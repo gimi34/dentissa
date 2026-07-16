@@ -13,7 +13,7 @@
 @section('content')
 
 {{-- ── Stats ───────────────────────────────────────────────── --}}
-<div class="stats-grid">
+<div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
     <div class="stat-card">
         <div class="stat-icon" style="background:var(--p100)">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="1.8">
@@ -39,19 +39,6 @@
         <div class="stat-label">Pacientes activos</div>
         <span class="stat-badge badge-blue">Registrados</span>
     </div>
-
-    <div class="stat-card">
-        <div class="stat-icon" style="background:var(--green-bg)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-        </div>
-        <div class="stat-value">${{ number_format($ingresosEsteMes ?? 0, 0) }}</div>
-        <div class="stat-label">Ingresos este mes</div>
-        <span class="stat-badge badge-green">Citas completadas</span>
-    </div>
-
 </div>
 
 {{-- ── Main grid ───────────────────────────────────────────── --}}
@@ -141,6 +128,8 @@
                 </a>
             </div>
         </div>
+
+    </div>
 
 </div>
 

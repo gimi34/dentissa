@@ -186,7 +186,7 @@
             <div class="card" style="padding:14px 16px">
                 <textarea
                     placeholder="Escribe aquí tus notas personales para hoy..."
-                    style="width:100%;resize:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:transparent;height:100px;line-height:1.6"
+                    style="width:100%;resize:none;border:none;outline:none;font-family:'Roboto',sans-serif;font-size:13px;color:var(--text);background:transparent;height:100px;line-height:1.6"
                 ></textarea>
             </div>
         </div>

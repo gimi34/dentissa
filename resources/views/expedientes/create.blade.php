@@ -138,7 +138,7 @@
 
 <style>
 .field-label { display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:5px }
-.field { display:block;width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s }
+.field { display:block;width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'Roboto',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s }
 .field:focus { border-color:var(--p300);box-shadow:0 0 0 3px rgba(212,83,126,.07) }
 .field-error { border-color:var(--red)!important }
 .field-hint { font-size:11.5px;color:var(--text-light);margin-top:4px }

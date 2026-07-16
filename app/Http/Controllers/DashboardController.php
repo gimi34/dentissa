@@ -23,13 +23,6 @@ class DashboardController extends Controller
             ->where('activo', 1)
             ->count();
 
-        $ingresosEsteMes = DB::table('citas')
-            ->join('servicios', 'citas.servicio_id', '=', 'servicios.id')
-            ->whereMonth('citas.fecha_hora', $hoy->month)
-            ->whereYear('citas.fecha_hora', $hoy->year)
-            ->where('citas.estado', 'completada')
-            ->sum('servicios.precio');
-
         // Lista de citas de hoy (con JOIN)
         $citasHoyLista = DB::table('citas')
             ->join('pacientes', 'citas.paciente_id', '=', 'pacientes.id')
@@ -45,8 +38,7 @@ class DashboardController extends Controller
                 DB::raw("CONCAT(up.nombre, ' ', up.apellido) AS paciente"),
                 'up.telefono',
                 DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
-                'servicios.nombre AS servicio',
-                'servicios.precio'
+                'servicios.nombre AS servicio'
             )
             ->orderBy('citas.fecha_hora')
             ->get();
@@ -54,7 +46,6 @@ class DashboardController extends Controller
         return view('dashboard.admin', compact(
             'citasHoy',
             'totalPacientes',
-            'ingresosEsteMes',
             'citasHoyLista'
         ));
     }
@@ -147,7 +138,6 @@ class DashboardController extends Controller
                     'citas.estado',
                     DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
                     'servicios.nombre AS servicio',
-                    'servicios.precio',
                     'servicios.duracion_min'
                 )
                 ->orderBy('citas.fecha_hora')
@@ -164,8 +154,7 @@ class DashboardController extends Controller
                     'citas.fecha_hora',
                     'citas.estado',
                     DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
-                    'servicios.nombre AS servicio',
-                    'servicios.precio'
+                    'servicios.nombre AS servicio'
                 )
                 ->orderByDesc('citas.fecha_hora')
                 ->limit(5)

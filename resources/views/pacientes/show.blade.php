@@ -43,7 +43,7 @@
             <div style="width:64px;height:64px;border-radius:50%;background:var(--p200);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:var(--p800);margin:0 auto 14px">
                 {{ strtoupper(substr($paciente->nombre,0,1)) }}{{ strtoupper(substr($paciente->apellido,0,1)) }}
             </div>
-            <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--text)">
+            <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                 {{ $paciente->nombre_completo }}
             </div>
             @if($paciente->fecha_nacimiento)
@@ -252,7 +252,6 @@
                                     <th>Fecha</th>
                                     <th>Servicio</th>
                                     <th>Dentista</th>
-                                    <th>Precio</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
@@ -264,9 +263,6 @@
                                     </td>
                                     <td style="font-weight:500;font-size:13px">{{ $c->servicio ?? '—' }}</td>
                                     <td style="font-size:12.5px;color:var(--text-muted)">{{ $c->dentista }}</td>
-                                    <td style="font-size:13px">
-                                        {{ $c->precio ? '$'.number_format($c->precio,0) : '—' }}
-                                    </td>
                                     <td>@include('partials.badge-estado', ['estado' => $c->estado])</td>
                                 </tr>
                                 @endforeach

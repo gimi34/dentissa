@@ -119,9 +119,8 @@
                         @endif
                         <option value="{{ $s->id }}"
                                 data-duracion="{{ $s->duracion_min }}"
-                                data-precio="{{ $s->precio }}"
                                 {{ old('servicio_id') == $s->id ? 'selected' : '' }}>
-                            {{ $s->nombre }} · ${{ number_format($s->precio, 0) }} · {{ $s->duracion_min }} min
+                            {{ $s->nombre }} · {{ $s->duracion_min }} min
                         </option>
                     @endforeach
                     @if($catActual !== '') </optgroup> @endif
@@ -131,7 +130,6 @@
                 <div id="servicio-preview" style="display:none;margin-top:12px;background:var(--p50);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px">
                     <div style="display:flex;gap:20px">
                         <div><span style="color:var(--text-muted)">Duración:</span> <strong id="prev-dur">—</strong> min</div>
-                        <div><span style="color:var(--text-muted)">Precio referencia:</span> <strong id="prev-precio">—</strong></div>
                     </div>
                     <div style="font-size:11.5px;color:var(--text-light);margin-top:4px">
                         La duración se cargará automáticamente al seleccionar un servicio.
@@ -177,39 +175,20 @@
     </form>
 </div>
 
-<style>
-.field-label { display:block; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-light); margin-bottom:5px; }
-.field {
-    display:block; width:100%;
-    padding:9px 13px;
-    border:1px solid var(--border);
-    border-radius:var(--radius-sm);
-    font-size:13.5px;
-    font-family:'DM Sans',sans-serif;
-    color:var(--text);
-    background:var(--white);
-    outline:none;
-    transition:border-color .15s;
-}
-.field:focus { border-color:var(--p300); box-shadow:0 0 0 3px rgba(212,83,126,.08); }
-.field-error { border-color:var(--red)!important; }
-.field-hint { font-size:11.5px; color:var(--text-light); margin-top:4px; }
-.field-hint-error { color:var(--red); }
-textarea.field { line-height:1.6; }
-</style>
+@push('styles')
+<link href="{{ asset('css/citas.css') }}" rel="stylesheet">
+@endpush
 
 @push('scripts')
 <script>
 document.getElementById('servicio-select').addEventListener('change', function () {
     const opt = this.options[this.selectedIndex];
     const dur   = opt.dataset.duracion;
-    const precio = opt.dataset.precio;
     const preview = document.getElementById('servicio-preview');
 
-    if (dur && precio) {
+    if (dur) {
         document.getElementById('duracion-field').value = dur;
         document.getElementById('prev-dur').textContent = dur;
-        document.getElementById('prev-precio').textContent = '$' + Number(precio).toLocaleString('es-MX');
         preview.style.display = 'block';
     } else {
         preview.style.display = 'none';

@@ -4,339 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dentissa · Crear cuenta</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --p50:  #FDF5F8;
-            --p100: #FBEAF0;
-            --p200: #F4C0D1;
-            --p300: #ED93B1;
-            --p400: #D4537E;
-            --p500: #B83C65;
-            --p600: #993556;
-            --p800: #72243E;
-            --text:       #2C1A21;
-            --text-muted: #8A6872;
-            --text-light: #C0A0AC;
-            --border:     #F0DCE4;
-            --white:      #FFFFFF;
-            --green:      #1D9E75;
-            --green-bg:   #E1F5EE;
-            --red:        #A32D2D;
-            --red-bg:     #FCEBEB;
-        }
-
-        html, body { height: 100%; }
-        body {
-            font-family: 'DM Sans', sans-serif;
-            display: flex;
-            min-height: 100vh;
-            background: var(--p50);
-        }
-
-        /* ── Panel izquierdo ──────────────────────────────────── */
-        .panel-left {
-            width: 38%;
-            background: linear-gradient(145deg, var(--p600) 0%, #7a1f3a 60%, #4B1528 100%);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 48px 44px;
-            flex-shrink: 0;
-        }
-
-        .panel-left::before {
-            content: '';
-            position: absolute;
-            width: 420px; height: 420px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.07);
-            top: -140px; right: -140px;
-        }
-        .panel-left::after {
-            content: '';
-            position: absolute;
-            width: 260px; height: 260px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.05);
-            bottom: -60px; left: -60px;
-        }
-
-        .brand { position: relative; z-index: 2; }
-        .brand-logo { display: flex; align-items: center; gap: 12px; }
-        .logo-icon {
-            width: 40px; height: 40px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        .brand-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px; font-weight: 600;
-            color: white;
-        }
-
-        .panel-illustration {
-            position: relative; z-index: 2;
-            flex: 1; display: flex;
-            align-items: center; justify-content: center;
-            padding: 20px 0;
-        }
-
-        .panel-copy { position: relative; z-index: 2; }
-        .panel-tagline {
-            font-family: 'Playfair Display', serif;
-            font-size: 26px; font-weight: 500;
-            color: white;
-            line-height: 1.3; margin-bottom: 12px;
-        }
-        .panel-tagline em { font-style: italic; color: var(--p200); }
-        .panel-sub { font-size: 13.5px; color: rgba(255,255,255,0.6); line-height: 1.7; }
-
-        /* Pasos de progreso en panel */
-        .steps-preview {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        .step-preview {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            transition: background .3s;
-        }
-        .step-preview.active { background: rgba(255,255,255,0.2); }
-        .step-num {
-            width: 26px; height: 26px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 600; color: white;
-            flex-shrink: 0;
-            transition: background .3s, color .3s;
-        }
-        .step-preview.active .step-num { background: var(--p300); color: white; }
-        .step-preview.done .step-num { background: var(--green); color: white; }
-        .step-label { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; }
-        .step-preview.active .step-label { color: white; }
-
-        /* ── Panel derecho (formulario) ───────────────────────── */
-        .panel-right {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--white);
-            overflow-y: auto;
-        }
-
-        .form-wrapper {
-            flex: 1;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 48px 32px;
-        }
-
-        .form-container {
-            width: 100%;
-            max-width: 480px;
-        }
-
-        /* Barra de progreso superior */
-        .progress-bar-wrap {
-            background: var(--p100);
-            height: 4px;
-            border-radius: 2px;
-            margin-bottom: 32px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            height: 100%;
-            background: var(--p400);
-            border-radius: 2px;
-            transition: width .4s ease;
-        }
-
-        .form-header { margin-bottom: 28px; }
-        .step-indicator {
-            font-size: 11.5px;
-            font-weight: 600;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--p400);
-            margin-bottom: 6px;
-        }
-        .form-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 26px; font-weight: 600;
-            color: var(--text); letter-spacing: -.3px;
-            margin-bottom: 4px;
-        }
-        .form-subtitle { font-size: 13.5px; color: var(--text-muted); }
-
-        /* Pasos */
-        .step { display: none; }
-        .step.active { display: block; animation: fadeUp .35s ease both; }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Campos */
-        .field-group { margin-bottom: 16px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-        .field-label {
-            display: block;
-            font-size: 12px; font-weight: 500;
-            color: var(--text-muted); margin-bottom: 6px;
-        }
-        .required { color: var(--p400); margin-left: 2px; }
-
-        .field-wrap { position: relative; }
-        .field-icon {
-            position: absolute; left: 13px; top: 50%;
-            transform: translateY(-50%);
-            width: 15px; height: 15px;
-            color: var(--p300); pointer-events: none;
-        }
-        .field-icon-right {
-            position: absolute; right: 13px; top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .field {
-            width: 100%;
-            padding: 11px 14px 11px 40px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'DM Sans', sans-serif;
-            color: var(--text);
-            background: var(--p50);
-            outline: none;
-            transition: border-color .2s, background .2s, box-shadow .2s;
-            -webkit-appearance: none;
-        }
-        .field.no-icon { padding-left: 14px; }
-        .field:focus {
-            border-color: var(--p300);
-            background: var(--white);
-            box-shadow: 0 0 0 4px rgba(212,83,126,.07);
-        }
-        .field.field-error { border-color: var(--red); background: var(--red-bg); }
-        select.field { cursor: pointer; padding-right: 36px; }
-
-        .toggle-pass {
-            position: absolute; right: 13px; top: 50%;
-            transform: translateY(-50%);
-            background: none; border: none; cursor: pointer;
-            color: var(--p300); padding: 2px; display: flex;
-        }
-        .toggle-pass:hover { color: var(--p500); }
-
-        .field-hint { font-size: 11.5px; color: var(--text-light); margin-top: 4px; }
-        .error-msg { font-size: 12px; color: var(--red); margin-top: 4px; }
-
-        /* Checkboxes opcionales */
-        .checkbox-label {
-            display: flex; align-items: flex-start; gap: 10px;
-            font-size: 13.5px; color: var(--text-muted);
-            cursor: pointer; line-height: 1.5;
-        }
-        .checkbox-label input { margin-top: 2px; accent-color: var(--p400); flex-shrink: 0; }
-
-        /* Tipo de sangre chips */
-        .blood-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-        .blood-chip {
-            padding: 6px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 20px;
-            font-size: 13px; color: var(--text-muted);
-            cursor: pointer; background: var(--p50);
-            transition: all .15s; user-select: none;
-        }
-        .blood-chip.selected { border-color: var(--p400); background: var(--p100); color: var(--p600); font-weight: 500; }
-        #tipo_sangre { display: none; }
-
-        /* Botones de navegación */
-        .form-nav {
-            display: flex;
-            gap: 10px;
-            margin-top: 28px;
-            align-items: center;
-        }
-        .btn-next, .btn-submit {
-            flex: 1;
-            padding: 13px;
-            border: none; border-radius: 10px;
-            font-size: 14.5px; font-weight: 500;
-            font-family: 'DM Sans', sans-serif;
-            cursor: pointer;
-            transition: all .2s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn-next { background: var(--p400); color: white; }
-        .btn-next:hover { background: var(--p500); box-shadow: 0 4px 16px rgba(212,83,126,.25); }
-        .btn-back {
-            padding: 13px 18px;
-            background: transparent; color: var(--text-muted);
-            border: 1.5px solid var(--border); border-radius: 10px;
-            font-size: 14px; font-family: 'DM Sans', sans-serif;
-            cursor: pointer; transition: all .2s;
-        }
-        .btn-back:hover { background: var(--p100); color: var(--p600); border-color: var(--p200); }
-        .btn-submit { background: var(--p400); color: white; }
-        .btn-submit:hover { background: var(--p500); box-shadow: 0 4px 16px rgba(212,83,126,.3); }
-
-        /* Alert de error global */
-        .alert {
-            padding: 12px 14px; border-radius: 9px;
-            font-size: 13.5px; margin-bottom: 20px;
-            display: flex; align-items: flex-start; gap: 9px;
-        }
-        .alert-error { background: var(--red-bg); color: var(--red); border: 1px solid #F7C1C1; }
-        .alert-error svg { flex-shrink: 0; margin-top: 1px; }
-
-        /* Footer del form */
-        .form-footer {
-            text-align: center;
-            padding: 20px 0 0;
-            font-size: 13.5px;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border);
-            margin-top: 20px;
-        }
-        .form-footer a { color: var(--p500); text-decoration: none; font-weight: 500; }
-        .form-footer a:hover { text-decoration: underline; }
-
-        /* Responsive */
-        @media (max-width: 860px) { .panel-left { display: none; } }
-        @media (max-width: 520px) { .grid-2 { grid-template-columns: 1fr; } }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
 </head>
-<body>
+<body class="page-register">
 
 <!-- ── Panel izquierdo ─────────────────────────────────────────── -->
 <div class="panel-left">
     <div class="brand">
-<div class="brand-logo">
-<div class="logo-icon" style="background:transparent;border-radius:0;width:44px;height:44px;">
-    <img src="{{ asset('images/logo-icon1.png') }}"
-         alt="Dentissa"
-         style="width:70px;height:70px;object-fit:contain;">
-</div>
-        </div>
     </div>
 
     <!-- Ilustración central -->
@@ -506,7 +181,7 @@
                     </div>
 
                     <div class="form-nav">
-                        <button type="button" class="btn-next" onclick="goTo(2)">
+                        <button type="button" class="btn-next" onclick="nextStep(2)">
                             Continuar
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"/>
@@ -596,7 +271,7 @@
 
                     <div class="form-nav">
                         <button type="button" class="btn-back" onclick="goTo(1)">← Atrás</button>
-                        <button type="button" class="btn-next" onclick="goTo(3)">
+                        <button type="button" class="btn-next" onclick="nextStep(3)">
                             Continuar
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"/>
@@ -738,6 +413,34 @@ const progress = [33, 66, 100];
 @else
     currentStep = 1;
 @endif
+
+// Valida los campos obligatorios del paso indicado antes de avanzar
+function validateStep(step) {
+    const stepEl = document.getElementById('step-' + step);
+    const fields = stepEl.querySelectorAll('input, select, textarea');
+    for (const field of fields) {
+        if (!field.checkValidity()) {
+            field.reportValidity();
+            return false;
+        }
+    }
+    if (step === 1) {
+        const password = document.getElementById('password');
+        const confirmation = document.getElementById('password_confirmation');
+        if (password.value !== confirmation.value) {
+            confirmation.setCustomValidity('Las contraseñas no coinciden');
+            confirmation.reportValidity();
+            confirmation.setCustomValidity('');
+            return false;
+        }
+    }
+    return true;
+}
+
+function nextStep(step) {
+    if (!validateStep(currentStep)) return;
+    goTo(step);
+}
 
 function goTo(step) {
     // Ocultar paso actual
