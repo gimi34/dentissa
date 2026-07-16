@@ -6,6 +6,7 @@ use App\Http\Controllers\CitasController;
 use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\ServiciosController;
 
 // ── Auth ────────────────────────────────────────────────────────────────
 Route::get ('/login',   [AuthController::class,  'loginForm'])->name('login');
@@ -13,6 +14,7 @@ Route::post('/login',   [AuthController::class,  'login']);
 Route::post('/logout',  [AuthController::class,  'logout'])->name('logout');
 Route::get ('/registro',[App\Http\Controllers\RegisterController::class, 'showForm'])->name('register');
 Route::post('/registro',[App\Http\Controllers\RegisterController::class, 'register']);
+
 
 // ── Raíz ────────────────────────────────────────────────────────────────
 Route::get('/', function () {
@@ -31,6 +33,10 @@ Route::get('/', function () {
 Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', [DashboardController::class, 'admin'])->name('dashboard');
+
+    // Servicios 
+    Route::resource('servicios', ServiciosController::class);
+    
 
     // Citas
     Route::get   ('/citas',             [CitasController::class, 'index']       )->name('citas');
@@ -67,7 +73,7 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
     Route::post  ('/personal/{id}/horarios',    [PersonalController::class, 'saveHorarios'])->name('personal.horarios');
 
     // Placeholders
-    Route::get('/servicios',  fn() => view('placeholder', ['titulo' => 'Catálogo de Servicios']) )->name('servicios');
+   
     Route::get('/reportes',   fn() => view('placeholder', ['titulo' => 'Reportes'])              )->name('reportes');
     Route::get('/usuarios',   fn() => view('placeholder', ['titulo' => 'Usuarios'])              )->name('usuarios');
 });
