@@ -6,6 +6,7 @@ use App\Http\Controllers\CitasController;
 use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\UsuarioController;
 
 // ── Auth ────────────────────────────────────────────────────────────────
 Route::get ('/login',   [AuthController::class,  'loginForm'])->name('login');
@@ -70,6 +71,16 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
     Route::get('/servicios',  fn() => view('placeholder', ['titulo' => 'Catálogo de Servicios']) )->name('servicios');
     Route::get('/reportes',   fn() => view('placeholder', ['titulo' => 'Reportes'])              )->name('reportes');
     Route::get('/usuarios',   fn() => view('placeholder', ['titulo' => 'Usuarios'])              )->name('usuarios');
+
+    Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+
+    Route::get('/usuarios/crear', [UsuarioController::class, 'create'])->name('usuarios.create');
+    Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
+        
+    Route::get('/usuarios/{id}/editar', [UsuarioController::class, 'edit'])->name('usuarios.edit');
+    Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->name('usuarios.update');
+
+    Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
 });
 
 // ── Dentista ────────────────────────────────────────────────────────────
