@@ -34,7 +34,6 @@ class CitasController extends Controller
                 DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
                 'servicios.id AS servicio_id',
                 'servicios.nombre AS servicio',
-                'servicios.precio',
                 'servicios.duracion_min AS duracion_servicio',
                 'servicios.color_agenda'
             );
@@ -45,10 +44,7 @@ class CitasController extends Controller
     {
         $query = $this->queryBase();
 
-        // Filtros
-        if ($request->filled('estado')) {
-            $query->where('citas.estado', $request->estado);
-        }
+        // Filtros de fecha / dentista / búsqueda (aplican tanto a la tabla como al resumen)
         if ($request->filled('fecha_desde')) {
             $query->whereDate('citas.fecha_hora', '>=', $request->fecha_desde);
         }
@@ -70,10 +66,24 @@ class CitasController extends Controller
 
         // Por defecto: citas del día actual si no hay filtros de fecha
         if (!$request->filled('fecha_desde') && !$request->filled('fecha_hasta') && !$request->filled('vista')) {
-    $query->whereDate('citas.fecha_hora', '>=', Carbon::today())
-          ->whereDate('citas.fecha_hora', '<=', Carbon::today()->addDays(7));
-}
+            $query->whereDate('citas.fecha_hora', '>=', Carbon::today())
+                  ->whereDate('citas.fecha_hora', '<=', Carbon::today()->addDays(7));
+        }
 
+        // Resumen del rango mostrado (antes de aplicar el filtro de estado y la paginación,
+        // para que las tarjetas reflejen todos los estados del mismo rango de fechas visible)
+        $resumenHoy = (clone $query)
+            ->select(DB::raw("
+                COUNT(*) AS total,
+                COALESCE(SUM(CASE WHEN citas.estado = 'completada' THEN 1 ELSE 0 END), 0) AS completadas,
+                COALESCE(SUM(CASE WHEN citas.estado = 'agendada'   THEN 1 ELSE 0 END), 0) AS agendadas,
+                COALESCE(SUM(CASE WHEN citas.estado = 'cancelada'  THEN 1 ELSE 0 END), 0) AS canceladas
+            "))
+            ->first();
+
+        if ($request->filled('estado')) {
+            $query->where('citas.estado', $request->estado);
+        }
 
         $citas = $query->orderBy('citas.fecha_hora')->paginate(25)->withQueryString();
 
@@ -85,17 +95,6 @@ class CitasController extends Controller
             ->select('personal.id', DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre"))
             ->orderBy('usuarios.nombre')
             ->get();
-
-        // Resumen de hoy para las tarjetas superiores
-        $resumenHoy = DB::table('citas')
-            ->whereDate('fecha_hora', Carbon::today())
-            ->selectRaw("
-                COUNT(*) AS total,
-                SUM(CASE WHEN estado = 'completada'  THEN 1 ELSE 0 END) AS completadas,
-                SUM(CASE WHEN estado = 'agendada'    THEN 1 ELSE 0 END) AS agendadas,
-                SUM(CASE WHEN estado = 'cancelada'   THEN 1 ELSE 0 END) AS canceladas
-            ")
-            ->first();
 
         return view('citas.index', compact('citas', 'dentistas', 'resumenHoy'));
     }
@@ -239,7 +238,6 @@ $conflicto = DB::table('citas')
             'estado'          => 'required|in:agendada,confirmada,en_curso,completada,cancelada,no_asistio',
             'motivo'          => 'nullable|string|max:500',
             'notas_internas'  => 'nullable|string|max:1000',
-            'cobrado'         => 'nullable|boolean',
         ]);
 
         $updates = [
@@ -247,7 +245,7 @@ $conflicto = DB::table('citas')
             'actualizado_en' => now(),
         ];
 
-        // Guardar nota interna si se envía (incluyendo info de cobro)
+        // Guardar nota interna si se envía
         if (!empty($data['notas_internas'])) {
             $updates['notas_internas'] = $data['notas_internas'];
         }

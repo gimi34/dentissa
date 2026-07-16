@@ -32,7 +32,7 @@
         <div class="card">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
                 <div>
-                    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--text)">
+                    <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                         {{ $cita->servicio ?? 'Consulta dental' }}
                     </div>
                     <div style="font-size:13px;color:var(--text-muted);margin-top:3px">
@@ -87,29 +87,6 @@
                 <span style="font-size:14px;font-weight:500;color:var(--text)">Control interno</span>
                 <span style="font-size:11.5px;color:var(--text-light);margin-left:4px">Solo visible para el personal</span>
             </div>
-
-            {{-- Info de pago referencial --}}
-            @if($cita->precio)
-            <div style="background:var(--p50);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px">
-                <div style="display:flex;align-items:center;justify-content:space-between">
-                    <div>
-                        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">
-                            Precio del servicio (referencia)
-                        </div>
-                        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:600;color:var(--p600)">
-                            ${{ number_format($cita->precio, 2) }}
-                        </div>
-                        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-                            {{ $cita->servicio }}
-                        </div>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:4px">Este registro es solo de referencia interna.</div>
-                        <div style="font-size:11.5px;color:var(--text-muted)">Sin módulo de facturación.</div>
-                    </div>
-                </div>
-            </div>
-            @endif
 
             {{-- Notas internas editables --}}
             <form action="{{ route('admin.citas.notas', $cita->id) }}" method="POST">
@@ -240,21 +217,7 @@
     </div>
 </div>
 
-<style>
-.field-label { display:block; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-light); margin-bottom:5px; }
-.field {
-    display:block; width:100%;
-    padding:9px 13px;
-    border:1px solid var(--border);
-    border-radius:var(--radius-sm);
-    font-size:13.5px;
-    font-family:'DM Sans',sans-serif;
-    color:var(--text);
-    background:var(--white);
-    outline:none;
-    transition:border-color .15s;
-}
-.field:focus { border-color:var(--p300); }
-textarea.field { line-height:1.6; }
-</style>
+@push('styles')
+<link href="{{ asset('css/citas.css') }}" rel="stylesheet">
+@endpush
 @endsection

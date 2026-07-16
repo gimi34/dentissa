@@ -38,7 +38,7 @@
             <div style="width:68px;height:68px;border-radius:50%;background:{{ $tipoBg }};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;color:{{ $tipoColor }};margin:0 auto 14px">
                 {{ strtoupper(substr($miembro->nombre,0,1)) }}{{ strtoupper(substr($miembro->apellido,0,1)) }}
             </div>
-            <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--text)">
+            <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                 {{ $miembro->nombre_completo }}
             </div>
             <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px">
@@ -247,7 +247,7 @@
 </div>
 
 <style>
-.field { display:block;width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s }
+.field { display:block;width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'Roboto',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s }
 .field:focus { border-color:var(--p300) }
 .hidden-row { display:none!important }
 </style>
