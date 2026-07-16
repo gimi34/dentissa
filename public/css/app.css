@@ -149,7 +149,7 @@ body {
     cursor: pointer;
     transition: all 0.15s;
 }
-.btn-logout:hover { background: var(--p100); color: var(--p600); }
+.btn-logout:hover { background: #FF0000; color: var(--p600); }
 
 /* ── Main ─────────────────────────────────── */
 .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
