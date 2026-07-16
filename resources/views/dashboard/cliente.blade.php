@@ -47,9 +47,6 @@
                                 @endif
                             </span>
                             <span>👨‍⚕️ {{ $proximaCita->dentista }}</span>
-                            @if($proximaCita->precio)
-                                <span>💰 ${{ number_format($proximaCita->precio, 0) }}</span>
-                            @endif
                         </div>
                         <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
                             @include('partials.badge-estado', ['estado' => $proximaCita->estado])

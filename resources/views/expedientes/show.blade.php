@@ -26,7 +26,7 @@
                         {{ \Carbon\Carbon::parse($expediente->creado_en)->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}
                         @if($expediente->servicio) · {{ $expediente->servicio }} @endif
                     </div>
-                    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--text)">
+                    <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                         Expediente de {{ $expediente->paciente }}
                     </div>
                     <div style="font-size:13px;color:var(--text-muted);margin-top:3px">
@@ -182,7 +182,7 @@
 
 <style>
 .field-label { display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:5px }
-.field { display:block;width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s }
+.field { display:block;width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'Roboto',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s }
 .field:focus { border-color:var(--p300);box-shadow:0 0 0 3px rgba(212,83,126,.07) }
 .error-msg { font-size:12px;color:var(--red);margin-top:4px }
 textarea.field { line-height:1.6 }

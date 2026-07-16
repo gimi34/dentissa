@@ -184,7 +184,7 @@ public function store(Request $request)
             ->select(
                 'citas.id', 'citas.fecha_hora', 'citas.estado', 'citas.duracion_min',
                 DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
-                'servicios.nombre AS servicio', 'servicios.precio'
+                'servicios.nombre AS servicio'
             )
             ->orderByDesc('citas.fecha_hora')
             ->limit(10)

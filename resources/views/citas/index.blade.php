@@ -19,7 +19,7 @@
     @endphp
     <div class="stat-card">
         <div class="stat-value">{{ $resumen->total }}</div>
-        <div class="stat-label">Total hoy</div>
+        <div class="stat-label">Total</div>
     </div>
     <div class="stat-card">
         <div class="stat-value" style="color:var(--p500)">{{ $resumen->agendadas }}</div>
@@ -139,9 +139,6 @@
                         <td>
                             @if($cita->servicio)
                                 <div style="font-size:13px">{{ $cita->servicio }}</div>
-                                @if($cita->precio)
-                                    <div style="font-size:11.5px;color:var(--text-muted)">${{ number_format($cita->precio, 0) }}</div>
-                                @endif
                             @else
                                 <span style="color:var(--text-light)">—</span>
                             @endif
@@ -213,23 +210,8 @@
     @endif
 </div>
 
-{{-- CSS extra para los campos del form de filtros --}}
-<style>
-.field-label { display:block; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-light); margin-bottom:5px; }
-.field {
-    display:block; width:100%;
-    padding:8px 12px;
-    border:1px solid var(--border);
-    border-radius:var(--radius-sm);
-    font-size:13px;
-    font-family:'DM Sans',sans-serif;
-    color:var(--text);
-    background:var(--white);
-    outline:none;
-    transition:border-color .15s;
-}
-.field:focus { border-color:var(--p300); }
-select.field { cursor:pointer; }
-</style>
+@push('styles')
+<link href="{{ asset('css/citas.css') }}" rel="stylesheet">
+@endpush
 
 @endsection
