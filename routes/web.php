@@ -6,11 +6,9 @@ use App\Http\Controllers\CitasController;
 use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\PersonalController;
-<<<<<<< HEAD
 use App\Http\Controllers\UsuarioController;
-=======
 use App\Http\Controllers\ServiciosController;
->>>>>>> faf9dc4f45c11b05965f0295a9048f9c5b3463a2
+
 
 // ── Auth ────────────────────────────────────────────────────────────────
 Route::get ('/login',   [AuthController::class,  'loginForm'])->name('login');
