@@ -42,7 +42,6 @@
         <a href="{{ route('admin.servicios.index') }}" class="btn btn-ghost">Limpiar</a>
     </form>
 </div>
-
 {{-- ── Tabla de Servicios ──────────────────────────────────────── --}}
 <div class="card card-0">
     @if($servicios->count() > 0)
@@ -50,9 +49,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 25%;">Nombre</th>
-                        <th style="width: 45%;">Descripción</th>
-                        <th style="width: 15%;">Precio</th>
+                        <th style="width: 35%;">Nombre</th>
+                        <th style="width: 50%;">Descripción</th>
                         <th style="width: 15%; text-align:right">Acciones</th>
                     </tr>
                 </thead>
@@ -66,9 +64,6 @@
                             {{ $servicio->descripcion }}
                         </td>
                         <td>
-                            <span style="font-weight:500">${{ number_format($servicio->precio, 2) }}</span>
-                        </td>
-                        <td>
                             <div style="display:flex;gap:4px;justify-content:flex-end">
                                 <a href="{{ route('admin.servicios.edit', $servicio->id) }}"
                                    class="btn btn-outline btn-sm" title="Editar">
@@ -77,7 +72,6 @@
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                     </svg>
                                 </a>
-                                {{-- Botón que abre el modal personalizado --}}
                                 <button type="button" class="btn btn-ghost btn-sm" title="Eliminar" style="color:var(--red);"
                                         onclick="abrirModalEliminar('{{ route('admin.servicios.destroy', $servicio->id) }}', '{{ addslashes($servicio->nombre) }}')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -30,16 +30,17 @@ class ServiciosController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
         ]);
 
-        Servicio::create($request->all());
+        $data = $request->all();
+        $data['precio'] = 0; // Valor por defecto oculto para evitar errores en BD
+
+        Servicio::create($data);
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio registrado correctamente.');
     }
 
     public function edit($id)
     {
-        // Buscamos estrictamente por el ID para evitar el error stdClass
         $servicio = Servicio::findOrFail($id);
         return view('servicios.edit', compact('servicio'));
     }
@@ -49,11 +50,13 @@ class ServiciosController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
         ]);
 
+        $data = $request->all();
+        $data['precio'] = 0; // Valor por defecto oculto
+
         $servicio = Servicio::findOrFail($id);
-        $servicio->update($request->all());
+        $servicio->update($data);
         
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio actualizado correctamente.');
     }
