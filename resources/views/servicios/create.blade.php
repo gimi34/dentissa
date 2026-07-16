@@ -22,19 +22,12 @@
                     Datos del servicio
                 </div>
                 
-                <div class="grid-2" style="margin-bottom:14px">
+                <div style="margin-bottom:14px">
                     <div class="field-group">
                         <label class="field-label">Nombre del servicio <span style="color:var(--p500)">*</span></label>
                         <input type="text" name="nombre" class="field {{ $errors->has('nombre') ? 'field-error' : '' }}"
                             value="{{ old('nombre') }}" required placeholder="Ej: Consulta general">
                         @error('nombre')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                    
-                    <div class="field-group">
-                        <label class="field-label">Precio ($) <span style="color:var(--p500)">*</span></label>
-                        <input type="number" step="0.01" name="precio" class="field {{ $errors->has('precio') ? 'field-error' : '' }}"
-                            value="{{ old('precio') }}" required placeholder="Ej: 400.00">
-                        @error('precio')<div class="error-msg">{{ $message }}</div>@enderror
                     </div>
                 </div>
 

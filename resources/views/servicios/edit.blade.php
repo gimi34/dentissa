@@ -11,27 +11,23 @@
         <span style="color:var(--text)">Editar: {{ $servicio->nombre }}</span>
     </div>
 
-    {{-- El action ahora extrae obligatoriamente el ID --}}
+    {{-- AQUÍ ESTÁ LA ETIQUETA FORM QUE FALTABA --}}
     <form method="POST" action="{{ route('admin.servicios.update', $servicio->id) }}">
         @csrf
         @method('PUT')
 
         <div style="display:flex;flex-direction:column;gap:18px">
 
+            {{-- Sección: Datos del servicio --}}
             <div class="card">
                 <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
                     Datos del servicio
                 </div>
                 
-                <div class="grid-2" style="margin-bottom:14px">
+                <div style="margin-bottom:14px">
                     <div class="field-group">
                         <label class="field-label">Nombre del servicio <span style="color:var(--p500)">*</span></label>
                         <input type="text" name="nombre" class="field" value="{{ old('nombre', $servicio->nombre) }}" required>
-                    </div>
-                    
-                    <div class="field-group">
-                        <label class="field-label">Precio ($) <span style="color:var(--p500)">*</span></label>
-                        <input type="number" step="0.01" name="precio" class="field" value="{{ old('precio', $servicio->precio) }}" required>
                     </div>
                 </div>
 
