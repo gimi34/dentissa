@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -35,14 +36,6 @@ class RegisterController extends Controller
             'genero'           => ['nullable', 'string', 'max:20'],
             'direccion'        => ['nullable', 'string', 'max:500'],
             'ciudad'           => ['nullable', 'string', 'max:100'],
-
-            // Paso 3 — Médico
-            'tipo_sangre'          => ['nullable', 'string', 'max:5'],
-            'alergias'             => ['nullable', 'string', 'max:1000'],
-            'enfermedades_cronicas'=> ['nullable', 'string', 'max:1000'],
-            'medicamentos_actuales'=> ['nullable', 'string', 'max:500'],
-            'contacto_emergencia'  => ['nullable', 'string', 'max:200'],
-            'telefono_emergencia'  => ['nullable', 'string', 'max:20'],
         ], [
             'nombre.required'    => 'El nombre es obligatorio.',
             'apellido.required'  => 'El apellido es obligatorio.',
@@ -73,21 +66,15 @@ class RegisterController extends Controller
                 'actualizado_en'=> now(),
             ]);
 
-            // 2. Insertar en pacientes
+            // 2. Insertar en pacientes (la info médica la completa el dentista en la cita)
             DB::table('pacientes')->insert([
-                'id'                   => (string) Str::uuid(),
-                'usuario_id'           => $usuarioId,
-                'fecha_nacimiento'     => $data['fecha_nacimiento'] ?? null,
-                'genero'               => $data['genero'] ?? null,
-                'direccion'            => $data['direccion'] ?? null,
-                'ciudad'               => $data['ciudad'] ?? null,
-                'tipo_sangre'          => $data['tipo_sangre'] ?? null,
-                'alergias'             => $data['alergias'] ?? null,
-                'enfermedades_cronicas'=> $data['enfermedades_cronicas'] ?? null,
-                'medicamentos_actuales'=> $data['medicamentos_actuales'] ?? null,
-                'contacto_emergencia'  => $data['contacto_emergencia'] ?? null,
-                'telefono_emergencia'  => $data['telefono_emergencia'] ?? null,
-                'creado_en'            => now(),
+                'id'               => (string) Str::uuid(),
+                'usuario_id'       => $usuarioId,
+                'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
+                'genero'           => $data['genero'] ?? null,
+                'direccion'        => $data['direccion'] ?? null,
+                'ciudad'           => $data['ciudad'] ?? null,
+                'creado_en'        => now(),
             ]);
         });
 
@@ -102,5 +89,76 @@ class RegisterController extends Controller
 
         return redirect()->route('cliente.dashboard')
             ->with('success', '¡Bienvenido/a, ' . $data['nombre'] . '! Tu cuenta fue creada exitosamente.');
+    }
+
+    public function contactoForm(Request $request)
+    {
+        $google = $request->session()->get('google_registro');
+
+        if (! $google) {
+            return redirect()->route('register');
+        }
+
+        return view('auth.registro-contacto', ['google' => $google]);
+    }
+
+    public function contactoStore(Request $request)
+    {
+        $google = $request->session()->get('google_registro');
+
+        if (! $google) {
+            return redirect()->route('register');
+        }
+
+        $data = $request->validate([
+            'telefono'         => ['nullable', 'string', 'max:20'],
+            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'genero'           => ['nullable', 'string', 'max:20'],
+            'direccion'        => ['nullable', 'string', 'max:500'],
+            'ciudad'           => ['nullable', 'string', 'max:100'],
+            'terminos'         => ['accepted'],
+        ], [
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'terminos.accepted'       => 'Debes aceptar los términos de uso y la política de privacidad.',
+        ]);
+
+        $usuario = DB::transaction(function () use ($google, $data) {
+            $usuarioId = (string) Str::uuid();
+
+            DB::table('usuarios')->insert([
+                'id'             => $usuarioId,
+                'nombre'         => $google['nombre'],
+                'apellido'       => $google['apellido'],
+                'email'          => $google['email'],
+                'google_id'      => $google['google_id'],
+                'password_hash'  => null,
+                'rol'            => 'cliente',
+                'telefono'       => $data['telefono'] ?? null,
+                'foto_url'       => $google['foto_url'] ?? null,
+                'activo'         => 1,
+                'creado_en'      => now(),
+                'actualizado_en' => now(),
+            ]);
+
+            DB::table('pacientes')->insert([
+                'id'               => (string) Str::uuid(),
+                'usuario_id'       => $usuarioId,
+                'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
+                'genero'           => $data['genero'] ?? null,
+                'direccion'        => $data['direccion'] ?? null,
+                'ciudad'           => $data['ciudad'] ?? null,
+                'creado_en'        => now(),
+            ]);
+
+            return Usuario::findOrFail($usuarioId);
+        });
+
+        $request->session()->forget('google_registro');
+
+        Auth::login($usuario);
+        $request->session()->regenerate();
+
+        return redirect()->route('cliente.dashboard')
+            ->with('success', '¡Bienvenido/a, ' . $usuario->nombre . '! Tu cuenta fue creada exitosamente.');
     }
 }

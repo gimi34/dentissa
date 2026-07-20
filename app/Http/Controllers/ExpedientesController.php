@@ -8,6 +8,49 @@ use Illuminate\Support\Str;
 
 class ExpedientesController extends Controller
 {
+    // ── INDEX ──────────────────────────────────────────────────────────
+    public function index(Request $request)
+    {
+        $query = DB::table('expedientes')
+            ->join('pacientes', 'expedientes.paciente_id', '=', 'pacientes.id')
+            ->join('usuarios as up', 'pacientes.usuario_id', '=', 'up.id')
+            ->join('personal', 'expedientes.dentista_id', '=', 'personal.id')
+            ->join('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
+            ->select(
+                'expedientes.id',
+                'expedientes.diagnostico',
+                'expedientes.proxima_visita',
+                'expedientes.creado_en',
+                'pacientes.id AS paciente_id',
+                DB::raw("CONCAT(up.nombre, ' ', up.apellido) AS paciente"),
+                DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista")
+            );
+
+        // El dentista solo ve los expedientes que él mismo registró
+        if (auth()->user()->rol === 'dentista') {
+            $personal = DB::table('personal')->where('usuario_id', auth()->id())->first();
+            $query->where('expedientes.dentista_id', $personal->id ?? null);
+        }
+
+        if ($request->filled('buscar')) {
+            $b = '%' . $request->buscar . '%';
+            $query->where(function ($q) use ($b) {
+                $q->whereRaw("CONCAT(up.nombre, ' ', up.apellido) LIKE ?", [$b])
+                  ->orWhere('expedientes.diagnostico', 'LIKE', $b);
+            });
+        }
+
+        $expedientes = $query->orderByDesc('expedientes.creado_en')->paginate(20)->withQueryString();
+
+        $base = match(auth()->user()->rol) {
+            'dentista'  => 'dentista',
+            'asistente' => 'asistente',
+            default     => 'admin',
+        };
+
+        return view('expedientes.index', compact('expedientes', 'base'));
+    }
+
     // ── CREATE ─────────────────────────────────────────────────────────
     public function create(Request $request)
     {

@@ -176,7 +176,7 @@
 </div>
 
 @push('styles')
-<link href="{{ asset('css/citas.css') }}" rel="stylesheet">
+<link href="{{ asset('css/citas.css') }}?v={{ filemtime(public_path('css/citas.css')) }}" rel="stylesheet">
 @endpush
 
 @push('scripts')

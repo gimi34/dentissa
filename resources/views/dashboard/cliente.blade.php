@@ -6,8 +6,7 @@
 {{-- Bienvenida --}}
 <div class="welcome-banner">
     <div style="z-index:1">
-        <div class="welcome-title">Hola, {{ auth()->user()->nombre }} 😊</div>
-        <div class="welcome-sub">Bienvenido/a a tu portal de salud dental. Aquí puedes consultar tus citas y tu historial.</div>
+        <div class="welcome-title" style="margin-bottom:0">Hola, {{ auth()->user()->nombre }}</div>
     </div>
     <div class="welcome-actions">
         <a href="/cliente/agendar" class="btn btn-white">Agendar cita</a>

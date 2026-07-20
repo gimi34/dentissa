@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dentissa · @yield('title', 'Dashboard')</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body>
@@ -175,9 +175,18 @@
 
     <div class="content">
         @if(session('success'))
-            <div style="background:var(--green-bg);color:var(--green);padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;border:1px solid #9fe1cb;">
+            <div id="flash-success" style="background:var(--green-bg);color:var(--green);padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;border:1px solid #9fe1cb;transition:opacity .5s ease;">
                 {{ session('success') }}
             </div>
+            <script>
+                setTimeout(() => {
+                    const el = document.getElementById('flash-success');
+                    if (el) {
+                        el.style.opacity = '0';
+                        setTimeout(() => el.remove(), 500);
+                    }
+                }, 4000);
+            </script>
         @endif
         @if(session('error'))
             <div style="background:var(--red-bg);color:var(--red);padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;border:1px solid #f7c1c1;">
