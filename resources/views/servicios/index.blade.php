@@ -49,19 +49,35 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 35%;">Nombre</th>
-                        <th style="width: 50%;">Descripción</th>
-                        <th style="width: 15%; text-align:right">Acciones</th>
+                        <th style="width: 25%; text-align:center;">Nombre</th>
+                        <th style="width: 35%; text-align:center;">Descripción</th>
+                        <th style="width: 15%; text-align:center;">Categoría</th>
+                        <th style="width: 10%; text-align:center;">Duración</th>
+                        <th style="width: 5%; text-align:center;">Estado</th>
+                        <th style="width: 10%; text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($servicios as $servicio)
                     <tr>
-                        <td>
+                        <td style="text-align:center;">
                             <div style="font-weight:500">{{ $servicio->nombre }}</div>
                         </td>
-                        <td style="color:var(--text-muted);font-size:13px">
+                        <td style="color:var(--text-muted); font-size:13px; text-align:center;">
                             {{ $servicio->descripcion }}
+                        </td>
+                        <td style="text-align:center; font-weight:500;">
+                            {{ $servicio->categoria }}
+                        </td>
+                        <td style="text-align:center; color:var(--text-muted); font-size:13px;">
+                            {{ $servicio->duracion_min }} min
+                        </td>
+                        <td style="text-align:center;">
+                            @if($servicio->activo)
+                                <span style="color:var(--green); font-size:12px; font-weight:bold;">Activo</span>
+                            @else
+                                <span style="color:var(--red); font-size:12px; font-weight:bold;">Inactivo</span>
+                            @endif
                         </td>
                         <td>
                             <div style="display:flex;gap:4px;justify-content:flex-end">
@@ -89,6 +105,7 @@
             </table>
         </div>
     @else
+    <!-- Resto del empty-state igual... -->
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -106,8 +123,9 @@
     <div class="modal-box card">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
             <div style="width:36px; height:36px; border-radius:50%; background:var(--red-bg); display:flex; align-items:center; justify-content:center; color:var(--red);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; height:20px;">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="15"></line>
+                    <line x1="12" y1="19" x2="12.01" y2="19"></line>
                 </svg>
             </div>
             <div style="font-size:16px; font-weight:600; color:var(--text);">Confirmar eliminación</div>

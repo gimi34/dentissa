@@ -4,67 +4,69 @@ namespace App\Http\Controllers;
 
 use App\Models\Servicio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ServiciosController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Servicio::query();
-
-        if ($request->filled('buscar')) {
-            $query->where('nombre', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('descripcion', 'like', '%' . $request->buscar . '%');
-        }
-
-        $servicios = $query->get();
+        $servicios = Servicio::all();
         return view('servicios.index', compact('servicios'));
     }
 
     public function create()
     {
-        return view('servicios.create');
+        $categorias = Servicio::whereNotNull('categoria')->distinct()->pluck('categoria');
+        return view('servicios.create', compact('categorias'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
+            'nombre' => 'required|string',
+            'categoria' => 'required|string',
+            'duracion_min' => 'required|integer',
         ]);
 
         $data = $request->all();
-        $data['precio'] = 0; // Valor por defecto oculto para evitar errores en BD
+        $data['id'] = (string) Str::uuid();
+        $data['precio'] = 0;
+        $data['color_agenda'] = '#F4C0D1'; // Valor por defecto oculto
+        $data['activo'] = 1;
+        $data['creado_en'] = now();
 
         Servicio::create($data);
-        return redirect()->route('admin.servicios.index')->with('success', 'Servicio registrado correctamente.');
+        return redirect()->route('admin.servicios.index');
     }
 
     public function edit($id)
     {
         $servicio = Servicio::findOrFail($id);
-        return view('servicios.edit', compact('servicio'));
+        $categorias = Servicio::whereNotNull('categoria')->distinct()->pluck('categoria');
+        return view('servicios.edit', compact('servicio', 'categorias'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
+            'nombre' => 'required|string',
+            'categoria' => 'required|string',
+            'duracion_min' => 'required|integer',
         ]);
 
         $data = $request->all();
-        $data['precio'] = 0; // Valor por defecto oculto
+        $data['precio'] = 0;
+        $data['activo'] = $request->has('activo') ? 1 : 0;
 
         $servicio = Servicio::findOrFail($id);
         $servicio->update($data);
         
-        return redirect()->route('admin.servicios.index')->with('success', 'Servicio actualizado correctamente.');
+        return redirect()->route('admin.servicios.index');
     }
 
     public function destroy($id)
     {
-        $servicio = Servicio::findOrFail($id);
-        $servicio->delete();
-        return redirect()->route('admin.servicios.index')->with('success', 'Servicio eliminado correctamente.');
+        Servicio::findOrFail($id)->delete();
+        return redirect()->route('admin.servicios.index');
     }
 }
