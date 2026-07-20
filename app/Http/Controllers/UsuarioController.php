@@ -42,6 +42,15 @@ class UsuarioController extends Controller
         return view('usuarios.index', compact('usuarios', 'totales'));
     }
 
+    public function show($id)
+    {
+        // Buscamos al usuario por su ID
+        $usuario = Usuario::findOrFail($id);
+        
+        // Retornamos la nueva vista pasándole los datos
+        return view('usuarios.show', compact('usuario'));
+    }
+
     public function create()
     {
         // Solo devuelve la vista vacía, sin mandarle ninguna variable $usuario

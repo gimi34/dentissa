@@ -60,17 +60,28 @@
                 <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
                     Rol y acceso al sistema
                 </div>
-                
+            
+
                 <div class="grid-2" style="margin-bottom:14px">
-                    <div class="field-group">
-                        <label class="field-label">Rol Asignado</label>
-                        <select name="rol" class="field">
-                            <option value="admin" {{ old('rol', $usuario->rol ?? '') === 'admin' ? 'selected' : '' }}>Administrador</option>
-                            <option value="dentista" {{ old('rol', $usuario->rol ?? '') === 'dentista' ? 'selected' : '' }}>Dentista</option>
-                            <option value="cliente" {{ old('rol', $usuario->rol ?? '') === 'cliente' ? 'selected' : '' }}>Paciente / Cliente</option>
-                        </select>
-                    </div>
                     
+                    {{-- Y si si no es paciente se muestra el selector --}}
+                    @if(!isset($usuario) || $usuario->rol !== 'cliente')
+                        <div class="field-group">
+                            <label class="field-label">Rol Asignado</label>
+                            <select name="rol" class="field">
+                                <option value="admin" {{ old('rol', $usuario->rol ?? '') === 'admin' ? 'selected' : '' }}>Administrador</option>
+                                <option value="dentista" {{ old('rol', $usuario->rol ?? '') === 'dentista' ? 'selected' : '' }}>Dentista</option>
+                                <option value="cliente" {{ old('rol', $usuario->rol ?? '') === 'cliente' ? 'selected' : '' }}>Paciente / Cliente</option>
+                            </select>
+                        </div>
+                    @endif
+
+                    {{-- Y si si es paciente no se muestra el selector --}}
+                @if(isset($usuario) && $usuario->rol === 'cliente')
+                    <input type="hidden" name="rol" value="cliente">
+                @endif
+                    
+                    {{-- Estado de la cuenta --}}
                     <div class="field-group">
                         <label class="field-label">Estado de la cuenta</label>
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-top:8px;">
@@ -80,6 +91,7 @@
                             <span style="font-size:13.5px; color:var(--text);">Usuario activo en el sistema</span>
                         </label>
                     </div>
+
                 </div>
             </div>
 

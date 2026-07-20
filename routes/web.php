@@ -80,6 +80,8 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 
     Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
 
+    Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])->name('usuarios.show');
+
     Route::get('/usuarios/crear', [UsuarioController::class, 'create'])->name('usuarios.create');
     Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
         
