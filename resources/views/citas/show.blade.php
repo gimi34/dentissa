@@ -1,8 +1,12 @@
 @extends('layouts.app')
 @section('title', 'Detalle de cita')
 
+@php
+    $rp = auth()->user()->rol === 'dentista' ? 'dentista' : 'admin';
+@endphp
+
 @section('topbar-actions')
-    @if($cita->estado !== 'cancelada' && $cita->estado !== 'completada')
+    @if($rp === 'admin' && $cita->estado !== 'cancelada' && $cita->estado !== 'completada')
         <form action="{{ route('admin.citas.destroy', $cita->id) }}" method="POST" style="display:inline">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-ghost"
@@ -18,7 +22,7 @@
 
 {{-- Breadcrumb --}}
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route('admin.citas') }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
+    <a href="{{ route("$rp.citas") }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
     <span>›</span>
     <span style="color:var(--text)">{{ $cita->paciente }}</span>
 </div>
@@ -78,6 +82,7 @@
         </div>
 
         {{-- ── Control interno ───────────────────────────────────────── --}}
+        @if($rp === 'admin')
         <div class="card" style="border-left:3px solid var(--p400)" id="control-interno">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p400)" stroke-width="2">
@@ -98,6 +103,7 @@
                 <button type="submit" class="btn btn-outline btn-sm">Guardar notas</button>
             </form>
         </div>
+        @endif
 
         {{-- Historial de cambios --}}
         <div>
@@ -151,7 +157,7 @@
         <div id="estado">
             <div class="section-head"><span class="section-title">Cambiar estado</span></div>
             <div class="card">
-                <form action="{{ route('admin.citas.estado', $cita->id) }}" method="POST">
+                <form action="{{ route("$rp.citas.estado", $cita->id) }}" method="POST">
                     @csrf @method('PATCH')
 
                     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
@@ -204,20 +210,22 @@
 
         {{-- Acciones rápidas --}}
         <div style="display:flex;flex-direction:column;gap:8px">
-            <a href="{{ route('admin.pacientes.show', $cita->paciente_id) }}"
+            <a href="{{ route("$rp.pacientes.show", $cita->paciente_id) }}"
                class="btn btn-outline" style="justify-content:center">
                Ver expediente del paciente
             </a>
-            <a href="{{ route('admin.citas.create', ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
-               class="btn btn-ghost" style="justify-content:center">
-               Reagendar / Nueva cita
-            </a>
+            @if($rp === 'admin')
+                <a href="{{ route('admin.citas.create', ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
+                   class="btn btn-ghost" style="justify-content:center">
+                   Reagendar / Nueva cita
+                </a>
+            @endif
         </div>
 
     </div>
 </div>
 
 @push('styles')
-<link href="{{ asset('css/citas.css') }}" rel="stylesheet">
+<link href="{{ asset('css/citas.css') }}?v={{ filemtime(public_path('css/citas.css')) }}" rel="stylesheet">
 @endpush
 @endsection

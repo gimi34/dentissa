@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dentissa · Crear cuenta</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/auth.css') }}?v={{ filemtime(public_path('css/auth.css')) }}" rel="stylesheet">
 </head>
 <body class="page-register">
 
@@ -42,10 +42,6 @@
                 <div class="step-num">2</div>
                 <span class="step-label">Datos de contacto</span>
             </div>
-            <div class="step-preview" id="prev-3">
-                <div class="step-num">3</div>
-                <span class="step-label">Información médica</span>
-            </div>
         </div>
     </div>
 </div>
@@ -57,7 +53,7 @@
 
             <!-- Barra de progreso -->
             <div class="progress-bar-wrap">
-                <div class="progress-bar" id="progress-bar" style="width:33%"></div>
+                <div class="progress-bar" id="progress-bar" style="width:50%"></div>
             </div>
 
             @if($errors->any())
@@ -73,13 +69,29 @@
                 </div>
             @endif
 
+            <a href="{{ route('auth.google') }}" class="btn-google" style="margin-bottom:18px">
+                <svg width="18" height="18" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                    <path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                </svg>
+                Registrarme con Google
+            </a>
+
+            <div class="divider" style="display:flex;align-items:center;gap:12px;margin-bottom:18px;color:var(--border)">
+                <span style="flex:1;height:1px;background:var(--border)"></span>
+                <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">o completa el formulario</span>
+                <span style="flex:1;height:1px;background:var(--border)"></span>
+            </div>
+
             <form method="POST" action="/registro" id="register-form">
                 @csrf
 
                 {{-- ── PASO 1: Datos personales ─────────────────── --}}
                 <div class="step active" id="step-1">
                     <div class="form-header">
-                        <div class="step-indicator">Paso 1 de 3</div>
+                        <div class="step-indicator">Paso 1 de 2</div>
                         <h2 class="form-title">¿Cómo te llamas?</h2>
                         <p class="form-subtitle">Necesitamos tu nombre para identificar tu cuenta</p>
                     </div>
@@ -193,7 +205,7 @@
                 {{-- ── PASO 2: Contacto ─────────────────────────── --}}
                 <div class="step" id="step-2">
                     <div class="form-header">
-                        <div class="step-indicator">Paso 2 de 3</div>
+                        <div class="step-indicator">Paso 2 de 2</div>
                         <h2 class="form-title">¿Cómo contactarte?</h2>
                         <p class="form-subtitle">Para recordatorios y confirmaciones de citas</p>
                     </div>
@@ -269,108 +281,6 @@
                         </div>
                     </div>
 
-                    <div class="form-nav">
-                        <button type="button" class="btn-back" onclick="goTo(1)">← Atrás</button>
-                        <button type="button" class="btn-next" onclick="nextStep(3)">
-                            Continuar
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                {{-- ── PASO 3: Info médica ──────────────────────── --}}
-                <div class="step" id="step-3">
-                    <div class="form-header">
-                        <div class="step-indicator">Paso 3 de 3</div>
-                        <h2 class="form-title">Información médica</h2>
-                        <p class="form-subtitle">Opcional, pero nos ayuda a atenderte mejor</p>
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label">Tipo de sangre</label>
-                        <input type="hidden" id="tipo_sangre" name="tipo_sangre" value="{{ old('tipo_sangre') }}">
-                        <div class="blood-chips">
-                            @foreach(['A+','A-','B+','B-','AB+','AB-','O+','O-'] as $ts)
-                                <div class="blood-chip {{ old('tipo_sangre') === $ts ? 'selected' : '' }}"
-                                     onclick="selectBlood('{{ $ts }}')">{{ $ts }}</div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label" for="alergias">Alergias conocidas</label>
-                        <div class="field-wrap">
-                            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="top:12px;transform:none">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                <line x1="12" y1="9" x2="12" y2="13"/>
-                                <line x1="12" y1="17" x2="12.01" y2="17"/>
-                            </svg>
-                            <textarea id="alergias" name="alergias"
-                                class="field" rows="2" style="resize:none;padding-top:10px"
-                                placeholder="Ej: Penicilina, látex, anestesia...">{{ old('alergias') }}</textarea>
-                        </div>
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label" for="enfermedades_cronicas">Enfermedades crónicas</label>
-                        <div class="field-wrap">
-                            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="top:12px;transform:none">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                            </svg>
-                            <textarea id="enfermedades_cronicas" name="enfermedades_cronicas"
-                                class="field" rows="2" style="resize:none;padding-top:10px"
-                                placeholder="Ej: Diabetes, hipertensión, cardiopatía...">{{ old('enfermedades_cronicas') }}</textarea>
-                        </div>
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label" for="medicamentos_actuales">Medicamentos actuales</label>
-                        <div class="field-wrap">
-                            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/>
-                                <circle cx="18" cy="18" r="4"/>
-                                <path d="m15.5 15.5 5 5"/>
-                            </svg>
-                            <input type="text" id="medicamentos_actuales" name="medicamentos_actuales"
-                                class="field" value="{{ old('medicamentos_actuales') }}"
-                                placeholder="Ej: Metformina 500mg, Losartán 50mg...">
-                        </div>
-                    </div>
-
-                    <!-- Contacto de emergencia -->
-                    <div style="padding:14px 16px;background:var(--p50);border-radius:10px;border:1px solid var(--border);margin-bottom:16px">
-                        <div style="font-size:12.5px;font-weight:500;color:var(--text-muted);margin-bottom:12px">
-                            Contacto de emergencia (opcional)
-                        </div>
-                        <div class="grid-2">
-                            <div class="field-group" style="margin-bottom:0">
-                                <label class="field-label" for="contacto_emergencia">Nombre</label>
-                                <div class="field-wrap">
-                                    <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                    <input type="text" id="contacto_emergencia" name="contacto_emergencia"
-                                        class="field" value="{{ old('contacto_emergencia') }}"
-                                        placeholder="Nombre completo">
-                                </div>
-                            </div>
-                            <div class="field-group" style="margin-bottom:0">
-                                <label class="field-label" for="telefono_emergencia">Teléfono</label>
-                                <div class="field-wrap">
-                                    <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 5.59 5.59l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
-                                    </svg>
-                                    <input type="tel" id="telefono_emergencia" name="telefono_emergencia"
-                                        class="field" value="{{ old('telefono_emergencia') }}"
-                                        placeholder="55 1234 5678">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Términos -->
                     <div class="field-group">
                         <label class="checkbox-label">
@@ -381,7 +291,7 @@
                     </div>
 
                     <div class="form-nav">
-                        <button type="button" class="btn-back" onclick="goTo(2)">← Atrás</button>
+                        <button type="button" class="btn-back" onclick="goTo(1)">← Atrás</button>
                         <button type="submit" class="btn-submit">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="20 6 9 17 4 12"/>
@@ -402,8 +312,8 @@
 
 <script>
 let currentStep = 1;
-const totalSteps = 3;
-const progress = [33, 66, 100];
+const totalSteps = 2;
+const progress = [50, 100];
 
 // Si hay errores de servidor, ir al paso correcto
 @if($errors->has('nombre') || $errors->has('apellido') || $errors->has('email') || $errors->has('password'))
@@ -491,13 +401,6 @@ function checkStrength(val) {
 function togglePass(id) {
     const input = document.getElementById(id);
     input.type = input.type === 'password' ? 'text' : 'password';
-}
-
-// Tipo de sangre
-function selectBlood(val) {
-    document.querySelectorAll('.blood-chip').forEach(c => c.classList.remove('selected'));
-    event.target.classList.add('selected');
-    document.getElementById('tipo_sangre').value = val;
 }
 
 // Inicializar con el paso correcto si hay errores

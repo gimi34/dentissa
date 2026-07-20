@@ -1,13 +1,19 @@
 @extends('layouts.app')
 @section('title', 'Citas')
 
+@php
+    $rp = auth()->user()->rol === 'dentista' ? 'dentista' : 'admin';
+@endphp
+
 @section('topbar-actions')
-    <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Nueva cita
-    </a>
+    @if($rp === 'admin')
+        <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nueva cita
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -37,7 +43,7 @@
 
 {{-- Filtros ────────────────────────────────────────────────────────────── --}}
 <div class="card" style="margin-bottom:20px;padding:16px 20px">
-    <form method="GET" action="{{ route('admin.citas') }}" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+    <form method="GET" action="{{ route("$rp.citas") }}" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
 
         <div style="flex:1;min-width:180px">
             <label class="field-label">Buscar paciente / dentista</label>
@@ -80,13 +86,13 @@
         </div>
 
         <button type="submit" class="btn btn-primary" style="margin-top:0">Filtrar</button>
-        <a href="{{ route('admin.citas') }}" class="btn btn-ghost">Limpiar</a>
+        <a href="{{ route("$rp.citas") }}" class="btn btn-ghost">Limpiar</a>
 
         {{-- Acceso rápido a semanas --}}
         <div style="margin-left:auto;display:flex;gap:6px">
-            <a href="{{ route('admin.citas', ['fecha_desde'=>now()->startOfWeek()->format('Y-m-d'),'fecha_hasta'=>now()->endOfWeek()->format('Y-m-d')]) }}"
+            <a href="{{ route("$rp.citas", ['fecha_desde'=>now()->startOfWeek()->format('Y-m-d'),'fecha_hasta'=>now()->endOfWeek()->format('Y-m-d')]) }}"
                class="btn btn-outline btn-sm">Esta semana</a>
-            <a href="{{ route('admin.citas', ['fecha_desde'=>now()->format('Y-m-d'),'fecha_hasta'=>now()->format('Y-m-d')]) }}"
+            <a href="{{ route("$rp.citas", ['fecha_desde'=>now()->format('Y-m-d'),'fecha_hasta'=>now()->format('Y-m-d')]) }}"
                class="btn {{ !request()->has('fecha_desde') ? 'btn-primary' : 'btn-outline' }} btn-sm">Hoy</a>
         </div>
     </form>
@@ -152,7 +158,7 @@
 
                         <td>
                             <div style="display:flex;gap:4px;justify-content:flex-end">
-                                <a href="{{ route('admin.citas.show', $cita->id) }}"
+                                <a href="{{ route("$rp.citas.show", $cita->id) }}"
                                    class="btn btn-ghost btn-sm" title="Ver detalle">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -160,7 +166,7 @@
                                     </svg>
                                 </a>
                                 @if($cita->estado !== 'completada' && $cita->estado !== 'cancelada')
-                                    <a href="{{ route('admin.citas.show', $cita->id) }}#estado"
+                                    <a href="{{ route("$rp.citas.show", $cita->id) }}#estado"
                                        class="btn btn-outline btn-sm" title="Cambiar estado">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="9 11 12 14 22 4"/>
@@ -203,15 +209,17 @@
                 <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
             </svg>
             <p>No se encontraron citas con los filtros aplicados</p>
-            <a href="{{ route('admin.citas.create') }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
-                Agendar primera cita
-            </a>
+            @if($rp === 'admin')
+                <a href="{{ route('admin.citas.create') }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
+                    Agendar primera cita
+                </a>
+            @endif
         </div>
     @endif
 </div>
 
 @push('styles')
-<link href="{{ asset('css/citas.css') }}" rel="stylesheet">
+<link href="{{ asset('css/citas.css') }}?v={{ filemtime(public_path('css/citas.css')) }}" rel="stylesheet">
 @endpush
 
 @endsection

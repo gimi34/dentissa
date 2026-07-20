@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CitasController;
 use App\Http\Controllers\PacientesController;
@@ -8,6 +9,8 @@ use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ServiciosController;
+use App\Http\Controllers\ClienteCitasController;
+use App\Http\Controllers\PerfilController;
 
 
 // ── Auth ────────────────────────────────────────────────────────────────
@@ -16,6 +19,12 @@ Route::post('/login',   [AuthController::class,  'login']);
 Route::post('/logout',  [AuthController::class,  'logout'])->name('logout');
 Route::get ('/registro',[App\Http\Controllers\RegisterController::class, 'showForm'])->name('register');
 Route::post('/registro',[App\Http\Controllers\RegisterController::class, 'register']);
+
+Route::get ('/registro/contacto',[App\Http\Controllers\RegisterController::class, 'contactoForm'] )->name('register.contacto');
+Route::post('/registro/contacto',[App\Http\Controllers\RegisterController::class, 'contactoStore']);
+
+Route::get('/auth/google',          [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 
 // ── Raíz ────────────────────────────────────────────────────────────────
@@ -101,6 +110,7 @@ Route::middleware(['auth','role:dentista'])->prefix('dentista')->name('dentista.
     Route::get('/pacientes',      [PacientesController::class, 'index'])->name('pacientes');
     Route::get('/pacientes/{id}', [PacientesController::class, 'show'] )->name('pacientes.show');
 
+    Route::get ('/expedientes',       [ExpedientesController::class, 'index'] )->name('expedientes');
     Route::get ('/expedientes/crear', [ExpedientesController::class, 'create'])->name('expedientes.create');
     Route::post('/expedientes',       [ExpedientesController::class, 'store'] )->name('expedientes.store');
     Route::get ('/expedientes/{id}',  [ExpedientesController::class, 'show']  )->name('expedientes.show');
@@ -124,10 +134,16 @@ Route::middleware(['auth','role:asistente'])->prefix('asistente')->name('asisten
 
 // ── Cliente ─────────────────────────────────────────────────────────────
 Route::middleware('auth')->prefix('cliente')->name('cliente.')->group(function () {
-    Route::get  ('/',                    [DashboardController::class, 'cliente'])->name('dashboard');
-    Route::get  ('/citas',               fn() => view('placeholder', ['titulo' => 'Mis Citas'])      )->name('citas');
-    Route::get  ('/citas/{id}',          fn() => view('placeholder', ['titulo' => 'Detalle de Cita']))->name('citas.show');
-    Route::patch('/citas/{id}/cancelar', fn($id) => redirect()->back()                               )->name('citas.cancelar');
-    Route::get  ('/agendar',             fn() => view('placeholder', ['titulo' => 'Agendar Cita'])   )->name('agendar');
-    Route::get  ('/perfil',              fn() => view('placeholder', ['titulo' => 'Mi Perfil'])       )->name('perfil');
+    Route::get  ('/',                    [DashboardController::class, 'cliente']        )->name('dashboard');
+
+    Route::get  ('/citas',               [ClienteCitasController::class, 'index']       )->name('citas');
+    Route::get  ('/citas/{id}',          [ClienteCitasController::class, 'show']        )->name('citas.show');
+    Route::patch('/citas/{id}/cancelar', [ClienteCitasController::class, 'cancelar']    )->name('citas.cancelar');
+
+    Route::get  ('/agendar',             [ClienteCitasController::class, 'agendarForm'] )->name('agendar');
+    Route::post ('/agendar',             [ClienteCitasController::class, 'agendarStore'])->name('agendar.store');
+
+    Route::get  ('/perfil',              [PerfilController::class, 'edit']              )->name('perfil');
+    Route::put  ('/perfil',              [PerfilController::class, 'update']            )->name('perfil.update');
+    Route::put  ('/perfil/password',     [PerfilController::class, 'updatePassword']    )->name('perfil.password');
 });

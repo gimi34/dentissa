@@ -311,6 +311,27 @@ body {
 }
 .page-login .register-link a:hover { text-decoration: underline; }
 
+.btn-google {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .2s, box-shadow .2s;
+}
+.btn-google:hover { background: #FAFAFA; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.btn-google svg { flex-shrink: 0; }
+
 .page-login .alert {
     padding: 12px 14px;
     border-radius: 8px;
