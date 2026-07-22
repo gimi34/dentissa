@@ -3,11 +3,11 @@
 
 @section('topbar-actions')
     <a href="/dentista/citas" class="btn btn-outline btn-sm">Ver agenda completa</a>
-    <a href="/dentista/pacientes" class="btn btn-primary" title="Elige un paciente para crear su expediente">
+    <a href="/dentista/citas/crear" class="btn btn-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Nuevo expediente
+        Nueva cita
     </a>
 @endsection
 
@@ -16,7 +16,7 @@
 {{-- Bienvenida --}}
 <div class="welcome-banner" style="margin-bottom:22px">
     <div style="z-index:1">
-        <div class="welcome-title">Buen día, Dr. {{ auth()->user()->nombre }} 🦷</div>
+        <div class="welcome-title">Buen día, Dr. {{ auth()->user()->nombre }}</div>
         <div class="welcome-sub">{{ now()->locale('es')->isoFormat('dddd, D [de] MMMM') }} · {{ $citasHoy ?? 0 }} {{ ($citasHoy ?? 0) == 1 ? 'cita programada' : 'citas programadas' }} hoy</div>
     </div>
     <div class="welcome-actions">
@@ -161,6 +161,12 @@
         <div>
             <div class="section-head"><span class="section-title">Acciones</span></div>
             <div class="quick-actions">
+                <a href="/dentista/citas/crear" class="quick-action">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                    </svg>
+                    <span>Nueva cita</span>
+                </a>
                 <a href="/dentista/pacientes" class="quick-action">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>

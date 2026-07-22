@@ -39,10 +39,53 @@ class CitasController extends Controller
             );
     }
 
+    // ── Alcance por rol ────────────────────────────────────────────────
+    private function personalIdPropio(): ?string
+    {
+        return DB::table('personal')->where('usuario_id', auth()->id())->value('id');
+    }
+
+    private function dentistaIdsAsistente(): array
+    {
+        $personalId = $this->personalIdPropio();
+        if (!$personalId) return [];
+
+        return DB::table('asistente_dentista')
+            ->where('asistente_id', $personalId)
+            ->pluck('dentista_id')
+            ->all();
+    }
+
+    // Aplica la restricción de citas visibles según el rol autenticado
+    private function aplicarAlcanceRol($query)
+    {
+        $rol = auth()->user()->rol;
+
+        if ($rol === 'dentista') {
+            $query->where('citas.dentista_id', $this->personalIdPropio());
+        } elseif ($rol === 'asistente') {
+            $query->whereIn('citas.dentista_id', $this->dentistaIdsAsistente());
+        }
+
+        return $query;
+    }
+
+    // ¿Puede el usuario autenticado ver/gestionar esta cita?
+    private function autorizadoParaCita(string $dentistaId): bool
+    {
+        $rol = auth()->user()->rol;
+
+        if ($rol === 'admin') return true;
+        if ($rol === 'dentista') return $dentistaId === $this->personalIdPropio();
+        if ($rol === 'asistente') return in_array($dentistaId, $this->dentistaIdsAsistente());
+
+        return false;
+    }
+
     // ── INDEX ──────────────────────────────────────────────────────────
     public function index(Request $request)
     {
-        $query = $this->queryBase();
+        $query = $this->aplicarAlcanceRol($this->queryBase());
 
         // Filtros de fecha / dentista / búsqueda (aplican tanto a la tabla como al resumen)
         if ($request->filled('fecha_desde')) {
@@ -87,14 +130,19 @@ class CitasController extends Controller
 
         $citas = $query->orderBy('citas.fecha_hora')->paginate(25)->withQueryString();
 
-        // Datos para filtros del formulario
-        $dentistas = DB::table('personal')
+        // Datos para filtros del formulario (respetando el alcance del rol)
+        $dentistasQuery = DB::table('personal')
             ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
             ->where('personal.tipo', 'dentista')
             ->where('usuarios.activo', 1)
             ->select('personal.id', DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre"))
-            ->orderBy('usuarios.nombre')
-            ->get();
+            ->orderBy('usuarios.nombre');
+
+        if (auth()->user()->rol === 'asistente') {
+            $dentistasQuery->whereIn('personal.id', $this->dentistaIdsAsistente());
+        }
+
+        $dentistas = $dentistasQuery->get();
 
         return view('citas.index', compact('citas', 'dentistas', 'resumenHoy'));
     }
@@ -109,23 +157,62 @@ class CitasController extends Controller
             ->orderBy('usuarios.nombre')
             ->get();
 
-        $dentistas = DB::table('personal')
+        $dentistasQuery = DB::table('personal')
             ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
             ->where('personal.tipo', 'dentista')
             ->where('usuarios.activo', 1)
             ->select('personal.id', DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre"))
-            ->orderBy('usuarios.nombre')
-            ->get();
+            ->orderBy('usuarios.nombre');
+
+        $rol = auth()->user()->rol;
+        if ($rol === 'dentista') {
+            $dentistasQuery->where('personal.id', $this->personalIdPropio());
+        } elseif ($rol === 'asistente') {
+            $dentistasQuery->whereIn('personal.id', $this->dentistaIdsAsistente());
+        }
+
+        $dentistas = $dentistasQuery->get();
 
         $servicios = DB::table('servicios')
             ->where('activo', 1)
             ->orderBy('categoria')->orderBy('nombre')
             ->get();
 
-        $fechaSugerida = $request->get('fecha', now()->addDay()->format('Y-m-d'));
+        // Preselección al venir desde el perfil de un paciente
+        $pacienteSeleccionado = $request->get('paciente_id');
+        $dentistaSeleccionado = $request->get('dentista');
+
+        $fechaSugerida = $request->get('fecha');
+
+        if ($pacienteSeleccionado) {
+            // Si el paciente tiene doctor asignado, preseleccionarlo
+            if (!$dentistaSeleccionado) {
+                $dentistaSeleccionado = DB::table('pacientes')
+                    ->where('id', $pacienteSeleccionado)
+                    ->value('dentista_id');
+            }
+
+            // Sugerir la fecha de próxima visita registrada en su expediente más reciente
+            if (!$fechaSugerida) {
+                $proximaVisita = DB::table('expedientes')
+                    ->where('paciente_id', $pacienteSeleccionado)
+                    ->whereNotNull('proxima_visita')
+                    ->orderByDesc('creado_en')
+                    ->value('proxima_visita');
+
+                if ($proximaVisita && Carbon::parse($proximaVisita)->isFuture()) {
+                    $fechaSugerida = Carbon::parse($proximaVisita)->format('Y-m-d');
+                }
+            }
+        }
+
+        $fechaSugerida = $fechaSugerida ?: now()->addDay()->format('Y-m-d');
         $horaSugerida  = $request->get('hora', '09:00');
 
-        return view('citas.create', compact('pacientes', 'dentistas', 'servicios', 'fechaSugerida', 'horaSugerida'));
+        return view('citas.create', compact(
+            'pacientes', 'dentistas', 'servicios', 'fechaSugerida', 'horaSugerida',
+            'pacienteSeleccionado', 'dentistaSeleccionado'
+        ));
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
@@ -141,6 +228,10 @@ class CitasController extends Controller
             'notas_paciente'  => 'nullable|string|max:1000',
             'notas_internas'  => 'nullable|string|max:1000',
         ]);
+
+        if (!$this->autorizadoParaCita($data['dentista_id'])) {
+            abort(403);
+        }
 
 $fechaHora = Carbon::parse($data['fecha'] . ' ' . $data['hora']);
 
@@ -203,7 +294,13 @@ $conflicto = DB::table('citas')
             'actualizado_en' => now(),
         ]);
 
-        return redirect()->route('admin.citas', [
+        $base = match(auth()->user()->rol) {
+            'dentista'  => 'dentista',
+            'asistente' => 'asistente',
+            default     => 'admin',
+        };
+
+        return redirect()->route("$base.citas", [
     'fecha_desde' => $fechaHora->format('Y-m-d'),
     'fecha_hasta' => $fechaHora->format('Y-m-d'),
 ])->with('success', 'Cita agendada correctamente.');
@@ -215,6 +312,7 @@ $conflicto = DB::table('citas')
         $cita = $this->queryBase()->where('citas.id', $id)->first();
 
         if (!$cita) abort(404);
+        if (!$this->autorizadoParaCita($cita->dentista_id)) abort(403);
 
         $historial = DB::table('historial_citas')
             ->leftJoin('usuarios', 'historial_citas.cambiado_por', '=', 'usuarios.id')
@@ -234,6 +332,10 @@ $conflicto = DB::table('citas')
     // ── UPDATE ESTADO ──────────────────────────────────────────────────
     public function updateEstado(Request $request, string $id)
     {
+        $dentistaId = DB::table('citas')->where('id', $id)->value('dentista_id');
+        if (!$dentistaId) abort(404);
+        if (!$this->autorizadoParaCita($dentistaId)) abort(403);
+
         $data = $request->validate([
             'estado'          => 'required|in:agendada,confirmada,en_curso,completada,cancelada,no_asistio',
             'motivo'          => 'nullable|string|max:500',

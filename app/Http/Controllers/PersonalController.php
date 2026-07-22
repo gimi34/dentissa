@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class PersonalController extends Controller
 {
@@ -60,7 +61,9 @@ class PersonalController extends Controller
     // ── CREATE ─────────────────────────────────────────────────────────
     public function create()
     {
-        return view('personal.create');
+        $dentistas = $this->dentistasDisponibles();
+
+        return view('personal.create', compact('dentistas'));
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
@@ -78,6 +81,8 @@ class PersonalController extends Controller
             'universidad'      => 'nullable|string|max:150',
             'anios_experiencia'=> 'nullable|integer|min:0|max:60',
             'biografia'        => 'nullable|string|max:1000',
+            'dentistas'        => 'nullable|array',
+            'dentistas.*'      => 'exists:personal,id',
         ], [
             'email.unique' => 'Este correo ya está registrado.',
             'tipo.required'=> 'Selecciona el tipo de personal.',
@@ -109,8 +114,10 @@ class PersonalController extends Controller
                 'actualizado_en' => now(),
             ]);
 
+            $personalId = (string) Str::uuid();
+
             DB::table('personal')->insert([
-                'id'                => (string) Str::uuid(),
+                'id'                => $personalId,
                 'usuario_id'        => $usuarioId,
                 'tipo'              => $data['tipo'],
                 'especialidad'      => $data['especialidad'] ?? null,
@@ -120,6 +127,10 @@ class PersonalController extends Controller
                 'biografia'         => $data['biografia'] ?? null,
                 'creado_en'         => now(),
             ]);
+
+            if ($data['tipo'] === 'asistente') {
+                $this->sincronizarDoctoresAsignados($personalId, $data['dentistas'] ?? []);
+            }
         });
 
         if ($passwordGenerada) {
@@ -169,6 +180,10 @@ class PersonalController extends Controller
         $totalCitas     = 0;
         $citasEsteMes   = 0;
 
+        // Doctores que auxilia (solo para asistentes) / Asistentes a cargo (solo para dentistas)
+        $doctoresAsignados  = collect();
+        $asistentesAsignados = collect();
+
         if ($miembro->tipo === 'dentista') {
             $citasRecientes = DB::table('citas')
                 ->join('pacientes', 'citas.paciente_id', '=', 'pacientes.id')
@@ -190,11 +205,32 @@ class PersonalController extends Controller
                 ->whereMonth('fecha_hora', now()->month)
                 ->whereYear('fecha_hora', now()->year)
                 ->count();
+
+            $asistentesAsignados = DB::table('asistente_dentista')
+                ->join('personal', 'asistente_dentista.asistente_id', '=', 'personal.id')
+                ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+                ->where('asistente_dentista.dentista_id', $id)
+                ->select('personal.id', 'usuarios.nombre', 'usuarios.apellido', 'usuarios.activo',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
+                ->orderBy('usuarios.nombre')
+                ->get();
+        }
+
+        if ($miembro->tipo === 'asistente') {
+            $doctoresAsignados = DB::table('asistente_dentista')
+                ->join('personal', 'asistente_dentista.dentista_id', '=', 'personal.id')
+                ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+                ->where('asistente_dentista.asistente_id', $id)
+                ->select('personal.id', 'personal.especialidad', 'usuarios.nombre', 'usuarios.apellido', 'usuarios.activo',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
+                ->orderBy('usuarios.nombre')
+                ->get();
         }
 
         return view('personal.show', compact(
             'miembro', 'horarios', 'dias',
-            'citasRecientes', 'totalCitas', 'citasEsteMes'
+            'citasRecientes', 'totalCitas', 'citasEsteMes',
+            'doctoresAsignados', 'asistentesAsignados'
         ));
     }
 
@@ -210,7 +246,14 @@ class PersonalController extends Controller
 
         if (!$miembro) abort(404);
 
-        return view('personal.edit', compact('miembro'));
+        $dentistas = $this->dentistasDisponibles();
+
+        $dentistasAsignados = DB::table('asistente_dentista')
+            ->where('asistente_id', $id)
+            ->pluck('dentista_id')
+            ->all();
+
+        return view('personal.edit', compact('miembro', 'dentistas', 'dentistasAsignados'));
     }
 
     // ── UPDATE ─────────────────────────────────────────────────────────
@@ -230,6 +273,8 @@ class PersonalController extends Controller
             'universidad'      => 'nullable|string|max:150',
             'anios_experiencia'=> 'nullable|integer|min:0|max:60',
             'biografia'        => 'nullable|string|max:1000',
+            'dentistas'        => 'nullable|array',
+            'dentistas.*'      => 'exists:personal,id',
         ]);
 
         $rol = match($data['tipo']) {
@@ -256,6 +301,13 @@ class PersonalController extends Controller
                 'anios_experiencia' => $data['anios_experiencia'] ?? 0,
                 'biografia'         => $data['biografia'] ?? null,
             ]);
+
+            if ($data['tipo'] === 'asistente') {
+                $this->sincronizarDoctoresAsignados($miembro->id, $data['dentistas'] ?? []);
+            } else {
+                // Si deja de ser asistente, se liberan las asignaciones que tenía
+                DB::table('asistente_dentista')->where('asistente_id', $miembro->id)->delete();
+            }
         });
 
         return redirect()->route('admin.personal.show', $id)
@@ -304,5 +356,68 @@ class PersonalController extends Controller
         });
 
         return back()->with('success', 'Horarios guardados correctamente.');
+    }
+
+    // ── MIS DOCTORES (vista del asistente) ────────────────────────────
+    public function misDoctores()
+    {
+        $personal = DB::table('personal')
+            ->where('usuario_id', auth()->id())
+            ->first();
+
+        $doctores = collect();
+
+        if ($personal) {
+            $doctores = DB::table('asistente_dentista')
+                ->join('personal', 'asistente_dentista.dentista_id', '=', 'personal.id')
+                ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+                ->where('asistente_dentista.asistente_id', $personal->id)
+                ->select(
+                    'personal.id', 'personal.especialidad', 'personal.numero_cedula',
+                    'usuarios.nombre', 'usuarios.apellido', 'usuarios.email',
+                    'usuarios.telefono', 'usuarios.activo',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo")
+                )
+                ->orderBy('usuarios.nombre')
+                ->get();
+
+            $hoy = Carbon::today();
+            foreach ($doctores as $doc) {
+                $doc->citas_hoy = DB::table('citas')
+                    ->where('dentista_id', $doc->id)
+                    ->whereDate('fecha_hora', $hoy)
+                    ->whereNotIn('estado', ['cancelada', 'no_asistio'])
+                    ->count();
+            }
+        }
+
+        return view('personal.mis-doctores', compact('doctores'));
+    }
+
+    // ── HELPERS ────────────────────────────────────────────────────────
+    private function dentistasDisponibles()
+    {
+        return DB::table('personal')
+            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+            ->where('personal.tipo', 'dentista')
+            ->where('usuarios.activo', 1)
+            ->select('personal.id', 'personal.especialidad',
+                DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
+            ->orderBy('usuarios.nombre')
+            ->get();
+    }
+
+    private function sincronizarDoctoresAsignados(string $asistenteId, array $dentistaIds): void
+    {
+        DB::table('asistente_dentista')->where('asistente_id', $asistenteId)->delete();
+
+        foreach (array_unique($dentistaIds) as $dentistaId) {
+            DB::table('asistente_dentista')->insert([
+                'id'           => (string) Str::uuid(),
+                'asistente_id' => $asistenteId,
+                'dentista_id'  => $dentistaId,
+                'creado_en'    => now(),
+            ]);
+        }
     }
 }

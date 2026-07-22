@@ -60,7 +60,8 @@
             @endif
         </div>
 
-        {{-- Formulario de edición --}}
+        {{-- Formulario de edición (solo doctor/admin; el asistente solo puede ver) --}}
+        @if($base !== 'asistente')
         <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST">
             @csrf @method('PUT')
 
@@ -100,6 +101,32 @@
                 </div>
             </div>
         </form>
+        @else
+            <div style="display:flex;flex-direction:column;gap:16px">
+                <div class="card">
+                    <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Diagnóstico</div>
+                    <p style="font-size:13.5px;color:var(--text);line-height:1.6;white-space:pre-line">{{ $expediente->diagnostico }}</p>
+                </div>
+                @if($expediente->tratamiento)
+                    <div class="card">
+                        <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Tratamiento realizado</div>
+                        <p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;white-space:pre-line">{{ $expediente->tratamiento }}</p>
+                    </div>
+                @endif
+                @if($expediente->receta)
+                    <div class="card">
+                        <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Receta médica</div>
+                        <p style="font-size:13px;color:var(--text-muted);line-height:1.6;white-space:pre-line">{{ $expediente->receta }}</p>
+                    </div>
+                @endif
+                @if($expediente->observaciones)
+                    <div class="card">
+                        <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Observaciones</div>
+                        <p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;white-space:pre-line">{{ $expediente->observaciones }}</p>
+                    </div>
+                @endif
+            </div>
+        @endif
 
     </div>
 
@@ -110,6 +137,7 @@
         <div>
             <div class="section-head"><span class="section-title">Próxima visita</span></div>
             <div class="card" style="padding:16px 18px">
+                @if($base !== 'asistente')
                 <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST">
                     @csrf @method('PUT')
                     {{-- Reenviar los campos existentes para no borrarlos --}}
@@ -126,6 +154,7 @@
                         Guardar fecha
                     </button>
                 </form>
+                @endif
 
                 @if($expediente->proxima_visita)
                     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;text-align:center;color:var(--p600);font-weight:500">
@@ -140,6 +169,8 @@
                             <span class="badge badge-amber">Próxima semana</span>
                         </div>
                     @endif
+                @elseif($base === 'asistente')
+                    <p style="font-size:13px;color:var(--text-light);text-align:center">Sin fecha sugerida</p>
                 @endif
             </div>
         </div>
@@ -172,10 +203,12 @@
         </div>
 
         {{-- Acceso rápido --}}
-        <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $expediente->paciente_id]) }}"
-           class="btn btn-outline" style="justify-content:center;width:100%">
-            + Nuevo expediente para este paciente
-        </a>
+        @if($base !== 'asistente')
+            <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $expediente->paciente_id]) }}"
+               class="btn btn-outline" style="justify-content:center;width:100%">
+                + Nuevo expediente para este paciente
+            </a>
+        @endif
     </div>
 
 </div>

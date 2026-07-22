@@ -122,6 +122,63 @@
             </div>
         @endif
 
+        {{-- Doctores que auxilia (solo asistentes) --}}
+        @if($miembro->tipo === 'asistente')
+            <div class="card" style="padding:16px 18px">
+                <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px">
+                    Doctores que auxilia
+                </div>
+                @if($doctoresAsignados->count() > 0)
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        @foreach($doctoresAsignados as $doc)
+                        <a href="{{ route('admin.personal.show', $doc->id) }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:6px;border-radius:var(--radius-sm);transition:background .15s" onmouseover="this.style.background='var(--p50)'" onmouseout="this.style.background='transparent'">
+                            <div style="width:32px;height:32px;border-radius:50%;background:var(--p100);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--p500);flex-shrink:0">
+                                {{ strtoupper(substr($doc->nombre,0,1)) }}{{ strtoupper(substr($doc->apellido,0,1)) }}
+                            </div>
+                            <div style="min-width:0">
+                                <div style="font-size:13px;font-weight:500;color:var(--text)">{{ $doc->nombre_completo }}</div>
+                                @if($doc->especialidad)
+                                    <div style="font-size:11.5px;color:var(--text-muted)">{{ $doc->especialidad }}</div>
+                                @endif
+                            </div>
+                            @if(!$doc->activo)
+                                <span class="badge badge-red" style="margin-left:auto">Inactivo</span>
+                            @endif
+                        </a>
+                        @endforeach
+                    </div>
+                @else
+                    <p style="font-size:13px;color:var(--text-light)">No tiene doctores asignados.</p>
+                @endif
+            </div>
+        @endif
+
+        {{-- Asistentes a cargo (solo dentistas) --}}
+        @if($miembro->tipo === 'dentista')
+            <div class="card" style="padding:16px 18px">
+                <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px">
+                    Asistentes a cargo
+                </div>
+                @if($asistentesAsignados->count() > 0)
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        @foreach($asistentesAsignados as $a)
+                        <a href="{{ route('admin.personal.show', $a->id) }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:6px;border-radius:var(--radius-sm);transition:background .15s" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background='transparent'">
+                            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);flex-shrink:0">
+                                {{ strtoupper(substr($a->nombre,0,1)) }}{{ strtoupper(substr($a->apellido,0,1)) }}
+                            </div>
+                            <div style="font-size:13px;font-weight:500;color:var(--text)">{{ $a->nombre_completo }}</div>
+                            @if(!$a->activo)
+                                <span class="badge badge-red" style="margin-left:auto">Inactivo</span>
+                            @endif
+                        </a>
+                        @endforeach
+                    </div>
+                @else
+                    <p style="font-size:13px;color:var(--text-light)">Sin asistentes asignados.</p>
+                @endif
+            </div>
+        @endif
+
     </div>
 
     {{-- ── Columna derecha ───────────────────────────────────────────── --}}

@@ -2,18 +2,20 @@
 @section('title', 'Citas')
 
 @php
-    $rp = auth()->user()->rol === 'dentista' ? 'dentista' : 'admin';
+    $rp = match(auth()->user()->rol) {
+        'dentista'  => 'dentista',
+        'asistente' => 'asistente',
+        default     => 'admin',
+    };
 @endphp
 
 @section('topbar-actions')
-    @if($rp === 'admin')
-        <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
+    <a href="{{ route("$rp.citas.create") }}" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Nueva cita
         </a>
-    @endif
 @endsection
 
 @section('content')
@@ -61,6 +63,7 @@
             <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}" class="field">
         </div>
 
+        @if($rp !== 'dentista')
         <div style="min-width:150px">
             <label class="field-label">Dentista</label>
             <select name="dentista_id" class="field">
@@ -72,6 +75,7 @@
                 @endforeach
             </select>
         </div>
+        @endif
 
         <div style="min-width:140px">
             <label class="field-label">Estado</label>
@@ -157,7 +161,7 @@
                         <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
 
                         <td>
-                            <div style="display:flex;gap:4px;justify-content:flex-end">
+                            <div style="display:flex;justify-content:flex-end">
                                 <a href="{{ route("$rp.citas.show", $cita->id) }}"
                                    class="btn btn-ghost btn-sm" title="Ver detalle">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -165,15 +169,6 @@
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
                                 </a>
-                                @if($cita->estado !== 'completada' && $cita->estado !== 'cancelada')
-                                    <a href="{{ route("$rp.citas.show", $cita->id) }}#estado"
-                                       class="btn btn-outline btn-sm" title="Cambiar estado">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="9 11 12 14 22 4"/>
-                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                                        </svg>
-                                    </a>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -209,11 +204,9 @@
                 <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
             </svg>
             <p>No se encontraron citas con los filtros aplicados</p>
-            @if($rp === 'admin')
-                <a href="{{ route('admin.citas.create') }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
-                    Agendar primera cita
-                </a>
-            @endif
+            <a href="{{ route("$rp.citas.create") }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
+                Agendar primera cita
+            </a>
         </div>
     @endif
 </div>

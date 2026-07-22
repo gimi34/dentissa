@@ -112,6 +112,69 @@ class DashboardController extends Controller
         ));
     }
 
+    // ── ASISTENTE ──────────────────────────────────────────────────────────
+    public function asistente()
+    {
+        $user = auth()->user();
+        $hoy  = Carbon::today();
+
+        $personal = DB::table('personal')
+            ->where('usuario_id', $user->id)
+            ->first();
+
+        $doctores      = collect();
+        $citasHoy      = 0;
+        $citasHoyLista = collect();
+
+        if ($personal) {
+            $doctorIds = DB::table('asistente_dentista')
+                ->where('asistente_id', $personal->id)
+                ->pluck('dentista_id');
+
+            $doctores = DB::table('personal')
+                ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+                ->whereIn('personal.id', $doctorIds)
+                ->select('personal.id', 'personal.especialidad', 'usuarios.nombre', 'usuarios.apellido', 'usuarios.activo',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
+                ->orderBy('usuarios.nombre')
+                ->get();
+
+            if ($doctorIds->isNotEmpty()) {
+                $citasHoy = DB::table('citas')
+                    ->whereIn('dentista_id', $doctorIds)
+                    ->whereDate('fecha_hora', $hoy)
+                    ->whereNotIn('estado', ['cancelada', 'no_asistio'])
+                    ->count();
+
+                $citasHoyLista = DB::table('citas')
+                    ->join('pacientes', 'citas.paciente_id', '=', 'pacientes.id')
+                    ->join('usuarios as up', 'pacientes.usuario_id', '=', 'up.id')
+                    ->join('personal', 'citas.dentista_id', '=', 'personal.id')
+                    ->join('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
+                    ->leftJoin('servicios', 'citas.servicio_id', '=', 'servicios.id')
+                    ->whereIn('citas.dentista_id', $doctorIds)
+                    ->whereDate('citas.fecha_hora', $hoy)
+                    ->select(
+                        'citas.id',
+                        'citas.fecha_hora',
+                        'citas.estado',
+                        DB::raw("CONCAT(up.nombre, ' ', up.apellido) AS paciente"),
+                        'up.telefono',
+                        DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
+                        'servicios.nombre AS servicio'
+                    )
+                    ->orderBy('citas.fecha_hora')
+                    ->get();
+            }
+        }
+
+        return view('dashboard.asistente', compact(
+            'doctores',
+            'citasHoy',
+            'citasHoyLista'
+        ));
+    }
+
     // ── CLIENTE ────────────────────────────────────────────────────────────
     public function cliente()
     {

@@ -3,16 +3,24 @@
 
 @section('content')
 
+@php
+    $rp = match(auth()->user()->rol) {
+        'dentista'  => 'dentista',
+        'asistente' => 'asistente',
+        default     => 'admin',
+    };
+@endphp
+
 <div style="max-width:760px">
 
     {{-- Breadcrumb --}}
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-        <a href="{{ route('admin.citas') }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
+        <a href="{{ route("$rp.citas") }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
         <span>›</span>
         <span style="color:var(--text)">Nueva cita</span>
     </div>
 
-    <form method="POST" action="{{ route('admin.citas.store') }}">
+    <form method="POST" action="{{ route("$rp.citas.store") }}">
         @csrf
 
         <div style="display:flex;flex-direction:column;gap:18px">
@@ -28,7 +36,7 @@
                         <select name="paciente_id" class="field {{ $errors->has('paciente_id') ? 'field-error' : '' }}" required>
                             <option value="">Seleccionar paciente...</option>
                             @foreach($pacientes as $p)
-                                <option value="{{ $p->id }}" {{ old('paciente_id') == $p->id ? 'selected' : '' }}>
+                                <option value="{{ $p->id }}" {{ old('paciente_id', $pacienteSeleccionado ?? '') == $p->id ? 'selected' : '' }}>
                                     {{ $p->nombre }}{{ $p->telefono ? ' · '.$p->telefono : '' }}
                                 </option>
                             @endforeach
@@ -44,7 +52,7 @@
                                 id="dentista-select">
                             <option value="">Seleccionar dentista...</option>
                             @foreach($dentistas as $d)
-                                <option value="{{ $d->id }}" {{ old('dentista_id') == $d->id ? 'selected' : '' }}>
+                                <option value="{{ $d->id }}" {{ old('dentista_id', $dentistaSeleccionado ?? '') == $d->id ? 'selected' : '' }}>
                                     {{ $d->nombre }}
                                 </option>
                             @endforeach
@@ -162,7 +170,7 @@
 
             {{-- Acciones --}}
             <div style="display:flex;gap:10px;justify-content:flex-end">
-                <a href="{{ route('admin.citas') }}" class="btn btn-ghost">Cancelar</a>
+                <a href="{{ route("$rp.citas") }}" class="btn btn-ghost">Cancelar</a>
                 <button type="submit" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
                         <polyline points="20 6 9 17 4 12"/>

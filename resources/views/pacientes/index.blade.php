@@ -74,6 +74,18 @@
             </select>
         </div>
 
+        <div style="min-width:180px">
+            <label class="field-label">Doctor asignado</label>
+            <select name="dentista_id" class="field">
+                <option value="">Todos</option>
+                @foreach($dentistas as $d)
+                    <option value="{{ $d->id }}" {{ request('dentista_id') == $d->id ? 'selected' : '' }}>
+                        {{ $d->nombre_completo }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         <button type="submit" class="btn btn-primary">Buscar</button>
         <a href="{{ request()->url() }}" class="btn btn-ghost">Limpiar</a>
     </form>
@@ -88,6 +100,7 @@
                     <tr>
                         <th>Paciente</th>
                         <th>Contacto</th>
+                        <th>Doctor</th>
                         <th>Ciudad</th>
                         <th>Tipo sangre</th>
                         <th>Alergias</th>
@@ -111,6 +124,13 @@
                         </td>
                         <td style="color:var(--text-muted);font-size:13px">
                             {{ $p->telefono ?? '—' }}
+                        </td>
+                        <td style="font-size:13px">
+                            @if($p->dentista_id)
+                                {{ trim($p->dentista_nombre) }}
+                            @else
+                                <span style="color:var(--text-light)">Sin asignar</span>
+                            @endif
                         </td>
                         <td style="color:var(--text-muted);font-size:13px">
                             {{ $p->ciudad ?? '—' }}
@@ -146,8 +166,8 @@
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
                                 </a>
-                                @if(auth()->user()->rol === 'admin' || auth()->user()->rol === 'asistente')
-                                    <a href="{{ route('admin.pacientes.edit', $p->id) }}"
+                                @if(auth()->user()->rol === 'admin' || auth()->user()->rol === 'dentista')
+                                    <a href="{{ route("{$base}.pacientes.edit", $p->id) }}"
                                        class="btn btn-outline btn-sm" title="Editar">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>

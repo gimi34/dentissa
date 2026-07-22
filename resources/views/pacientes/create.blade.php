@@ -5,7 +5,13 @@
 <div style="max-width:800px">
 
     {{-- Breadcrumb --}}
-    @php $base = auth()->user()->rol === 'admin' ? 'admin' : 'asistente'; @endphp
+    @php
+        $base = match(auth()->user()->rol) {
+            'admin'    => 'admin',
+            'dentista' => 'dentista',
+            default    => 'asistente',
+        };
+    @endphp
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
         <a href="{{ route("{$base}.pacientes") }}" style="color:var(--text-muted);text-decoration:none">Pacientes</a>
         <span>›</span>
@@ -13,7 +19,7 @@
     </div>
 
     <form method="POST"
-          action="{{ isset($paciente) ? route('admin.pacientes.update', $paciente->id) : route('admin.pacientes.store') }}">
+          action="{{ isset($paciente) ? route("{$base}.pacientes.update", $paciente->id) : route("{$base}.pacientes.store") }}">
         @csrf
         @if(isset($paciente)) @method('PUT') @endif
 
@@ -88,6 +94,18 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
+                <div class="field-group" style="margin-top:14px">
+                    <label class="field-label">Doctor asignado</label>
+                    <select name="dentista_id" class="field">
+                        <option value="">Sin asignar</option>
+                        @foreach($dentistas as $d)
+                            <option value="{{ $d->id }}" {{ old('dentista_id', $paciente->dentista_id ?? '') == $d->id ? 'selected' : '' }}>
+                                {{ $d->nombre_completo }}{{ $d->especialidad ? ' · '.$d->especialidad : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="field-hint">Dentista de cabecera del paciente.</div>
                 </div>
             </div>
 

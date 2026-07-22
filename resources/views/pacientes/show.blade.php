@@ -3,24 +3,24 @@
 
 @section('topbar-actions')
     @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
-    <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
-       class="btn btn-outline">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-        </svg>
-        Nuevo expediente
-    </a>
-    @if($base === 'admin')
-        <a href="{{ route('admin.citas.create', ['paciente_id' => $paciente->id]) }}"
-           class="btn btn-primary">
+    @if($base !== 'asistente')
+        <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
+           class="btn btn-outline">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
             </svg>
-            Nueva cita
+            Nuevo expediente
         </a>
     @endif
+    <a href="{{ route("{$base}.citas.create", ['paciente_id' => $paciente->id]) }}"
+       class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nueva cita
+    </a>
 @endsection
 
 @section('content')
@@ -83,18 +83,31 @@
                         {{ $paciente->ciudad }}{{ $paciente->direccion ? ' · '.$paciente->direccion : '' }}
                     </div>
                 @endif
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    @if($paciente->dentista_id)
+                        Dr. {{ trim($paciente->dentista_nombre) }}
+                    @else
+                        <span style="color:var(--text-light)">Sin doctor asignado</span>
+                    @endif
+                </div>
             </div>
 
-            @if($base === 'admin')
+            @if($base === 'admin' || $base === 'dentista')
                 <div style="margin-top:16px;display:flex;gap:8px">
-                    <a href="{{ route('admin.pacientes.edit', $paciente->id) }}"
+                    <a href="{{ route("{$base}.pacientes.edit", $paciente->id) }}"
                        class="btn btn-outline btn-sm" style="flex:1;justify-content:center">Editar</a>
-                    <form action="{{ route('admin.pacientes.toggle', $paciente->id) }}" method="POST" style="flex:1">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="btn btn-sm" style="width:100%;justify-content:center;background:{{ $paciente->activo ? 'var(--red-bg)' : 'var(--green-bg)' }};color:{{ $paciente->activo ? 'var(--red)' : 'var(--green)' }};border:none;cursor:pointer">
-                            {{ $paciente->activo ? 'Desactivar' : 'Reactivar' }}
-                        </button>
-                    </form>
+                    @if($base === 'admin')
+                        <form action="{{ route('admin.pacientes.toggle', $paciente->id) }}" method="POST" style="flex:1">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="btn btn-sm" style="width:100%;justify-content:center;background:{{ $paciente->activo ? 'var(--red-bg)' : 'var(--green-bg)' }};color:{{ $paciente->activo ? 'var(--red)' : 'var(--green)' }};border:none;cursor:pointer">
+                                {{ $paciente->activo ? 'Desactivar' : 'Reactivar' }}
+                            </button>
+                        </form>
+                    @endif
                 </div>
             @endif
         </div>
@@ -182,8 +195,10 @@
         <div>
             <div class="section-head">
                 <span class="section-title">Expedientes clínicos</span>
-                <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
-                   class="btn btn-ghost btn-sm">+ Nuevo</a>
+                @if($base !== 'asistente')
+                    <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
+                       class="btn btn-ghost btn-sm">+ Nuevo</a>
+                @endif
             </div>
 
             @if($expedientes->count() > 0)
@@ -227,8 +242,10 @@
                             <polyline points="14 2 14 8 20 8"/>
                         </svg>
                         <p>Sin expedientes clínicos aún</p>
-                        <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
-                           class="btn btn-outline btn-sm" style="margin-top:10px;display:inline-flex">Crear primer expediente</a>
+                        @if($base !== 'asistente')
+                            <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
+                               class="btn btn-outline btn-sm" style="margin-top:10px;display:inline-flex">Crear primer expediente</a>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -238,10 +255,8 @@
         <div>
             <div class="section-head">
                 <span class="section-title">Historial de citas</span>
-                @if($base === 'admin')
-                    <a href="{{ route('admin.citas.create', ['paciente_id' => $paciente->id]) }}"
-                       class="btn btn-ghost btn-sm">+ Nueva</a>
-                @endif
+                <a href="{{ route("{$base}.citas.create", ['paciente_id' => $paciente->id]) }}"
+                   class="btn btn-ghost btn-sm">+ Nueva</a>
             </div>
             <div class="card card-0">
                 @if($citas->count() > 0)
@@ -253,6 +268,7 @@
                                     <th>Servicio</th>
                                     <th>Dentista</th>
                                     <th>Estado</th>
+                                    <th style="text-align:right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -264,6 +280,17 @@
                                     <td style="font-weight:500;font-size:13px">{{ $c->servicio ?? '—' }}</td>
                                     <td style="font-size:12.5px;color:var(--text-muted)">{{ $c->dentista }}</td>
                                     <td>@include('partials.badge-estado', ['estado' => $c->estado])</td>
+                                    <td>
+                                        <div style="display:flex;justify-content:flex-end">
+                                            <a href="{{ route("{$base}.citas.show", $c->id) }}"
+                                               class="btn btn-ghost btn-sm" title="Ver detalle">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>

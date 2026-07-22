@@ -15,10 +15,13 @@ class PacientesController extends Controller
     {
         $query = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
+            ->leftJoin('personal', 'pacientes.dentista_id', '=', 'personal.id')
+            ->leftJoin('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
             ->where('usuarios.activo', 1)
             ->select(
                 'pacientes.id',
                 'pacientes.usuario_id',
+                'pacientes.dentista_id',
                 'pacientes.fecha_nacimiento',
                 'pacientes.tipo_sangre',
                 'pacientes.alergias',
@@ -28,7 +31,8 @@ class PacientesController extends Controller
                 'usuarios.apellido',
                 'usuarios.email',
                 'usuarios.telefono',
-                DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo")
+                DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"),
+                DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista_nombre")
             );
 
         if ($request->filled('buscar')) {
@@ -45,6 +49,10 @@ class PacientesController extends Controller
             $query->where('pacientes.ciudad', $request->ciudad);
         }
 
+        if ($request->filled('dentista_id')) {
+            $query->where('pacientes.dentista_id', $request->dentista_id);
+        }
+
         $pacientes = $query->orderBy('usuarios.nombre')->paginate(20)->withQueryString();
 
         // Total y ciudades para filtros
@@ -59,13 +67,17 @@ class PacientesController extends Controller
             ->where('pacientes.ciudad', '!=', '')
             ->distinct()->pluck('pacientes.ciudad')->sort()->values();
 
-        return view('pacientes.index', compact('pacientes', 'totalPacientes', 'ciudades'));
+        $dentistas = $this->dentistasDisponibles();
+
+        return view('pacientes.index', compact('pacientes', 'totalPacientes', 'ciudades', 'dentistas'));
     }
 
     // ── CREATE ─────────────────────────────────────────────────────────
     public function create()
     {
-        return view('pacientes.create');
+        $dentistas = $this->dentistasDisponibles();
+
+        return view('pacientes.create', compact('dentistas'));
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
@@ -89,6 +101,7 @@ public function store(Request $request)
         'notas_medicas'         => 'nullable|string|max:2000',
         'contacto_emergencia'   => 'nullable|string|max:200',
         'telefono_emergencia'   => 'nullable|string|max:20',
+        'dentista_id'           => 'nullable|exists:personal,id',
     ], [
         'email.unique' => 'Este correo ya está registrado en el sistema.',
     ]);
@@ -118,6 +131,7 @@ public function store(Request $request)
         DB::table('pacientes')->insert([
             'id'                    => (string) Str::uuid(),
             'usuario_id'            => $usuarioId,
+            'dentista_id'           => $data['dentista_id'] ?? null,
             'fecha_nacimiento'      => $data['fecha_nacimiento'] ?? null,
             'genero'                => $data['genero'] ?? null,
             'direccion'             => $data['direccion'] ?? null,
@@ -133,8 +147,10 @@ public function store(Request $request)
         ]);
     });
 
+    $rutaListado = auth()->user()->rol === 'admin' ? 'admin.pacientes' : 'asistente.pacientes';
+
     if ($passwordGenerada) {
-        return redirect()->route('admin.pacientes')
+        return redirect()->route($rutaListado)
             ->with('password_generada', [
                 'nombre'   => $data['nombre'] . ' ' . $data['apellido'],
                 'email'    => $data['email'],
@@ -142,7 +158,7 @@ public function store(Request $request)
             ]);
     }
 
-    return redirect()->route('admin.pacientes')
+    return redirect()->route($rutaListado)
         ->with('success', 'Paciente registrado correctamente.');
 }
 
@@ -151,10 +167,13 @@ public function store(Request $request)
     {
         $paciente = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
+            ->leftJoin('personal', 'pacientes.dentista_id', '=', 'personal.id')
+            ->leftJoin('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
             ->where('pacientes.id', $id)
             ->select('pacientes.*', 'usuarios.nombre', 'usuarios.apellido',
                      'usuarios.email', 'usuarios.telefono', 'usuarios.activo',
-                     DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
+                     DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"),
+                     DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista_nombre"))
             ->first();
 
         if (!$paciente) abort(404);
@@ -211,6 +230,9 @@ public function store(Request $request)
     // ── EDIT ───────────────────────────────────────────────────────────
     public function edit(string $id)
     {
+        // El asistente no puede modificar la información del paciente
+        if (auth()->user()->rol === 'asistente') abort(403);
+
         $paciente = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
             ->where('pacientes.id', $id)
@@ -220,12 +242,16 @@ public function store(Request $request)
 
         if (!$paciente) abort(404);
 
-        return view('pacientes.edit', compact('paciente'));
+        $dentistas = $this->dentistasDisponibles();
+
+        return view('pacientes.edit', compact('paciente', 'dentistas'));
     }
 
     // ── UPDATE ─────────────────────────────────────────────────────────
     public function update(Request $request, string $id)
     {
+        if (auth()->user()->rol === 'asistente') abort(403);
+
         $paciente = DB::table('pacientes')->where('id', $id)->first();
         if (!$paciente) abort(404);
 
@@ -246,6 +272,7 @@ public function store(Request $request)
             'notas_medicas'         => 'nullable|string|max:2000',
             'contacto_emergencia'   => 'nullable|string|max:200',
             'telefono_emergencia'   => 'nullable|string|max:20',
+            'dentista_id'           => 'nullable|exists:personal,id',
         ]);
 
         DB::transaction(function () use ($data, $paciente) {
@@ -258,6 +285,7 @@ public function store(Request $request)
             ]);
 
             DB::table('pacientes')->where('id', $paciente->id)->update([
+                'dentista_id'           => $data['dentista_id'] ?? null,
                 'fecha_nacimiento'      => $data['fecha_nacimiento'] ?? null,
                 'genero'                => $data['genero'] ?? null,
                 'direccion'             => $data['direccion'] ?? null,
@@ -272,7 +300,9 @@ public function store(Request $request)
             ]);
         });
 
-        return redirect()->route('admin.pacientes.show', $id)
+        $base = auth()->user()->rol === 'admin' ? 'admin' : 'dentista';
+
+        return redirect()->route("{$base}.pacientes.show", $id)
             ->with('success', 'Datos del paciente actualizados.');
     }
 
@@ -291,5 +321,18 @@ public function store(Request $request)
 
         $msg = $activo ? 'Paciente desactivado.' : 'Paciente reactivado.';
         return back()->with('success', $msg);
+    }
+
+    // ── HELPERS ────────────────────────────────────────────────────────
+    private function dentistasDisponibles()
+    {
+        return DB::table('personal')
+            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+            ->where('personal.tipo', 'dentista')
+            ->where('usuarios.activo', 1)
+            ->select('personal.id', 'personal.especialidad',
+                DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
+            ->orderBy('usuarios.nombre')
+            ->get();
     }
 }

@@ -54,6 +54,9 @@ class ExpedientesController extends Controller
     // ── CREATE ─────────────────────────────────────────────────────────
     public function create(Request $request)
     {
+        // Solo el doctor (o el admin) puede registrar el diagnóstico clínico
+        if (auth()->user()->rol === 'asistente') abort(403);
+
         $pacienteId = $request->get('paciente_id');
 
         $paciente = DB::table('pacientes')
@@ -98,6 +101,8 @@ class ExpedientesController extends Controller
     // ── STORE ──────────────────────────────────────────────────────────
     public function store(Request $request)
     {
+        if (auth()->user()->rol === 'asistente') abort(403);
+
         $data = $request->validate([
             'paciente_id'    => 'required|exists:pacientes,id',
             'dentista_id'    => 'required|exists:personal,id',
@@ -176,6 +181,8 @@ class ExpedientesController extends Controller
     // ── UPDATE ─────────────────────────────────────────────────────────
     public function update(Request $request, string $id)
     {
+        if (auth()->user()->rol === 'asistente') abort(403);
+
         $data = $request->validate([
             'diagnostico'    => 'required|string|max:2000',
             'tratamiento'    => 'nullable|string|max:2000',

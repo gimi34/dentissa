@@ -2,7 +2,11 @@
 @section('title', 'Detalle de cita')
 
 @php
-    $rp = auth()->user()->rol === 'dentista' ? 'dentista' : 'admin';
+    $rp = match(auth()->user()->rol) {
+        'dentista'  => 'dentista',
+        'asistente' => 'asistente',
+        default     => 'admin',
+    };
 @endphp
 
 @section('topbar-actions')
@@ -214,12 +218,10 @@
                class="btn btn-outline" style="justify-content:center">
                Ver expediente del paciente
             </a>
-            @if($rp === 'admin')
-                <a href="{{ route('admin.citas.create', ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
-                   class="btn btn-ghost" style="justify-content:center">
-                   Reagendar / Nueva cita
-                </a>
-            @endif
+            <a href="{{ route("$rp.citas.create", ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
+               class="btn btn-ghost" style="justify-content:center">
+               Reagendar / Nueva cita
+            </a>
         </div>
 
     </div>

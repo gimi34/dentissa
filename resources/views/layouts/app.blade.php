@@ -107,6 +107,36 @@
                 Expedientes
             </a>
 
+        @elseif(auth()->user()->rol === 'asistente')
+            <span class="nav-label">Principal</span>
+            <a href="/asistente" class="nav-item {{ request()->is('asistente') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+                Home
+            </a>
+            <a href="/asistente/doctores" class="nav-item {{ request()->is('asistente/doctores*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mis Doctores
+            </a>
+            <a href="/asistente/citas" class="nav-item {{ request()->is('asistente/citas*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                Citas
+            </a>
+            <a href="/asistente/pacientes" class="nav-item {{ request()->is('asistente/pacientes*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                </svg>
+                Pacientes
+            </a>
+
         @else {{-- cliente --}}
             <span class="nav-label">Mi cuenta</span>
             <a href="/cliente" class="nav-item {{ request()->is('cliente') ? 'active' : '' }}">

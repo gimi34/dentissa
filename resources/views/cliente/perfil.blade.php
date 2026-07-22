@@ -77,6 +77,18 @@
                        class="field" placeholder="Ciudad de México">
             </div>
 
+            <div style="margin-bottom:20px">
+                <label class="field-label">Mi doctor</label>
+                <div class="field" style="background:var(--p50);color:var(--text-muted);cursor:default">
+                    @if(optional($paciente)->dentista_nombre)
+                        Dr. {{ trim($paciente->dentista_nombre) }}{{ $paciente->dentista_especialidad ? ' · '.$paciente->dentista_especialidad : '' }}
+                    @else
+                        Aún no se te ha asignado un doctor
+                    @endif
+                </div>
+                <div class="field-hint">Tu doctor asignado lo define la clínica. Si quieres que te atienda alguien más, contáctanos.</div>
+            </div>
+
             <div style="display:flex;justify-content:flex-end">
                 <button type="submit" class="btn btn-primary">Guardar cambios</button>
             </div>

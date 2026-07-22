@@ -83,6 +83,35 @@
                 @error('tipo')<div class="error-msg">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Doctores asignados (solo visible para asistentes) --}}
+            <div class="card" id="bloque-dentistas" style="{{ old('tipo', $miembro->tipo ?? '') === 'asistente' ? '' : 'display:none' }}">
+                <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+                    Doctores que auxilia
+                </div>
+                <p style="font-size:12.5px;color:var(--text-muted);margin:10px 0 12px">
+                    Selecciona el o los dentistas a los que este asistente dará apoyo.
+                </p>
+                @if($dentistas->isEmpty())
+                    <p style="font-size:13px;color:var(--text-light)">No hay dentistas activos registrados todavía.</p>
+                @else
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+                        @foreach($dentistas as $d)
+                        @php $marcado = in_array($d->id, old('dentistas', $dentistasAsignados ?? [])); @endphp
+                        <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid {{ $marcado ? 'var(--blue)' : 'var(--border)' }};background:{{ $marcado ? 'var(--blue-bg)' : 'var(--white)' }};border-radius:var(--radius-sm);cursor:pointer;font-size:13px">
+                            <input type="checkbox" name="dentistas[]" value="{{ $d->id }}" {{ $marcado ? 'checked' : '' }}
+                                   style="accent-color:var(--blue);width:15px;height:15px">
+                            <span>
+                                {{ $d->nombre_completo }}
+                                @if($d->especialidad)
+                                    <span style="display:block;font-size:11.5px;color:var(--text-muted)">{{ $d->especialidad }}</span>
+                                @endif
+                            </span>
+                        </label>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
             {{-- Datos profesionales --}}
             <div class="card">
                 <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
@@ -177,6 +206,11 @@ function selectTipo(val) {
             txt.style.color        = 'var(--text-muted)';
         }
     });
+
+    const bloqueDentistas = document.getElementById('bloque-dentistas');
+    if (bloqueDentistas) {
+        bloqueDentistas.style.display = (val === 'asistente') ? '' : 'none';
+    }
 }
 </script>
 @endpush

@@ -70,6 +70,7 @@ class RegisterController extends Controller
             DB::table('pacientes')->insert([
                 'id'               => (string) Str::uuid(),
                 'usuario_id'       => $usuarioId,
+                'dentista_id'      => $this->asignarDentistaAutomatico(),
                 'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
                 'genero'           => $data['genero'] ?? null,
                 'direccion'        => $data['direccion'] ?? null,
@@ -143,6 +144,7 @@ class RegisterController extends Controller
             DB::table('pacientes')->insert([
                 'id'               => (string) Str::uuid(),
                 'usuario_id'       => $usuarioId,
+                'dentista_id'      => $this->asignarDentistaAutomatico(),
                 'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
                 'genero'           => $data['genero'] ?? null,
                 'direccion'        => $data['direccion'] ?? null,
@@ -160,5 +162,19 @@ class RegisterController extends Controller
 
         return redirect()->route('cliente.dashboard')
             ->with('success', '¡Bienvenido/a, ' . $usuario->nombre . '! Tu cuenta fue creada exitosamente.');
+    }
+
+    // Asigna el dentista activo con menos pacientes a su cargo (balanceo simple)
+    private function asignarDentistaAutomatico(): ?string
+    {
+        return DB::table('personal')
+            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+            ->leftJoin('pacientes', 'pacientes.dentista_id', '=', 'personal.id')
+            ->where('personal.tipo', 'dentista')
+            ->where('usuarios.activo', 1)
+            ->groupBy('personal.id', 'personal.creado_en')
+            ->orderByRaw('COUNT(pacientes.id) ASC')
+            ->orderBy('personal.creado_en')
+            ->value('personal.id');
     }
 }

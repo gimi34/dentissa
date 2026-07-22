@@ -64,3 +64,6 @@ ZXDdiGPu5U contraseña usuario
 
 gits.qchit@gmail.com
 pws: 
+
+asistente 
+mYCvys3Ru4

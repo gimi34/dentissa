@@ -106,11 +106,15 @@ Route::middleware(['auth','role:dentista'])->prefix('dentista')->name('dentista.
     Route::get('/', [DashboardController::class, 'dentista'])->name('dashboard');
 
     Route::get  ('/citas',             [CitasController::class, 'index']       )->name('citas');
+    Route::get  ('/citas/crear',       [CitasController::class, 'create']      )->name('citas.create');
+    Route::post ('/citas',             [CitasController::class, 'store']       )->name('citas.store');
     Route::get  ('/citas/{id}',        [CitasController::class, 'show']        )->name('citas.show');
     Route::patch('/citas/{id}/estado', [CitasController::class, 'updateEstado'])->name('citas.estado');
 
-    Route::get('/pacientes',      [PacientesController::class, 'index'])->name('pacientes');
-    Route::get('/pacientes/{id}', [PacientesController::class, 'show'] )->name('pacientes.show');
+    Route::get('/pacientes',           [PacientesController::class, 'index'] )->name('pacientes');
+    Route::get('/pacientes/{id}',      [PacientesController::class, 'show']  )->name('pacientes.show');
+    Route::get('/pacientes/{id}/edit', [PacientesController::class, 'edit']  )->name('pacientes.edit');
+    Route::put('/pacientes/{id}',      [PacientesController::class, 'update'])->name('pacientes.update');
 
     Route::get ('/expedientes',       [ExpedientesController::class, 'index'] )->name('expedientes');
     Route::get ('/expedientes/crear', [ExpedientesController::class, 'create'])->name('expedientes.create');
@@ -122,15 +126,21 @@ Route::middleware(['auth','role:dentista'])->prefix('dentista')->name('dentista.
 // ── Asistente ───────────────────────────────────────────────────────────
 Route::middleware(['auth','role:asistente'])->prefix('asistente')->name('asistente.')->group(function () {
 
-    Route::get('/', fn() => view('placeholder', ['titulo' => 'Panel Asistente']))->name('dashboard');
+    Route::get('/', [DashboardController::class, 'asistente'])->name('dashboard');
+
+    Route::get ('/doctores', [PersonalController::class, 'misDoctores'])->name('doctores');
+
+    Route::get  ('/citas',             [CitasController::class, 'index']       )->name('citas');
+    Route::get  ('/citas/crear',       [CitasController::class, 'create']      )->name('citas.create');
+    Route::post ('/citas',             [CitasController::class, 'store']       )->name('citas.store');
+    Route::get  ('/citas/{id}',        [CitasController::class, 'show']        )->name('citas.show');
+    Route::patch('/citas/{id}/estado', [CitasController::class, 'updateEstado'])->name('citas.estado');
 
     Route::get ('/pacientes',       [PacientesController::class, 'index'] )->name('pacientes');
     Route::get ('/pacientes/crear', [PacientesController::class, 'create'])->name('pacientes.create');
     Route::post('/pacientes',       [PacientesController::class, 'store'] )->name('pacientes.store');
     Route::get ('/pacientes/{id}',  [PacientesController::class, 'show']  )->name('pacientes.show');
 
-    Route::get ('/expedientes/crear', [ExpedientesController::class, 'create'])->name('expedientes.create');
-    Route::post('/expedientes',       [ExpedientesController::class, 'store'] )->name('expedientes.store');
     Route::get ('/expedientes/{id}',  [ExpedientesController::class, 'show']  )->name('expedientes.show');
 });
 

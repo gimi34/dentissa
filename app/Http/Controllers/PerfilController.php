@@ -13,7 +13,13 @@ class PerfilController extends Controller
     public function edit()
     {
         $user     = auth()->user();
-        $paciente = DB::table('pacientes')->where('usuario_id', $user->id)->first();
+        $paciente = DB::table('pacientes')
+            ->leftJoin('personal', 'pacientes.dentista_id', '=', 'personal.id')
+            ->leftJoin('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
+            ->where('pacientes.usuario_id', $user->id)
+            ->select('pacientes.*', 'personal.especialidad AS dentista_especialidad',
+                DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista_nombre"))
+            ->first();
 
         return view('cliente.perfil', compact('user', 'paciente'));
     }
