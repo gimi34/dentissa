@@ -1,0 +1,27 @@
+<!-- INVARIANT: examples are single-line HTML comments so a fresh template parses to total=0 (MEMORY_EMPTY). Do NOT un-comment or split across lines. t100 guards this. -->
+> This file is kept up to date automatically while the stage runs. Add observations at the review step, not by editing here directly.
+
+## Interpretations
+<!-- example: 2026-05-29T10:14:32Z — chose REST over GraphQL; the consuming team only needs CRUD, revisit if subscriptions land -->
+
+## Deviations
+<!-- example: 2026-05-29T10:14:32Z — skipped the optional caching layer the stage prose suggested; the dataset is small enough that it adds risk -->
+
+## Tradeoffs
+<!-- example: 2026-05-29T10:14:32Z — picked TDD over BDD this run; the team is unit-first and the domain is well-understood -->
+
+## Open questions
+<!-- example: 2026-05-29T10:14:32Z — confirm the retention window with compliance before the next stage hardens the schema -->
+
+- 2026-09-02T19:10Z — Interpretación: la guía de reejecución devolvió `NO_STORE` para `dentissa`, así que es el primer escaneo del repositorio y no hay pregunta de reutilización que hacer. Se ejecuta un escaneo completo (`./`) con profundidad Comprehensive.
+- 2026-09-02T19:10Z — Interpretación: el registro del intent no lleva un array `repos`, de modo que es un repositorio único no registrado en la raíz del workspace; ni el traspaso ni los recibos llevan calificación de repo.
+- 2026-09-02T19:10Z — Cuestión abierta: la detección del workspace reportó "Frameworks: Vite" y no Laravel, pese a que el código es un monolito Laravel con vistas Blade. Vite está presente por el build de assets; conviene que el escaneo del desarrollador establezca el framework real en lugar de heredar esa detección.
+- 2026-09-02T19:25Z — Desviación: dos hipótesis del brief resultaron falsas y quedan corregidas. El esquema NO vive solo en la base de datos: está versionado en `database/dentissa.sql` (volcado de 671 líneas, 17 tablas, 2 vistas, 1 trigger) que `docker-compose.yml` monta como script de inicialización. Y la pila real es Laravel `v12.62.0` sobre PHP `^8.2` con MariaDB; Vite/Tailwind/axios están instalados pero muertos (`@vite` aparece una sola vez, en una plantilla que ninguna ruta renderiza).
+- 2026-09-02T19:25Z — Compromiso: el volcado está desfasado respecto al código. Le faltan `usuarios.google_id`, `pacientes.dentista_id` y la tabla `asistente_dentista`, que añaden las tres migraciones de julio de 2026. El esquema efectivo es «volcado + esas migraciones»; solo funciona porque el volcado trae la tabla `migrations` ya poblada, y `composer setup` falla contra una base de datos vacía.
+- 2026-09-02T19:25Z — Cuestión abierta: hay datos personales sensibles y credenciales en el repositorio y en la historia de git (hashes bcrypt, correos y teléfonos reales, tipo de sangre y alergias en el volcado; tres contraseñas en texto plano al final de `README.md`). Ningún artefacto derivado debe reproducir esos valores. `.env` no se abrió en ningún momento.
+- 2026-09-02T19:25Z — Cuestión abierta: dos defectos funcionales confirmados con evidencia, no supuestos — el orden de rutas en `routes/web.php:92-94` rompe el alta de usuarios (responde `404`), y `ServiciosController` fija `precio = 0` en cada escritura, borrando el precio en silencio. Se documentan como hallazgos; corregirlos queda fuera de este trabajo.
+- 2026-09-02T19:25Z — Interpretación: la cobertura declarada es honesta y acotada. Quedaron en `Skimmed only` 30 de las 37 plantillas Blade, 6 archivos `config/` por defecto y las 1.072 líneas de `public/css/`; cualquier afirmación sobre maquetación o accesibilidad exigiría una segunda pasada.
+- 2026-09-02T19:55Z — Desviación: el arquitecto corrigió una cifra del escaneo. El desarrollador reportó «61 rutas registradas (57 efectivas)»; el recuento real es 89 (82 registros de verbo único más 7 de `Route::resource`), verificado por conteo mecánico y por enumeración manual grupo a grupo, que coinciden. Los artefactos publicados usan 89.
+- 2026-09-02T19:55Z — Cuestión abierta: tres hallazgos nuevos aportados por el arquitecto y no presentes en el escaneo. `TD-20` — el volcado no siembra ninguna fila de `horarios_dentista` ni de `expedientes`, y solo 1 fila de `personal` sin usuarios de rol `asistente`; como la regla de agenda exige una fila de horario, tras un arranque limpio no puede agendarse ninguna cita. `TD-19` — sin transacción ni bloqueo entre la comprobación de solape y el `INSERT`, dos peticiones concurrentes pueden violar `BRN-6`. `DEF-3` — `Route::resource` registra `admin.servicios.show` pero el controlador no tiene método `show()` ni existe su plantilla.
+- 2026-09-02T19:55Z — Interpretación: `SEC-1` lleva un agravante detectado durante la síntesis — una de las tres credenciales del `README.md` es del rol `asistente` y el volcado no contiene ningún usuario con ese rol, señal de que las contraseñas se copiaron de un entorno real y no de un juego sintético. La remediación se ordena con la rotación como paso 0.
+- 2026-09-02T19:55Z — Interpretación: publicación por intercambio atómico completada contra un almacén vacío (`NO_STORE`, escaneo completo). El bloque `## Scope of Analysis` quedó `kind: full` con `./` presente, 41 rutas analizadas, 23 componentes y 14 rutas en `shallow.paths`; la limitación de cobertura se repite en tres artefactos para que ninguna fase posterior tome como verificada una afirmación sobre maquetación o accesibilidad.
