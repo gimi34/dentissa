@@ -5,5 +5,12 @@
     "dirName": "260902-docs-sistema-dental",
     "scope": "reverse-engineering-only",
     "status": "complete"
+  },
+  {
+    "uuid": "01a0688e-5751-76d7-a86b-56f97ace0195",
+    "slug": "fix-admin-crud",
+    "dirName": "260903-fix-admin-crud",
+    "scope": "bugfix",
+    "status": "in-flight"
   }
 ]
