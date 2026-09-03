@@ -25,7 +25,7 @@ del dominio, que no existen fuera de `database/dentissa.sql` — la restricción
 y la decisión Q4 = D. Quedan cubiertas por la lista manual. El plan lo declara
 abiertamente en lugar de rebajar el objetivo.
 
-[Approval Fingerprint]: sha256:8be41a9ecdb7dff3699bccaf8d4a43db92a57a3780ce4efb5f2cecedd3a30a27
+[Approval Fingerprint]: sha256:99c18aba1b3ff9ed80b3b2b871e3f972f7c5b2a11ec420abc579df60497391c9
 
 - Approve Plan
 - Request Changes
