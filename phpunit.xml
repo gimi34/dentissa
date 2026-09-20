@@ -23,8 +23,21 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!-- Base de pruebas: MariaDB `dentissa_test`, servida por el contenedor
+             `db` del repositorio y cargada desde database/dentissa.sql con
+             database/testing/bootstrap-test-db.sh. Sustituye a la SQLite en
+             memoria anterior, que no tenía las tablas del dominio (viven solo
+             en el volcado, no en migraciones) ni claves foráneas activas.
+             Laravel conecta de forma perezosa, así que las pruebas que no
+             consultan la base siguen corriendo sin el contenedor levantado.
+             Credenciales: las del entorno de desarrollo local que ya declaran
+             docker-compose.yml y .env; no se introduce ninguna nueva. -->
+        <env name="DB_CONNECTION" value="mariadb"/>
+        <env name="DB_HOST" value="db"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="dentissa_test"/>
+        <env name="DB_USERNAME" value="root"/>
+        <env name="DB_PASSWORD" value="root"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

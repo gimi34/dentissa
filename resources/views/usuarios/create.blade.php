@@ -11,6 +11,17 @@
         <span style="color:var(--text)">{{ isset($usuario) ? 'Editar: '.$usuario->nombre.' '.$usuario->apellido : 'Nuevo Usuario' }}</span>
     </div>
 
+    @if ($errors->any())
+        <div class="alerta-errores" data-testid="usuario-errores">
+            <strong>Revisa los datos del formulario:</strong>
+            <ul style="margin:6px 0 0 18px">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form method="POST"
           action="{{ isset($usuario) ? route('admin.usuarios.update', $usuario->id) : route('admin.usuarios.store') }}">
         @csrf
@@ -71,6 +82,7 @@
                             <select name="rol" class="field">
                                 <option value="admin" {{ old('rol', $usuario->rol ?? '') === 'admin' ? 'selected' : '' }}>Administrador</option>
                                 <option value="dentista" {{ old('rol', $usuario->rol ?? '') === 'dentista' ? 'selected' : '' }}>Dentista</option>
+                                <option value="asistente" data-testid="rol-asistente" {{ old('rol', $usuario->rol ?? '') === 'asistente' ? 'selected' : '' }}>Asistente</option>
                                 <option value="cliente" {{ old('rol', $usuario->rol ?? '') === 'cliente' ? 'selected' : '' }}>Paciente / Cliente</option>
                             </select>
                         </div>
@@ -118,6 +130,7 @@
 .field-hint { font-size:11.5px;color:var(--text-light);margin-top:4px }
 .error-msg { font-size:12px;color:var(--red);margin-top:4px }
 .field-group { margin-bottom:0 }
+.alerta-errores { margin-bottom:18px;padding:12px 14px;border:1.5px solid var(--red);border-radius:var(--radius-sm);background:var(--red-bg);color:var(--red);font-size:13px }
 textarea.field { line-height:1.6 }
 select.field { cursor:pointer }
 </style>

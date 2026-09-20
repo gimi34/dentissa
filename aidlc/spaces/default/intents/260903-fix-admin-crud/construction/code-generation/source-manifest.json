@@ -1,0 +1,20 @@
+{
+  "stage": "code-generation",
+  "unit": "stage-level",
+  "version": 1,
+  "writes": [
+    { "path": "routes/web.php" },
+    { "path": "app/Http/Controllers/UsuarioController.php" },
+    { "path": "app/Http/Controllers/ServiciosController.php" },
+    { "path": "resources/views/usuarios/create.blade.php" },
+    { "path": "resources/views/usuarios/index.blade.php" },
+    { "path": "resources/views/servicios/create.blade.php" },
+    { "path": "resources/views/servicios/edit.blade.php" },
+    { "path": "tests/Feature/AdminUsuariosRutasTest.php" },
+    { "path": "phpunit.xml" },
+    { "path": "database/testing/bootstrap-test-db.sh" },
+    { "path": "tests/Feature/ServiciosPrecioTest.php" },
+    { "path": "tests/Feature/UsuariosAdminTest.php" },
+    { "path": "tests/Feature/ExampleTest.php" }
+  ]
+}

@@ -1,11 +1,22 @@
 @extends('layouts.app')
 @section('content')
 <div style="max-width:800px">
+    @if ($errors->any())
+        <div class="alerta-errores" data-testid="servicio-errores">
+            <strong>Revisa los datos del formulario:</strong>
+            <ul style="margin:6px 0 0 18px">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('admin.servicios.store') }}">
         @csrf
         <div class="card">
             <div class="grid-2">
-                <div class="field-group"><label class="field-label">Nombre</label><input type="text" name="nombre" class="field" required></div>
+                <div class="field-group"><label class="field-label">Nombre</label><input type="text" name="nombre" class="field" value="{{ old('nombre') }}" required></div>
                 <div class="field-group">
                     <label class="field-label">Categoría</label>
                     <select name="categoria" class="field" required>
@@ -13,13 +24,25 @@
                     </select>
                 </div>
             </div>
+            <div class="grid-2" style="margin-top:15px">
+                <div class="field-group">
+                    <label class="field-label">Duración (minutos)</label>
+                    <input type="number" name="duracion_min" class="field" value="{{ old('duracion_min') }}" required>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Precio</label>
+                    <input type="number" name="precio" class="field" data-testid="servicio-precio"
+                           step="0.01" min="0" value="{{ old('precio') }}" required>
+                </div>
+            </div>
             <div class="field-group" style="margin-top:15px">
-                <label class="field-label">Duración (minutos)</label>
-                <input type="number" name="duracion_min" class="field" required>
+                <label class="field-label">Color de agenda</label>
+                <input type="color" name="color_agenda" class="field field-color" data-testid="servicio-color-agenda"
+                       value="{{ old('color_agenda', '#F4C0D1') }}" required>
             </div>
             <div class="field-group" style="margin-top:15px">
                 <label class="field-label">Descripción</label>
-                <textarea name="descripcion" class="field" rows="3"></textarea>
+                <textarea name="descripcion" class="field" rows="3">{{ old('descripcion') }}</textarea>
             </div>
         </div>
         <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
@@ -32,5 +55,7 @@
     .field { display:block;width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:5px; }
     .field-label { font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-light); }
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .field-color { padding:4px; height:38px; cursor:pointer; }
+    .alerta-errores { margin-bottom:16px; padding:12px 14px; border:1.5px solid var(--red, #d14343); border-radius:5px; background:var(--red-bg, #fdecec); color:var(--red, #d14343); font-size:13px; }
 </style>
 @endsection

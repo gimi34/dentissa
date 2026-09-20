@@ -85,19 +85,18 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 
     // Placeholders
     Route::get('/reportes',   fn() => view('placeholder', ['titulo' => 'Reportes'])              )->name('reportes');
-    Route::get('/usuarios',   fn() => view('placeholder', ['titulo' => 'Usuarios'])              )->name('usuarios');
 
-    Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
-
-    Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])->name('usuarios.show');
-
-    Route::get('/usuarios/crear', [UsuarioController::class, 'create'])->name('usuarios.create');
-    Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
-        
-    Route::get('/usuarios/{id}/editar', [UsuarioController::class, 'edit'])->name('usuarios.edit');
-    Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->name('usuarios.update');
-
-    Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
+    // Usuarios
+    // El orden importa: Laravel resuelve por orden de registro, así que
+    // /usuarios/crear se declara antes que /usuarios/{id} y {id} queda
+    // restringido al formato UUID de la columna usuarios.id (FR1.1, FR1.2).
+    Route::get   ('/usuarios',             [UsuarioController::class, 'index']        )->name('usuarios.index');
+    Route::get   ('/usuarios/crear',       [UsuarioController::class, 'create']       )->name('usuarios.create');
+    Route::post  ('/usuarios',             [UsuarioController::class, 'store']        )->name('usuarios.store');
+    Route::get   ('/usuarios/{id}',        [UsuarioController::class, 'show']         )->name('usuarios.show')->where('id', '[0-9a-fA-F-]{36}');
+    Route::get   ('/usuarios/{id}/editar', [UsuarioController::class, 'edit']         )->name('usuarios.edit')->where('id', '[0-9a-fA-F-]{36}');
+    Route::put   ('/usuarios/{id}',        [UsuarioController::class, 'update']       )->name('usuarios.update')->where('id', '[0-9a-fA-F-]{36}');
+    Route::patch ('/usuarios/{id}/toggle', [UsuarioController::class, 'toggleActivo'] )->name('usuarios.toggle');
 });
 
 // ── Dentista ────────────────────────────────────────────────────────────
