@@ -1,0 +1,121 @@
+# Generado por /init (ai-dd). Valida el flujo y la seguridad en cada PR.
+# Modo baseline: los pasos de seguridad solo fallan por problemas NUEVOS del PR, para que la deuda
+# previa (registrada en docs/security.md) no bloquee todos los PRs. Un job semanal revisa el repo
+# completo y reporta sin bloquear.
+# Fija cada acción a un SHA de commit completo y cada imagen a una versión (cadena de suministro): RD6.a.
+# TODO(init): verificar que las etiquetas de imagen usadas (gitleaks v8.21.2, semgrep 1.99.0,
+# trivy 0.57.1) existen en su registro y actualizarlas a la última estable antes del primer PR.
+name: ai-dd
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"   # revisión completa semanal
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flujo:
+    name: Artefactos del flujo
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # TODO: fijar a SHA
+      - uses: actions/setup-python@v5   # TODO: fijar a SHA
+        with:
+          python-version: "3.12"
+      - name: Validar specs, planes y tareas
+        run: python .ai/bin/aidd.py validate
+
+  calidad:
+    name: Tests y lint
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root   # solo para la base efímera de CI
+          MARIADB_DATABASE: dentissa_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      # phpunit.xml declara DB_HOST=db sin force: estas variables lo sustituyen en CI.
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_DATABASE: dentissa_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v4   # TODO: fijar a SHA
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2   # TODO: fijar a SHA
+        with:
+          php-version: "8.4"
+          extensions: pdo_mysql, mbstring, bcmath, gd, zip, exif, pcntl
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Preparar .env de CI
+        run: cp .env.example .env && php artisan key:generate
+      - name: Cargar el esquema de pruebas
+        # Mientras no exista el esquema por migraciones (RD2), se carga el volcado y luego las
+        # migraciones de julio, que el volcado no incluye.
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot dentissa_test < database/dentissa.sql
+          php artisan migrate --force
+      - name: Pint sobre los archivos PHP cambiados en el PR
+        run: |
+          files=$(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}"...HEAD -- '*.php')
+          if [ -n "$files" ]; then vendor/bin/pint --test $files; else echo "Sin archivos PHP cambiados"; fi
+      - run: php artisan test
+
+  seguridad-pr:
+    name: Seguridad (solo cambios del PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # TODO: fijar a SHA
+        with:
+          fetch-depth: 0
+      - name: Secretos en los commits del PR
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.21.2 \
+            git --log-opts="origin/${{ github.base_ref }}..HEAD" --no-banner
+      - name: SAST, solo hallazgos nuevos
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.99.0 \
+            semgrep scan --config p/php --config p/laravel \
+            --baseline-commit "$(git merge-base origin/${{ github.base_ref }} HEAD)" --error
+      - uses: shivammathur/setup-php@v2   # TODO: fijar a SHA
+        with:
+          php-version: "8.4"
+      - name: Dependencias, solo si el PR cambia lockfiles
+        run: |
+          if git diff --name-only "origin/${{ github.base_ref }}"...HEAD | grep -qE '(composer\.lock|package-lock\.json)$'; then
+            composer audit && npm audit --audit-level=high
+          else
+            echo "El PR no cambia dependencias"
+          fi
+
+  seguridad-completa:
+    name: Seguridad (repo completo, informativo)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    continue-on-error: true   # reporta la deuda sin bloquear; cada hallazgo alto va a docs/security.md
+    steps:
+      - uses: actions/checkout@v4   # TODO: fijar a SHA
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2   # TODO: fijar a SHA
+        with:
+          php-version: "8.4"
+      - run: docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.21.2 detect --no-banner
+      - run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.99.0 semgrep scan --config p/php --config p/laravel --error
+      - run: composer audit && npm audit --audit-level=high
+      - run: docker run --rm -v "$PWD:/src" aquasec/trivy:0.57.1 fs --severity HIGH,CRITICAL /src
