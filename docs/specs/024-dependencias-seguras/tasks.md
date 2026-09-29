@@ -1,7 +1,7 @@
 ---
 spec: 024-dependencias-seguras
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 024 Dependencias sin vulnerabilidades críticas ni altas
