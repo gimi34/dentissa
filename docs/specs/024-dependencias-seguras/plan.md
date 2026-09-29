@@ -14,7 +14,10 @@ parche. En el frontend, `npm audit fix`, fijar `vite` en 8.3.0 y `rolldown` en 1
 `overrides`), para que toda versión que cambie, directa o transitiva, tenga al menos 7 días. Dos
 tests PHPUnit nuevos comprueban que los paquetes vulnerables están en versiones corregidas: fallan
 hoy y pasan después (P2 para CA1 y CA2). Las auditorías, la suite completa, la construcción de
-assets y un login con Google comprueban el resto.
+assets y un login con Google comprueban el resto. Dos avisos de severidad baja publicados después
+del plan (`laravel/framework` y `league/flysystem`) quedan fuera: se registran como excepción EX1
+con vencimiento, y la auditoría de Composer ignora las severidades baja y media, como ya hace la de
+npm (D10).
 
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste |
@@ -23,8 +26,8 @@ assets y un login con Google comprueban el resto.
 | P2 Test que falla antes y pasa después | ❌ aceptado: CA3–CA7 sin test PHPUnit que falle antes, porque no hay comportamiento nuevo de la aplicación que probar — aprobado por el usuario el 2026-09-29 | CA1 y CA2 sí lo tienen: `DependenciasSegurasTest` falla hoy y pasa tras actualizar. CA3 (sin regresiones) es un criterio de no regresión: la suite existente pasa antes y después, así que ningún test puede fallar antes. CA4–CA7 son la construcción de assets, un login manual con un proveedor externo y restricciones sobre el propio diff. Se verifican con la suite completa, `npm run build`, la confirmación del usuario y las comprobaciones de T022. |
 | P3 Autorización en servidor, por rol y recurso | ➖ | No cambia ninguna ruta ni permiso. |
 | P4 Entrada validada y SQL con bindings | ➖ | Sin entradas nuevas ni SQL. |
-| P5 Nada sensible en el repo | ✅ | Solo cambian los lockfiles, `package.json` (rango de `vite` y `overrides`), un test nuevo y `docs/security.md`; sin credenciales. |
-| P6 Sin vulnerabilidades críticas/altas en producción | ✅ | Es el objeto de la spec: CA1 y CA2. |
+| P5 Nada sensible en el repo | ✅ | Solo cambian los lockfiles, `package.json` (rango de `vite` y `overrides`), un test nuevo, `docs/security.md`, `docs/roadmap.md` y el comando de auditoría en `.github/workflows/ai-dd.yml` y `.ai/project.yaml`; sin credenciales. |
+| P6 Sin vulnerabilidades críticas/altas en producción | ✅ | Es el objeto de la spec: CA1 y CA2. La auditoría de Composer pasa a ignorar las severidades baja y media, como ya hace `npm audit --audit-level=high`. P6 solo exige críticas y altas, así que el umbral no lo debilita (D10). |
 | P7 Auditoría de datos sensibles | ➖ | Sin accesos nuevos a datos sensibles. |
 | P8 Correlación y logs limpios | ➖ | Sin logs nuevos. |
 
@@ -39,7 +42,10 @@ antigüedad de 7 días; si no, se reabre el plan (D8).
 | `package-lock.json` | `npm audit fix`: `axios` 1.13.6 → 1.20.0, `concurrently` 9.2.1 → 9.2.4, `form-data` 4.0.5 → 4.0.6, `follow-redirects` 1.15.11 → 1.16.0, `nanoid` 3.3.11 → 3.3.19, `picomatch` 4.0.3 → 4.0.7 y 2.3.1 → 2.3.2, `postcss` 8.5.8 → 8.5.28, `shell-quote` 1.8.3 → 1.9.0, `lightningcss` 1.32.0 → 1.33.0, `rolldown` 1.0.0-rc.10 → **1.2.9** (fijada), `vite` 8.0.1 → **8.3.0**. Paquetes nuevos, arrastrados por dependencias existentes: `agent-base`, `https-proxy-agent`, `debug`, `ms` y `@rolldown/binding-android-arm-eabi`; se retira `@rolldown/binding-wasm32-wasi`. Simulación con `rolldown` fijado: 48 versiones cambian, todas con ≥ 7 días, del registro oficial y con `integrity`, sin scripts de instalación | Bajo: solo `welcome.blade.php` usa Vite |
 | `package.json` | Rango de `vite` `^8.0.0` → `^8.3.0` (al fijar 8.3.0) y `"overrides": { "rolldown": "1.2.9" }`; el resto de rangos no cambia y no hay dependencias directas nuevas | Bajo |
 | `tests/Feature/DependenciasSegurasTest.php` (nuevo) | Dos tests: las dependencias del servidor instaladas (`Composer\InstalledVersions`) y las del frontend en `package-lock.json` están en versiones iguales o superiores a las corregidas de los avisos (tabla de Contratos y datos) | Bajo |
-| `docs/security.md` | RS16.a, RS16.b y RS16.c → "en curso (spec 024)"; `/release` las pasa a mitigadas por corrección | Bajo |
+| `docs/security.md` | RS16.a, RS16.b y RS16.c → "en curso (spec 024)" (`/release` las pasa a mitigadas por corrección); excepción EX1 con los dos avisos bajos; comando SCA de la tabla Herramientas → `composer audit --ignore-severity=low --ignore-severity=medium` `&& npm audit --audit-level=high` (D10) | Bajo |
+| `.github/workflows/ai-dd.yml` | Los dos pasos de dependencias (el job del PR y el informativo del repo completo) ejecutan `composer audit --ignore-severity=low --ignore-severity=medium` `&& npm audit --audit-level=high` (D10) | Bajo: ruta de CI; solo cambia el umbral de Composer |
+| `.ai/project.yaml` | `security.tools.sca` con el mismo comando, para que `/review` y `/release` usen el mismo umbral que el CI (D10) | Bajo |
+| `docs/roadmap.md` | En Pendientes: actualizar `laravel/framework` a ≥ 12.69.0 y `league/flysystem` a ≥ 3.35.3 antes del vencimiento de EX1 (2026-10-31) | Bajo |
 
 ## Contratos y datos
 Sin cambios de rutas, respuestas, modelo de datos ni migraciones. Sin cambios de pantallas: los
@@ -62,10 +68,11 @@ assets construidos por Vite solo los usa `welcome.blade.php`, que ninguna ruta s
   (`test_las_dependencias_del_servidor_estan_en_versiones_corregidas`,
   `test_las_dependencias_del_frontend_estan_en_versiones_corregidas`) contra la tabla de versiones
   mínimas. Fallan hoy y pasan tras T020/T021; después impiden que vuelva un lockfile vulnerable.
-- **Verificación de seguridad (CA1, CA2):** `docker compose exec app composer audit` y
-  `npm audit --audit-level=high` terminan con código 0: el job de dependencias del PR queda en
-  verde. Se esperan 0 avisos en el servidor, porque las versiones nuevas corrigen también los 7
-  medios.
+- **Verificación de seguridad (CA1, CA2):** `docker compose exec app composer audit
+  --ignore-severity=low --ignore-severity=medium` y `npm audit --audit-level=high` terminan con
+  código 0: el job de dependencias del PR queda en verde. Las versiones nuevas corrigen las 9
+  altas y los 7 medios del servidor; `composer audit` sin filtro solo muestra los 2 avisos bajos
+  de EX1 (D10).
 - **Regresión (CA3):** `php artisan test` completo contra `dentissa_test`, con la misma línea
   base que la rama de partida (`chore/ai-dd-init`: 22 tests en verde).
 - **Construcción (CA4):** `npm run build` sin errores (línea base del 2026-09-29: construye en ~2 s).
@@ -95,14 +102,14 @@ assets construidos por Vite solo los usa `welcome.blade.php`, que ninguna ruta s
 | TM1 | Tampering: una versión maliciosa o un paquete de nombre parecido entra como dependencia, directa o transitiva | A03:2025 | `package.json`, `composer.json`, ambos lockfiles | Ninguna dependencia directa nueva; toda versión que cambia con ≥ 7 días (`rolldown` fijada en 1.2.9 por esa regla); solo el registro oficial, con `integrity` | Comprobación CA7 (T022): diff de `require`/`devDependencies` sin altas, fechas de publicación ≥ 7 días de cada versión cambiada, `resolved` e `integrity` de cada entrada npm y origen de cada paquete de Composer |
 | TM2 | Elevation of privilege: una transitiva nueva ejecuta código al instalarse | A03:2025 | `package-lock.json` | Actualizar con `--ignore-scripts` y revisar que el lockfile no añade paquetes con `hasInstallScript` | Comprobación sobre el diff del lockfile: 0 entradas nuevas con `hasInstallScript` |
 | TM3 | Denial of service / tampering por un cambio de comportamiento en un componente actualizado (cliente HTTP del OAuth, parser Markdown) | A08:2025 | `guzzlehttp/guzzle`, `league/commonmark` | Solo subidas menores o de parche en el servidor; suite completa; login con Google | CA3 (`php artisan test`), CA5 (login manual) |
-| TM4 | Vulnerabilidades conocidas en componentes (residuales) | A03:2025 | dependencias de servidor y frontend | Actualización a versiones corregidas | `DependenciasSegurasTest`; CA1 (`composer audit`), CA2 (`npm audit --audit-level=high`) |
+| TM4 | Vulnerabilidades conocidas en componentes (residuales) | A03:2025 | dependencias de servidor y frontend | Actualización a versiones corregidas | `DependenciasSegurasTest`; CA1 (`composer audit --ignore-severity=low --ignore-severity=medium`), CA2 (`npm audit --audit-level=high`) |
 
 Casos de abuso de la spec → amenazas: CA7 → TM1, TM2.
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: dependencias del servidor sin críticas ni altas | `composer.lock` | Feature `DependenciasSegurasTest::test_las_dependencias_del_servidor_estan_en_versiones_corregidas`; verificación `composer audit` con código 0 (hoy: 9 altas y 7 medias) |
+| CA1: dependencias del servidor sin críticas ni altas | `composer.lock` | Feature `DependenciasSegurasTest::test_las_dependencias_del_servidor_estan_en_versiones_corregidas`; verificación `composer audit --ignore-severity=low --ignore-severity=medium` con código 0 (hoy: 9 altas, 7 medias y 2 bajas; tras actualizar solo quedan las 2 bajas de EX1) |
 | CA2: dependencias del frontend sin críticas ni altas, incluidas las de desarrollo | `package-lock.json`, `package.json` | Feature `DependenciasSegurasTest::test_las_dependencias_del_frontend_estan_en_versiones_corregidas`; verificación `npm audit --audit-level=high` con código 0 (hoy: 2 críticas y 6 altas) |
 | CA3: suite completa sin fallos nuevos | `composer.lock` | `php artisan test` frente a la línea base de la rama |
 | CA4: construcción del frontend sin errores | `package-lock.json`, `package.json` | `npm run build` |
@@ -112,7 +119,7 @@ Casos de abuso de la spec → amenazas: CA7 → TM1, TM2.
 | TM1 | directas sin altas; toda versión cambiada con ≥ 7 días; registro oficial e `integrity` | Comprobación CA7 |
 | TM2 | `--ignore-scripts`; sin `hasInstallScript` nuevos | Comprobación sobre el diff del lockfile |
 | TM3 | subidas menores; suite; login | `php artisan test`; login manual |
-| TM4 | versiones corregidas | `DependenciasSegurasTest`; `composer audit`; `npm audit --audit-level=high` |
+| TM4 | versiones corregidas | `DependenciasSegurasTest`; `composer audit --ignore-severity=low --ignore-severity=medium`; `npm audit --audit-level=high` |
 
 ## Observabilidad
 No aplica: la spec no cambia datos sensibles, autenticación ni permisos, y no añade logs, eventos
@@ -186,11 +193,21 @@ de auditoría ni métricas.
   reabre el plan (decisión del usuario, 2026-09-29).
 - D9 · Antigüedad mínima de 7 días para toda versión que cambie, directa o transitiva, en ambos
   lockfiles (spec CA7; decisión del usuario, 2026-09-29).
+- D10 · Avisos bajos publicados después del plan y detectados en T010 (2026-09-29):
+  - `laravel/framework` 12.62.0 (CVE-2026-102279, corregido en 12.69.0) y `league/flysystem`
+    3.35.1 (CVE-2026-102601, corregido en 3.35.3). No se corrigen en la 024: actualizar Laravel
+    arrastra 42 paquetes, y la 12.69.3 no cumple los 7 días.
+  - Se registran como excepción EX1 en `docs/security.md` (aprobada por el usuario el
+    2026-09-29, vence el 2026-10-31) y quedan en Pendientes del roadmap.
+  - La auditoría de Composer ignora las severidades baja y media en el CI, `/review` y
+    `/release` (`composer audit --ignore-severity=low --ignore-severity=medium`), igual que
+    `npm audit --audit-level=high`. P6 solo exige críticas y altas.
+  - Decisión del usuario, 2026-09-29.
 
 ## Impacto en arquitectura
 - `docs/architecture.md`: sin cambios (no cita versiones de dependencias).
 - `docs/security.md → Riesgos conocidos → RS16`: estado por corrección (T091) y actualizar el
-  recuento de la línea base.
+  recuento de la línea base. `Excepciones aceptadas` → EX1, y `Herramientas` → comando SCA (D10).
 
 ## Riesgos y mitigaciones
 - Una subida menor de Guzzle cambia algún detalle del OAuth con Google → login manual (CA5) antes
@@ -206,3 +223,7 @@ de auditoría ni métricas.
 - `overrides` fija `rolldown` en 1.2.9; cuando la 1.2.11 o posterior cumpla los 7 días, una
   actualización futura puede retirar la fijación (anotado en `docs/security.md` con RS16).
 - Rollback reintroduce las vulnerabilidades → documentado en Rollout; RS16 se reabre si se usa.
+- Los avisos bajos de EX1 siguen hasta actualizar Laravel y Flysystem → vencimiento el 2026-10-31
+  y anotación en Pendientes del roadmap.
+- Un aviso medio o bajo nuevo de Composer ya no pone el job en rojo → P6 no lo exige; se ve con
+  `composer audit` sin filtro.
