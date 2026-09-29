@@ -65,8 +65,11 @@ jobs:
         run: cp .env.example .env && php artisan key:generate
       - name: Cargar el esquema de pruebas
         # Mientras no exista el esquema por migraciones (RD2), se carga el volcado y luego las
-        # migraciones de julio, que el volcado no incluye.
+        # migraciones de julio, que el volcado no incluye. La base se pone en utf8mb4_unicode_ci,
+        # como hace database/testing/bootstrap-test-db.sh: `horarios_dentista` no declara
+        # collation y su clave foránea a `personal` falla (errno 150) con la de por defecto.
         run: |
+          mysql -h 127.0.0.1 -uroot -proot -e "ALTER DATABASE dentissa_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
           mysql -h 127.0.0.1 -uroot -proot dentissa_test < database/dentissa.sql
           php artisan migrate --force
       - name: Pint sobre los archivos PHP cambiados en el PR
