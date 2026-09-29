@@ -32,8 +32,13 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - 020 antes de `/release 020` (plan de la 024, Rollout pasos 4 y 5): reconstruir `feature/020-auditoria-base`
   sobre `main` sin sus copias de los commits de la 024 y comprobar que no cambian `docs/specs/024-dependencias-seguras`,
   la fila 024 de `docs/specs/README.md` ni su enlace aquí; después, que el merge de la 024 es ancestro del commit
-  que se libera y que `composer audit` y `npm audit --audit-level=high` dan 0 críticas y 0 altas (decisión del
-  usuario, 2026-09-29).
+  que se libera y que `composer audit --ignore-severity=low --ignore-severity=medium` y
+  `npm audit --audit-level=high` terminan con código 0, es decir, 0 críticas y 0 altas (decisión del
+  usuario, 2026-09-29; comando de la spec 024, D10).
+- EX1 (`docs/security.md`, spec 024, D10): actualizar `laravel/framework` a ≥ 12.69.0 y
+  `league/flysystem` a ≥ 3.35.3 antes del 2026-10-31. Al vencer, el usuario decide si se actualizan
+  en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan`
+  o `/release` posterior al 2026-10-31 (decisión del usuario, 2026-09-29).
 - `aidlc/spaces/default/intents/260920-monolito-modular/` puede eliminarse cuando el usuario
   revise su migración a la spec 013.
 - Aprobar o ajustar las specs inferidas 001–012 (`/specify --edit NNN`).

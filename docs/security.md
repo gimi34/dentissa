@@ -82,6 +82,7 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 ## Excepciones aceptadas
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
+| EX1 | `laravel/framework` 12.62.0 (CVE-2026-102279, XSS en la página de depuración; corregido en 12.69.0) y `league/flysystem` 3.35.1 (CVE-2026-102601, normalización de rutas; corregido en 3.35.3) | Baja | Publicados el 2026-09-29, después del plan de la spec 024. Actualizar Laravel arrastra 42 paquetes, y la 12.69.3 aún no cumple los 7 días (spec 024, D10). No pertenece a RS16 (severidad baja, fuera de P6). Al vencer, el usuario decide si se actualizan en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan` o `/release` posterior al vencimiento | el usuario, 2026-09-29 | 2026-10-31 |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -238,15 +239,20 @@ críticos, 6 altos y 1 moderado (`concurrently`, `shell-quote`, `axios`, `vite`,
 Bloquean `/release` (principio P6). Se atiende en una spec propia de actualización de
 dependencias, antes de cualquier release (decisión del usuario, 2026-09-28).
 
+Recuento de la spec 024 antes de actualizar (T010, 2026-09-29): `composer audit` reporta 9 altas y
+7 medias (`guzzlehttp/guzzle` 1 alta y 5 medias; `league/commonmark` 8 altas y 2 medias), más 2
+bajas ajenas a RS16 que cubre la excepción EX1. `npm audit` reporta 2 críticas, 6 altas y 1
+moderada. `rolldown` queda fijado en 1.2.9 con `overrides` en `package.json` hasta que una versión
+más reciente cumpla los 7 días de antigüedad; entonces una actualización futura puede retirar la
+fijación.
+
 Correcciones:
-- RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: pendiente
-- RS16.b Aplicar las correcciones de npm (`npm audit fix`, revisando saltos de versión mayor) — estado: pendiente
-- RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: pendiente
+- RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: en curso (spec 024)
+- RS16.b Aplicar las correcciones de npm (`npm audit fix`, revisando saltos de versión mayor) — estado: en curso (spec 024)
+- RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: en curso (spec 024)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en
   staging y producción: esos entornos aún no existen. En local coinciden con `.env.example`
   (`APP_DEBUG=true`), confirmado por el usuario, 2026-09-28.
-- Vulnerabilidades conocidas de dependencias: `composer audit` y `npm audit` aún no se han
-  ejecutado.
 - Restricción de dominios de la app de Google OAuth.

@@ -1,7 +1,7 @@
 ---
 id: 024
 slug: dependencias-seguras
-status: approved
+status: implemented
 created: 2026-09-29
 extends: []
 ---
@@ -22,13 +22,13 @@ comportamiento de la aplicación y atiende RS16 por completo.
 - Como paciente o miembro del personal, quiero seguir entrando con mi cuenta de Google igual que antes.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del servidor, entonces no reporta ninguna vulnerabilidad crítica ni alta.
-- [ ] CA2 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del frontend, incluidas las que solo se usan en desarrollo, entonces no reporta ninguna vulnerabilidad crítica ni alta.
-- [ ] CA3 · Dada la actualización, cuando se ejecuta la suite completa de pruebas, entonces pasan todas, sin fallos nuevos respecto a la línea base anterior a la actualización.
-- [ ] CA4 · Dada la actualización, cuando se construyen los recursos del frontend, entonces la construcción termina sin errores.
-- [ ] CA5 · Dada la actualización, cuando una persona inicia sesión con su cuenta de Google en el entorno local, entonces entra igual que antes (verificación manual, porque depende del proveedor externo).
-- [ ] CA6 · Dada la actualización, cuando se comparan las versiones instaladas con las anteriores, entonces ni el framework del servidor ni ninguna dependencia que la aplicación ejecuta en producción cambia de versión mayor; solo las herramientas de construcción del frontend pueden hacerlo.
-- [ ] CA7 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces no se añade ninguna dependencia directa nueva y cada versión que cambia, sea de una dependencia directa o de una de las que estas arrastran, lleva al menos 7 días publicada en el registro oficial.
+- [x] CA1 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del servidor, entonces no reporta ninguna vulnerabilidad crítica ni alta.
+- [x] CA2 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del frontend, incluidas las que solo se usan en desarrollo, entonces no reporta ninguna vulnerabilidad crítica ni alta.
+- [x] CA3 · Dada la actualización, cuando se ejecuta la suite completa de pruebas, entonces pasan todas, sin fallos nuevos respecto a la línea base anterior a la actualización.
+- [x] CA4 · Dada la actualización, cuando se construyen los recursos del frontend, entonces la construcción termina sin errores.
+- [x] CA5 · Dada la actualización, cuando una persona inicia sesión con su cuenta de Google en el entorno local, entonces entra igual que antes (verificación manual, porque depende del proveedor externo).
+- [x] CA6 · Dada la actualización, cuando se comparan las versiones instaladas con las anteriores, entonces ni el framework del servidor ni ninguna dependencia que la aplicación ejecuta en producción cambia de versión mayor; solo las herramientas de construcción del frontend pueden hacerlo.
+- [x] CA7 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces no se añade ninguna dependencia directa nueva y cada versión que cambia, sea de una dependencia directa o de una de las que estas arrastran, lleva al menos 7 días publicada en el registro oficial.
 
 ## Fuera de alcance
 - Instalar o ejecutar las herramientas de detección de secretos, análisis estático y análisis de contenedores (020/R26 → roadmap).
