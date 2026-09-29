@@ -1,7 +1,7 @@
 ---
 spec: 024-dependencias-seguras
 plan: plan.md
-status: approved
+status: draft
 impl_base: c2d352d
 ---
 
@@ -20,8 +20,8 @@ Formato:
 | P2 Test que falla antes y pasa después | ❌ aceptado: CA3–CA7 sin test PHPUnit que falle antes, porque no hay comportamiento nuevo de la aplicación que probar — aprobado por el usuario el 2026-09-29 | T011 (`DependenciasSegurasTest`) se escribe antes de actualizar y falla hoy; T020 y T021 dependen de ella (CA1, CA2). CA3 (no regresión) se verifica con la suite completa en T020 y T040; CA4–CA7 en T021, T022 y T023, según la desviación aceptada en el plan. |
 | P3 Autorización en servidor | ➖ | Ninguna tarea toca rutas ni permisos. |
 | P4 Entrada validada y SQL con bindings | ➖ | Sin entradas nuevas ni SQL. |
-| P5 Nada sensible en el repo | ✅ | Solo lockfiles, `package.json`, un test y `docs/security.md`. |
-| P6 Sin vulnerabilidades críticas/altas | ✅ | Objeto de la spec (T020, T021, T040). Ninguna tarea añade dependencias directas; la fijación de `rolldown` va en `overrides` (CA7). |
+| P5 Nada sensible en el repo | ✅ | Solo lockfiles, `package.json`, un test, `docs/security.md`, `docs/roadmap.md` y el comando de auditoría en `.github/workflows/ai-dd.yml` y `.ai/project.yaml` (T024). |
+| P6 Sin vulnerabilidades críticas/altas | ✅ | Objeto de la spec (T020, T021, T040). Ninguna tarea añade dependencias directas; la fijación de `rolldown` va en `overrides` (CA7). T024 hace que Composer ignore solo las severidades baja y media, que P6 no exige (D10), y T091 registra los 2 avisos bajos como EX1. |
 | P7 Auditoría de datos sensibles | ➖ | Sin accesos nuevos a datos sensibles. |
 | P8 Correlación y logs limpios | ➖ | Sin logs nuevos. |
 
@@ -39,15 +39,16 @@ Formato:
   - nota: hecha tras retomar `/implement` (2026-09-29): no depende de la decisión sobre los avisos bajos de T010, porque las mínimas del plan no cambian. Los dos tests fallan por la razón esperada: servidor `guzzlehttp/guzzle 7.13.2 < 7.15.2` y `league/commonmark 2.8.2 < 2.10.0`; frontend, 10 instancias, entre ellas `node_modules/picomatch 4.0.3 < 4.0.4` y la anidada `node_modules/vite-plugin-full-reload/node_modules/picomatch 2.3.1 < 2.3.2`, y `vite 8.0.1 < 8.0.16`. Comprobado rompiendo la tabla: sin la mínima de la rama 2 de `picomatch`, el fallo cita "la rama 2 no tiene mínima definida"; restaurada. `vendor/bin/pint --test` sin cambios dentro del contenedor.
 
 ## Implementación
-- [ ] T020 Actualizar las dependencias del servidor: `docker compose exec app composer update league/commonmark guzzlehttp/guzzle --with-dependencies`, sin tocar `composer.json` (controles TM1, TM3, TM4) — composer.lock — hecho cuando: `composer audit` termina con código 0 (0 avisos); `test_las_dependencias_del_servidor_estan_en_versiones_corregidas` pasa; `composer.json` sin cambios; `php artisan test` iguala la línea base de T002 más los tests de T011; la nota recoge las versiones resueltas (si difieren de la simulación, solo se aceptan menores o de parche, D8) y las nuevas de `guzzle` y `commonmark` — cubre: CA1, CA3, CA6, CA7 — depende: T010, T011
+- [ ] T020 Actualizar las dependencias del servidor: `docker compose exec app composer update league/commonmark guzzlehttp/guzzle --with-dependencies`, sin tocar `composer.json` (controles TM1, TM3, TM4) — composer.lock — hecho cuando: `composer audit --ignore-severity=low --ignore-severity=medium` termina con código 0 y `composer audit` sin filtro solo reporta los 2 avisos bajos de EX1 (`laravel/framework`, `league/flysystem`; D10); `test_las_dependencias_del_servidor_estan_en_versiones_corregidas` pasa; `composer.json` sin cambios; `php artisan test` iguala la línea base de T002 más los tests de T011; la nota recoge las versiones resueltas (si difieren de la simulación, solo se aceptan menores o de parche, D8) y las nuevas de `guzzle` y `commonmark` — cubre: CA1, CA3, CA6, CA7 — depende: T010, T011
 - [ ] T021 Actualizar las dependencias del frontend: `npm audit fix --ignore-scripts`, `npm install --save-dev vite@8.3.0 --ignore-scripts` y `"overrides": { "rolldown": "1.2.9" }` en `package.json` seguido de `npm install --ignore-scripts` (controles TM1, TM2, TM4) — package-lock.json, package.json — hecho cuando: `npm audit --audit-level=high` termina con código 0; `test_las_dependencias_del_frontend_estan_en_versiones_corregidas` pasa; `vite` queda en 8.3.0 y `rolldown` en 1.2.9; en `package.json` solo cambian el rango de `vite` (`^8.3.0`) y `overrides`; el lockfile conserva las entradas linux-x64 (gnu/musl) de `@rolldown/binding-*` y `lightningcss-*`; `npm run build` termina sin errores — cubre: CA2, CA4, CA6, CA7 — depende: T010, T011
 - [ ] T022 Verificar las restricciones del cambio sobre el diff de ambos lockfiles, con las versiones realmente resueltas (tests de TM1 y TM2): (1) ninguna versión mayor cambia en `packages` de `composer.lock` ni en los paquetes de los assets construidos, con la lista obtenida como en T002 (sourcemaps), y `proxy-from-env` no aparece en esa lista; (2) `composer.json` y `package.json` sin dependencias directas nuevas; (3) cada versión que cambia, directa o transitiva, lleva al menos 7 días publicada (`npm view <paquete> time`, campo `time` de Packagist); (4) cada entrada nueva o cambiada de `package-lock.json` tiene `resolved` bajo `https://registry.npmjs.org/` e `integrity`, y cada paquete cambiado de `composer.lock` viene de Packagist o GitHub; (5) ninguna entrada nueva con `hasInstallScript` respecto a T002 — docs/specs/024-dependencias-seguras/tasks.md — hecho cuando: la nota recoge la tabla de paquetes cambiados (versión antes y después, fecha y origen) y los cinco puntos se cumplen; si alguno no se cumple, se detiene la implementación y se reabre el plan (D8) — cubre: CA6, CA7 — depende: T020, T021
 - [ ] T023 Verificación manual del login con Google en local, hecha por el usuario tras T020 (test de TM3) — (sin archivos; nota en tasks.md) — hecho cuando: el usuario confirma que entra con Google en `http://localhost:8000` igual que antes, y la nota lo registra con fecha — cubre: CA5 — depende: T020
+- [ ] T024 Cambiar el comando de auditoría de dependencias a `composer audit --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` en los dos pasos de dependencias de `.github/workflows/ai-dd.yml` (el job del PR y el informativo del repo completo), en `security.tools.sca` de `.ai/project.yaml` y en la fila SCA de la tabla Herramientas de `docs/security.md` (D10; `.github/` es ruta protegida y esta tarea aprobada la autoriza) — .github/workflows/ai-dd.yml, .ai/project.yaml, docs/security.md — hecho cuando: `git diff` de los tres archivos solo cambia esas 4 líneas; el comando, ejecutado en local (Composer dentro del contenedor, npm en el host), termina con código 0 — cubre: CA1, CA2 — depende: T020, T021
 
 ## Integración y documentación
-- [ ] T040 Verificación final completa: `php artisan test`, `npm run build`, `composer audit`, `npm audit --audit-level=high`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php` y `python .ai/bin/aidd.py validate docs/specs/024-dependencias-seguras` — (sin archivos) — hecho cuando: los seis en verde (suite igual a la línea base de T002 más T011; ambas auditorías con código 0, así que el job de dependencias del PR queda en verde; Pint sin cambios; validador sin errores) — cubre: CA1, CA2, CA3, CA4 — depende: T022, T023
+- [ ] T040 Verificación final completa: `php artisan test`, `npm run build`, `composer audit --ignore-severity=low --ignore-severity=medium`, `npm audit --audit-level=high`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php` y `python .ai/bin/aidd.py validate docs/specs/024-dependencias-seguras` — (sin archivos) — hecho cuando: los seis en verde (suite igual a la línea base de T002 más T011; ambas auditorías con código 0, así que el job de dependencias del PR queda en verde; Pint sin cambios; validador sin errores) — cubre: CA1, CA2, CA3, CA4 — depende: T022, T023, T024
 - [ ] T090 Comprobar que `docs/architecture.md` no necesita cambios (no cita versiones de dependencias) y anotarlo
-- [ ] T091 Actualizar `docs/security.md → RS16`: RS16.a, RS16.b y RS16.c → "en curso (spec 024)", por corrección; el recuento de la línea base con los datos de T010; y una nota de que `rolldown` va fijado en 1.2.9 con `overrides` hasta que una versión más reciente cumpla los 7 días. `docs/deployment.md` y `docs/observability.md` sin cambios
+- [ ] T091 Actualizar `docs/security.md → RS16`: RS16.a, RS16.b y RS16.c → "en curso (spec 024)", por corrección; el recuento de la línea base con los datos de T010; y una nota de que `rolldown` va fijado en 1.2.9 con `overrides` hasta que una versión más reciente cumpla los 7 días. En `docs/security.md → Excepciones aceptadas`, fila EX1: `laravel/framework` 12.62.0 (CVE-2026-102279) y `league/flysystem` 3.35.1 (CVE-2026-102601), severidad baja, motivo de D10, aprobado por el usuario el 2026-09-29, vence el 2026-10-31. En `docs/roadmap.md → Pendientes`: actualizar `laravel/framework` a ≥ 12.69.0 y `league/flysystem` a ≥ 3.35.3 antes del 2026-10-31 (EX1). `docs/deployment.md` y `docs/observability.md` sin cambios
 - [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
@@ -59,8 +60,8 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010, T011, T040 | T020 |
-| CA2 | T010, T011, T040 | T021 |
+| CA1 | T010, T011, T040 | T020, T024 |
+| CA2 | T010, T011, T040 | T021, T024 |
 | CA3 | T002, T040 | T020 |
 | CA4 | T002, T040 | T021 |
 | CA5 | T023 | T020 |
@@ -80,4 +81,7 @@ Formato:
 | package-lock.json | T021 |
 | package.json | T021 |
 | tests/Feature/DependenciasSegurasTest.php | T011 |
-| docs/security.md | T091 |
+| docs/security.md | T024, T091 |
+| .github/workflows/ai-dd.yml | T024 |
+| .ai/project.yaml | T024 |
+| docs/roadmap.md | T091 |
