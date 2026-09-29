@@ -2,30 +2,29 @@
 
 namespace Tests\Feature;
 
-use Composer\InstalledVersions;
 use Tests\TestCase;
 
 /**
- * Versiones mínimas corregidas de las dependencias con avisos críticos o altos
- * (spec 024, TM4). Impiden que vuelva un lockfile vulnerable.
+ * Versiones mínimas corregidas de las dependencias con avisos de `composer audit`
+ * y `npm audit` del 2026-09-29 (spec 024, TM4). Impiden que vuelva un lockfile
+ * vulnerable. Casi todas corrigen avisos críticos o altos; `follow-redirects` se
+ * incluye a propósito aunque su aviso era moderado (tabla del plan).
  *
- * No abren sesión ni tocan la base de datos: leen las versiones instaladas del
- * servidor y el `package-lock.json` del frontend.
+ * No abren sesión ni tocan la base de datos: leen `composer.lock` y
+ * `package-lock.json`, no lo instalado en `vendor` o `node_modules`.
  */
 class DependenciasSegurasTest extends TestCase
 {
     /**
-     * Mínima corregida de cada paquete del servidor (avisos de `composer audit`
-     * del 2026-09-29).
+     * Mínima corregida de cada paquete del servidor, por rama mayor.
      */
     private const MINIMAS_SERVIDOR = [
-        'guzzlehttp/guzzle' => '7.15.2',
-        'league/commonmark' => '2.10.0',
+        'guzzlehttp/guzzle' => [7 => '7.15.2'],
+        'league/commonmark' => [2 => '2.10.0'],
     ];
 
     /**
-     * Mínima corregida de cada paquete del frontend, por rama mayor (avisos de
-     * `npm audit` del 2026-09-29).
+     * Mínima corregida de cada paquete del frontend, por rama mayor.
      */
     private const MINIMAS_FRONTEND = [
         'axios' => [1 => '1.17.1'],
@@ -41,15 +40,24 @@ class DependenciasSegurasTest extends TestCase
 
     public function test_las_dependencias_del_servidor_estan_en_versiones_corregidas(): void
     {
+        $lock = json_decode(file_get_contents(base_path('composer.lock')), true, flags: JSON_THROW_ON_ERROR);
+        $versiones = array_column($lock['packages'], 'version', 'name');
         $fallos = [];
 
-        foreach (self::MINIMAS_SERVIDOR as $paquete => $minima) {
-            $instalada = InstalledVersions::getPrettyVersion($paquete);
+        foreach (self::MINIMAS_SERVIDOR as $paquete => $minimasPorRama) {
+            if (! isset($versiones[$paquete])) {
+                $fallos[] = "{$paquete}: no aparece en composer.lock";
 
-            if ($instalada === null) {
-                $fallos[] = "{$paquete}: no está instalado";
-            } elseif (version_compare(ltrim($instalada, 'v'), $minima, '<')) {
-                $fallos[] = "{$paquete} {$instalada} < {$minima}";
+                continue;
+            }
+
+            $version = ltrim($versiones[$paquete], 'v');
+            $rama = (int) explode('.', $version)[0];
+
+            if (! isset($minimasPorRama[$rama])) {
+                $fallos[] = "{$paquete} {$version}: la rama {$rama} no tiene mínima definida";
+            } elseif (version_compare($version, $minimasPorRama[$rama], '<')) {
+                $fallos[] = "{$paquete} {$version} < {$minimasPorRama[$rama]}";
             }
         }
 
