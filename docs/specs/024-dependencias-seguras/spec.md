@@ -28,11 +28,11 @@ comportamiento de la aplicación y atiende RS16 por completo.
 - [ ] CA4 · Dada la actualización, cuando se construyen los recursos del frontend, entonces la construcción termina sin errores.
 - [ ] CA5 · Dada la actualización, cuando una persona inicia sesión con su cuenta de Google en el entorno local, entonces entra igual que antes (verificación manual, porque depende del proveedor externo).
 - [ ] CA6 · Dada la actualización, cuando se comparan las versiones instaladas con las anteriores, entonces ni el framework del servidor ni ninguna dependencia que la aplicación ejecuta en producción cambia de versión mayor; solo las herramientas de construcción del frontend pueden hacerlo.
-- [ ] CA7 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces no se añade ninguna dependencia directa nueva y cada versión nueva de una dependencia directa lleva al menos 7 días publicada en el registro oficial.
+- [ ] CA7 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces no se añade ninguna dependencia directa nueva y cada versión que cambia, sea de una dependencia directa o de una de las que estas arrastran, lleva al menos 7 días publicada en el registro oficial.
 
 ## Fuera de alcance
 - Instalar o ejecutar las herramientas de detección de secretos, análisis estático y análisis de contenedores (020/R26 → roadmap).
-- Cambiar la versión del lenguaje del servidor o de su framework (RD7 → objetivo 5).
+- Cambiar la versión del lenguaje del servidor o de su framework, y alinear la versión declarada con la que exige el registro de versiones instaladas (objetivo 5).
 - Retirar las herramientas del frontend que hoy casi no se usan (roadmap, "Restos del esqueleto de Laravel").
 - Corregir las vulnerabilidades medias o moderadas que no se resuelvan con la misma actualización: no bloquean la release (P6).
 - Automatizar la verificación periódica de dependencias.
@@ -41,7 +41,7 @@ comportamiento de la aplicación y atiende RS16 por completo.
 - Datos sensibles involucrados: ninguno directamente. La spec reduce la exposición de todos los datos de la aplicación, incluidos los de salud y las credenciales, a fallos de componentes de terceros.
 - Quién puede hacer qué: no cambia ningún permiso ni flujo de ningún rol.
 - Casos de abuso:
-  - Como atacante, publico una versión maliciosa de una dependencia o un paquete con un nombre parecido para que entre en la actualización → no se añade ninguna dependencia directa nueva y cada versión nueva de una dependencia directa lleva al menos 7 días publicada (CA7).
+  - Como atacante, publico una versión maliciosa de una dependencia o un paquete con un nombre parecido para que entre en la actualización → no se añade ninguna dependencia directa nueva y cada versión que cambia, directa o arrastrada por otra, lleva al menos 7 días publicada (CA7).
 
 ## Cobertura de riesgos
 | Corrección | Alcance | Criterios / motivo y destino |
@@ -49,7 +49,6 @@ comportamiento de la aplicación y atiende RS16 por completo.
 | RS16.a — actualizar las dependencias vulnerables del servidor a versiones corregidas dentro de las restricciones declaradas | dentro | CA1, CA3, CA5, CA6, CA7 |
 | RS16.b — aplicar las correcciones de las dependencias del frontend, revisando los saltos de versión mayor | dentro | CA2, CA4, CA6, CA7 |
 | RS16.c — volver a verificar ambas sin hallazgos críticos ni altos | dentro | CA1, CA2 |
-| RD7.a — alinear la versión declarada del lenguaje del servidor con la que exige el lock | fuera | no hace falta para corregir RS16; las actualizaciones se ejecutan con la versión del contenedor → objetivo 5 |
 
 ## Auditoría
 No aplica: la spec no cambia datos sensibles, autenticación ni permisos. El acceso con Google no
@@ -66,9 +65,10 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 - Recuento de partida (2026-09-29): servidor, 9 altas y 7 medias; frontend, 2 críticas, 6 altas y 1 moderada.
 - Mientras las herramientas de secretos, análisis estático y contenedores no estén instaladas (020/R26), `/release` dejará constancia de su ausencia; esta spec no las instala.
 - La spec queda enlazada desde "Pendientes y deuda" del roadmap, sin objetivo propio (decisión del usuario, 2026-09-29).
+- La antigüedad mínima de 7 días aplica a toda versión que cambie, directa o arrastrada por otra dependencia; si alguna no la cumple, se usa la versión corregida anterior o se espera (decisión del usuario, 2026-09-29).
 
 ## Notas para /plan
-- Servidor (RS16.a): `league/commonmark` y `guzzlehttp/guzzle`, transitivas de Laravel. Actualizar dentro de las restricciones de `composer.json` (p. ej. `composer update league/commonmark guzzlehttp/guzzle --with-dependencies`) y ejecutar Composer dentro del contenedor `app`, porque `composer.lock` exige PHP ≥ 8.4.1 (RD7).
+- Servidor (RS16.a): `league/commonmark` y `guzzlehttp/guzzle`, transitivas de Laravel. Actualizar dentro de las restricciones de `composer.json` (p. ej. `composer update league/commonmark guzzlehttp/guzzle --with-dependencies`) y ejecutar Composer dentro del contenedor `app`, porque `composer.lock` exige PHP ≥ 8.4.1.
 - Frontend (RS16.b): `concurrently`, `shell-quote`, `axios`, `vite`, `form-data`, `nanoid`, `picomatch`, `postcss` y `follow-redirects`. Probar primero `npm audit fix`; `--force` solo para saltos mayores de herramientas de construcción (p. ej. `vite`). Hoy solo `welcome.blade.php` usa Vite.
 - Verificación: `composer audit`, `npm audit --audit-level=high`, `php artisan test`, `npm run build` y un login con Google en local (Socialite usa Guzzle).
 - Antigüedad mínima de versiones nuevas: `security.agent.min_package_age_days: 7` en `.ai/project.yaml` (`shared/agent-security.md` §2).
@@ -79,3 +79,5 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 |---|---|---|
 | 2026-09-29 | Creación | /specify, riesgo RS16 (bloquea `/release 020`) |
 | 2026-09-29 | Aprobada por el usuario | /specify |
+| 2026-09-29 | CA7 y su caso de abuso cubren toda versión que cambie, directa o transitiva; la spec deja de citar por su identificador el riesgo de versión del lenguaje del servidor (sigue fuera de alcance, objetivo 5). Vuelve a `draft`. | /analyze 024 ronda 1: A02, A12 (decisión del usuario, 2026-09-29) |
+| 2026-09-29 | Aprobada de nuevo por el usuario | /specify --edit |
