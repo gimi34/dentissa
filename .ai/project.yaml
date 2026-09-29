@@ -1,0 +1,68 @@
+# Generado por /init. Lo leen todas las skills del flujo.
+name: dentissa
+type: fullstack                # frontend | backend | fullstack | mobile | monorepo | library
+stage: mvp                     # prototype | mvp | production | maintenance
+origin: brownfield             # greenfield | brownfield
+language: es                   # es | en | … idioma de los documentos (shared/vocabulary.md)
+initialized_at: 2026-09-28
+stack:
+  languages: [php, blade, javascript, sql]
+  frontend: blade + css propio en public/css (vite + tailwind 4 declarados, casi sin uso)
+  backend: laravel 12 (php ^8.2; imagen docker php 8.4-fpm) + laravel/socialite
+  database: mariadb 10.11 (docker)
+  package_manager: composer (+ npm para assets)
+packages: []                   # solo monorepo: [{ path: apps/web, type: frontend }, …]
+constitution_version: 1.0.0
+workflow:
+  enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
+  legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md
+skills_version: 1.8.1          # versión del paquete de skills con que se inicializó
+deploy:
+  strategy: manual             # none | manual | ci-on-merge | ci-on-tag
+  platform: TODO(init) por definir (sin presupuesto; ver docs/deployment.md)
+  environments: [dev, staging, prod]
+  prod_approval: human         # innegociable
+  rollback: TODO(init) no existe; propuesto redeploy del tag anterior + restaurar backup previo de BD (RD1)
+security:
+  owasp_top10_edition: 2025
+  asvs_level: 2
+  sensitive_data: [personal, health, credentials]
+  tools:                       # comandos; vacío si no hay herramienta configurada
+    secrets: gitleaks detect --no-banner
+    sast: semgrep scan --config p/php --config p/laravel --error
+    sca: composer audit && npm audit --audit-level=high
+    containers: trivy fs --severity HIGH,CRITICAL .
+    dast: null                 # solo contra staging
+  agent:
+    min_package_age_days: 7
+    protected_paths:           # además de las de shared/agent-security.md
+      - AIDLC.md
+      - aidlc/
+      - docker-compose.yml
+      - Dockerfile
+      - database/dentissa.sql
+observability:
+  log_level_prod: info
+  correlation_header: X-Request-Id
+  audit:
+    required: true
+    events: [login, login_failed, logout, access_denied, sensitive_read, sensitive_write, role_change, account_change]
+    retention: 5 años (decisión del usuario, 2026-09-28)
+skills:
+  enabled: [design]            # p. ej. [design]
+paths:
+  constitution: docs/constitution.md
+  architecture: docs/architecture.md
+  roadmap: docs/roadmap.md
+  deployment: docs/deployment.md
+  security: docs/security.md
+  observability: docs/observability.md
+  changelog: CHANGELOG.md
+  specs: docs/specs
+  adr: docs/adr
+  templates: docs/templates
+verification:                  # lo llena la Fase 4
+  - { command: "python .ai/bin/aidd.py validate", result: pass, note: "13 specs, 0 errores (2026-09-28)" }
+  - { command: "php artisan test", result: fail, note: "PHP 8.2 local: composer.lock exige >= 8.4.1 (RD7); Docker no estaba en marcha para correrlo en el contenedor" }
+  - { command: "vendor/bin/pint --test", result: fail, note: "no ejecutado: mismo motivo; /init no tocó archivos PHP" }
+  - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso" }

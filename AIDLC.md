@@ -1,3 +1,25 @@
+<!--
+  AI-DLC EN PAUSA — movido por /init (AI-DD) el 2026-09-28 (decisión del usuario, 2026-09-28).
+
+  Por qué: el proyecto adopta el flujo AI-DD (/specify → /plan → /tasks → /analyze → /implement →
+  /review → /release). Dos flujos activos a la vez dan instrucciones contradictorias al agente.
+
+  Qué se movió (texto literal, sin reescribir):
+  - Este archivo: contenido íntegro de `.claude/CLAUDE.md` (debajo de esta cabecera).
+  - `aidlc/paused/rules-aidlc.md`: contenido íntegro de `.claude/rules/aidlc.md` (imports del método).
+  - `aidlc/paused/settings-aidlc-hooks.json`: bloques `statusLine` y `hooks` de `.claude/settings.json`.
+  No se borró nada de `aidlc/` ni de `.claude/` (agentes, skills, hooks, tools siguen en su sitio).
+
+  Estado al pausar: intención `260920-monolito-modular` en curso (3/26 etapas, en reverse-engineering).
+  Su contenido se migró como spec draft `docs/specs/013-monolito-modular/` (originales en referencias/).
+
+  Cómo retomarlo:
+  1. Copia el contenido de debajo de esta cabecera a `.claude/CLAUDE.md`.
+  2. Copia `aidlc/paused/rules-aidlc.md` a `.claude/rules/aidlc.md`.
+  3. Devuelve `statusLine` y `hooks` de `aidlc/paused/settings-aidlc-hooks.json` a `.claude/settings.json`.
+  4. Reinicia Claude Code y actualiza `workflow.legacy_workflow` en `.ai/project.yaml` y AGENTS.md.
+-->
+
 @.claude/rules/aidlc.md
 
 <!--

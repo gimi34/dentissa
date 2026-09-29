@@ -1,0 +1,120 @@
+---
+version: 1.0.0
+ratified: 2026-09-28
+last_amended: 2026-09-28
+status: approved   # aprobada por el usuario el 2026-09-28
+---
+
+# Constitución de Dentissa
+
+Principios innegociables. Toda spec, plan y tarea debe cumplirlos. `/plan` y `/tasks` incluyen un
+**Constitution Check** que evalúa cada principio; un incumplimiento sin justificación bloquea.
+
+Principios elegidos por el usuario en la entrevista de `/init` (decisión del usuario, 2026-09-28).
+
+## Código previo
+El código existente anterior a esta constitución que no cumple un principio **no bloquea** por sí
+mismo: queda registrado como deuda en [roadmap.md](roadmap.md) y en las "Observaciones" de cada
+spec. Los principios se exigen a todo código **nuevo o modificado**.
+
+## Principios
+
+### P1. Spec aprobada antes de código
+**Regla:** ninguna implementación de comportamiento nuevo o modificado sin una spec en
+`docs/specs/NNN-<slug>/spec.md` con `status: approved` y su `tasks.md` aprobado.
+**Cómo se verifica:** `python .ai/bin/aidd.py status`; el hook del plugin (`workflow.enforcement`)
+pide aprobación al editar código sin spec activa; `/review` rechaza cambios sin spec.
+**Por qué:** trabajo en equipo académico con varias personas tocando los mismos controladores; la
+spec fija el qué y el por qué antes de discutir el cómo.
+
+### P2. Todo cambio de comportamiento lleva test que falla antes y pasa después
+**Regla:** cada criterio de aceptación de una spec tiene al menos un test PHPUnit (Feature o Unit)
+que falla sin el cambio y pasa con él. Los tests usan `DatabaseTransactions` contra la base de
+pruebas, nunca contra la base de desarrollo.
+**Cómo se verifica:** sección Trazabilidad del plan (criterio → test); `/review` comprueba que
+cada test existe y que `php artisan test` pasa.
+**Por qué:** hoy solo usuarios y servicios tienen tests; agenda, pacientes y expedientes no tienen
+red de seguridad.
+
+### P3. Autorización verificada en el servidor, por rol y por recurso
+**Regla:** todo endpoint nuevo o modificado verifica (1) el rol con middleware y (2) el alcance
+sobre el recurso concreto (dentista → sus pacientes y expedientes; asistente → los de sus
+doctores asignados; cliente → solo lo suyo) mediante una Policy o Gate de Laravel. Ningún control
+de acceso vive solo en la vista.
+**Cómo se verifica:** test Feature por rol que cubre el caso permitido y el denegado (403) por
+cada acción; `/review` con `shared/security-checklist.md`.
+**Por qué:** el sistema maneja expedientes clínicos; el acceso horizontal entre personal es el
+riesgo más grave detectado (docs/security.md).
+
+### P4. Entrada validada en el servidor y SQL siempre con bindings
+**Regla:** toda entrada externa se valida en el servidor (reglas de `validate` o Form Request),
+incluidos formatos de fecha y hora, arrays y claves foráneas con su tipo; toda consulta usa
+Query Builder/Eloquent con bindings; prohibido concatenar entrada del usuario en SQL, `DB::raw`,
+`whereRaw` u `orderByRaw`. En Blade solo `{{ }}` o `@js()`; `{!! !!}` requiere justificación en el plan.
+**Cómo se verifica:** SAST (`semgrep`) sobre los archivos tocados; tests de validación por campo;
+revisión.
+**Por qué:** evita inyección y errores 500 por entradas mal formadas.
+
+### P5. Nada sensible en el repositorio
+**Regla:** no se versionan secretos, contraseñas (tampoco de cuentas de prueba), `.env`, volcados
+con datos personales o de salud (aunque sean ficticios con apariencia real) ni credenciales de
+base de datos distintas de las de un entorno local desechable documentado. Los datos de ejemplo
+salen de seeders con datos sintéticos (Faker).
+**Cómo se verifica:** `gitleaks detect --no-banner` en `/implement` y en CI; revisión de diffs de
+`database/`, `README.md` y archivos de configuración.
+**Por qué:** marco LFPDPPP / NOM-024 y buenas prácticas aunque los datos actuales sean ficticios.
+
+### P6. Ninguna vulnerabilidad crítica o alta llega a producción sin excepción aprobada
+**Regla:** `/release` bloquea si `composer audit`, `npm audit --audit-level=high`, `semgrep` o
+`trivy` reportan hallazgos críticos o altos sin una excepción vigente (con motivo, aprobador y
+fecha de vencimiento) en `docs/security.md → Excepciones aceptadas`.
+**Cómo se verifica:** salida de las herramientas en `/review` y `/release`; job de CI.
+**Por qué:** ASVS nivel 2 y datos de salud.
+
+### P7. Auditoría de accesos y cambios a datos sensibles
+**Regla:** los logins (exitosos y fallidos, también con Google), logouts, accesos denegados
+(403), lecturas de ficha de paciente y expedientes, cambios de pacientes, expedientes y notas de
+citas, y altas, cambios de rol, activación/desactivación y cambios de contraseña de cuentas se
+registran como eventos de auditoría con actor, acción, recurso, resultado y fecha, en un almacén
+solo-anexado con retención de 5 años.
+**Cómo se verifica:** criterios `CA` de la sección "Auditoría" de cada spec que toque esos datos,
+con test que comprueba que el evento se escribe; `/review` lo verifica.
+**Por qué:** trazabilidad exigible por NOM-024 para el expediente clínico electrónico; hoy no se
+registra nada.
+
+### P8. Correlación por petición y logs sin datos sensibles
+**Regla:** cada petición lleva un identificador `X-Request-Id` (aceptado si es válido o generado)
+que se devuelve en la respuesta y aparece en el contexto de todos sus logs y eventos de auditoría.
+Ningún log contiene datos personales, de salud, contraseñas, tokens ni valores enlazados de SQL.
+Nivel por defecto `info` en staging y producción; `APP_DEBUG=false` fuera de local.
+**Cómo se verifica:** test del middleware de correlación; revisión de cada llamada a `Log::`;
+checklist de despliegue en `docs/deployment.md`.
+**Por qué:** hoy no hay ni un log propio ni correlación; una `QueryException` puede volcar datos
+clínicos en `laravel.log`.
+
+## Restricciones
+- Proyecto académico en etapa MVP; todos los datos son ficticios y el repositorio es privado
+  (confirmado por el usuario, 2026-09-28).
+- Marco de referencia normativo: LFPDPPP (datos personales) y NOM-024-SSA3 (expediente clínico
+  electrónico); conservación de referencia del expediente según NOM-004-SSA3 (5 años).
+- Sin presupuesto: solo herramientas y servicios gratuitos u open source.
+- Entrega académica aproximada: fin de semestre, diciembre de 2026.
+- Stack fijo salvo ADR: Laravel 12, PHP ≥ 8.2, MariaDB, Blade renderizado en servidor, Docker Compose.
+
+## Definición de terminado
+- [ ] `php artisan test` pasa completo contra la base `dentissa_test`.
+- [ ] `vendor/bin/pint --test` limpio sobre los archivos tocados por la spec.
+- [ ] Spec, CHANGELOG y documentos afectados (`docs/*.md`) actualizados.
+- [ ] `python .ai/bin/aidd.py validate` sin errores.
+
+## Gobierno
+- Cambiar esta constitución requiere subir `version` (SemVer: MAJOR elimina o redefine un
+  principio, MINOR añade uno, PATCH aclara redacción) y registrar la enmienda abajo.
+- Ante conflicto, la constitución prevalece sobre specs, planes y `AGENTS.md`.
+- Independientemente de los principios, ningún despliegue a producción se hace sin aprobación
+  humana explícita del responsable del proyecto (`.ai/project.yaml → deploy.prod_approval`).
+
+## Enmiendas
+| Versión | Fecha | Cambio | Motivo |
+|---|---|---|---|
+| 1.0.0 | 2026-09-28 | Versión inicial | /init |
