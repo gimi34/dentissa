@@ -26,10 +26,12 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
+| 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | approved | — | — (2026-09-28) |
 
-Specs previstas del objetivo 2 del roadmap (se crean con `/specify` una por una):
-015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
-018 vinculacion-google-segura · 019 credenciales-generadas.
+Specs previstas (números reservados; se crean con `/specify` una por una):
+- Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
+  018 vinculacion-google-segura · 019 credenciales-generadas.
+- Objetivo 3: 021 auditoria-accesos-cuentas · 022 auditoria-datos-clinicos · 023 logs-y-errores.
 
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida

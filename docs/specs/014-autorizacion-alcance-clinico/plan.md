@@ -26,14 +26,14 @@ esquema ni modelos nuevos; la spec 013 podrá migrar estos Gates a Policies cuan
 | P4 Entrada validada y SQL con bindings | ✅ | `dentista_id` del asistente con `Rule::in(...)` de sus dentistas; `cita_id` con `Rule::exists(...)->where('paciente_id', …)`; filtros de alcance con Query Builder y `whereExists`, sin `DB::raw` con entrada. |
 | P5 Nada sensible en el repo | ✅ | Los tests crean datos sintéticos en transacción; no se añaden secretos ni volcados. |
 | P6 Sin vulnerabilidades críticas/altas en producción | ✅ | No añade dependencias. Las vulnerabilidades previas (RS16) se atienden en una spec propia antes de cualquier release (decisión del usuario, 2026-09-28). |
-| P7 Auditoría de datos sensibles | ✅ | CA11 y CA12 emiten eventos de auditoría; prerrequisito: spec base de auditoría del objetivo 3 implementada antes (decisión del usuario, 2026-09-28). |
-| P8 Correlación y logs limpios | ➖ | La spec no añade logs. La correlación (`X-Request-Id`) la aporta la spec base del objetivo 3; los eventos de CA11/CA12 la heredan. |
+| P7 Auditoría de datos sensibles | ✅ | CA11 y CA12 emiten eventos con `App\Auditoria\Auditoria` (spec 020); las lecturas en modo crítico (fallo cerrado). Prerrequisito: spec 020 implementada antes (decisión del usuario, 2026-09-28). |
+| P8 Correlación y logs limpios | ➖ | La spec no añade logs. La correlación (`X-Request-Id`) la aporta la spec 020; los eventos de CA11/CA12 la heredan del `Context`. |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
 | `app/Autorizacion/AlcanceClinico.php` (nuevo) | `personalId(Usuario)`, `dentistasDelAlcance(Usuario): ?array` (null = admin sin restricción; dentista → [propio]; asistente → asignados), `aplicarAPacientes(Builder $q, Usuario)` (paciente asignado a un dentista del alcance **o** con cita no cancelada con él, vía `whereExists`), `pacienteEnAlcance(Usuario, string $pacienteId): bool`, `esAutorDe(Usuario, object $expediente): bool` | Medio: es la regla central; cubierta por tests unitarios con BD |
-| `app/Providers/AppServiceProvider.php` | Registrar los 6 Gates y un `Gate::after` que emite el evento de acceso denegado (CA11) para esas habilidades | Bajo |
+| `app/Providers/AppServiceProvider.php` | Registrar los 6 Gates y un `Gate::after` que, para esas habilidades, llama a `Auditoria::denegacion(...)` con resultado `denegado_404` o `denegado_403` (CA11); la marca en el `Context` evita que `withExceptions` (spec 020) duplique el 403 | Bajo |
 | `app/Http/Controllers/PacientesController.php` | `index`: filtro de alcance en listado, total y ciudades; desplegable de dentistas limitado al alcance. `create/store`: para asistente, `dentista_id` obligatorio y dentro de sus dentistas (CA8). `show`: `Gate::authorize('ver-paciente')` + evento de lectura (CA12); la lista de expedientes muestra todos los del paciente. `edit/update`: `Gate::authorize('editar-paciente')` (sustituye el `abort(403)` del asistente); si el dentista reasigna el paciente fuera de su alcance, redirige al listado | Medio: cambia el flujo principal del personal |
 | `app/Http/Controllers/ExpedientesController.php` | `create`: `Gate::authorize('crear-expediente', $pacienteId)`; el dentista solo puede elegirse a sí mismo. `store`: mismo Gate; si el rol es dentista y `dentista_id` ≠ el propio → error de validación; `dentista_id` debe ser de tipo dentista; `cita_id` debe pertenecer al paciente (CA7). `show`: `Gate::authorize('ver-expediente')` + evento de lectura (CA12). `update`: `Gate::authorize('editar-expediente')` (autor o admin). `index` sin cambios | Medio |
 | `app/Http/Controllers/CitasController.php` | `create`: lista de pacientes filtrada con `aplicarAPacientes`; si el `paciente_id` preseleccionado está fuera del alcance, se ignora (sin dentista ni próxima visita sugerida). `store`: `Gate::authorize('agendar-para-paciente', $pacienteId)` antes de la regla de agenda (CA9) | Bajo: no toca la regla de agenda |
@@ -41,7 +41,6 @@ esquema ni modelos nuevos; la spec 013 podrá migrar estos Gates a Policies cuan
 | `resources/views/pacientes/create.blade.php` | Para asistente: selector de dentista obligatorio con sus dentistas y texto de ayuda | Bajo |
 | `resources/views/expedientes/show.blade.php` | Formularios de edición y de próxima visita solo si `@can('editar-expediente')`; si no, vista de solo lectura con "Firmado por …" | Bajo |
 | `resources/views/expedientes/create.blade.php` | Para dentista, autor fijo (él mismo) en vez de selector | Bajo |
-| `database/testing/bootstrap-test-db.sh` | Tras cargar el volcado, aplicar las migraciones pendientes sobre `dentissa_test` (crea `asistente_dentista` y `pacientes.dentista_id`) | Bajo: solo afecta a la base de pruebas; la 013 lo sustituirá |
 | `tests/Feature/Concerns/EscenarioAlcanceClinico.php` (nuevo) | Fixture: 2 dentistas con horario, 1 asistente asignado a D1, 4 pacientes (P1 de D1; P2 de D2; P3 de D2 con cita confirmada con D1; P4 de D2 con cita cancelada con D1), expedientes E1 (P1, D1) y E3 (P3, D2) | Bajo |
 | `tests/Feature/AlcanceClinico/*Test.php` (nuevos) | Tests de la Trazabilidad | — |
 
@@ -93,8 +92,11 @@ para dentista).
   el HTML no contiene datos del paciente ajeno (nombre y alergias del fixture).
 - **Unit con BD:** `AlcanceClinicoTest` para la regla (asignado, cita no cancelada, cita cancelada,
   sin relación, admin, asistente, reasignación).
-- **Auditoría:** tests que asertan el evento en el almacén de auditoría de la spec base del
-  objetivo 3 (su API se fija en su plan).
+- **Auditoría:** tests que asertan el evento en la tabla `auditoria` de la spec 020 (acción,
+  actor, recurso, resultado); las lecturas se prueban también con `AlmacenAuditoriaQueFalla`
+  (spec 020) para comprobar el fallo cerrado.
+- **Base de pruebas:** el arnés con migraciones lo aporta la spec 020 (crea `asistente_dentista`,
+  `pacientes.dentista_id` y `auditoria` en `dentissa_test`).
 - Comandos: `bash database/testing/bootstrap-test-db.sh` y `docker compose exec app php artisan test`.
 
 ## Modelo de amenazas
@@ -130,8 +132,8 @@ Casos de abuso de la spec → amenazas: CA3 → TM1, TM2, TM12; CA5 → TM1, TM1
 | CA8: alta por asistente exige uno de sus dentistas | `PacientesController@store/create`, `pacientes/create` | Feature `AltaPacienteAsistenteTest::test_el_alta_sin_dentista_se_rechaza`, `test_el_asistente_no_asigna_un_dentista_ajeno`, `test_el_alta_con_su_dentista_se_crea` |
 | CA9 (abuso): alta de citas solo con pacientes del alcance y su próxima visita | `CitasController@create/store`, Gate `agendar-para-paciente` | Feature `AlcanceAltaCitasTest::test_el_selector_de_pacientes_respeta_el_alcance`, `test_la_preseleccion_de_un_paciente_ajeno_se_ignora`, `test_agendar_para_un_paciente_ajeno_responde_404` |
 | CA10: reasignación surte efecto inmediato | `AlcanceClinico` | Feature `AlcancePacientesTest::test_tras_reasignar_el_dentista_anterior_pierde_el_acceso`; Unit `AlcanceClinicoTest::test_la_cita_cancelada_no_da_alcance` |
-| CA11: accesos denegados auditados | `Gate::after` en `AppServiceProvider` → API de auditoría (spec base objetivo 3) | Feature `AuditoriaAlcanceTest::test_un_acceso_denegado_queda_registrado` (ficha, expediente, edición ajena, alta de cita) |
-| CA12: lecturas de ficha y expediente auditadas | `PacientesController@show`, `ExpedientesController@show` → API de auditoría | Feature `AuditoriaAlcanceTest::test_la_lectura_de_una_ficha_queda_registrada`, `test_la_lectura_de_un_expediente_queda_registrada` |
+| CA11: accesos denegados auditados | `Gate::after` en `AppServiceProvider` → `Auditoria::denegacion` (spec 020) | Feature `AuditoriaAlcanceTest::test_un_acceso_denegado_queda_registrado` (ficha, expediente, edición ajena, alta de cita), `test_una_denegacion_403_no_se_duplica` |
+| CA12: lecturas de ficha y expediente auditadas | `PacientesController@show`, `ExpedientesController@show` → `Auditoria::registrar(..., critico: true)` (spec 020) | Feature `AuditoriaAlcanceTest::test_la_lectura_de_una_ficha_queda_registrada`, `test_la_lectura_de_un_expediente_queda_registrada`, `test_sin_auditoria_no_se_muestra_el_expediente` |
 | TM1 | Gate `ver-paciente` | `test_un_dentista_no_ve_la_ficha_de_un_paciente_ajeno` |
 | TM2 | Gate `editar-paciente` | `test_un_dentista_no_actualiza_un_paciente_ajeno` |
 | TM3 | Gate `editar-expediente` | `test_un_dentista_no_modifica_el_expediente_de_otro` |
@@ -150,17 +152,16 @@ Casos de abuso de la spec → amenazas: CA3 → TM1, TM2, TM12; CA5 → TM1, TM1
 ## Observabilidad
 - Logs nuevos: ninguno. No se registran datos de pacientes ni de expedientes.
 - Eventos de auditoría:
-  - `acceso_denegado` (actor, habilidad, tipo y id del recurso, resultado `denegado_404` o `denegado_403`, fecha, request_id) → `Gate::after` en `AppServiceProvider` para los 6 Gates → `AuditoriaAlcanceTest::test_un_acceso_denegado_queda_registrado` (CA11, TM14).
-  - `lectura_paciente` y `lectura_expediente` (actor, id del recurso, fecha, request_id) → `PacientesController@show`, `ExpedientesController@show`, después de autorizar → `test_la_lectura_de_una_ficha_queda_registrada`, `test_la_lectura_de_un_expediente_queda_registrada` (CA12).
-  - Prerrequisito: el almacén y la API de auditoría los define la spec base del objetivo 3 (aún sin crear). Si su API difiere de lo previsto aquí, corregir con `/plan 014 --fix`.
+  - `acceso_denegado` (actor, habilidad como acción, tipo y id del recurso, resultado `denegado_404` o `denegado_403`, fecha, request_id) → `Gate::after` en `AppServiceProvider` para los 6 Gates, con `Auditoria::denegacion` → `AuditoriaAlcanceTest::test_un_acceso_denegado_queda_registrado` (CA11, TM14).
+  - `lectura_paciente` y `lectura_expediente` (actor, id del recurso, fecha, request_id) → `PacientesController@show`, `ExpedientesController@show`, después de autorizar y antes de renderizar, con `Auditoria::registrar(..., critico: true)`: si no puede registrarse, 503 genérico y no se muestra el recurso → `test_la_lectura_de_una_ficha_queda_registrada`, `test_la_lectura_de_un_expediente_queda_registrada`, `test_sin_auditoria_no_se_muestra_el_expediente` (CA12).
+  - Prerrequisito: spec 020 implementada (tabla `auditoria`, `App\Auditoria\Auditoria`, correlación).
 - Métricas y alertas: ninguna nueva (no hay infraestructura de métricas).
 - Cómo se verifica tras el deploy: con un dentista de prueba, abrir la ficha de un paciente ajeno → 404, y consultar en el registro de auditoría el evento `acceso_denegado` con el `request_id` de la respuesta.
 
 ## Rollout
 - Feature flag: no aplica. Un control de acceso no debe poder desactivarse, aún no hay
   producción y el rollback es el redeploy del tag anterior (decisión del usuario, 2026-09-28).
-- Orden de despliegue: (1) spec base de auditoría del objetivo 3 desplegada; (2) esta spec en un
-  solo paso (código y vistas). El cambio del arnés de tests no se despliega.
+- Orden de despliegue: (1) spec 020 desplegada; (2) esta spec en un solo paso (código y vistas).
 - Compatibilidad: sin migraciones ni cambios de datos; convive con la versión anterior (solo
   restringe accesos). Formularios abiertos antes del deploy pueden recibir 404/422 al enviarse
   si el paciente queda fuera del alcance: aceptable.
@@ -173,17 +174,20 @@ Casos de abuso de la spec → amenazas: CA3 → TM1, TM2, TM12; CA5 → TM1, TM1
 ## Decisiones (→ ADR si son arquitectónicas)
 - D1 · Mecanismo de autorización: Gates registrados en `AppServiceProvider` sobre la clase
   `App\Autorizacion\AlcanceClinico`, en lugar de Policies con modelos mínimos (no existen modelos
-  de paciente ni expediente) (decisión del usuario, 2026-09-28). → [ADR 0003](../../adr/0003-autorizacion-gates-alcance-clinico.md) (proposed). Cubre RS1.a, RS1.b, RS1.c y RS1.d.
+  de paciente ni expediente) (decisión del usuario, 2026-09-28). → [ADR 0003](../../adr/0003-autorizacion-gates-alcance-clinico.md) (accepted). Cubre RS1.a, RS1.b, RS1.c y RS1.d.
 - D2 · Respuesta fuera de alcance: 404 (`denyAsNotFound`), para no confirmar la existencia del
   recurso (requisito no funcional de la spec); 403 cuando el recurso se ve pero no se puede
   modificar. Derivada de la spec aprobada.
 - D3 · Base de pruebas: `bootstrap-test-db.sh` aplica las migraciones tras cargar el volcado,
-  como ya hace el CI (decisión del usuario, 2026-09-28). La spec 013 lo sustituirá.
+  como ya hace el CI (decisión del usuario, 2026-09-28). El cambio lo hace la spec 020 (su D8);
+  esta spec solo lo usa. La spec 013 lo sustituirá.
 - D4 · Vulnerabilidades previas (RS16): fuera de esta spec; spec propia de actualización de
   dependencias antes de cualquier release (decisión del usuario, 2026-09-28).
 - D5 · Sin feature flag (ver Rollout) (decisión del usuario, 2026-09-28).
-- D6 · Auditoría: los eventos de CA11/CA12 se emiten con la API de la spec base del objetivo 3,
-  que se implementa antes (decisión del usuario, 2026-09-28 en `/specify`).
+- D6 · Auditoría: los eventos de CA11/CA12 se emiten con `App\Auditoria\Auditoria` de la spec
+  020, que se implementa antes (decisión del usuario, 2026-09-28 en `/specify`): denegaciones con
+  `denegacion(...)` y lecturas con `registrar(..., critico: true)`, porque la spec 020 exige fallo
+  cerrado en acciones sobre datos clínicos.
 - D7 · `ExpedientesController@index` del dentista sigue listando solo los expedientes que firmó
   (spec 007 CA1 no se modifica); la lectura de expedientes de otros autores se hace desde la
   ficha del paciente.
@@ -202,7 +206,9 @@ Casos de abuso de la spec → amenazas: CA3 → TM1, TM2, TM12; CA5 → TM1, TM1
   tiene índices por `paciente_id` y `dentista_id`. Revisar si el directorio supera 1 s.
 - Choque con la spec 013 (draft), que refactoriza los mismos controladores → la 014 se
   implementa antes; la 013 migrará los Gates a Policies y deberá conservar estos tests.
-- Dependencia de la spec base de auditoría, aún no escrita → la 014 no puede pasar `/implement`
-  hasta que exista; siguiente paso sugerido: `/specify` de la auditoría base.
+- Dependencia de la spec 020 (plan aprobado) → la 014 no puede pasar `/implement` hasta que la
+  020 esté implementada.
+- Fallo cerrado en las lecturas: un fallo del registro impide abrir fichas y expedientes (503)
+  → comportamiento exigido por la spec 020; página genérica con `request_id`.
 - El dentista que reasigna a su paciente a otro dentista pierde el acceso al guardar → se
   redirige al listado con un mensaje en lugar de mostrar un 404.

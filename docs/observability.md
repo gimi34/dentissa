@@ -84,21 +84,21 @@ registrado. `ExpedientesController@update` sobrescribe diagnóstico y receta sin
 cuándo. → roadmap objetivo 3.
 
 Correcciones:
-- OB1.a Tabla de auditoría solo-anexado con actor, acción, recurso, resultado, fecha, IP y request_id — estado: pendiente
+- OB1.a Tabla de auditoría solo-anexado con actor, acción, recurso, resultado, fecha, IP y request_id — estado: en curso (spec 020)
 - OB1.b Listeners de eventos de autenticación (Login, Failed, Logout) incluido el acceso con Google — estado: pendiente
-- OB1.c Registrar los accesos denegados (403) de middleware, controladores y Policies — estado: pendiente
+- OB1.c Registrar los accesos denegados (403) de middleware, controladores y Policies — estado: en curso (spec 020)
 - OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente
 - OB1.e Registrar cambios de pacientes, expedientes, notas y estado de citas (campos, sin valores) — estado: pendiente
 - OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente
-- OB1.g Retención de 5 años con purga programada (`routes/console.php`) — estado: pendiente
-- OB1.h Pantalla de consulta solo para admin que audita su propia lectura — estado: pendiente
+- OB1.g Retención de 5 años con purga programada (`routes/console.php`) — estado: en curso (spec 020)
+- OB1.h Pantalla de consulta solo para admin que audita su propia lectura — estado: en curso (spec 020)
 
 ### OB2 · Media — Sin identificador de correlación por petición
 No hay `X-Request-Id` ni contexto compartido en los logs. → roadmap objetivo 3.
 
 Correcciones:
-- OB2.a Middleware que acepta o genera `X-Request-Id` y lo devuelve en la respuesta — estado: pendiente
-- OB2.b Añadir `request_id` y `actor_id` al contexto de logs y auditoría (`Context::add`) — estado: pendiente
+- OB2.a Middleware que acepta o genera `X-Request-Id` y lo devuelve en la respuesta — estado: en curso (spec 020)
+- OB2.b Añadir `request_id` y `actor_id` al contexto de logs y auditoría (`Context::add`) — estado: en curso (spec 020)
 
 ### OB3 · Media — Logs sin uso y sin configuración por entorno
 El código no registra nada propio; la configuración es la de fábrica (texto, `single`, sin
