@@ -27,7 +27,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 ## Pendientes y deuda
 - Dependencias con vulnerabilidades conocidas (riesgo de dependencias en `docs/security.md`,
   detectado en `/plan 014`): spec propia de actualización antes de cualquier release (decisión
-  del usuario, 2026-09-28). Propuesta de objetivo pendiente de confirmar.
+  del usuario, 2026-09-28). Se atiende en la spec [024](specs/024-dependencias-seguras/spec.md),
+  sin objetivo propio (decisión del usuario, 2026-09-29).
 - `aidlc/spaces/default/intents/260920-monolito-modular/` puede eliminarse cuando el usuario
   revise su migración a la spec 013.
 - Aprobar o ajustar las specs inferidas 001–012 (`/specify --edit NNN`).
