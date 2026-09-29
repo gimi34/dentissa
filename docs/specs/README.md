@@ -28,11 +28,14 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
 | 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | approved | — | — (2026-09-28) |
 | 024 | [dependencias-seguras](024-dependencias-seguras/spec.md) | Transversal | implemented | — | — (2026-09-29) |
+| 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | approved | — | — (2026-09-29) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
   018 vinculacion-google-segura · 019 credenciales-generadas.
 - Objetivo 3: 021 auditoria-accesos-cuentas · 022 auditoria-datos-clinicos · 023 logs-y-errores.
+- Objetivo 4 (agenda): 026 estados-cita · 027 horarios-reprogramar (tras la 025; decisión del
+  usuario, 2026-09-29).
 
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida
