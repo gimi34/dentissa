@@ -1,7 +1,7 @@
 ---
 id: 024
 slug: dependencias-seguras
-status: implemented
+status: approved
 created: 2026-09-29
 extends: []
 ---
