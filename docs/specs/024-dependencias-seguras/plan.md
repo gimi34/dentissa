@@ -20,10 +20,10 @@ assets y un login con Google comprueban el resto.
 | Principio | Resultado | Justificación / ajuste |
 |---|---|---|
 | P1 Spec aprobada antes de código | ✅ | Spec 024 `approved` el 2026-09-29. |
-| P2 Test que falla antes y pasa después | ❌ aceptado: CA1, CA2 y CA3 tienen test PHPUnit (`DependenciasSegurasTest` para CA1 y CA2, que falla hoy; la suite completa para CA3), pero CA4–CA7 no lo tienen: son la construcción de assets, un login manual con un proveedor externo y restricciones sobre el propio diff, sin comportamiento de la aplicación que probar. Se verifican con `npm run build`, la confirmación del usuario y las comprobaciones de T022 — aprobado por el usuario el 2026-09-29 |
+| P2 Test que falla antes y pasa después | ❌ aceptado: CA3–CA7 sin test PHPUnit que falle antes, porque no hay comportamiento nuevo de la aplicación que probar — aprobado por el usuario el 2026-09-29 | CA1 y CA2 sí lo tienen: `DependenciasSegurasTest` falla hoy y pasa tras actualizar. CA3 (sin regresiones) es un criterio de no regresión: la suite existente pasa antes y después, así que ningún test puede fallar antes. CA4–CA7 son la construcción de assets, un login manual con un proveedor externo y restricciones sobre el propio diff. Se verifican con la suite completa, `npm run build`, la confirmación del usuario y las comprobaciones de T022. |
 | P3 Autorización en servidor, por rol y recurso | ➖ | No cambia ninguna ruta ni permiso. |
 | P4 Entrada validada y SQL con bindings | ➖ | Sin entradas nuevas ni SQL. |
-| P5 Nada sensible en el repo | ✅ | Solo cambian lockfiles y el rango de `vite` en `package.json`; sin credenciales. |
+| P5 Nada sensible en el repo | ✅ | Solo cambian los lockfiles, `package.json` (rango de `vite` y `overrides`), un test nuevo y `docs/security.md`; sin credenciales. |
 | P6 Sin vulnerabilidades críticas/altas en producción | ✅ | Es el objeto de la spec: CA1 y CA2. |
 | P7 Auditoría de datos sensibles | ➖ | Sin accesos nuevos a datos sensibles. |
 | P8 Correlación y logs limpios | ➖ | Sin logs nuevos. |
@@ -74,9 +74,12 @@ assets construidos por Vite solo los usa `welcome.blade.php`, que ninguna ruta s
 - **Versiones mayores (CA6):** sobre el diff completo de ambos lockfiles. "Dependencia que se
   ejecuta en producción" es todo paquete de `packages` (no `packages-dev`) de `composer.lock`,
   directo o transitivo, y todo paquete npm que acaba en los assets construidos (`public/build`).
-  Ninguno cambia de versión mayor. El único salto mayor de la simulación, `proxy-from-env`
-  1 → 2, solo lo usa `axios` en Node y no llega a `public/build`: se comprueba buscándolo en los
-  assets construidos.
+  Ninguno cambia de versión mayor. La lista de paquetes npm de los assets sale del grafo real de
+  la construcción, igual antes (T002) y después (T022): se construye con sourcemaps en un
+  directorio temporal y se listan los `node_modules/<paquete>` distintos de `sources` (buscar
+  nombres en el bundle minificado no sirve: no los conserva). El único salto mayor de la
+  simulación, `proxy-from-env` 1 → 2, solo lo usa `axios` en Node (su campo `browser` excluye el
+  adaptador HTTP); la comprobación es que no aparece en esa lista.
 - **Cadena de suministro (CA7):** `package.json` y `composer.json` no ganan dependencias
   directas. **Cada versión que cambia en cualquiera de los dos lockfiles**, directa o transitiva,
   lleva al menos 7 días publicada (`npm view <paquete> time`, campo `time` de Packagist). En npm,
@@ -92,7 +95,7 @@ assets construidos por Vite solo los usa `welcome.blade.php`, que ninguna ruta s
 | TM1 | Tampering: una versión maliciosa o un paquete de nombre parecido entra como dependencia, directa o transitiva | A03:2025 | `package.json`, `composer.json`, ambos lockfiles | Ninguna dependencia directa nueva; toda versión que cambia con ≥ 7 días (`rolldown` fijada en 1.2.9 por esa regla); solo el registro oficial, con `integrity` | Comprobación CA7 (T022): diff de `require`/`devDependencies` sin altas, fechas de publicación ≥ 7 días de cada versión cambiada, `resolved` e `integrity` de cada entrada npm y origen de cada paquete de Composer |
 | TM2 | Elevation of privilege: una transitiva nueva ejecuta código al instalarse | A03:2025 | `package-lock.json` | Actualizar con `--ignore-scripts` y revisar que el lockfile no añade paquetes con `hasInstallScript` | Comprobación sobre el diff del lockfile: 0 entradas nuevas con `hasInstallScript` |
 | TM3 | Denial of service / tampering por un cambio de comportamiento en un componente actualizado (cliente HTTP del OAuth, parser Markdown) | A08:2025 | `guzzlehttp/guzzle`, `league/commonmark` | Solo subidas menores o de parche en el servidor; suite completa; login con Google | CA3 (`php artisan test`), CA5 (login manual) |
-| TM4 | Vulnerabilidades conocidas en componentes (residuales) | A03:2025 | dependencias de servidor y frontend | Actualización a versiones corregidas | CA1 (`composer audit`), CA2 (`npm audit --audit-level=high`) |
+| TM4 | Vulnerabilidades conocidas en componentes (residuales) | A03:2025 | dependencias de servidor y frontend | Actualización a versiones corregidas | `DependenciasSegurasTest`; CA1 (`composer audit`), CA2 (`npm audit --audit-level=high`) |
 
 Casos de abuso de la spec → amenazas: CA7 → TM1, TM2.
 
@@ -104,7 +107,7 @@ Casos de abuso de la spec → amenazas: CA7 → TM1, TM2.
 | CA3: suite completa sin fallos nuevos | `composer.lock` | `php artisan test` frente a la línea base de la rama |
 | CA4: construcción del frontend sin errores | `package-lock.json`, `package.json` | `npm run build` |
 | CA5: login con Google igual que antes | `composer.lock` (Guzzle) | Verificación manual del usuario en local |
-| CA6: sin saltos mayores del framework ni de dependencias de producción | `composer.lock`, `package-lock.json` | Comparación de versiones mayores sobre el diff completo de ambos lockfiles; `proxy-from-env` ausente de `public/build` |
+| CA6: sin saltos mayores del framework ni de dependencias de producción | `composer.lock`, `package-lock.json` | Comparación de versiones mayores sobre el diff completo de ambos lockfiles; lista de paquetes de los assets obtenida de los sourcemaps de la construcción, sin `proxy-from-env` y sin saltos mayores |
 | CA7 (abuso): sin directas nuevas y toda versión que cambia con ≥ 7 días | `package.json`, `composer.json`, ambos lockfiles | Comprobación de directas, fechas de publicación, origen e integridad de cada versión cambiada (TM1) |
 | TM1 | directas sin altas; toda versión cambiada con ≥ 7 días; registro oficial e `integrity` | Comprobación CA7 |
 | TM2 | `--ignore-scripts`; sin `hasInstallScript` nuevos | Comprobación sobre el diff del lockfile |
@@ -128,16 +131,20 @@ de auditoría ni métricas.
 - Integración y releases (decisión del usuario, 2026-09-29):
   1. Se implementa en `feature/024-dependencias-seguras`, creada desde `chore/ai-dd-init` con los
      commits de la spec, el plan, las tareas y el análisis de la 024 traídos con `cherry-pick`.
-  2. `chore/ai-dd-init` se integra en `main` antes que la 024, para que `main` tenga el flujo
-     AI-DD y el CI.
+  2. `chore/ai-dd-init` se integra en `main` antes que la 024, con merge commit y sin squash ni
+     rebase, para que `main` tenga el flujo AI-DD y el CI sin reescribir sus commits.
   3. El PR de la 024 va contra `main`, con el job de dependencias en verde, y la 024 se libera
-     sola.
+     sola. Antes de abrirlo, `git log --oneline main..feature/024-dependencias-seguras` solo
+     muestra commits de la 024.
   4. `feature/020-auditoria-base` se reconstruye sobre `main` sin sus copias de los commits de la
-     024. Comprobación: tras integrar la 020, el diff de `docs/specs/024-dependencias-seguras`
-     entre el `main` anterior y el nuevo está vacío.
+     024. Comprobación: tras integrar la 020, entre el `main` anterior y el nuevo no cambian ni
+     `docs/specs/024-dependencias-seguras` ni la fila 024 de `docs/specs/README.md` ni su enlace
+     en `docs/roadmap.md`.
   5. Antes de `/release 020`, el merge de la 024 es ancestro del commit que se libera
      (`git merge-base --is-ancestor`), y `composer audit` y `npm audit --audit-level=high` dan
      0 críticas y 0 altas sobre ese árbol.
+  Los pasos 4 y 5 se ejecutan en el ciclo de la 020, así que quedan anotados en "Pendientes y
+  deuda" del roadmap (decisión del usuario, 2026-09-29).
 
 ## Decisiones (→ ADR si son arquitectónicas)
 - D1 · Servidor: `composer update league/commonmark guzzlehttp/guzzle --with-dependencies`
@@ -167,7 +174,7 @@ de auditoría ni métricas.
 - D4 · Verificación del login con Google (CA5): manual, por el usuario en local (decisión del
   usuario, 2026-09-29).
 - D5 · Tests PHPUnit de versión para CA1 y CA2 (`DependenciasSegurasTest`), y P2 aceptado como
-  desviación para CA4–CA7 (decisión del usuario, 2026-09-29). Si esta desviación se repite en
+  desviación para CA3–CA7 (decisión del usuario, 2026-09-29; CA3 añadido tras `/analyze` ronda 2). Si esta desviación se repite en
   otras specs sin cambio de comportamiento, conviene enmendar P2 para distinguir los cambios de
   comportamiento del resto.
 - D6 · Cobertura de riesgos: RS16.a, RS16.b y RS16.c dentro (spec 024 completa); pasan a "en
