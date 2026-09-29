@@ -1,71 +1,55 @@
 ---
-result: fail
-round: 2
+result: pass
+round: 3
 mode: delta
 constitution_version: 1.0.0
 date: 2026-09-29
 spec_sha: a62bb70ff6f0
-plan_sha: 165d0c1c8d32
-tasks_sha: eca56b182d93
+plan_sha: 3803a075c0f4
+tasks_sha: c5258fa9f997
 ---
 
 # Análisis · 024 Dependencias sin vulnerabilidades críticas ni altas
 
 ## Resumen
-Resultado **fail** por un hallazgo CRÍTICO, A17: CA3 queda fuera de la excepción aceptada de P2.
-Es un criterio de no regresión y no puede tener un test que falle antes. Además, la fila P2 del
-plan tiene 2 celdas en una tabla de 3. Las correcciones de la ronda 1 resuelven A02, A03, A05 y
-A08–A16. A01, A04, A06 y A07 se resolvieron pero su corrección abrió hallazgos nuevos: A01 → A17,
-A04 → A19, y A06 y A07 → A20. Abiertos: CRÍTICA 1 · ALTA 0 · MEDIA 2 · BAJA 3. El usuario ya
-decidió todos.
+Resultado **pass**. Las correcciones de la ronda 2 resuelven A17, A18, A19, A21 y A22. A20 queda
+resuelto en el plan y el roadmap, pero abre dos hallazgos MEDIOS en las tareas, A23 y A24, que el
+usuario acepta como notas de T001 y T040. Abiertos: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0 (2
+MEDIOS aceptados).
 
-El cambio es estructural pero acotado: CA7 se amplía a las transitivas, se añade el test T011, y
-aparecen `overrides`, D8 y D9. No hace falta otro `--redo`; la ronda 3 puede ser delta.
+El delta no trae cambios estructurales: ni módulos, ni contratos, ni criterios nuevos. Cambian la
+excepción de P2 (ahora CA3–CA7), el método de CA6 (sourcemaps) y las comprobaciones git del
+Rollout. `aidd.py validate` da 0 errores.
 
-Ronda anterior: [history/analysis.r1.md](history/analysis.r1.md).
+Ronda anterior: [history/analysis.r2.md](history/analysis.r2.md).
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 7 / 7 (CA1 y CA2 con test PHPUnit en T011; CA3–CA7 sin él, pendiente de registrar la excepción de P2: A17) |
+| Criterios con tarea de test e implementación | 7 / 7 (CA1 y CA2 con test PHPUnit en T011; CA3–CA7 con la excepción aceptada de P2) |
 | Amenazas con control y test | 4 / 4 |
-| Principios de la constitución evaluados | 8 / 8 (P2 con excepción incompleta: A17) |
+| Principios de la constitución evaluados | 8 / 8 (P2 con excepción aceptada para CA3–CA7) |
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A01 | ALTA | resuelto con efecto nuevo (→ A17) | T011 (`DependenciasSegurasTest`) cubre CA1 y CA2, y P2 figura como `❌ aceptado`; pero la excepción solo cubre CA4–CA7 y da CA3 por cubierto con "la suite completa". |
-| A02 | ALTA | resuelto | CA7 de la spec ("cada versión que cambia, sea de una dependencia directa o de una de las que estas arrastran"), Estrategia CA7, TM1 y D9 del plan, y T022 (3). |
-| A03 | MEDIA | resuelto | Cambios por módulo ("las definitivas son las que resuelva la actualización") y D8; T020 y T022 usan las versiones resueltas. |
-| A04 | MEDIA | resuelto con efecto nuevo (→ A19) | CA6 cubre `packages` no dev y los paquetes de `public/build` (plan, T002, T022); pero buscar `proxy-from-env` en el bundle minificado no demuestra nada. |
-| A05 | MEDIA | resuelto | Ambas auditorías deben terminar con código 0 (plan, T010, T020, T040); `composer.lock` no tiene paquetes `abandoned`. |
-| A06 | MEDIA | resuelto con efecto nuevo (→ A20) | Paso 4 del Rollout, cuya comprobación solo mira `docs/specs/024-…`. |
-| A07 | MEDIA | resuelto con efecto nuevo (→ A20) | Pasos 2, 3 y 5 del Rollout; los pasos 4 y 5 no están escritos en ningún documento de la 020. |
-| A08 | MEDIA | resuelto | T021 conserva las entradas linux-x64 de `@rolldown/binding-*` y `lightningcss-*`; `@tailwindcss/oxide-*` no cambia. |
-| A09 | MEDIA | resuelto | T022 (4): `resolved` bajo el registro oficial con `integrity`; en Composer, origen Packagist o GitHub. |
-| A10 | BAJA | resuelto | T002 y T020 registran las versiones de `vendor`. |
-| A11 | BAJA | resuelto | Las listas de paquetes nuevos y de `extraneous` coinciden con el lockfile. |
-| A12 | BAJA | resuelto | La spec ya no cita RD7; el validador no da el aviso. |
-| A13 | BAJA | resuelto | T010 "(test de TM4)". |
-| A14 | BAJA | resuelto | T040 incluye `aidd.py validate`. |
-| A15 | BAJA | resuelto | T001 incluye `analysis.md` y justifica que toque más de 3 archivos. |
-| A16 | BAJA | resuelto | D2 registra `vite` 8.0.16 como la versión corregida mínima y el motivo del descarte. |
+| A17 | CRÍTICA | resuelto | Las filas P2 de `plan.md` y `tasks.md` citan el mismo conjunto: "❌ aceptado: CA3–CA7 sin test PHPUnit que falle antes… — aprobado por el usuario el 2026-09-29". La fila del plan tiene 3 celdas. D5 dice "desviación para CA3–CA7". En tareas, CA3 va a T020 y T040, igual que en Cobertura. |
+| A18 | BAJA | resuelto | P5 del plan cita "los lockfiles, `package.json` (rango de `vite` y `overrides`), un test nuevo y `docs/security.md`". La columna Test de TM4 cita `DependenciasSegurasTest`, igual que Trazabilidad. |
+| A19 | MEDIA | resuelto | La Estrategia y la Trazabilidad de CA6, T002 y T022 (1) obtienen la lista de paquetes de los assets de una construcción con sourcemaps en un directorio temporal. Comprobado: el campo `browser` de `axios` sustituye `lib/adapters/http.js`, el único archivo de `axios/lib` que usa `proxy-from-env`. |
+| A20 | MEDIA | resuelto con efecto nuevo (→ A23, A24) | El paso 2 del Rollout exige merge commit, sin squash ni rebase. El paso 3 añade `git log --oneline main..feature/024-dependencias-seguras`. La comprobación del paso 4 incluye la fila del README y el enlace del roadmap. El roadmap anota los pasos 4 y 5 en Pendientes. |
+| A21 | BAJA | resuelto | T011 y T040 exigen que `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php` no reporte cambios dentro del contenedor. |
+| A22 | BAJA | resuelto | T011 evalúa todas las entradas `node_modules/<paquete>`, también las anidadas, y su fallo esperado cita `picomatch` 4.0.3 y la anidada 2.3.1. `package-lock.json` tiene exactamente esas dos instancias, y ningún otro paquete de la tabla está anidado. |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A17 | Constitución (P2) | CRÍTICA | `plan.md` Constitution Check P2 y D5; `tasks.md` Constitution Check P2 | P2 exige un test PHPUnit que falle sin el cambio y pase con él. CA3 no puede tenerlo: la suite pasa antes y después, y ningún test puede fallar antes en un criterio de "sin regresiones". Aun así se da por cubierto, y la excepción aprobada solo abarca CA4–CA7. Además, la fila P2 del plan tiene 2 celdas en una tabla de 3. | Decidido: la excepción de P2 cubre CA3–CA7, con el mismo motivo y la misma fecha en el plan (fila P2 y D5) y en las tareas (fila P2), y la fila del plan tiene 3 celdas con el formato `❌ aceptado: <motivo> — aprobado por el usuario el <fecha>`. Comprobación: las filas P2 de plan y tareas listan el mismo conjunto de criterios y `aidd.py validate` no da errores. → `/plan 024 --fix`, `/tasks 024 --fix` |
-| A18 | Inconsistencia | BAJA | `plan.md` Constitution Check P5; Modelo de amenazas, columna Test de TM4 | P5 dice "solo cambian lockfiles y el rango de `vite`", pero `package.json` también recibe `overrides` y hay un test nuevo. La columna Test de TM4 no cita `DependenciasSegurasTest`, aunque Trazabilidad y las tareas sí. | P5 y TM4 del plan coinciden con Cambios por módulo y con Trazabilidad. → `/plan 024 --fix` |
-| A19 | Cobertura / Ambigüedad | MEDIA | `plan.md` Estrategia y Trazabilidad de CA6; T002; T022 (1) | Buscar `proxy-from-env` en `public/build` no demuestra nada: el bundle minificado no contiene nombres de paquete (0 apariciones de `node_modules` ni de `proxy-from-env`, y sí falsos positivos como el literal `form-data`). Tampoco hay método para obtener la lista de "paquetes npm de los assets construidos", que T002 y T022 necesitan. | La lista de paquetes npm de los assets sale del grafo real de la construcción, igual antes (T002) y después (T022). Comprobación: construcción con sourcemaps en un directorio temporal, listando los `node_modules/<paquete>` distintos de `sources`; `proxy-from-env` no aparece y ningún paquete de la lista cambia de versión mayor. → `/plan 024 --fix`, `/tasks 024 --fix` |
-| A20 | Duplicación y conflicto / Cobertura | MEDIA | `plan.md` Rollout pasos 3–5 y D7 | (i) Los pasos 4 y 5 se ejecutan en el ciclo de la 020, pero solo están escritos en el plan de la 024. (ii) La comprobación del paso 4 solo mira `docs/specs/024-…`, y los commits de la 024 también tocan la fila 024 de `docs/specs/README.md` y su enlace en `docs/roadmap.md`. (iii) Si `chore/ai-dd-init` se integra con squash o rebase, el PR de la 024 vuelve a arrastrar sus commits. | Decidido: los pasos 4 y 5 se anotan en Pendientes del roadmap. La comprobación del paso 4 incluye la fila 024 del README y su enlace en el roadmap. `chore/ai-dd-init` se integra con merge commit, sin squash, y antes de abrir el PR de la 024, `git log --oneline main..feature/024-dependencias-seguras` solo muestra commits de la 024. → `/plan 024 --fix` (Rollout) y nota en el roadmap |
-| A21 | Cobertura | BAJA | T011, T040 | La 024 añade un PHP (`tests/Feature/DependenciasSegurasTest.php`), y la Definición de terminado y el job `calidad` exigen `pint --test` sobre los PHP cambiados; ninguna tarea lo incluye. | `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php` sin cambios dentro del contenedor, en el criterio de T011 o de T040. → `/tasks 024 --fix` |
-| A22 | Ambigüedad | BAJA | T011; `plan.md` tabla de versiones mínimas (`picomatch`) | El lockfile tiene dos instancias: `node_modules/picomatch` 4.0.3 y `node_modules/vite-plugin-full-reload/node_modules/picomatch` 2.3.1. Si el test solo mira el primer nivel, la mínima de la rama 2 nunca se comprueba. | El test evalúa toda entrada de `packages` cuya ruta termine en `node_modules/<paquete>`, la compara con la mínima de su rama mayor y falla si la rama no tiene mínima. Comprobación: el fallo de T011 cita a la vez `picomatch` 4.0.3 y la anidada 2.3.1. → `/tasks 024 --fix` |
+| A23 | Inconsistencia / Duplicación y conflicto | MEDIA | T001; `plan.md` Rollout, nota de los pasos 4 y 5; `docs/roadmap.md` Pendientes y deuda | La nota de los pasos 4 y 5 entró en el roadmap en 8e7ac1d, un commit de la 024 que T001 trae con `cherry-pick`. Pero T001 dice que en el roadmap "solo se añaden la fila de la 024 y su enlace en Pendientes". Si se sigue al pie de la letra, la nota no llega a `feature/024` ni a `main`, y al reconstruir la 020 (paso 4) se pierde la corrección de A20 (i). | La rama 024, y `main` tras su merge, contienen en `docs/roadmap.md` el enlace de la 024 y la nota de los pasos 4 y 5. Comprobación: el diff de `docs/roadmap.md` entre `chore/ai-dd-init` y `feature/024-dependencias-seguras` muestra exactamente esas dos viñetas. → aceptado como nota de T001 |
+| A24 | Cobertura | MEDIA | `plan.md` Rollout paso 3; `tasks.md` (ninguna tarea) | Ninguna tarea recoge la comprobación del paso 3. Es la que detecta que `chore/ai-dd-init` no está en `main` o que entró con squash o rebase (A20 iii). T040 da por hecho que el PR existe, pero no exige esa comprobación antes de abrirlo. | Antes de abrir el PR de la 024 queda comprobado que `chore/ai-dd-init` es ancestro de `main` y que `main..feature/024-dependencias-seguras` solo contiene commits de la 024. Comprobación: la salida de `git merge-base --is-ancestor chore/ai-dd-init main` y de `git log --oneline main..feature/024-dependencias-seguras`, anotadas en `tasks.md`. → aceptado como nota de T040 |
 
 ## Decisiones pendientes del usuario
-Resueltas en esta ronda:
-- **A17:** la excepción aceptada de P2 se amplía a CA3–CA7 (decisión del usuario, 2026-09-29).
-- **A20:** los pasos 4 y 5 de la integración se anotan en Pendientes del roadmap, y `chore/ai-dd-init` se integra en `main` con merge commit, sin squash (decisión del usuario, 2026-09-29).
-- **A18, A19, A21 y A22:** se corrigen en el mismo `--fix` (decisión del usuario, 2026-09-29).
+Ninguna. A23 y A24 se aceptan como notas de tarea (decisión del usuario, 2026-09-29).
 
 ## Aceptados
-Ninguno: todos los hallazgos se corrigen antes de `/implement`.
+Aceptados por el usuario el 2026-09-29:
+- **A23** → nota de T001: al resolver el conflicto de `docs/roadmap.md`, conservar el enlace de la 024 y la nota de los pasos 4 y 5; comprobar que el diff de `docs/roadmap.md` entre `chore/ai-dd-init` y `feature/024-dependencias-seguras` muestra exactamente esas dos viñetas.
+- **A24** → nota de T040: antes de abrir el PR de la 024, anotar la salida de `git merge-base --is-ancestor chore/ai-dd-init main` (código 0) y de `git log --oneline main..feature/024-dependencias-seguras` (solo commits de la 024); si alguna falla, no se abre el PR.
