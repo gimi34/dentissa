@@ -74,6 +74,7 @@ Formato:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
+  - nota: decisión del usuario (2026-09-29, `/release 024`): versión v0.1.0 sin despliegue, porque staging y producción no existen y `docs/deployment.md` no tiene procedimiento (objetivo 5). T095–T097 se marcarán "no aplica" al cerrar. Integración: `/release` prepara la versión y el CHANGELOG en la rama; el usuario sube las ramas y fusiona en GitHub `chore/ai-dd-init` → `main` y luego el PR de la 024 (merge commit, sin squash), con el CI en verde; después, `/release 024` crea el tag `v0.1.0` en `main` y cierra la spec.
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
 - [ ] T098 Marcar spec como `released`
