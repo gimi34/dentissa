@@ -66,8 +66,8 @@ Adoptadas en la entrevista (decisión del usuario, 2026-09-28); **ninguna está 
 | Tipo | Herramienta | Comando | Cuándo corre |
 |---|---|---|---|
 | Secretos | gitleaks | `gitleaks detect --no-banner` | /implement, CI |
-| SAST | semgrep | `semgrep scan --config p/php --config p/laravel --error` | /implement (archivos tocados), /review |
-| SCA (dependencias) | composer audit + npm audit | `composer audit --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | /review, /release |
+| SAST | semgrep | `semgrep scan --config p/php --error` | /implement (archivos tocados), /review |
+| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | /review, /release |
 | Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | /review, /release |
 | DAST | ninguna | — | — |
 

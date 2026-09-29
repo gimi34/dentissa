@@ -39,6 +39,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   `league/flysystem` a ≥ 3.35.3 antes del 2026-10-31. Al vencer, el usuario decide si se actualizan
   en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan`
   o `/release` posterior al 2026-10-31 (decisión del usuario, 2026-09-29).
+- Retirar `overrides.rolldown` (fijado en 1.2.9) de `package.json` cuando `rolldown` 1.2.11 o
+  posterior lleve al menos 7 días publicada, para que `npm audit fix` pueda volver a actualizarlo
+  (spec 024, D2; /review 024 R7).
 - `aidlc/spaces/default/intents/260920-monolito-modular/` puede eliminarse cuando el usuario
   revise su migración a la spec 013.
 - Aprobar o ajustar las specs inferidas 001–012 (`/specify --edit NNN`).
