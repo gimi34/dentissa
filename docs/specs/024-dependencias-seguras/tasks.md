@@ -1,7 +1,7 @@
 ---
 spec: 024-dependencias-seguras
 plan: plan.md
-status: draft
+status: approved
 impl_base: c2d352d
 ---
 
