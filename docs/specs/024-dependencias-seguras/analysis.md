@@ -1,55 +1,64 @@
 ---
 result: pass
-round: 3
+round: 4
 mode: delta
 constitution_version: 1.0.0
 date: 2026-09-29
 spec_sha: a62bb70ff6f0
-plan_sha: 3803a075c0f4
-tasks_sha: c5258fa9f997
+plan_sha: c4dee4ea0d5e
+tasks_sha: 7ea5691c88fd
 ---
 
 # Análisis · 024 Dependencias sin vulnerabilidades críticas ni altas
 
 ## Resumen
-Resultado **pass**. Las correcciones de la ronda 2 resuelven A17, A18, A19, A21 y A22. A20 queda
-resuelto en el plan y el roadmap, pero abre dos hallazgos MEDIOS en las tareas, A23 y A24, que el
-usuario acepta como notas de T001 y T040. Abiertos: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0 (2
-MEDIOS aceptados).
+Resultado **pass**. La ronda revisa la corrección D10: dos avisos bajos de Composer publicados
+después del plan, que se registran como excepción EX1 (vence el 2026-10-31), y `composer audit`,
+que pasa a ignorar las severidades baja y media en el CI, `/review` y `/release` (T020, T024, T040,
+T091). Hay 4 hallazgos nuevos, CRÍTICA 0 · ALTA 0 · MEDIA 2 · BAJA 2, y el usuario los acepta
+todos como notas.
 
-El delta no trae cambios estructurales: ni módulos, ni contratos, ni criterios nuevos. Cambian la
-excepción de P2 (ahora CA3–CA7), el método de CA6 (sourcemaps) y las comprobaciones git del
-Rollout. `aidd.py validate` da 0 errores.
+El cambio es estructural solo en el plan y las tareas: una tarea nueva (T024), tres archivos más
+en el alcance (entre ellos `.github/workflows/ai-dd.yml`, ruta protegida autorizada por T024) y
+otro umbral de bloqueo para Composer. La spec y sus criterios no cambian, así que basta el análisis
+delta. `aidd.py validate` da 0 errores.
 
-Ronda anterior: [history/analysis.r2.md](history/analysis.r2.md).
+Ronda anterior: [history/analysis.r3.md](history/analysis.r3.md).
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 7 / 7 (CA1 y CA2 con test PHPUnit en T011; CA3–CA7 con la excepción aceptada de P2) |
+| Criterios con tarea de test e implementación | 7 / 7 (CA1 y CA2 con T024 como tarea de implementación adicional) |
 | Amenazas con control y test | 4 / 4 |
-| Principios de la constitución evaluados | 8 / 8 (P2 con excepción aceptada para CA3–CA7) |
+| Principios de la constitución evaluados | 8 / 8 (P6: el umbral nuevo no la viola, porque solo exige críticas y altas) |
 
 ## Seguimiento de rondas anteriores
-| ID | Severidad | Estado | Evidencia |
-|---|---|---|---|
-| A17 | CRÍTICA | resuelto | Las filas P2 de `plan.md` y `tasks.md` citan el mismo conjunto: "❌ aceptado: CA3–CA7 sin test PHPUnit que falle antes… — aprobado por el usuario el 2026-09-29". La fila del plan tiene 3 celdas. D5 dice "desviación para CA3–CA7". En tareas, CA3 va a T020 y T040, igual que en Cobertura. |
-| A18 | BAJA | resuelto | P5 del plan cita "los lockfiles, `package.json` (rango de `vite` y `overrides`), un test nuevo y `docs/security.md`". La columna Test de TM4 cita `DependenciasSegurasTest`, igual que Trazabilidad. |
-| A19 | MEDIA | resuelto | La Estrategia y la Trazabilidad de CA6, T002 y T022 (1) obtienen la lista de paquetes de los assets de una construcción con sourcemaps en un directorio temporal. Comprobado: el campo `browser` de `axios` sustituye `lib/adapters/http.js`, el único archivo de `axios/lib` que usa `proxy-from-env`. |
-| A20 | MEDIA | resuelto con efecto nuevo (→ A23, A24) | El paso 2 del Rollout exige merge commit, sin squash ni rebase. El paso 3 añade `git log --oneline main..feature/024-dependencias-seguras`. La comprobación del paso 4 incluye la fila del README y el enlace del roadmap. El roadmap anota los pasos 4 y 5 en Pendientes. |
-| A21 | BAJA | resuelto | T011 y T040 exigen que `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php` no reporte cambios dentro del contenedor. |
-| A22 | BAJA | resuelto | T011 evalúa todas las entradas `node_modules/<paquete>`, también las anidadas, y su fallo esperado cita `picomatch` 4.0.3 y la anidada 2.3.1. `package-lock.json` tiene exactamente esas dos instancias, y ningún otro paquete de la tabla está anidado. |
+Sin hallazgos abiertos: A23 y A24 se aceptaron en la ronda 3 como notas de T001 y T040. T001 ya
+tiene la suya.
+
+Comprobado sin hallazgo:
+- El comando aparece exactamente en las 4 líneas que cita T024: `.github/workflows/ai-dd.yml`
+  (líneas 101 y 120), `.ai/project.yaml` (línea 33) y `docs/security.md` (línea 70).
+  `feature/020-auditoria-base` no toca esos archivos.
+- `--ignore-severity` existe en Composer 2.10.2 y admite varios valores. Los avisos ignorados
+  siguen apareciendo en la salida, con el motivo por el que se ignoran.
+- La fila EX1 que pide T091 encaja en las columnas de "Excepciones aceptadas".
+- `.github/` cumple `agent-security.md` §4 con T024 aprobada.
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A23 | Inconsistencia / Duplicación y conflicto | MEDIA | T001; `plan.md` Rollout, nota de los pasos 4 y 5; `docs/roadmap.md` Pendientes y deuda | La nota de los pasos 4 y 5 entró en el roadmap en 8e7ac1d, un commit de la 024 que T001 trae con `cherry-pick`. Pero T001 dice que en el roadmap "solo se añaden la fila de la 024 y su enlace en Pendientes". Si se sigue al pie de la letra, la nota no llega a `feature/024` ni a `main`, y al reconstruir la 020 (paso 4) se pierde la corrección de A20 (i). | La rama 024, y `main` tras su merge, contienen en `docs/roadmap.md` el enlace de la 024 y la nota de los pasos 4 y 5. Comprobación: el diff de `docs/roadmap.md` entre `chore/ai-dd-init` y `feature/024-dependencias-seguras` muestra exactamente esas dos viñetas. → aceptado como nota de T001 |
-| A24 | Cobertura | MEDIA | `plan.md` Rollout paso 3; `tasks.md` (ninguna tarea) | Ninguna tarea recoge la comprobación del paso 3. Es la que detecta que `chore/ai-dd-init` no está en `main` o que entró con squash o rebase (A20 iii). T040 da por hecho que el PR existe, pero no exige esa comprobación antes de abrirlo. | Antes de abrir el PR de la 024 queda comprobado que `chore/ai-dd-init` es ancestro de `main` y que `main..feature/024-dependencias-seguras` solo contiene commits de la 024. Comprobación: la salida de `git merge-base --is-ancestor chore/ai-dd-init main` y de `git log --oneline main..feature/024-dependencias-seguras`, anotadas en `tasks.md`. → aceptado como nota de T040 |
+| A25 | Inconsistencia | MEDIA | `tasks.md` segunda nota de T010; `plan.md` D10 | La nota de T010 registra la decisión como `composer audit --ignore-severity=low`, solo para "T020, T040 y el CI". D10 atribuye al usuario, con la misma fecha, ignorar también la severidad media y aplicarlo en `/review` y `/release`. | tasks.md y plan.md dejan constancia de la misma decisión: severidades baja y media, en CI, `/review` y `/release`. Comprobación: ninguna mención de la decisión dice solo `low` sin una aclaración posterior. → aceptado como nota de T010 |
+| A26 | Cobertura de riesgos | MEDIA | `plan.md` D10; T091; `docs/security.md` Excepciones aceptadas y Riesgos conocidos | No se dice qué pasa cuando EX1 vence, quién actúa ni dónde se comprueba. El filtro es global y no depende de EX1, así que al vencer nada falla. EX1 tampoco queda enlazada con ningún riesgo: las bajas no forman parte de RS16. | La fila EX1 y la nota del roadmap indican qué se hace al vencer, quién lo hace y en qué paso se comprueba. EX1 dice que no pertenece a RS16 (severidad baja, fuera de P6). Comprobación: un grep de `EX1` en `security.md` y `roadmap.md` muestra el destino y la acción al vencer. → aceptado como nota de T091 |
+| A27 | Inconsistencia | BAJA | `spec.md` Fuera de alcance, Supuestos (recuento) y Notas para /plan | La spec no menciona los avisos bajos: el recuento dice "9 altas y 7 medias", y la nota de verificación cita `composer audit` sin filtro. Es compatible con CA1, que solo exige críticas y altas. | La spec no cambia. D10 del plan registra que los bajos quedan fuera de la 024, con su motivo y su destino (EX1 y roadmap). → aceptado sin cambio (plan) |
+| A28 | Duplicación y conflicto | BAJA | `plan.md` Rollout paso 5; `docs/roadmap.md` nota de la 020 en Pendientes | Ambos exigen que `composer audit` sin filtro dé "0 críticas y 0 altas". Tal cual, ese comando sale con código 1 por las bajas de EX1, y en `/release 020` puede tomarse como un fallo. | La nota de la 020 en el roadmap usa el comando filtrado de D10, o dice que se juzga por severidad y no por el código de salida. Comprobación: un grep de `composer audit` en `roadmap.md`. → aceptado como nota de T091 |
 
 ## Decisiones pendientes del usuario
-Ninguna. A23 y A24 se aceptan como notas de tarea (decisión del usuario, 2026-09-29).
+Ninguna.
 
 ## Aceptados
 Aceptados por el usuario el 2026-09-29:
-- **A23** → nota de T001: al resolver el conflicto de `docs/roadmap.md`, conservar el enlace de la 024 y la nota de los pasos 4 y 5; comprobar que el diff de `docs/roadmap.md` entre `chore/ai-dd-init` y `feature/024-dependencias-seguras` muestra exactamente esas dos viñetas.
-- **A24** → nota de T040: antes de abrir el PR de la 024, anotar la salida de `git merge-base --is-ancestor chore/ai-dd-init main` (código 0) y de `git log --oneline main..feature/024-dependencias-seguras` (solo commits de la 024); si alguna falla, no se abre el PR.
+- **A25** → nota de T010: aclarar que la decisión final (D10) ignora las severidades baja y media en el CI, `/review` y `/release`; la nota anterior queda como registro del momento.
+- **A26** → nota de T091: la fila EX1 dice que no pertenece a RS16 (severidad baja, fuera de P6) y qué pasa al vencer. Al vencer, el usuario decide si actualiza `laravel/framework` y `league/flysystem` en una spec propia o si renueva EX1 con fecha y aprobación nuevas, y el primer `/plan` o `/release` posterior al 2026-10-31 lo comprueba. La nota del roadmap dice lo mismo.
+- **A27** → plan: sin cambio. D10 ya registra que los bajos quedan fuera de la 024, y CA1 solo cubre críticas y altas.
+- **A28** → nota de T091: la nota de la 020 en `docs/roadmap.md` pasa a usar `composer audit --ignore-severity=low --ignore-severity=medium` y `npm audit --audit-level=high` con código 0.
