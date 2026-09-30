@@ -36,8 +36,8 @@ RS12.c solo en el agendado de citas y RS12.b va a la spec 027.
 - [ ] CA6 · Dadas citas canceladas o marcadas como no asistió en ese hueco, cuando se pide una cita nueva del mismo dentista, entonces no cuentan como conflicto y la cita se acepta.
 - [ ] CA7 · Dada una cita de otro dentista a la misma hora, cuando se pide una cita para este dentista, entonces no cuenta como conflicto.
 - [ ] CA8 (abuso) · Dadas dos peticiones simultáneas para huecos que se solapan del mismo dentista, del personal, del paciente o una de cada, cuando se procesan, entonces solo una cita queda guardada y la otra recibe el mensaje de hueco no disponible, nunca un error del servidor.
-- [ ] CA9 (abuso) · Dada una hora mal formada (fuera de rango como "25:99", o texto), cuando se envía en cualquiera de los dos flujos, entonces se rechaza con un error de validación del campo hora y nunca con un error del servidor.
-- [ ] CA10 (abuso) · Dado un identificador de dentista que no existe o que corresponde a otro tipo de personal (asistente o administración), cuando se agenda en cualquiera de los dos flujos, entonces se rechaza con un error de validación y no se guarda ninguna cita.
+- [ ] CA9 (abuso) · Dada una hora mal formada (fuera de rango como "25:99", o texto) o una fecha mal formada (con hora incluida como "2026-10-05 10:00", o texto), cuando se envía en cualquiera de los dos flujos, entonces se rechaza con un error de validación del campo correspondiente y nunca con un error del servidor.
+- [ ] CA10 (abuso) · Dado un identificador de dentista que no existe, que corresponde a otro tipo de personal (asistente o administración) o a un dentista cuya cuenta está desactivada, cuando se agenda en cualquiera de los dos flujos, entonces se rechaza con un error de validación y no se guarda ninguna cita.
 
 ## Fuera de alcance
 - Qué cambios de estado se permiten y quién puede hacerlos → spec 026 estados-cita.
@@ -64,8 +64,8 @@ RS12.c solo en el agendado de citas y RS12.b va a la spec 027.
   alcance, y el paciente solo para sí mismo.
 - Casos de abuso:
   - Como dos usuarios concurrentes, intento reservar el mismo hueco → solo uno lo consigue y el otro recibe un mensaje, no un error (CA8).
-  - Como usuario, envío una hora mal formada → se rechaza con error de validación, sin error del servidor (CA9).
-  - Como usuario, envío el identificador de un asistente o un administrador como dentista → se rechaza y no se guarda la cita (CA10).
+  - Como usuario, envío una hora o una fecha mal formadas → se rechazan con error de validación, sin error del servidor (CA9).
+  - Como usuario, envío como dentista a un asistente, a un administrador o a un dentista desactivado → se rechaza y no se guarda la cita (CA10).
   - Como paciente, intento averiguar quién tiene cita en un hueco → el mensaje de no disponible no lo revela (CA4).
 
 ## Cobertura de riesgos
@@ -118,3 +118,5 @@ cambia.
 |---|---|---|
 | 2026-09-29 | Spec creada | /specify, corte de la lógica de citas en 025–027 |
 | 2026-09-29 | Aprobada | Decisión del usuario |
+| 2026-09-30 | CA9 incluye la fecha mal formada y CA10 el dentista desactivado; vuelve a `draft` | `/analyze` ronda 1, A9 y A10 (decisión del usuario, 2026-09-30) |
+| 2026-09-30 | Aprobada de nuevo | Decisión del usuario |
