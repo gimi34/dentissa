@@ -33,26 +33,19 @@ los dos controladores.
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste |
 |---|---|---|
-| P1 Spec aprobada antes de código | ✅ | Spec 025 `approved` el 2026-09-29. |
-| P2 Test que falla antes y pasa después | ❌ aceptado: CA2, CA3, CA6 y CA7 describen comportamiento que ya se cumple hoy, así que sus tests son de caracterización y no pueden fallar antes; cada uno se comprueba rompiendo la regla un momento — aprobado por el usuario el 2026-09-29 | CA1, CA4, CA5, CA8, CA9 y CA10 tienen tests que fallan hoy:
-- CA1 y CA4: el mensaje es distinto entre flujos.
-- CA5: las citas seguidas se rechazan en un sentido.
-- CA8: hoy no hay bloqueo antes de leer, y el bloqueo agotado acaba en 500 sin manejar.
-- CA9: una hora o fecha mal formada da 500.
-- CA10: se acepta un dentista de otro tipo o desactivado.
-
-Es la segunda excepción de este tipo (tras la 024), así que se propone enmendar P2 (D9). |
-| P3 Autorización en servidor, por rol y recurso | ❌ aceptado: los dos endpoints modificados siguen sin Policy ni Gate hasta la spec 014, que los introduce (ADR 0003); el alcance del paciente en el alta del personal es de la 014 y el rechazo por rol en `/cliente/*` es de la 015 — aprobado por el usuario el 2026-09-30 | No cambia ningún permiso: se conservan los middlewares de rol y `autorizadoParaCita`. `AltaCitasRolesTest` prueba, para cada rol, el caso permitido y el denegado. En el personal: admin permitido; dentista con su dentista permitido y con otro → 403; asistente con un dentista asignado permitido y con uno no asignado → 403; cliente → 403. En el paciente: permitido, y un `paciente_id` ajeno inyectado se ignora (la cita queda a su nombre). |
+| P1 Spec aprobada antes de código | ✅ | Spec 025 `approved`, aprobada de nuevo el 2026-09-30 tras ampliar CA9 y CA10. |
+| P2 Test que falla antes y pasa después | ❌ aceptado: CA2, CA3, CA6 y CA7 describen comportamiento que ya se cumple hoy, así que sus tests son de caracterización y no pueden fallar antes; cada uno se comprueba rompiendo la regla un momento — aprobado por el usuario el 2026-09-29 | CA1, CA4, CA5, CA8, CA9 y CA10 tienen tests que fallan hoy: CA1 y CA4, porque el mensaje es distinto entre flujos; CA5, porque las citas seguidas se rechazan en un sentido; CA8, porque no hay bloqueo antes de leer y el bloqueo agotado acaba en 500; CA9, porque una hora o una fecha con hora dan 500; CA10, porque se acepta un dentista de otro tipo o desactivado. Todos los tests usan `DatabaseTransactions` contra `dentissa_test`. La única escritura confirmada es la de la segunda conexión de `ReservaConcurrenteTest` (un usuario dentista, su fila en `personal` y su horario), también en `dentissa_test`; se borra al final del test y la base queda como en la línea base. Es la segunda excepción de este tipo (tras la 024), así que se propone enmendar P2 (D9). |
+| P3 Autorización en servidor, por rol y recurso | ❌ aceptado: los dos endpoints modificados siguen sin Policy ni Gate. El alta del personal (`POST /{rol}/citas`) los recibe en la spec 014, con el Gate `agendar-para-paciente` (ADR 0003) y el alcance del paciente. El alta del paciente (`POST /cliente/agendar`) los recibe en la spec 015, junto con el rechazo por rol en `/cliente/*` — aprobado por el usuario el 2026-09-30 | No cambia ningún permiso: se conservan los middlewares de rol y `autorizadoParaCita`. `AltaCitasRolesTest` prueba, para cada rol, el caso permitido y el denegado. En el personal: admin permitido; dentista con su dentista permitido y con otro → 403; asistente con un dentista asignado permitido y con uno no asignado → 403; cliente → 403. En el paciente: permitido, y un `paciente_id` ajeno inyectado se ignora (la cita queda a su nombre). |
 | P4 Entrada validada y SQL con bindings | ✅ | En ambos flujos, `fecha` con `date_format:Y-m-d`, `hora` con `date_format:H:i` y `dentista_id` con `Rule::exists` restringido a `tipo=dentista` y a usuario activo. Las consultas del servicio usan Query Builder con bindings; se retira el `whereRaw` de la regla (el del buscador de `index` queda fuera de alcance). |
 | P5 Nada sensible en el repo | ✅ | Solo código, tests y documentación; sin credenciales. |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas. La rama sale de la 024, con `composer audit --locked` y `npm audit` en 0. |
-| P7 Auditoría de datos sensibles | ❌ aceptado: el alta guarda notas de la cita (dato de salud) sin evento de auditoría; auditarla queda para la spec 022, porque la 025 no cambia qué notas se guardan ni quién puede guardarlas — aprobado por el usuario el 2026-09-30 | La infraestructura de auditoría (spec 020) aún no está en esta rama. Se anota en el roadmap (D9). |
-| P8 Correlación y logs limpios | ➖ | Sin logs nuevos. El rechazo por bloqueo agotado o interbloqueo se devuelve como mensaje, sin registrar SQL ni datos. Un test comprueba que ni la reserva ni el rechazo escriben logs. |
+| P7 Auditoría de datos sensibles | ❌ aceptado: (1) el alta guarda notas de la cita (dato de salud) sin evento de auditoría, que queda para la spec 022; (2) el 403 del alta del personal (`autorizadoParaCita`) no se registra, y el registro central de accesos denegados es de la spec 020 (OB1.c). La 025 no cambia qué notas se guardan, quién puede guardarlas ni cuándo se deniega — aprobado por el usuario el 2026-09-30 | La infraestructura de auditoría (spec 020) aún no está en esta rama. Las dos partes se anotan en el roadmap (D9). |
+| P8 Correlación y logs limpios | ➖ | Sin logs nuevos. El rechazo por bloqueo agotado o interbloqueo se devuelve como mensaje, sin registrar SQL ni datos; un test comprueba que ninguna llamada a `Log` en la reserva ni en ese rechazo lleva SQL, bindings ni datos de la cita. Residuo declarado: una `QueryException` del insert distinta de 1205/1213 sigue el reporte por defecto, que registra el SQL con sus bindings, notas incluidas (OB4.a, pendiente → objetivo 3, spec 023). El log con IDs de los conflictos de agenda (OB3.b) también queda para el objetivo 3. |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
-| `app/Agenda/ReservaCitas.php` (nuevo) | Constructor: conexión de base de datos (`ConnectionInterface`) y segundos de espera por bloqueo (5 por defecto). Se registra en el contenedor y los controladores lo reciben por inyección. `reservar(array $cita): string`: <ol><li>abre una transacción y fija `innodb_lock_wait_timeout`;</li><li>**lo primero**, bloquea la fila del dentista (`personal`, `lockForUpdate`);</li><li>después lee el horario del día (existe y `disponible=1`) y comprueba el encaje en la franja (bordes incluidos);</li><li>comprueba el solape estricto con las citas del mismo día y dentista que no están `cancelada` ni `no_asistio`;</li><li>inserta la cita en `agendada` y devuelve su id.</li></ol> Un bloqueo agotado (1205) o un interbloqueo (1213) se convierten en `CitaNoAgendable` con el mensaje de no disponible, sin registrar nada. | Medio: concentra la regla de los dos flujos. |
+| `app/Agenda/ReservaCitas.php` (nuevo) | Constructor: conexión de base de datos (`ConnectionInterface`) y segundos de espera por bloqueo (5 por defecto). Se registra en el contenedor y los controladores lo reciben por inyección. `reservar(array $cita): string`: <ol><li>abre una transacción y fija `innodb_lock_wait_timeout`;</li><li>**lo primero**, bloquea la fila del dentista (`personal`, `lockForUpdate`);</li><li>después lee el horario del día (existe y `disponible=1`) y comprueba el encaje en la franja (bordes incluidos);</li><li>comprueba el solape estricto con las citas del mismo día y dentista que no están `cancelada` ni `no_asistio`;</li><li>inserta la cita en `agendada` y devuelve su id.</li></ol> Un bloqueo agotado (1205) o un interbloqueo (1213) se convierten en `CitaNoAgendable` con el mensaje de no disponible, sin registrar nada. Llegue como `QueryException` (transacción de nivel 1, producción) o como `Illuminate\Database\DeadlockException` (transacción anidada, como en los tests), se trata igual. | Medio: concentra la regla de los dos flujos. |
 | `app/Agenda/CitaNoAgendable.php` (nuevo) | Excepción con el mensaje para el usuario. Tres casos: el dentista no atiende ese día; la cita queda fuera de la franja (con `H:i - H:i`); el horario ya no está disponible. | Bajo |
 | `app/Http/Controllers/CitasController.php` y `ClienteCitasController.php` (formato previo) | Pint sobre los dos archivos completos, en un commit aparte y sin cambios de lógica; la suite sigue igual (D10). | Bajo: solo formato; se suma a los conflictos de formato con la 014. |
 | `app/Http/Controllers/CitasController.php` | `store(Request, ReservaCitas)`: `fecha` → `required\|date_format:Y-m-d`; `hora` → `required\|date_format:H:i`; `dentista_id` → `Rule::exists` con `tipo=dentista` y usuario activo, con los mensajes en español de Contratos. Conserva `autorizadoParaCita`, la duración del formulario (10–300) y las fechas pasadas. Llama al servicio y convierte `CitaNoAgendable` en `back()->withInput()->withErrors(['hora' => …])`. Se elimina la copia de la regla. | Medio: la 014 también cambia `store` (D7). |
@@ -64,7 +57,7 @@ Es la segunda excepción de este tipo (tras la 024), así que se propone enmenda
 | `tests/Feature/AltaCitasFlujosTest.php` (nuevo) | Diferencias que se mantienen por flujo y columnas guardadas (spec, Fuera de alcance; A16). | Bajo |
 | `docs/architecture.md` | "Resumen", "Módulos", paso 4 del "Flujo principal" y "Deuda técnica" (T090). | Bajo |
 | `docs/security.md` | RS12.a → "en curso (spec 025)". RS12.c sigue "pendiente", con la nota de que el agendado lo resuelve la 025 y el resto la 013 (D5). | Bajo |
-| `docs/roadmap.md` | Pendientes: enmienda de P2 (D9), auditoría del alta con notas → 022 (P7), ajuste de la 014 sobre el `store` de la 025 (D7) y límite de peticiones en el alta de citas (D13). | Bajo |
+| `docs/roadmap.md` | Pendientes: enmienda de P2 (D9); auditoría del alta con notas → 022 y del 403 del alta del personal → 020 (P7); Gate o Policy del alta del paciente → 015 (P3); ajuste de la 014 sobre el `store` de la 025 (D7); límite de peticiones en el alta de citas (D13). | Bajo |
 
 ## Contratos y datos
 - **Rutas:** sin cambios (`POST /{admin|dentista|asistente}/citas`, `POST /cliente/agendar`),
@@ -108,14 +101,25 @@ Es la segunda excepción de este tipo (tras la 024), así que se propone enmenda
   - `test_las_citas_canceladas_o_no_asistio_no_bloquean_el_hueco` (CA6).
   - `test_la_cita_de_otro_dentista_no_bloquea_el_hueco` (CA7).
 - **Concurrencia (CA8), `ReservaConcurrenteTest`:**
-  - **Preparación con una segunda conexión.** Se define en el test copiando la configuración de
-    la conexión por defecto, así sirve igual en local (`db`) y en el CI (`127.0.0.1`). Esa
-    conexión crea y **confirma** un usuario dentista, su fila en `personal` y su horario, y los
-    borra en `tearDown`. No depende del id del volcado.
+  - **Preparación con una segunda conexión.** Solo la usan los tests de bloqueo. Se define en el
+    test copiando la configuración de la conexión por defecto, así sirve igual en local (`db`) y
+    en el CI (`127.0.0.1`).
+    - Crea y **confirma** un usuario dentista, su fila en `personal` y su horario. No depende del
+      id del volcado.
+    - Lo hace antes de la primera lectura de la app en el test, para que la vista de REPEATABLE
+      READ de la app ya los vea.
   - **Nada de filas hijas desde la app.** La conexión de la app, dentro de `DatabaseTransactions`,
     no escribe ninguna fila que referencie a ese dentista. Si lo hiciera, la clave foránea le
-    daría un bloqueo compartido y se bloquearía a sí misma. Pacientes y usuarios del paciente sí
-    los crea la app, porque no referencian a `personal`.
+    daría un bloqueo compartido y se bloquearía a sí misma. Los pacientes que crea la app llevan
+    `dentista_id` nulo, porque `pacientes.dentista_id` también tiene clave foránea a `personal`.
+  - **Limpieza sin esperas**, en este orden:
+    1. la segunda conexión deshace su transacción, lo que suelta el `FOR UPDATE`;
+    2. la app deshace la suya (`parent::tearDown()`);
+    3. la segunda conexión, obtenida antes, borra lo que confirmó.
+    Ejecutar el archivo dos veces seguidas no deja restos: los recuentos de usuarios, dentistas y
+    horarios coinciden con la línea base.
+  - **Tests sin segunda conexión:** los de orden, espera y logs usan un dentista creado dentro de
+    la transacción de la app. Así no retienen bloqueos sobre filas de la segunda conexión.
   - **Espera acotada.** Las dos sesiones usan `innodb_lock_wait_timeout = 1`, y `ReservaCitas` se
     enlaza en el contenedor con 1 s.
   - `test_una_reserva_no_se_guarda_mientras_otra_tiene_el_hueco_del_dentista` y
@@ -128,10 +132,13 @@ Es la segunda excepción de este tipo (tras la 024), así que se propone enmenda
     `personal` va antes de la lectura de `horarios_dentista` y de `citas`. Falla hoy porque no hay
     `for update`.
   - `test_un_interbloqueo_se_convierte_en_no_disponible`: `ReservaCitas` con una conexión doble
-    cuya transacción lanza una `QueryException` 1213; se espera `CitaNoAgendable` con el mensaje
-    de no disponible.
-  - `test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_logs`: `Log::spy()` durante una
-    reserva normal y durante un bloqueo agotado, sin ninguna llamada.
+    cuya transacción lanza, en tres casos, una `QueryException` 1205, una `QueryException` 1213 y
+    una `DeadlockException`. En los tres se espera `CitaNoAgendable` con el mensaje de no
+    disponible. El test de bloqueo por HTTP cubre, además, el camino real anidado.
+  - `test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_datos_en_logs`: `Log::spy()` durante
+    una reserva normal y durante un bloqueo agotado. Ninguna llamada lleva SQL, bindings ni datos
+    de la cita (notas, paciente). Así el test sigue siendo válido cuando OB3.b añada un log con
+    IDs.
 - **Validación (CA9, CA10), `AltaCitasValidacionTest`, por flujo:**
   - `test_una_hora_mal_formada_se_rechaza_sin_error_500`, con "25:99" y "abc".
   - `test_una_fecha_mal_formada_se_rechaza_sin_error_500`, con "2026-10-05 10:00" y "abc".
@@ -171,7 +178,7 @@ Es la segunda excepción de este tipo (tras la 024), así que se propone enmenda
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
 | TM1 | Tampering: dos reservas simultáneas se quedan con el mismo hueco (condición de carrera) | A06:2025 | `ReservaCitas::reservar` | Transacción con bloqueo de la fila del dentista **antes** de leer horario y citas | `ReservaConcurrenteTest::test_una_reserva_no_se_guarda_mientras_otra_tiene_el_hueco_del_dentista`, `test_el_bloqueo_del_dentista_se_toma_antes_de_leer_horario_y_citas` |
-| TM2 | Denial of service: espera por bloqueo o interbloqueo que acaba en error 500 | A06:2025 | `ReservaCitas::reservar` | Espera de 5 s como máximo; los errores 1205/1213 se convierten en `CitaNoAgendable`, sin logs | `ReservaConcurrenteTest::test_el_bloqueo_agotado_responde_no_disponible_sin_error_500`, `test_un_interbloqueo_se_convierte_en_no_disponible`, `test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_logs` |
+| TM2 | Denial of service: espera por bloqueo o interbloqueo que acaba en error 500 | A06:2025 | `ReservaCitas::reservar` | Espera de 5 s como máximo; los errores 1205/1213 se convierten en `CitaNoAgendable`, sin logs | `ReservaConcurrenteTest::test_el_bloqueo_agotado_responde_no_disponible_sin_error_500`, `test_un_interbloqueo_se_convierte_en_no_disponible`, `test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_datos_en_logs` |
 | TM3 | Denial of service / divulgación: hora o fecha mal formada que provoca una excepción y un error 500 | A05:2025 | `CitasController@store`, `ClienteCitasController@agendarStore` | `date_format:Y-m-d` y `date_format:H:i` antes de interpretar la fecha | `AltaCitasValidacionTest::test_una_hora_mal_formada_se_rechaza_sin_error_500`, `test_una_fecha_mal_formada_se_rechaza_sin_error_500` |
 | TM4 | Tampering: se agenda con un asistente, un administrador o un dentista desactivado | A05:2025 | ambos controladores | `Rule::exists` sobre `personal` con `tipo=dentista` y usuario activo | `AltaCitasValidacionTest::test_un_dentista_de_otro_tipo_inexistente_o_desactivado_se_rechaza` |
 | TM5 | Information disclosure: el mensaje de ocupado revela a otro paciente o su servicio | A01:2025 | `CitaNoAgendable` | Mensaje fijo, sin datos de la otra cita | `ReglaAgendaTest::test_una_cita_solapada_se_rechaza_sin_revelar_la_otra_cita` |
@@ -200,7 +207,7 @@ Amenaza fuera de alcance (D13):
 | CA9 (abuso): hora o fecha mal formada sin error 500 | ambos controladores | Feature `AltaCitasValidacionTest::test_una_hora_mal_formada_se_rechaza_sin_error_500`, `test_una_fecha_mal_formada_se_rechaza_sin_error_500` |
 | CA10 (abuso): dentista inexistente, de otro tipo o desactivado | ambos controladores | Feature `AltaCitasValidacionTest::test_un_dentista_de_otro_tipo_inexistente_o_desactivado_se_rechaza` |
 | TM1 | bloqueo de la fila del dentista antes de leer | `ReservaConcurrenteTest::test_una_reserva_no_se_guarda_mientras_otra_tiene_el_hueco_del_dentista`, `test_el_bloqueo_del_dentista_se_toma_antes_de_leer_horario_y_citas` |
-| TM2 | espera acotada y conversión de 1205/1213 sin logs | `ReservaConcurrenteTest::test_el_bloqueo_agotado_responde_no_disponible_sin_error_500`, `test_un_interbloqueo_se_convierte_en_no_disponible`, `test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_logs` |
+| TM2 | espera acotada y conversión de 1205/1213 sin logs | `ReservaConcurrenteTest::test_el_bloqueo_agotado_responde_no_disponible_sin_error_500`, `test_un_interbloqueo_se_convierte_en_no_disponible`, `test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_datos_en_logs` |
 | TM3 | `date_format:Y-m-d` y `date_format:H:i` | `AltaCitasValidacionTest::test_una_hora_mal_formada_se_rechaza_sin_error_500`, `test_una_fecha_mal_formada_se_rechaza_sin_error_500` |
 | TM4 | `exists` con `tipo=dentista` y usuario activo | `AltaCitasValidacionTest::test_un_dentista_de_otro_tipo_inexistente_o_desactivado_se_rechaza` |
 | TM5 | mensaje fijo | `ReglaAgendaTest::test_una_cita_solapada_se_rechaza_sin_revelar_la_otra_cita` |
@@ -208,7 +215,12 @@ Amenaza fuera de alcance (D13):
 ## Observabilidad
 No aplica: la spec no añade logs, eventos de auditoría ni métricas (spec 025, Auditoría), y no
 cambia permisos. El registro actual de cambios de estado (`trg_historial_cita`) no se toca.
-Verificación: `ReservaConcurrenteTest::test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_logs`.
+Residuos declarados (P8, P7):
+- El reporte por defecto de una `QueryException` inesperada deja SQL y bindings (OB4.a → spec
+  023).
+- El log con IDs de los conflictos de agenda es OB3.b (objetivo 3).
+- El 403 del alta del personal sin evento → spec 020.
+Verificación: `ReservaConcurrenteTest::test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_datos_en_logs`.
 
 ## Rollout
 - Sin despliegue configurado: hoy solo existe el entorno local (`docs/deployment.md`). Cuando
@@ -240,7 +252,11 @@ Verificación: `ReservaConcurrenteTest::test_ni_la_reserva_ni_el_rechazo_por_blo
 - D3 · Espera por bloqueo: 5 s por sesión (`innodb_lock_wait_timeout`), configurable en el
   constructor del servicio (los tests usan 1 s). 1205 y 1213 → mensaje de no disponible (CA8),
   sin logs.
-  - El servicio recibe la conexión por constructor, para poder simular el 1213 en un test.
+  - El servicio recibe la conexión por constructor, para poder simular 1205, 1213 y
+    `DeadlockException` en un test.
+  - Dentro de una transacción anidada (tests con `DatabaseTransactions`), Laravel convierte 1205 y
+    1213 en `Illuminate\Database\DeadlockException`, que no es una `QueryException`. En nivel 1
+    (producción) llega la `QueryException`. El servicio trata las dos formas igual.
   - Se registra en el contenedor y los controladores lo reciben por inyección de método, para que
     el enlace de 1 s de los tests aplique.
   - El bloqueo se toma antes de cualquier lectura de la transacción. Así, en REPEATABLE READ la
@@ -312,7 +328,11 @@ Verificación: `ReservaConcurrenteTest::test_ni_la_reserva_ni_el_rechazo_por_blo
   - la misma imagen `mariadb:10.11` en local y en el CI;
   - la conexión copia la configuración por defecto;
   - espera de 1 s en ambas sesiones;
-  - los datos del dentista los confirma la segunda conexión y los borra en `tearDown`.
+  - los datos del dentista los confirma la segunda conexión antes de la primera lectura de la
+    app;
+  - pacientes con `dentista_id` nulo;
+  - limpieza en orden (rollback de la segunda conexión → rollback de la app → borrado);
+  - comprobado ejecutando el archivo dos veces seguidas sin restos.
 - El volcado no trae horarios → cada test crea el suyo (en su transacción, salvo el de
   concurrencia).
 - Cambia el mensaje de ocupado que ve el personal → acordado en la spec. Ningún test existente
