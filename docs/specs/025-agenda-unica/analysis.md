@@ -1,71 +1,85 @@
 ---
 result: fail
-round: 1
+round: 2
 mode: full
 constitution_version: 1.0.0
 date: 2026-09-30
-spec_sha: 81974c16a911
-plan_sha: a4fa97d5b2ce
-tasks_sha: 70cf776c0fcf
+spec_sha: 3ca194bd9bf0
+plan_sha: e64f1d11895b
+tasks_sha: eaf2b9fa8b24
 ---
 
 # Análisis · 025 Regla de agenda única sin doble reserva
 
 ## Resumen
-Resultado **fail**, con 3 hallazgos CRÍTICOS de constitución: en P3 faltan un Gate o Policy y los
-tests por rol, y en P7 no se audita el alta con notas de la cita, sin que haya excepción
-registrada. Hay además 3 hallazgos ALTOS, que obligarían a rehacer trabajo:
-- el test de concurrencia no funciona tal como está diseñado;
-- el criterio "sin `whereRaw`" no puede cumplirse;
-- Pint ya falla hoy en los dos controladores.
+Resultado **fail**. La ronda es completa porque las tareas se regeneraron con `--redo`. Motivos:
+- **A23 (CRÍTICO):** el 403 del alta del personal no se audita y no tiene excepción P7.
+- **A24 (ALTO):** con `DatabaseTransactions`, Laravel convierte 1205 y 1213 en `DeadlockException`.
+  Un servicio que solo capture `QueryException` respondería 500.
 
-Conteo: CRÍTICA 3 · ALTA 3 · MEDIA 10 · BAJA 6. El usuario ya decidió todo lo que era suyo.
+De la ronda 1 quedan resueltos 16 hallazgos. A1, A4, A8, A12 y A17 se resolvieron pero
+abrieron hallazgos nuevos, y A14 sigue abierto en parte.
+
+Hallazgos nuevos: CRÍTICA 1 · ALTA 1 · MEDIA 2 · BAJA 6. El usuario decidió las excepciones y
+aceptó A27–A30 como notas de tarea.
+
+Ronda anterior: [history/analysis.r1.md](history/analysis.r1.md).
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 10 / 10 (con huecos: fecha mal formada sin cubrir, A9; diferencias por flujo sin test, A16) |
-| Amenazas con control y test | 5 / 5 (TM1 solo probada por el camino del bloqueo agotado, A5; falta la amenaza de saturación, A18) |
-| Principios de la constitución evaluados | 8 / 8 (P3 y P7 con violaciones sin excepción: A1, A2, A3) |
+| Criterios con tarea de test e implementación | 10 / 10 |
+| Amenazas con control y test | 5 / 5 (TM6 fuera de alcance, D13; el control "espera de 5 s" de TM2 sin test: A29) |
+| Principios de la constitución evaluados | 8 / 8 (P7 con una parte sin excepción: A23) |
 
 ## Seguimiento de rondas anteriores
-Primera ronda.
+| ID | Severidad | Estado | Evidencia |
+|---|---|---|---|
+| A1 | CRÍTICA | resuelto con efecto nuevo (→ A26) | La fila P3 del plan y la de las tareas nombran las tres partes, pero el Gate de `/cliente/agendar` no tiene destino real. |
+| A2 | CRÍTICA | resuelto | T013 cubre admin, dentista, asistente y cliente, cada uno con permitido y denegado. `asistente_dentista` existe (`id` char(36) sin valor por defecto; el test debe darlo). |
+| A3 | CRÍTICA | resuelto | P7 aparece como `❌ aceptado … → 022` en el plan y en las tareas, y T041 lo lleva al roadmap. Otra parte de P7 queda sin cubrir: A23. |
+| A4 | ALTA | resuelto con efecto nuevo (→ A24, A25) | T011 recoge la segunda conexión, la espera de 1 s y la razón real (comprobado: hoy falla en ~1 s con un 500). |
+| A5 | MEDIA | resuelto | Test de orden bloqueo → lectura con `DB::listen`; T020 exige "bloquea primero". |
+| A6 | ALTA | resuelto | T020 limita el criterio al método `store`. |
+| A7 | ALTA | resuelto | T002 y D10. Pint solo aplica reglas de formato, y `fully_qualified_strict_types` cambia `\Illuminate\Support\Str` por un `use`, sin efecto en la lógica. |
+| A8 | MEDIA | resuelto con efecto nuevo (→ A28) | Hay mensajes exactos y entrada conservada en T012, pero no en los rechazos de la regla. |
+| A9 | MEDIA | resuelto | Spec CA9, D12, T012. |
+| A10 | MEDIA | resuelto | Spec CA10, D12, T012. |
+| A11 | MEDIA | resuelto | Pacientes dentro del alcance; D7 y T041. |
+| A12 | MEDIA | resuelto con efecto nuevo (→ A27) | D11 fija el dueño de cada tabla, pero la condición no llega a la 013. |
+| A13 | MEDIA | resuelto | RS12.c sigue "pendiente" con nota, un estado válido; ninguna corrección queda "mitigada" con una parte fuera. |
+| A14 | MEDIA | abierto (parcial) | T010 separa por flujo, pero T011 y T012 no exigen nombres filtrables. T020 necesita filtrar los casos del personal de T011 y T012, y no está definido a qué flujo pertenecen los tests de orden y de logs. |
+| A15 | MEDIA | resuelto | Inyección desde el contenedor en el plan, T020 y T021. |
+| A16 | MEDIA | resuelto | T014. Condición: el test del personal envía `servicio_id` vacío, porque si falta la clave da 500. |
+| A17 | BAJA | resuelto con efecto nuevo (→ A24) | El interbloqueo simulado es viable con la firma del plan, pero solo prueba una forma del error. |
+| A18 | BAJA | resuelto | TM6 y D13, con viñeta en T041. |
+| A20 | BAJA | resuelto | T090 cubre las cuatro secciones. |
+| A21 | BAJA | resuelto | La consulta de vigilancia está alineada con la regla. |
+| A22 | BAJA | resuelto | T013, cliente con otro paciente. |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A1 | Constitución (P3) | CRÍTICA | `plan.md` y `tasks.md` Constitution Check P3 | Los dos endpoints modificados siguen sin Policy ni Gate (usan `autorizadoParaCita`). `store` no limita el paciente al alcance del dentista o asistente (→ 014) y `/cliente` no exige `role:cliente` (→ 015). La excepción registrada solo cubre "sin test denegado en `/cliente/agendar`". | Decidido: excepción acotada `❌ aceptado` en P3 (sin Gate hasta la 014; alcance del paciente → 014; rol de `/cliente` → 015), con motivo y fecha, en plan y tareas. Comprobación: las filas P3 del plan y de las tareas nombran las tres partes. → `/plan --fix`, `/tasks --fix` |
-| A2 | Constitución (P3) / Cobertura | CRÍTICA | `plan.md` "Roles (P3)"; T013 | Faltan tests por rol, permitido y denegado, para dentista y asistente en `POST /dentista/citas` y `/asistente/citas`. | Decidido: `AltaCitasRolesTest` cubre dentista (su dentista → permitido; otro dentista → 403) y asistente (dentista asignado → permitido; no asignado → 403), con `asistente_dentista` creado en el test. → `/plan --fix`, `/tasks --fix` |
-| A3 | Constitución (P7) | CRÍTICA | `plan.md` y `tasks.md` P7 | El alta que se modifica escribe `notas_paciente` y `notas_internas`, que son datos de salud (`docs/security.md`). El ➖ del plan dice que no cambia datos clínicos, lo que no es cierto. | Decidido: `❌ aceptado: la auditoría del alta con notas → spec 022; la 025 no cambia qué notas se guardan ni quién — aprobado por el usuario el 2026-09-30`, más una viñeta en el roadmap. → `/plan --fix`, `/tasks --fix` |
-| A4 | Inconsistencia / viabilidad | ALTA | T011; `plan.md` "Concurrencia (CA8)" y P2 | `citas.dentista_id` y `horarios_dentista.personal_id` tienen clave foránea a `personal`, así que un insert hijo pide un bloqueo compartido sobre el dentista. Mientras otra conexión lo tiene con `FOR UPDATE`, el insert de hoy espera 50 s y acaba en un error 500; no se guarda sin esperar. Si el test crea el horario con la conexión de la app, se bloquea a sí mismo. En el CI el host es `127.0.0.1`. | La conexión de la app no escribe filas que referencien al dentista bloqueado: el horario lo crea y confirma la segunda conexión, que lo borra en `tearDown`. La espera queda acotada en ambas conexiones, y la segunda hereda la configuración de la conexión por defecto. Hay que anotar la razón real por la que falla hoy (500 por bloqueo agotado sin manejar). Comprobación: T011 falla antes de T020 en pocos segundos y sin colgarse. → `/plan --fix`, `/tasks --fix` |
-| A5 | Cobertura | MEDIA | CA8; TM1; T011 | Solo se prueba el bloqueo agotado. No se prueba que las citas candidatas se lean **después** de obtener el bloqueo; si se leen antes, se vuelve a la doble reserva en REPEATABLE READ. | Debe cumplirse que el bloqueo del dentista se toma antes de leer horario y citas. Test: registrar las consultas del servicio y comprobar que el `for update` sobre `personal` precede a la lectura de `citas`. → `/plan --fix`, `/tasks --fix` |
-| A6 | Inconsistencia | ALTA | T020 "`CitasController` no contiene `whereRaw`" | `CitasController@index` (líneas 103–104) usa `whereRaw` en el buscador, que queda fuera del alcance. | El criterio se limita a `store` y a la regla retirada. Comprobación: búsqueda acotada al método. → `/tasks --fix` |
-| A7 | Inconsistencia / viabilidad | ALTA | T020, T021, T040 (`pint --test`); CI | `pint --test` ya falla hoy en los dos controladores por métodos que no se tocan. | Decidido: tarea previa solo de formato con `pint` sobre los dos controladores, en un commit aparte, sin lógica y con la suite en verde. Declararlo en el plan. → `/plan --fix`, `/tasks --fix` |
-| A8 | Cobertura (RNF) | MEDIA | spec RNF; `plan.md` "Errores de validación nuevos"; T010, T012 | `APP_LOCALE=en` y no existe `lang/`, así que `date_format` y `exists` responderían en inglés. Ninguna tarea añade los mensajes en español ni prueba que el formulario conserve los datos. | Los errores de `hora`, `fecha` y `dentista_id` salen con los textos exactos en español del plan, y la sesión conserva `fecha`, `hora` y `dentista_id` en ambos flujos. Test en T012/T010. → `/plan --fix`, `/tasks --fix` |
-| A9 | Seguridad | MEDIA | CA9/TM3; `fecha` en ambos controladores | La regla `date` acepta "2026-10-05 10:00", y al concatenar con `hora` salta una excepción y un error 500. | Decidido: CA9 cubre también la fecha. Una `fecha` mal formada da error de validación y nunca 500, con test por flujo. → `/specify --edit 025`, `/plan --fix`, `/tasks --fix` |
-| A10 | Ambigüedad | MEDIA | CA10; `plan.md` P4 | No está decidido si un dentista cuyo usuario está desactivado es válido. Con una petición manipulada se podría agendar con él. | Decidido: se rechaza, igual que en los formularios. Test de CA10 en ambos flujos. → `/specify --edit 025`, `/plan --fix`, `/tasks --fix` |
-| A11 | Duplicación y conflicto (014) | MEDIA | `plan.md` D7; plan 014 (`Gate agendar-para-paciente`, `denyAsNotFound`); T013 | Tras la 014, un dentista con un paciente fuera de su alcance recibirá 404, lo que rompería el test de "otro dentista". La 014 no menciona a la 025. | Los tests de rol usan pacientes dentro del alcance, para que el 403 dependa solo de `autorizadoParaCita`. Anotar en el roadmap el ajuste de `/plan 014 --fix`. → `/plan --fix`, `/tasks --fix` |
-| A12 | Duplicación y conflicto (013) | MEDIA | `plan.md` D1, D2; 013 CA3, CA10 | La 013 pondrá una prueba de arquitectura por módulo y cambiará el volcado por un seeder. `ReservaCitas` bloquea `personal` y lee `horarios_dentista`, que aún no tienen módulo dueño, y T011 depende del dentista del volcado. | Anotar en el plan el dueño de `personal` y `horarios_dentista` y el acceso previsto. T011 obtiene un dentista confirmado sin depender del id del volcado. → `/plan --fix`, `/tasks --fix` |
-| A13 | Cobertura de riesgos (RS12) | MEDIA | `plan.md` D5 y "Riesgos"; T091 | RS12.c es una sola corrección, una parte dentro y otra fuera. El estado "en curso (spec 025: agendado; resto → 013)" no está en el vocabulario, y marcarla mitigada en `/release` dejaría fuera la otra parte. | Dividir RS12.c en `security.md` en dos correcciones con ID propio (agendado → 025; pacientes, expedientes y asistentes → 013), cada una con un estado válido. `/release 025` solo mitiga RS12.a y la del agendado. → `/plan --fix`, `/tasks --fix` |
-| A14 | Ambigüedad | MEDIA | T020 | T010 y T011 prueban los dos flujos en el mismo método, así que el criterio de T020 (casos del personal) no se puede observar mientras el flujo del paciente no esté cambiado. | Separar los casos por flujo (métodos o data providers con nombre), para poder filtrar solo los del personal. → `/tasks --fix` |
-| A15 | Ambigüedad | MEDIA | `plan.md` ("llama a `ReservaCitas::reservar`"); T011, T020, T021 | T011 da por hecho que el servicio sale del contenedor, pero ninguna tarea lo exige. | Los dos controladores resuelven `ReservaCitas` por inyección desde el contenedor. Comprobación: T011 pasa con la espera de 1 s enlazada. → `/plan --fix`, `/tasks --fix` |
-| A16 | Cobertura | MEDIA | spec "Fuera de alcance" (se mantienen las diferencias por flujo); T020, T021 | El insert pasa a `ReservaCitas` y ningún test comprueba las columnas guardadas ni las diferencias por flujo: `creado_por`, notas, duración elegida frente a la del servicio, servicio obligatorio y fechas pasadas. | Tests por flujo de las columnas guardadas y de cada diferencia (fecha pasada permitida al personal y rechazada al paciente; duración del servicio). → `/tasks --fix` |
-| A17 | Cobertura | BAJA | `plan.md` TM2, P8, Observabilidad; T040 | No se prueba la conversión de 1213 ni que la reserva y el bloqueo agotado no escriben logs. | Test de 1213 (excepción simulada) y comprobación de que no se escriben logs, en T011 o T040. → `/plan --fix`, `/tasks --fix` |
-| A18 | Seguridad | BAJA | `plan.md` Modelo de amenazas; D3 | No está modelada la saturación de workers por la espera en serie ni la falta de límite de peticiones en `/cliente/agendar`. | Decidido: amenaza nueva fuera de alcance, con destino a una spec de límite de peticiones, y viñeta en el roadmap. → `/plan --fix` |
-| A19 | Inconsistencia (redacción) | BAJA | spec "Notas para /plan" | La nota dice que la 013 se editará, pero ya está editada (25ebe76). | Aceptado sin cambio (decisión del usuario, 2026-09-30). |
-| A20 | Inconsistencia (documentación) | BAJA | T090; `plan.md` Impacto en arquitectura | Faltan el "Resumen" y el paso 4 del "Flujo principal" de `architecture.md`. | T090 y el plan incluyen también esas dos secciones. → `/plan --fix`, `/tasks --fix` |
-| A21 | Ambigüedad | BAJA | `plan.md` Rollout (consulta de vigilancia) | La consulta no excluye `no_asistio` ni usa solape estricto, y no aclara que las reactivaciones son de la 026. | Alinear la consulta con la regla y anotar lo de la 026. → `/plan --fix` |
-| A22 | Constitución (P3) | BAJA | `plan.md` y `tasks.md` P3 | El alcance del paciente en `/cliente/agendar` sí se puede probar hoy: un `paciente_id` inyectado se ignora. | Decidido: test `test_un_cliente_no_puede_agendar_para_otro_paciente`, con la excepción limitada al rechazo por rol (→ 015). → `/plan --fix`, `/tasks --fix` |
+| A23 | Constitución (P7) | CRÍTICA | Filas P7 del plan y de las tareas; `CitasController@store` (`abort(403)`) | P7 obliga a auditar los 403. El `store` modificado devuelve un 403 que no se registra, y el registro central de 403 es de la 020, que no está en esta rama. | Decidido: la excepción P7 nombra también el 403 del alta del personal, con destino a la 020 (registro central de accesos denegados), motivo y fecha, y se anota en el roadmap. Comprobación: las filas P7 del plan y de las tareas nombran las dos partes. → `/plan --fix`, `/tasks --fix` |
+| A24 | Viabilidad / Inconsistencia | ALTA | Plan D3 y "Cambios por módulo"; T011, T020 | Con la transacción anidada (tests), Laravel 12 convierte 1205 y 1213 en `Illuminate\Database\DeadlockException`, que extiende `PDOException` y no trae `errorInfo`. En producción (nivel 1) llega una `QueryException`. Capturar solo `QueryException` 1205/1213 da 500 en los tests después de T020, y el camino de producción queda sin probar. | 1205 y 1213 se convierten en `CitaNoAgendable`, sin logs, tanto si llegan como `QueryException` como si llegan como `DeadlockException`. Test: el bloqueo agotado por HTTP (anidado), más la conexión simulada con `QueryException` 1205, `QueryException` 1213 y `DeadlockException`. → `/plan --fix`, `/tasks --fix` |
+| A25 | Viabilidad | MEDIA | T011; plan "Concurrencia" y "Riesgos"; P2 | Cuatro problemas: (a) `pacientes.dentista_id` tiene clave foránea a `personal` (migración `2026_07_20`), así que el plan se equivoca al decir que los pacientes no referencian al dentista; (b) las reservas normales de los tests de orden y de logs, con el dentista confirmado, retienen bloqueos hasta el rollback de la app y la limpieza de la segunda conexión espera y falla; (c) la segunda conexión debe confirmar antes de la primera lectura de la app; (d) P2 no declara las escrituras confirmadas fuera de `DatabaseTransactions`. | La app nunca escribe filas que referencien al dentista retenido por la segunda conexión: pacientes con `dentista_id` nulo, y reservas normales con un dentista creado en la transacción de la app. La segunda conexión confirma antes de la primera lectura de la app, la limpieza nunca espera a un bloqueo, y P2 declara esas escrituras. Test: `ReservaConcurrenteTest` ejecutado dos veces seguidas termina sin errores en `tearDown` y deja dentistas, usuarios y horarios como en la línea base de T001. → `/plan --fix`, `/tasks --fix` |
+| A26 | Constitución (P3) | MEDIA | Excepción P3 del plan y de las tareas | La excepción dice que la 014 introduce los Gates, pero la 014 solo añade `agendar-para-paciente` en `CitasController@store`. El Gate de `/cliente/agendar` no tiene destino real. | Decidido: destino por endpoint. Alta del personal → 014 y `/cliente/agendar` → 015, anotados en el roadmap. Comprobación: filas P3 del plan y de las tareas, y viñeta del roadmap. → `/plan --fix`, `/tasks --fix` |
+| A27 | Duplicación y conflicto (013) | BAJA | Plan D11; T041; spec 013 CA10 | La condición de D11 (la prueba de arquitectura de la 013 permite el acceso de `ReservaCitas` a `personal`, o lo migra) no llega a la 013. | Aceptado como nota de T041. |
+| A28 | Cobertura (RNF) | BAJA | Spec RNF; T010 | No se prueba que un rechazo de la regla (`CitaNoAgendable` con `withInput()`) conserve la entrada. | Aceptado como nota de T010. |
+| A29 | Cobertura (TM2) | BAJA | Plan TM2 y D3; T011 | El control "espera de 5 s por defecto" no tiene test: todos los tests enlazan 1 s. | Aceptado como nota de T011. |
+| A30 | Ambigüedad | BAJA | T012; plan P2 (CA9) | Hoy la fecha "abc" no da 500: la rechaza la regla `date` con un mensaje en inglés. Solo "2026-10-05 10:00" da 500. | Aceptado como nota de T012. |
+| A31 | Inconsistencia | BAJA | Plan, fila P1 | Cita la aprobación del 2026-09-29, pero la vigente es la del 2026-09-30. | La fila P1 cita la aprobación vigente. → `/plan --fix` |
+| A32 | Cobertura de riesgos (OB3/OB4) | BAJA | Plan P8 y Observabilidad; T011 (test sin logs) | P8 no declara el residuo OB4.a: una `QueryException` distinta de 1205/1213 en el insert se registra con SQL y bindings, notas incluidas. Además, "ninguna llamada a `Log`" choca con OB3.b (registrar con IDs los conflictos de agenda). | P8 declara el residuo OB4.a (→ objetivo 3). El test de logs comprueba que no se registra SQL, bindings ni datos de la cita, en lugar de "ninguna llamada". → `/plan --fix`, `/tasks --fix` |
 
 ## Decisiones pendientes del usuario
 Resueltas en esta ronda (decisión del usuario, 2026-09-30):
-- **A1, A2, A22:** excepción acotada de P3 (sin Gate hasta la 014; alcance del paciente → 014; rol de `/cliente` → 015) y tests de rol completos, incluido el de otro paciente.
-- **A3:** excepción de P7 → spec 022.
-- **A7:** tarea previa solo de formato con Pint sobre los dos controladores.
-- **A9, A10:** la spec incluye la fecha mal formada en CA9 y el dentista desactivado en CA10.
-- **A18:** amenaza modelada, fuera de alcance → roadmap.
-- **A19:** sin cambio.
+- **A23:** la excepción P7 se amplía al 403 del alta del personal → 020.
+- **A26:** la excepción P3 nombra el destino por endpoint (alta del personal → 014; `/cliente/agendar` → 015).
+- **A27–A30:** se aceptan como notas de tarea.
 
 ## Aceptados
 Aceptados por el usuario el 2026-09-30:
-- **A19** → spec: la nota de "Notas para /plan" sobre la 013 queda como está; el Historial de la 013 ya registra la edición.
+- **A27** → nota de T041: añadir en Pendientes del roadmap que la prueba de arquitectura de la 013 debe permitir el acceso de `ReservaCitas` a `personal` o migrarlo a una interfaz de Identidad (D11).
+- **A28** → nota de T010: al menos un rechazo de la regla por flujo (día, franja, solape o bloqueo agotado) vuelve con `fecha`, `hora` y `dentista_id` en la sesión (`assertSessionHasInput`).
+- **A29** → nota de T011: un test comprueba con `DB::listen` que `ReservaCitas`, resuelto del contenedor sin sustituir, fija la espera a 5 s antes del `for update`.
+- **A30** → nota de T012: anotar la razón esperada de cada caso; "abc" falla por el texto del mensaje y "2026-10-05 10:00" por el error 500.
