@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CitaNoAgendable;
+use App\Agenda\ReservaCitas;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -225,82 +227,36 @@ class CitasController extends Controller
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
-    public function store(Request $request)
+    public function store(Request $request, ReservaCitas $reservas)
     {
-        $data = $request->validate([
+        $data = $request->validate(ReservaCitas::reglasDeEntrada() + [
             'paciente_id' => 'required|exists:pacientes,id',
-            'dentista_id' => 'required|exists:personal,id',
             'servicio_id' => 'nullable|exists:servicios,id',
-            'fecha' => 'required|date',
-            'hora' => 'required',
             'duracion_min' => 'required|integer|min:10|max:300',
             'notas_paciente' => 'nullable|string|max:1000',
             'notas_internas' => 'nullable|string|max:1000',
-        ]);
+        ], ReservaCitas::mensajesDeEntrada());
 
         if (! $this->autorizadoParaCita($data['dentista_id'])) {
             abort(403);
         }
 
-        $fechaHora = Carbon::parse($data['fecha'].' '.$data['hora']);
-
-        $duracion = (int) $data['duracion_min'];
-        $horaFinCita = (clone $fechaHora)->addMinutes($duracion);
-
-        // Disponibilidad del dentista según su horario semanal
-        $diaSemana = $fechaHora->isoWeekday(); // 1=Lunes ... 7=Domingo
-
-        $horario = DB::table('horarios_dentista')
-            ->where('personal_id', $data['dentista_id'])
-            ->where('dia_semana', $diaSemana)
-            ->first();
-
-        if (! $horario || ! $horario->disponible) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El dentista no tiene horario disponible ese día de la semana.',
+        // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
+        try {
+            $reservas->reservar([
+                'paciente_id' => $data['paciente_id'],
+                'dentista_id' => $data['dentista_id'],
+                'servicio_id' => $data['servicio_id'] ?: null,
+                'fecha' => $data['fecha'],
+                'hora' => $data['hora'],
+                'duracion_min' => (int) $data['duracion_min'],
+                'notas_paciente' => $data['notas_paciente'] ?? null,
+                'notas_internas' => $data['notas_internas'] ?? null,
+                'creado_por' => auth()->id(),
             ]);
+        } catch (CitaNoAgendable $rechazo) {
+            return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
         }
-
-        $horaInicio = Carbon::parse($data['fecha'].' '.$horario->hora_inicio);
-        $horaFinDisponible = Carbon::parse($data['fecha'].' '.$horario->hora_fin);
-
-        if ($fechaHora->lt($horaInicio) || $horaFinCita->gt($horaFinDisponible)) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El horario elegido está fuera del horario de atención del dentista ('
-                    .$horaInicio->format('H:i').' - '.$horaFinDisponible->format('H:i').').',
-            ]);
-        }
-
-        $conflicto = DB::table('citas')
-            ->where('dentista_id', $data['dentista_id'])
-            ->whereNotIn('estado', ['cancelada', 'no_asistio'])
-            ->where(function ($q) use ($fechaHora, $horaFinCita) {
-                $q->whereBetween('fecha_hora', [$fechaHora, $horaFinCita])
-                    ->orWhereRaw('DATE_ADD(fecha_hora, INTERVAL duracion_min MINUTE) > ? AND fecha_hora < ?',
-                        [$fechaHora, $horaFinCita]);
-            })
-            ->exists();
-
-        if ($conflicto) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El dentista ya tiene una cita en ese horario. Por favor elige otro horario.',
-            ]);
-        }
-
-        DB::table('citas')->insert([
-            'id' => (string) Str::uuid(),
-            'paciente_id' => $data['paciente_id'],
-            'dentista_id' => $data['dentista_id'],
-            'servicio_id' => $data['servicio_id'] ?: null,
-            'fecha_hora' => $fechaHora,
-            'duracion_min' => (int) $data['duracion_min'],
-            'estado' => 'agendada',
-            'notas_paciente' => $data['notas_paciente'] ?? null,
-            'notas_internas' => $data['notas_internas'] ?? null,
-            'creado_por' => auth()->id(),
-            'creado_en' => now(),
-            'actualizado_en' => now(),
-        ]);
 
         $base = match (auth()->user()->rol) {
             'dentista' => 'dentista',
@@ -309,8 +265,8 @@ class CitasController extends Controller
         };
 
         return redirect()->route("$base.citas", [
-            'fecha_desde' => $fechaHora->format('Y-m-d'),
-            'fecha_hasta' => $fechaHora->format('Y-m-d'),
+            'fecha_desde' => $data['fecha'],
+            'fecha_hasta' => $data['fecha'],
         ])->with('success', 'Cita agendada correctamente.');
     }
 
