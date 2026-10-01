@@ -47,12 +47,26 @@ Formato:
   - nota: 2026-10-01. Los 8 pasan hoy. Comprobado rompiendo: `autorizadoParaCita` siempre `true` → fallan los dos 403 de dentista y asistente; `paciente_id` tomado de la petición → falla "cliente no puede agendar para otro paciente"; el 403 del cliente en el alta del personal tiene dos capas (middleware de rol y `autorizadoParaCita`) y falla al quitar las dos. Restaurado. `asistente_dentista.id` se da en el test (no tiene valor por defecto). `pint --test` limpio.
 - [x] T014 Escribir `AltaCitasFlujosTest` con las diferencias que se mantienen por flujo: la cita del personal guarda la duración elegida, el servicio nulo, `notas_paciente`, `notas_internas` y `creado_por`; la del paciente toma la duración del servicio; el paciente debe elegir servicio; y solo el personal puede agendar en fecha pasada (A16) — tests/Feature/AltaCitasFlujosTest.php — hecho cuando: pasan hoy y cada uno se comprueba rompiendo un momento lo que protege, con nota; `pint --test` sin cambios — depende: T002
   - nota: 2026-10-01. Los 4 pasan hoy. Comprobado rompiendo: `notas_internas` del personal a `null`; duración del paciente fija en 30; `servicio_id` opcional para el paciente; quitar `after_or_equal:today`. Cada test afectado falla y se restaura. El personal envía `servicio_id` vacío (si falta la clave, hoy da 500). `pint --test` limpio.
+- [ ] T015 Añadir a `ReglaAgendaTest`, en el flujo del paciente, el caso de un servicio de 0 minutos y otro de duración negativa con una cita existente a las 10:00: la reserva de las 10:00 se rechaza con "La duración del servicio no es válida." en el campo hora y no se guarda ninguna cita (R1) — tests/Feature/ReglaAgendaTest.php — hecho cuando: el test falla hoy porque la cita se acepta encima de la otra; `pint --test` sin cambios — cubre: CA4, CA8
+  - nota: añadida por /review: R1
+- [ ] T016 Añadir a `AltaCitasValidacionTest`, por flujo, los casos con `dentista_id`, `paciente_id` (personal) y `servicio_id` enviados como array, que deben dar error de validación en ese campo y nunca 500, y el caso del personal sin la clave `servicio_id`, que debe aceptarse con el servicio nulo (R2, R3) — tests/Feature/AltaCitasValidacionTest.php — hecho cuando: los tests fallan hoy por el 500 (TypeError con el array; "Undefined array key" sin `servicio_id`); `pint --test` sin cambios — cubre: CA9, CA10
+  - nota: añadida por /review: R2, R3
+- [ ] T017 Añadir a `ReservaConcurrenteTest` dos tests (R4). (a) `test_la_reserva_ve_la_cita_que_otra_conexion_confirmo_despues_de_su_primera_lectura`: la app hace una lectura consistente; después, la segunda conexión crea y confirma un dentista con horario y una cita a las 10:00; la app reserva las 10:00 por el flujo del personal y recibe "Ese horario ya no está disponible. Por favor elige otro.", con 1 sola cita para ese dentista; la limpieza borra también esa cita. (b) `test_un_dentista_que_ya_no_existe_responde_no_disponible`: `ReservaCitas` resuelto del contenedor, llamado con un `dentista_id` inexistente, lanza `CitaNoAgendable` con el mensaje de no disponible — tests/Feature/ReservaConcurrenteTest.php — hecho cuando: (a) falla hoy porque la lectura de citas, sin bloqueo, no ve la cita confirmada y se guarda una segunda; (b) falla hoy porque responde "El dentista no tiene horario…"; `pint --test` sin cambios — cubre: CA8
+  - nota: añadida por /review: R4
+- [ ] T018 Mejorar `ReservaConcurrenteTest` sin cambiar lo que prueba (R6, R7): limpieza robusta (cada id confirmado se guarda nada más insertarse; el `tearDown` hace la limpieza y el `disconnect` en un `finally`, tolerando ids ausentes); un caso de la conexión simulada con `QueryException` 1452 que debe relanzarse tal cual; un control de que el listener de logs funciona (un `Log::info` de prueba se captura); y `::class` en lugar de nombres de clase en texto — tests/Feature/ReservaConcurrenteTest.php — hecho cuando: el archivo pasa; comprobado rompiendo `ReservaCitas` para convertir cualquier `QueryException` en no disponible (falla el caso 1452) y quitando el listener (falla el control); ejecutado dos veces seguidas sin restos (recuentos de T001); `pint --test` sin cambios — cubre: CA8 — depende: T017
+  - nota: añadida por /review: R6, R7
+- [ ] T019 Mejorar `ReglaAgendaTest` (R5): en CA1, el resultado comparado incluye el estado HTTP, todos los errores de sesión y las citas nuevas del dentista, y cada caso comprueba su resultado esperado (aceptada con 1 cita, o el mensaje concreto); añadir el borde de un minuto (10:29 contra 10:00–10:30, rechazada) y una cita `confirmada` que bloquea el hueco — tests/Feature/ReglaAgendaTest.php — hecho cuando: el archivo pasa; comprobado rompiendo un momento el flujo del paciente para que devuelva 500 en el caso válido (falla CA1) y el solape para que ignore `confirmada` (falla el caso nuevo); `pint --test` sin cambios — cubre: CA1, CA4, CA6 — depende: T015
+  - nota: añadida por /review: R5
 
 ## Implementación
 - [x] T020 Crear `App\Agenda\CitaNoAgendable` y `App\Agenda\ReservaCitas` según el plan (D1–D4, D11): constructor con la conexión y los segundos de espera (5 por defecto), registrado en el contenedor; `reservar(array $cita): string` fija la espera, bloquea **primero** la fila del dentista con `lockForUpdate()`, después lee el horario y comprueba encaje y solape estricto (en PHP), e inserta en `agendada`; 1205 y 1213 se convierten en `CitaNoAgendable`, sin logs, lleguen como `QueryException` o como `Illuminate\Database\DeadlockException`. `CitasController@store` recibe `ReservaCitas` por inyección y valida con los mensajes en español de Contratos: `fecha` → `date_format:Y-m-d`; `hora` → `date_format:H:i`; `dentista_id` → `Rule::exists` con `tipo=dentista` y usuario activo. Convierte `CitaNoAgendable` en error del campo `hora` con `withInput()` y elimina su copia de la regla (controles TM1–TM5 en el flujo del personal) — app/Agenda/ReservaCitas.php, app/Agenda/CitaNoAgendable.php, app/Http/Controllers/CitasController.php — hecho cuando: pasan los casos `personal` de T010, T011 y T012 (`--filter` con el nombre del flujo) y los casos sin flujo de T011 (orden, interbloqueo y logs); T013 y T014 siguen pasando; el método `store` no contiene `whereRaw` ni consulta `horarios_dentista` (el `whereRaw` del buscador de `index` queda fuera); `pint --test` sin cambios en los tres archivos — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10 — depende: T010, T011, T012, T013, T014
   - nota: 2026-10-01. `ReservaCitas` y `CitaNoAgendable` en `app/Agenda/`. El servicio se resuelve por autowiring del contenedor (`ConnectionInterface` + espera con valor por defecto 5), sin registro explícito; los tests lo sustituyen con `bind`. Las reglas y los mensajes de entrada comunes (`fecha`, `hora`, `dentista_id` con tipo y usuario activo, todas con `bail`) viven en `ReservaCitas::reglasDeEntrada()` y `mensajesDeEntrada()`, para que los dos flujos usen exactamente lo mismo. Los candidatos al solape se leen con `whereBetween` (inicio del día → fin de la nueva cita) y el solape estricto se calcula en PHP. `SET SESSION innodb_lock_wait_timeout` concatena un entero propio (no entrada del usuario), para que el SQL lleve el valor y el test A29 lo pueda comprobar. Tras T020: pasan los 14 casos `personal` de T010–T012, los 4 de T011 sin flujo, T013, T014 y CA1; fallaban solo los 6 casos `paciente` pendientes de T021. `store` sin `whereRaw` ni `horarios_dentista` (queda el `whereRaw` del buscador de `index`, fuera de alcance). Se quita `Carbon` del cálculo de `store`; `Str` sigue en uso en otro método. Pint y semgrep `p/php` sin hallazgos.
 - [x] T021 `ClienteCitasController@agendarStore` recibe `ReservaCitas` por inyección y aplica las mismas reglas y mensajes de `fecha` (más `after_or_equal:today`), `hora` y `dentista_id`. Conserva el servicio obligatorio y la duración del servicio, usa el mismo manejo de `CitaNoAgendable` y elimina su copia de la regla (controles TM1–TM5 en el flujo del paciente) — app/Http/Controllers/ClienteCitasController.php — hecho cuando: T010–T014 pasan completos; `agendarStore` no contiene `whereRaw` ni consulta `horarios_dentista`; `pint --test` sin cambios; comprobado rompiendo un momento `ReservaCitas`, con una nota por caso: quitar la comprobación de `disponible` (CA2), mover el borde final de la franja (CA3), dejar de excluir `cancelada` (CA6), quitar el filtro por dentista (CA7) y hacer inclusivo el solape (CA5, sentido "empieza cuando termina otra"). Cada test afectado falla y después se restaura. — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10 — depende: T020
   - nota: 2026-10-01. `agendarStore` usa `reglasDeEntrada()` más `after_or_equal:today` en `fecha`, y conserva "Elige un dentista." y "Elige un servicio.". Se quitan los `use` de `Carbon` y `Str`, que ya no se usan. T010–T014 pasan completos (43 tests, 11 s). Comprobado rompiendo `ReservaCitas` un momento: sin `disponible` → falla CA2; `gte` en el borde final → falla CA3 (bordes); `cancelada` deja de liberar → falla CA6; sin filtro por dentista → falla CA7; solape inclusivo → falla CA5 "empieza cuando termina otra"; cada uno en los dos flujos, y restaurado. `agendarStore` sin `whereRaw` ni `horarios_dentista`. Suite completa: 67 passed (350 assertions) = 24 de T001 + 43 nuevos. Pint y semgrep `p/php` sin hallazgos.
+- [ ] T022 `ReservaCitas` y `CitaNoAgendable` (R1, R2, R4): rechazar una duración menor de 1 minuto con `CitaNoAgendable::duracionInvalida()` ("La duración del servicio no es válida."); leer las citas candidatas con bloqueo (`lockForUpdate`), para ver siempre la última versión confirmada aunque haya una transacción exterior; si la fila del dentista ya no existe al bloquearla, responder no disponible; y `dentista_id` con regla `string` antes de `exists` en `reglasDeEntrada()` — app/Agenda/ReservaCitas.php, app/Agenda/CitaNoAgendable.php — hecho cuando: T015, T017 y los casos de `dentista_id` de T016 pasan; T010–T014 siguen pasando; `pint --test` y semgrep `p/php` sin hallazgos — cubre: CA4, CA8, CA10 — depende: T015, T016, T017
+  - nota: añadida por /review: R1, R2, R4
+- [ ] T023 Controladores de citas (R2, R3): `paciente_id` y `servicio_id` con regla `string` antes de `exists` en el flujo del personal, `servicio_id` igual en el del paciente, y `servicio_id` del personal con `?? null` — app/Http/Controllers/CitasController.php, app/Http/Controllers/ClienteCitasController.php — hecho cuando: T016 pasa completo; T010–T014 siguen pasando; `pint --test` y semgrep `p/php` sin hallazgos — cubre: CA9, CA10 — depende: T016, T022
+  - nota: añadida por /review: R2, R3
 
 ## Integración y documentación
 - [x] T040 Verificación final — (sin archivos) — hecho cuando: `php artisan test` completo da la línea base de T001 más los tests de T010–T014, todos en verde; `vendor/bin/pint --test` sobre los 9 archivos PHP tocados, sin cambios; `php artisan test --filter='ReglaAgendaTest|ReservaConcurrenteTest|AltaCitasValidacionTest'` dura menos de 10 s; `semgrep scan --config p/php --error` sobre los 4 archivos de `app/` tocados, con 0 hallazgos; `python .ai/bin/aidd.py validate docs/specs/025-agenda-unica`, sin errores. — cubre: CA1, CA8, CA9, CA10 — depende: T021
@@ -65,7 +79,7 @@ Formato:
   - nota: 2026-10-01. `docs/architecture.md`: el Resumen menciona la primera pieza de servicio (`app/Agenda/ReservaCitas.php`); en Módulos, las dos filas de Agenda delegan la regla y hay una fila nueva "Agenda (regla)"; el paso 4 del Flujo principal describe la transacción con bloqueo del dentista; se retira de Deuda técnica la regla de agenda duplicada.
 - [x] T091 Actualizar `docs/security.md → RS12`, por corrección: RS12.a → "en curso (spec 025)"; RS12.c sigue "pendiente", con la nota "agendado: spec 025; pacientes, expedientes y asignación de asistentes: spec 013" (D5); RS12.b sin cambios (→ 027). `docs/deployment.md` y `docs/observability.md` sin cambios
   - nota: 2026-10-01. `docs/security.md`: RS12.a → "en curso (spec 025)"; RS12.c sigue "pendiente" con la nota "agendado de citas: hecho en la spec 025; pacientes, expedientes y asignación de asistentes: spec 013"; RS12.b sin cambios (→ 027). `docs/deployment.md` y `docs/observability.md` sin cambios.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
@@ -76,35 +90,35 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010, T040 | T020, T021 |
+| CA1 | T010, T019, T040 | T020, T021 |
 | CA2 | T010 | T020, T021 |
 | CA3 | T010 | T020, T021 |
-| CA4 | T010 | T020, T021 |
+| CA4 | T010, T015, T019 | T020, T021, T022 |
 | CA5 | T010 | T020, T021 |
-| CA6 | T010 | T020, T021 |
+| CA6 | T010, T019 | T020, T021 |
 | CA7 | T010 | T020, T021 |
-| CA8 | T011, T040 | T020, T021 |
-| CA9 | T012, T040 | T020, T021 |
-| CA10 | T012, T040 | T020, T021 |
+| CA8 | T011, T015, T017, T018, T040 | T020, T021, T022 |
+| CA9 | T012, T016, T040 | T020, T021, T023 |
+| CA10 | T012, T016, T040 | T020, T021, T022, T023 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
-| TM1 | T020, T021 | T011 |
-| TM2 | T020, T021 | T011 |
-| TM3 | T020, T021 | T012 |
-| TM4 | T020, T021 | T012 |
+| TM1 | T020, T021, T022 | T011, T017 |
+| TM2 | T020, T021 | T011, T018 |
+| TM3 | T020, T021, T023 | T012, T016 |
+| TM4 | T020, T021, T022 | T012, T016 |
 | TM5 | T020, T021 | T010 |
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
-| app/Agenda/ReservaCitas.php | T020 |
-| app/Agenda/CitaNoAgendable.php | T020 |
+| app/Agenda/ReservaCitas.php | T020, T022 |
+| app/Agenda/CitaNoAgendable.php | T020, T022 |
 | app/Http/Controllers/CitasController.php y ClienteCitasController.php (formato previo) | T002 |
-| app/Http/Controllers/CitasController.php | T020 |
-| app/Http/Controllers/ClienteCitasController.php | T021 |
-| tests/Feature/ReglaAgendaTest.php | T010 |
-| tests/Feature/ReservaConcurrenteTest.php | T011 |
-| tests/Feature/AltaCitasValidacionTest.php | T012 |
+| app/Http/Controllers/CitasController.php | T020, T023 |
+| app/Http/Controllers/ClienteCitasController.php | T021, T023 |
+| tests/Feature/ReglaAgendaTest.php | T010, T015, T019 |
+| tests/Feature/ReservaConcurrenteTest.php | T011, T017, T018 |
+| tests/Feature/AltaCitasValidacionTest.php | T012, T016 |
 | tests/Feature/AltaCitasRolesTest.php | T013 |
 | tests/Feature/AltaCitasFlujosTest.php | T014 |
 | docs/architecture.md | T090 |
