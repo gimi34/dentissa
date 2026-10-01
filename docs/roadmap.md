@@ -51,3 +51,28 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Unificar convenciones de rutas (`/crear` vs `/create`, `/edit` vs `/editar`, nombres con y sin `.index`).
 - `Route::resource('servicios')` expone `show` sin método; `ServiciosController@index` ignora el buscador.
 - Objetivo de accesibilidad sin definir (propuesto WCAG 2.1 AA).
+- Enmienda MINOR de P2 (constitución): distinguir los cambios de comportamiento, que exigen un test
+  que falle antes, de los tests de caracterización, que se comprueban rompiendo el código que
+  protegen. Motivo: P2 necesitó excepción en la spec 024 (CA3–CA7) y en la 025 (CA2, CA3, CA6, CA7)
+  (spec 025, D9; decisión del usuario, 2026-09-29).
+- Auditoría del alta de citas con notas (dato de salud) → spec 022. Excepción P7 de la spec 025:
+  la 025 no cambia qué notas se guardan ni quién (D9; decisión del usuario, 2026-09-30).
+- Auditoría del 403 del alta de citas del personal (`autorizadoParaCita`) → spec 020, registro
+  central de accesos denegados (OB1.c). Excepción P7 de la spec 025 (D9; decisión del usuario,
+  2026-09-30).
+- Gate o Policy del alta de citas del paciente (`POST /cliente/agendar`) y rechazo por rol en
+  `/cliente/*` → spec 015. Excepción P3 de la spec 025. El alta del personal recibe su Gate en la
+  014 (D9; decisión del usuario, 2026-09-30).
+- Residuo de SQL con bindings en el log: cualquier `QueryException` de `ReservaCitas` (bloqueo,
+  lecturas o insert) distinta de 1205/1213 sigue el reporte por defecto y registra el SQL con sus
+  valores, notas incluidas → spec 023 (OB4.a). Excepción P8 de la spec 025 (D9, A38; decisión del
+  usuario, 2026-09-30).
+- Al retomar `/plan 014 --fix`: su plan añade el Gate `agendar-para-paciente` y el alcance del
+  paciente sobre el `CitasController@store` que deja la 025, que ya delega la regla en
+  `App\Agenda\ReservaCitas` (spec 025, D7; decisión del usuario, 2026-09-29).
+- Límite de peticiones en las rutas de escritura, empezando por el alta de citas (TM6 de la spec
+  025: reservas del mismo dentista esperan en serie hasta 5 s y `/cliente/agendar` no tiene
+  límite) → spec propia (spec 025, D13; decisión del usuario, 2026-09-30).
+- Spec 013 (prueba de arquitectura, CA10): debe permitir que `App\Agenda\ReservaCitas` bloquee la
+  fila de `personal` (tabla de Identidad) o migrar ese acceso a una interfaz de Identidad para
+  bloquear a un dentista (spec 025, D11, A27).

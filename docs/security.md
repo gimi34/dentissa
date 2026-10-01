@@ -205,9 +205,9 @@ Correcciones:
 `CitasController.php`, `ClienteCitasController.php`, `PersonalController.php`, `PacientesController.php`.
 
 Correcciones:
-- RS12.a Validar `hora` con `date_format:H:i` — estado: pendiente
+- RS12.a Validar `hora` con `date_format:H:i` — estado: en curso (spec 025)
 - RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: pendiente
-- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente
+- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; pacientes, expedientes y asignación de asistentes: spec 013)
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)
 El registro público responde con un mensaje explícito de "correo ya registrado". Evidencia:

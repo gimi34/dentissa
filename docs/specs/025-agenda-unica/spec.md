@@ -1,7 +1,7 @@
 ---
 id: 025
 slug: agenda-unica
-status: approved
+status: implemented
 created: 2026-09-29
 extends: [003, 004, 005]
 ---
@@ -28,16 +28,16 @@ RS12.c solo en el agendado de citas y RS12.b va a la spec 027.
 - Como paciente o personal, quiero un mensaje claro cuando la hora o el dentista no son válidos, en lugar de un error.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dada una misma fecha, hora, duración y dentista, cuando se valida la cita en el agendado del personal y en el del paciente, entonces ambos flujos aplican la misma regla (horario del día, encaje en la franja y solape) y dan el mismo resultado.
-- [ ] CA2 · Dado un dentista sin horario ese día de la semana, o con ese día marcado como no disponible, cuando se pide una cita ese día, entonces se rechaza con un mensaje que dice que el dentista no atiende ese día.
-- [ ] CA3 · Dada una cita que empieza antes del inicio de la franja del dentista o termina después de su fin, cuando se pide, entonces se rechaza con un mensaje que indica la franja de atención. Una cita que empieza justo al inicio o termina justo al fin de la franja se acepta.
-- [ ] CA4 · Dada una cita que se solapa al menos un minuto con otra del mismo dentista que no está cancelada ni marcada como no asistió, cuando se pide, entonces se rechaza con un mensaje de hueco no disponible que no revela el paciente, el servicio ni el motivo de la otra cita.
-- [ ] CA5 · Dada una cita que empieza exactamente cuando termina otra del mismo dentista, o que termina exactamente cuando empieza otra, cuando se pide, entonces se acepta: citas seguidas no son conflicto.
-- [ ] CA6 · Dadas citas canceladas o marcadas como no asistió en ese hueco, cuando se pide una cita nueva del mismo dentista, entonces no cuentan como conflicto y la cita se acepta.
-- [ ] CA7 · Dada una cita de otro dentista a la misma hora, cuando se pide una cita para este dentista, entonces no cuenta como conflicto.
-- [ ] CA8 (abuso) · Dadas dos peticiones simultáneas para huecos que se solapan del mismo dentista, del personal, del paciente o una de cada, cuando se procesan, entonces solo una cita queda guardada y la otra recibe el mensaje de hueco no disponible, nunca un error del servidor.
-- [ ] CA9 (abuso) · Dada una hora mal formada (fuera de rango como "25:99", o texto) o una fecha mal formada (con hora incluida como "2026-10-05 10:00", o texto), cuando se envía en cualquiera de los dos flujos, entonces se rechaza con un error de validación del campo correspondiente y nunca con un error del servidor.
-- [ ] CA10 (abuso) · Dado un identificador de dentista que no existe, que corresponde a otro tipo de personal (asistente o administración) o a un dentista cuya cuenta está desactivada, cuando se agenda en cualquiera de los dos flujos, entonces se rechaza con un error de validación y no se guarda ninguna cita.
+- [x] CA1 · Dada una misma fecha, hora, duración y dentista, cuando se valida la cita en el agendado del personal y en el del paciente, entonces ambos flujos aplican la misma regla (horario del día, encaje en la franja y solape) y dan el mismo resultado.
+- [x] CA2 · Dado un dentista sin horario ese día de la semana, o con ese día marcado como no disponible, cuando se pide una cita ese día, entonces se rechaza con un mensaje que dice que el dentista no atiende ese día.
+- [x] CA3 · Dada una cita que empieza antes del inicio de la franja del dentista o termina después de su fin, cuando se pide, entonces se rechaza con un mensaje que indica la franja de atención. Una cita que empieza justo al inicio o termina justo al fin de la franja se acepta.
+- [x] CA4 · Dada una cita que se solapa al menos un minuto con otra del mismo dentista que no está cancelada ni marcada como no asistió, cuando se pide, entonces se rechaza con un mensaje de hueco no disponible que no revela el paciente, el servicio ni el motivo de la otra cita.
+- [x] CA5 · Dada una cita que empieza exactamente cuando termina otra del mismo dentista, o que termina exactamente cuando empieza otra, cuando se pide, entonces se acepta: citas seguidas no son conflicto.
+- [x] CA6 · Dadas citas canceladas o marcadas como no asistió en ese hueco, cuando se pide una cita nueva del mismo dentista, entonces no cuentan como conflicto y la cita se acepta.
+- [x] CA7 · Dada una cita de otro dentista a la misma hora, cuando se pide una cita para este dentista, entonces no cuenta como conflicto.
+- [x] CA8 (abuso) · Dadas dos peticiones simultáneas para huecos que se solapan del mismo dentista, del personal, del paciente o una de cada, cuando se procesan, entonces solo una cita queda guardada y la otra recibe el mensaje de hueco no disponible, nunca un error del servidor.
+- [x] CA9 (abuso) · Dada una hora mal formada (fuera de rango como "25:99", o texto) o una fecha mal formada (con hora incluida como "2026-10-05 10:00", o texto), cuando se envía en cualquiera de los dos flujos, entonces se rechaza con un error de validación del campo correspondiente y nunca con un error del servidor.
+- [x] CA10 (abuso) · Dado un identificador de dentista que no existe, que corresponde a otro tipo de personal (asistente o administración) o a un dentista cuya cuenta está desactivada, cuando se agenda en cualquiera de los dos flujos, entonces se rechaza con un error de validación y no se guarda ninguna cita.
 
 ## Fuera de alcance
 - Qué cambios de estado se permiten y quién puede hacerlos → spec 026 estados-cita.
