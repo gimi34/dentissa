@@ -40,7 +40,7 @@ los dos controladores.
 | P5 Nada sensible en el repo | ✅ | Solo código, tests y documentación; sin credenciales. |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas. La rama sale de la 024, con `composer audit --locked` y `npm audit` en 0. |
 | P7 Auditoría de datos sensibles | ❌ aceptado: (1) el alta guarda notas de la cita (dato de salud) sin evento de auditoría, que queda para la spec 022; (2) el 403 del alta del personal (`autorizadoParaCita`) no se registra, y el registro central de accesos denegados es de la spec 020 (OB1.c). La 025 no cambia qué notas se guardan, quién puede guardarlas ni cuándo se deniega — aprobado por el usuario el 2026-09-30 | La infraestructura de auditoría (spec 020) aún no está en esta rama. Las dos partes se anotan en el roadmap (D9). |
-| P8 Correlación y logs limpios | ➖ | Sin logs nuevos. El rechazo por bloqueo agotado o interbloqueo se devuelve como mensaje, sin registrar SQL ni datos; un test comprueba que ninguna llamada a `Log` en la reserva ni en ese rechazo lleva SQL, bindings ni datos de la cita. Residuo declarado: una `QueryException` del insert distinta de 1205/1213 sigue el reporte por defecto, que registra el SQL con sus bindings, notas incluidas (OB4.a, pendiente → objetivo 3, spec 023). El log con IDs de los conflictos de agenda (OB3.b) también queda para el objetivo 3. |
+| P8 Correlación y logs limpios | ❌ aceptado: una `QueryException` del insert de `ReservaCitas` distinta de 1205/1213 sigue el reporte por defecto de Laravel, que registra el SQL con sus bindings, notas de la cita incluidas; la redacción de bindings para toda la aplicación es OB4.a y la corrige la spec 023 — aprobado por el usuario el 2026-09-30 | Sin logs nuevos. El rechazo por bloqueo agotado o interbloqueo se devuelve como mensaje, sin registrar SQL ni datos; un test comprueba que ninguna llamada a `Log` en la reserva ni en ese rechazo lleva SQL, bindings ni datos de la cita. El log con IDs de los conflictos de agenda (OB3.b) queda para el objetivo 3. El residuo se anota en el roadmap (D9). |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
@@ -57,7 +57,7 @@ los dos controladores.
 | `tests/Feature/AltaCitasFlujosTest.php` (nuevo) | Diferencias que se mantienen por flujo y columnas guardadas (spec, Fuera de alcance; A16). | Bajo |
 | `docs/architecture.md` | "Resumen", "Módulos", paso 4 del "Flujo principal" y "Deuda técnica" (T090). | Bajo |
 | `docs/security.md` | RS12.a → "en curso (spec 025)". RS12.c sigue "pendiente", con la nota de que el agendado lo resuelve la 025 y el resto la 013 (D5). | Bajo |
-| `docs/roadmap.md` | Pendientes: enmienda de P2 (D9); auditoría del alta con notas → 022 y del 403 del alta del personal → 020 (P7); Gate o Policy del alta del paciente → 015 (P3); ajuste de la 014 sobre el `store` de la 025 (D7); límite de peticiones en el alta de citas (D13). | Bajo |
+| `docs/roadmap.md` | Pendientes: enmienda de P2 (D9); auditoría del alta con notas → 022 y del 403 del alta del personal → 020 (P7); Gate o Policy del alta del paciente → 015 (P3); residuo de SQL con bindings en el log del alta → 023 (P8); ajuste de la 014 sobre el `store` de la 025 (D7); límite de peticiones en el alta de citas (D13). | Bajo |
 
 ## Contratos y datos
 - **Rutas:** sin cambios (`POST /{admin|dentista|asistente}/citas`, `POST /cliente/agendar`),
@@ -116,6 +116,7 @@ los dos controladores.
     1. la segunda conexión deshace su transacción, lo que suelta el `FOR UPDATE`;
     2. la app deshace la suya (`parent::tearDown()`);
     3. la segunda conexión, obtenida antes, borra lo que confirmó.
+
     Ejecutar el archivo dos veces seguidas no deja restos: los recuentos de usuarios, dentistas y
     horarios coinciden con la línea base.
   - **Tests sin segunda conexión:** los de orden, espera y logs usan un dentista creado dentro de
@@ -215,11 +216,12 @@ Amenaza fuera de alcance (D13):
 ## Observabilidad
 No aplica: la spec no añade logs, eventos de auditoría ni métricas (spec 025, Auditoría), y no
 cambia permisos. El registro actual de cambios de estado (`trg_historial_cita`) no se toca.
-Residuos declarados (P8, P7):
-- El reporte por defecto de una `QueryException` inesperada deja SQL y bindings (OB4.a → spec
-  023).
+Residuos declarados:
+- P8 (excepción aceptada): el reporte por defecto de una `QueryException` inesperada deja SQL y
+  bindings (OB4.a → spec 023).
 - El log con IDs de los conflictos de agenda es OB3.b (objetivo 3).
-- El 403 del alta del personal sin evento → spec 020.
+- P7 (excepción aceptada): el 403 del alta del personal sin evento → spec 020.
+
 Verificación: `ReservaConcurrenteTest::test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_datos_en_logs`.
 
 ## Rollout
@@ -284,11 +286,15 @@ Verificación: `ReservaConcurrenteTest::test_ni_la_reserva_ni_el_rechazo_por_blo
   copias de la regla (decisión del usuario, 2026-09-29).
 - D9 · Excepciones de constitución:
   - P2: CA2, CA3, CA6 y CA7 (tests de caracterización comprobados rompiendo).
-  - P3: sin Gate hasta la 014; alcance del paciente → 014; rol de `/cliente` → 015.
-  - P7: auditoría del alta con notas → 022.
+  - P3: sin Policy ni Gate en los dos endpoints modificados. El alta del personal los recibe en
+    la 014 (Gate `agendar-para-paciente`, alcance del paciente) y el alta del paciente en la 015
+    (Gate o Policy y rol de `/cliente/*`).
+  - P7: auditoría del alta con notas → 022, y del 403 del alta del personal → 020 (OB1.c).
+  - P8: residuo de SQL con bindings en el reporte de una `QueryException` inesperada del alta →
+    023 (OB4.a).
   - Es la segunda vez que P2 necesita excepción, así que se anota en el roadmap proponer una
     enmienda MINOR de P2 que distinga cambios de comportamiento de tests de caracterización.
-    También se anota la auditoría del alta para la 022.
+    También se anotan los destinos de las excepciones de P3, P7 y P8 (T041).
   - Decisiones del usuario del 2026-09-29 y del 2026-09-30.
 - D10 · Formato: Pint ya falla hoy en los dos controladores por código que no se toca. Se aplica
   en un commit previo solo de formato, sin lógica, y así el paso Pint del CI queda en verde
