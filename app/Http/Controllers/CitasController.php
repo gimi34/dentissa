@@ -230,12 +230,15 @@ class CitasController extends Controller
     public function store(Request $request, ReservaCitas $reservas)
     {
         $data = $request->validate(ReservaCitas::reglasDeEntrada() + [
-            'paciente_id' => 'required|exists:pacientes,id',
-            'servicio_id' => 'nullable|exists:servicios,id',
+            'paciente_id' => 'bail|required|string|exists:pacientes,id',
+            'servicio_id' => 'bail|nullable|string|exists:servicios,id',
             'duracion_min' => 'required|integer|min:10|max:300',
             'notas_paciente' => 'nullable|string|max:1000',
             'notas_internas' => 'nullable|string|max:1000',
-        ], ReservaCitas::mensajesDeEntrada());
+        ], ReservaCitas::mensajesDeEntrada() + [
+            'paciente_id.string' => 'Elige un paciente válido.',
+            'servicio_id.string' => 'Elige un servicio válido.',
+        ]);
 
         if (! $this->autorizadoParaCita($data['dentista_id'])) {
             abort(403);
@@ -246,7 +249,7 @@ class CitasController extends Controller
             $reservas->reservar([
                 'paciente_id' => $data['paciente_id'],
                 'dentista_id' => $data['dentista_id'],
-                'servicio_id' => $data['servicio_id'] ?: null,
+                'servicio_id' => $data['servicio_id'] ?? null,
                 'fecha' => $data['fecha'],
                 'hora' => $data['hora'],
                 'duracion_min' => (int) $data['duracion_min'],

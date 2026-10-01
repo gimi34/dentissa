@@ -137,11 +137,12 @@ class ClienteCitasController extends Controller
         $reglas['fecha'][] = 'after_or_equal:today';
 
         $data = $request->validate($reglas + [
-            'servicio_id' => 'required|exists:servicios,id',
+            'servicio_id' => 'bail|required|string|exists:servicios,id',
             'notas_paciente' => 'nullable|string|max:1000',
         ], ReservaCitas::mensajesDeEntrada() + [
             'dentista_id.required' => 'Elige un dentista.',
             'servicio_id.required' => 'Elige un servicio.',
+            'servicio_id.string' => 'Elige un servicio válido.',
         ]);
 
         $servicio = DB::table('servicios')->where('id', $data['servicio_id'])->first();

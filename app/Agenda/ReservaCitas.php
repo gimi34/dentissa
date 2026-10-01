@@ -40,7 +40,7 @@ class ReservaCitas
         return [
             'fecha' => ['bail', 'required', 'date_format:Y-m-d'],
             'hora' => ['bail', 'required', 'date_format:H:i'],
-            'dentista_id' => ['bail', 'required', Rule::exists('personal', 'id')->where(
+            'dentista_id' => ['bail', 'required', 'string', Rule::exists('personal', 'id')->where(
                 fn ($consulta) => $consulta->where('tipo', 'dentista')->whereIn(
                     'usuario_id',
                     fn ($activos) => $activos->select('id')->from('usuarios')->where('activo', 1),
@@ -57,6 +57,7 @@ class ReservaCitas
         return [
             'fecha.date_format' => 'La fecha debe tener el formato AAAA-MM-DD.',
             'hora.date_format' => 'La hora debe tener el formato HH:MM.',
+            'dentista_id.string' => 'Elige un dentista válido.',
             'dentista_id.exists' => 'Elige un dentista válido.',
         ];
     }
@@ -71,6 +72,11 @@ class ReservaCitas
      */
     public function reservar(array $cita): string
     {
+        // Una duración de 0 o negativa haría que el solape nunca se cumpliera.
+        if ((int) $cita['duracion_min'] < 1) {
+            throw CitaNoAgendable::duracionInvalida();
+        }
+
         try {
             return $this->db->transaction(fn () => $this->reservarConBloqueo($cita));
         } catch (DeadlockException) {
@@ -92,7 +98,12 @@ class ReservaCitas
 
         // Primero el bloqueo del dentista: así las lecturas siguientes ven las
         // citas que confirmó la reserva anterior.
-        $this->db->table('personal')->where('id', $cita['dentista_id'])->lockForUpdate()->first(['id']);
+        $dentista = $this->db->table('personal')->where('id', $cita['dentista_id'])->lockForUpdate()->first(['id']);
+
+        if ($dentista === null) {
+            // El dentista dejó de existir entre la validación y la reserva.
+            throw CitaNoAgendable::noDisponible();
+        }
 
         $inicio = Carbon::createFromFormat('Y-m-d H:i', $cita['fecha'].' '.$cita['hora'])->startOfMinute();
         $fin = $inicio->copy()->addMinutes((int) $cita['duracion_min']);
@@ -144,6 +155,9 @@ class ReservaCitas
             ->where('dentista_id', $dentistaId)
             ->whereNotIn('estado', self::ESTADOS_LIBRES)
             ->whereBetween('fecha_hora', [$inicio->copy()->startOfDay(), $fin])
+            // Lectura con bloqueo: ve la última versión confirmada aunque la reserva
+            // corra dentro de una transacción exterior con una vista de lectura previa.
+            ->lockForUpdate()
             ->get(['fecha_hora', 'duracion_min']);
 
         foreach ($citas as $otra) {

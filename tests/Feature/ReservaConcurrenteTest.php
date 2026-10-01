@@ -96,25 +96,15 @@ class ReservaConcurrenteTest extends TestCase
     #[DataProvider('flujos')]
     public function test_una_reserva_no_se_guarda_mientras_otra_tiene_el_hueco_del_dentista(string $flujo): void
     {
-        $dentista = $this->dentistaBloqueadoPorOtraConexion();
-
-        $respuesta = $this->agendar($flujo, $dentista, '10:00');
-
-        $this->assertNotSame(500, $respuesta->status(), 'La reserva no debe terminar en un error del servidor.');
-        $respuesta->assertSessionHasErrors(['hora' => self::MENSAJE_NO_DISPONIBLE]);
-        $this->assertSame(0, DB::table('citas')->where('dentista_id', $dentista)->count());
-    }
-
-    #[DataProvider('flujos')]
-    public function test_el_bloqueo_agotado_responde_no_disponible_sin_error_500(string $flujo): void
-    {
+        // Un solo escenario de bloqueo real por flujo (TM1 y TM2): cada espera cuesta 1 s.
         $dentista = $this->dentistaBloqueadoPorOtraConexion();
         $this->escucharLogs();
 
         $respuesta = $this->agendar($flujo, $dentista, '10:00');
 
         $this->assertNotSame(500, $respuesta->status(), 'El bloqueo agotado no debe terminar en un error del servidor.');
-        $this->assertSame(self::MENSAJE_NO_DISPONIBLE, $this->mensajeDeHora());
+        $respuesta->assertSessionHasErrors(['hora' => self::MENSAJE_NO_DISPONIBLE]);
+        $this->assertSame(0, DB::table('citas')->where('dentista_id', $dentista)->count());
         // A34: durante un bloqueo agotado real ningún log lleva SQL, bindings ni datos de la cita.
         $this->assertLogsSinDatos();
     }

@@ -1,7 +1,7 @@
 ---
 id: 025
 slug: agenda-unica
-status: approved
+status: implemented
 created: 2026-09-29
 extends: [003, 004, 005]
 ---

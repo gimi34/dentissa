@@ -22,6 +22,11 @@ class CitaNoAgendable extends RuntimeException
             .$inicio->format('H:i').' - '.$fin->format('H:i').').');
     }
 
+    public static function duracionInvalida(): self
+    {
+        return new self('La duración del servicio no es válida.');
+    }
+
     public static function noDisponible(): self
     {
         return new self('Ese horario ya no está disponible. Por favor elige otro.');
