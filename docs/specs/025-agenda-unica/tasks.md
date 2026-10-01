@@ -1,7 +1,7 @@
 ---
 spec: 025-agenda-unica
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 025 Regla de agenda única sin doble reserva
