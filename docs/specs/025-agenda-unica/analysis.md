@@ -1,67 +1,53 @@
 ---
-result: fail
-round: 3
+result: pass
+round: 4
 mode: delta
 constitution_version: 1.0.0
-date: 2026-09-30
+date: 2026-10-01
 spec_sha: 3ca194bd9bf0
-plan_sha: 04167e18a4af
-tasks_sha: b10353ff8b1c
+plan_sha: 14a5169fc7fc
+tasks_sha: 92b8f8cca780
 ---
 
 # Análisis · 025 Regla de agenda única sin doble reserva
 
 ## Resumen
-Resultado **fail** por un hallazgo CRÍTICO, A33. La fila P8 admite que una excepción inesperada
-del insert de `ReservaCitas` se registre con el SQL y sus valores enlazados, y aun así queda en ➖,
-sin excepción formal.
+Resultado **pass**. De la ronda 3, A36 y A37 quedan resueltos, y A33 también, aunque abre un
+hallazgo nuevo (A38).
 
-Los siete hallazgos abiertos de la ronda 2 quedan cerrados: A14, A24 y A31 resueltos; A23, A25,
-A26 y A32 resueltos, aunque abren hallazgos nuevos. Esta ronda aporta: CRÍTICA 1 · ALTA 0 ·
-MEDIA 1 · BAJA 3. El usuario decidió todos.
+Esta ronda aporta 2 hallazgos: CRÍTICA 0 · ALTA 0 · MEDIA 1 · BAJA 1. El usuario los acepta.
+- A38 precisa el alcance de la excepción de P8, que ya se había decidido para todo el alta.
+- A39 es solo de redacción.
 
-Se comprobó que el nuevo diseño de T011 es viable, en el código de Laravel y en el esquema:
-- `DeadlockException` solo aparece en transacciones anidadas.
-- La vista de REPEATABLE READ se crea en la primera lectura.
-- `pacientes.dentista_id` admite nulo.
-- La conexión guardada sobrevive a `parent::tearDown()`.
-- Las tablas de plan y tareas tienen todas las filas con el mismo número de columnas.
+Las filas P8 del plan y de las tareas son idénticas y tienen 3 celdas. T041 sigue en una línea,
+con siete viñetas.
 
-Ronda anterior: [history/analysis.r2.md](history/analysis.r2.md).
+Ronda anterior: [history/analysis.r3.md](history/analysis.r3.md).
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
 | Criterios con tarea de test e implementación | 10 / 10 |
 | Amenazas con control y test | 5 / 5 (TM6 fuera de alcance, D13) |
-| Principios de la constitución evaluados | 8 / 8 (P8 con residuo sin excepción: A33) |
+| Principios de la constitución evaluados | 8 / 8 (P2, P3, P7 y P8 con excepciones aceptadas) |
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A14 | MEDIA | resuelto | T011 y T012 nombran los casos `personal` y `paciente`; T020 exige los `personal` de T010–T012 y los casos sin flujo de T011. |
-| A23 | CRÍTICA | resuelto con efecto nuevo (→ A36) | Las filas P7 del plan y de las tareas nombran las dos partes (022 y 020, OB1.c). D9 no se actualizó. |
-| A24 | ALTA | resuelto | D3, `ReservaCitas`, T020 y T011, con tres casos. En vendor, `ManagesTransactions.php:93-101` lanza `DeadlockException` solo en transacciones anidadas; en nivel 1 llega la `QueryException`. |
-| A25 | MEDIA | resuelto con efecto nuevo (→ A35) | Pacientes con `dentista_id` nulo, confirmación antes de la primera lectura, limpieza en orden y declaración en P2. Todo es viable. Falta el recuento de usuarios en T001. |
-| A26 | MEDIA | resuelto con efecto nuevo (→ A36) | Las filas P3 dan destino por endpoint (014/015) y T041 tiene la viñeta de la 015. D9 no se actualizó. |
-| A31 | BAJA | resuelto | P1 cita la aprobación del 2026-09-30. |
-| A32 | BAJA | resuelto con efecto nuevo (→ A33, A34) | P8 declara OB4.a y OB3.b, y el test comprueba que no se registran SQL, bindings ni datos. El residuo queda sin excepción formal, y el rechazo del test no pasa por el manejador de excepciones. |
+| A33 | CRÍTICA | resuelto con efecto nuevo (→ A38) | `plan.md:43` y `tasks.md:25` con `❌ aceptado … — aprobado por el usuario el 2026-09-30`, con el mismo texto y 3 celdas. Viñeta de la spec 023 en T041, D9 y el roadmap. |
+| A36 | BAJA | resuelto | D9 da los mismos destinos que las filas P3 (014/015) y P7 (022/020), más P8 → 023, en línea con T041. |
+| A37 | BAJA | resuelto | Hay líneas en blanco antes de "Verificación: …" y de "Ejecutar el archivo dos veces…". |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A33 | Constitución (P8) | CRÍTICA | Filas P8 del plan y de las tareas | La fila admite que una `QueryException` del insert de `ReservaCitas`, código nuevo de esta spec, se registre con SQL y bindings, notas incluidas. P8 lo prohíbe, y la fila está en ➖ sin `❌ aceptado`. | Decidido: excepción formal en P8. El residuo OB4.a en el alta de citas queda para la spec 023, con la aprobación del usuario del 2026-09-30, igual en plan y tareas y con viñeta en el roadmap (T041). Comprobación: las filas P8 del plan y de las tareas, y T041. → `/plan --fix`, `/tasks --fix` |
-| A34 | Inconsistencia / Cobertura (TM2, P2) | MEDIA | Plan, "Concurrencia"; T011 (b) | El test de logs usa un rechazo simulado que llama al servicio sin HTTP, así que no pasa por el manejador de excepciones, que es donde se registran el SQL y los bindings. Además, el plan dice "durante un bloqueo agotado", algo que sin la segunda conexión no se puede producir. | Aceptado como nota de T011. |
-| A35 | Inconsistencia | BAJA | T011 "hecho cuando"; T001 | T011 compara el recuento de usuarios con T001, que no lo registra. | Aceptado como nota de T001. |
-| A36 | Inconsistencia | BAJA | Plan D9 | D9 no recoge los destinos nuevos de P3 (`/cliente/agendar` → 015) ni de P7 (403 → 020), aunque la fila P7 remite a D9. | D9 enumera las mismas partes y destinos que las filas P3 y P7 y que T041. → `/plan --fix` |
-| A37 | Ambigüedad (formato) | BAJA | Plan, Observabilidad y "Concurrencia" | Faltan líneas en blanco: "Verificación: …" queda pegada a la lista de residuos, y "Ejecutar el archivo dos veces…" al paso 3 de la limpieza. | Separar ambas frases de la lista a la que no pertenecen. Comprobación: vista renderizada. → `/plan --fix` |
+| A38 | Constitución (P8) / Inconsistencia | MEDIA | Filas P8 de `plan.md:43` y `tasks.md:25` frente a D9, Observabilidad y T041 | La excepción nombra solo "una `QueryException` del insert". `ReservaCitas` hace además el bloqueo, la lectura del horario y la de las citas, que también registrarían SQL con valores ante otro error. D9, Observabilidad y T041 ya hablan de "el alta". | Aceptado: la decisión de A33 fue "residuo OB4.a en el alta de citas" y cubre cualquier consulta de `ReservaCitas` distinta de 1205/1213. → nota de T041 |
+| A39 | Inconsistencia | BAJA | `plan.md`, Observabilidad, "Residuos declarados" | La lista nombra la parte del 403 de P7, pero no la de las notas (→ 022). | Aceptado sin cambio: la fila P7 y D9 tienen las dos partes. → plan |
 
 ## Decisiones pendientes del usuario
-Resueltas en esta ronda (decisión del usuario, 2026-09-30):
-- **A33:** excepción formal en P8, residuo OB4.a → spec 023.
-- **A34, A35:** se aceptan como notas de tarea. A36 y A37 van en el `--fix` del plan.
+Ninguna. A38 y A39 se aceptan (decisión del usuario, 2026-10-01).
 
 ## Aceptados
-Aceptados por el usuario el 2026-09-30:
-- **A34** → nota de T011: `Log::spy()` también durante un bloqueo agotado real por HTTP, con la segunda conexión y en al menos un flujo. Antes del cambio ese caso falla porque el 500 registra el SQL; después, ninguna llamada a `Log` lleva SQL, bindings ni datos de la cita.
-- **A35** → nota de T001: la línea base registra también el recuento de usuarios, que T011 compara.
+Aceptados por el usuario el 2026-10-01:
+- **A38** → nota de T041: la viñeta del residuo P8 dice que cubre cualquier `QueryException` de `ReservaCitas` (bloqueo, lecturas e insert) distinta de 1205/1213, conforme a la decisión de A33 ("residuo OB4.a en el alta de citas").
+- **A39** → plan: sin cambio; la fila P7 y D9 ya nombran las dos partes (notas → 022, 403 → 020).
