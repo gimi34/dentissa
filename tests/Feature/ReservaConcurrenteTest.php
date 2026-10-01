@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Agenda\CitaNoAgendable;
+use App\Agenda\ReservaCitas;
 use App\Models\Usuario;
 use Carbon\Carbon;
 use Illuminate\Database\Connection;
@@ -13,6 +15,7 @@ use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Testing\TestResponse;
@@ -39,8 +42,6 @@ class ReservaConcurrenteTest extends TestCase
 
     private const MENSAJE_NO_DISPONIBLE = 'Ese horario ya no está disponible. Por favor elige otro.';
 
-    private const SERVICIO_RESERVA = 'App\Agenda\ReservaCitas';
-
     private const NOTA_DE_PRUEBA = 'nota-confidencial-de-prueba';
 
     private ?Connection $segunda = null;
@@ -63,18 +64,25 @@ class ReservaConcurrenteTest extends TestCase
         $segunda = $this->segunda;
         $confirmados = $this->confirmados;
 
-        // 1. La segunda conexión suelta el FOR UPDATE.
-        $segunda?->rollBack();
-
-        // 2. La app deshace su transacción.
-        parent::tearDown();
-
-        // 3. Se borra lo que confirmó la segunda conexión; ya no hay bloqueos de la app.
-        if ($segunda !== null) {
-            $segunda->table('horarios_dentista')->where('personal_id', $confirmados['personal'])->delete();
-            $segunda->table('personal')->where('id', $confirmados['personal'])->delete();
-            $segunda->table('usuarios')->where('id', $confirmados['usuario'])->delete();
-            $segunda->disconnect();
+        try {
+            // 1. La segunda conexión suelta el FOR UPDATE, si lo tenía.
+            if ($segunda !== null && $segunda->transactionLevel() > 0) {
+                $segunda->rollBack();
+            }
+        } finally {
+            try {
+                // 2. La app deshace su transacción.
+                parent::tearDown();
+            } finally {
+                // 3. Siempre, aunque algo falle antes: se borra lo que confirmó la segunda
+                //    conexión, en orden inverso. Cada fila se apuntó nada más insertarse.
+                if ($segunda !== null) {
+                    foreach (array_reverse($confirmados) as [$tabla, $id]) {
+                        $segunda->table($tabla)->where('id', $id)->delete();
+                    }
+                    $segunda->disconnect();
+                }
+            }
         }
     }
 
@@ -109,6 +117,61 @@ class ReservaConcurrenteTest extends TestCase
         $this->assertSame(self::MENSAJE_NO_DISPONIBLE, $this->mensajeDeHora());
         // A34: durante un bloqueo agotado real ningún log lleva SQL, bindings ni datos de la cita.
         $this->assertLogsSinDatos();
+    }
+
+    /**
+     * R4: aunque la app ya haya hecho una lectura consistente (como dentro de una
+     * transacción exterior), la reserva ve la cita que otra conexión confirmó después.
+     */
+    public function test_la_reserva_ve_la_cita_que_otra_conexion_confirmo_despues_de_su_primera_lectura(): void
+    {
+        $dentista = $this->dentistaConfirmadoPorOtraConexion();
+
+        // Primera lectura consistente de la app: fija su vista de REPEATABLE READ.
+        DB::table('citas')->count();
+
+        // Después, otra conexión confirma una cita a las 10:00 para ese dentista.
+        $usuarioAjeno = $this->confirmar('usuarios', [
+            'id' => (string) Str::uuid(), 'nombre' => 'Paciente', 'apellido' => 'Concurrente', 'rol' => 'cliente',
+            'email' => 'concurrente.'.Str::random(10).'@example.test', 'activo' => 1,
+        ]);
+        $pacienteAjeno = $this->confirmar('pacientes', ['id' => (string) Str::uuid(), 'usuario_id' => $usuarioAjeno]);
+        $this->confirmar('citas', [
+            'id' => (string) Str::uuid(), 'paciente_id' => $pacienteAjeno, 'dentista_id' => $dentista,
+            'fecha_hora' => $this->lunes.' 10:00:00', 'duracion_min' => 30, 'estado' => 'agendada',
+        ]);
+
+        $this->agendar('personal', $dentista, '10:00')
+            ->assertSessionHasErrors(['hora' => self::MENSAJE_NO_DISPONIBLE]);
+
+        // Lectura con bloqueo: ve la cita confirmada y la propia, si la hubiera.
+        $this->assertSame(1, DB::table('citas')->where('dentista_id', $dentista)->lockForUpdate()->count());
+    }
+
+    /**
+     * R4: si la fila del dentista ya no existe al bloquearla, la reserva responde no disponible.
+     */
+    public function test_un_dentista_que_ya_no_existe_responde_no_disponible(): void
+    {
+        $servicio = $this->app->make(ReservaCitas::class);
+
+        try {
+            $servicio->reservar([
+                'paciente_id' => (string) Str::uuid(),
+                'dentista_id' => (string) Str::uuid(),
+                'servicio_id' => null,
+                'fecha' => $this->lunes,
+                'hora' => '10:00',
+                'duracion_min' => 30,
+                'notas_paciente' => null,
+                'notas_internas' => null,
+                'creado_por' => null,
+            ]);
+            $this->fail('El servicio debía rechazar la reserva.');
+        } catch (Throwable $e) {
+            $this->assertInstanceOf(CitaNoAgendable::class, $e);
+            $this->assertSame(self::MENSAJE_NO_DISPONIBLE, $e->getMessage());
+        }
     }
 
     // ── (b) Sin segunda conexión, sin flujo ────────────────────────────
@@ -154,6 +217,27 @@ class ReservaConcurrenteTest extends TestCase
         }
     }
 
+    public function test_un_error_sql_que_no_es_de_bloqueo_se_relanza_tal_cual(): void
+    {
+        $previa = new PDOException('SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row');
+        $previa->errorInfo = ['23000', 1452, 'Cannot add or update a child row: a foreign key constraint fails'];
+        $error = new QueryException('mariadb', 'insert into citas (id) values (?)', ['id-de-prueba'], $previa);
+
+        $conexion = Mockery::mock(ConnectionInterface::class)->shouldIgnoreMissing();
+        $conexion->shouldReceive('transaction')->andThrow($error);
+
+        try {
+            (new ReservaCitas($conexion, 1))->reservar([
+                'paciente_id' => (string) Str::uuid(), 'dentista_id' => (string) Str::uuid(), 'servicio_id' => null,
+                'fecha' => $this->lunes, 'hora' => '10:00', 'duracion_min' => 30,
+                'notas_paciente' => null, 'notas_internas' => null, 'creado_por' => null,
+            ]);
+            $this->fail('El error SQL debía propagarse.');
+        } catch (Throwable $e) {
+            $this->assertSame($error, $e, 'Un error SQL ajeno al bloqueo no se convierte en "no disponible".');
+        }
+    }
+
     public function test_ni_la_reserva_ni_el_rechazo_por_bloqueo_escriben_datos_en_logs(): void
     {
         $this->escucharLogs();
@@ -176,30 +260,58 @@ class ReservaConcurrenteTest extends TestCase
      */
     private function dentistaBloqueadoPorOtraConexion(): string
     {
-        $default = config('database.default');
-        config(['database.connections.segunda_reserva' => config("database.connections.{$default}")]);
-        $this->segunda = DB::connection('segunda_reserva');
-        $this->segunda->statement('SET SESSION innodb_lock_wait_timeout = 1');
-
-        $usuarioId = (string) Str::uuid();
-        $personalId = (string) Str::uuid();
-        $this->segunda->table('usuarios')->insert([
-            'id' => $usuarioId, 'nombre' => 'Dentista', 'apellido' => 'Concurrente', 'rol' => 'dentista',
-            'email' => 'concurrente.'.Str::random(10).'@example.test', 'activo' => 1,
-        ]);
-        $this->segunda->table('personal')->insert(['id' => $personalId, 'usuario_id' => $usuarioId, 'tipo' => 'dentista']);
-        $this->segunda->table('horarios_dentista')->insert([
-            'id' => (string) Str::uuid(), 'personal_id' => $personalId, 'dia_semana' => 1,
-            'hora_inicio' => '09:00:00', 'hora_fin' => '13:00:00', 'disponible' => 1,
-        ]);
-        $this->confirmados = ['usuario' => $usuarioId, 'personal' => $personalId];
+        $personalId = $this->dentistaConfirmadoPorOtraConexion();
 
         $this->segunda->beginTransaction();
         $this->segunda->select('select id from personal where id = ? for update', [$personalId]);
 
         // La app espera como mucho 1 s, igual que ReservaCitas en los tests.
         DB::statement('SET SESSION innodb_lock_wait_timeout = 1');
-        $this->app->bind(self::SERVICIO_RESERVA, fn () => new (self::SERVICIO_RESERVA)(DB::connection(), 1));
+        $this->app->bind(ReservaCitas::class, fn () => new ReservaCitas(DB::connection(), 1));
+
+        return $personalId;
+    }
+
+    /**
+     * Abre la segunda conexión copiando la configuración de la conexión por defecto.
+     */
+    private function segundaConexion(): Connection
+    {
+        if ($this->segunda === null) {
+            $default = config('database.default');
+            config(['database.connections.segunda_reserva' => config("database.connections.{$default}")]);
+            $this->segunda = DB::connection('segunda_reserva');
+            $this->segunda->statement('SET SESSION innodb_lock_wait_timeout = 1');
+        }
+
+        return $this->segunda;
+    }
+
+    /**
+     * Inserta y confirma una fila con la segunda conexión y la apunta para borrarla en `tearDown`.
+     */
+    private function confirmar(string $tabla, array $fila): string
+    {
+        $this->segundaConexion()->table($tabla)->insert($fila);
+        $this->confirmados[] = [$tabla, $fila['id']];
+
+        return $fila['id'];
+    }
+
+    /**
+     * Dentista con horario de lunes de 09:00 a 13:00, confirmado por la segunda conexión.
+     */
+    private function dentistaConfirmadoPorOtraConexion(): string
+    {
+        $usuarioId = $this->confirmar('usuarios', [
+            'id' => (string) Str::uuid(), 'nombre' => 'Dentista', 'apellido' => 'Concurrente', 'rol' => 'dentista',
+            'email' => 'concurrente.'.Str::random(10).'@example.test', 'activo' => 1,
+        ]);
+        $personalId = $this->confirmar('personal', ['id' => (string) Str::uuid(), 'usuario_id' => $usuarioId, 'tipo' => 'dentista']);
+        $this->confirmar('horarios_dentista', [
+            'id' => (string) Str::uuid(), 'personal_id' => $personalId, 'dia_semana' => 1,
+            'hora_inicio' => '09:00:00', 'hora_fin' => '13:00:00', 'disponible' => 1,
+        ]);
 
         return $personalId;
     }
@@ -284,7 +396,7 @@ class ReservaConcurrenteTest extends TestCase
     {
         $conexion = Mockery::mock(ConnectionInterface::class)->shouldIgnoreMissing();
         $conexion->shouldReceive('transaction')->andThrow($error);
-        $servicio = new (self::SERVICIO_RESERVA)($conexion, 1);
+        $servicio = new ReservaCitas($conexion, 1);
 
         try {
             $servicio->reservar([
@@ -299,7 +411,7 @@ class ReservaConcurrenteTest extends TestCase
                 'creado_por' => null,
             ]);
         } catch (Throwable $e) {
-            $this->assertInstanceOf('App\Agenda\CitaNoAgendable', $e);
+            $this->assertInstanceOf(CitaNoAgendable::class, $e);
 
             return $e->getMessage();
         }
@@ -331,6 +443,11 @@ class ReservaConcurrenteTest extends TestCase
         Event::listen(MessageLogged::class, function (MessageLogged $evento) {
             $this->mensajesLog[] = $evento->message.' '.json_encode($evento->context);
         });
+
+        // Control: el listener capta los logs; si no, comprobar que no hay datos no probaría nada.
+        Log::info('control del listener de logs');
+        $this->assertNotEmpty($this->mensajesLog, 'El listener de logs no capta nada.');
+        $this->mensajesLog = [];
     }
 
     private function assertLogsSinDatos(): void

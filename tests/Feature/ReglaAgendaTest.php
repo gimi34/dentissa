@@ -32,6 +32,8 @@ class ReglaAgendaTest extends TestCase
 
     private const MENSAJE_NO_DISPONIBLE = 'Ese horario ya no está disponible. Por favor elige otro.';
 
+    private const MENSAJE_DURACION_INVALIDA = 'La duración del servicio no es válida.';
+
     private Usuario $admin;
 
     private Usuario $usuarioPaciente;
@@ -73,16 +75,24 @@ class ReglaAgendaTest extends TestCase
             'válida' => fn (string $dentista) => $this->crearHorario($dentista),
         ];
         $horas = ['sin horario' => '10:00', 'fuera de franja' => '08:30', 'solape' => '10:15', 'válida' => '10:00'];
+        // Resultado esperado por caso: estado HTTP, errores de sesión y citas del dentista tras la petición.
+        $esperados = [
+            'sin horario' => ['estado' => 302, 'errores' => ['hora' => [self::MENSAJE_SIN_HORARIO]], 'citas' => 0],
+            'fuera de franja' => ['estado' => 302, 'errores' => ['hora' => [self::MENSAJE_FUERA_DE_FRANJA]], 'citas' => 0],
+            'solape' => ['estado' => 302, 'errores' => ['hora' => [self::MENSAJE_NO_DISPONIBLE]], 'citas' => 1],
+            'válida' => ['estado' => 302, 'errores' => [], 'citas' => 1],
+        ];
 
         foreach ($casos as $caso => $preparar) {
             $resultados = [];
             foreach (['personal', 'paciente'] as $flujo) {
                 $dentista = $this->crearDentista();
                 $preparar($dentista);
-                $resultados[$flujo] = $this->resultado($this->agendar($flujo, $dentista, $horas[$caso]));
+                $resultados[$flujo] = $this->resultado($this->agendar($flujo, $dentista, $horas[$caso]), $dentista);
             }
 
             $this->assertSame($resultados['personal'], $resultados['paciente'], "Caso «{$caso}»: los dos flujos deben dar el mismo resultado.");
+            $this->assertSame($esperados[$caso], $resultados['personal'], "Caso «{$caso}»: resultado inesperado.");
         }
     }
 
@@ -154,6 +164,48 @@ class ReglaAgendaTest extends TestCase
         $this->assertStringNotContainsString('Zacarías', $mensaje);
         $this->assertStringNotContainsString('Secreto', $mensaje);
         $this->assertStringNotContainsString('Endodoncia', $mensaje);
+        $this->assertSame(1, $this->citasDe($dentista));
+    }
+
+    // ── CA4 y CA8: una duración no válida no salta el solape (R1) ──────
+
+    public function test_un_servicio_de_duracion_cero_o_negativa_no_agenda_encima_de_otra_cita(): void
+    {
+        foreach ([0, -30] as $duracion) {
+            $dentista = $this->crearDentista();
+            $this->crearHorario($dentista);
+            $this->crearCita($dentista, '10:00');
+            $this->servicioId = $this->crearServicio('Servicio mal configurado', $duracion);
+
+            $this->agendar('paciente', $dentista, '10:00')
+                ->assertSessionHasErrors(['hora' => self::MENSAJE_DURACION_INVALIDA]);
+
+            $this->assertSame(1, $this->citasDe($dentista), "Duración {$duracion}: no debe guardarse una segunda cita.");
+        }
+    }
+
+    #[DataProvider('flujos')]
+    public function test_un_solape_de_un_minuto_se_rechaza(string $flujo): void
+    {
+        $dentista = $this->crearDentista();
+        $this->crearHorario($dentista);
+        $this->crearCita($dentista, '10:00');
+
+        // 10:29 + 30 min se cruza un minuto con la de 10:00 a 10:30.
+        $this->agendar($flujo, $dentista, '10:29')->assertSessionHasErrors(['hora' => self::MENSAJE_NO_DISPONIBLE]);
+
+        $this->assertSame(1, $this->citasDe($dentista));
+    }
+
+    #[DataProvider('flujos')]
+    public function test_una_cita_confirmada_bloquea_el_hueco(string $flujo): void
+    {
+        $dentista = $this->crearDentista();
+        $this->crearHorario($dentista);
+        $this->crearCita($dentista, '10:00', estado: 'confirmada');
+
+        $this->agendar($flujo, $dentista, '10:00')->assertSessionHasErrors(['hora' => self::MENSAJE_NO_DISPONIBLE]);
+
         $this->assertSame(1, $this->citasDe($dentista));
     }
 
@@ -241,13 +293,31 @@ class ReglaAgendaTest extends TestCase
     }
 
     /**
-     * Resultado comparable entre flujos: si se aceptó y, si no, el mensaje del campo hora.
+     * Resultado comparable entre flujos: estado HTTP, todos los errores de sesión
+     * y número de citas del dentista después de la petición.
      */
-    private function resultado(TestResponse $respuesta): array
+    private function resultado(TestResponse $respuesta, string $dentistaId): array
     {
-        $mensaje = $this->mensajeDeHora();
+        return [
+            'estado' => $respuesta->status(),
+            'errores' => $this->erroresDeSesion(),
+            'citas' => $this->citasDe($dentistaId),
+        ];
+    }
 
-        return ['aceptada' => $mensaje === '', 'mensaje' => $mensaje];
+    /**
+     * Errores de la sesión por campo. Con `session.serialization = json` llegan como
+     * array; en otro caso, como ViewErrorBag.
+     */
+    private function erroresDeSesion(): array
+    {
+        $errores = app('session.store')->get('errors');
+
+        if ($errores instanceof ViewErrorBag) {
+            return $errores->getMessages();
+        }
+
+        return $errores['default']['messages'] ?? [];
     }
 
     /**
@@ -312,10 +382,10 @@ class ReglaAgendaTest extends TestCase
         return $id;
     }
 
-    private function crearServicio(string $nombre): string
+    private function crearServicio(string $nombre, int $duracion = 30): string
     {
         $id = (string) Str::uuid();
-        DB::table('servicios')->insert(['id' => $id, 'nombre' => $nombre, 'duracion_min' => 30, 'activo' => 1]);
+        DB::table('servicios')->insert(['id' => $id, 'nombre' => $nombre, 'duracion_min' => $duracion, 'activo' => 1]);
 
         return $id;
     }

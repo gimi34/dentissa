@@ -123,6 +123,46 @@ class AltaCitasValidacionTest extends TestCase
         $this->assertSame(0, $this->citasNuevas());
     }
 
+    // ── R2 y R3: identificadores como array y servicio ausente ─────────
+
+    #[DataProvider('flujos')]
+    public function test_los_identificadores_enviados_como_array_se_rechazan_sin_error_500(string $flujo): void
+    {
+        $campos = ['dentista_id' => $this->dentistaValido, 'servicio_id' => $this->servicioId];
+        if ($flujo === 'personal') {
+            $campos['paciente_id'] = $this->pacienteId;
+        }
+
+        foreach ($campos as $campo => $valor) {
+            $respuesta = $this->agendar($flujo, [$campo => [$valor]]);
+
+            $this->assertNotSame(500, $respuesta->status(), "{$campo} como array no debe dar un error del servidor.");
+            $respuesta->assertSessionHasErrors($campo);
+        }
+
+        $this->agendar($flujo, ['dentista_id' => [$this->dentistaValido]])
+            ->assertSessionHasErrors(['dentista_id' => self::MENSAJE_DENTISTA]);
+
+        $this->assertSame(0, $this->citasNuevas());
+    }
+
+    public function test_el_personal_puede_agendar_sin_enviar_servicio(): void
+    {
+        $this->flushSession();
+        $respuesta = $this->actingAs($this->admin)->post('/admin/citas', [
+            'paciente_id' => $this->pacienteId,
+            'dentista_id' => $this->dentistaValido,
+            'fecha' => $this->lunes,
+            'hora' => '10:00',
+            'duracion_min' => 30,
+        ]);
+
+        $this->assertNotSame(500, $respuesta->status(), 'Sin servicio_id no debe dar un error del servidor.');
+        $respuesta->assertSessionHasNoErrors();
+        $this->assertNull(DB::table('citas')->where('paciente_id', $this->pacienteId)->value('servicio_id'));
+        $this->assertSame(1, $this->citasNuevas());
+    }
+
     // ── Apoyo ──────────────────────────────────────────────────────────
 
     private function agendar(string $flujo, array $cambios): TestResponse
