@@ -194,6 +194,9 @@
                         <textarea name="motivo" id="motivo" class="field" rows="2" maxlength="500"
                             placeholder="Ej: Paciente confirmó por teléfono..."
                             style="resize:none">{{ old('motivo') }}</textarea>
+                        @error('motivo')
+                            <div class="field-hint field-hint-error">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">

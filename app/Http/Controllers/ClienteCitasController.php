@@ -85,6 +85,10 @@ class ClienteCitasController extends Controller
         }
 
         $cita = $this->conPuedeCancelar($cita, $estados);
+        // Si ya empezó, se explica por qué no se puede cancelar en lugar de quitar el botón sin más.
+        $cita->aviso_cancelar = in_array($cita->estado, ['agendada', 'confirmada'], true) && ! $cita->puede_cancelar
+            ? CambioDeEstadoNoPermitido::yaEmpezo()->getMessage()
+            : null;
 
         return view('citas.cliente-show', compact('cita'));
     }

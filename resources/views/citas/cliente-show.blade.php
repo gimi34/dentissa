@@ -11,6 +11,8 @@
                 Cancelar cita
             </button>
         </form>
+    @elseif($cita->aviso_cancelar)
+        <span style="font-size:13px;color:var(--text-muted)">{{ $cita->aviso_cancelar }}</span>
     @endif
 @endsection
 

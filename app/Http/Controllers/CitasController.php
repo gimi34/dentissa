@@ -336,6 +336,8 @@ class CitasController extends Controller
             'estado.required' => 'Elige un estado válido.',
             'estado.string' => 'Elige un estado válido.',
             'estado.in' => 'Elige un estado válido.',
+            'motivo.string' => 'El motivo debe ser un texto.',
+            'motivo.max' => 'El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.',
         ]);
 
         Gate::authorize('cambiar-estado-cita', [$cita, $data['estado']]);
@@ -343,7 +345,8 @@ class CitasController extends Controller
         try {
             $estados->cambiar($id, $data['estado'], auth()->user(), $data['motivo'] ?? null);
         } catch (CambioDeEstadoNoPermitido $e) {
-            return back()->withErrors(['estado' => $e->getMessage()]);
+            // Se conserva el motivo escrito para no tener que volver a teclearlo.
+            return back()->withInput()->withErrors(['estado' => $e->getMessage()]);
         }
 
         return back()->with('success', 'Estado actualizado correctamente.');
