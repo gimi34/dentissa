@@ -137,11 +137,13 @@ Formato:
 - [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación
+- [x] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: decisión del usuario (2026-10-02, `/release 026`): versión v0.3.0 sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración: el usuario sube `feature/026-estados-cita` y fusiona su PR contra `main` con el CI en verde (merge commit, sin squash); después, `/release` crea el tag anotado `v0.3.0` sobre el merge commit, lo sube con confirmación y cierra la spec.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
-- [ ] T098 Marcar spec como `released`
+- [x] T096 Aprobación humana para producción
+  - nota: no aplica: sin entorno de producción (`docs/deployment.md`, objetivo 5). Versión v0.3.0 sin despliegue, por decisión del usuario (2026-10-02).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+  - nota: no aplica: sin entornos. Integración en `main` con el PR #10 (merge commit `4f281e5`, mismo contenido que `5e2df53`); el usuario confirmó el CI en verde. Tag anotado `v0.3.0` sobre `4f281e5`, publicado el 2026-10-02.
+- [x] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

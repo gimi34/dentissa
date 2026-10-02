@@ -24,9 +24,9 @@ con antelación.
 - [ ] CA2 · Dado un paciente, cuando abre el detalle de una cita que no es suya, entonces no la ve (404).
 - [ ] CA3 · Dado un paciente, cuando agenda en `POST /cliente/agendar`, entonces el servicio es obligatorio y fija la duración, y no se aceptan fechas pasadas.
 - [ ] CA4 · Dada una cita pedida fuera del horario del dentista o solapada, cuando se envía, entonces se rechaza con la misma regla que usa el personal (spec 003). → reemplazado por 025 CA1
-- [ ] CA5 · Dada una cita propia en estado `agendada` o `confirmada`, cuando la cancela, entonces pasa a `cancelada`; en otro estado se rechaza.
+- [ ] CA5 · Dada una cita propia en estado `agendada` o `confirmada`, cuando la cancela, entonces pasa a `cancelada`; en otro estado se rechaza. → reemplazado por 026 CA7
 - [ ] CA6 (abuso) · Como paciente, intento cancelar o ver la cita de otro paciente cambiando el id → se rechaza. (Se cumple hoy: todas las consultas filtran por el paciente del usuario autenticado.)
-- [ ] CA7 (abuso) · Como admin, dentista o asistente, entro a `/cliente/*` → se rechaza con 403. **HOY NO SE CUMPLE: el grupo solo exige `auth`, no `role:cliente`.**
+- [ ] CA7 (abuso) · Como admin, dentista o asistente, entro a `/cliente/*` → se rechaza con 403. **HOY NO SE CUMPLE: el grupo solo exige `auth`, no `role:cliente`.** Atendido en parte por 026 (v0.3.0): la cancelación (`PATCH /cliente/citas/{id}/cancelar`) ya exige `role:cliente`; el resto del grupo → spec 015.
 
 ## Fuera de alcance
 - Reprogramar una cita (hay que cancelar y agendar de nuevo).
@@ -62,3 +62,4 @@ La cancelación por el cliente no deja actor en `historial_citas`. Ver `docs/obs
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-02 | Comportamiento modificado por 025 en v0.2.0 | /release |
+| 2026-10-02 | Comportamiento modificado por 026 en v0.3.0 | /release |

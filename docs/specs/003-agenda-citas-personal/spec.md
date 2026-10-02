@@ -26,15 +26,15 @@ dentista sin solaparlas y seguir el estado de cada cita hasta que se atiende o s
 - [ ] CA4 · Dada una cita nueva que se solapa con otra no cancelada ni `no_asistio` del mismo dentista, cuando se guarda, entonces se rechaza con error. → reemplazado por 025 CA4, CA5, CA6, CA7
 - [ ] CA5 · Dada una cita válida (duración 10–300 min, servicio opcional), cuando se guarda, entonces se crea en estado `agendada` con `creado_por` = usuario actual.
 - [ ] CA6 · Dado el detalle de una cita fuera de su alcance, cuando un dentista o asistente la abre, entonces recibe 403.
-- [ ] CA7 · Dado el detalle de una cita, cuando se cambia su estado (`PATCH …/estado`) a cualquiera de los 6 estados, entonces se guarda y el trigger añade una fila a `historial_citas`.
+- [ ] CA7 · Dado el detalle de una cita, cuando se cambia su estado (`PATCH …/estado`) a cualquiera de los 6 estados, entonces se guarda y el trigger añade una fila a `historial_citas`. → reemplazado por 026 CA1, CA2, CA3, CA4, CA5, CA6, CA9
 - [ ] CA8 · Dado un admin, cuando edita las notas internas (`PATCH /admin/citas/{id}/notas`), entonces se guardan; solo el admin las ve.
-- [ ] CA9 · Dado un admin, cuando "elimina" una cita (`DELETE /admin/citas/{id}`), entonces su estado pasa a `cancelada` sin borrarla.
+- [ ] CA9 · Dado un admin, cuando "elimina" una cita (`DELETE /admin/citas/{id}`), entonces su estado pasa a `cancelada` sin borrarla. → reemplazado por 026 CA6
 - [ ] CA10 (abuso) · Como dentista o asistente, abro el formulario de alta → solo veo los pacientes de mi alcance. **HOY NO SE CUMPLE: se listan todos los pacientes activos con teléfono y se lee `proxima_visita` de cualquier paciente.**
 - [x] CA11 (abuso) · Como dos usuarios que agendan el mismo hueco a la vez → solo una cita se guarda. Resuelto por 025 (v0.2.0) → reemplazado por 025 CA8
 
 ## Fuera de alcance
 - Recordatorios de cita (`recordatorio_enviado` existe pero nunca se escribe).
-- Grafo de transiciones de estado (hoy se permite cualquier cambio).
+- Grafo de transiciones de estado (hoy se permite cualquier cambio). → incorporado por 026 (v0.3.0)
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: notas del paciente e internas (salud), teléfono de pacientes.
@@ -72,3 +72,4 @@ no dejan rastro con actor. Ver brechas en `docs/observability.md`.
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-02 | Comportamiento modificado por 025 en v0.2.0 | /release |
+| 2026-10-02 | Comportamiento modificado por 026 en v0.3.0 | /release |

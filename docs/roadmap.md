@@ -72,6 +72,33 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 025/R16: actualizar en el plan de la 025 (TM2 y Trazabilidad) el nombre del test unido en T024.
   - 025/R17: las migraciones de la spec 013 deben crear `idx_citas_dentista` con ese nombre, porque
     `ReservaCitas` lo fuerza (lo cubre `ReservaConcurrenteTest`).
+- Deuda de la spec 026 (/review, aceptada sin tarea; liberada en v0.3.0):
+  - 026/R2: mensaje propio cuando se pide el mismo estado que ya tiene la cita (doble envío, dos
+    pestañas), en lugar del mensaje genérico de transición.
+  - 026/R3: tests del paciente en el borde exacto de la hora de inicio y con una cita agendada ya
+    empezada.
+  - 026/R6: dos aserciones fijan las fechas en UTC (deuda D4); actualizarlas con la spec que corrija D4.
+  - 026/R7: documentar en `CambioEstadoConcurrenteTest` que el bloqueo real llega como
+    `DeadlockException` (transacción anidada) y el 1205 de producción solo lo cubre el test simulado.
+  - 026/R8: limpieza robusta en `CambioEstadoConcurrenteTest` si `dentissa_test` conserva el trigger.
+  - 026/R9: quitar la rama `cliente → admin` del helper `cambiar` de `EscenarioEstadosCita`.
+  - 026/R11: derivar los destinos del admin de `CambiarEstadoCita` de `EstadosCita::TRANSICIONES`.
+  - 026/R12: `conPuedeCancelar` y `aviso_cancelar` deben usar la regla del servicio.
+  - 026/R13: una sola fuente para el texto de "aún no empieza" (`avisoDeEstado` y `antesDeTiempo`).
+  - 026/R14: etiquetas de estado fuera de la clase de excepción `CambioDeEstadoNoPermitido`.
+  - 026/R15: `autorizadoParaCita` (show y store) al Gate `gestionar-cita`, con comparación estricta,
+    en la 014.
+  - 026/R16: evitar consultas de alcance repetidas en `EstadosCita::disponibles()`.
+  - 026/R17: `gestionar-cita` es redundante en `CitasController::destroy`.
+  - 026/R18: excepción de dominio en lugar de `NotFoundHttpException` en `EstadosCita`.
+  - 026/R19: validar `CLINICA_ZONA_HORARIA` al arrancar (hoy un valor inválido da 500).
+  - 026/R21: corregir a `A06:2025` las categorías OWASP de TM3, TM4 y TM8 en el plan de la 026.
+  - 026/R22: asociar el error de `estado` al grupo de radios (`aria-describedby`) y llevarle el foco.
+  - 026/R23: unificar el patrón del error de `estado` con el resto de formularios de citas.
+  - 026/R24: contraste de "(ahora: X)" en la `legend` del formulario de estado.
+  - 026/R25: llevar los estilos en línea del formulario de estado a `citas.css`.
+  - 026/R27: el límite de 500 caracteres del motivo cuenta distinto los saltos de línea en el
+    navegador y en el servidor; normalizar antes de validar.
 - Enmienda MINOR de P2 (constitución): distinguir los cambios de comportamiento, que exigen un test
   que falle antes, de los tests de caracterización, que se comprueban rompiendo el código que
   protegen. Motivo: P2 necesitó excepción en la spec 024 (CA3–CA7) y en la 025 (CA2, CA3, CA6, CA7)
