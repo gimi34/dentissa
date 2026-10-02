@@ -55,7 +55,7 @@
                         <td>
                             <div style="display:flex;gap:4px;justify-content:flex-end">
                                 <a href="{{ route('cliente.citas.show', $cita->id) }}" class="btn btn-outline btn-sm">Ver</a>
-                                @if(in_array($cita->estado, ['agendada', 'confirmada']))
+                                @if($cita->puede_cancelar)
                                     <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" style="display:inline">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red)"

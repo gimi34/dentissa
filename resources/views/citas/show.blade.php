@@ -10,7 +10,7 @@
 @endphp
 
 @section('topbar-actions')
-    @if($rp === 'admin' && $cita->estado !== 'cancelada' && $cita->estado !== 'completada')
+    @if($rp === 'admin' && in_array('cancelada', $disponibles, true))
         <form action="{{ route('admin.citas.destroy', $cita->id) }}" method="POST" style="display:inline">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-ghost"
@@ -110,7 +110,7 @@
         @endif
 
         {{-- Historial de cambios --}}
-        <div>
+        <div id="historial">
             <div class="section-head">
                 <span class="section-title">Historial de cambios</span>
             </div>
@@ -126,10 +126,10 @@
                                 <div class="timeline-content">
                                     <div class="timeline-title">
                                         @if($h->estado_anterior && $h->estado_nuevo)
-                                            <span style="color:var(--text-muted)">{{ ucfirst(str_replace('_',' ',$h->estado_anterior)) }}</span>
-                                            → <span style="color:var(--p600)">{{ ucfirst(str_replace('_',' ',$h->estado_nuevo)) }}</span>
+                                            <span style="color:var(--text-muted)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
+                                            → <span style="color:var(--p600)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
                                         @elseif($h->estado_nuevo)
-                                            Estado: <span style="color:var(--p600)">{{ ucfirst(str_replace('_',' ',$h->estado_nuevo)) }}</span>
+                                            Estado: <span style="color:var(--p600)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
                                         @else
                                             Cambio registrado
                                         @endif
@@ -138,7 +138,7 @@
                                         <div class="timeline-sub">{{ $h->motivo }}</div>
                                     @endif
                                     <div style="font-size:11.5px;color:var(--text-light);margin-top:2px">
-                                        por {{ trim($h->cambiado_por_nombre) ?: 'Sistema (trigger)' }}
+                                        por {{ trim($h->cambiado_por_nombre) ?: 'Sistema' }}
                                     </div>
                                 </div>
                             </div>
@@ -161,31 +161,46 @@
         <div id="estado">
             <div class="section-head"><span class="section-title">Cambiar estado</span></div>
             <div class="card">
+                @error('estado')
+                    <div class="field-hint field-hint-error" role="alert" style="margin:0 0 12px">{{ $message }}</div>
+                @enderror
+
+                @if($aviso)
+                    <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin:0">{{ $aviso }}</p>
+                @endif
+
+                @if($disponibles !== [])
                 <form action="{{ route("$rp.citas.estado", $cita->id) }}" method="POST">
                     @csrf @method('PATCH')
 
-                    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-                        @foreach($estados as $e)
-                            <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid {{ $cita->estado === $e ? 'var(--p300)' : 'var(--border)' }};background:{{ $cita->estado === $e ? 'var(--p100)' : 'var(--white)' }};cursor:pointer;transition:all .15s">
-                                <input type="radio" name="estado" value="{{ $e }}"
-                                       {{ $cita->estado === $e ? 'checked' : '' }}
-                                       style="accent-color:var(--p400)">
-                                @include('partials.badge-estado', ['estado' => $e])
-                            </label>
-                        @endforeach
-                    </div>
+                    <fieldset style="border:0;padding:0;margin:0 0 14px">
+                        <legend class="field-label" style="margin-bottom:8px">
+                            Nuevo estado <span style="font-weight:400;text-transform:none;letter-spacing:0">(ahora: {{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($cita->estado) }})</span>
+                        </legend>
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                            @foreach($disponibles as $e)
+                                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--white);cursor:pointer;transition:all .15s">
+                                    <input type="radio" name="estado" value="{{ $e }}" required
+                                           {{ old('estado') === $e ? 'checked' : '' }}
+                                           style="accent-color:var(--p400)">
+                                    @include('partials.badge-estado', ['estado' => $e])
+                                </label>
+                            @endforeach
+                        </div>
+                    </fieldset>
 
                     <div style="margin-bottom:12px">
-                        <label class="field-label">Motivo del cambio <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
-                        <textarea name="motivo" class="field" rows="2"
+                        <label class="field-label" for="motivo">Motivo del cambio <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+                        <textarea name="motivo" id="motivo" class="field" rows="2" maxlength="500"
                             placeholder="Ej: Paciente confirmó por teléfono..."
-                            style="resize:none"></textarea>
+                            style="resize:none">{{ old('motivo') }}</textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
                         Actualizar estado
                     </button>
                 </form>
+                @endif
             </div>
         </div>
 

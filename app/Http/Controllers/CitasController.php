@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
+use App\Agenda\EstadosCita;
 use App\Agenda\ReservaCitas;
+use App\Autorizacion\AlcanceClinico;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 
 class CitasController extends Controller
 {
@@ -42,23 +45,16 @@ class CitasController extends Controller
             );
     }
 
-    // ── Alcance por rol ────────────────────────────────────────────────
+    // ── Alcance por rol (misma regla que los Gates de la spec 026) ─────
     private function personalIdPropio(): ?string
     {
-        return DB::table('personal')->where('usuario_id', auth()->id())->value('id');
+        return app(AlcanceClinico::class)->personalId(auth()->user());
     }
 
+    // Solo se usa con el rol asistente: sus dentistas asignados.
     private function dentistaIdsAsistente(): array
     {
-        $personalId = $this->personalIdPropio();
-        if (! $personalId) {
-            return [];
-        }
-
-        return DB::table('asistente_dentista')
-            ->where('asistente_id', $personalId)
-            ->pluck('dentista_id')
-            ->all();
+        return app(AlcanceClinico::class)->dentistasDelAlcance(auth()->user()) ?? [];
     }
 
     // Aplica la restricción de citas visibles según el rol autenticado
@@ -274,7 +270,7 @@ class CitasController extends Controller
     }
 
     // ── SHOW ───────────────────────────────────────────────────────────
-    public function show(string $id)
+    public function show(string $id, EstadosCita $estados)
     {
         $cita = $this->queryBase()->where('citas.id', $id)->first();
 
@@ -295,51 +291,59 @@ class CitasController extends Controller
             ->orderByDesc('fecha')
             ->get();
 
-        $estados = ['agendada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio'];
+        // Solo las transiciones que este usuario puede hacer ahora (spec 026).
+        $disponibles = $estados->disponibles(auth()->user(), $cita);
+        $aviso = $this->avisoDeEstado($cita, $disponibles, $estados->haEmpezado($cita), $estados->inicio($cita));
 
-        return view('citas.show', compact('cita', 'historial', 'estados'));
+        return view('citas.show', compact('cita', 'historial', 'disponibles', 'aviso'));
+    }
+
+    // Texto que sustituye al formulario de estado cuando no hay ningún cambio disponible.
+    private function avisoDeEstado(object $cita, array $disponibles, bool $empezada, Carbon $inicio): ?string
+    {
+        if (in_array($cita->estado, EstadosCita::CERRADOS, true)) {
+            return CambioDeEstadoNoPermitido::cerrada($cita->estado)->getMessage();
+        }
+        if ($disponibles !== []) {
+            return null;
+        }
+        if (! $empezada) {
+            return 'Podrás marcarla como en curso o no asistida a partir de las '
+                .$inicio->format('H:i').' del '.$inicio->format('d/m/Y').'.';
+        }
+        if ($cita->estado === 'en_curso') {
+            return 'Solo el dentista o la administración pueden completar esta cita.';
+        }
+
+        return 'No tienes cambios de estado disponibles para esta cita.';
     }
 
     // ── UPDATE ESTADO ──────────────────────────────────────────────────
-    public function updateEstado(Request $request, string $id)
+    public function updateEstado(Request $request, string $id, EstadosCita $estados)
     {
-        $dentistaId = DB::table('citas')->where('id', $id)->value('dentista_id');
-        if (! $dentistaId) {
+        $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id', 'estado', 'fecha_hora']);
+        if (! $cita) {
             abort(404);
         }
-        if (! $this->autorizadoParaCita($dentistaId)) {
-            abort(403);
-        }
+        // El alcance va antes de validar: fuera de alcance es 403 con cualquier entrada.
+        Gate::authorize('gestionar-cita', $cita);
 
+        // Las notas internas no se aceptan aquí (spec 026, CA11).
         $data = $request->validate([
-            'estado' => 'required|in:agendada,confirmada,en_curso,completada,cancelada,no_asistio',
+            'estado' => 'required|string|in:'.implode(',', ['agendada', ...array_keys(EstadosCita::TRANSICIONES)]),
             'motivo' => 'nullable|string|max:500',
-            'notas_internas' => 'nullable|string|max:1000',
+        ], [
+            'estado.required' => 'Elige un estado válido.',
+            'estado.string' => 'Elige un estado válido.',
+            'estado.in' => 'Elige un estado válido.',
         ]);
 
-        $updates = [
-            'estado' => $data['estado'],
-            'actualizado_en' => now(),
-        ];
+        Gate::authorize('cambiar-estado-cita', [$cita, $data['estado']]);
 
-        // Guardar nota interna si se envía
-        if (! empty($data['notas_internas'])) {
-            $updates['notas_internas'] = $data['notas_internas'];
-        }
-
-        DB::table('citas')->where('id', $id)->update($updates);
-
-        // El trigger trg_historial_cita en MySQL registra el cambio automáticamente,
-        // pero si quieres guardar el motivo manualmente también:
-        if (! empty($data['motivo'])) {
-            DB::table('historial_citas')->insert([
-                'id' => (string) Str::uuid(),
-                'cita_id' => $id,
-                'cambiado_por' => auth()->id(),
-                'estado_nuevo' => $data['estado'],
-                'motivo' => $data['motivo'],
-                'fecha' => now(),
-            ]);
+        try {
+            $estados->cambiar($id, $data['estado'], auth()->user(), $data['motivo'] ?? null);
+        } catch (CambioDeEstadoNoPermitido $e) {
+            return back()->withErrors(['estado' => $e->getMessage()]);
         }
 
         return back()->with('success', 'Estado actualizado correctamente.');
@@ -361,12 +365,21 @@ class CitasController extends Controller
     }
 
     // ── DESTROY ────────────────────────────────────────────────────────
-    public function destroy(string $id)
+    // "Eliminar" es cancelar, con las mismas reglas que el cambio de estado (spec 026, CA6).
+    public function destroy(string $id, EstadosCita $estados)
     {
-        DB::table('citas')->where('id', $id)->update([
-            'estado' => 'cancelada',
-            'actualizado_en' => now(),
-        ]);
+        $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id', 'estado', 'fecha_hora']);
+        if (! $cita) {
+            abort(404);
+        }
+        Gate::authorize('gestionar-cita', $cita);
+        Gate::authorize('cambiar-estado-cita', [$cita, 'cancelada']);
+
+        try {
+            $estados->cambiar($id, 'cancelada', auth()->user(), null);
+        } catch (CambioDeEstadoNoPermitido $e) {
+            return back()->withErrors(['estado' => $e->getMessage()]);
+        }
 
         return redirect()->route('admin.citas')
             ->with('success', 'Cita cancelada.');
