@@ -1,6 +1,6 @@
 ---
 spec: 026-estados-cita
-status: approved   # aprobado por el usuario el 2026-10-02
+status: approved   # aprobado de nuevo por el usuario el 2026-10-02 tras /plan --fix A1,A2,A3,A5,A11,A12,A13,A17
 created: 2026-10-02
 ---
 
@@ -20,7 +20,9 @@ estado anterior, nuevo y motivo. Para eso se retira el trigger `trg_historial_ci
 escribe otra sin autor.
 
 Quién puede pedir cada transición lo decide el Gate `cambiar-estado-cita`, que también comprueba el
-alcance. Para el alcance usa `App\Autorizacion\AlcanceClinico::dentistasDelAlcance()`, con la firma
+alcance; antes de validar la entrada, el Gate `gestionar-cita` comprueba solo el alcance, para que
+el personal fuera de alcance reciba 403 con cualquier entrada. El rol va primero: un cambio que el
+rol no puede pedir se rechaza por permisos aunque la cita esté cerrada. Para el alcance usa `App\Autorizacion\AlcanceClinico::dentistasDelAlcance()`, con la firma
 que diseña la spec 014 (ADR 0003). Los tres puntos de entrada usan el mismo servicio y el mismo
 Gate:
 - el cambio de estado del personal;
@@ -33,9 +35,9 @@ y ese momento.
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste |
 |---|---|---|
-| P1 Spec aprobada antes de código | ✅ | Spec 026 `approved`, aprobada de nuevo el 2026-10-02 tras citar OB5 y ampliar CA11. |
+| P1 Spec aprobada antes de código | ✅ | Spec 026 `approved`, aprobada de nuevo el 2026-10-02 tras citar OB5 y ampliar CA11, y otra vez tras citar RS2 y ajustar CA2, CA6 y CA7 (`/analyze` ronda 1). |
 | P2 Test que falla antes y pasa después | ✅ | Cada CA tiene al menos un test que falla hoy (ver Estrategia de pruebas): hoy se acepta cualquier par de estados, no hay regla de rol, de tiempo ni de bloqueo, quedan dos filas de historial y `notas_internas` se guarda. Los casos que ya se cumplen hoy dentro de un CA se comprueban rompiendo el código un momento: el estado inexistente (CA11), el paciente con una cita en otro estado (CA7), el personal fuera de alcance (CA4, CA5) y el paciente en la ruta del personal. Todos usan `DatabaseTransactions` contra `dentissa_test`. La única escritura confirmada es la de la segunda conexión de `CambioEstadoConcurrenteTest`, que se borra al final, como en la 025. |
-| P3 Autorización en servidor, por rol y recurso | ✅ | Los tres endpoints modificados verifican el rol con middleware: `role:admin\|dentista\|asistente` ya en sus grupos, y `role:cliente` nuevo en `PATCH /cliente/citas/{id}/cancelar`. El alcance y la transición se verifican con el Gate `cambiar-estado-cita`. `EstadosCitaRolesTest` cubre, por rol y acción, el caso permitido y el denegado (403; 404 para la cita de otro paciente). |
+| P3 Autorización en servidor, por rol y recurso | ❌ aceptado: tres endpoints GET se modifican solo para pasar datos a la vista y conservan su autorización actual. `GET /{rol}/citas/{id}` (pasa `$disponibles`, `$empezada` e `$inicio`) verifica el rol con middleware y el alcance con `autorizadoParaCita`, sin Gate → spec 014. `GET /cliente/citas` y `GET /cliente/citas/{id}` (pasan `puede_cancelar`) siguen en `/cliente` sin `role:cliente`, con el alcance en la consulta por `paciente_id` → spec 015 — aprobado por el usuario el 2026-10-02 | Los tres endpoints que cambian estado sí cumplen. Verifican el rol con middleware: `role:admin\|dentista\|asistente` ya en sus grupos, y `role:cliente` nuevo en `PATCH /cliente/citas/{id}/cancelar`. El alcance se verifica con el Gate `gestionar-cita` antes de validar, y la transición con `cambiar-estado-cita`. `EstadosCitaRolesTest` cubre, por rol y acción, el caso permitido y el denegado (403; 404 para la cita de otro paciente), también en "eliminar". `autorizadoParaCita` y `aplicarAlcanceRol` delegan en `AlcanceClinico` (A11), así que el alcance de citas tiene una sola regla. |
 | P4 Entrada validada y SQL con bindings | ✅ | `estado` → `required\|string\|in:` de los 6 estados; `motivo` → `nullable\|string\|max:500`; `notas_internas` ya no se lee. Consultas con Query Builder y bindings. La migración usa `DB::unprepared` con DDL fijo, sin entrada del usuario. En Blade, el motivo y los nombres se muestran solo con la salida escapada de Blade (dobles llaves). |
 | P5 Nada sensible en el repo | ✅ | Código, tests y documentación; `.env.example` solo gana `CLINICA_ZONA_HORARIA` con su valor por defecto público. |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas. Línea base del 2026-10-02: `composer audit --locked` sin críticas ni altas (un aviso medio de `phpseclib`, ignorado por la política del CI; dos bajos cubiertos por EX1) y `npm audit` en 0. |
@@ -45,12 +47,12 @@ y ese momento.
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
-| `app/Agenda/EstadosCita.php` (nuevo) | Constantes `TRANSICIONES` (estado nuevo → estados de origen), `CERRADOS` (`completada`, `cancelada`, `no_asistio`) y `REQUIEREN_INICIO` (`en_curso`, `no_asistio`). `cambiar(string $citaId, string $nuevo, Usuario $actor, ?string $motivo): void` hace en una transacción: `lockForUpdate()` de la cita; si ya no existe, 404; si está cerrada, `cerrada`; si el origen no está en `TRANSICIONES[$nuevo]`, `transicion`; si es `en_curso`/`no_asistio` y aún no empieza, `antesDeTiempo`; si el actor es paciente, cancela y ya empezó, `yaEmpezo`; después `update` de `estado` y `actualizado_en`, e `insert` en `historial_citas`. Los errores 1205/1213 y `DeadlockException` → `ocupada`; cualquier otro error se relanza. `disponibles(Usuario, object $cita): array` devuelve, en el orden de la tabla, los estados nuevos que pasan el Gate y las reglas sin bloquear (para las vistas). `haEmpezado(object $cita): bool` compara `fecha_hora`, interpretada en `config('clinica.zona_horaria')`, con `now()` en esa zona (borde incluido: a la hora exacta ya empezó) | Medio: es la regla central; tests de cada regla y de concurrencia |
-| `app/Agenda/CambioDeEstadoNoPermitido.php` (nuevo) | `RuntimeException` con `public readonly string $tipo` (`cerrada`, `transicion`, `antesDeTiempo`, `yaEmpezo`, `ocupada`) y fábricas con los mensajes de Contratos | Bajo |
-| `app/Autorizacion/AlcanceClinico.php` (nuevo) | Solo `personalId(Usuario): ?string` y `dentistasDelAlcance(Usuario): ?array` (`null` = admin sin restricción; dentista → `[propio]`; asistente → asignados; otro rol → `[]`), con la firma del plan de la 014. La 014 añadirá el resto de métodos (D3) | Bajo: lógica idéntica a `autorizadoParaCita` |
-| `app/Autorizacion/CambiarEstadoCita.php` (nuevo) | `autorizar(Usuario $usuario, object $cita, string $nuevo): Response`. Personal fuera de alcance → `deny('No tienes acceso a esta cita.')` (403, como hoy). Paciente con una cita ajena → `denyAsNotFound()` (404, como hoy). Matriz por rol: admin → los 5 estados destino; dentista → `confirmada`, `en_curso`, `completada`, `no_asistio`; asistente → `confirmada`, `cancelada`, `no_asistio`; cliente → `cancelada`. Fuera de la matriz → `deny(<mensaje del rol>)` (403). Un estado destino `agendada` no está en ninguna matriz: no es destino de ninguna transición, y lo rechaza la regla de estado | Medio: tests por rol |
-| `app/Providers/AppServiceProvider.php` | `Gate::define('cambiar-estado-cita', [CambiarEstadoCita::class, 'autorizar'])` en `boot()` | Bajo: la 020 y la 014 añaden más registros al mismo método |
-| `app/Http/Controllers/CitasController.php` | `show`: quita `$estados` y pasa `$disponibles = EstadosCita::disponibles(...)`, `$empezada` y `$inicio` para los avisos. `updateEstado(Request, EstadosCita)`: carga la cita (404), valida `estado` y `motivo` (sin `notas_internas`), `Gate::authorize('cambiar-estado-cita', [$cita, $estado])` y llama a `cambiar`; `CambioDeEstadoNoPermitido` → `back()->withErrors(['estado' => $e->getMessage()])`. `destroy(string $id, EstadosCita)`: 404 si no existe, el mismo Gate con `cancelada`, el mismo servicio con motivo `null` y, si se rechaza, el mismo `back()->withErrors`. `autorizadoParaCita` y `aplicarAlcanceRol` no cambian (los usan `index`, `show` y `store`; la 014 los migra) | Medio |
+| `app/Agenda/EstadosCita.php` (nuevo) | `__construct(private ConnectionInterface $db)`, inyectado por el contenedor como `ReservaCitas`, para que los tests puedan pasar una conexión simulada. Constantes `TRANSICIONES` (estado nuevo → estados de origen), `CERRADOS` (`completada`, `cancelada`, `no_asistio`) y `REQUIEREN_INICIO` (`en_curso`, `no_asistio`). `cambiar(string $citaId, string $nuevo, Usuario $actor, ?string $motivo): void` hace en una transacción: `lockForUpdate()` de la cita; si ya no existe, 404; si está cerrada, `cerrada`; si el destino es `agendada`, `vuelta`; si el origen no está en `TRANSICIONES[$nuevo]`, `transicion`; si es `en_curso`/`no_asistio` y aún no empieza, `antesDeTiempo`; si el actor es paciente, cancela y ya empezó, `yaEmpezo`; después `update` de `estado` y `actualizado_en`, e `insert` en `historial_citas`. Los errores 1205/1213 y `DeadlockException` → `ocupada`; cualquier otro error se relanza. `disponibles(Usuario, object $cita): array` devuelve, en el orden de la tabla, los estados nuevos que pasan el Gate y las reglas sin bloquear (para las vistas). `haEmpezado(object $cita): bool` compara `fecha_hora`, interpretada en `config('clinica.zona_horaria')`, con `now()` en esa zona (borde incluido: a la hora exacta ya empezó) | Medio: es la regla central; tests de cada regla y de concurrencia |
+| `app/Agenda/CambioDeEstadoNoPermitido.php` (nuevo) | `RuntimeException` con `public readonly string $tipo` (`cerrada`, `vuelta`, `transicion`, `antesDeTiempo`, `yaEmpezo`, `ocupada`) y fábricas con los mensajes de Contratos | Bajo |
+| `app/Autorizacion/AlcanceClinico.php` (nuevo) | Solo `personalId(Usuario): ?string` y `dentistasDelAlcance(Usuario): ?array` (`null` = admin sin restricción; dentista → `[propio]`; asistente → asignados; otro rol → `[]`), con la firma del plan de la 014. La 014 añadirá el resto de métodos (D3). `CitasController` delega en ella su alcance (A11) | Bajo: lógica idéntica a la de los helpers actuales de `CitasController` |
+| `app/Autorizacion/CambiarEstadoCita.php` (nuevo) | `alcance(Usuario $usuario, object $cita): Response`, que solo comprueba el alcance, y `autorizar(Usuario $usuario, object $cita, string $nuevo): Response`, que comprueba el alcance y la matriz. Personal fuera de alcance → `deny('No tienes acceso a esta cita.')` (403, como hoy). Paciente con una cita ajena → `denyAsNotFound()` (404, como hoy). Matriz por rol: admin → los 5 estados destino; dentista → `confirmada`, `en_curso`, `completada`, `no_asistio`; asistente → `confirmada`, `cancelada`, `no_asistio`; cliente → `cancelada`. Fuera de la matriz → `deny(<mensaje del rol>)` (403), también si la cita está cerrada ("rol primero", supuesto de la spec). Si el destino no es un estado de `TRANSICIONES` (solo `agendada`), `autorizar` comprueba solo el alcance y deja el rechazo al servicio (`cerrada` o `vuelta`) | Medio: tests por rol |
+| `app/Providers/AppServiceProvider.php` | `Gate::define('gestionar-cita', [CambiarEstadoCita::class, 'alcance'])` y `Gate::define('cambiar-estado-cita', [CambiarEstadoCita::class, 'autorizar'])` en `boot()` | Bajo: la 020 y la 014 añaden más registros al mismo método |
+| `app/Http/Controllers/CitasController.php` | `show`: quita `$estados` y pasa `$disponibles = EstadosCita::disponibles(...)`, `$empezada` y `$inicio` para los avisos. `updateEstado(Request, EstadosCita)`: carga la cita (404), `Gate::authorize('gestionar-cita', $cita)` (403 fuera de alcance, antes de validar), valida `estado` y `motivo` (sin `notas_internas`), `Gate::authorize('cambiar-estado-cita', [$cita, $estado])` y llama a `cambiar`; `CambioDeEstadoNoPermitido` → `back()->withErrors(['estado' => $e->getMessage()])`. `destroy(string $id, EstadosCita)`: 404 si no existe, `gestionar-cita` y `cambiar-estado-cita` con `cancelada`, el mismo servicio con motivo `null` y, si se rechaza, el mismo `back()->withErrors`. `personalIdPropio` y `dentistaIdsAsistente` pasan a delegar en `AlcanceClinico::personalId()` y `dentistasDelAlcance()`, así que `autorizadoParaCita`, `aplicarAlcanceRol` y los desplegables de `index` y `create` usan la misma regla que el Gate, sin cambiar su comportamiento (A11; la 014 no los toca) | Medio |
 | `app/Http/Controllers/ClienteCitasController.php` | `cancelar(string $id, EstadosCita)`: carga la cita, `Gate::authorize('cambiar-estado-cita', [$cita, 'cancelada'])` (ajena → 404) y llama a `cambiar` con el paciente como actor. Los tipos `cerrada` y `transicion` → `back()->with('error', 'Esta cita ya no se puede cancelar. Si necesitas ayuda, llama a la clínica.')`; los demás tipos, con su mensaje. `index` y `show` pasan `puede_cancelar` por cita (`in_array(estado, [agendada, confirmada]) && ! haEmpezado`) | Bajo |
 | `routes/web.php` | `->middleware('role:cliente')` en la ruta `cliente.citas.cancelar` | Bajo: el personal recibe 403 en lugar de 404 |
 | `config/clinica.php` (nuevo), `.env.example` | `'zona_horaria' => env('CLINICA_ZONA_HORARIA', 'America/Mexico_City')`; la variable, documentada en `.env.example` | Bajo |
@@ -77,6 +79,7 @@ y ese momento.
 | Caso | Mensaje |
 |---|---|
 | `cerrada` (CA2) | "Esta cita ya está {completada \| cancelada \| marcada como no asistida} y no puede cambiar de estado. Para volver a atender al paciente, agenda una cita nueva." |
+| `vuelta` (CA3, CA11; destino `agendada` con la cita abierta) | "Una cita no puede volver a «Agendada». Si hay que moverla, cancélala y agenda una nueva." |
 | `transicion` (CA3) | "Solo se puede pasar a «{Nuevo}» desde «{Origen}»." o, con varios orígenes, "…desde «Agendada» o «Confirmada»." |
 | `antesDeTiempo` (CA8) | "La cita aún no empieza. Podrás marcarla como «{Nuevo}» a partir de las {H:i} del {d/m/Y}." |
 | `yaEmpezo` (CA7) | "Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica." |
@@ -135,21 +138,26 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
   - `test_una_cita_cerrada_no_cambia_de_estado` (CA2): desde los 3 cerrados, con el mensaje `cerrada`.
   - `test_una_transicion_no_permitida_indica_desde_que_estados_se_permite` (CA3): agendada → completada y en curso → cancelada, con el mensaje exacto.
   - `test_en_curso_o_no_asistio_antes_de_la_hora_se_rechaza` y `test_a_la_hora_exacta_de_inicio_ya_se_puede_iniciar` (CA8).
-  - `test_la_hora_de_inicio_se_compara_en_la_zona_de_la_clinica` (CA7, CA8): una cita de las 10:00 locales con `now` = 15:30 UTC (09:30 en Ciudad de México) aún no empieza; con 16:00 UTC ya empezó. Falla si se compara en UTC.
+  - `test_la_hora_de_inicio_se_compara_en_la_zona_de_la_clinica` (CA8; solo flujos del personal, "iniciar" como dentista): una cita de las 10:00 locales con `now` = 15:30 UTC (09:30 en Ciudad de México) aún no empieza; con 16:00 UTC ya empezó. Falla si se compara en UTC.
   - `test_un_estado_inexistente_se_rechaza_sin_error_500` (CA11; ya se cumple hoy y se comprueba rompiendo la regla `in:`).
-  - `test_reabrir_una_cita_cancelada_se_rechaza` (CA11).
+  - `test_reabrir_una_cita_cancelada_se_rechaza` (CA11): como admin, cancelada → agendada y cancelada → confirmada reciben el mensaje `cerrada`.
+  - `test_volver_a_agendada_nunca_se_permite` (CA3, CA11): como admin, confirmada → agendada recibe el mensaje `vuelta`, sin cambios.
   - `test_las_notas_internas_enviadas_con_el_estado_no_cambian` (CA11, TM6): para admin, dentista y asistente.
 - **Roles** (`EstadosCitaRolesTest`):
   - `test_el_dentista_confirma_inicia_completa_y_marca_no_asistio_en_sus_citas` (CA4);
   - `test_el_dentista_no_puede_cancelar_su_cita` (CA4, 403 sin cambios; falla hoy);
   - `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista` (403, ya se cumple; rompiendo el alcance);
+  - `test_fuera_de_alcance_con_estado_invalido_responde_403` (A5: dentista y asistente fuera de alcance con `estado` vacío o inexistente → 403 sin cambios; ya se cumple hoy y se comprueba moviendo un momento la validación antes del alcance);
+  - `test_un_rol_sin_la_transicion_recibe_403_aunque_la_cita_este_cerrada` ("rol primero": dentista con una cita completada pide `cancelada` → 403 con el mensaje del rol);
+  - `test_el_alcance_del_listado_y_del_detalle_no_cambia` (A11, caracterización: el dentista solo ve sus citas en el listado y recibe 403 en el detalle de otra; el asistente igual con dentistas no asignados; se comprueba rompiendo un momento `dentistasDelAlcance`);
   - `test_el_asistente_confirma_cancela_y_marca_no_asistio_en_citas_de_sus_dentistas` (CA5);
   - `test_el_asistente_no_puede_iniciar_ni_completar` (CA5, 403; falla hoy);
   - `test_el_asistente_no_puede_cambiar_citas_de_dentistas_no_asignados` (403);
   - `test_eliminar_cita_es_una_cancelacion_con_las_mismas_reglas` (CA6: agendada → cancelada; completada → mensaje `cerrada`; falla hoy);
   - `test_eliminar_una_cita_inexistente_responde_404`;
+  - `test_solo_el_admin_puede_eliminar_una_cita` (P3: dentista, asistente y paciente → 403 en `DELETE /admin/citas/{id}`, sin cambios; ya se cumple con `role:admin`, se comprueba rompiendo un momento el middleware);
   - `test_el_paciente_cancela_su_cita_antes_de_que_empiece` (CA7);
-  - `test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo` (CA7; falla hoy);
+  - `test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo` (CA7; falla hoy): una cita de las 10:00 locales con `now` = 16:30 UTC se rechaza con `yaEmpezo`; con 15:30 UTC se cancela (comprueba también la zona horaria en el flujo del paciente);
   - `test_el_paciente_no_puede_cancelar_una_cita_en_otro_estado` (CA7, ya se cumple);
   - `test_el_paciente_no_puede_cancelar_la_cita_de_otro` (404);
   - `test_el_personal_no_puede_usar_la_cancelacion_del_paciente` (403; falla hoy, responde 404);
@@ -167,7 +175,7 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
   - `test_un_interbloqueo_se_convierte_en_mensaje` (TM5): conexión simulada con 1205, 1213 y `DeadlockException`.
   - `test_otro_error_de_base_de_datos_no_se_oculta`: el 1452 se relanza.
 - **Vistas** (`EstadosCitaVistasTest`): una prueba por fila de "Qué ve cada rol".
-- **Requisito de tiempo:** la suite de la 026 debe correr en menos de 10 s; se mide en T092 con `--filter` sobre los 5 archivos.
+- **Requisito de tiempo:** la suite de la 026 debe correr en menos de 10 s; se mide en T040 con `--filter` sobre los 5 archivos.
 - **Base de tests:** la migración se aplica a `dentissa_test` con
   `docker compose exec -e DB_DATABASE=dentissa_test app php artisan migrate --force`. El CI ya
   ejecuta `migrate` tras cargar el volcado.
@@ -176,15 +184,15 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
 | TM1 | Elevation: un dentista cancela o un asistente inicia o completa manipulando la petición | A01:2025 | `updateEstado` | Gate `cambiar-estado-cita` con matriz por rol | `EstadosCitaRolesTest::test_el_dentista_no_puede_cancelar_su_cita`, `test_el_asistente_no_puede_iniciar_ni_completar` |
-| TM2 | Elevation / divulgación: cambiar el estado de una cita fuera del alcance (otro dentista, otro paciente) | A01:2025 | los 3 endpoints | Alcance en el Gate (`AlcanceClinico`): 403 al personal, 404 al paciente | `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista`, `test_el_asistente_no_puede_cambiar_citas_de_dentistas_no_asignados`, `test_el_paciente_no_puede_cancelar_la_cita_de_otro` |
-| TM3 | Tampering: reabrir una cita cerrada o saltarse estados (p. ej. reocupar un hueco ya liberado) | A04:2025 | `EstadosCita::cambiar` | Tabla de transiciones y estados cerrados, evaluados en el servidor | `EstadosCitaTransicionesTest::test_solo_se_aceptan_las_transiciones_de_la_tabla`, `test_reabrir_una_cita_cancelada_se_rechaza` |
+| TM2 | Elevation / divulgación: cambiar el estado de una cita fuera del alcance (otro dentista, otro paciente) | A01:2025 | los 3 endpoints | Alcance en el Gate (`AlcanceClinico`): 403 al personal, 404 al paciente | `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista`, `test_el_asistente_no_puede_cambiar_citas_de_dentistas_no_asignados`, `test_el_paciente_no_puede_cancelar_la_cita_de_otro`, `test_fuera_de_alcance_con_estado_invalido_responde_403` |
+| TM3 | Tampering: reabrir una cita cerrada o saltarse estados (p. ej. reocupar un hueco ya liberado) | A04:2025 | `EstadosCita::cambiar` | Tabla de transiciones y estados cerrados, evaluados en el servidor | `EstadosCitaTransicionesTest::test_solo_se_aceptan_las_transiciones_de_la_tabla`, `test_reabrir_una_cita_cancelada_se_rechaza`, `test_volver_a_agendada_nunca_se_permite` |
 | TM4 | Tampering: dos cambios incompatibles simultáneos se aplican los dos | A04:2025 | `EstadosCita::cambiar` | `lockForUpdate()` de la cita antes de leer su estado, en la misma transacción que la escritura | `CambioEstadoConcurrenteTest::test_un_cambio_se_evalua_contra_el_estado_ya_guardado_por_otro`, `test_el_bloqueo_de_la_cita_se_toma_antes_de_leer_su_estado` |
 | TM5 | Denial of service: bloqueo agotado o interbloqueo que acaba en 500 | A10:2025 | `EstadosCita::cambiar` | 1205/1213 y `DeadlockException` → mensaje `ocupada`, sin cambios ni logs | `test_mientras_otro_tiene_la_cita_bloqueada_no_hay_error_500`, `test_un_interbloqueo_se_convierte_en_mensaje` |
 | TM6 | Tampering: sobrescribir las notas internas a través del cambio de estado | A01:2025 | `updateEstado` | `notas_internas` no se valida ni se escribe | `EstadosCitaTransicionesTest::test_las_notas_internas_enviadas_con_el_estado_no_cambian` |
 | TM7 | Repudiation: un cambio sin autor, o con dos versiones contradictorias en el historial | A09:2025 | `EstadosCita::cambiar`, migración | Una sola fila con autor en la misma transacción; trigger retirado | `HistorialCitaTest::test_cada_cambio_aceptado_deja_una_sola_entrada_con_autor`, `test_un_rechazo_no_deja_entrada_en_el_historial` |
 | TM8 | Tampering: marcar en curso o no asistida antes de la hora, o cancelar como paciente una cita ya empezada | A04:2025 | `EstadosCita::haEmpezado` | Hora del servidor en la zona de la clínica; el cliente no envía la hora | `test_en_curso_o_no_asistio_antes_de_la_hora_se_rechaza`, `test_la_hora_de_inicio_se_compara_en_la_zona_de_la_clinica`, `test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo` |
 | TM9 | Information disclosure: el motivo (texto libre, posible dato de salud) en los logs | A09:2025 | `EstadosCita`, controladores | Sin logs nuevos; residuo de P8 aceptado (→ 023) | `HistorialCitaTest::test_ni_el_cambio_ni_el_rechazo_escriben_datos_en_logs` |
-| TM10 | Elevation: usar la ruta de otro rol (el personal en la cancelación del paciente, el paciente en la del personal) | A01:2025 | `routes/web.php` | `role:cliente` en la cancelación del paciente; `role:` existentes en el personal | `test_el_personal_no_puede_usar_la_cancelacion_del_paciente`, `test_el_paciente_no_puede_usar_el_cambio_de_estado_del_personal` |
+| TM10 | Elevation: usar la ruta de otro rol (el personal en la cancelación del paciente, el paciente en la del personal) | A01:2025 | `routes/web.php` | `role:cliente` en la cancelación del paciente; `role:` existentes en el personal | `test_el_personal_no_puede_usar_la_cancelacion_del_paciente`, `test_el_paciente_no_puede_usar_el_cambio_de_estado_del_personal`, `test_solo_el_admin_puede_eliminar_una_cita` |
 | TM11 | Tampering (XSS): un motivo con HTML que se ejecuta al ver el historial | A05:2025 | `citas/show.blade.php` | Salida escapada de Blade (dobles llaves) | `HistorialCitaTest::test_el_motivo_se_muestra_escapado` |
 
 ## Trazabilidad
@@ -192,25 +200,25 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
 |---|---|---|
 | CA1: solo las 7 transiciones de la tabla | `EstadosCita`, `CitasController@updateEstado` | Feature `EstadosCitaTransicionesTest::test_solo_se_aceptan_las_transiciones_de_la_tabla` |
 | CA2: estados cerrados rechazados con mensaje | `EstadosCita`, `CambioDeEstadoNoPermitido` | Feature `test_una_cita_cerrada_no_cambia_de_estado`, `EstadosCitaVistasTest::test_una_cita_cerrada_no_ofrece_cambios_y_explica_como_seguir` |
-| CA3: otra transición, con los estados de origen permitidos | `EstadosCita`, `CambioDeEstadoNoPermitido` | Feature `test_una_transicion_no_permitida_indica_desde_que_estados_se_permite` |
-| CA4: dentista sin cancelar | Gate `cambiar-estado-cita`, `CambiarEstadoCita` | Feature `EstadosCitaRolesTest::test_el_dentista_confirma_inicia_completa_y_marca_no_asistio_en_sus_citas`, `test_el_dentista_no_puede_cancelar_su_cita`, `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista` |
+| CA3: otra transición, con los estados de origen permitidos | `EstadosCita`, `CambioDeEstadoNoPermitido` | Feature `test_una_transicion_no_permitida_indica_desde_que_estados_se_permite`, `test_volver_a_agendada_nunca_se_permite` |
+| CA4: dentista sin cancelar | Gate `cambiar-estado-cita`, `CambiarEstadoCita` | Feature `EstadosCitaRolesTest::test_el_dentista_confirma_inicia_completa_y_marca_no_asistio_en_sus_citas`, `test_el_dentista_no_puede_cancelar_su_cita`, `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista`, `test_un_rol_sin_la_transicion_recibe_403_aunque_la_cita_este_cerrada`, `test_fuera_de_alcance_con_estado_invalido_responde_403`, `test_el_alcance_del_listado_y_del_detalle_no_cambia` |
 | CA5: asistente sin iniciar ni completar | Gate, `CambiarEstadoCita`, `AlcanceClinico` | Feature `test_el_asistente_confirma_cancela_y_marca_no_asistio_en_citas_de_sus_dentistas`, `test_el_asistente_no_puede_iniciar_ni_completar`, `test_el_asistente_no_puede_cambiar_citas_de_dentistas_no_asignados` |
-| CA6: admin y "eliminar" como cancelación | `CitasController@destroy`, `EstadosCita` | Feature `test_eliminar_cita_es_una_cancelacion_con_las_mismas_reglas`, `test_eliminar_una_cita_inexistente_responde_404`, `EstadosCitaTransicionesTest::test_solo_se_aceptan_las_transiciones_de_la_tabla` (como admin), `EstadosCitaVistasTest::test_el_boton_cancelar_del_admin_solo_aparece_en_citas_abiertas` |
-| CA7: el paciente cancela antes de que empiece | `ClienteCitasController@cancelar`, `EstadosCita::haEmpezado`, `routes/web.php`, vistas del paciente | Feature `test_el_paciente_cancela_su_cita_antes_de_que_empiece`, `test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo`, `test_el_paciente_no_puede_cancelar_una_cita_en_otro_estado`, `test_el_paciente_no_puede_cancelar_la_cita_de_otro`, `EstadosCitaVistasTest::test_el_paciente_no_ve_cancelar_en_una_cita_que_ya_empezo` |
+| CA6: admin y "eliminar" como cancelación | `CitasController@destroy`, `EstadosCita` | Feature `test_eliminar_cita_es_una_cancelacion_con_las_mismas_reglas`, `test_eliminar_una_cita_inexistente_responde_404`, `test_solo_el_admin_puede_eliminar_una_cita`, `EstadosCitaTransicionesTest::test_solo_se_aceptan_las_transiciones_de_la_tabla` (como admin), `EstadosCitaVistasTest::test_el_boton_cancelar_del_admin_solo_aparece_en_citas_abiertas` |
+| CA7: el paciente cancela antes de que empiece | `ClienteCitasController@cancelar`, `EstadosCita::haEmpezado`, `routes/web.php`, vistas del paciente | Feature `test_el_paciente_cancela_su_cita_antes_de_que_empiece`, `test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo`, `test_el_paciente_no_puede_cancelar_una_cita_en_otro_estado`, `test_el_paciente_no_puede_cancelar_la_cita_de_otro`, `test_el_personal_no_puede_usar_la_cancelacion_del_paciente`, `EstadosCitaVistasTest::test_el_paciente_no_ve_cancelar_en_una_cita_que_ya_empezo` |
 | CA8: en curso y no asistió solo tras la hora de inicio | `EstadosCita::haEmpezado`, `config/clinica.php` | Feature `test_en_curso_o_no_asistio_antes_de_la_hora_se_rechaza`, `test_a_la_hora_exacta_de_inicio_ya_se_puede_iniciar`, `test_la_hora_de_inicio_se_compara_en_la_zona_de_la_clinica`, `EstadosCitaVistasTest::test_antes_de_la_hora_se_explica_desde_cuando_se_puede_iniciar` |
 | CA9: una entrada con autor por cambio, visible en el historial | `EstadosCita::cambiar`, migración, `citas/show.blade.php` | Feature `HistorialCitaTest::test_cada_cambio_aceptado_deja_una_sola_entrada_con_autor`, `test_un_rechazo_no_deja_entrada_en_el_historial`, `test_el_historial_muestra_autor_estados_y_motivo` |
 | CA10 (abuso): cambios simultáneos, solo uno y sin 500 | `EstadosCita::cambiar` (bloqueo) | Feature `CambioEstadoConcurrenteTest::test_un_cambio_se_evalua_contra_el_estado_ya_guardado_por_otro`, `test_el_bloqueo_de_la_cita_se_toma_antes_de_leer_su_estado`, `test_mientras_otro_tiene_la_cita_bloqueada_no_hay_error_500`, `test_un_interbloqueo_se_convierte_en_mensaje` |
-| CA11 (abuso): estado inexistente, reapertura y notas internas | `CitasController@updateEstado` (validación), `EstadosCita` | Feature `test_un_estado_inexistente_se_rechaza_sin_error_500`, `test_reabrir_una_cita_cancelada_se_rechaza`, `test_las_notas_internas_enviadas_con_el_estado_no_cambian` |
+| CA11 (abuso): estado inexistente, reapertura y notas internas | `CitasController@updateEstado` (validación), `EstadosCita` | Feature `test_un_estado_inexistente_se_rechaza_sin_error_500`, `test_reabrir_una_cita_cancelada_se_rechaza`, `test_volver_a_agendada_nunca_se_permite`, `test_las_notas_internas_enviadas_con_el_estado_no_cambian` |
 | TM1 | Gate | `test_el_dentista_no_puede_cancelar_su_cita`, `test_el_asistente_no_puede_iniciar_ni_completar` |
-| TM2 | Gate, `AlcanceClinico` | `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista`, `test_el_asistente_no_puede_cambiar_citas_de_dentistas_no_asignados`, `test_el_paciente_no_puede_cancelar_la_cita_de_otro` |
-| TM3 | `EstadosCita` | `test_solo_se_aceptan_las_transiciones_de_la_tabla`, `test_reabrir_una_cita_cancelada_se_rechaza` |
+| TM2 | Gates `gestionar-cita` y `cambiar-estado-cita`, `AlcanceClinico` | `test_el_dentista_no_puede_cambiar_la_cita_de_otro_dentista`, `test_el_asistente_no_puede_cambiar_citas_de_dentistas_no_asignados`, `test_el_paciente_no_puede_cancelar_la_cita_de_otro`, `test_fuera_de_alcance_con_estado_invalido_responde_403` |
+| TM3 | `EstadosCita` | `test_solo_se_aceptan_las_transiciones_de_la_tabla`, `test_reabrir_una_cita_cancelada_se_rechaza`, `test_volver_a_agendada_nunca_se_permite` |
 | TM4 | `EstadosCita` | `test_un_cambio_se_evalua_contra_el_estado_ya_guardado_por_otro`, `test_el_bloqueo_de_la_cita_se_toma_antes_de_leer_su_estado` |
 | TM5 | `EstadosCita` | `test_mientras_otro_tiene_la_cita_bloqueada_no_hay_error_500`, `test_un_interbloqueo_se_convierte_en_mensaje`, `test_otro_error_de_base_de_datos_no_se_oculta` |
 | TM6 | `updateEstado` | `test_las_notas_internas_enviadas_con_el_estado_no_cambian` |
 | TM7 | `EstadosCita`, migración | `test_cada_cambio_aceptado_deja_una_sola_entrada_con_autor`, `test_un_rechazo_no_deja_entrada_en_el_historial` |
 | TM8 | `EstadosCita::haEmpezado` | `test_en_curso_o_no_asistio_antes_de_la_hora_se_rechaza`, `test_la_hora_de_inicio_se_compara_en_la_zona_de_la_clinica`, `test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo` |
 | TM9 | sin logs nuevos | `test_ni_el_cambio_ni_el_rechazo_escriben_datos_en_logs` |
-| TM10 | `routes/web.php` | `test_el_personal_no_puede_usar_la_cancelacion_del_paciente`, `test_el_paciente_no_puede_usar_el_cambio_de_estado_del_personal` |
+| TM10 | `routes/web.php` | `test_el_personal_no_puede_usar_la_cancelacion_del_paciente`, `test_el_paciente_no_puede_usar_el_cambio_de_estado_del_personal`, `test_solo_el_admin_puede_eliminar_una_cita` |
 | TM11 | `citas/show.blade.php` | `test_el_motivo_se_muestra_escapado` |
 
 ## Observabilidad
@@ -241,6 +249,8 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
 | OB5.a | dentro | `EstadosCita::cambiar` y la migración que retira el trigger; CA9 |
 | OB5.b | fuera, parcialmente atendida | las cancelaciones de los tres flujos pasan por `EstadosCita` y quedan con autor; las notas internas → spec 022 |
 | OB5.c | fuera | → spec 022; la app no borra citas |
+| RS2.a | fuera, parcialmente atendida | `role:cliente` solo en `PATCH /cliente/citas/{id}/cancelar` (CA7); el resto del grupo `/cliente` → spec 015 |
+| RS2.b | fuera | → spec 015 |
 
 ## Rollout
 - Sin despliegue configurado: hoy solo existe el entorno local (`docs/deployment.md`). Cuando haya
@@ -270,9 +280,9 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
   - Contra: un `UPDATE` hecho a mano en la BD ya no deja historial.
   - Resuelve la pregunta abierta de la spec 013 sobre el trigger: la escritura pasa a la aplicación. Se anota en el roadmap para la `/specify --edit 013`.
 - **D3. Autorización** (decisión del usuario, 2026-10-02).
-  - Gate `cambiar-estado-cita` en una clase invocable de `App\Autorizacion`, con el alcance de `AlcanceClinico::dentistasDelAlcance()` y la firma del plan de la 014, según ADR 0003.
-  - Más `role:cliente` en la ruta de cancelar del paciente.
-  - Conflicto con la 014 (plan `approved`, sin tareas): esa spec da `AlcanceClinico` como nuevo y también registra Gates en `AppServiceProvider` y toca `CitasController` (`create`/`store`). Tras liberar la 026, `/plan 014 --fix` debe partir de la clase existente y conservar sus dos métodos. Se anota en el roadmap (T090).
+  - Gates `gestionar-cita` y `cambiar-estado-cita` en la clase `App\Autorizacion\CambiarEstadoCita` (métodos `alcance` y `autorizar`), con el alcance de `AlcanceClinico::dentistasDelAlcance()` y la firma del plan de la 014, según ADR 0003.
+  - Más `role:cliente` en la ruta de cancelar del paciente, que atiende RS2.a solo en esa ruta (el resto del grupo → 015; analyze A12).
+  - Conflicto con la 014 (plan `approved`, sin tareas): esa spec da `AlcanceClinico` como nuevo y también registra Gates en `AppServiceProvider` y toca `CitasController` (`create`/`store`). Tras liberar la 026, `/plan 014 --fix` debe partir de la clase existente, conservar sus dos métodos y contar con que `CitasController` ya delega en ella su alcance (A11). Se anota en el roadmap (T041).
   - Conflicto con la 020: su plan también edita `AppServiceProvider::boot()`. Se resuelve al reconstruirla sobre `main`.
 - **D4. Zona horaria de la clínica** (decisión del usuario, 2026-10-02).
   - `config('clinica.zona_horaria')` (por defecto America/Mexico_City, sin horario de verano desde 2022), solo para `haEmpezado`.
@@ -284,13 +294,15 @@ local de la clínica. Las aserciones sobre HTML se hacen sobre la sección por `
   - Que la espera se agote o haya un interbloqueo no está en la spec. Se responde con el mensaje `ocupada`, sin 500, coherente con "nunca un error del servidor".
   - Igual que en 025/R9, `cambiar()` no debe llamarse dentro de otra transacción. Se documenta en el docblock.
 - **D6. Autorización frente a regla de estado.**
-  - El rol y el alcance los decide el Gate: 403, o 404 para la cita de otro paciente.
+  - El rol y el alcance los deciden los Gates: 403, o 404 para la cita de otro paciente. El alcance se comprueba antes de validar la entrada (A5).
+  - "Rol primero" (decisión del usuario, 2026-10-02, analyze A2): un cambio que el rol no puede pedir da 403 aunque la cita esté cerrada; el mensaje de CA2 aplica a los cambios que el rol sí puede pedir. Volver a `agendada` pasa los Gates (no es una transición de la matriz) y el servicio lo rechaza con `cerrada` o `vuelta`.
   - El estado y el tiempo los decide el servicio: mensaje en el formulario.
   - Así se separan los tests de P3 de los de la regla, y el personal ve un mensaje útil en los casos que la interfaz no puede evitar (formulario desactualizado, CA10).
 - **D7. Mensajes del paciente.** Los tipos `cerrada` y `transicion` se traducen a "Esta cita ya no se puede cancelar…", el texto actual ampliado. No se le muestran estados internos.
 - **D8. Panel del paciente (spec 012) sin cambios.** Fuera de `extends`. Su botón solo aparece con la próxima cita agendada, y el servidor aplica las reglas igualmente.
 - **D9. Sin feature flag** (decisión del usuario, 2026-10-02).
-- **D10. Excepciones P7 y P8** (decisión del usuario, 2026-10-02): ver Constitution Check. Se anotan en el roadmap (T090).
+- **D10. Excepciones P7 y P8** (decisión del usuario, 2026-10-02): ver Constitution Check. Se anotan en el roadmap (T041).
+- **D11. Excepción P3 en tres GET** (decisión del usuario, 2026-10-02, analyze A1): el detalle de cita del personal recibe su Gate en la 014, y "Mis citas" y el detalle del paciente, `role:cliente` en la 015. Se anota en el roadmap (T041).
 
 ## Impacto en arquitectura
 Al implementar (T090/T091):
@@ -300,7 +312,7 @@ Al implementar (T090/T091):
   - el párrafo del trigger (escritura del historial desde la app);
   - "Esquema" (trigger retirado por migración);
   - quitar la deuda "dos filas por cambio con motivo".
-- **`docs/security.md`:** "Dónde se aplica" gana el Gate `cambiar-estado-cita` y `role:cliente` en la cancelación.
+- **`docs/security.md`:** "Dónde se aplica" gana los Gates `gestionar-cita` y `cambiar-estado-cita` y `role:cliente` en la cancelación; RS2.a sigue "pendiente", con la nota "cancelación del paciente con `role:cliente`: spec 026; resto del grupo → spec 015".
 - **`docs/observability.md`:**
   - OB5.a → "en curso (spec 026)"; pasa a mitigada en `/release`;
   - OB5.b, con una nota sobre las cancelaciones con autor y las notas pendientes → 022;
@@ -310,7 +322,8 @@ Al implementar (T090/T091):
   - comparaciones con `now()` en UTC (D4);
   - `/plan 014 --fix` con `AlcanceClinico` existente (D3);
   - la pregunta del trigger de la 013 resuelta (D2);
-  - residuos de P7 y P8 (D10).
+  - residuos de P7 y P8 (D10);
+  - excepción P3 de los tres GET → 014 y 015 (D11).
 
 ## Riesgos y mitigaciones
 - **Doble escritura del historial** si el código llega sin la migración. Mitigación: Rollout en un solo paso; la consulta de duplicados de Observabilidad.
