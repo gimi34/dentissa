@@ -123,7 +123,7 @@ fila sin `estado_anterior`. Las cancelaciones (admin y cliente) y los cambios de
 actor, y `ON DELETE CASCADE` borra el historial con la cita. → roadmap objetivo 3.
 
 Correcciones:
-- OB5.a Una sola escritura por cambio, desde la aplicación, con actor, estado anterior, nuevo y motivo (retirar o ajustar el trigger) — estado: en curso (spec 026)
+- OB5.a Una sola escritura por cambio, desde la aplicación, con actor, estado anterior, nuevo y motivo (retirar o ajustar el trigger) — estado: mitigada (v0.3.0)
 - OB5.b Registrar cancelaciones y cambios de notas internas con actor — estado: pendiente (cancelaciones con autor: spec 026; notas internas → spec 022)
 - OB5.c Impedir el borrado en cascada del historial — estado: pendiente
 

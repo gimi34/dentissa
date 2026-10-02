@@ -1,8 +1,9 @@
 ---
 id: 026
 slug: estados-cita
-status: implemented
+status: released
 created: 2026-10-02
+released: v0.3.0 (2026-10-02)
 extends: [003, 004]
 ---
 
@@ -168,3 +169,4 @@ resto de las pantallas del paciente y la ficha creada desde el perfil quedan par
 | 2026-10-02 | Implementada (T001–T092) | /implement |
 | 2026-10-02 | Vuelve a approved: /review ronda 1 con cambios pedidos (R1, R4, R5, R10, R20, R26) | /review |
 | 2026-10-02 | Implementada de nuevo (T016–T018, T028, T029 de /review) | /implement |
+| 2026-10-02 | Liberada en v0.3.0, sin despliegue (no hay entornos) | /release |
