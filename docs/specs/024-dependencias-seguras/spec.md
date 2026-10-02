@@ -1,8 +1,9 @@
 ---
 id: 024
 slug: dependencias-seguras
-status: implemented
+status: released
 created: 2026-09-29
+released: v0.1.0 (2026-10-02)
 extends: []
 ---
 
@@ -81,3 +82,4 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 | 2026-09-29 | Aprobada por el usuario | /specify |
 | 2026-09-29 | CA7 y su caso de abuso cubren toda versión que cambie, directa o transitiva; la spec deja de citar por su identificador el riesgo de versión del lenguaje del servidor (sigue fuera de alcance, objetivo 5). Vuelve a `draft`. | /analyze 024 ronda 1: A02, A12 (decisión del usuario, 2026-09-29) |
 | 2026-09-29 | Aprobada de nuevo por el usuario | /specify --edit |
+| 2026-10-02 | Liberada en v0.1.0, sin despliegue (no hay entornos) | /release |

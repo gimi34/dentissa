@@ -73,11 +73,13 @@ Formato:
 - [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación
+- [x] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: decisión del usuario (2026-09-29, `/release 024`): versión v0.1.0 sin despliegue, porque staging y producción no existen y `docs/deployment.md` no tiene procedimiento (objetivo 5). T095–T097 se marcarán "no aplica" al cerrar. Integración: `/release` prepara la versión y el CHANGELOG en la rama; el usuario sube las ramas y fusiona en GitHub `chore/ai-dd-init` → `main` y luego el PR de la 024 (merge commit, sin squash), con el CI en verde; después, `/release 024` crea el tag `v0.1.0` en `main` y cierra la spec.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
-- [ ] T098 Marcar spec como `released`
+- [x] T096 Aprobación humana para producción
+  - nota: no aplica: sin entorno de producción (`docs/deployment.md`, objetivo 5). Versión v0.1.0 sin despliegue, por decisión del usuario (2026-09-29).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+  - nota: no aplica: sin entornos. Integración en `main` con el PR #6 (merge commit `fddca7d`) y el arreglo de CI del PR #7 (`2aa3956`), cuyo job "Tests y lint" pasó con 24 tests. Tag anotado `v0.1.0` sobre `fddca7d`, publicado el 2026-10-02.
+- [x] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
