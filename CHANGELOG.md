@@ -5,6 +5,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-02
+
+### Added
+- Pruebas automáticas de la regla de agenda: horario del dentista, franja, citas seguidas,
+  solapes, reservas simultáneas, validación de la entrada y permisos por rol (spec 025).
+
+### Changed
+- El personal y los pacientes agendan con la misma regla y reciben los mismos mensajes. Cuando
+  un horario ya está ocupado, el personal ve ahora "Ese horario ya no está disponible. Por favor
+  elige otro." (spec 025).
+- Se pueden agendar citas seguidas sin hueco entre ellas, por ejemplo 10:00–10:30 y
+  10:30–11:00 (spec 025).
+- Un dentista con la cuenta desactivada ya no se puede elegir para una cita (spec 025).
+
+### Fixed
+- Dos personas que reservaban a la vez el mismo hueco de un dentista podían quedarse las dos con
+  él; ahora solo una lo consigue (spec 025).
+- Una hora o fecha mal escritas, un dentista no válido o un servicio sin duración ya no producen
+  un error del servidor ni una cita encima de otra: se muestra un mensaje claro y el formulario
+  conserva los datos (spec 025).
+
 ## [0.1.0] - 2026-09-29
 
 ### Added

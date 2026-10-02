@@ -205,9 +205,9 @@ Correcciones:
 `CitasController.php`, `ClienteCitasController.php`, `PersonalController.php`, `PacientesController.php`.
 
 Correcciones:
-- RS12.a Validar `hora` con `date_format:H:i` — estado: pendiente
+- RS12.a Validar `hora` con `date_format:H:i` — estado: en curso (spec 025)
 - RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: pendiente
-- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente
+- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; pacientes, expedientes y asignación de asistentes: spec 013)
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)
 El registro público responde con un mensaje explícito de "correo ya registrado". Evidencia:
@@ -232,6 +232,9 @@ Correcciones:
 - RS15.b Cifrado de disco y de backups en staging/prod — estado: pendiente
 
 ### RS16 · Alta — Dependencias con vulnerabilidades conocidas (A03 Software Supply Chain Failures)
+**Mitigado en v0.1.0 (spec 024, 2026-10-02):** RS16.a, RS16.b y RS16.c mitigadas. Los dos avisos
+bajos posteriores quedan cubiertos por la excepción EX1, que vence el 2026-10-31.
+
 Línea base de `/plan 014` (2026-09-28): `composer audit` reporta 10 avisos altos y 6 medios en
 `league/commonmark` 2.8.2 y `guzzlehttp/guzzle` (transitivas de Laravel); `npm audit` reporta 2
 críticos, 6 altos y 1 moderado (`concurrently`, `shell-quote`, `axios`, `vite`, `form-data`,
@@ -247,9 +250,9 @@ más reciente cumpla los 7 días de antigüedad; entonces una actualización fut
 fijación.
 
 Correcciones:
-- RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: en curso (spec 024)
-- RS16.b Aplicar las correcciones de npm (`npm audit fix`, revisando saltos de versión mayor) — estado: en curso (spec 024)
-- RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: en curso (spec 024)
+- RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: mitigada (v0.1.0)
+- RS16.b Aplicar las correcciones de npm (`npm audit fix`, revisando saltos de versión mayor) — estado: mitigada (v0.1.0)
+- RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: mitigada (v0.1.0)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en

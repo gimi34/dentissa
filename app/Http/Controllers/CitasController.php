@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CitaNoAgendable;
+use App\Agenda\ReservaCitas;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class CitasController extends Controller
 {
@@ -48,7 +51,9 @@ class CitasController extends Controller
     private function dentistaIdsAsistente(): array
     {
         $personalId = $this->personalIdPropio();
-        if (!$personalId) return [];
+        if (! $personalId) {
+            return [];
+        }
 
         return DB::table('asistente_dentista')
             ->where('asistente_id', $personalId)
@@ -75,9 +80,15 @@ class CitasController extends Controller
     {
         $rol = auth()->user()->rol;
 
-        if ($rol === 'admin') return true;
-        if ($rol === 'dentista') return $dentistaId === $this->personalIdPropio();
-        if ($rol === 'asistente') return in_array($dentistaId, $this->dentistaIdsAsistente());
+        if ($rol === 'admin') {
+            return true;
+        }
+        if ($rol === 'dentista') {
+            return $dentistaId === $this->personalIdPropio();
+        }
+        if ($rol === 'asistente') {
+            return in_array($dentistaId, $this->dentistaIdsAsistente());
+        }
 
         return false;
     }
@@ -98,19 +109,19 @@ class CitasController extends Controller
             $query->where('citas.dentista_id', $request->dentista_id);
         }
         if ($request->filled('buscar')) {
-            $buscar = '%' . $request->buscar . '%';
-            $query->where(function($q) use ($buscar) {
+            $buscar = '%'.$request->buscar.'%';
+            $query->where(function ($q) use ($buscar) {
                 $q->whereRaw("CONCAT(up.nombre, ' ', up.apellido) LIKE ?", [$buscar])
-                  ->orWhereRaw("CONCAT(ud.nombre, ' ', ud.apellido) LIKE ?", [$buscar])
-                  ->orWhere('servicios.nombre', 'LIKE', $buscar)
-                  ->orWhere('up.telefono', 'LIKE', $buscar);
+                    ->orWhereRaw("CONCAT(ud.nombre, ' ', ud.apellido) LIKE ?", [$buscar])
+                    ->orWhere('servicios.nombre', 'LIKE', $buscar)
+                    ->orWhere('up.telefono', 'LIKE', $buscar);
             });
         }
 
         // Por defecto: citas del día actual si no hay filtros de fecha
-        if (!$request->filled('fecha_desde') && !$request->filled('fecha_hasta') && !$request->filled('vista')) {
+        if (! $request->filled('fecha_desde') && ! $request->filled('fecha_hasta') && ! $request->filled('vista')) {
             $query->whereDate('citas.fecha_hora', '>=', Carbon::today())
-                  ->whereDate('citas.fecha_hora', '<=', Carbon::today()->addDays(7));
+                ->whereDate('citas.fecha_hora', '<=', Carbon::today()->addDays(7));
         }
 
         // Resumen del rango mostrado (antes de aplicar el filtro de estado y la paginación,
@@ -186,14 +197,14 @@ class CitasController extends Controller
 
         if ($pacienteSeleccionado) {
             // Si el paciente tiene doctor asignado, preseleccionarlo
-            if (!$dentistaSeleccionado) {
+            if (! $dentistaSeleccionado) {
                 $dentistaSeleccionado = DB::table('pacientes')
                     ->where('id', $pacienteSeleccionado)
                     ->value('dentista_id');
             }
 
             // Sugerir la fecha de próxima visita registrada en su expediente más reciente
-            if (!$fechaSugerida) {
+            if (! $fechaSugerida) {
                 $proximaVisita = DB::table('expedientes')
                     ->where('paciente_id', $pacienteSeleccionado)
                     ->whereNotNull('proxima_visita')
@@ -207,7 +218,7 @@ class CitasController extends Controller
         }
 
         $fechaSugerida = $fechaSugerida ?: now()->addDay()->format('Y-m-d');
-        $horaSugerida  = $request->get('hora', '09:00');
+        $horaSugerida = $request->get('hora', '09:00');
 
         return view('citas.create', compact(
             'pacientes', 'dentistas', 'servicios', 'fechaSugerida', 'horaSugerida',
@@ -216,94 +227,50 @@ class CitasController extends Controller
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
-    public function store(Request $request)
+    public function store(Request $request, ReservaCitas $reservas)
     {
-        $data = $request->validate([
-            'paciente_id'  => 'required|exists:pacientes,id',
-            'dentista_id'  => 'required|exists:personal,id',
-            'servicio_id'  => 'nullable|exists:servicios,id',
-            'fecha'        => 'required|date',
-            'hora'         => 'required',
+        $data = $request->validate(ReservaCitas::reglasDeEntrada() + [
+            'paciente_id' => 'bail|required|string|exists:pacientes,id',
+            'servicio_id' => 'bail|nullable|string|exists:servicios,id',
             'duracion_min' => 'required|integer|min:10|max:300',
-            'notas_paciente'  => 'nullable|string|max:1000',
-            'notas_internas'  => 'nullable|string|max:1000',
+            'notas_paciente' => 'nullable|string|max:1000',
+            'notas_internas' => 'nullable|string|max:1000',
+        ], ReservaCitas::mensajesDeEntrada() + [
+            'paciente_id.string' => 'Elige un paciente válido.',
+            'servicio_id.string' => 'Elige un servicio válido.',
         ]);
 
-        if (!$this->autorizadoParaCita($data['dentista_id'])) {
+        if (! $this->autorizadoParaCita($data['dentista_id'])) {
             abort(403);
         }
 
-$fechaHora = Carbon::parse($data['fecha'] . ' ' . $data['hora']);
-
-
-$duracion = (int) $data['duracion_min'];
-$horaFinCita = (clone $fechaHora)->addMinutes($duracion);
-
-// Disponibilidad del dentista según su horario semanal
-$diaSemana = $fechaHora->isoWeekday(); // 1=Lunes ... 7=Domingo
-
-$horario = DB::table('horarios_dentista')
-    ->where('personal_id', $data['dentista_id'])
-    ->where('dia_semana', $diaSemana)
-    ->first();
-
-if (!$horario || !$horario->disponible) {
-    return back()->withInput()->withErrors([
-        'hora' => 'El dentista no tiene horario disponible ese día de la semana.'
-    ]);
-}
-
-$horaInicio = Carbon::parse($data['fecha'] . ' ' . $horario->hora_inicio);
-$horaFinDisponible = Carbon::parse($data['fecha'] . ' ' . $horario->hora_fin);
-
-if ($fechaHora->lt($horaInicio) || $horaFinCita->gt($horaFinDisponible)) {
-    return back()->withInput()->withErrors([
-        'hora' => 'El horario elegido está fuera del horario de atención del dentista ('
-            . $horaInicio->format('H:i') . ' - ' . $horaFinDisponible->format('H:i') . ').'
-    ]);
-}
-
-$conflicto = DB::table('citas')
-    ->where('dentista_id', $data['dentista_id'])
-    ->whereNotIn('estado', ['cancelada', 'no_asistio'])
-    ->where(function($q) use ($fechaHora, $horaFinCita) {
-        $q->whereBetween('fecha_hora', [$fechaHora, $horaFinCita])
-          ->orWhereRaw('DATE_ADD(fecha_hora, INTERVAL duracion_min MINUTE) > ? AND fecha_hora < ?',
-              [$fechaHora, $horaFinCita]);
-    })
-    ->exists();
-
-        if ($conflicto) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El dentista ya tiene una cita en ese horario. Por favor elige otro horario.'
+        // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
+        try {
+            $reservas->reservar([
+                'paciente_id' => $data['paciente_id'],
+                'dentista_id' => $data['dentista_id'],
+                'servicio_id' => $data['servicio_id'] ?? null,
+                'fecha' => $data['fecha'],
+                'hora' => $data['hora'],
+                'duracion_min' => (int) $data['duracion_min'],
+                'notas_paciente' => $data['notas_paciente'] ?? null,
+                'notas_internas' => $data['notas_internas'] ?? null,
+                'creado_por' => auth()->id(),
             ]);
+        } catch (CitaNoAgendable $rechazo) {
+            return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
         }
 
-        DB::table('citas')->insert([
-            'id'           => (string) \Illuminate\Support\Str::uuid(),
-            'paciente_id'  => $data['paciente_id'],
-            'dentista_id'  => $data['dentista_id'],
-            'servicio_id'  => $data['servicio_id'] ?: null,
-            'fecha_hora'   => $fechaHora,
-            'duracion_min' => (int) $data['duracion_min'],
-            'estado'       => 'agendada',
-            'notas_paciente'  => $data['notas_paciente'] ?? null,
-            'notas_internas'  => $data['notas_internas'] ?? null,
-            'creado_por'   => auth()->id(),
-            'creado_en'    => now(),
-            'actualizado_en' => now(),
-        ]);
-
-        $base = match(auth()->user()->rol) {
-            'dentista'  => 'dentista',
+        $base = match (auth()->user()->rol) {
+            'dentista' => 'dentista',
             'asistente' => 'asistente',
-            default     => 'admin',
+            default => 'admin',
         };
 
         return redirect()->route("$base.citas", [
-    'fecha_desde' => $fechaHora->format('Y-m-d'),
-    'fecha_hasta' => $fechaHora->format('Y-m-d'),
-])->with('success', 'Cita agendada correctamente.');
+            'fecha_desde' => $data['fecha'],
+            'fecha_hasta' => $data['fecha'],
+        ])->with('success', 'Cita agendada correctamente.');
     }
 
     // ── SHOW ───────────────────────────────────────────────────────────
@@ -311,8 +278,12 @@ $conflicto = DB::table('citas')
     {
         $cita = $this->queryBase()->where('citas.id', $id)->first();
 
-        if (!$cita) abort(404);
-        if (!$this->autorizadoParaCita($cita->dentista_id)) abort(403);
+        if (! $cita) {
+            abort(404);
+        }
+        if (! $this->autorizadoParaCita($cita->dentista_id)) {
+            abort(403);
+        }
 
         $historial = DB::table('historial_citas')
             ->leftJoin('usuarios', 'historial_citas.cambiado_por', '=', 'usuarios.id')
@@ -324,7 +295,7 @@ $conflicto = DB::table('citas')
             ->orderByDesc('fecha')
             ->get();
 
-        $estados = ['agendada','confirmada','en_curso','completada','cancelada','no_asistio'];
+        $estados = ['agendada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio'];
 
         return view('citas.show', compact('cita', 'historial', 'estados'));
     }
@@ -333,22 +304,26 @@ $conflicto = DB::table('citas')
     public function updateEstado(Request $request, string $id)
     {
         $dentistaId = DB::table('citas')->where('id', $id)->value('dentista_id');
-        if (!$dentistaId) abort(404);
-        if (!$this->autorizadoParaCita($dentistaId)) abort(403);
+        if (! $dentistaId) {
+            abort(404);
+        }
+        if (! $this->autorizadoParaCita($dentistaId)) {
+            abort(403);
+        }
 
         $data = $request->validate([
-            'estado'          => 'required|in:agendada,confirmada,en_curso,completada,cancelada,no_asistio',
-            'motivo'          => 'nullable|string|max:500',
-            'notas_internas'  => 'nullable|string|max:1000',
+            'estado' => 'required|in:agendada,confirmada,en_curso,completada,cancelada,no_asistio',
+            'motivo' => 'nullable|string|max:500',
+            'notas_internas' => 'nullable|string|max:1000',
         ]);
 
         $updates = [
-            'estado'         => $data['estado'],
+            'estado' => $data['estado'],
             'actualizado_en' => now(),
         ];
 
         // Guardar nota interna si se envía
-        if (!empty($data['notas_internas'])) {
+        if (! empty($data['notas_internas'])) {
             $updates['notas_internas'] = $data['notas_internas'];
         }
 
@@ -356,14 +331,14 @@ $conflicto = DB::table('citas')
 
         // El trigger trg_historial_cita en MySQL registra el cambio automáticamente,
         // pero si quieres guardar el motivo manualmente también:
-        if (!empty($data['motivo'])) {
+        if (! empty($data['motivo'])) {
             DB::table('historial_citas')->insert([
-                'id'        => (string) \Illuminate\Support\Str::uuid(),
-                'cita_id'   => $id,
+                'id' => (string) Str::uuid(),
+                'cita_id' => $id,
                 'cambiado_por' => auth()->id(),
                 'estado_nuevo' => $data['estado'],
-                'motivo'    => $data['motivo'],
-                'fecha'     => now(),
+                'motivo' => $data['motivo'],
+                'fecha' => now(),
             ]);
         }
 
@@ -389,7 +364,7 @@ $conflicto = DB::table('citas')
     public function destroy(string $id)
     {
         DB::table('citas')->where('id', $id)->update([
-            'estado'         => 'cancelada',
+            'estado' => 'cancelada',
             'actualizado_en' => now(),
         ]);
 

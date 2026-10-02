@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CitaNoAgendable;
+use App\Agenda\ReservaCitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class ClienteCitasController extends Controller
 {
@@ -18,8 +18,8 @@ class ClienteCitasController extends Controller
     public function index(Request $request)
     {
         $paciente = $this->pacienteActual();
-        $pasadas  = $request->get('filtro') === 'pasadas';
-        $citas    = collect();
+        $pasadas = $request->get('filtro') === 'pasadas';
+        $citas = collect();
 
         if ($paciente) {
             $query = DB::table('citas')
@@ -41,8 +41,8 @@ class ClienteCitasController extends Controller
                 $query->where('citas.fecha_hora', '<', now())->orderByDesc('citas.fecha_hora');
             } else {
                 $query->where('citas.fecha_hora', '>=', now())
-                      ->where('citas.estado', '!=', 'cancelada')
-                      ->orderBy('citas.fecha_hora');
+                    ->where('citas.estado', '!=', 'cancelada')
+                    ->orderBy('citas.fecha_hora');
             }
 
             $citas = $query->paginate(10)->withQueryString();
@@ -76,7 +76,9 @@ class ClienteCitasController extends Controller
             )
             ->first();
 
-        if (! $cita) abort(404);
+        if (! $cita) {
+            abort(404);
+        }
 
         return view('citas.cliente-show', compact('cita'));
     }
@@ -88,14 +90,16 @@ class ClienteCitasController extends Controller
         abort_unless($paciente, 404);
 
         $cita = DB::table('citas')->where('id', $id)->where('paciente_id', $paciente->id)->first();
-        if (! $cita) abort(404);
+        if (! $cita) {
+            abort(404);
+        }
 
         if (! in_array($cita->estado, ['agendada', 'confirmada'])) {
             return back()->with('error', 'Esta cita ya no se puede cancelar.');
         }
 
         DB::table('citas')->where('id', $id)->update([
-            'estado'         => 'cancelada',
+            'estado' => 'cancelada',
             'actualizado_en' => now(),
         ]);
 
@@ -124,79 +128,41 @@ class ClienteCitasController extends Controller
     }
 
     // ── AGENDAR (store) ───────────────────────────────────────────────
-    public function agendarStore(Request $request)
+    public function agendarStore(Request $request, ReservaCitas $reservas)
     {
         $paciente = $this->pacienteActual();
         abort_unless($paciente, 404);
 
-        $data = $request->validate([
-            'dentista_id'    => 'required|exists:personal,id',
-            'servicio_id'    => 'required|exists:servicios,id',
-            'fecha'          => 'required|date|after_or_equal:today',
-            'hora'           => 'required',
+        $reglas = ReservaCitas::reglasDeEntrada();
+        $reglas['fecha'][] = 'after_or_equal:today';
+
+        $data = $request->validate($reglas + [
+            'servicio_id' => 'bail|required|string|exists:servicios,id',
             'notas_paciente' => 'nullable|string|max:1000',
-        ], [
+        ], ReservaCitas::mensajesDeEntrada() + [
             'dentista_id.required' => 'Elige un dentista.',
             'servicio_id.required' => 'Elige un servicio.',
+            'servicio_id.string' => 'Elige un servicio válido.',
         ]);
 
         $servicio = DB::table('servicios')->where('id', $data['servicio_id'])->first();
-        $duracion = $servicio->duracion_min ?? 30;
 
-        $fechaHora   = Carbon::parse($data['fecha'] . ' ' . $data['hora']);
-        $horaFinCita = (clone $fechaHora)->addMinutes($duracion);
-
-        $diaSemana = $fechaHora->isoWeekday();
-        $horario = DB::table('horarios_dentista')
-            ->where('personal_id', $data['dentista_id'])
-            ->where('dia_semana', $diaSemana)
-            ->first();
-
-        if (! $horario || ! $horario->disponible) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El dentista no tiene horario disponible ese día de la semana.',
+        // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
+        try {
+            $reservas->reservar([
+                'paciente_id' => $paciente->id,
+                'dentista_id' => $data['dentista_id'],
+                'servicio_id' => $data['servicio_id'],
+                'fecha' => $data['fecha'],
+                'hora' => $data['hora'],
+                'duracion_min' => $servicio->duracion_min ?? 30,
+                'notas_paciente' => $data['notas_paciente'] ?? null,
+                'notas_internas' => null,
+                'creado_por' => auth()->id(),
             ]);
+        } catch (CitaNoAgendable $rechazo) {
+            return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
         }
-
-        $horaInicio        = Carbon::parse($data['fecha'] . ' ' . $horario->hora_inicio);
-        $horaFinDisponible = Carbon::parse($data['fecha'] . ' ' . $horario->hora_fin);
-
-        if ($fechaHora->lt($horaInicio) || $horaFinCita->gt($horaFinDisponible)) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El horario elegido está fuera del horario de atención del dentista ('
-                    . $horaInicio->format('H:i') . ' - ' . $horaFinDisponible->format('H:i') . ').',
-            ]);
-        }
-
-        $conflicto = DB::table('citas')
-            ->where('dentista_id', $data['dentista_id'])
-            ->whereNotIn('estado', ['cancelada', 'no_asistio'])
-            ->where(function ($q) use ($fechaHora, $horaFinCita) {
-                $q->whereBetween('fecha_hora', [$fechaHora, $horaFinCita])
-                  ->orWhereRaw('DATE_ADD(fecha_hora, INTERVAL duracion_min MINUTE) > ? AND fecha_hora < ?',
-                      [$fechaHora, $horaFinCita]);
-            })
-            ->exists();
-
-        if ($conflicto) {
-            return back()->withInput()->withErrors([
-                'hora' => 'Ese horario ya no está disponible. Por favor elige otro.',
-            ]);
-        }
-
-        DB::table('citas')->insert([
-            'id'             => (string) Str::uuid(),
-            'paciente_id'    => $paciente->id,
-            'dentista_id'    => $data['dentista_id'],
-            'servicio_id'    => $data['servicio_id'],
-            'fecha_hora'     => $fechaHora,
-            'duracion_min'   => $duracion,
-            'estado'         => 'agendada',
-            'notas_paciente' => $data['notas_paciente'] ?? null,
-            'creado_por'     => auth()->id(),
-            'creado_en'      => now(),
-            'actualizado_en' => now(),
-        ]);
 
         return redirect()->route('cliente.dashboard')
             ->with('success', 'Tu cita fue agendada correctamente.');

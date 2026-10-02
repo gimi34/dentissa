@@ -7,8 +7,9 @@ updated: 2026-09-28
 
 ## Resumen
 Monolito Laravel 12 con MVC clásico que renderiza HTML en el servidor con Blade (aplicación
-multipágina, sin API ni SPA). Toda la lógica de negocio y el acceso a datos viven dentro de 13
-controladores: no hay capa de servicios, repositorios, Policies, Form Requests, eventos ni jobs.
+multipágina, sin API ni SPA). Casi toda la lógica de negocio y el acceso a datos viven dentro de
+13 controladores. La primera pieza de servicio es `app/Agenda/ReservaCitas.php` (spec 025), con la
+regla de agenda; no hay repositorios, Policies, Form Requests, eventos ni jobs.
 El acceso a datos es casi siempre Query Builder (`DB::table` con joins manuales); solo `usuarios`
 y `servicios` tienen modelo Eloquent. La autorización combina un middleware propio `role:` con
 comprobaciones sueltas en cada controlador. El esquema del dominio no está en migraciones: vive
@@ -43,8 +44,9 @@ flowchart LR
 | Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google | `usuarios`, Socialite |
 | Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista | `usuarios`, `pacientes`, `personal` |
 | Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol | `citas`, `pacientes`, `asistente_dentista` |
-| Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas y cancelación de citas con alcance por rol | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
-| Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar (repite la regla de agenda) | `citas`, `horarios_dentista`, `servicios` |
+| Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas y cancelación de citas con alcance por rol; el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php` | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
+| Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php` | `citas`, `horarios_dentista`, `servicios` |
+| Agenda (regla) | `app/Agenda/ReservaCitas.php`, `app/Agenda/CitaNoAgendable.php` | Regla de agenda única (horario del día, encaje en la franja, solape estricto) y guardado de la cita en una transacción que bloquea primero la fila del dentista (spec 025) | `personal` (bloqueo), `horarios_dentista`, `citas` |
 | Pacientes | `app/Http/Controllers/PacientesController.php` | CRUD de pacientes y alta de su usuario | `usuarios`, `pacientes`, `expedientes`, `citas` |
 | Expedientes | `app/Http/Controllers/ExpedientesController.php` | Expediente clínico ligado a una cita | `expedientes`, `citas` |
 | Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, horarios, asignación asistente↔dentista | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
@@ -62,8 +64,10 @@ Ejemplo: el personal agenda una cita.
 1. El navegador envía `POST /admin/citas` con `@csrf` a nginx (puerto 8000).
 2. nginx lo pasa por FastCGI a php-fpm (`app:9000`).
 3. Laravel aplica el grupo `web` (incluye `PreventBackHistory`), luego `auth` y `role:admin`.
-4. `CitasController@store` valida inline, comprueba el alcance por rol, revisa `horarios_dentista`
-   y los solapes, e inserta con `DB::table('citas')` (sin transacción entre comprobación e insert).
+4. `CitasController@store` valida la entrada (fecha, hora y dentista activo, con las reglas
+   comunes de `ReservaCitas`), comprueba el alcance por rol y llama a `ReservaCitas::reservar`. En
+   una transacción, el servicio bloquea la fila del dentista, revisa `horarios_dentista` y los
+   solapes, e inserta la cita. Un rechazo vuelve al formulario como error del campo hora.
 5. Responde `redirect()` con flash `success`, que muestra `layouts/app.blade.php`.
 Al cambiar el estado de una cita, el trigger `trg_historial_cita` escribe en `historial_citas`.
 
@@ -132,8 +136,6 @@ Detalle en [deployment.md](deployment.md).
 ## Deuda técnica y riesgos observados
 - Esquema del dominio no reproducible desde migraciones; el volcado está desfasado respecto a las
   3 migraciones de julio (→ roadmap objetivo 1, spec 013).
-- Regla de agenda (horario, encaje, solape) duplicada en `CitasController` y
-  `ClienteCitasController`, sin transacción: la doble reserva es posible (→ spec 013).
 - Ayudante de dentistas disponibles copiado en 2 sitios y consulta base de citas en 4.
 - `historial_citas` recibe dos filas por un cambio de estado con motivo (trigger + controlador).
 - Restos del esqueleto: `App\Models\User`, tabla `users`, `DatabaseSeeder`, `welcome.blade.php`,
