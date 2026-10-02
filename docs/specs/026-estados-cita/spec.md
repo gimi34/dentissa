@@ -1,7 +1,7 @@
 ---
 id: 026
 slug: estados-cita
-status: implemented
+status: approved
 created: 2026-10-02
 extends: [003, 004]
 ---
@@ -166,3 +166,4 @@ resto de las pantallas del paciente y la ficha creada desde el perfil quedan par
 | 2026-10-02 | Cita RS2 (RS2.a parcial, RS2.b fuera), CA7 rechaza al personal en la cancelación del paciente, CA2 con el mensaje del paciente, CA6 "del detalle" y supuesto de "rol primero" | /analyze ronda 1: A12, A14, A19, A2 |
 | 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-02 | Implementada (T001–T092) | /implement |
+| 2026-10-02 | Vuelve a approved: /review ronda 1 con cambios pedidos (R1, R4, R5, R10, R20, R26) | /review |

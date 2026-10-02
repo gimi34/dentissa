@@ -55,6 +55,12 @@ Formato:
   - nota: A7 — los botones "Cancelar cita" del admin y "Cancelar" del paciente se comprueban por el formulario cuyo `action` termina en la ruta de destroy o de cancelar y con su método (`DELETE`/`PATCH`), no por sección.
   - nota: A8 — el listado del paciente se comprueba con `?filtro=pasadas`: por la comparación en UTC (deuda D4), las citas de las 10:00 y de las 12:00 locales aparecen como pasadas a las 10:30 locales; la que aún no empieza sigue mostrando "Cancelar".
 
+- [ ] T016 Añadir a `EstadosCitaTransicionesTest` `test_un_motivo_demasiado_largo_muestra_un_mensaje_en_espanol` (admin, confirmada → en_curso con un motivo de 501 caracteres: 302, la cita no cambia, `errorDe('motivo')` es exactamente "El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo." y, al cargar el detalle, ese texto aparece dentro de la sección `estado`) y `test_un_rechazo_por_la_regla_conserva_el_motivo_escrito` (admin, agendada → completada con motivo "Llamó para avisar": el rechazo deja `session()->getOldInput('motivo')` con ese texto) — tests/Feature/EstadosCitaTransicionesTest.php — hecho cuando: los dos fallan por la razón esperada (hoy el mensaje es el de Laravel en inglés y la vista no lo muestra; el rechazo no conserva la entrada) — cubre: CA9, CA11
+  - nota: añadida por /review: R1, R10
+- [ ] T017 Endurecer tests que ya pasan: en `EstadosCitaRolesTest::test_el_paciente_no_puede_cancelar_una_cita_en_otro_estado`, exigir para `cancelada` y `no_asistio` exactamente "Esta cita ya no se puede cancelar. Si necesitas ayuda, llama a la clínica." (y para `en_curso` y `completada` el mismo texto); en `HistorialCitaTest::test_un_rechazo_no_deja_entrada_en_el_historial`, exigir `assertStatus(302)` en el rechazo por regla, `assertStatus(403)` en el rechazo por rol y que el estado de cada cita no cambió; y añadir a `HistorialCitaTest` `test_si_falla_el_historial_la_cita_no_cambia` (llamar a `EstadosCita::cambiar` con un actor cuyo `id` no existe en `usuarios`: se lanza la `QueryException` de la FK y la cita sigue en su estado, leído con `lockForUpdate`) — tests/Feature/EstadosCitaRolesTest.php, tests/Feature/HistorialCitaTest.php — hecho cuando: los tres pasan; el del paciente se comprueba cambiando un momento el texto traducido en `ClienteCitasController::cancelar`, el de rechazos quitando un momento el `abort(404)`/Gate de `updateEstado` para que la petición falle antes de la regla, y el de atomicidad sacando un momento el `insert` del historial de la transacción (los tres fallan; restaurado y anotado) — cubre: CA2, CA9 — depende: T016
+  - nota: añadida por /review: R4, R5, R20
+- [ ] T018 Añadir a `EstadosCitaVistasTest` `test_el_paciente_ve_por_que_no_puede_cancelar_una_cita_que_ya_empezo` (16:30 UTC; cita confirmada de las 10:00 locales: el detalle del paciente muestra "Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica." y no tiene formulario de cancelar; la cita de las 12:00 no muestra ese texto) — tests/Feature/EstadosCitaVistasTest.php — hecho cuando: falla por la razón esperada (hoy el detalle no muestra el texto) — cubre: CA7
+  - nota: añadida por /review: R26
 ## Implementación
 - [x] T020 Crear `config/clinica.php` con `'zona_horaria' => env('CLINICA_ZONA_HORARIA', 'America/Mexico_City')` y documentar la variable en `.env.example` — config/clinica.php, .env.example — hecho cuando: `php artisan tinker --execute="echo config('clinica.zona_horaria');"` imprime `America/Mexico_City` y la suite no tiene fallos nuevos fuera de T011–T015 — cubre: CA7, CA8 — depende: T011
   - nota: 2026-10-02. `config/clinica.php` con `zona_horaria` (`CLINICA_ZONA_HORARIA`, por defecto America/Mexico_City) y la variable comentada en `.env.example`. `tinker` imprime `America/Mexico_City`; Pint limpio. Suite al cerrar la fase: 123 passed.
@@ -82,6 +88,10 @@ Formato:
   - nota: 2026-10-02. `cliente-show` y `cliente-index` usan `$cita->puede_cancelar` en lugar del estado. Pasa `test_el_paciente_no_ve_cancelar_en_una_cita_que_ya_empezo` (`EstadosCitaVistasTest`: 6 passed).
   - nota: Revisión de diseño: sin la skill `design` disponible (ver T025), revisado a mano. Solo cambia la condición del botón existente; no hay elementos ni estilos nuevos.
 
+- [ ] T028 En `CitasController::updateEstado`, añadir los mensajes "El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo." (`motivo.max`) y "El motivo debe ser un texto." (`motivo.string`), y devolver los rechazos de `EstadosCita` con `back()->withInput()->withErrors(...)`; en `citas/show.blade.php`, mostrar `@error('motivo')` con `field-hint field-hint-error` bajo el textarea del motivo (revisión manual de diseño, sin la skill `design`) — app/Http/Controllers/CitasController.php, resources/views/citas/show.blade.php — hecho cuando: pasan los dos tests de T016, la suite completa no tiene fallos y `pint --test` pasa en el controlador — cubre: CA9, CA11 — depende: T016
+  - nota: añadida por /review: R1, R10
+- [ ] T029 En `ClienteCitasController::show`, pasar `aviso_cancelar` = mensaje `yaEmpezo` cuando la cita está agendada o confirmada y ya empezó (`null` en otro caso); en `citas/cliente-show.blade.php`, mostrarlo en la barra superior en lugar del botón, con el estilo de texto atenuado de las demás vistas (revisión manual de diseño, sin la skill `design`) — app/Http/Controllers/ClienteCitasController.php, resources/views/citas/cliente-show.blade.php — hecho cuando: pasa el test de T018, la suite completa no tiene fallos y `pint --test` pasa en el controlador — cubre: CA7 — depende: T018
+  - nota: añadida por /review: R26
 ## Integración y documentación
 - [x] T040 Hacer la verificación final — (sin archivos) — hecho cuando:
   - `php artisan test` completo da la línea base de T001 más los tests de T011–T015, todos en verde;
@@ -119,7 +129,7 @@ Formato:
   - `docs/deployment.md`: la migración de la 026 va en el mismo paso que el código, y la variable `CLINICA_ZONA_HORARIA`.
   - nota: 2026-10-02. `docs/security.md → Dónde se aplica` con los Gates `gestionar-cita` y `cambiar-estado-cita` y `role:cliente` en la cancelación; RS2.a sigue "pendiente" con la nota (spec 026; resto → 015); RS2.b sin cambios. `docs/observability.md`: OB5.a → "en curso (spec 026)"; OB5.b sigue "pendiente" con la nota (cancelaciones: 026; notas → 022); OB5.c sin cambios; la fila del registro de auditoría apunta a `EstadosCita`; la brecha por confirmar del trigger, marcada como resuelta. `docs/deployment.md`: la migración de la 026 va en el mismo paso que el código (con su rollback) y `CLINICA_ZONA_HORARIA` en Variables de entorno.
   - nota: A18 — `docs/deployment.md → Migraciones` documenta que, tras `bootstrap-test-db.sh` (que recarga el volcado con el trigger), hay que ejecutar `migrate` sobre `dentissa_test`.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
@@ -131,16 +141,16 @@ Formato:
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T011, T040 | T023, T024 |
-| CA2 | T011, T012, T015 | T022, T023, T024, T025 |
+| CA2 | T011, T012, T015, T017 | T022, T023, T024, T025 |
 | CA3 | T011 | T022, T023, T024 |
 | CA4 | T012 | T022, T024 |
 | CA5 | T012 | T022, T024 |
 | CA6 | T012, T015 | T022, T024, T025 |
-| CA7 | T012, T015 | T020, T022, T023, T026, T027 |
+| CA7 | T012, T015, T018 | T020, T022, T023, T026, T027, T029 |
 | CA8 | T011, T015 | T020, T023, T024, T025 |
-| CA9 | T013, T040 | T021, T023, T024, T025, T026 |
+| CA9 | T013, T016, T017, T040 | T021, T023, T024, T025, T026, T028 |
 | CA10 | T014, T040 | T023, T024 |
-| CA11 | T011 | T023, T024 |
+| CA11 | T011, T016 | T023, T024, T028 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -150,7 +160,7 @@ Formato:
 | TM4 | T023 | T014 |
 | TM5 | T023 | T014 |
 | TM6 | T024 | T011 |
-| TM7 | T021, T023 | T013 |
+| TM7 | T021, T023 | T013, T017 |
 | TM8 | T020, T023 | T011, T012 |
 | TM9 | T023, T024 | T013 |
 | TM10 | T026 | T012 |
@@ -163,19 +173,19 @@ Formato:
 | app/Autorizacion/AlcanceClinico.php | T022 |
 | app/Autorizacion/CambiarEstadoCita.php | T022 |
 | app/Providers/AppServiceProvider.php | T022 |
-| app/Http/Controllers/CitasController.php | T024, T025 |
-| app/Http/Controllers/ClienteCitasController.php | T026 |
+| app/Http/Controllers/CitasController.php | T024, T025, T028 |
+| app/Http/Controllers/ClienteCitasController.php | T026, T029 |
 | routes/web.php | T002, T026 |
 | config/clinica.php, .env.example | T020 |
 | database/migrations/2026_10_02_000000_retirar_trigger_historial_cita.php | T021 |
-| resources/views/citas/show.blade.php | T025 |
-| resources/views/citas/cliente-show.blade.php, cliente-index.blade.php | T027 |
+| resources/views/citas/show.blade.php | T025, T028 |
+| resources/views/citas/cliente-show.blade.php, cliente-index.blade.php | T027, T029 |
 | tests/Feature/Concerns/EscenarioEstadosCita.php | T010 |
-| tests/Feature/EstadosCitaTransicionesTest.php | T011 |
-| tests/Feature/EstadosCitaRolesTest.php | T012 |
-| tests/Feature/HistorialCitaTest.php | T013 |
+| tests/Feature/EstadosCitaTransicionesTest.php | T011, T016 |
+| tests/Feature/EstadosCitaRolesTest.php | T012, T017 |
+| tests/Feature/HistorialCitaTest.php | T013, T017 |
 | tests/Feature/CambioEstadoConcurrenteTest.php | T014 |
-| tests/Feature/EstadosCitaVistasTest.php | T015 |
+| tests/Feature/EstadosCitaVistasTest.php | T015, T018 |
 | docs/architecture.md | T090 |
 | docs/security.md, docs/observability.md, docs/deployment.md | T091 |
 | docs/roadmap.md | T041 |
