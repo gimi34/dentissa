@@ -45,7 +45,7 @@ flowchart LR
 # Local (dev)
 docker compose up -d
 docker compose exec app composer install
-docker compose exec app php artisan migrate      # aplica las 3 migraciones de julio sobre el volcado
+docker compose exec app php artisan migrate      # aplica las migraciones sobre el volcado (incluida la de la spec 026)
 # staging: TODO(init) — procedimiento manual a definir con la plataforma (roadmap objetivo 5)
 # producción: TODO(init) — igual que staging, desde un tag vX.Y.Z y solo con aprobación humana
 ```
@@ -57,6 +57,16 @@ docker compose exec app php artisan migrate      # aplica las 3 migraciones de j
 - Comando: `php artisan migrate --force`
 - Limitación actual: el esquema del dominio solo existe en `database/dentissa.sql`; las
   migraciones no pueden crear la base desde cero (ver RD2).
+- Spec 026: la migración `2026_10_02_000000_retirar_trigger_historial_cita` va en el mismo paso que
+  el código. Sin ella, el código nuevo y el trigger escribirían dos filas de historial; con ella y
+  el código anterior, los cambios de estado quedarían sin historial. Rollback:
+  `php artisan migrate:rollback --step=1` (recrea el trigger) y volver a desplegar la versión
+  anterior.
+- Base de tests: `database/testing/bootstrap-test-db.sh` recarga el volcado, que trae el trigger, y
+  no ejecuta migraciones. Después hay que ejecutar
+  `docker compose exec -e DB_DATABASE=dentissa_test app php artisan migrate --force`; si no,
+  `HistorialCitaTest` encontrará dos filas por cambio. El CI ya ejecuta `migrate` tras cargar el
+  volcado.
 
 ## Rollback
 No existe procedimiento de rollback (confirmado por el usuario, 2026-09-28). Propuesta a validar
@@ -74,6 +84,7 @@ en roadmap objetivo 5:
 |---|---|---|---|---|
 | APP_NAME, APP_ENV, APP_KEY, APP_DEBUG, APP_URL | ✓ | ✓ | ✓ | `.env` local · TODO(init) gestor de la plataforma |
 | APP_LOCALE, APP_FALLBACK_LOCALE, APP_FAKER_LOCALE, BCRYPT_ROUNDS | ✓ | ✓ | ✓ | `.env` |
+| CLINICA_ZONA_HORARIA (zona de la hora de las citas; por defecto America/Mexico_City; spec 026) | ✓ | ✓ | ✓ | `.env` |
 | LOG_CHANNEL, LOG_STACK, LOG_DEPRECATIONS_CHANNEL, LOG_LEVEL | ✓ | ✓ | ✓ | `.env` |
 | DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD | ✓ | ✓ | ✓ | `.env` · secretos de la plataforma |
 | SESSION_DRIVER, SESSION_LIFETIME, SESSION_ENCRYPT, SESSION_PATH, SESSION_DOMAIN | ✓ | ✓ | ✓ | `.env` |

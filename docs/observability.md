@@ -15,7 +15,7 @@ cubierta.
 | Logs de aplicación | Monolog (Laravel), canal `stack` → `single` | presente (config de fábrica); el código no escribe ni un log: 0 llamadas a `Log::`/`logger()`/`report()` | `config/logging.php`, grep en `app/` |
 | Agregación de logs | ninguna | — | `laravel.log` en el directorio del proyecto montado; logs de nginx dentro del contenedor sin volumen |
 | Correlación por petición | ninguna | — | `bootstrap/app.php` sin middleware ni `Context::add` |
-| Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados de cita) | — | `database/dentissa.sql` (trigger `trg_historial_cita`), `CitasController::updateEstado` |
+| Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados de cita) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026) |
 | Métricas | ninguna | — | `composer.json` sin Pulse/Telescope/Prometheus |
 | Trazas distribuidas | ninguna | — | — |
 | Alertas | ninguna (canal `slack` definido sin webhook) | presente | `config/logging.php` |
@@ -123,8 +123,8 @@ fila sin `estado_anterior`. Las cancelaciones (admin y cliente) y los cambios de
 actor, y `ON DELETE CASCADE` borra el historial con la cita. → roadmap objetivo 3.
 
 Correcciones:
-- OB5.a Una sola escritura por cambio, desde la aplicación, con actor, estado anterior, nuevo y motivo (retirar o ajustar el trigger) — estado: pendiente
-- OB5.b Registrar cancelaciones y cambios de notas internas con actor — estado: pendiente
+- OB5.a Una sola escritura por cambio, desde la aplicación, con actor, estado anterior, nuevo y motivo (retirar o ajustar el trigger) — estado: en curso (spec 026)
+- OB5.b Registrar cancelaciones y cambios de notas internas con actor — estado: pendiente (cancelaciones con autor: spec 026; notas internas → spec 022)
 - OB5.c Impedir el borrado en cascada del historial — estado: pendiente
 
 ### OB6 · Baja — Health check superficial y sin alertas
@@ -144,8 +144,8 @@ Correcciones:
 ## Brechas por confirmar
 - `laravel.log` crecerá sin rotación en staging/prod — depende de: `LOG_CHANNEL`/`LOG_STACK` de esos
   entornos, que aún no existen — cómo confirmarla: al definir la plataforma (roadmap objetivo 5).
-- La base de producción podría no tener el trigger `trg_historial_cita` — depende de: cómo se cree
-  el esquema en esos entornos — cómo confirmarla: al migrar el esquema (roadmap objetivo 1).
+- ~~La base de producción podría no tener el trigger `trg_historial_cita`~~ — resuelta: la spec 026
+  retira el trigger con una migración idempotente y el historial lo escribe la aplicación.
 
 ## No determinado
 - Obligación legal real de registro de accesos: el proyecto es académico con datos ficticios; se

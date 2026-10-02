@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
+use App\Agenda\EstadosCita;
 use App\Agenda\ReservaCitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class ClienteCitasController extends Controller
 {
@@ -15,7 +18,7 @@ class ClienteCitasController extends Controller
     }
 
     // ── INDEX ──────────────────────────────────────────────────────────
-    public function index(Request $request)
+    public function index(Request $request, EstadosCita $estados)
     {
         $paciente = $this->pacienteActual();
         $pasadas = $request->get('filtro') === 'pasadas';
@@ -45,14 +48,15 @@ class ClienteCitasController extends Controller
                     ->orderBy('citas.fecha_hora');
             }
 
-            $citas = $query->paginate(10)->withQueryString();
+            $citas = $query->paginate(10)->withQueryString()
+                ->through(fn ($cita) => $this->conPuedeCancelar($cita, $estados));
         }
 
         return view('citas.cliente-index', compact('citas', 'pasadas'));
     }
 
     // ── SHOW ───────────────────────────────────────────────────────────
-    public function show(string $id)
+    public function show(string $id, EstadosCita $estados)
     {
         $paciente = $this->pacienteActual();
         abort_unless($paciente, 404);
@@ -80,30 +84,46 @@ class ClienteCitasController extends Controller
             abort(404);
         }
 
+        $cita = $this->conPuedeCancelar($cita, $estados);
+        // Si ya empezó, se explica por qué no se puede cancelar en lugar de quitar el botón sin más.
+        $cita->aviso_cancelar = in_array($cita->estado, ['agendada', 'confirmada'], true) && ! $cita->puede_cancelar
+            ? CambioDeEstadoNoPermitido::yaEmpezo()->getMessage()
+            : null;
+
         return view('citas.cliente-show', compact('cita'));
     }
 
     // ── CANCELAR ───────────────────────────────────────────────────────
-    public function cancelar(string $id)
+    public function cancelar(string $id, EstadosCita $estados)
     {
-        $paciente = $this->pacienteActual();
-        abort_unless($paciente, 404);
-
-        $cita = DB::table('citas')->where('id', $id)->where('paciente_id', $paciente->id)->first();
+        $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id', 'estado', 'fecha_hora']);
         if (! $cita) {
             abort(404);
         }
+        // La cita de otro paciente responde 404, como antes.
+        Gate::authorize('cambiar-estado-cita', [$cita, 'cancelada']);
 
-        if (! in_array($cita->estado, ['agendada', 'confirmada'])) {
-            return back()->with('error', 'Esta cita ya no se puede cancelar.');
+        try {
+            $estados->cambiar($id, 'cancelada', auth()->user(), null);
+        } catch (CambioDeEstadoNoPermitido $e) {
+            // El paciente no ve estados internos (spec 026, CA2 y D7).
+            $mensaje = in_array($e->tipo, ['cerrada', 'transicion', 'vuelta'], true)
+                ? 'Esta cita ya no se puede cancelar. Si necesitas ayuda, llama a la clínica.'
+                : $e->getMessage();
+
+            return back()->with('error', $mensaje);
         }
 
-        DB::table('citas')->where('id', $id)->update([
-            'estado' => 'cancelada',
-            'actualizado_en' => now(),
-        ]);
-
         return back()->with('success', 'Tu cita fue cancelada.');
+    }
+
+    // El paciente puede cancelar una cita agendada o confirmada que aún no empieza (CA7).
+    private function conPuedeCancelar(object $cita, EstadosCita $estados): object
+    {
+        $cita->puede_cancelar = in_array($cita->estado, ['agendada', 'confirmada'], true)
+            && ! $estados->haEmpezado($cita);
+
+        return $cita;
     }
 
     // ── AGENDAR (form) ────────────────────────────────────────────────

@@ -12,9 +12,9 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | # | Objetivo | Criterio de éxito | Spec | Estado |
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
-| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS14.a | 014 (RS1); 015–019 previstas | pendiente |
-| 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); 021–023 previstas | pendiente |
-| 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); 026–027 previstas; 013 (parte 3) | pendiente |
+| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); 015–019 previstas | pendiente |
+| 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
+| 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); 027 prevista; 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD3.a, RD3.b, RD3.c, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS8.a, RS8.b, RS15.b, OB4.b, OB6.b, OB7.a; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
@@ -97,3 +97,28 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Spec 013 (prueba de arquitectura, CA10): debe permitir que `App\Agenda\ReservaCitas` bloquee la
   fila de `personal` (tabla de Identidad) o migrar ese acceso a una interfaz de Identidad para
   bloquear a un dentista (spec 025, D11, A27).
+- Comparaciones de fecha que siguen en UTC aunque las citas guardan la hora local de la clínica:
+  paneles, próximas y pasadas del paciente, `after_or_equal:today` del alta y fechas del historial
+  de la cita, mostradas sin convertir. La spec 026 solo usa `config('clinica.zona_horaria')` para
+  decidir si una cita ya empezó (spec 026, D4; decisión del usuario, 2026-10-02).
+- Al retomar la 014: debe incorporar con `/specify --edit 014` el Gate del detalle de cita del
+  personal (`GET /{rol}/citas/{id}`), y en `/plan 014 --fix` partir de `App\Autorizacion\AlcanceClinico`
+  ya creado (con `personalId` y `dentistasDelAlcance`), de los Gates `gestionar-cita` y
+  `cambiar-estado-cita` en `AppServiceProvider` y de que `CitasController` ya delega en él su
+  alcance (spec 026, D3, A11, A23).
+- Excepción P3 de la spec 026: el detalle de cita del personal recibe su Gate en la 014, y "Mis
+  citas" y el detalle del paciente, `role:cliente` en la 015 (spec 026, D11; decisión del
+  usuario, 2026-10-02).
+- Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
+  una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
+  usuario, 2026-10-02).
+- Residuos P7 de la spec 026: el cambio de estado y su motivo quedan en el historial de la cita,
+  pero sin evento de auditoría formal → spec 022; los 403 de los Gates `gestionar-cita` y
+  `cambiar-estado-cita` no se registran → spec 020 (D10; decisión del usuario, 2026-10-02).
+- Residuo P8 de la spec 026: una `QueryException` de `EstadosCita` distinta de 1205/1213 sigue el
+  reporte por defecto y registra el SQL con sus valores, motivo incluido → spec 023 (D10;
+  decisión del usuario, 2026-10-02).
+- Requisito de tiempo de la spec 026 (tests en menos de 10 s en local): sus 46 tests tardan unos
+  12 s en Docker Desktop sobre Windows (unos 0,24 s por test más la espera de 1 s del test de
+  bloqueo). Medirlo en el CI de Linux antes de decidir si se ajusta el límite o los tests
+  (decisión del usuario, 2026-10-02).

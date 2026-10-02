@@ -2,7 +2,7 @@
 @section('title', 'Detalle de cita')
 
 @section('topbar-actions')
-    @if(in_array($cita->estado, ['agendada', 'confirmada']))
+    @if($cita->puede_cancelar)
         <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" style="display:inline">
             @csrf @method('PATCH')
             <button type="submit" class="btn btn-ghost"
@@ -11,6 +11,8 @@
                 Cancelar cita
             </button>
         </form>
+    @elseif($cita->aviso_cancelar)
+        <span style="font-size:13px;color:var(--text-muted)">{{ $cita->aviso_cancelar }}</span>
     @endif
 @endsection
 
