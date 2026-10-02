@@ -27,7 +27,21 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 ## Pendientes y deuda
 - Dependencias con vulnerabilidades conocidas (riesgo de dependencias en `docs/security.md`,
   detectado en `/plan 014`): spec propia de actualización antes de cualquier release (decisión
-  del usuario, 2026-09-28). Propuesta de objetivo pendiente de confirmar.
+  del usuario, 2026-09-28). Se atiende en la spec [024](specs/024-dependencias-seguras/spec.md),
+  sin objetivo propio (decisión del usuario, 2026-09-29).
+- 020 antes de `/release 020` (plan de la 024, Rollout pasos 4 y 5): reconstruir `feature/020-auditoria-base`
+  sobre `main` sin sus copias de los commits de la 024 y comprobar que no cambian `docs/specs/024-dependencias-seguras`,
+  la fila 024 de `docs/specs/README.md` ni su enlace aquí; después, que el merge de la 024 es ancestro del commit
+  que se libera y que `composer audit --ignore-severity=low --ignore-severity=medium` y
+  `npm audit --audit-level=high` terminan con código 0, es decir, 0 críticas y 0 altas (decisión del
+  usuario, 2026-09-29; comando de la spec 024, D10).
+- EX1 (`docs/security.md`, spec 024, D10): actualizar `laravel/framework` a ≥ 12.69.0 y
+  `league/flysystem` a ≥ 3.35.3 antes del 2026-10-31. Al vencer, el usuario decide si se actualizan
+  en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan`
+  o `/release` posterior al 2026-10-31 (decisión del usuario, 2026-09-29).
+- Retirar `overrides.rolldown` (fijado en 1.2.9) de `package.json` cuando `rolldown` 1.2.11 o
+  posterior lleve al menos 7 días publicada, para que `npm audit fix` pueda volver a actualizarlo
+  (spec 024, D2; /review 024 R7).
 - `aidlc/spaces/default/intents/260920-monolito-modular/` puede eliminarse cuando el usuario
   revise su migración a la spec 013.
 - Aprobar o ajustar las specs inferidas 001–012 (`/specify --edit NNN`).

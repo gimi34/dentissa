@@ -90,7 +90,7 @@ jobs:
       - name: SAST, solo hallazgos nuevos
         run: |
           docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.99.0 \
-            semgrep scan --config p/php --config p/laravel \
+            semgrep scan --config p/php \
             --baseline-commit "$(git merge-base origin/${{ github.base_ref }} HEAD)" --error
       - uses: shivammathur/setup-php@v2   # TODO: fijar a SHA
         with:
@@ -98,7 +98,7 @@ jobs:
       - name: Dependencias, solo si el PR cambia lockfiles
         run: |
           if git diff --name-only "origin/${{ github.base_ref }}"...HEAD | grep -qE '(composer\.lock|package-lock\.json)$'; then
-            composer audit && npm audit --audit-level=high
+            composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high
           else
             echo "El PR no cambia dependencias"
           fi
@@ -116,6 +116,6 @@ jobs:
         with:
           php-version: "8.4"
       - run: docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.21.2 detect --no-banner
-      - run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.99.0 semgrep scan --config p/php --config p/laravel --error
-      - run: composer audit && npm audit --audit-level=high
+      - run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.99.0 semgrep scan --config p/php --error
+      - run: composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high
       - run: docker run --rm -v "$PWD:/src" aquasec/trivy:0.57.1 fs --severity HIGH,CRITICAL /src

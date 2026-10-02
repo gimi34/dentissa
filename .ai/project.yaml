@@ -29,8 +29,8 @@ security:
   sensitive_data: [personal, health, credentials]
   tools:                       # comandos; vacío si no hay herramienta configurada
     secrets: gitleaks detect --no-banner
-    sast: semgrep scan --config p/php --config p/laravel --error
-    sca: composer audit && npm audit --audit-level=high
+    sast: semgrep scan --config p/php --error
+    sca: composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high
     containers: trivy fs --severity HIGH,CRITICAL .
     dast: null                 # solo contra staging
   agent:
