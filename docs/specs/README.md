@@ -28,7 +28,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
 | 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | approved | — | — (2026-09-28) |
 | 024 | [dependencias-seguras](024-dependencias-seguras/spec.md) | Transversal | released (v0.1.0) | — | — (2026-09-29) |
-| 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | implemented | — | — (2026-09-29) |
+| 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | released (v0.2.0) | — | — (2026-09-29) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
