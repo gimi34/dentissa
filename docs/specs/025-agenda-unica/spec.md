@@ -1,8 +1,9 @@
 ---
 id: 025
 slug: agenda-unica
-status: implemented
+status: released
 created: 2026-09-29
+released: v0.2.0 (2026-10-02)
 extends: [003, 004, 005]
 ---
 
@@ -120,3 +121,4 @@ cambia.
 | 2026-09-29 | Aprobada | Decisión del usuario |
 | 2026-09-30 | CA9 incluye la fecha mal formada y CA10 el dentista desactivado; vuelve a `draft` | `/analyze` ronda 1, A9 y A10 (decisión del usuario, 2026-09-30) |
 | 2026-09-30 | Aprobada de nuevo | Decisión del usuario |
+| 2026-10-02 | Liberada en v0.2.0, sin despliegue (no hay entornos) | /release |

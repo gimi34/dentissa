@@ -55,6 +55,23 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Unificar convenciones de rutas (`/crear` vs `/create`, `/edit` vs `/editar`, nombres con y sin `.index`).
 - `Route::resource('servicios')` expone `show` sin método; `ServiciosController@index` ignora el buscador.
 - Objetivo de accesibilidad sin definir (propuesto WCAG 2.1 AA).
+- Deuda de la spec 025 (/review, aceptada sin tarea; liberada en v0.2.0):
+  - 025/R8: `SET SESSION innodb_lock_wait_timeout` en `ReservaCitas` deja 5 s fijados en la conexión
+    para el resto de la petición; restaurar el valor o usar `SET STATEMENT … FOR` si aparecen procesos
+    persistentes.
+  - 025/R9: `ReservaCitas::reservar()` convierte `DeadlockException` en no disponible; documentar o
+    impedir que se llame dentro de otra transacción.
+  - 025/R10: unir los dos tests de bloqueo real de `ReservaConcurrenteTest`. Resuelto en la propia 025
+    (T024), sin acción pendiente.
+  - 025/R11: extraer los helpers de fixtures de agenda de los 5 tests a un trait común.
+  - 025/R12: la búsqueda de solapes empieza en el inicio del día; revisar en la spec 027 si se permiten
+    franjas que crucen la medianoche.
+  - 025/R13: el test de la espera de 5 s depende del texto del SQL; comprobar el efecto
+    (`@@SESSION.innodb_lock_wait_timeout`) si se pasa a binding.
+  - 025/R14: el test de orden debería exigir que el bloqueo sea la primera lectura de la transacción.
+  - 025/R16: actualizar en el plan de la 025 (TM2 y Trazabilidad) el nombre del test unido en T024.
+  - 025/R17: las migraciones de la spec 013 deben crear `idx_citas_dentista` con ese nombre, porque
+    `ReservaCitas` lo fuerza (lo cubre `ReservaConcurrenteTest`).
 - Enmienda MINOR de P2 (constitución): distinguir los cambios de comportamiento, que exigen un test
   que falle antes, de los tests de caracterización, que se comprueban rompiendo el código que
   protegen. Motivo: P2 necesitó excepción en la spec 024 (CA3–CA7) y en la 025 (CA2, CA3, CA6, CA7)
