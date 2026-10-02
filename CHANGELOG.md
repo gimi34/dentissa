@@ -5,6 +5,42 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-02
+
+### Added
+- Cada cambio de estado de una cita queda en su historial con quién lo hizo, el estado anterior,
+  el nuevo y el motivo, y el detalle de la cita lo muestra así (spec 026).
+- El detalle de la cita explica por qué no se puede cambiar su estado cuando no hay ningún cambio
+  posible: cita cerrada, cita que aún no empieza o cambio reservado a otro rol (spec 026).
+- El paciente ve por qué ya no puede cancelar una cita que ya empezó (spec 026).
+
+### Changed
+- Una cita solo avanza por estados con sentido: agendada → confirmada → en curso → completada, o
+  bien agendada o confirmada → cancelada o no asistió. Las citas completadas, canceladas o no
+  asistidas ya no se pueden reabrir; para volver a atender al paciente se agenda una cita nueva
+  (spec 026).
+- Qué puede hacer cada rol: el dentista confirma, inicia, completa y marca no asistió en sus
+  citas, pero no las cancela; el asistente confirma, cancela y marca no asistió en las citas de
+  sus dentistas, pero no las inicia ni completa; la administración puede hacer cualquier cambio
+  permitido (spec 026).
+- "En curso" y "no asistió" solo se pueden marcar cuando la cita ya empezó, según la hora de la
+  clínica; el paciente solo puede cancelar mientras su cita no haya empezado (spec 026).
+- El formulario de cambio de estado solo ofrece los cambios posibles para quien lo usa y en ese
+  momento, y "eliminar cita" del administrador es una cancelación con las mismas reglas (spec 026).
+
+### Fixed
+- Un cambio de estado con motivo ya no deja dos entradas en el historial, una de ellas sin autor
+  (spec 026).
+- Dos cambios de estado enviados a la vez sobre la misma cita ya no se aplican los dos; el segundo
+  recibe un mensaje claro en lugar de un error del servidor (spec 026).
+- Un motivo demasiado largo muestra un mensaje en español junto al campo y conserva lo escrito
+  (spec 026).
+
+### Security
+- El cambio de estado ya no acepta notas internas: dentistas y asistentes no pueden
+  sobrescribirlas (spec 026).
+- Solo un paciente puede usar la cancelación de citas del paciente (spec 026).
+
 ## [0.2.0] - 2026-10-02
 
 ### Added

@@ -138,6 +138,7 @@ Formato:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
+  - nota: decisión del usuario (2026-10-02, `/release 026`): versión v0.3.0 sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración: el usuario sube `feature/026-estados-cita` y fusiona su PR contra `main` con el CI en verde (merge commit, sin squash); después, `/release` crea el tag anotado `v0.3.0` sobre el merge commit, lo sube con confirmación y cierra la spec.
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
 - [ ] T098 Marcar spec como `released`
