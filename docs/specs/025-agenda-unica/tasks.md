@@ -99,6 +99,7 @@ Formato:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
+  - nota: decisión del usuario (2026-10-02, `/release 025`): versión v0.2.0 sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración, en orden: arreglo de CI (`4c7f48c`) y la 024 en `main`; después, el PR de `feature/025-agenda-unica` contra `main` con el CI en verde (merge commit, sin squash); por último, `/release` crea los tags `v0.1.0` y `v0.2.0` y cierra las specs.
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
 - [ ] T098 Marcar spec como `released`
