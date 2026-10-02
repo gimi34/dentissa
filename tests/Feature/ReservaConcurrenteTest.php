@@ -164,6 +164,35 @@ class ReservaConcurrenteTest extends TestCase
         }
     }
 
+    /**
+     * R15: el bloqueo de las citas candidatas es solo del dentista que se reserva. Una
+     * cita de otro dentista retenida por otra conexión no hace esperar la reserva.
+     */
+    public function test_la_reserva_de_otro_dentista_no_espera_a_las_citas_bloqueadas_de_otro(): void
+    {
+        $dentistaA = $this->dentistaConfirmadoPorOtraConexion();
+        $dentistaB = $this->dentistaConfirmadoPorOtraConexion();
+        $usuarioAjeno = $this->confirmar('usuarios', [
+            'id' => (string) Str::uuid(), 'nombre' => 'Paciente', 'apellido' => 'Concurrente', 'rol' => 'cliente',
+            'email' => 'concurrente.'.Str::random(10).'@example.test', 'activo' => 1,
+        ]);
+        $pacienteAjeno = $this->confirmar('pacientes', ['id' => (string) Str::uuid(), 'usuario_id' => $usuarioAjeno]);
+        $citaDeA = $this->confirmar('citas', [
+            'id' => (string) Str::uuid(), 'paciente_id' => $pacienteAjeno, 'dentista_id' => $dentistaA,
+            'fecha_hora' => $this->lunes.' 10:00:00', 'duracion_min' => 30, 'estado' => 'agendada',
+        ]);
+
+        // La otra conexión retiene solo la cita de A, por su clave primaria.
+        $this->segunda->beginTransaction();
+        $this->segunda->select('select id from citas where id = ? for update', [$citaDeA]);
+        DB::statement('SET SESSION innodb_lock_wait_timeout = 1');
+        $this->app->bind(ReservaCitas::class, fn () => new ReservaCitas(DB::connection(), 1));
+
+        $this->agendar('personal', $dentistaB, '10:00')->assertSessionHasNoErrors();
+
+        $this->assertSame(1, DB::table('citas')->where('dentista_id', $dentistaB)->count());
+    }
+
     // ── (b) Sin segunda conexión, sin flujo ────────────────────────────
 
     public function test_el_bloqueo_del_dentista_se_toma_antes_de_leer_horario_y_citas(): void

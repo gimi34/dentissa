@@ -152,6 +152,9 @@ class ReservaCitas
     private function comprobarSolape(string $dentistaId, Carbon $inicio, Carbon $fin): void
     {
         $citas = $this->db->table('citas')
+            // Por el índice del dentista: el FOR UPDATE solo bloquea citas de este
+            // dentista, no las de otros en el mismo tramo del día (R15).
+            ->forceIndex('idx_citas_dentista')
             ->where('dentista_id', $dentistaId)
             ->whereNotIn('estado', self::ESTADOS_LIBRES)
             ->whereBetween('fecha_hora', [$inicio->copy()->startOfDay(), $fin])
