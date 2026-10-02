@@ -97,3 +97,28 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Spec 013 (prueba de arquitectura, CA10): debe permitir que `App\Agenda\ReservaCitas` bloquee la
   fila de `personal` (tabla de Identidad) o migrar ese acceso a una interfaz de Identidad para
   bloquear a un dentista (spec 025, D11, A27).
+- Comparaciones de fecha que siguen en UTC aunque las citas guardan la hora local de la clínica:
+  paneles, próximas y pasadas del paciente, `after_or_equal:today` del alta y fechas del historial
+  de la cita, mostradas sin convertir. La spec 026 solo usa `config('clinica.zona_horaria')` para
+  decidir si una cita ya empezó (spec 026, D4; decisión del usuario, 2026-10-02).
+- Al retomar la 014: debe incorporar con `/specify --edit 014` el Gate del detalle de cita del
+  personal (`GET /{rol}/citas/{id}`), y en `/plan 014 --fix` partir de `App\Autorizacion\AlcanceClinico`
+  ya creado (con `personalId` y `dentistasDelAlcance`), de los Gates `gestionar-cita` y
+  `cambiar-estado-cita` en `AppServiceProvider` y de que `CitasController` ya delega en él su
+  alcance (spec 026, D3, A11, A23).
+- Excepción P3 de la spec 026: el detalle de cita del personal recibe su Gate en la 014, y "Mis
+  citas" y el detalle del paciente, `role:cliente` en la 015 (spec 026, D11; decisión del
+  usuario, 2026-10-02).
+- Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
+  una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
+  usuario, 2026-10-02).
+- Residuos P7 de la spec 026: el cambio de estado y su motivo quedan en el historial de la cita,
+  pero sin evento de auditoría formal → spec 022; los 403 de los Gates `gestionar-cita` y
+  `cambiar-estado-cita` no se registran → spec 020 (D10; decisión del usuario, 2026-10-02).
+- Residuo P8 de la spec 026: una `QueryException` de `EstadosCita` distinta de 1205/1213 sigue el
+  reporte por defecto y registra el SQL con sus valores, motivo incluido → spec 023 (D10;
+  decisión del usuario, 2026-10-02).
+- Requisito de tiempo de la spec 026 (tests en menos de 10 s en local): sus 46 tests tardan unos
+  12 s en Docker Desktop sobre Windows (unos 0,24 s por test más la espera de 1 s del test de
+  bloqueo). Medirlo en el CI de Linux antes de decidir si se ajusta el límite o los tests
+  (decisión del usuario, 2026-10-02).

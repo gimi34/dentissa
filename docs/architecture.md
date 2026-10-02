@@ -8,11 +8,13 @@ updated: 2026-09-28
 ## Resumen
 Monolito Laravel 12 con MVC clásico que renderiza HTML en el servidor con Blade (aplicación
 multipágina, sin API ni SPA). Casi toda la lógica de negocio y el acceso a datos viven dentro de
-13 controladores. La primera pieza de servicio es `app/Agenda/ReservaCitas.php` (spec 025), con la
-regla de agenda; no hay repositorios, Policies, Form Requests, eventos ni jobs.
+13 controladores. Las piezas de servicio están en `app/Agenda/`: `ReservaCitas.php` (spec 025), con la
+regla de agenda, y `EstadosCita.php` (spec 026), con los estados de la cita. Los Gates de citas
+viven en `app/Autorizacion/` (spec 026); no hay repositorios, Policies, Form Requests, eventos ni jobs.
 El acceso a datos es casi siempre Query Builder (`DB::table` con joins manuales); solo `usuarios`
 y `servicios` tienen modelo Eloquent. La autorización combina un middleware propio `role:` con
-comprobaciones sueltas en cada controlador. El esquema del dominio no está en migraciones: vive
+comprobaciones en cada controlador y, para los cambios de estado de las citas, los Gates
+`gestionar-cita` y `cambiar-estado-cita`. El esquema del dominio no está en migraciones: vive
 en el volcado `database/dentissa.sql`, que Docker carga al inicializar la base.
 
 ## Diagrama de componentes
@@ -44,9 +46,11 @@ flowchart LR
 | Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google | `usuarios`, Socialite |
 | Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista | `usuarios`, `pacientes`, `personal` |
 | Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol | `citas`, `pacientes`, `asistente_dentista` |
-| Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas y cancelación de citas con alcance por rol; el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php` | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
-| Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php` | `citas`, `horarios_dentista`, `servicios` |
+| Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas y cancelación de citas con alcance por rol (vía `app/Autorizacion/AlcanceClinico.php`); el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y el cambio de estado y "eliminar" en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
+| Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y cancelar en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `servicios` |
 | Agenda (regla) | `app/Agenda/ReservaCitas.php`, `app/Agenda/CitaNoAgendable.php` | Regla de agenda única (horario del día, encaje en la franja, solape estricto) y guardado de la cita en una transacción que bloquea primero la fila del dentista (spec 025) | `personal` (bloqueo), `horarios_dentista`, `citas` |
+| Agenda (estados) | `app/Agenda/EstadosCita.php`, `app/Agenda/CambioDeEstadoNoPermitido.php` | Transiciones de estado, estados cerrados, regla "ya empezó" en la zona de la clínica (`config/clinica.php`) y guardado del cambio con una sola entrada de historial con autor, en una transacción que bloquea primero la fila de la cita (spec 026) | `citas` (bloqueo), `historial_citas` |
+| Autorización de citas | `app/Autorizacion/AlcanceClinico.php`, `app/Autorizacion/CambiarEstadoCita.php` | Alcance del personal sobre las citas (ADR 0003) y Gates `gestionar-cita` y `cambiar-estado-cita`, registrados en `AppServiceProvider` (spec 026) | `personal`, `asistente_dentista`, `pacientes` |
 | Pacientes | `app/Http/Controllers/PacientesController.php` | CRUD de pacientes y alta de su usuario | `usuarios`, `pacientes`, `expedientes`, `citas` |
 | Expedientes | `app/Http/Controllers/ExpedientesController.php` | Expediente clínico ligado a una cita | `expedientes`, `citas` |
 | Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, horarios, asignación asistente↔dentista | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
@@ -69,7 +73,8 @@ Ejemplo: el personal agenda una cita.
    una transacción, el servicio bloquea la fila del dentista, revisa `horarios_dentista` y los
    solapes, e inserta la cita. Un rechazo vuelve al formulario como error del campo hora.
 5. Responde `redirect()` con flash `success`, que muestra `layouts/app.blade.php`.
-Al cambiar el estado de una cita, el trigger `trg_historial_cita` escribe en `historial_citas`.
+Al cambiar el estado de una cita, `EstadosCita` escribe una sola fila en `historial_citas`, con
+autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio (spec 026).
 
 ## Datos
 - Motor: MariaDB 10.11 en Docker (el volcado se generó con 10.4.32). PKs UUID `char(36)`.
@@ -80,9 +85,10 @@ Al cambiar el estado de una cita, el trigger `trg_historial_cita` escribe en `hi
   (tipo dentista/asistente/administrador), `asistente_dentista`, `horarios_dentista`, `servicios`,
   `citas` (estado enum de 6 valores), `historial_citas`, `expedientes`. Vistas SQL `v_citas_hoy` y
   `v_historial_paciente` (no las usa el código PHP).
-- Esquema: las tablas de dominio, las vistas y el trigger solo existen en `database/dentissa.sql`.
-  Las migraciones crean tablas de infraestructura (`users`, `sessions`, `cache`, `jobs`…) y
-  `asistente_dentista`, y alteran `usuarios` y `pacientes`, que ninguna migración crea. El
+- Esquema: las tablas de dominio, las vistas y el trigger `trg_historial_cita` solo existen en
+  `database/dentissa.sql`. Las migraciones crean tablas de infraestructura (`users`, `sessions`,
+  `cache`, `jobs`…) y `asistente_dentista`, alteran `usuarios` y `pacientes`, que ninguna migración
+  crea, y retiran el trigger (spec 026). El
   esquema no se puede recrear desde migraciones sobre una base vacía.
 
 ## Integraciones externas
@@ -107,7 +113,8 @@ Al cambiar el estado de una cita, el trigger `trg_historial_cita` escribe en `hi
 - Contratos de API: no hay API; el contrato es formulario HTML ↔ `$request->validate()`.
 - Autenticación y autorización: sesión de Laravel (guard `web`) sobre `App\Models\Usuario`;
   middleware `role:` por grupo de rutas; comprobaciones de fila en controladores
-  (`aplicarAlcanceRol`, `autorizadoParaCita`). Detalle en [security.md](security.md).
+  (`aplicarAlcanceRol`, `autorizadoParaCita`, que delegan en `AlcanceClinico`), y Gates para los
+  cambios de estado de las citas (spec 026). Detalle en [security.md](security.md).
 - Observabilidad: sin logs propios, sin correlación, sin auditoría; ver [observability.md](observability.md).
 - Seguridad: CSRF por defecto, consultas con bindings, sin `{!! !!}`; riesgos en [security.md](security.md).
 
@@ -137,7 +144,6 @@ Detalle en [deployment.md](deployment.md).
 - Esquema del dominio no reproducible desde migraciones; el volcado está desfasado respecto a las
   3 migraciones de julio (→ roadmap objetivo 1, spec 013).
 - Ayudante de dentistas disponibles copiado en 2 sitios y consulta base de citas en 4.
-- `historial_citas` recibe dos filas por un cambio de estado con motivo (trigger + controlador).
 - Restos del esqueleto: `App\Models\User`, tabla `users`, `DatabaseSeeder`, `welcome.blade.php`,
   nombre `laravel/laravel` en `composer.json`, README genérico.
 - `Route::resource('servicios')` registra `show`, que el controlador no implementa.

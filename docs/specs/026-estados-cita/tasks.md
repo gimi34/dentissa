@@ -83,7 +83,7 @@ Formato:
   - nota: Revisión de diseño: sin la skill `design` disponible (ver T025), revisado a mano. Solo cambia la condición del botón existente; no hay elementos ni estilos nuevos.
 
 ## Integración y documentación
-- [ ] T040 Hacer la verificación final — (sin archivos) — hecho cuando:
+- [x] T040 Hacer la verificación final — (sin archivos) — hecho cuando:
   - `php artisan test` completo da la línea base de T001 más los tests de T011–T015, todos en verde;
   - `vendor/bin/pint --test` pasa sobre todos los archivos PHP tocados;
   - `php artisan test --filter='EstadosCitaTransicionesTest|EstadosCitaRolesTest|HistorialCitaTest|CambioEstadoConcurrenteTest|EstadosCitaVistasTest'` dura menos de 10 s;
@@ -92,19 +92,24 @@ Formato:
   - `dentissa_test` conserva los recuentos de la línea base.
 
   — cubre: CA1, CA9, CA10
-- [ ] T041 Añadir en `docs/roadmap.md → Pendientes` seis viñetas que citan la spec 026 y su decisión — docs/roadmap.md — hecho cuando: existen las viñetas de:
+  - nota: 2026-10-02. `php artisan test` → 123 passed (770 assertions) = 77 de T001 + 46 de T011–T015, todos en verde. `pint --test` limpio en los 16 archivos PHP tocados desde `impl_base`. semgrep `p/php` (imagen `semgrep/semgrep:1.99.0`) sobre `app/Agenda`, `app/Autorizacion`, `AppServiceProvider`, los dos controladores de citas, la migración y `config/clinica.php`: sin hallazgos. gitleaks (imagen `zricethezav/gitleaks:v8.21.2`, `7aa05ac..HEAD`, 3 commits): sin fugas. `dentissa_test` conserva los recuentos de la línea base (8 usuarios, 2 citas, 1 historial, 1 personal, 6 pacientes).
+  - nota: RNF de 10 s NO cumplido en local: los 5 archivos tardan 12,1 s y 11,9 s (dos ejecuciones). Los tiempos por test suman unos 12 s: 1,2 s del test de bloqueo (espera de 1 s) y unos 0,24 s de media en los demás (Docker Desktop sobre Windows con carpeta montada). El usuario decidió aceptarlo con nota y medirlo en el CI de Linux antes de ajustar el límite o los tests (decisión del usuario, 2026-10-02); queda en `docs/roadmap.md → Pendientes y deuda`.
+- [x] T041 Añadir en `docs/roadmap.md → Pendientes` seis viñetas que citan la spec 026 y su decisión — docs/roadmap.md — hecho cuando: existen las viñetas de:
   - comparaciones de fecha que siguen en UTC: paneles, próximas citas del paciente, `after_or_equal:today` y fechas del historial (D4);
   - `/plan 014 --fix` debe partir de `AlcanceClinico` ya creado, de los Gates `gestionar-cita` y `cambiar-estado-cita` en `AppServiceProvider` y de que `CitasController` ya delega en él su alcance (D3);
   - excepción P3 de los tres GET: el detalle de cita del personal recibe su Gate en la 014, y "Mis citas" y el detalle del paciente, `role:cliente` en la 015 (D11);
   - la pregunta de la 013 sobre el trigger, resuelta: la escritura pasa a la aplicación (D2);
   - residuo P7: sin evento formal del cambio de estado → spec 022, y sin registro de los 403 del Gate → spec 020;
   - residuo P8: `QueryException` con el motivo en el log → spec 023.
-- [ ] T090 Actualizar `docs/architecture.md`:
+  - nota: 2026-10-02. Siete viñetas en `docs/roadmap.md → Pendientes y deuda`, todas con la spec 026 y su decisión: comparaciones en UTC (D4); ajuste de la 014 (D3, A11, A23); excepción P3 de los tres GET (D11); trigger de la 013 resuelto (D2); residuos P7 (→ 022, → 020) y P8 (→ 023); y la séptima, el requisito de 10 s no cumplido en local (decisión del usuario en T040).
+  - nota: A23 — la viñeta de la 014 dice que debe incorporar con `/specify --edit 014` el Gate del detalle de cita del personal (`GET /{rol}/citas/{id}`), además de ajustar su plan.
+- [x] T090 Actualizar `docs/architecture.md`:
   - Módulos: la fila Agenda (personal) menciona `app/Agenda/EstadosCita.php`; nueva carpeta `app/Autorizacion`.
   - El párrafo del trigger: el historial lo escribe la aplicación.
   - "Esquema": el trigger, retirado por migración.
   - Deuda técnica: se retira "dos filas por cambio con motivo".
-- [ ] T091 Actualizar la documentación de seguridad, observabilidad y despliegue:
+  - nota: 2026-10-02. `docs/architecture.md`: el Resumen menciona `EstadosCita` y `app/Autorizacion`, y la autorización con Gates para los cambios de estado; Módulos con las filas "Agenda (estados)" y "Autorización de citas", y las filas de personal y cliente delegando en `EstadosCita`; el párrafo del trigger dice que la aplicación escribe una sola fila con autor; "Esquema" recoge la migración que retira el trigger; Backend menciona la delegación en `AlcanceClinico`; se quita de Deuda técnica "dos filas por cambio con motivo".
+- [x] T091 Actualizar la documentación de seguridad, observabilidad y despliegue:
   - `docs/security.md → Dónde se aplica`: los Gates `gestionar-cita` y `cambiar-estado-cita` y `role:cliente` en la cancelación del paciente. RS2.a sigue "pendiente", con la nota "cancelación del paciente con `role:cliente`: spec 026; resto del grupo → spec 015"; RS2.b sin cambios.
   - `docs/observability.md`, por corrección:
     - OB5.a → "en curso (spec 026)";
@@ -112,7 +117,9 @@ Formato:
     - OB5.c sin cambios (→ 022);
     - la "Brecha por confirmar" del trigger en producción, marcada como resuelta porque el trigger se retira (spec 026).
   - `docs/deployment.md`: la migración de la 026 va en el mismo paso que el código, y la variable `CLINICA_ZONA_HORARIA`.
-- [ ] T092 Marcar spec como `implemented`
+  - nota: 2026-10-02. `docs/security.md → Dónde se aplica` con los Gates `gestionar-cita` y `cambiar-estado-cita` y `role:cliente` en la cancelación; RS2.a sigue "pendiente" con la nota (spec 026; resto → 015); RS2.b sin cambios. `docs/observability.md`: OB5.a → "en curso (spec 026)"; OB5.b sigue "pendiente" con la nota (cancelaciones: 026; notas → 022); OB5.c sin cambios; la fila del registro de auditoría apunta a `EstadosCita`; la brecha por confirmar del trigger, marcada como resuelta. `docs/deployment.md`: la migración de la 026 va en el mismo paso que el código (con su rollback) y `CLINICA_ZONA_HORARIA` en Variables de entorno.
+  - nota: A18 — `docs/deployment.md → Migraciones` documenta que, tras `bootstrap-test-db.sh` (que recarga el volcado con el trigger), hay que ejecutar `migrate` sobre `dentissa_test`.
+- [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación

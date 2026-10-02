@@ -33,8 +33,12 @@ updated: 2026-09-28
   asistente → los pacientes de sus dentistas asignados; solo el dentista autor (o admin) edita un
   expediente; cliente → solo lo suyo (decisión del usuario, 2026-09-28).
 - Dónde se aplica: middleware `role:` por grupo (`bootstrap/app.php`,
-  `app/Http/Middleware/RoleMiddleware.php`) y comprobaciones inline en controladores. No hay
-  Policies ni Gates.
+  `app/Http/Middleware/RoleMiddleware.php`) y comprobaciones inline en controladores. Los cambios
+  de estado de las citas (`PATCH /{rol}/citas/{id}/estado`, `DELETE /admin/citas/{id}` y
+  `PATCH /cliente/citas/{id}/cancelar`) usan los Gates `gestionar-cita` (alcance, antes de validar)
+  y `cambiar-estado-cita` (alcance y estados que cada rol puede pedir), en
+  `app/Autorizacion/CambiarEstadoCita.php`; la cancelación del paciente exige además `role:cliente`
+  (spec 026). No hay Policies.
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
@@ -112,7 +116,7 @@ El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usar
 Evidencia: `routes/web.php:147`, `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente
+- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; resto del grupo → spec 015)
 - RS2.b `PerfilController::update` no crea ficha de paciente para usuarios que no son cliente — estado: pendiente
 
 ### RS3 · Alta — Usuarios desactivados conservan su sesión (A07 Authentication Failures)
