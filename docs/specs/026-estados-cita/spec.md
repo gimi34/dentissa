@@ -15,11 +15,14 @@ regla de agenda de la spec 025, o marcar como completada una cita que nunca empe
 puede cancelar, aunque la spec 003 dice que no debería.
 
 El historial de una cita no sirve para saber quién hizo cada cambio. Un cambio con motivo deja dos
-filas: una sin autor y otra sin el estado anterior.
+filas: una sin autor y otra sin el estado anterior. Además, el cambio de estado acepta las notas
+internas de la cita, así que un dentista o un asistente puede sobrescribirlas sin poder verlas.
 
 Esto afecta al personal, que no puede fiarse del estado de la agenda, y a los pacientes, cuya cita
 cancelada puede reaparecer encima de otra. Atiende la brecha OB1.e **parcialmente**: el historial
-de estados gana el autor, y el evento de auditoría formal queda para la spec 022.
+de estados gana el autor, y el evento de auditoría formal queda para la spec 022. Atiende la
+brecha OB5 **parcialmente**: una sola entrada con autor por cambio, también en las cancelaciones;
+las notas internas y la conservación del historial al borrar una cita quedan para la spec 022.
 
 ## Historias de usuario
 - Como personal de la clínica, quiero que una cita solo avance por estados que tengan sentido, para que la agenda refleje lo que pasó de verdad.
@@ -39,7 +42,7 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
 - [ ] CA8 · Dada una cita cuya hora de inicio aún no ha llegado, cuando alguien la marca en curso o no asistida, entonces se rechaza con un mensaje que lo explica.
 - [ ] CA9 · Dado cualquier cambio de estado aceptado, por cualquier rol, cuando se guarda, entonces queda exactamente una entrada en el historial de la cita con quién lo hizo, el estado anterior, el nuevo, el motivo si se dio y la fecha; y el historial de la cita lo muestra así.
 - [ ] CA10 (abuso) · Dados dos cambios de estado incompatibles enviados a la vez sobre la misma cita (por ejemplo, confirmar y cancelar), cuando se procesan, entonces solo se aplica uno; el otro se evalúa contra el estado ya cambiado y, si no está permitido, recibe el mensaje de CA2 o CA3, nunca un error del servidor.
-- [ ] CA11 (abuso) · Dado un estado inexistente o una transición manipulada desde el formulario (por ejemplo, reabrir una cita cancelada), cuando se envía, entonces se rechaza con un error de validación o el mensaje de CA2, sin error del servidor y sin cambiar la cita.
+- [ ] CA11 (abuso) · Dado un estado inexistente o una transición manipulada desde el formulario (por ejemplo, reabrir una cita cancelada), cuando se envía, entonces se rechaza con un error de validación o el mensaje de CA2, sin error del servidor y sin cambiar la cita. Dado un cambio de estado al que se añaden a mano notas internas, cuando se procesa, entonces las notas internas de la cita no cambian, lo envíe quien lo envíe.
 
 ## Fuera de alcance
 - Reprogramar una cita o reabrir una cancelada (spec 027 horarios-reprogramar; hoy se agenda de
@@ -50,7 +53,9 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
 - Cambiar automáticamente el estado de citas pasadas (p. ej. a no asistió al terminar el día).
 - Eventos de auditoría formales del cambio de estado y de los rechazos → spec 022 (objetivo 3).
 - Que otros roles entren en las pantallas del paciente (004 CA7) → spec 015.
-- Notas internas de la cita (003 CA8), que no cambian.
+- Editar las notas internas de la cita (003 CA8): siguen editándose solo desde su propio formulario
+  de la administración. El cambio de estado deja de aceptarlas (CA11).
+- Conservar el historial de una cita si la cita se borra (OB5.c) → spec 022.
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: estado y motivo de la cita, asociados a un paciente (datos de
@@ -66,6 +71,7 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
 - Casos de abuso:
   - Como personal, envío a la vez dos cambios incompatibles → solo uno se aplica, sin error del servidor (CA10).
   - Como personal, manipulo el formulario para reabrir una cita cancelada o mandar un estado inexistente → se rechaza sin cambios (CA11).
+  - Como dentista o asistente, añado notas internas al cambio de estado para sobrescribirlas → las notas no cambian (CA11).
   - Como dentista, intento cancelar mi cita o cambiar la de otro dentista → se rechaza (CA4; el alcance ya lo rechaza hoy con 403).
   - Como paciente, intento cancelar la cita de otro paciente o una que ya empezó → se rechaza (CA7; 004 CA6).
 
@@ -80,6 +86,9 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
 | OB1.f — altas, cambios de rol y de cuentas | fuera | no es de citas → spec 021 |
 | OB1.g — retención de 5 años con purga | fuera | → spec 020 |
 | OB1.h — pantalla de consulta de auditoría | fuera | → spec 020 |
+| OB5.a — una sola escritura por cambio, con actor, estado anterior, nuevo y motivo | dentro | CA9 |
+| OB5.b — registrar cancelaciones y cambios de notas internas con actor | fuera, parcialmente atendida | Las cancelaciones de todos los roles quedan con autor (CA6, CA7, CA9); los cambios de notas internas no son cambios de estado → spec 022 (decisión del usuario, 2026-10-02). |
+| OB5.c — impedir el borrado en cascada del historial | fuera | la aplicación no borra citas ("eliminar" es cancelar, CA6); la conservación del historial va con la auditoría de datos clínicos → spec 022 (decisión del usuario, 2026-10-02) |
 
 ## Auditoría
 - Cada cambio de estado aceptado deja una entrada de historial con quién, de qué estado a cuál,
@@ -110,7 +119,8 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
 
 ## Notas para /plan
 - Corte acordado: 025 → 026 → 027 (decisión del usuario, 2026-09-29).
-- Hoy `CitasController::updateEstado` acepta cualquier estado del `enum`.
+- Hoy `CitasController::updateEstado` acepta cualquier estado del `enum` y también
+  `notas_internas`, que hay que dejar de aceptar (CA11, decisión del usuario, 2026-10-02).
   `CitasController::destroy` (admin) cancela sin comprobar el estado actual.
   `ClienteCitasController::cancelar` ya exige agendada o confirmada.
 - El historial lo escribe el trigger `trg_historial_cita`, sin actor. Además, el controlador
@@ -122,6 +132,12 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
   `design`).
 - La concurrencia de CA10 se puede resolver como en la 025 (bloqueo de la fila de la cita en una
   transacción); `App\Agenda` es el módulo natural.
+- Decisiones ya tomadas para `/plan` (decisión del usuario, 2026-10-02):
+  - retirar `trg_historial_cita` con una migración (reversible) y escribir la fila desde la app;
+  - zona horaria de la clínica configurable (por defecto America/Mexico_City) para "ya empezó";
+  - Gate `cambiar-estado-cita` con `AlcanceClinico::dentistasDelAlcance()` (firma de la 014) y
+    `role:cliente` en la ruta de cancelar del paciente;
+  - excepciones P7 (→ 022 y 020) y P8 (redacción de datos en los logs de errores → 023) aceptadas; sin feature flag.
 - Criterios de las specs extendidas que se modifican:
   - 003 CA7 ("a cualquiera de los 6 estados") → reemplazado por CA1–CA6 y CA9;
   - 003 CA9 ("eliminar" del admin) → reemplazado por CA6;
@@ -133,3 +149,5 @@ de estados gana el autor, y el evento de auditoría formal queda para la spec 02
 |---|---|---|
 | 2026-10-02 | Spec creada | /specify, corte de la lógica de citas en 025–027 |
 | 2026-10-02 | Aprobada | Decisión del usuario |
+| 2026-10-02 | Cita OB5 (OB5.a dentro; OB5.b y OB5.c fuera) y CA11 rechaza las notas internas en el cambio de estado | /specify --edit, hallazgos de /plan |
+| 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
