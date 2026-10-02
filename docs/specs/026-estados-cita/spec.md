@@ -23,6 +23,8 @@ cancelada puede reaparecer encima de otra. Atiende la brecha OB1.e **parcialment
 de estados gana el autor, y el evento de auditoría formal queda para la spec 022. Atiende la
 brecha OB5 **parcialmente**: una sola entrada con autor por cambio, también en las cancelaciones;
 las notas internas y la conservación del historial al borrar una cita quedan para la spec 022.
+Atiende el riesgo RS2 **parcialmente**: solo un paciente puede usar la cancelación del paciente; el
+resto de las pantallas del paciente y la ficha creada desde el perfil quedan para la spec 015.
 
 ## Historias de usuario
 - Como personal de la clínica, quiero que una cita solo avance por estados que tengan sentido, para que la agenda refleje lo que pasó de verdad.
@@ -33,12 +35,12 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
 
 ## Criterios de aceptación
 - [ ] CA1 · Dada una cita, cuando se cambia su estado, entonces solo se aceptan estas transiciones: agendada → confirmada; confirmada → en curso; en curso → completada; agendada o confirmada → cancelada; agendada o confirmada → no asistió.
-- [ ] CA2 · Dada una cita completada, cancelada o no asistida, cuando alguien intenta cambiar su estado, entonces se rechaza con un mensaje que dice que la cita ya está cerrada, y la cita no cambia. Para volver a atender al paciente se agenda una cita nueva.
+- [ ] CA2 · Dada una cita completada, cancelada o no asistida, cuando alguien intenta cambiar su estado, entonces se rechaza con un mensaje que dice que la cita ya está cerrada, y la cita no cambia. Para volver a atender al paciente se agenda una cita nueva. Al paciente se le dice que la cita ya no se puede cancelar.
 - [ ] CA3 · Dada cualquier otra transición fuera de CA1 (por ejemplo, de agendada a completada o de en curso a cancelada), cuando se intenta, entonces se rechaza con un mensaje que indica desde qué estados se permite, y la cita no cambia.
 - [ ] CA4 · Dado un dentista con una cita propia, cuando confirma, inicia, completa o marca que el paciente no asistió, entonces el cambio se acepta; cuando intenta cancelarla, se rechaza y la cita no cambia.
 - [ ] CA5 · Dado un asistente con una cita de un dentista que tiene asignado, cuando la confirma, la cancela o marca que el paciente no asistió, entonces el cambio se acepta; cuando intenta iniciarla o completarla, se rechaza y la cita no cambia.
-- [ ] CA6 · Dada la administración, cuando hace cualquier transición permitida por CA1, entonces se acepta; la acción "eliminar cita" del listado es una cancelación y sigue las mismas reglas.
-- [ ] CA7 · Dado un paciente con una cita propia agendada o confirmada que todavía no ha empezado, cuando la cancela, entonces pasa a cancelada; si ya empezó o está en otro estado, se rechaza con un mensaje y la cita no cambia.
+- [ ] CA6 · Dada la administración, cuando hace cualquier transición permitida por CA1, entonces se acepta; la acción "eliminar cita" del detalle de la cita es una cancelación y sigue las mismas reglas.
+- [ ] CA7 · Dado un paciente con una cita propia agendada o confirmada que todavía no ha empezado, cuando la cancela, entonces pasa a cancelada; si ya empezó o está en otro estado, se rechaza con un mensaje y la cita no cambia. Dado un miembro del personal que usa la cancelación del paciente, cuando la envía, entonces se rechaza por permisos y la cita no cambia.
 - [ ] CA8 · Dada una cita cuya hora de inicio aún no ha llegado, cuando alguien la marca en curso o no asistida, entonces se rechaza con un mensaje que lo explica.
 - [ ] CA9 · Dado cualquier cambio de estado aceptado, por cualquier rol, cuando se guarda, entonces queda exactamente una entrada en el historial de la cita con quién lo hizo, el estado anterior, el nuevo, el motivo si se dio y la fecha; y el historial de la cita lo muestra así.
 - [ ] CA10 (abuso) · Dados dos cambios de estado incompatibles enviados a la vez sobre la misma cita (por ejemplo, confirmar y cancelar), cuando se procesan, entonces solo se aplica uno; el otro se evalúa contra el estado ya cambiado y, si no está permitido, recibe el mensaje de CA2 o CA3, nunca un error del servidor.
@@ -52,7 +54,8 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
 - Notificar al paciente o al dentista de los cambios de estado.
 - Cambiar automáticamente el estado de citas pasadas (p. ej. a no asistió al terminar el día).
 - Eventos de auditoría formales del cambio de estado y de los rechazos → spec 022 (objetivo 3).
-- Que otros roles entren en las pantallas del paciente (004 CA7) → spec 015.
+- Que otros roles entren en las demás pantallas del paciente (resto de 004 CA7) → spec 015; esta
+  spec solo lo impide en la cancelación (CA7).
 - Editar las notas internas de la cita (003 CA8): siguen editándose solo desde su propio formulario
   de la administración. El cambio de estado deja de aceptarlas (CA11).
 - Conservar el historial de una cita si la cita se borra (OB5.c) → spec 022.
@@ -74,6 +77,7 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
   - Como dentista o asistente, añado notas internas al cambio de estado para sobrescribirlas → las notas no cambian (CA11).
   - Como dentista, intento cancelar mi cita o cambiar la de otro dentista → se rechaza (CA4; el alcance ya lo rechaza hoy con 403).
   - Como paciente, intento cancelar la cita de otro paciente o una que ya empezó → se rechaza (CA7; 004 CA6).
+  - Como personal, uso la cancelación pensada para el paciente → se rechaza por permisos (CA7; parte de 004 CA7).
 
 ## Cobertura de riesgos
 | Corrección | Alcance | Criterios / motivo y destino |
@@ -88,6 +92,8 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
 | OB1.h — pantalla de consulta de auditoría | fuera | → spec 020 |
 | OB5.a — una sola escritura por cambio, con actor, estado anterior, nuevo y motivo | dentro | CA9 |
 | OB5.b — registrar cancelaciones y cambios de notas internas con actor | fuera, parcialmente atendida | Las cancelaciones de todos los roles quedan con autor (CA6, CA7, CA9); los cambios de notas internas no son cambios de estado → spec 022 (decisión del usuario, 2026-10-02). |
+| RS2.a — exigir el rol de paciente en todas sus pantallas | fuera, parcialmente atendida | Solo la cancelación del paciente lo exige (CA7); el resto de las pantallas del paciente → spec 015 (decisión del usuario, 2026-10-02). |
+| RS2.b — no crear ficha de paciente desde el perfil de quien no es paciente | fuera | no es de citas → spec 015 |
 | OB5.c — impedir el borrado en cascada del historial | fuera | la aplicación no borra citas ("eliminar" es cancelar, CA6); la conservación del historial va con la auditoría de datos clínicos → spec 022 (decisión del usuario, 2026-10-02) |
 
 ## Auditoría
@@ -116,6 +122,10 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
   cancelada y no asistió.
 - Transiciones, permisos por rol, reglas de tiempo y alcance de la auditoría: decisiones del
   usuario, 2026-10-02.
+- Si alguien pide un cambio que su rol no permite, se rechaza por permisos aunque la cita esté
+  cerrada; el mensaje de CA2 aplica a los cambios que su rol sí puede pedir. Volver a "agendada"
+  nunca está permitido: con la cita cerrada recibe el mensaje de CA2 y, si no, uno que dice que la
+  cita no puede volver a ese estado (decisión del usuario, 2026-10-02, /analyze A2).
 
 ## Notas para /plan
 - Corte acordado: 025 → 026 → 027 (decisión del usuario, 2026-09-29).
@@ -142,7 +152,9 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
   - 003 CA7 ("a cualquiera de los 6 estados") → reemplazado por CA1–CA6 y CA9;
   - 003 CA9 ("eliminar" del admin) → reemplazado por CA6;
   - 003 Fuera de alcance "grafo de transiciones" → pasa a estar dentro;
-  - 004 CA5 → reemplazado por CA7 (añade "antes de que empiece").
+  - 004 CA5 → reemplazado por CA7 (añade "antes de que empiece");
+  - 004 CA7 → atendido en parte por CA7: la ruta de cancelar exige `role:cliente`; el resto del
+    grupo `/cliente` → 015.
 
 ## Historial
 | Fecha | Cambio | Motivo |
@@ -150,4 +162,6 @@ las notas internas y la conservación del historial al borrar una cita quedan pa
 | 2026-10-02 | Spec creada | /specify, corte de la lógica de citas en 025–027 |
 | 2026-10-02 | Aprobada | Decisión del usuario |
 | 2026-10-02 | Cita OB5 (OB5.a dentro; OB5.b y OB5.c fuera) y CA11 rechaza las notas internas en el cambio de estado | /specify --edit, hallazgos de /plan |
+| 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
+| 2026-10-02 | Cita RS2 (RS2.a parcial, RS2.b fuera), CA7 rechaza al personal en la cancelación del paciente, CA2 con el mensaje del paciente, CA6 "del detalle" y supuesto de "rol primero" | /analyze ronda 1: A12, A14, A19, A2 |
 | 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
