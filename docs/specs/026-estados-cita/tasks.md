@@ -2,6 +2,7 @@
 spec: 026-estados-cita
 plan: plan.md
 status: approved
+impl_base: 7aa05ac
 ---
 
 # Tareas · 026 Estados de la cita y quién puede cambiarlos
@@ -24,8 +25,10 @@ Formato:
 | P8 Correlación y logs limpios | ❌ aceptado: si el `insert` del historial o el `update` de la cita fallan con una `QueryException` distinta de 1205/1213, el reporte por defecto de Laravel registra el SQL con sus bindings, motivo incluido; la redacción de bindings para toda la aplicación la hace la spec 023 — aprobado por el usuario el 2026-10-02 | Ninguna tarea añade llamadas a `Log::`. T013 comprueba que ni el cambio ni el rechazo escriben datos en logs. T041 anota el residuo. |
 
 ## Preparación
-- [ ] T001 Registrar la línea base en `feature/026-estados-cita`, con cuatro datos: el recuento de `php artisan test` en verde; que hoy un dentista que envía `estado=cancelada` en `PATCH /dentista/citas/{id}/estado` lo consigue; que un cambio con motivo deja dos filas en `historial_citas`, una sin autor; y que `SHOW TRIGGERS` en `dentissa_test` lista `trg_historial_cita` — docs/specs/026-estados-cita/tasks.md — hecho cuando: la nota bajo esta tarea recoge los cuatro datos
-- [ ] T002 Formatear con Pint `routes/web.php`, sin cambiar comportamiento (hoy falla `pint --test`; T026 toca una línea) — routes/web.php — hecho cuando: `vendor/bin/pint --test routes/web.php` pasa, `php artisan route:list` da las mismas rutas que antes y la suite da la línea base de T001
+- [x] T001 Registrar la línea base en `feature/026-estados-cita`, con cuatro datos: el recuento de `php artisan test` en verde; que hoy un dentista que envía `estado=cancelada` en `PATCH /dentista/citas/{id}/estado` lo consigue; que un cambio con motivo deja dos filas en `historial_citas`, una sin autor; y que `SHOW TRIGGERS` en `dentissa_test` lista `trg_historial_cita` — docs/specs/026-estados-cita/tasks.md — hecho cuando: la nota bajo esta tarea recoge los cuatro datos
+  - nota: 2026-10-02, rama `feature/026-estados-cita` en 7aa05ac. (1) `php artisan test` → 77 passed (404 assertions). (2) Con un test temporal no versionado (usa la fixture de T010): un dentista que envía `estado=cancelada` en `PATCH /dentista/citas/{id}/estado` recibe 302 y la cita queda `cancelada`. (3) Un cambio del admin con motivo deja 2 filas en `historial_citas`: una sin `cambiado_por` (trigger) y otra sin `estado_anterior` (controlador). (4) `SHOW TRIGGERS LIKE 'citas'` en `dentissa_test` lista `trg_historial_cita`. Recuentos de `dentissa_test`: 8 usuarios, 2 citas, 1 fila de historial, 1 fila de `personal`.
+- [x] T002 Formatear con Pint `routes/web.php`, sin cambiar comportamiento (hoy falla `pint --test`; T026 toca una línea) — routes/web.php — hecho cuando: `vendor/bin/pint --test routes/web.php` pasa, `php artisan route:list` da las mismas rutas que antes y la suite da la línea base de T001
+  - nota: 2026-10-02. `vendor/bin/pint routes/web.php` (function_declaration, method_argument_space, fully_qualified_strict_types…); `pint --test` pasa. `route:list --json` antes y después: las 91 rutas coinciden en método, URI, nombre, acción y middleware (solo cambia el orden del JSON). Suite: 77 passed.
 
 ## Tests (antes de implementar)
 - [ ] T010 Crear la fixture `EscenarioEstadosCita` con admin, dentistas D1 y D2, asistente A1 asignado a D1, pacientes P1 y P2 con usuario cliente, y los helpers `cita(dentista, paciente, estado, inicio)`, `cambiar(usuario, cita, estado, motivo, extra)`, `entradasDeHistorial(cita)` y `seccion(html, id)` (XPath por `id`), según el plan — tests/Feature/Concerns/EscenarioEstadosCita.php — hecho cuando: el trait existe, crea los datos dentro de la transacción del test y `pint --test` pasa
