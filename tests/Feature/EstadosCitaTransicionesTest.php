@@ -202,6 +202,31 @@ class EstadosCitaTransicionesTest extends TestCase
         );
     }
 
+    public function test_un_motivo_demasiado_largo_muestra_un_mensaje_en_espanol(): void
+    {
+        $mensaje = 'El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.';
+        $cita = $this->cita($this->d1, $this->p1, 'confirmada', self::INICIO);
+
+        $this->cambiar($this->admin, $cita, 'en_curso', str_repeat('a', 501))->assertStatus(302);
+
+        $this->assertSame('confirmada', $this->estadoDe($cita));
+        $this->assertSame($mensaje, $this->errorDe('motivo'));
+
+        // El mensaje se ve en el formulario de estado del detalle (la petición siguiente).
+        $estado = $this->seccion($this->actingAs($this->admin)->get("/admin/citas/{$cita}")->getContent(), 'estado');
+        $this->assertStringContainsString($mensaje, (string) $estado);
+    }
+
+    public function test_un_rechazo_por_la_regla_conserva_el_motivo_escrito(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::INICIO);
+
+        $this->cambiar($this->admin, $cita, 'completada', 'Llamó para avisar')->assertStatus(302);
+
+        $this->assertSame('agendada', $this->estadoDe($cita));
+        $this->assertSame('Llamó para avisar', session()->getOldInput('motivo'));
+    }
+
     public function test_las_notas_internas_enviadas_con_el_estado_no_cambian(): void
     {
         foreach ([$this->admin, $this->dentista1, $this->asistente] as $usuario) {

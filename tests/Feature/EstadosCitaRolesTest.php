@@ -236,7 +236,7 @@ class EstadosCitaRolesTest extends TestCase
             $this->cancelarComoPaciente($this->paciente1, $cita)->assertStatus(302);
 
             $this->assertSame($origen, $this->estadoDe($cita));
-            $this->assertNotEmpty(session('error'), $origen);
+            $this->assertSame(self::MENSAJE_PACIENTE_NO_CANCELABLE, session('error'), $origen);
         }
     }
 

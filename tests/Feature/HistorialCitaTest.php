@@ -2,11 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Agenda\EstadosCita;
+use App\Models\Usuario;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\TestCase;
 
@@ -63,13 +68,33 @@ class HistorialCitaTest extends TestCase
     public function test_un_rechazo_no_deja_entrada_en_el_historial(): void
     {
         $saltada = $this->cita($this->d1, $this->p1, 'agendada', self::INICIO);
-        $this->cambiar($this->admin, $saltada, 'completada', 'Intento de saltar estados');
+        $this->cambiar($this->admin, $saltada, 'completada', 'Intento de saltar estados')->assertStatus(302);
+        $this->assertSame('agendada', $this->estadoDe($saltada));
 
         $porRol = $this->cita($this->d1, $this->p1, 'agendada', self::INICIO);
-        $this->cambiar($this->dentista1, $porRol, 'cancelada');
+        $this->cambiar($this->dentista1, $porRol, 'cancelada')->assertStatus(403);
+        $this->assertSame('agendada', $this->estadoDe($porRol));
 
         $this->assertCount(0, $this->entradasDeHistorial($saltada));
         $this->assertCount(0, $this->entradasDeHistorial($porRol));
+    }
+
+    public function test_si_falla_el_historial_la_cita_no_cambia(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::INICIO);
+        // Un autor que no existe en `usuarios`: el INSERT del historial viola su clave foránea.
+        $actor = new Usuario(['rol' => 'admin']);
+        $actor->id = (string) Str::uuid();
+
+        try {
+            app(EstadosCita::class)->cambiar($cita, 'confirmada', $actor, null);
+            $this->fail('El historial debía fallar por la clave foránea del autor.');
+        } catch (QueryException) {
+            // Esperado: sin historial, el cambio de estado tampoco debe quedar guardado.
+        }
+
+        $this->assertSame('agendada', DB::table('citas')->where('id', $cita)->lockForUpdate()->value('estado'));
+        $this->assertCount(0, $this->entradasDeHistorial($cita));
     }
 
     public function test_el_historial_muestra_autor_estados_y_motivo(): void

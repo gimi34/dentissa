@@ -122,6 +122,22 @@ class EstadosCitaVistasTest extends TestCase
         $this->assertSame(1, $this->formulariosHacia($listado, "/cliente/citas/{$pendiente}/cancelar", 'PATCH'));
     }
 
+    public function test_el_paciente_ve_por_que_no_puede_cancelar_una_cita_que_ya_empezo(): void
+    {
+        $mensaje = 'Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica.';
+        // 16:30 UTC son las 10:30 en la clínica.
+        Carbon::setTestNow(Carbon::parse('2026-10-05 16:30:00', 'UTC'));
+        $empezada = $this->cita($this->d1, $this->p1, 'confirmada', '2026-10-05 10:00');
+        $pendiente = $this->cita($this->d1, $this->p1, 'confirmada', '2026-10-05 12:00');
+
+        $detalle = $this->actingAs($this->paciente1)->get("/cliente/citas/{$empezada}")->assertOk()->getContent();
+        $this->assertStringContainsString($mensaje, $detalle);
+        $this->assertSame(0, $this->formulariosHacia($detalle, "/cliente/citas/{$empezada}/cancelar", 'PATCH'));
+
+        $detalle = $this->actingAs($this->paciente1)->get("/cliente/citas/{$pendiente}")->assertOk()->getContent();
+        $this->assertStringNotContainsString($mensaje, $detalle);
+    }
+
     // ── Apoyo ──────────────────────────────────────────────────────────
 
     private function seccionEstado($usuario, string $prefijo, string $cita): ?string
