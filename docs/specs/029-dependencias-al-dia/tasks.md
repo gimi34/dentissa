@@ -59,8 +59,9 @@ Formato:
   - nota: tras T020: `php artisan test` → 152 en verde (1207 aserciones), el mismo recuento que la línea base de T001, sin fallos nuevos; los dos de `DependenciasSegurasTest` incluidos. Duración ~40 s (antes ~33 s, con variación habitual en local).
 - [x] T023 Verificación manual del login con Google en local, hecha por el usuario tras T020 (test de TM3) — (sin archivos; nota en tasks.md) — hecho cuando: el usuario confirma que entra con Google en `http://localhost:8000` igual que antes, y la nota recoge la fecha · verificación manual: login con Google en local tras la actualización — cubre: CA5 — depende: T020
   - nota: verificación manual OK 2026-10-03 (usuario): tras T020, el login con Google en `http://localhost:8000` funciona igual que antes.
-- [ ] T024 Reformular el docblock de `DependenciasSegurasTest`: las mínimas de la 024 corrigen avisos críticos o altos (salvo `follow-redirects`, moderado) y las de la 029, avisos bajos y medios (CA1 exige cero avisos de cualquier severidad), con el párrafo ajustado a unos 85 caracteres por línea — tests/Feature/DependenciasSegurasTest.php — hecho cuando: el docblock dice eso, ninguna línea pasa de 90 caracteres, `pint --test` pasa y `DependenciasSegurasTest` sigue en verde — cubre: CA1
+- [x] T024 Reformular el docblock de `DependenciasSegurasTest`: las mínimas de la 024 corrigen avisos críticos o altos (salvo `follow-redirects`, moderado) y las de la 029, avisos bajos y medios (CA1 exige cero avisos de cualquier severidad), con el párrafo ajustado a unos 85 caracteres por línea — tests/Feature/DependenciasSegurasTest.php — hecho cuando: el docblock dice eso, ninguna línea pasa de 90 caracteres, `pint --test` pasa y `DependenciasSegurasTest` sigue en verde — cubre: CA1
   - nota: añadida por /review: R1
+  - nota: el docblock separa las mínimas de la 024 (críticas o altas, salvo `follow-redirects`, moderado) y las de la 029 (bajas y una media, CA1 con cero avisos); línea más larga: 84 caracteres; `pint --test` pasa y `DependenciasSegurasTest` sigue en verde (2/2).
 
 ## Integración y documentación
 - [x] T040 Verificación final: `php artisan test`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php`, `composer audit --locked` sin filtro con 0 avisos, `npm audit` con 0, gitleaks sobre el rango de la spec sin hallazgos, `python .ai/bin/aidd.py validate docs/specs/029-dependencias-al-dia` sin errores y, por CA7, `docs/security.md` con la fila de EX1 anotada (avisos corregidos por la 029, se retira al liberarla) y RS17.a "en curso (spec 029)" — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — cubre: CA7 — depende: T021, T022, T023, T091
@@ -74,9 +75,10 @@ Formato:
 - [x] T091 Actualizar `docs/security.md`, por corrección: RS17.a → "en curso (spec 029)", y en la fila de EX1 una nota de que sus avisos quedan corregidos en la spec 029 y que la excepción se retira al liberarla. `docs/deployment.md` y `docs/observability.md` no cambian — docs/security.md — hecho cuando: los dos cambios están y ningún riesgo figura como mitigado antes de la release — cubre: CA7 — depende: T020
   - nota: RS17.a → "en curso (spec 029)"; ningún riesgo se marca como mitigado antes de la release. `docs/deployment.md` y `docs/observability.md` no cambian.
   - nota: A3 — la columna "Vence" de EX1 gana una nota: sus dos avisos quedan corregidos en la 029 y la excepción se retira al liberarla. No adelanta la retirada, que sigue en la release (T098); difiere del plan solo en esa nota.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
   - nota: spec 029 → `implemented` (2026-10-03) con CA1–CA7 marcados.
   - nota: A12 — CA7 se marca por lo que comprueba T040 (estado tras la actualización); su última frase (EX1 retirada y RS17.a mitigada) se comprueba en T098, al liberar.
+  - nota: 2026-10-03, tras T024 (/review r1): spec de nuevo en `implemented`; CA1–CA7 siguen marcados (152 tests en verde).
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
