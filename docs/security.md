@@ -38,7 +38,10 @@ updated: 2026-09-28
   `PATCH /cliente/citas/{id}/cancelar`) usan los Gates `gestionar-cita` (alcance, antes de validar)
   y `cambiar-estado-cita` (alcance y estados que cada rol puede pedir), en
   `app/Autorizacion/CambiarEstadoCita.php`; la cancelación del paciente exige además `role:cliente`
-  (spec 026). No hay Policies.
+  (spec 026). El horario del dentista (`POST /admin/personal/{id}/horarios`) y su sección en la
+  ficha usan, además de `role:admin`, el Gate `definir-horario` (`app/Autorizacion/GestionPersonal.php`):
+  solo la administración y solo sobre un dentista; otro tipo de personal → 404 (spec 027). No hay
+  Policies.
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
@@ -215,8 +218,8 @@ Correcciones:
 
 Correcciones:
 - RS12.a Validar `hora` con `date_format:H:i` — estado: mitigada (v0.2.0)
-- RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: pendiente
-- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; pacientes, expedientes y asignación de asistentes: spec 013)
+- RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: en curso (spec 027)
+- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; horario de dentista: spec 027; pacientes, expedientes y asignación de asistentes: spec 013)
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)
 El registro público responde con un mensaje explícito de "correo ya registrado". Evidencia:

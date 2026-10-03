@@ -98,25 +98,33 @@ Formato:
   - nota: verificación manual OK 2026-10-03 (usuario): ficha de un dentista a 1440 px — borde de las horas, foco con teclado en campos y en «Ver cita», alternar un día, error de franja con resumen y lista de citas fuera.
 
 ## Integración y documentación
-- [ ] T040 Verificación final — (sin archivos) — hecho cuando:
+- [x] T040 Verificación final — (sin archivos) — hecho cuando:
   - `php artisan test` completo da la línea base de T002 más los tests de T010–T012, todos en verde (incluidos `ReglaAgendaTest` y `ReservaConcurrenteTest`);
   - `vendor/bin/pint --test` pasa sobre todos los archivos PHP tocados;
   - semgrep `p/php --metrics=off` sobre los archivos de `app/` tocados no da hallazgos;
   - gitleaks sobre el rango de la spec no da hallazgos;
   - composer audit `--locked` y npm audit dan 0 altas o críticas;
   - el diff no añade llamadas a `Log::`.
-- [ ] T041 Anotar en `docs/roadmap.md → Pendientes y deuda` que la deuda 025/R12 (franjas que cruzan la medianoche) queda resuelta por la 027 (CA2), y añadir la viñeta "extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (spec 013)" — docs/roadmap.md — hecho cuando: las dos viñetas existen y citan la spec 027
-- [ ] T090 Actualizar `docs/architecture.md`:
+  - nota: 2026-10-03: `php artisan test` → 150 en verde (127 de la línea base de T002 + 23 de T010–T012, incluidos `ReglaAgendaTest` y `ReservaConcurrenteTest`), ~33 s.
+  - nota: `pint --test` pasa en los 9 archivos PHP tocados; semgrep `p/php --metrics=off` sobre los 6 archivos de `app/` tocados: 0 hallazgos; gitleaks sobre `ebe3bc1..HEAD`: sin secretos.
+  - nota: composer audit `--locked`: 0 altas o críticas. Dos bajas cubiertas por EX1 (laravel/framework CVE-2026-102279 y league/flysystem CVE-2026-102601) y una **media nueva**: phpseclib/phpseclib CVE-2026-84308 (X25519 no constante; afecta a < 3.0.57). Fuera de P6 (solo bloquean críticas y altas); queda para que `/review` y `/release` decidan si se registra.
+  - nota: npm audit: 0 vulnerabilidades. El diff de `app/` no añade llamadas a `Log::`.
+- [x] T041 Anotar en `docs/roadmap.md → Pendientes y deuda` que la deuda 025/R12 (franjas que cruzan la medianoche) queda resuelta por la 027 (CA2), y añadir la viñeta "extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (spec 013)" — docs/roadmap.md — hecho cuando: las dos viñetas existen y citan la spec 027
+  - nota: 025/R12 marcada como resuelta por la 027 (CA2) y nueva viñeta "Deuda de la spec 027" con la extracción de la regla de franja común → spec 013.
+- [x] T090 Actualizar `docs/architecture.md`:
   - fila "Agenda (horario)" con `app/Agenda/HorarioDentista.php` y la regla `app/Rules/HoraFinPosterior.php`;
   - fila "Autorización de personal" (nueva, junto a la de citas) con `GestionPersonal` y el Gate `definir-horario`;
   - en "Personal", que el horario lo guarda el servicio.
-- [ ] T091 Actualizar `docs/security.md`, por corrección:
+  - nota: fila "Agenda (horario)" con `HorarioDentista`, `HorarioNoGuardado` y `HoraFinPosterior`; fila nueva "Autorización de personal" (junto a la de citas) con `GestionPersonal` y `definir-horario`; la fila "Personal" dice que el horario lo valida el controlador y lo guarda el servicio; el párrafo de piezas de servicio cita `HorarioDentista.php` y `app/Rules/`.
+- [x] T091 Actualizar `docs/security.md`, por corrección:
   - RS12.b → "en curso (spec 027)";
   - RS12.c sigue "pendiente", y su nota añade "horario de dentista: spec 027";
   - "Dónde se aplica" gana el Gate `definir-horario`.
+  - nota: por corrección: RS12.b → "en curso (spec 027)" (pasará a mitigada en la release); RS12.c sigue pendiente con "horario de dentista: spec 027"; "Dónde se aplica" gana el Gate `definir-horario`. `deployment.md` y `observability.md` sin cambios (sin variables, migraciones ni logs nuevos).
 
   `docs/deployment.md` y `docs/observability.md` no cambian.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: spec 027 → `implemented` (2026-10-03) con CA1–CA9 marcados: sus tests pasan; `docs/specs/README.md` actualizado.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación

@@ -1,7 +1,7 @@
 ---
 id: 027
 slug: horarios-validos
-status: approved
+status: implemented
 created: 2026-10-02
 extends: [005]
 ---
@@ -30,15 +30,15 @@ mitigada, y RS12.c se atiende solo en el horario; el resto va a la spec 013.
 - Como administración, quiero ver las citas que quedan fuera del horario al cambiarlo, para reprogramarlas o cancelarlas a tiempo.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un dentista, cuando la administración guarda su horario con días marcados y, en cada uno, una hora de inicio y una de fin posterior el mismo día, entonces queda guardado un horario por día marcado y la ficha lo muestra así; los días no marcados quedan sin horario.
-- [ ] CA2 (abuso) · Dado un día marcado cuya hora de fin es igual o anterior a la de inicio (incluida una franja que cruzaría la medianoche, como 22:00–02:00), cuando se guarda, entonces se rechaza con un mensaje junto a ese día que dice que la hora de fin debe ser posterior a la de inicio, y el horario anterior del dentista no cambia.
-- [ ] CA3 (abuso) · Dado un horario manipulado (un día que no existe, una hora mal escrita como "25:99" o un texto, o una lista en lugar de un valor), cuando se envía, entonces se rechaza con un error de validación, nunca con un error del servidor, y el horario anterior no cambia.
-- [ ] CA4 · Dado un día marcado al que le falta la hora de inicio o la de fin, cuando se guarda, entonces se rechaza con un mensaje junto a ese día y el horario anterior no cambia; nunca se rellena una hora por defecto sin que la administración la vea.
-- [ ] CA5 · Dado un dentista, cuando la administración guarda su horario sin ningún día marcado, entonces el horario queda vacío y el mensaje avisa de que no se podrán agendar citas con ese dentista hasta que tenga horario.
-- [ ] CA6 (abuso) · Dada una persona del personal que no es dentista (asistente o administración), o un identificador que no existe, cuando se intenta guardar un horario para ella, entonces se rechaza y no se guarda nada; la ficha de un asistente o un administrador no ofrece el formulario de horario.
-- [ ] CA7 · Dado un dentista con citas futuras agendadas o confirmadas, cuando la administración guarda un horario nuevo que deja alguna fuera (en un día sin horario, o que empieza antes o termina después de la franja de su día), entonces el horario se guarda, las citas no cambian y la administración ve la lista de las que quedaron fuera, con paciente, fecha, hora y estado y un enlace a cada una.
-- [ ] CA8 · Dado un cambio de horario que no deja ninguna cita futura fuera, cuando se guarda, entonces solo se muestra el mensaje de que se guardó, sin lista; las citas pasadas, canceladas, no asistidas, completadas o en curso nunca aparecen en la lista.
-- [ ] CA9 (abuso) · Dado un dentista, un asistente o un paciente, cuando intenta guardar el horario de un dentista, entonces se rechaza por permisos y el horario no cambia.
+- [x] CA1 · Dado un dentista, cuando la administración guarda su horario con días marcados y, en cada uno, una hora de inicio y una de fin posterior el mismo día, entonces queda guardado un horario por día marcado y la ficha lo muestra así; los días no marcados quedan sin horario.
+- [x] CA2 (abuso) · Dado un día marcado cuya hora de fin es igual o anterior a la de inicio (incluida una franja que cruzaría la medianoche, como 22:00–02:00), cuando se guarda, entonces se rechaza con un mensaje junto a ese día que dice que la hora de fin debe ser posterior a la de inicio, y el horario anterior del dentista no cambia.
+- [x] CA3 (abuso) · Dado un horario manipulado (un día que no existe, una hora mal escrita como "25:99" o un texto, o una lista en lugar de un valor), cuando se envía, entonces se rechaza con un error de validación, nunca con un error del servidor, y el horario anterior no cambia.
+- [x] CA4 · Dado un día marcado al que le falta la hora de inicio o la de fin, cuando se guarda, entonces se rechaza con un mensaje junto a ese día y el horario anterior no cambia; nunca se rellena una hora por defecto sin que la administración la vea.
+- [x] CA5 · Dado un dentista, cuando la administración guarda su horario sin ningún día marcado, entonces el horario queda vacío y el mensaje avisa de que no se podrán agendar citas con ese dentista hasta que tenga horario.
+- [x] CA6 (abuso) · Dada una persona del personal que no es dentista (asistente o administración), o un identificador que no existe, cuando se intenta guardar un horario para ella, entonces se rechaza y no se guarda nada; la ficha de un asistente o un administrador no ofrece el formulario de horario.
+- [x] CA7 · Dado un dentista con citas futuras agendadas o confirmadas, cuando la administración guarda un horario nuevo que deja alguna fuera (en un día sin horario, o que empieza antes o termina después de la franja de su día), entonces el horario se guarda, las citas no cambian y la administración ve la lista de las que quedaron fuera, con paciente, fecha, hora y estado y un enlace a cada una.
+- [x] CA8 · Dado un cambio de horario que no deja ninguna cita futura fuera, cuando se guarda, entonces solo se muestra el mensaje de que se guardó, sin lista; las citas pasadas, canceladas, no asistidas, completadas o en curso nunca aparecen en la lista.
+- [x] CA9 (abuso) · Dado un dentista, un asistente o un paciente, cuando intenta guardar el horario de un dentista, entonces se rechaza por permisos y el horario no cambia.
 
 ## Fuera de alcance
 - Reprogramar una cita a otra fecha u hora, o reabrir una cancelada → spec 028 reprogramar-citas
@@ -137,3 +137,4 @@ Cada brecha, contradicción o supuesto resuelto, con su origen (`shared/contract
 | 2026-10-02 | Aprobada | Decisión del usuario |
 | 2026-10-02 | Decisión del horario sin días confirmada por el usuario (pasa de supuesto a fuente `usuario`) | /analyze A15 |
 | 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
+| 2026-10-03 | Implementada: los 9 criterios pasan sus tests (`HorarioDentistaTest`, `CitasFueraDelHorarioTest`, `HorarioDentistaVistasTest`) | /implement T092 |

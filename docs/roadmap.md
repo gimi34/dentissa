@@ -80,13 +80,18 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     (T024), sin acción pendiente.
   - 025/R11: extraer los helpers de fixtures de agenda de los 5 tests a un trait común.
   - 025/R12: la búsqueda de solapes empieza en el inicio del día; revisar en la spec 027 si se permiten
-    franjas que crucen la medianoche.
+    franjas que crucen la medianoche. Resuelta por la spec 027 (CA2): el horario no admite franjas
+    que crucen la medianoche (la hora de fin es posterior a la de inicio el mismo día), así que la
+    regla de agenda no cambia.
   - 025/R13: el test de la espera de 5 s depende del texto del SQL; comprobar el efecto
     (`@@SESSION.innodb_lock_wait_timeout`) si se pasa a binding.
   - 025/R14: el test de orden debería exigir que el bloqueo sea la primera lectura de la transacción.
   - 025/R16: actualizar en el plan de la 025 (TM2 y Trazabilidad) el nombre del test unido en T024.
   - 025/R17: las migraciones de la spec 013 deben crear `idx_citas_dentista` con ese nombre, porque
     `ReservaCitas` lo fuerza (lo cubre `ReservaConcurrenteTest`).
+- Deuda de la spec 027:
+  - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
+    repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
 - Deuda de la spec 026 (/review, aceptada sin tarea; liberada en v0.3.0):
   - 026/R2: mensaje propio cuando se pide el mismo estado que ya tiene la cita (doble envío, dos
     pestañas), en lugar del mensaje genérico de transición.
