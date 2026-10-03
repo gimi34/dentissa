@@ -89,9 +89,22 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 025/R16: actualizar en el plan de la 025 (TM2 y Trazabilidad) el nombre del test unido en T024.
   - 025/R17: las migraciones de la spec 013 deben crear `idx_citas_dentista` con ese nombre, porque
     `ReservaCitas` lo fuerza (lo cubre `ReservaConcurrenteTest`).
-- Deuda de la spec 027:
+- Deuda de la spec 027 (liberada en v0.4.0; /review, aceptada sin tarea):
   - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
     repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
+  - 027/R8: comprobar `tipo = dentista` y que la fila exista dentro de la transacción del horario
+    (hoy se comprueba antes, fuera de ella).
+  - 027/R9: una fila heredada con `disponible = 0` sale marcada en la ficha y se normaliza a 1 al
+    guardar; `citasFuera` ya la trata como día sin horario.
+  - 027/R11: "Horarios de atención" como `h2` y nombre accesible para el formulario (DS7).
+  - 027/R12: llevar el foco al resumen de errores del horario tras el rechazo.
+  - 027/R13: texto oculto en los "Ver cita" de la lista de citas fuera (2.4.9, AAA).
+  - 027/R14: objetivos de toque de la fila, el campo de hora y "Ver cita" (DS6, objetivo 6).
+  - 027/R16: `DB::raw`/`whereRaw` previos de `PersonalController` (P4, código previo).
+  - 027/R17: validación del horario en un Form Request y estado de la vista en un view-model.
+  - 027/R18: tokens de tamaño propios para la casilla y la etiqueta del día.
+  - 027/R19: ayudas de test de la 027 al trait común (junto con 025/R11).
+  - 027/R20: excluir `vendor/` de trivy en local (falsos positivos de la documentación de mockery).
 - Deuda de la spec 026 (/review, aceptada sin tarea; liberada en v0.3.0):
   - 026/R2: mensaje propio cuando se pide el mismo estado que ya tiene la cita (doble envío, dos
     pestañas), en lugar del mensaje genérico de transición.

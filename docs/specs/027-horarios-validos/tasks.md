@@ -155,11 +155,14 @@ Formato:
   - nota: 2026-10-03, tras las tareas de /review r1: spec de nuevo en `implemented`; CA1–CA9 siguen marcados (152 tests en verde).
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación
+- [x] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: decisión del usuario (2026-10-03, `/release 027`): versión v0.4.0 sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración: el usuario sube `feature/027-horarios-validos` y fusiona su PR contra `main` con el CI en verde (merge commit, sin squash); después, `/release` crea el tag anotado `v0.4.0` sobre el merge commit, lo sube con confirmación y cierra la spec. Puerta de seguridad (2026-10-03): composer audit 0 críticas/altas (2 bajas en EX1, 1 media en RS17), npm audit 0; trivy solo con el falso positivo de `vendor/` (027/R20).
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
-- [ ] T098 Marcar spec como `released`
+- [x] T096 Aprobación humana para producción
+  - nota: no aplica: sin entorno de producción (`docs/deployment.md`, objetivo 5). Versión v0.4.0 sin despliegue, por decisión del usuario (2026-10-03).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+  - nota: no aplica: sin entornos. Integración en `main` con el PR #13 (merge commit `a53bb5c`, mismo contenido que `0a3f2af`); el usuario confirmó el CI en verde. Tag anotado `v0.4.0` sobre `a53bb5c`, publicado el 2026-10-03.
+- [x] T098 Marcar spec como `released`
+  - nota: 2026-10-03: spec `released` (v0.4.0); README, roadmap (027/R8, R9, R11–R14, R16–R20), RS12.b mitigada (v0.4.0) y spec 005 actualizados en `chore/cierre-027`.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
