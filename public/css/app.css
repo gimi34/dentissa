@@ -27,6 +27,25 @@
     --radius:      12px;
     --radius-sm:   8px;
     --radius-lg:   16px;
+    /* Sistema de diseño 1.1.0 (spec 027): espaciado, grosores, tamaños, pesos, foco y borde de control. */
+    --space-1: 4px;
+    --space-2: 6px;
+    --space-3: 8px;
+    --space-4: 10px;
+    --space-5: 14px;
+    --space-6: 16px;
+    --space-7: 20px;
+    --space-8: 28px;
+    --border-width:      1px;
+    --focus-ring:        var(--p600);
+    --focus-ring-width:  2px;
+    --focus-ring-offset: 2px;
+    --border-control:    var(--p400);
+    --text-body:         13.5px; /* tamaño, no color */
+    --text-small:        11.5px; /* tamaño, no color */
+    --weight-regular:    400;
+    --weight-strong:     500;
+    --field-time-width:  110px;
 }
 
 body {
@@ -401,3 +420,47 @@ tr:hover td { background: var(--p50); }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--p200); border-radius: 2px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Sistema de diseño 1.1.0 (spec 027): solo tokens ───────────────── */
+
+/* Ayuda y error de campo (antes en citas.css). */
+.field-hint { font-size: var(--text-small); color: var(--text-light); margin-top: var(--space-1); }
+.field-hint-error { color: var(--red); }
+
+/* Día del horario: una fila por día de la semana en la ficha del dentista. */
+.horario-dia {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5);
+    padding: var(--space-4) var(--space-5); border-radius: var(--radius-sm);
+    background: transparent; border: var(--border-width) solid var(--border);
+}
+.horario-dia--activo { background: var(--p50); border-color: var(--p200); }
+.horario-dia__dia { display: flex; align-items: center; gap: var(--space-3); min-width: var(--field-time-width); cursor: pointer; }
+.horario-dia__dia input { accent-color: var(--p400); width: var(--space-6); height: var(--space-6); }
+.horario-dia__nombre { font-size: var(--text-body); font-weight: var(--weight-regular); color: var(--text-muted); }
+.horario-dia--activo .horario-dia__nombre { font-weight: var(--weight-strong); color: var(--text); }
+.horario-dia__horas { display: flex; align-items: center; gap: var(--space-3); flex: 1; }
+.horario-dia__nota { font-size: var(--text-small); color: var(--text-muted); }
+.horario-dia .field {
+    width: var(--field-time-width); padding: var(--space-2) var(--space-4);
+    font-size: var(--text-body); border-width: var(--border-width); border-color: var(--border-control);
+}
+/* Gana al `.field:focus` previo del bloque <style> de la ficha, que tiene la misma especificidad que `.horario-dia .field`. */
+.horario-dia .field:focus { border-color: var(--border-control); }
+.horario-dia .field-hint { flex-basis: 100%; }
+
+/* Lista de citas (citas fuera del horario). */
+.lista-citas { list-style: none; margin: 0; padding: 0; }
+.lista-citas > li {
+    display: flex; align-items: center; gap: var(--space-5);
+    padding: var(--space-5) var(--space-6); color: var(--text);
+    border-bottom: var(--border-width) solid var(--border);
+}
+.lista-citas > li:last-child { border-bottom: none; }
+.lista-citas .btn { margin-left: auto; }
+
+/* Anillo de foco de las piezas nuevas. */
+.lista-citas a:focus-visible,
+.horario-dia input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}

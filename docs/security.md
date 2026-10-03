@@ -38,7 +38,10 @@ updated: 2026-09-28
   `PATCH /cliente/citas/{id}/cancelar`) usan los Gates `gestionar-cita` (alcance, antes de validar)
   y `cambiar-estado-cita` (alcance y estados que cada rol puede pedir), en
   `app/Autorizacion/CambiarEstadoCita.php`; la cancelación del paciente exige además `role:cliente`
-  (spec 026). No hay Policies.
+  (spec 026). El horario del dentista (`POST /admin/personal/{id}/horarios`) y su sección en la
+  ficha usan, además de `role:admin`, el Gate `definir-horario` (`app/Autorizacion/GestionPersonal.php`):
+  solo la administración y solo sobre un dentista; otro tipo de personal → 404 (spec 027). No hay
+  Policies.
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
@@ -215,8 +218,8 @@ Correcciones:
 
 Correcciones:
 - RS12.a Validar `hora` con `date_format:H:i` — estado: mitigada (v0.2.0)
-- RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: pendiente
-- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; pacientes, expedientes y asignación de asistentes: spec 013)
+- RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: en curso (spec 027)
+- RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; horario de dentista: spec 027; pacientes, expedientes y asignación de asistentes: spec 013)
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)
 El registro público responde con un mensaje explícito de "correo ya registrado". Evidencia:
@@ -262,6 +265,16 @@ Correcciones:
 - RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: mitigada (v0.1.0)
 - RS16.b Aplicar las correcciones de npm (`npm audit fix`, revisando saltos de versión mayor) — estado: mitigada (v0.1.0)
 - RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: mitigada (v0.1.0)
+
+### RS17 · Media — Vulnerabilidad media en `phpseclib/phpseclib` (A03 Software Supply Chain Failures)
+Detectada el 2026-10-03 en la review de la spec 027 (`composer audit --locked`): `phpseclib/phpseclib`
+3.0.55, dependencia transitiva, tiene CVE-2026-84308 (multiplicación escalar X25519 sin tiempo
+constante, que permite recuperar la clave privada), corregida en 3.0.57. Es media: queda fuera de
+P6, que solo bloquea críticas y altas, y el comando SCA del CI ignora las medias. La spec 027 no la
+introduce (no cambia `composer.lock`).
+
+Correcciones:
+- RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: pendiente → spec de actualización de dependencias, antes del vencimiento de EX1 (2026-10-31), respetando los 7 días de antigüedad de la versión (decisión del usuario, 2026-10-03)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en

@@ -9,8 +9,9 @@ updated: 2026-09-28
 Monolito Laravel 12 con MVC clásico que renderiza HTML en el servidor con Blade (aplicación
 multipágina, sin API ni SPA). Casi toda la lógica de negocio y el acceso a datos viven dentro de
 13 controladores. Las piezas de servicio están en `app/Agenda/`: `ReservaCitas.php` (spec 025), con la
-regla de agenda, y `EstadosCita.php` (spec 026), con los estados de la cita. Los Gates de citas
-viven en `app/Autorizacion/` (spec 026); no hay repositorios, Policies, Form Requests, eventos ni jobs.
+regla de agenda, `EstadosCita.php` (spec 026), con los estados de la cita, y `HorarioDentista.php`
+(spec 027), con el horario del dentista. Los Gates de citas y de personal viven en
+`app/Autorizacion/` (specs 026 y 027), y la regla de validación `HoraFinPosterior`, en `app/Rules/`; no hay repositorios, Policies, Form Requests, eventos ni jobs.
 El acceso a datos es casi siempre Query Builder (`DB::table` con joins manuales); solo `usuarios`
 y `servicios` tienen modelo Eloquent. La autorización combina un middleware propio `role:` con
 comprobaciones en cada controlador y, para los cambios de estado de las citas, los Gates
@@ -50,10 +51,12 @@ flowchart LR
 | Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y cancelar en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `servicios` |
 | Agenda (regla) | `app/Agenda/ReservaCitas.php`, `app/Agenda/CitaNoAgendable.php` | Regla de agenda única (horario del día, encaje en la franja, solape estricto) y guardado de la cita en una transacción que bloquea primero la fila del dentista (spec 025) | `personal` (bloqueo), `horarios_dentista`, `citas` |
 | Agenda (estados) | `app/Agenda/EstadosCita.php`, `app/Agenda/CambioDeEstadoNoPermitido.php` | Transiciones de estado, estados cerrados, regla "ya empezó" en la zona de la clínica (`config/clinica.php`) y guardado del cambio con una sola entrada de historial con autor, en una transacción que bloquea primero la fila de la cita (spec 026) | `citas` (bloqueo), `historial_citas` |
+| Agenda (horario) | `app/Agenda/HorarioDentista.php`, `app/Agenda/HorarioNoGuardado.php`, `app/Rules/HoraFinPosterior.php` | Guardado del horario semanal del dentista en una transacción que bloquea primero su fila de `personal` (el mismo bloqueo que la reserva), cálculo de las citas futuras agendadas o confirmadas que quedan fuera (misma regla de franja que `ReservaCitas`) y validación de que la hora de fin sea posterior a la de inicio sin error 500 con entradas manipuladas (spec 027) | `personal` (bloqueo), `horarios_dentista`, `citas`, `pacientes`, `usuarios` |
 | Autorización de citas | `app/Autorizacion/AlcanceClinico.php`, `app/Autorizacion/CambiarEstadoCita.php` | Alcance del personal sobre las citas (ADR 0003) y Gates `gestionar-cita` y `cambiar-estado-cita`, registrados en `AppServiceProvider` (spec 026) | `personal`, `asistente_dentista`, `pacientes` |
+| Autorización de personal | `app/Autorizacion/GestionPersonal.php` | Gate `definir-horario`, registrado en `AppServiceProvider`: solo la administración, y solo sobre un dentista (otro tipo de personal → 404) (spec 027) | `personal` |
 | Pacientes | `app/Http/Controllers/PacientesController.php` | CRUD de pacientes y alta de su usuario | `usuarios`, `pacientes`, `expedientes`, `citas` |
 | Expedientes | `app/Http/Controllers/ExpedientesController.php` | Expediente clínico ligado a una cita | `expedientes`, `citas` |
-| Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, horarios, asignación asistente↔dentista | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
+| Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, asignación asistente↔dentista y horarios: valida el horario y lo guarda con `app/Agenda/HorarioDentista.php`, que también da la lista de citas fuera del horario de la ficha (spec 027) | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
 | Servicios | `app/Http/Controllers/ServiciosController.php` | Catálogo (Eloquent + `Route::resource`) | `servicios` |
 | Usuarios | `app/Http/Controllers/UsuarioController.php` | Administración de cuentas y roles | `usuarios` |
 | Perfil | `app/Http/Controllers/PerfilController.php` | Perfil y contraseña del cliente | `usuarios`, `pacientes` |

@@ -5,6 +5,31 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-03
+
+### Added
+- Al guardar el horario de un dentista, su ficha muestra las citas futuras, agendadas o
+  confirmadas, que quedaron fuera del nuevo horario, con paciente, fecha, hora, estado y un enlace
+  a cada una; el mensaje dice cuántas son. Las citas no se modifican: se reprograman o cancelan
+  desde su detalle (spec 027).
+
+### Changed
+- El horario de un dentista solo se guarda si es coherente: cada día marcado necesita hora de
+  inicio y de fin, y la de fin debe ser posterior a la de inicio el mismo día (no se admiten
+  franjas que crucen la medianoche). Ya no se rellenan 09:00–18:00 sin que se vea. Los errores
+  aparecen junto a su día y en un resumen, y el formulario conserva lo escrito (spec 027).
+- Solo los dentistas tienen horario: la ficha de un asistente o de un administrador ya no ofrece
+  el formulario (spec 027).
+- Guardar un horario sin días avisa de que no se podrán agendar citas con ese dentista hasta que
+  tenga horario (spec 027).
+- La sección de horario de la ficha sigue el sistema de diseño: campos de hora con borde visible,
+  anillo de foco al navegar con el teclado y textos con mejor contraste (spec 027).
+
+### Security
+- Un horario manipulado (días que no existen, horas mal escritas o listas) se rechaza con un error
+  de validación, nunca con un error del servidor, y solo la administración puede definir horarios
+  (spec 027).
+
 ### Changed — flujo AI-DD actualizado a 1.11.0
 - Validador `.ai/bin/aidd.py` y plantillas de spec, plan, tareas y review de la versión 1.11.0
   (tabla "Decisiones", columna "Cómo se verifica", línea "Conteo:").

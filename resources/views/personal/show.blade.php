@@ -184,63 +184,103 @@
     {{-- ── Columna derecha ───────────────────────────────────────────── --}}
     <div style="display:flex;flex-direction:column;gap:20px">
 
-        {{-- Horarios semanales --}}
-        <div>
+        {{-- Horario semanal y citas fuera de él: solo la administración, y solo en la ficha de un dentista (spec 027) --}}
+        @if($puedeDefinirHorario)
+        @if($citasFuera->isNotEmpty())
+            @include('personal.partials.citas-fuera')
+        @endif
+
+        <div id="horario">
             <div class="section-head">
                 <span class="section-title">Horarios de atención</span>
             </div>
             <div class="card">
+                @php
+                    // Tras un rechazo (validación o bloqueo agotado) se muestra lo enviado; si no, lo guardado (D11).
+                    // Solo se usan valores de texto: una lista enviada se muestra vacía (A22, A29).
+                    $conEnvio = old('formulario') === 'horario';
+                    $clavesDias = collect($errors->keys())->filter(fn ($clave) => str_starts_with($clave, 'dias'));
+                    $diasConError = $clavesDias
+                        ->map(fn ($clave) => preg_match('/^dias\.([1-7])\.hora_(inicio|fin)$/', $clave, $m) ? (int) $m[1] : null)
+                        ->filter()->unique()->sort();
+                    $horarioNoValido = $clavesDias->contains(fn ($clave) => ! preg_match('/^dias\.[1-7]\.hora_(inicio|fin)$/', $clave));
+                @endphp
                 <form action="{{ route('admin.personal.horarios', $miembro->id) }}" method="POST">
                     @csrf
+                    <input type="hidden" name="formulario" value="horario">
+
+                    @if($clavesDias->isNotEmpty())
+                        <div class="field-hint field-hint-error" role="alert">
+                            @if($horarioNoValido)
+                                <p>El horario enviado no es válido.</p>
+                            @endif
+                            @if($diasConError->isNotEmpty())
+                                <p>Revisa el horario de: {{ $diasConError->map(fn ($n) => $dias[$n])->implode(', ') }}.</p>
+                            @endif
+                        </div>
+                    @endif
 
                     <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:18px">
                         @foreach($dias as $num => $nombre)
-                        @php $horario = $horarios->get($num); @endphp
-                        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);background:{{ $horario ? 'var(--p50)' : 'transparent' }};border:1px solid {{ $horario ? 'var(--p200)' : 'var(--border)' }};transition:all .15s" id="fila-{{ $num }}">
-
-                            {{-- Toggle día --}}
-                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:110px">
+                        @php
+                            $horario = $horarios->get($num);
+                            if ($conEnvio) {
+                                $activo = old("dias.$num.activo") === '1';
+                                $inicio = old("dias.$num.hora_inicio");
+                                $fin = old("dias.$num.hora_fin");
+                                $inicio = is_string($inicio) ? $inicio : ($activo ? '' : '09:00');
+                                $fin = is_string($fin) ? $fin : ($activo ? '' : '18:00');
+                            } else {
+                                $activo = (bool) $horario;
+                                $inicio = $horario ? substr($horario->hora_inicio, 0, 5) : '09:00';
+                                $fin = $horario ? substr($horario->hora_fin, 0, 5) : '18:00';
+                            }
+                            $errorInicio = $errors->has("dias.$num.hora_inicio");
+                            $errorFin = $errors->has("dias.$num.hora_fin");
+                        @endphp
+                        <div class="horario-dia {{ $activo ? 'horario-dia--activo' : '' }}" id="fila-{{ $num }}">
+                            <label class="horario-dia__dia">
                                 <input type="checkbox"
                                     name="dias[{{ $num }}][activo]"
                                     value="1"
-                                    {{ $horario ? 'checked' : '' }}
-                                    onchange="toggleDia({{ $num }}, this.checked)"
-                                    style="accent-color:var(--p400);width:15px;height:15px">
-                                <span style="font-size:13.5px;font-weight:{{ $horario ? '500' : '400' }};color:{{ $horario ? 'var(--text)' : 'var(--text-muted)' }}" id="lbl-{{ $num }}">
-                                    {{ $nombre }}
-                                </span>
+                                    @checked($activo)
+                                    onchange="toggleDia({{ $num }}, this.checked)">
+                                <span class="horario-dia__nombre" id="lbl-{{ $num }}">{{ $nombre }}</span>
                             </label>
 
-                            {{-- Horas --}}
-                            <div style="display:flex;align-items:center;gap:8px;flex:1" id="horas-{{ $num }}"
-                                 class="{{ $horario ? '' : 'hidden-row' }}">
+                            <div class="horario-dia__horas {{ $activo ? '' : 'hidden-row' }}" id="horas-{{ $num }}">
                                 <input type="time"
                                     name="dias[{{ $num }}][hora_inicio]"
-                                    value="{{ $horario->hora_inicio ?? '09:00' }}"
-                                    class="field" style="width:110px;padding:6px 10px;font-size:13px"
-                                    {{ $horario ? '' : 'disabled' }}>
-                                <span style="color:var(--text-muted);font-size:12px">a</span>
+                                    value="{{ $inicio }}"
+                                    class="field"
+                                    aria-label="Hora de inicio del {{ mb_strtolower($nombre) }}"
+                                    @if($errorInicio) aria-invalid="true" aria-describedby="error-dia-{{ $num }}-hora_inicio" @endif
+                                    @disabled(! $activo)>
+                                <span class="horario-dia__nota">a</span>
                                 <input type="time"
                                     name="dias[{{ $num }}][hora_fin]"
-                                    value="{{ $horario->hora_fin ?? '18:00' }}"
-                                    class="field" style="width:110px;padding:6px 10px;font-size:13px"
-                                    {{ $horario ? '' : 'disabled' }}>
+                                    value="{{ $fin }}"
+                                    class="field"
+                                    aria-label="Hora de fin del {{ mb_strtolower($nombre) }}"
+                                    @if($errorFin) aria-invalid="true" aria-describedby="error-dia-{{ $num }}-hora_fin" @endif
+                                    @disabled(! $activo)>
 
-                                @if($horario)
+                                @if(! $conEnvio && $horario)
                                     @php
-                                        $inicio = \Carbon\Carbon::parse($horario->hora_inicio);
-                                        $fin    = \Carbon\Carbon::parse($horario->hora_fin);
-                                        $horas  = $inicio->diffInMinutes($fin) / 60;
+                                        $horas = \Carbon\Carbon::parse($horario->hora_inicio)->diffInMinutes(\Carbon\Carbon::parse($horario->hora_fin)) / 60;
                                     @endphp
-                                    <span style="font-size:12px;color:var(--text-muted);margin-left:4px">
-                                        {{ number_format($horas, 1) }}h
-                                    </span>
+                                    <span class="horario-dia__nota">{{ number_format($horas, 1) }}h</span>
                                 @endif
                             </div>
 
-                            @if(!$horario)
-                                <span style="font-size:12px;color:var(--text-light)" id="sin-{{ $num }}">No disponible</span>
-                            @endif
+                            <span class="horario-dia__nota" id="sin-{{ $num }}" @if($activo) hidden @endif>No disponible</span>
+
+                            @error("dias.$num.hora_inicio")
+                                <p class="field-hint field-hint-error" id="error-dia-{{ $num }}-hora_inicio">{{ $message }}</p>
+                            @enderror
+                            @error("dias.$num.hora_fin")
+                                <p class="field-hint field-hint-error" id="error-dia-{{ $num }}-hora_fin">{{ $message }}</p>
+                            @enderror
                         </div>
                         @endforeach
                     </div>
@@ -256,6 +296,7 @@
                 </form>
             </div>
         </div>
+        @endif
 
         {{-- Citas recientes (solo dentistas) --}}
         @if($miembro->tipo === 'dentista')
@@ -314,25 +355,14 @@
 function toggleDia(num, checked) {
     const fila  = document.getElementById('fila-' + num);
     const horas = document.getElementById('horas-' + num);
-    const lbl   = document.getElementById('lbl-' + num);
     const sin   = document.getElementById('sin-' + num);
-    const inputs = horas ? horas.querySelectorAll('input') : [];
 
-    if (checked) {
-        fila.style.background = 'var(--p50)';
-        fila.style.borderColor = 'var(--p200)';
-        lbl.style.fontWeight = '500';
-        lbl.style.color = 'var(--text)';
-        if (horas) { horas.classList.remove('hidden-row'); inputs.forEach(i => i.disabled = false); }
-        if (sin)   { sin.style.display = 'none'; }
-    } else {
-        fila.style.background = 'transparent';
-        fila.style.borderColor = 'var(--border)';
-        lbl.style.fontWeight = '400';
-        lbl.style.color = 'var(--text-muted)';
-        if (horas) { horas.classList.add('hidden-row'); inputs.forEach(i => i.disabled = true); }
-        if (sin)   { sin.style.display = 'inline'; }
-    }
+    fila.classList.toggle('horario-dia--activo', checked);
+    horas.classList.toggle('hidden-row', ! checked);
+    horas.querySelectorAll('input').forEach(i => i.disabled = ! checked);
+    sin.hidden = checked;
+    // Los errores de un día desmarcado no aplican: se ocultan y vuelven al marcarlo.
+    fila.querySelectorAll('.field-hint-error').forEach(e => e.hidden = ! checked);
 }
 </script>
 @endpush

@@ -14,7 +14,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
 | 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
-| 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); 027 prevista; 013 (parte 3) | pendiente |
+| 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); 028 prevista (reprogramar); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD3.a, RD3.b, RD3.c, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS8.a, RS8.b, RS15.b, OB4.b, OB6.b, OB7.a; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | — | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | — | pendiente |
 
@@ -80,13 +80,18 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     (T024), sin acción pendiente.
   - 025/R11: extraer los helpers de fixtures de agenda de los 5 tests a un trait común.
   - 025/R12: la búsqueda de solapes empieza en el inicio del día; revisar en la spec 027 si se permiten
-    franjas que crucen la medianoche.
+    franjas que crucen la medianoche. Resuelta por la spec 027 (CA2): el horario no admite franjas
+    que crucen la medianoche (la hora de fin es posterior a la de inicio el mismo día), así que la
+    regla de agenda no cambia.
   - 025/R13: el test de la espera de 5 s depende del texto del SQL; comprobar el efecto
     (`@@SESSION.innodb_lock_wait_timeout`) si se pasa a binding.
   - 025/R14: el test de orden debería exigir que el bloqueo sea la primera lectura de la transacción.
   - 025/R16: actualizar en el plan de la 025 (TM2 y Trazabilidad) el nombre del test unido en T024.
   - 025/R17: las migraciones de la spec 013 deben crear `idx_citas_dentista` con ese nombre, porque
     `ReservaCitas` lo fuerza (lo cubre `ReservaConcurrenteTest`).
+- Deuda de la spec 027:
+  - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
+    repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
 - Deuda de la spec 026 (/review, aceptada sin tarea; liberada en v0.3.0):
   - 026/R2: mensaje propio cuando se pide el mismo estado que ya tiene la cita (doble envío, dos
     pestañas), en lugar del mensaje genérico de transición.
@@ -117,7 +122,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Enmienda MINOR de P2 (constitución): distinguir los cambios de comportamiento, que exigen un test
   que falle antes, de los tests de caracterización, que se comprueban rompiendo el código que
   protegen. Motivo: P2 necesitó excepción en la spec 024 (CA3–CA7) y en la 025 (CA2, CA3, CA6, CA7)
-  (spec 025, D9; decisión del usuario, 2026-09-29).
+  (spec 025, D9; decisión del usuario, 2026-09-29). Hecho: constitución 1.2.0 (2026-10-02, spec 027).
 - Auditoría del alta de citas con notas (dato de salud) → spec 022. Excepción P7 de la spec 025:
   la 025 no cambia qué notas se guardan ni quién (D9; decisión del usuario, 2026-09-30).
 - Auditoría del 403 del alta de citas del personal (`autorizadoParaCita`) → spec 020, registro

@@ -1,5 +1,5 @@
 ---
-version: 1.1.0
+version: 1.2.0
 ratified: 2026-09-28
 last_amended: 2026-10-02
 status: approved   # aprobada por el usuario el 2026-09-28
@@ -28,11 +28,19 @@ pide aprobación al editar código sin spec activa; `/review` rechaza cambios si
 spec fija el qué y el por qué antes de discutir el cómo.
 
 ### P2. Todo cambio de comportamiento lleva test que falla antes y pasa después
-**Regla:** cada criterio de aceptación de una spec tiene al menos un test PHPUnit (Feature o Unit)
-que falla sin el cambio y pasa con él. Los tests usan `DatabaseTransactions` contra la base de
-pruebas, nunca contra la base de desarrollo.
-**Cómo se verifica:** sección Trazabilidad del plan (criterio → test); `/review` comprueba que
-cada test existe y que `php artisan test` pasa.
+**Regla:** cada criterio de aceptación de una spec tiene al menos un test PHPUnit (Feature o Unit).
+- Si el criterio **cambia comportamiento**, su test falla sin el cambio y pasa con él.
+- Si el criterio describe algo que **ya se cumple** (p. ej. un rechazo por rol que el middleware
+  ya hace), su test es de **caracterización**. Pasa desde el principio y se comprueba rompiendo un
+  momento el código que protege: debe fallar, se restaura y se anota en la tarea (`comprobado
+  rompiendo <qué>`).
+
+Los tests usan `DatabaseTransactions` contra la base de pruebas, nunca contra la base de
+desarrollo.
+**Cómo se verifica:** sección Trazabilidad del plan (criterio → test, marcando los de
+caracterización); `/implement` registra el fallo previo o la rotura comprobada en la nota de la
+tarea; `/review` comprueba que cada test existe, que `php artisan test` pasa y que cada
+caracterización tiene su comprobación.
 **Por qué:** hoy solo usuarios y servicios tienen tests; agenda, pacientes y expedientes no tienen
 red de seguridad.
 
@@ -132,3 +140,4 @@ datos de salud de pacientes que deben poder usarla (decisión del usuario, 2026-
 |---|---|---|---|
 | 1.0.0 | 2026-09-28 | Versión inicial | /init |
 | 1.1.0 | 2026-10-02 | Añade P9: la interfaz usa solo el sistema de diseño y cumple WCAG 2.1 AA en pantallas nuevas o modificadas | Upgrade a AI-DD 1.11.0, sistema de diseño extraído (decisión del usuario, 2026-10-02) |
+| 1.2.0 | 2026-10-02 | P2 distingue los cambios de comportamiento (test que falla antes) de los criterios que ya se cumplen (test de caracterización comprobado rompiendo el código) | Tercera excepción a P2 (specs 024, 025 y 027); pendiente del roadmap (decisión del usuario, 2026-10-02) |
