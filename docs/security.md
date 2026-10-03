@@ -218,7 +218,7 @@ Correcciones:
 
 Correcciones:
 - RS12.a Validar `hora` con `date_format:H:i` — estado: mitigada (v0.2.0)
-- RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: en curso (spec 027)
+- RS12.b Validar cada elemento de `dias[*]` (día, horas y orden) en `saveHorarios` — estado: mitigada (v0.4.0)
 - RS12.c `exists` con restricción `tipo=dentista` donde se espera un dentista — estado: pendiente (agendado de citas: hecho en la spec 025; horario de dentista: spec 027; pacientes, expedientes y asignación de asistentes: spec 013)
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)

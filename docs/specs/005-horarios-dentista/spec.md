@@ -18,10 +18,10 @@ se puede agendar con él.
 
 ## Criterios de aceptación
 <!-- Spec inferida: [x] = cubierto por un test existente; [ ] = comportamiento observado en el código, sin test. -->
-- [ ] CA1 · Dado un admin en la ficha de un dentista, cuando guarda el horario (`POST /admin/personal/{id}/horarios`), entonces se borran los horarios anteriores y se inserta uno por día marcado, con `disponible=1`.
+- [ ] CA1 · Dado un admin en la ficha de un dentista, cuando guarda el horario (`POST /admin/personal/{id}/horarios`), entonces se borran los horarios anteriores y se inserta uno por día marcado, con `disponible=1`. → reemplazado por 027 CA1, CA4 y CA5
 - [ ] CA2 · Dado un dentista, cuando tiene como máximo un horario por día (1 = lunes … 7 = domingo), entonces la restricción única (personal_id, dia_semana) lo garantiza.
 - [ ] CA3 · Dado un dentista sin horario para un día, cuando se intenta agendar ese día, entonces la cita se rechaza (specs 003 y 004). → reemplazado por 025 CA2
-- [ ] CA4 (abuso) · Como admin, envío un horario con hora de fin anterior a la de inicio o un día inexistente → se rechaza con error de validación. **HOY NO SE CUMPLE: `dias[*]` no se valida.**
+- [x] CA4 (abuso) · Como admin, envío un horario con hora de fin anterior a la de inicio o un día inexistente → se rechaza con error de validación. resuelto por 027 (v0.4.0)
 
 ## Fuera de alcance
 - Excepciones por fecha (vacaciones, festivos) y varias franjas por día.
@@ -52,3 +52,4 @@ se puede agendar con él.
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-02 | Comportamiento modificado por 025 en v0.2.0 | /release |
+| 2026-10-03 | Comportamiento modificado por 027 en v0.4.0 | /release |
