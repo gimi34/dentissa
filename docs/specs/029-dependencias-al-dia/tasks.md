@@ -61,7 +61,7 @@ Formato:
   - nota: verificación manual OK 2026-10-03 (usuario): tras T020, el login con Google en `http://localhost:8000` funciona igual que antes.
 
 ## Integración y documentación
-- [x] T040 Verificación final: `php artisan test`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php`, `composer audit --locked` sin filtro con 0 avisos, `npm audit` con 0, gitleaks sobre el rango de la spec sin hallazgos y `python .ai/bin/aidd.py validate docs/specs/029-dependencias-al-dia` sin errores — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — cubre: CA7 — depende: T021, T022, T023, T091
+- [x] T040 Verificación final: `php artisan test`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php`, `composer audit --locked` sin filtro con 0 avisos, `npm audit` con 0, gitleaks sobre el rango de la spec sin hallazgos, `python .ai/bin/aidd.py validate docs/specs/029-dependencias-al-dia` sin errores y, por CA7, `docs/security.md` con la fila de EX1 anotada (avisos corregidos por la 029, se retira al liberarla) y RS17.a "en curso (spec 029)" — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — cubre: CA7 — depende: T021, T022, T023, T091
   - nota: 2026-10-03: `php artisan test` → 152 en verde; `pint --test` pasa en `DependenciasSegurasTest.php`; `composer audit --locked` sin filtro → "No security vulnerability advisories found"; `npm audit` → 0; gitleaks sobre `cc1bb85..HEAD` sin hallazgos; `aidd.py validate` sin errores.
   - nota: A1 — T040 no cubre CA7: lo cumple y lo comprueba T098 en la release (EX1 fuera de "Excepciones aceptadas", RS17.a mitigada con su versión, `composer audit` sin filtro sin avisos sin registrar). Aquí solo queda comprobado que no hay ningún aviso.
   - nota: A6 — sin avisos nuevos: no hizo falta ninguna excepción y CA1 se cumple tal como está escrito.
@@ -77,7 +77,7 @@ Formato:
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
-- [ ] T098 Marcar spec como `released`: además, por CA7, EX1 sale de "Excepciones aceptadas", RS17.a → mitigada (vX.Y.Z), el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente, `composer audit --locked` sin filtro sigue sin avisos, y el tag es anterior al 2026-10-31
+- [ ] T098 Marcar spec como `released`: además, como pasos de la release (plan D6, /analyze A1), EX1 sale de "Excepciones aceptadas", RS17.a → mitigada (vX.Y.Z), el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente, `composer audit --locked` sin filtro sigue sin avisos, y el tag es anterior al 2026-10-31
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
