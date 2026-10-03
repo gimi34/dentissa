@@ -361,6 +361,8 @@ function toggleDia(num, checked) {
     horas.classList.toggle('hidden-row', ! checked);
     horas.querySelectorAll('input').forEach(i => i.disabled = ! checked);
     sin.hidden = checked;
+    // Los errores de un día desmarcado no aplican: se ocultan y vuelven al marcarlo.
+    fila.querySelectorAll('.field-hint-error').forEach(e => e.hidden = ! checked);
 }
 </script>
 @endpush

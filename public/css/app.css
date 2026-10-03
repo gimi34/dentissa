@@ -442,8 +442,10 @@ tr:hover td { background: var(--p50); }
 .horario-dia__nota { font-size: var(--text-small); color: var(--text-muted); }
 .horario-dia .field {
     width: var(--field-time-width); padding: var(--space-2) var(--space-4);
-    font-size: var(--text-body); border-color: var(--border-control);
+    font-size: var(--text-body); border-width: var(--border-width); border-color: var(--border-control);
 }
+/* Gana al `.field:focus` previo del bloque <style> de la ficha, que tiene la misma especificidad que `.horario-dia .field`. */
+.horario-dia .field:focus { border-color: var(--border-control); }
 .horario-dia .field-hint { flex-basis: 100%; }
 
 /* Lista de citas (citas fuera del horario). */
