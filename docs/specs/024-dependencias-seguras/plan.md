@@ -30,6 +30,7 @@ npm (D10).
 | P6 Sin vulnerabilidades críticas/altas en producción | ✅ | Es el objeto de la spec: CA1 y CA2. La auditoría de Composer pasa a ignorar las severidades baja y media, como ya hace `npm audit --audit-level=high`. P6 solo exige críticas y altas, así que el umbral no lo debilita (D10). |
 | P7 Auditoría de datos sensibles | ➖ | Sin accesos nuevos a datos sensibles. |
 | P8 Correlación y logs limpios | ➖ | Sin logs nuevos. |
+| P9 La interfaz usa solo el sistema de diseño | ➖ | Principio añadido en la constitución 1.1.0 (2026-10-02), después de liberar esta spec en v0.1.0; además la spec no toca la interfaz. |
 
 ## Cambios por módulo
 Las versiones de esta tabla salen de la simulación del 2026-09-29. Las definitivas son las que

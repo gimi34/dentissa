@@ -1,7 +1,7 @@
 ---
-version: 1.0.0
+version: 1.1.0
 ratified: 2026-09-28
-last_amended: 2026-09-28
+last_amended: 2026-10-02
 status: approved   # aprobada por el usuario el 2026-09-28
 ---
 
@@ -92,6 +92,19 @@ checklist de despliegue en `docs/deployment.md`.
 **Por qué:** hoy no hay ni un log propio ni correlación; una `QueryException` puede volcar datos
 clínicos en `laravel.log`.
 
+### P9. La interfaz usa solo el sistema de diseño
+**Regla:** en pantallas y estilos nuevos o modificados, colores, tipografía, espaciados, radios,
+sombras y duraciones salen de los tokens de [docs/design/system.md](design/system.md); ningún valor
+literal nuevo en estilos, `style=""` ni componentes. Un valor nuevo se añade primero al sistema.
+Esas pantallas cumplen **WCAG 2.1 AA** (contraste ≥ 4.5:1 en texto y ≥ 3:1 en bordes de control y
+foco, foco visible, estados con texto y no solo color). El código anterior que no lo cumple no
+bloquea (sección "Código previo"): es deuda `DS` de `system.md` y se corrige al tocar la pantalla.
+**Cómo se verifica:** `/review` revisa las vistas y el CSS tocados (sin literales ni estilos en línea
+nuevos) y el contraste de los pares que usan, contra `docs/design/system.html`; el lint automático
+de valores literales queda pendiente (DS4).
+**Por qué:** mantiene la coherencia entre specs sin revisar cada pantalla a mano, y la app guarda
+datos de salud de pacientes que deben poder usarla (decisión del usuario, 2026-10-02).
+
 ## Restricciones
 - Proyecto académico en etapa MVP; todos los datos son ficticios y el repositorio es privado
   (confirmado por el usuario, 2026-09-28).
@@ -118,3 +131,4 @@ clínicos en `laravel.log`.
 | Versión | Fecha | Cambio | Motivo |
 |---|---|---|---|
 | 1.0.0 | 2026-09-28 | Versión inicial | /init |
+| 1.1.0 | 2026-10-02 | Añade P9: la interfaz usa solo el sistema de diseño y cumple WCAG 2.1 AA en pantallas nuevas o modificadas | Upgrade a AI-DD 1.11.0, sistema de diseño extraído (decisión del usuario, 2026-10-02) |

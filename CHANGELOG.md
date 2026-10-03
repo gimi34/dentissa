@@ -5,6 +5,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.11.0
+- Validador `.ai/bin/aidd.py` y plantillas de spec, plan, tareas y review de la versión 1.11.0
+  (tabla "Decisiones", columna "Cómo se verifica", línea "Conteo:").
+- Herramientas de seguridad con estado (`en-ci`; DAST `no-aplica` sin staging) y semgrep con
+  `--metrics=off` en `project.yaml` y en el CI.
+- Sistema de diseño extraído del código en `docs/design/system.md` y `system.html`, aprobado,
+  con la deuda de diseño DS1–DS11.
+- Constitución 1.1.0: principio P9, "La interfaz usa solo el sistema de diseño", que exige WCAG
+  2.1 AA en las pantallas nuevas o modificadas.
+- Roadmap: objetivo 6 de accesibilidad WCAG 2.1 AA; el resto de la deuda de diseño queda en
+  "Pendientes y deuda".
+
 ## [0.3.0] - 2026-10-02
 
 ### Added

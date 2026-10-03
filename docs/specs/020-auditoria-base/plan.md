@@ -29,6 +29,7 @@ consulta del registro, que el admin hace en una pantalla nueva `/admin/auditoria
 | P6 Sin vulnerabilidades críticas/altas en producción | ✅ | No añade dependencias. RS16 se atiende en su propia spec antes de cualquier release. |
 | P7 Auditoría de datos sensibles | ✅ | Es la infraestructura que P7 exige: almacén solo-anexado, retención de 5 años, lectura solo admin auditada. |
 | P8 Correlación y logs limpios | ✅ | `X-Request-Id` en cada respuesta y en el `Context` de logs y eventos; fuera de HTTP, un `request_id` generado por ejecución. Los únicos logs nuevos (`auditoria.fallo`, `auditoria.purga`) no llevan datos personales, y un fallo de escritura de auditoría nunca deja SQL, bindings ni valores del evento en el log (TM13). Residuo aceptado: si falla la consulta del registro o el borrado de la purga, el reporte por defecto deja el SQL con sus bindings (identificadores y fechas) en el log; se corrige en la spec 023 (OB4.a), que debe liberarse antes de producción (decisión del usuario, 2026-09-28). |
+| P9 La interfaz usa solo el sistema de diseño | ➖ pendiente | Principio añadido en la constitución 1.1.0 (2026-10-02), después de aprobar este plan; se evalúa al reconstruir la 020 sobre `main` (pantalla de consulta de auditoría). |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |

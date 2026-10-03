@@ -107,7 +107,7 @@ autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio
 - Design tokens / sistema de diseño: CSS propio en `public/css/app.css`, `auth.css`, `citas.css`
   con variables (`--p50…--p800`, `--text`, `--border`), mucho `style=""` inline. Vite + Tailwind 4
   están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
-- Accesibilidad: TODO(init): objetivo no definido (propuesto WCAG 2.1 AA).
+- Accesibilidad: WCAG 2.1 AA (decisión del usuario, 2026-10-02); principio P9 y deuda DS1–DS11 en [design/system.md](design/system.md).
 
 ## Backend
 - Contratos de API: no hay API; el contrato es formulario HTML ↔ `$request->validate()`.
