@@ -62,8 +62,11 @@ Formato:
 
 ## Integración y documentación
 - [ ] T040 Verificación final: `php artisan test`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php`, `composer audit --locked` sin filtro con 0 avisos, `npm audit` con 0, gitleaks sobre el rango de la spec sin hallazgos y `python .ai/bin/aidd.py validate docs/specs/029-dependencias-al-dia` sin errores — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — cubre: CA7 — depende: T021, T022, T023, T091
-- [ ] T090 Comprobar que `docs/architecture.md` no necesita cambios (no cita versiones de dependencias) y anotarlo
-- [ ] T091 Actualizar `docs/security.md`, por corrección: RS17.a → "en curso (spec 029)", y en la fila de EX1 una nota de que sus avisos quedan corregidos en la spec 029 y que la excepción se retira al liberarla. `docs/deployment.md` y `docs/observability.md` no cambian — docs/security.md — hecho cuando: los dos cambios están y ningún riesgo figura como mitigado antes de la release — cubre: CA7 — depende: T020
+- [x] T090 Comprobar que `docs/architecture.md` no necesita cambios (no cita versiones de dependencias) y anotarlo
+  - nota: `docs/architecture.md` no cita versiones menores ni de parche de las dependencias (solo "Laravel 12"), así que no cambia.
+- [x] T091 Actualizar `docs/security.md`, por corrección: RS17.a → "en curso (spec 029)", y en la fila de EX1 una nota de que sus avisos quedan corregidos en la spec 029 y que la excepción se retira al liberarla. `docs/deployment.md` y `docs/observability.md` no cambian — docs/security.md — hecho cuando: los dos cambios están y ningún riesgo figura como mitigado antes de la release — cubre: CA7 — depende: T020
+  - nota: RS17.a → "en curso (spec 029)"; ningún riesgo se marca como mitigado antes de la release. `docs/deployment.md` y `docs/observability.md` no cambian.
+  - nota: A3 — la columna "Vence" de EX1 gana una nota: sus dos avisos quedan corregidos en la 029 y la excepción se retira al liberarla. No adelanta la retirada, que sigue en la release (T098); difiere del plan solo en esa nota.
 - [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
