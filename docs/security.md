@@ -266,6 +266,16 @@ Correcciones:
 - RS16.b Aplicar las correcciones de npm (`npm audit fix`, revisando saltos de versión mayor) — estado: mitigada (v0.1.0)
 - RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: mitigada (v0.1.0)
 
+### RS17 · Media — Vulnerabilidad media en `phpseclib/phpseclib` (A03 Software Supply Chain Failures)
+Detectada el 2026-10-03 en la review de la spec 027 (`composer audit --locked`): `phpseclib/phpseclib`
+3.0.55, dependencia transitiva, tiene CVE-2026-84308 (multiplicación escalar X25519 sin tiempo
+constante, que permite recuperar la clave privada), corregida en 3.0.57. Es media: queda fuera de
+P6, que solo bloquea críticas y altas, y el comando SCA del CI ignora las medias. La spec 027 no la
+introduce (no cambia `composer.lock`).
+
+Correcciones:
+- RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: pendiente → spec de actualización de dependencias, antes del vencimiento de EX1 (2026-10-31), respetando los 7 días de antigüedad de la versión (decisión del usuario, 2026-10-03)
+
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en
   staging y producción: esos entornos aún no existen. En local coinciden con `.env.example`

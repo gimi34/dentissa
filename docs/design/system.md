@@ -28,7 +28,7 @@ cumple está en "Deuda de diseño".
 
 ## Color
 
-Tokens reales de `:root` en `public/css/app.css:3-30`. La columna "Rol" da el nombre semántico de
+Tokens reales de `:root` en `public/css/app.css:3-49`. La columna "Rol" da el nombre semántico de
 la plantilla de ai-dd (`--color-*`), que es el que usa `system.html`.
 
 | Token | Valor | Rol | Uso | Contraste sobre su fondo |
@@ -75,9 +75,9 @@ escritorio, 17 distintos en el CSS):
 
 | Nivel | Escritorio | Dónde |
 |---|---|---|
-| Título de página (`h1` de la barra superior) | 19px / 500 | `app.css:171` |
-| Cifra de tarjeta (`.stat-value`) | 28px / 600 | `app.css:232` |
-| Título de sección (`span.section-title`) | 15px / 500 | `app.css:248` |
+| Título de página (`h1` de la barra superior) | 19px / 500 | `app.css:190` |
+| Cifra de tarjeta (`.stat-value`) | 28px / 600 | `app.css:251` |
+| Título de sección (`span.section-title`) | 15px / 500 | `app.css:267` |
 | Cuerpo (tabla, menú, campo, botón) | 13–13.5px | `app.css`, `citas.css` |
 | Pequeño (etiqueta, ayuda, badge, `th`) | 10–12.5px | `app.css`, `citas.css` |
 
@@ -111,7 +111,7 @@ auth). Es un servicio externo que `docs/security.md` no aprueba (DS9).
 - No existe un botón de peligro: se hace en línea con `background: var(--red)`.
 
 ### Campo de formulario
-- `.field`, `.field-label`, `.field-hint`, `.field-hint-error` y `.field-error` están en
+- `.field`, `.field-label` y `.field-error` están en
   `public/css/citas.css`, que solo cargan 7 vistas. Las demás copian las reglas en bloques
   `<style>` con variantes distintas (DS5).
 - Etiqueta de 11px en `--text-light`, campo de 13.5px con padding 9px 13px y borde 1px `--border`.
@@ -210,17 +210,17 @@ se corrige cuando una spec toca la pantalla o como objetivo del roadmap.
 
 | ID | Problema | Dónde (evidencia) | Corrección propuesta | Estado |
 |---|---|---|---|---|
-| DS1 | Texto con contraste < 4.5:1: botón principal 3.93:1, `--text-light` 3.51:1 (etiquetas, ayudas, `th`), verde de éxito 2.98:1, menú del sidebar 3.82:1, `.nav-label` 2.72:1, hover de "Cerrar sesión" 1.75:1 | `public/css/app.css:15,19-20,44,88,98,152,191`, `citas.css:12,34` | Oscurecer `--p400` del botón (o usar `--p500`), `--text-light` y `--green`; texto del sidebar en blanco puro; quitar `#FF0000` | pendiente |
-| DS2 | Foco e indicadores invisibles: borde de campo 1.31:1, foco `--p300` 2.23:1 con halo al 7%, `outline: none` en campos y sin `:focus-visible` en botones | `public/css/citas.css:20,29`, `app.css:175-200` | Token `--color-focus` ≥ 3:1 y `:focus-visible` en botones, campos y enlaces | en curso: `--focus-ring` y `--border-control` existen; se aplican en el horario de la ficha del personal (spec 027) |
+| DS1 | Texto con contraste < 4.5:1: botón principal 3.93:1, `--text-light` 3.51:1 (etiquetas, ayudas, `th`), verde de éxito 2.98:1, menú del sidebar 3.82:1, `.nav-label` 2.72:1, hover de "Cerrar sesión" 1.75:1 | `public/css/app.css:15,19-20,63,107,117,171,210`, `citas.css:12`, `.field-hint` en `app.css:427` | Oscurecer `--p400` del botón (o usar `--p500`), `--text-light` y `--green`; texto del sidebar en blanco puro; quitar `#FF0000` | pendiente |
+| DS2 | Foco e indicadores invisibles: borde de campo 1.31:1, foco `--p300` 2.23:1 con halo al 7%, `outline: none` en campos y sin `:focus-visible` en botones | `public/css/citas.css:20,29`, `app.css:194-219` | Token `--color-focus` ≥ 3:1 y `:focus-visible` en botones, campos y enlaces | en curso: `--focus-ring` y `--border-control` existen; se aplican en el horario de la ficha del personal (spec 027) |
 | DS3 | `--text-muted` vale lo mismo que `--text` (#000): no hay jerarquía de texto secundario | `public/css/app.css:13-14` | Definir un secundario que cumpla 4.5:1 | pendiente |
-| DS4 | Valores fijos: 871 `style=""` en las vistas, 17 tamaños de letra, ninguna escala de espaciado ni de tipografía; sidebar `#c75078` y radios literales fuera de los tokens | `resources/views/**`, `public/css/app.css:44,152` | Tokens de espaciado y tipografía; migrar los estilos en línea al tocar cada pantalla | en curso: escala de espaciado, `--text-body`, `--text-small` y pesos (spec 027); sección de horario de la ficha sin estilos en línea |
+| DS4 | Valores fijos: 871 `style=""` en las vistas, 17 tamaños de letra, ninguna escala de espaciado ni de tipografía; sidebar `#c75078` y radios literales fuera de los tokens | `resources/views/**`, `public/css/app.css:63,171` | Tokens de espaciado y tipografía; migrar los estilos en línea al tocar cada pantalla | en curso: escala de espaciado, `--text-body`, `--text-small` y pesos (spec 027); filas y campos de la sección de horario de la ficha sin estilos en línea (sus envoltorios previos los conservan) |
 | DS5 | Componentes duplicados o contradictorios: 14 bloques `<style>` redefinen `.field` (borde 1.5px, radio 5px, 'DM Sans'), `citas.css` solo en 7 vistas, y `auth.css` redefine tokens (`--text-light: #000`) | `expedientes/create:139`, `pacientes/create:200`, `usuarios/index:208`…, `public/css/auth.css:8-26` | Una sola hoja de componentes cargada por el layout | en curso: `.field-hint` y `.field-hint-error` pasan a `app.css` (spec 027) |
-| DS6 | Objetivo de toque < 44px: botón ≈ 32px, `.btn-sm` ≈ 25px, campo ≈ 36px | `public/css/app.css:175-200,334-337`, `citas.css:16-30` | `min-height` con un token `--touch-min` | pendiente |
+| DS6 | Objetivo de toque < 44px: botón ≈ 32px, `.btn-sm` ≈ 25px, campo ≈ 36px | `public/css/app.css:194-219,353-356`, `citas.css:16-30` | `min-height` con un token `--touch-min` | pendiente |
 | DS7 | Estados y semántica que faltan: sin deshabilitado ni carga, sin páginas de error propias, mensajes flash sin `aria-live`, modales sin `role="dialog"` ni manejo del foco, 5 `confirm()` nativos, títulos de sección como `span` (un solo `h1`) | `layouts/app.blade.php:207-253`, `servicios/index:121-193`, `usuarios/index:215-299` | Componentes de aviso y diálogo accesibles y estados de carga | pendiente |
-| DS8 | La app no se adapta a móvil: sin `@media`, sidebar fijo de 242px y rejillas fijas (solo auth se adapta) | `public/css/app.css` (0 `@media`), `:41-51,215,251-253` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | pendiente |
+| DS8 | La app no se adapta a móvil: sin `@media`, sidebar fijo de 242px y rejillas fijas (solo auth se adapta) | `public/css/app.css` (0 `@media`), `:60-70,234,270-272` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | pendiente |
 | DS9 | Tipografía: Roboto se carga desde Google Fonts sin aprobación en `security.md`; 'DM Sans' y 'DM Mono' se nombran sin cargarse | `layouts/app.blade.php:7`, `usuarios/create:127`, `expedientes/create:110` | Autoalojar Roboto o aprobar el servicio; quitar las familias no cargadas | pendiente |
-| DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:355` | Bloque `prefers-reduced-motion: reduce` | pendiente |
-| DS11 | Restos sin uso: Tailwind 4, Vite y `welcome.blade.php` (ninguna ruta los sirve); clases sin uso (`.logo-icon`, `.appt-card`, `.alert-item`…) | `package.json`, `vite.config.js`, `resources/views/welcome.blade.php`, `public/css/app.css:61-75,360,390-398` | Retirarlos o decidir migrar a ellos | pendiente |
+| DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:374` | Bloque `prefers-reduced-motion: reduce` | pendiente |
+| DS11 | Restos sin uso: Tailwind 4, Vite y `welcome.blade.php` (ninguna ruta los sirve); clases sin uso (`.logo-icon`, `.appt-card`, `.alert-item`…) | `package.json`, `vite.config.js`, `resources/views/welcome.blade.php`, `public/css/app.css:80-94,379,409-417` | Retirarlos o decidir migrar a ellos | pendiente |
 
 ## Decisiones
 
