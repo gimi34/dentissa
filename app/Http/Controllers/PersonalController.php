@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\HorarioDentista;
+use App\Agenda\HorarioNoGuardado;
+use App\Rules\HoraFinPosterior;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -147,7 +151,7 @@ class PersonalController extends Controller
     }
 
     // ── SHOW ───────────────────────────────────────────────────────────
-    public function show(string $id)
+    public function show(string $id, HorarioDentista $horarioDentista)
     {
         $miembro = DB::table('personal')
             ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
@@ -229,8 +233,12 @@ class PersonalController extends Controller
                 ->get();
         }
 
+        // Horario y citas fuera de él: solo si la administración puede definirlo (spec 027).
+        $puedeDefinirHorario = Gate::allows('definir-horario', $miembro);
+        $citasFuera = $puedeDefinirHorario ? $horarioDentista->citasFuera($id) : collect();
+
         return view('personal.show', compact(
-            'miembro', 'horarios', 'dias',
+            'miembro', 'horarios', 'dias', 'puedeDefinirHorario', 'citasFuera',
             'citasRecientes', 'totalCitas', 'citasEsteMes',
             'doctoresAsignados', 'asistentesAsignados'
         ));
@@ -338,36 +346,80 @@ class PersonalController extends Controller
     }
 
     // ── GUARDAR HORARIOS ───────────────────────────────────────────────
-    public function saveHorarios(Request $request, string $id)
+    public function saveHorarios(Request $request, string $id, HorarioDentista $horarioDentista)
     {
         $miembro = DB::table('personal')->where('id', $id)->first();
         if (! $miembro) {
             abort(404);
         }
 
-        $dias = $request->input('dias', []);
+        // Solo la administración, y solo sobre un dentista (otro tipo → 404).
+        Gate::authorize('definir-horario', $miembro);
 
-        DB::transaction(function () use ($id, $dias) {
-            // Borrar horarios actuales
-            DB::table('horarios_dentista')->where('personal_id', $id)->delete();
+        $validados = $request->validate(self::reglasDeHorario(), self::mensajesDeHorario());
 
-            foreach ($dias as $dia => $info) {
-                if (! isset($info['activo'])) {
-                    continue;
-                }
-
-                DB::table('horarios_dentista')->insert([
-                    'id' => (string) Str::uuid(),
-                    'personal_id' => $id,
-                    'dia_semana' => (int) $dia,
-                    'hora_inicio' => $info['hora_inicio'] ?? '09:00',
-                    'hora_fin' => $info['hora_fin'] ?? '18:00',
-                    'disponible' => 1,
-                ]);
+        $franjas = [];
+        foreach ($validados['dias'] ?? [] as $dia => $info) {
+            if (isset($info['activo'])) {
+                $franjas[(int) $dia] = ['inicio' => $info['hora_inicio'], 'fin' => $info['hora_fin']];
             }
-        });
+        }
 
-        return back()->with('success', 'Horarios guardados correctamente.');
+        try {
+            $fuera = $horarioDentista->guardar($id, $franjas);
+        } catch (HorarioNoGuardado $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', $this->mensajeDeHorarioGuardado($franjas !== [], $fuera));
+    }
+
+    /**
+     * Reglas del horario semanal (spec 027): días 1–7, solo los campos del
+     * formulario, horas H:i obligatorias en los días marcados y fin posterior al
+     * inicio. El orden de las horas lo comprueba HoraFinPosterior, no `after:` (A5).
+     */
+    private static function reglasDeHorario(): array
+    {
+        return [
+            'dias' => ['nullable', 'array:1,2,3,4,5,6,7'],
+            'dias.*' => ['array:activo,hora_inicio,hora_fin'],
+            'dias.*.activo' => ['nullable', 'in:1'],
+            'dias.*.hora_inicio' => ['nullable', 'required_with:dias.*.activo', 'date_format:H:i'],
+            'dias.*.hora_fin' => ['nullable', 'required_with:dias.*.activo', 'date_format:H:i', new HoraFinPosterior],
+        ];
+    }
+
+    private static function mensajesDeHorario(): array
+    {
+        $noValido = 'El horario enviado no es válido.';
+        $formato = 'Escribe la hora con el formato HH:MM.';
+
+        return [
+            'dias.array' => $noValido,
+            'dias.*.array' => $noValido,
+            'dias.*.activo.in' => $noValido,
+            'dias.*.hora_inicio.required_with' => 'Indica la hora de inicio de este día.',
+            'dias.*.hora_inicio.date_format' => $formato,
+            'dias.*.hora_fin.required_with' => 'Indica la hora de fin de este día.',
+            'dias.*.hora_fin.date_format' => $formato,
+        ];
+    }
+
+    /** Mensaje tras guardar: base (con o sin días) y, si hay citas fuera, su recuento. */
+    private function mensajeDeHorarioGuardado(bool $conDias, int $fuera): string
+    {
+        $mensaje = $conDias
+            ? 'Horario guardado.'
+            : 'Horario guardado sin días de atención: no se podrán agendar citas con este dentista hasta que tenga horario.';
+
+        if ($fuera === 1) {
+            $mensaje .= ' 1 cita quedó fuera del horario: revísala en «Citas fuera del horario».';
+        } elseif ($fuera > 1) {
+            $mensaje .= " {$fuera} citas quedaron fuera del horario: revísalas en «Citas fuera del horario».";
+        }
+
+        return $mensaje;
     }
 
     // ── MIS DOCTORES (vista del asistente) ────────────────────────────
