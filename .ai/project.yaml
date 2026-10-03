@@ -12,7 +12,7 @@ stack:
   database: mariadb 10.11 (docker)
   package_manager: composer (+ npm para assets)
 packages: []                   # solo monorepo: [{ path: apps/web, type: frontend }, …]
-constitution_version: 1.2.0
+constitution_version: 1.2.1
 workflow:
   enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
   legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md

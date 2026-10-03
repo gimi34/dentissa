@@ -1,7 +1,7 @@
 ---
-version: 1.2.0
+version: 1.2.1
 ratified: 2026-09-28
-last_amended: 2026-10-02
+last_amended: 2026-10-03
 status: approved   # aprobada por el usuario el 2026-09-28
 ---
 
@@ -34,6 +34,11 @@ spec fija el qué y el por qué antes de discutir el cómo.
   ya hace), su test es de **caracterización**. Pasa desde el principio y se comprueba rompiendo un
   momento el código que protege: debe fallar, se restaura y se anota en la tarea (`comprobado
   rompiendo <qué>`).
+- Si el criterio **no describe comportamiento de la aplicación** (que no haya regresiones, el
+  contenido de un diff o de un lockfile, datos de un servicio externo como un registro de
+  paquetes, o una comprobación que solo puede hacer una persona), se verifica con el comando o la
+  comprobación que declara la Trazabilidad del plan, y su resultado se anota en la tarea. No
+  necesita test PHPUnit propio, y no puede usarse para un criterio que sí cambia comportamiento.
 
 Los tests usan `DatabaseTransactions` contra la base de pruebas, nunca contra la base de
 desarrollo.
@@ -141,3 +146,4 @@ datos de salud de pacientes que deben poder usarla (decisión del usuario, 2026-
 | 1.0.0 | 2026-09-28 | Versión inicial | /init |
 | 1.1.0 | 2026-10-02 | Añade P9: la interfaz usa solo el sistema de diseño y cumple WCAG 2.1 AA en pantallas nuevas o modificadas | Upgrade a AI-DD 1.11.0, sistema de diseño extraído (decisión del usuario, 2026-10-02) |
 | 1.2.0 | 2026-10-02 | P2 distingue los cambios de comportamiento (test que falla antes) de los criterios que ya se cumplen (test de caracterización comprobado rompiendo el código) | Tercera excepción a P2 (specs 024, 025 y 027); pendiente del roadmap (decisión del usuario, 2026-10-02) |
+| 1.2.1 | 2026-10-03 | P2 aclara que los criterios que no describen comportamiento de la aplicación (no regresión, contenido de un diff, datos externos o comprobación manual) se verifican con el comando o la comprobación que declara el plan | Excepción repetida a P2 en las specs de dependencias (024 y 029) (decisión del usuario, 2026-10-03) |
