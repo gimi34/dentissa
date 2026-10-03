@@ -1,7 +1,7 @@
 ---
 id: 029
 slug: dependencias-al-dia
-status: implemented
+status: approved
 created: 2026-10-03
 extends: []
 ---
@@ -101,3 +101,4 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 | 2026-10-03 | CA7 se reescribe para que se compruebe al implementar; la parte de la release queda como paso de `/release` (T098). Vuelve a `draft` | /analyze A1, decisión del usuario |
 | 2026-10-03 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-03 | Implementada: CA1–CA7 comprobados (CA7 en T040; su última frase, en la release, T098) | /implement T092 |
+| 2026-10-03 | Vuelve a approved: /review ronda 1 pide corregir R1 (docblock del test; tarea T024) | /review |
