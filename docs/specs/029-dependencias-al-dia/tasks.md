@@ -66,18 +66,22 @@ Formato:
   - nota: A1 — T040 no cubre CA7: lo cumple y lo comprueba T098 en la release (EX1 fuera de "Excepciones aceptadas", RS17.a mitigada con su versión, `composer audit` sin filtro sin avisos sin registrar). Aquí solo queda comprobado que no hay ningún aviso.
   - nota: A6 — sin avisos nuevos: no hizo falta ninguna excepción y CA1 se cumple tal como está escrito.
   - nota: A10 — CA2 es una comprobación declarada (P2 1.2.1, datos de un servicio externo): `npm audit` → 0 en T020 y aquí; el test del frontend de la 024 sigue en verde como apoyo.
+  - nota: A13 — corrige la nota de A1: tras `/tasks --fix A1`, T040 sí comprueba CA7. Comprobado el 2026-10-03: `composer audit --locked` sin filtro sin avisos; en `docs/security.md`, la fila de EX1 dice que sus avisos quedan corregidos por la 029 y que se retira al liberarla, y RS17.a figura "en curso (spec 029)"; suite 152 en verde.
 - [x] T090 Comprobar que `docs/architecture.md` no necesita cambios (no cita versiones de dependencias) y anotarlo
   - nota: `docs/architecture.md` no cita versiones menores ni de parche de las dependencias (solo "Laravel 12"), así que no cambia.
 - [x] T091 Actualizar `docs/security.md`, por corrección: RS17.a → "en curso (spec 029)", y en la fila de EX1 una nota de que sus avisos quedan corregidos en la spec 029 y que la excepción se retira al liberarla. `docs/deployment.md` y `docs/observability.md` no cambian — docs/security.md — hecho cuando: los dos cambios están y ningún riesgo figura como mitigado antes de la release — cubre: CA7 — depende: T020
   - nota: RS17.a → "en curso (spec 029)"; ningún riesgo se marca como mitigado antes de la release. `docs/deployment.md` y `docs/observability.md` no cambian.
   - nota: A3 — la columna "Vence" de EX1 gana una nota: sus dos avisos quedan corregidos en la 029 y la excepción se retira al liberarla. No adelanta la retirada, que sigue en la release (T098); difiere del plan solo en esa nota.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: spec 029 → `implemented` (2026-10-03) con CA1–CA7 marcados.
+  - nota: A12 — CA7 se marca por lo que comprueba T040 (estado tras la actualización); su última frase (EX1 retirada y RS17.a mitigada) se comprueba en T098, al liberar.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
 - [ ] T098 Marcar spec como `released`: además, como pasos de la release (plan D6, /analyze A1), EX1 sale de "Excepciones aceptadas", RS17.a → mitigada (vX.Y.Z), el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente, `composer audit --locked` sin filtro sigue sin avisos, y el tag es anterior al 2026-10-31
+  - nota: A12 — al liberar se comprueba la última frase de CA7: EX1 fuera de "Excepciones aceptadas" y RS17.a mitigada con su versión.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

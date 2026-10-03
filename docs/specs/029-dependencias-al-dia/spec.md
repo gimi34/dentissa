@@ -1,7 +1,7 @@
 ---
 id: 029
 slug: dependencias-al-dia
-status: approved
+status: implemented
 created: 2026-10-03
 extends: []
 ---
@@ -33,7 +33,7 @@ RS17 por completo y retira EX1.
 - [x] CA4 · Dada la actualización, cuando se comparan las dependencias instaladas con las anteriores, entonces solo cambian las tres bibliotecas con aviso y las que estas arrastran; ninguna cambia de versión mayor y no se añade ninguna dependencia directa.
 - [x] CA5 · Dada la actualización, cuando una persona inicia sesión con su cuenta de Google en el entorno local, entonces entra igual que antes (verificación manual, porque depende del proveedor externo).
 - [x] CA6 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces cada versión que cambia, directa o arrastrada, lleva al menos 7 días publicada en el registro oficial.
-- [ ] CA7 · Dada la actualización, cuando se revisan las excepciones y los riesgos de seguridad, entonces la verificación de dependencias no deja ningún aviso sin registrar, la excepción EX1 indica que sus avisos quedan corregidos por esta spec y que se retira al liberarla, y la corrección RS17.a figura en curso por esta spec. Al liberar, EX1 sale de las excepciones vigentes y RS17.a pasa a mitigada.
+- [x] CA7 · Dada la actualización, cuando se revisan las excepciones y los riesgos de seguridad, entonces la verificación de dependencias no deja ningún aviso sin registrar, la excepción EX1 indica que sus avisos quedan corregidos por esta spec y que se retira al liberarla, y la corrección RS17.a figura en curso por esta spec. Al liberar, EX1 sale de las excepciones vigentes y RS17.a pasa a mitigada.
 
 ## Fuera de alcance
 - Actualizar el resto de las dependencias del servidor o del frontend que no tienen avisos (decisión del usuario, 2026-10-03).
@@ -100,3 +100,4 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 | 2026-10-03 | Aprobada | Decisión del usuario |
 | 2026-10-03 | CA7 se reescribe para que se compruebe al implementar; la parte de la release queda como paso de `/release` (T098). Vuelve a `draft` | /analyze A1, decisión del usuario |
 | 2026-10-03 | Aprobada de nuevo | Decisión del usuario |
+| 2026-10-03 | Implementada: CA1–CA7 comprobados (CA7 en T040; su última frase, en la release, T098) | /implement T092 |
