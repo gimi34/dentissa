@@ -61,7 +61,11 @@ Formato:
   - nota: verificación manual OK 2026-10-03 (usuario): tras T020, el login con Google en `http://localhost:8000` funciona igual que antes.
 
 ## Integración y documentación
-- [ ] T040 Verificación final: `php artisan test`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php`, `composer audit --locked` sin filtro con 0 avisos, `npm audit` con 0, gitleaks sobre el rango de la spec sin hallazgos y `python .ai/bin/aidd.py validate docs/specs/029-dependencias-al-dia` sin errores — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — cubre: CA7 — depende: T021, T022, T023, T091
+- [x] T040 Verificación final: `php artisan test`, `vendor/bin/pint --test tests/Feature/DependenciasSegurasTest.php`, `composer audit --locked` sin filtro con 0 avisos, `npm audit` con 0, gitleaks sobre el rango de la spec sin hallazgos y `python .ai/bin/aidd.py validate docs/specs/029-dependencias-al-dia` sin errores — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — cubre: CA7 — depende: T021, T022, T023, T091
+  - nota: 2026-10-03: `php artisan test` → 152 en verde; `pint --test` pasa en `DependenciasSegurasTest.php`; `composer audit --locked` sin filtro → "No security vulnerability advisories found"; `npm audit` → 0; gitleaks sobre `cc1bb85..HEAD` sin hallazgos; `aidd.py validate` sin errores.
+  - nota: A1 — T040 no cubre CA7: lo cumple y lo comprueba T098 en la release (EX1 fuera de "Excepciones aceptadas", RS17.a mitigada con su versión, `composer audit` sin filtro sin avisos sin registrar). Aquí solo queda comprobado que no hay ningún aviso.
+  - nota: A6 — sin avisos nuevos: no hizo falta ninguna excepción y CA1 se cumple tal como está escrito.
+  - nota: A10 — CA2 es una comprobación declarada (P2 1.2.1, datos de un servicio externo): `npm audit` → 0 en T020 y aquí; el test del frontend de la 024 sigue en verde como apoyo.
 - [x] T090 Comprobar que `docs/architecture.md` no necesita cambios (no cita versiones de dependencias) y anotarlo
   - nota: `docs/architecture.md` no cita versiones menores ni de parche de las dependencias (solo "Laravel 12"), así que no cambia.
 - [x] T091 Actualizar `docs/security.md`, por corrección: RS17.a → "en curso (spec 029)", y en la fila de EX1 una nota de que sus avisos quedan corregidos en la spec 029 y que la excepción se retira al liberarla. `docs/deployment.md` y `docs/observability.md` no cambian — docs/security.md — hecho cuando: los dos cambios están y ningún riesgo figura como mitigado antes de la release — cubre: CA7 — depende: T020

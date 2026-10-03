@@ -27,13 +27,13 @@ RS17 por completo y retira EX1.
 - Como paciente o miembro del personal, quiero seguir entrando con mi cuenta de Google igual que antes.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del servidor, entonces no reporta ningún aviso de ninguna severidad (crítica, alta, media ni baja).
-- [ ] CA2 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del frontend, entonces no reporta ninguna vulnerabilidad, igual que antes de la actualización.
-- [ ] CA3 · Dada la actualización, cuando se ejecuta la suite completa de pruebas, entonces pasan todas, sin fallos nuevos respecto a la línea base anterior a la actualización.
-- [ ] CA4 · Dada la actualización, cuando se comparan las dependencias instaladas con las anteriores, entonces solo cambian las tres bibliotecas con aviso y las que estas arrastran; ninguna cambia de versión mayor y no se añade ninguna dependencia directa.
-- [ ] CA5 · Dada la actualización, cuando una persona inicia sesión con su cuenta de Google en el entorno local, entonces entra igual que antes (verificación manual, porque depende del proveedor externo).
-- [ ] CA6 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces cada versión que cambia, directa o arrastrada, lleva al menos 7 días publicada en el registro oficial.
-- [ ] CA7 · Dada la release de esta spec, cuando se revisan las excepciones y los riesgos de seguridad, entonces EX1 ya no figura como vigente, RS17 figura como mitigado y no queda ningún aviso de dependencias sin registrar.
+- [x] CA1 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del servidor, entonces no reporta ningún aviso de ninguna severidad (crítica, alta, media ni baja).
+- [x] CA2 · Dado el proyecto actualizado, cuando se ejecuta la verificación de vulnerabilidades de las dependencias del frontend, entonces no reporta ninguna vulnerabilidad, igual que antes de la actualización.
+- [x] CA3 · Dada la actualización, cuando se ejecuta la suite completa de pruebas, entonces pasan todas, sin fallos nuevos respecto a la línea base anterior a la actualización.
+- [x] CA4 · Dada la actualización, cuando se comparan las dependencias instaladas con las anteriores, entonces solo cambian las tres bibliotecas con aviso y las que estas arrastran; ninguna cambia de versión mayor y no se añade ninguna dependencia directa.
+- [x] CA5 · Dada la actualización, cuando una persona inicia sesión con su cuenta de Google en el entorno local, entonces entra igual que antes (verificación manual, porque depende del proveedor externo).
+- [x] CA6 (abuso) · Dado un atacante que publica una versión maliciosa o un paquete con un nombre parecido, cuando se actualizan las dependencias, entonces cada versión que cambia, directa o arrastrada, lleva al menos 7 días publicada en el registro oficial.
+- [ ] CA7 · Dada la actualización, cuando se revisan las excepciones y los riesgos de seguridad, entonces la verificación de dependencias no deja ningún aviso sin registrar, la excepción EX1 indica que sus avisos quedan corregidos por esta spec y que se retira al liberarla, y la corrección RS17.a figura en curso por esta spec. Al liberar, EX1 sale de las excepciones vigentes y RS17.a pasa a mitigada.
 
 ## Fuera de alcance
 - Actualizar el resto de las dependencias del servidor o del frontend que no tienen avisos (decisión del usuario, 2026-10-03).
@@ -73,6 +73,7 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 | 2026-10-03 | implícita | Antigüedad mínima de las versiones nuevas | 7 días | `.ai/project.yaml` (`security.agent.min_package_age_days`), `shared/agent-security.md` §2 |
 | 2026-10-03 | implícita | ¿Puede cambiar de versión mayor el framework o una dependencia de producción? | No | `docs/specs/024-dependencias-seguras/spec.md` (Supuestos, decisión del usuario 2026-09-29) |
 | 2026-10-03 | implícita | Las vulnerabilidades medias y bajas no bloquean una release; solo las críticas y altas | Se corrigen igualmente en esta spec (umbral de cero avisos, decisión del usuario) | `docs/constitution.md` P6 |
+| 2026-10-03 | brecha | CA7 describía un estado que solo existe después de liberar, así que no podía comprobarse al implementar | CA7 comprueba lo que deja la implementación (ningún aviso sin registrar, EX1 anotada, RS17.a en curso); la retirada de EX1 y RS17.a mitigada son pasos de la release | usuario (/analyze A1, 2026-10-03) |
 | 2026-10-03 | supuesto | ¿Pertenece a un objetivo del roadmap? | Se enlaza desde "Pendientes y deuda", sin objetivo propio, como la 024 | `docs/roadmap.md` |
 
 ## Notas para /plan
@@ -97,3 +98,5 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 |---|---|---|
 | 2026-10-03 | Creación | /specify: EX1 vence el 2026-10-31 y RS17 (review de la 027) |
 | 2026-10-03 | Aprobada | Decisión del usuario |
+| 2026-10-03 | CA7 se reescribe para que se compruebe al implementar; la parte de la release queda como paso de `/release` (T098). Vuelve a `draft` | /analyze A1, decisión del usuario |
+| 2026-10-03 | Aprobada de nuevo | Decisión del usuario |
