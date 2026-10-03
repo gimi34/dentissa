@@ -8,6 +8,7 @@ use DOMElement;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
@@ -109,6 +110,9 @@ class HorarioDentistaVistasTest extends TestCase
         $this->assertTrue($this->campo($xpath, 'dias[2][activo]')->hasAttribute('checked'), 'El martes sigue marcado.');
         $this->assertStringNotContainsString('hidden-row', $xpath->query("//*[@id='horas-2']")->item(0)?->getAttribute('class') ?? 'hidden-row');
         $this->assertFalse($this->campo($xpath, 'dias[2][hora_inicio]')->hasAttribute('disabled'), 'Los campos del martes están habilitados.');
+        // CA4: nunca se rellena una hora por defecto tras el rechazo (R6).
+        $this->assertSame('', $this->campo($xpath, 'dias[2][hora_inicio]')->getAttribute('value'), 'El inicio del martes sale vacío.');
+        $this->assertSame('', $this->campo($xpath, 'dias[2][hora_fin]')->getAttribute('value'), 'El fin del martes sale vacío.');
         // El miércoles, desmarcado en el envío, sigue desmarcado aunque tenga horario guardado.
         $this->assertFalse($this->campo($xpath, 'dias[3][activo]')->hasAttribute('checked'), 'El miércoles sigue desmarcado.');
     }
@@ -151,6 +155,8 @@ class HorarioDentistaVistasTest extends TestCase
         $this->assertMatchesRegularExpression('/function toggleDia\b/', $html);
         preg_match('/function toggleDia\b.*?\n}/s', $html, $script);
         $this->assertStringNotContainsString('.style', $script[0] ?? '', 'toggleDia solo cambia clases, hidden y disabled.');
+        $this->assertStringContainsString('.field-hint-error', $script[0] ?? '', 'toggleDia alterna también los mensajes de error del día (R10).');
+        $this->assertMatchesRegularExpression('/\.hidden\s*=\s*!\s*checked/', $script[0] ?? '', 'Los mensajes se ocultan al desmarcar el día y vuelven al marcarlo.');
     }
 
     public function test_las_reglas_css_nuevas_solo_usan_tokens(): void
@@ -183,6 +189,32 @@ class HorarioDentistaVistasTest extends TestCase
         $this->assertMatchesRegularExpression('/border-color\s*:\s*var\(--border-control\)/', $this->declaraciones($reglas, '.horario-dia .field'));
         $this->assertStringContainsString('var(--focus-ring)', $this->declaraciones($reglas, ':focus-visible'));
         $this->assertStringNotContainsString('.field-hint', file_get_contents(public_path('css/citas.css')), 'La ayuda de campo vive solo en app.css.');
+
+        // R2: el borde del campo de hora es del sistema también con el foco, frente al `.field:focus`
+        // previo de la vista, que tiene la misma especificidad que `.horario-dia .field`.
+        $this->assertMatchesRegularExpression('/border-width\s*:\s*var\(--border-width\)/', $this->declaraciones($reglas, '.horario-dia .field'));
+        $this->assertMatchesRegularExpression('/border-color\s*:\s*var\(--border-control\)/', $this->declaraciones($reglas, '.horario-dia .field:focus'), 'Falta la regla .horario-dia .field:focus con --border-control.');
+    }
+
+    // ── P3: el Gate por rol y tipo (R7) ────────────────────────────────
+
+    public function test_el_gate_definir_horario_distingue_rol_y_tipo(): void
+    {
+        [, $asistenteId] = $this->crearPersonal('asistente', 'Aurora', 'Ayuda');
+        $dentista = DB::table('personal')->where('id', $this->d1)->first();
+        $asistente = DB::table('personal')->where('id', $asistenteId)->first();
+
+        $this->assertTrue(Gate::forUser($this->admin)->inspect('definir-horario', $dentista)->allowed(), 'Admin sobre un dentista: permitido.');
+
+        $sobreAsistente = Gate::forUser($this->admin)->inspect('definir-horario', $asistente);
+        $this->assertTrue($sobreAsistente->denied(), 'Admin sobre un asistente: denegado.');
+        $this->assertSame(404, $sobreAsistente->status(), 'Para otro tipo de personal el horario no existe.');
+
+        foreach (['dentista' => $this->dentista1, 'asistente' => $this->asistente, 'paciente' => $this->paciente1] as $rol => $usuario) {
+            $respuesta = Gate::forUser($usuario)->inspect('definir-horario', $dentista);
+            $this->assertTrue($respuesta->denied(), "{$rol}: denegado.");
+            $this->assertSame(403, $respuesta->status() ?? 403, "{$rol}: 403, no 404.");
+        }
     }
 
     public function test_los_pares_de_contraste_cumplen_aa(): void
@@ -209,6 +241,37 @@ class HorarioDentistaVistasTest extends TestCase
                 $this->assertGreaterThanOrEqual($minimo, $contraste, sprintf('%s sobre %s: %.2f:1 (mínimo %.1f:1)', $frente, $fondo, $contraste, $minimo));
             }
         }
+
+        // R3: los colores que usan de verdad las reglas nuevas, sobre los fondos de la sección.
+        // `.field-hint` (color previo, --text-light) se excluye: en las piezas nuevas siempre va con
+        // `.field-hint-error`, que fija el rojo.
+        $comprobados = 0;
+        foreach ($this->reglasCss(public_path('css/app.css')) as [$selector, $cuerpo]) {
+            if (! preg_match('/\.lista-citas|\.horario-dia|:focus-visible|\.field-hint/', $selector)) {
+                continue;
+            }
+            $usos = [];
+            if (trim($selector) !== '.field-hint' && preg_match_all('/(?<![-\w])color\s*:\s*([^;]+)/', $cuerpo, $m)) {
+                $usos = array_merge($usos, array_map(fn ($v) => [$v, 4.5], $m[1]));
+            }
+            if (str_contains($selector, '.field') && preg_match_all('/border(?:-color)?\s*:\s*([^;]+)/', $cuerpo, $m)) {
+                $usos = array_merge($usos, array_map(fn ($v) => [$v, 3.0], $m[1]));
+            }
+            if (preg_match_all('/outline(?:-color)?\s*:\s*([^;]+)/', $cuerpo, $m)) {
+                $usos = array_merge($usos, array_map(fn ($v) => [$v, 3.0], $m[1]));
+            }
+            foreach ($usos as [$valor, $minimo]) {
+                preg_match_all('/var\((--[\w-]+)\)/', $valor, $vars);
+                foreach (array_intersect($vars[1], array_keys($tokens)) as $color) {
+                    foreach (['--white', '--p50'] as $fondo) {
+                        $contraste = $this->contraste($tokens[$color], $tokens[$fondo]);
+                        $this->assertGreaterThanOrEqual($minimo, $contraste, sprintf('%s usa %s sobre %s: %.2f:1 (mínimo %.1f:1)', $selector, $color, $fondo, $contraste, $minimo));
+                        $comprobados++;
+                    }
+                }
+            }
+        }
+        $this->assertGreaterThanOrEqual(10, $comprobados, 'Deben comprobarse los colores de las reglas nuevas.');
     }
 
     // ── Apoyo ──────────────────────────────────────────────────────────

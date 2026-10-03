@@ -132,6 +132,21 @@ class CitasFueraDelHorarioTest extends TestCase
         }
     }
 
+    public function test_una_cita_de_hoy_que_aun_no_empieza_en_la_clinica_cuenta_como_futura(): void
+    {
+        // A las 17:00 UTC son las 11:00 en la clínica: la cita de hoy a las 14:00 locales aún no
+        // empieza, aunque sus 14:00 sean anteriores a las 17:00 de UTC (R1).
+        $this->citaDe('Hoy', 'Tarde', '2026-10-05 14:00');
+
+        $this->guardar($this->d1, [2 => $this->dia('09:00', '18:00')])
+            ->assertSessionHas('success', 'Horario guardado. '.self::RECUENTO_UNA);
+
+        $this->flushSession();
+        $lista = $this->seccion($this->ficha($this->d1)->assertOk()->getContent(), 'citas-fuera');
+        $this->assertNotNull($lista, 'La cita de hoy por la tarde está fuera del horario y aún no empieza.');
+        $this->assertStringContainsString('Hoy Tarde', $lista);
+    }
+
     public function test_una_cita_justo_en_el_borde_de_la_franja_no_cuenta_como_fuera(): void
     {
         // Mismos bordes que ReglaAgendaTest: lunes de 09:00 a 13:00 y citas de 30 minutos.

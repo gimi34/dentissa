@@ -85,9 +85,14 @@ class HorarioDentistaTest extends TestCase
         $this->flushSession();
         $horario = $this->seccion($this->ficha($this->d1)->assertOk()->getContent(), 'horario');
         $this->assertNotNull($horario, 'La ficha de un dentista debe tener la sección horario.');
-        $this->assertStringContainsString('value="09:00"', $horario);
-        $this->assertStringContainsString('value="13:00"', $horario);
         $this->assertStringNotContainsString('09:00:00', $horario);
+        // Cada día guardado, en su fila y marcado; el día con horas pero sin marcar, desmarcado (R5).
+        foreach ([1 => ['09:00', '13:00'], 3 => ['10:00', '18:00']] as $dia => [$inicio, $fin]) {
+            $this->assertSame($inicio, $this->valorDe($horario, "dias[{$dia}][hora_inicio]"), "Inicio del día {$dia}.");
+            $this->assertSame($fin, $this->valorDe($horario, "dias[{$dia}][hora_fin]"), "Fin del día {$dia}.");
+            $this->assertTrue($this->casillaMarcada($horario, $dia), "El día {$dia} sale marcado.");
+        }
+        $this->assertFalse($this->casillaMarcada($horario, 5), 'El viernes no se guardó y sale desmarcado.');
 
         // Al reenviar el formulario tal como lo muestra la ficha, el horario sigue igual.
         $this->flushSession();
@@ -363,6 +368,32 @@ class HorarioDentistaTest extends TestCase
             : ($errores['default']['messages'] ?? []);
 
         return array_filter($mensajes, fn ($clave) => str_starts_with($clave, 'dias'), ARRAY_FILTER_USE_KEY);
+    }
+
+    /** Valor del campo con ese nombre en el HTML dado. */
+    private function valorDe(string $html, string $nombre): ?string
+    {
+        $campo = $this->xpath($html)->query("//input[@name='{$nombre}']")->item(0);
+
+        return $campo?->getAttribute('value');
+    }
+
+    private function casillaMarcada(string $html, int $dia): bool
+    {
+        $casilla = $this->xpath($html)->query("//input[@name='dias[{$dia}][activo]']")->item(0);
+        $this->assertNotNull($casilla, "Falta la casilla del día {$dia}.");
+
+        return $casilla->hasAttribute('checked');
+    }
+
+    private function xpath(string $html): DOMXPath
+    {
+        $dom = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        libxml_clear_errors();
+
+        return new DOMXPath($dom);
     }
 
     /** Texto del resumen `role="alert"` de la sección horario. */
