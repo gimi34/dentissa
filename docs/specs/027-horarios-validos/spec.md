@@ -114,7 +114,7 @@ Cada brecha, contradicción o supuesto resuelto, con su origen (`shared/contract
 | 2026-10-02 | implícita | Accesibilidad de la pantalla modificada | WCAG 2.1 AA y solo tokens del sistema | docs/constitution.md P9 |
 | 2026-10-02 | implícita | Un horario por día de la semana, de lunes a domingo | Se mantiene | docs/specs/005-horarios-dentista/spec.md CA2 |
 | 2026-10-02 | supuesto | ¿Qué cuenta como cita "futura"? | La que aún no empieza en la hora de la clínica, como en la spec 026 | docs/specs/026-estados-cita/spec.md |
-| 2026-10-02 | supuesto | ¿Se puede guardar un horario sin días? | Sí, con aviso de que no se podrán agendar citas | /specify |
+| 2026-10-02 | brecha | ¿Se puede guardar un horario sin días? | Sí, con aviso de que no se podrán agendar citas (CA5) | usuario (/analyze A15) |
 
 ## Notas para /plan
 - Código actual: `PersonalController::saveHorarios` (`POST /admin/personal/{id}/horarios`) borra
@@ -135,3 +135,5 @@ Cada brecha, contradicción o supuesto resuelto, con su origen (`shared/contract
 |---|---|---|
 | 2026-10-02 | Spec creada | /specify, corte de la lógica de citas: 027 horarios y 028 reprogramar |
 | 2026-10-02 | Aprobada | Decisión del usuario |
+| 2026-10-02 | Decisión del horario sin días confirmada por el usuario (pasa de supuesto a fuente `usuario`) | /analyze A15 |
+| 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
