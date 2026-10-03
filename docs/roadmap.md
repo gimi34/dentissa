@@ -117,7 +117,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Enmienda MINOR de P2 (constitución): distinguir los cambios de comportamiento, que exigen un test
   que falle antes, de los tests de caracterización, que se comprueban rompiendo el código que
   protegen. Motivo: P2 necesitó excepción en la spec 024 (CA3–CA7) y en la 025 (CA2, CA3, CA6, CA7)
-  (spec 025, D9; decisión del usuario, 2026-09-29).
+  (spec 025, D9; decisión del usuario, 2026-09-29). Hecho: constitución 1.2.0 (2026-10-02, spec 027).
 - Auditoría del alta de citas con notas (dato de salud) → spec 022. Excepción P7 de la spec 025:
   la 025 no cambia qué notas se guardan ni quién (D9; decisión del usuario, 2026-09-30).
 - Auditoría del 403 del alta de citas del personal (`autorizadoParaCita`) → spec 020, registro
