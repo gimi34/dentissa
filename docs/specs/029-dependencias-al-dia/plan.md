@@ -1,6 +1,6 @@
 ---
 spec: 029-dependencias-al-dia
-status: approved   # aprobado por el usuario el 2026-10-03
+status: approved   # aprobado por el usuario el 2026-10-03 (--fix A1)
 created: 2026-10-03
 ---
 
@@ -42,7 +42,7 @@ definitivas son las que resuelva la actualización el día de implementar, con l
 |---|---|---|
 | `composer.lock` | 41 paquetes, todos de GitHub vía Packagist y con al menos 7 días. Las tres con aviso: `laravel/framework` v12.62.0 → v12.69.2, `league/flysystem` 3.35.1 → 3.36.0 (y `league/flysystem-local` 3.31.0 → 3.35.3) y `phpseclib/phpseclib` 3.0.55 → 3.0.57. Las arrastradas: `carbonphp/carbon-doctrine-types` 3.2.0 → 3.2.1, `doctrine/lexer` 3.0.1 → 3.0.2, `graham-campbell/result-type` v1.1.4 → v1.2.0, `guzzlehttp/uri-template` v1.0.8 → v1.0.11, `laravel/prompts` v0.3.21 → v0.3.24, `laravel/serializable-closure` v2.0.13 → v2.1.0, `league/mime-type-detection` 1.16.0 → 1.17.0, `monolog/monolog` 3.10.0 → 3.12.0, `nesbot/carbon` 3.13.0 → 3.14.0, `phpoption/phpoption` 1.9.5 → 1.10.0, `ramsey/uuid` 4.9.3 → 4.9.4, `vlucas/phpdotenv` v5.6.3 → v5.7.0 y 25 de Symfony en sus ramas 7.4, 8.1, 3.7 y 1.x (`console`, `error-handler`, `finder`, `http-foundation`, `uid` → v7.4.20; `http-kernel`, `mailer`, `mime`, `process` → v7.4.19; `routing` → v7.4.18; `var-dumper` → v7.4.18; `css-selector` → v8.1.6; `event-dispatcher` → v8.1.5; `string` → v8.1.7; `translation` → v8.1.5; `service-contracts` → v3.7.3; y los 9 `polyfill-*` → v1.43.0) | Medio: el framework y Symfony sostienen toda la app; Monolog y Carbon tocan logs y fechas |
 | `tests/Feature/DependenciasSegurasTest.php` | `MINIMAS_SERVIDOR` gana `laravel/framework` 12 → 12.69.0, `league/flysystem` 3 → 3.35.3 y `phpseclib/phpseclib` 3 → 3.0.57; el docblock cita la spec 029 | Bajo |
-| `docs/security.md` | RS17.a → "en curso (spec 029)" (T091). En `/release`: RS17.a → mitigada, EX1 sale de "Excepciones aceptadas" y el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente | Bajo |
+| `docs/security.md` | RS17.a → "en curso (spec 029)" y, en la fila de EX1, que sus avisos quedan corregidos por la 029 y que se retira al liberarla (T091, CA7). En `/release`: RS17.a → mitigada, EX1 sale de "Excepciones aceptadas" y el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente | Bajo |
 | `docs/roadmap.md` | En `/release`: la entrada de dependencias dice que la 029 atendió EX1 y RS17 | Bajo |
 
 `composer.json`, `package.json`, `package-lock.json`, el CI y `.ai/project.yaml` no cambian.
@@ -73,7 +73,7 @@ Sin cambios de rutas, respuestas, modelo de datos, migraciones ni pantallas.
   - ningún paquete nuevo es de tipo `composer-plugin`.
 - **CA5 (comprobación manual):** login con Google en local, anotado con fecha (Socialite usa Guzzle, que no cambia, y el framework, que sí).
 - **CA6 (datos de un servicio externo):** para cada versión que cambia, el campo `time` de Packagist (`https://repo.packagist.org/p2/<paquete>.json`) tiene al menos 7 días el día de implementar, y su `source` es de GitHub.
-- **CA7 (estado de la documentación, en `/release`):** en `docs/security.md`, EX1 no está en "Excepciones aceptadas", RS17.a figura como mitigada con su versión, y `composer audit` sin filtro no deja ningún aviso sin registrar.
+- **CA7 (estado de la documentación tras la actualización):** `composer audit --locked` sin filtro no deja ningún aviso sin registrar; en `docs/security.md`, la fila de EX1 indica que sus avisos quedan corregidos por la 029 y que se retira al liberarla, y RS17.a figura "en curso (spec 029)". Se comprueba en T040. Al liberar (T098, paso de `/release`, no del criterio): EX1 sale de "Excepciones aceptadas" y RS17.a pasa a mitigada con su versión.
 - **RNF (antes del 2026-10-31):** fecha del tag de la release.
 
 ## Modelo de amenazas
@@ -95,7 +95,7 @@ Casos de abuso de la spec → amenazas: CA6 → TM1 y TM2.
 | CA4: solo cambian las tres y lo arrastrado, sin saltos mayores ni directas nuevas | `composer.lock` | Comprobación (P2 1.2.1): comparación de `composer.lock` y `composer.json` antes y después |
 | CA5: login con Google igual que antes | `composer.lock` | Verificación manual del usuario en local |
 | CA6 (abuso): toda versión que cambia con ≥ 7 días | `composer.lock` | Comprobación (P2 1.2.1): fechas y origen en Packagist de cada versión cambiada |
-| CA7: EX1 retirada, RS17 mitigado, sin avisos sin registrar | `docs/security.md` | Comprobación en `/release` (P2 1.2.1): `docs/security.md` y `composer audit` sin filtro |
+| CA7: ningún aviso sin registrar, EX1 anotada para retirarla y RS17.a en curso | `docs/security.md` | Comprobación (P2 1.2.1) en T040: `composer audit --locked` sin filtro y lectura de `docs/security.md` (EX1 y RS17.a) |
 | TM1 | resolución limitada; ≥ 7 días; origen | Comprobaciones de CA4 y CA6 |
 | TM2 | sin paquetes ni plugins nuevos | Comprobación de CA4 |
 | TM3 | subidas menores; suite; login | `php artisan test`; login manual |
@@ -130,12 +130,12 @@ de auditoría ni métricas. Monolog sube de versión menor sin cambios en `confi
 - **D3 · Constitución 1.2.1** (decisión del usuario, 2026-10-03): P2 permite verificar con una comprobación declarada los criterios que no describen comportamiento (CA3–CA7). Evita repetir la excepción de la 024.
 - **D4 · Umbral de CA1:** `composer audit --locked` sin `--ignore-severity`. El CI, `/review` y `/release` siguen ignorando las severidades baja y media (024, D10), y cambiarlo queda fuera de alcance (spec).
 - **D5 · Test:** se amplía `DependenciasSegurasTest` en lugar de crear otro, con el mismo patrón por rama mayor.
-- **D6 · Riesgos:** RS17.a pasa a "en curso (spec 029)" al implementar y a mitigada en `/release`; EX1 se retira en `/release` (spec CA7).
+- **D6 · Riesgos:** RS17.a pasa a "en curso (spec 029)" al implementar y EX1 queda anotada para retirarla (spec CA7); en `/release`, RS17.a pasa a mitigada y EX1 se retira (/analyze A1, decisión del usuario, 2026-10-03).
 - **D7 · Plazo de EX1:** si al implementar alguna de las tres no tiene ninguna versión corregida con ≥ 7 días, se usa la anterior corregida que sí los cumpla. Si no hay ninguna, se renueva EX1 solo para ese paquete, con fecha nueva y aprobación del usuario (spec, Decisiones). Hoy no hace falta: las tres tienen versión corregida con ≥ 7 días.
 
 ## Impacto en arquitectura
 - `docs/architecture.md`: sin cambios (no cita versiones de dependencias).
-- `docs/security.md`: RS17.a "en curso" (T091); en `/release`, EX1 retirada, RS17.a mitigada y el texto del riesgo de dependencias de la 024 sin EX1 vigente.
+- `docs/security.md`: RS17.a "en curso" y EX1 anotada para retirarla (T091); en `/release`, EX1 retirada, RS17.a mitigada y el texto del riesgo de dependencias de la 024 sin EX1 vigente.
 
 ## Riesgos y mitigaciones
 - **Laravel 12.62 → 12.69 trae siete versiones menores de cambios** (y Symfony 7.4.14 → 7.4.20) → la suite completa (152 tests) y el login con Google. Si algo falla, se revierte solo `composer.lock` y se reabre el plan.
