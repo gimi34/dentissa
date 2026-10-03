@@ -73,6 +73,12 @@ Formato:
   - nota: A32 — las comprobaciones de CSS van en un test propio, `test_las_reglas_css_nuevas_solo_usan_tokens`, separado del de HTML; exige además que cada regla nueva exista, para no pasar en vacío.
   - nota: A34 — el test de reglas exige `var(--weight-*)` en todo `font-weight` de las reglas nuevas.
   - nota: A35 — el test de contraste solo toma tokens de color (valores hex tras resolver `var()`), y el de reglas rechaza `color:` con `--text-body`/`--text-small`.
+- [ ] T013 [P] Añadir a `CitasFueraDelHorarioTest` el límite de cita "futura" en la hora de la clínica: con el reloj a las 17:00 UTC (11:00 en la clínica), una cita agendada hoy a las 14:00 locales que queda fuera del horario nuevo aparece en `citas-fuera` y cuenta en el recuento del mensaje — tests/Feature/CitasFueraDelHorarioTest.php — hecho cuando: el caso pasa con el código actual y se comprueba de caracterización cambiando un momento en `HorarioDentista::citasFuera` la hora de la clínica por `Carbon::now()` en UTC (falla; restaurado y anotado) — cubre: CA7, CA8 — depende: T023
+  - nota: añadida por /review: R1
+- [ ] T014 [P] Precisar en `HorarioDentistaTest::test_un_horario_valido_se_guarda_y_la_ficha_lo_muestra` lo que muestra la ficha: dentro de `fila-1`, `value="09:00"` y `value="13:00"` con la casilla `checked`; dentro de `fila-3`, `value="10:00"` y `value="18:00"` con `checked`; `fila-5` (horas sin marcar) sin `checked` — tests/Feature/HorarioDentistaTest.php — hecho cuando: el test pasa y se comprueba rompiendo un momento el recorte `H:i` de la vista (`substr(…, 0, 5)`) (falla; restaurado y anotado) — cubre: CA1 — depende: T023
+  - nota: añadida por /review: R5
+- [ ] T015 [P] Ampliar `HorarioDentistaVistasTest`: (a) tras el rechazo de un día marcado sin horas, sus dos campos salen vacíos (`value=""`); (b) test del Gate `definir-horario` con `Gate::forUser()->inspect()`: admin sobre un dentista → permitido, admin sobre un asistente → denegado 404, dentista sobre un dentista → denegado 403; (c) `test_las_reglas_css_nuevas_solo_usan_tokens` exige una regla `.horario-dia .field:focus` con `border-color: var(--border-control)` y que `.horario-dia .field` fije `border-width: var(--border-width)`; (d) `test_los_pares_de_contraste_cumplen_aa` saca los pares de las propias reglas nuevas: todo token de `color:` (salvo `.field-hint`, que en las piezas nuevas siempre va con `.field-hint-error`) cumple ≥ 4.5:1 sobre `--white` y `--p50`, y todo token de borde de `.horario-dia .field` y de `outline` cumple ≥ 3:1; (e) `toggleDia` alterna `hidden` en los `.field-hint-error` de la fila — tests/Feature/HorarioDentistaVistasTest.php — hecho cuando: (c) y (e) fallan hoy por la razón esperada (falta la regla de foco y `toggleDia` no toca los mensajes); (a), (b) y (d) pasan y se comprueban rompiendo lo que protegen (defaults 09:00/18:00 en la vista, la rama de rol del Gate, `--text-light` en `.horario-dia__nota`) (fallan; restaurado y anotado) — cubre: CA4, CA6, CA9 — depende: T023
+  - nota: añadida por /review: R2, R3, R6, R7, R10
 
 ## Implementación
 - [x] T020 Crear `HorarioDentista` (constructor con `ConnectionInterface`; `guardar` en una transacción con `lockForUpdate()` de `personal`, después borrar e insertar con `disponible = 1`, devolviendo el número de citas fuera; 1205/1213 y `DeadlockException` → `HorarioNoGuardado::ocupado()`, el resto se relanza; `citasFuera` con la regla y los bordes de `ReservaCitas`, solo `agendada`/`confirmada` que aún no empiezan en `clinica.zona_horaria`, con paciente, fecha, hora y estado, ordenadas) y `HorarioNoGuardado` con su mensaje — app/Agenda/HorarioDentista.php, app/Agenda/HorarioNoGuardado.php — hecho cuando: pasan los dos tests de servicio de TM5 de T010 (`test_el_horario_bloquea_al_dentista_antes_de_borrar` y `test_un_bloqueo_agotado_no_da_error_500`), y `pint --test` pasa en los dos archivos — cubre: CA1, CA7, CA8 — depende: T010, T011
@@ -96,6 +102,10 @@ Formato:
   - nota: A33 — Rollout (complemento del plan; no se edita `plan.md` para no invalidar el análisis): el formulario envía además el campo oculto `formulario=horario`, que la versión anterior ignora; la sección de horario cambia de aspecto (espaciado ±2 px, letra 13.5 px, notas en `--text-muted` en vez de `--text-light`, borde rosa intenso en los campos de hora y anillo de foco). Se recogerá en el CHANGELOG de la release.
   - nota: los envoltorios de la lista de días y del botón conservan sus estilos en línea: no los modifica la spec (deuda DS4 del resto de la ficha).
   - nota: verificación manual OK 2026-10-03 (usuario): ficha de un dentista a 1440 px — borde de las horas, foco con teclado en campos y en «Ver cita», alternar un día, error de franja con resumen y lista de citas fuera.
+- [ ] T024 Fijar en `app.css` el borde del campo de hora con y sin foco: `.horario-dia .field` con `border-width: var(--border-width)` y una regla `.horario-dia .field:focus { border-color: var(--border-control); }`, que gana a la regla `.field:focus` del bloque `<style>` previo de la vista — public/css/app.css — hecho cuando: pasa la parte (c) de T015 y la suite completa no tiene fallos nuevos · verificación manual: con Tab, el borde del campo de hora sigue en `--border-control` (rosa intenso) con el anillo de foco — cubre: CA1 — depende: T015
+  - nota: añadida por /review: R2
+- [ ] T025 Hacer que `toggleDia` alterne también `hidden` en los mensajes `.field-hint-error` de la fila del día (se ocultan al desmarcarlo y vuelven al marcarlo) — resources/views/personal/show.blade.php — hecho cuando: pasa la parte (e) de T015 y la suite completa no tiene fallos nuevos · verificación manual: desmarcar y volver a marcar un día con error en la ficha — cubre: CA2, CA4 — depende: T015
+  - nota: añadida por /review: R10
 
 ## Integración y documentación
 - [x] T040 Verificación final — (sin archivos) — hecho cuando:
@@ -111,6 +121,10 @@ Formato:
   - nota: npm audit: 0 vulnerabilidades. El diff de `app/` no añade llamadas a `Log::`.
 - [x] T041 Anotar en `docs/roadmap.md → Pendientes y deuda` que la deuda 025/R12 (franjas que cruzan la medianoche) queda resuelta por la 027 (CA2), y añadir la viñeta "extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (spec 013)" — docs/roadmap.md — hecho cuando: las dos viñetas existen y citan la spec 027
   - nota: 025/R12 marcada como resuelta por la 027 (CA2) y nueva viñeta "Deuda de la spec 027" con la extracción de la regla de franja común → spec 013.
+- [ ] T042 Corregir `docs/design/system.md`: en "Campo de formulario", solo `.field`, `.field-label` y `.field-error` siguen en `citas.css`; referencias de línea de `app.css` actualizadas (`:root` y tamaños); DS4 dice que la sección de horario no tiene estilos en línea en filas y campos (los envoltorios previos siguen); DS1 cita `.field-hint` en `app.css` — docs/design/system.md — hecho cuando: `aidd.py validate` sin avisos de diseño y las referencias apuntan a las líneas actuales
+  - nota: añadida por /review: R15
+- [ ] T043 Registrar en `docs/security.md` la vulnerabilidad media de `phpseclib/phpseclib` 3.0.55 (CVE-2026-84308, corregida en 3.0.57), detectada el 2026-10-03 en la review de la 027, con destino "spec de actualización de dependencias, antes del vencimiento de EX1 (2026-10-31), respetando los 7 días de antigüedad" (decisión del usuario, 2026-10-03) — docs/security.md — hecho cuando: la entrada existe con fecha, severidad, versión corregida y destino
+  - nota: añadida por /review: R4
 - [x] T090 Actualizar `docs/architecture.md`:
   - fila "Agenda (horario)" con `app/Agenda/HorarioDentista.php` y la regla `app/Rules/HoraFinPosterior.php`;
   - fila "Autorización de personal" (nueva, junto a la de citas) con `GestionPersonal` y el Gate `definir-horario`;
@@ -123,7 +137,7 @@ Formato:
   - nota: por corrección: RS12.b → "en curso (spec 027)" (pasará a mitigada en la release); RS12.c sigue pendiente con "horario de dentista: spec 027"; "Dónde se aplica" gana el Gate `definir-horario`. `deployment.md` y `observability.md` sin cambios (sin variables, migraciones ni logs nuevos).
 
   `docs/deployment.md` y `docs/observability.md` no cambian.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: spec 027 → `implemented` (2026-10-03) con CA1–CA9 marcados: sus tests pasan; `docs/specs/README.md` actualizado.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -135,15 +149,15 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010 | T020, T022, T023 |
-| CA2 | T010, T012 | T022, T023 |
+| CA1 | T010, T014 | T020, T022, T023, T024 |
+| CA2 | T010, T012 | T022, T023, T025 |
 | CA3 | T010 | T022, T023 |
-| CA4 | T010, T012 | T022, T023 |
+| CA4 | T010, T012, T015 | T022, T023, T025 |
 | CA5 | T010 | T022 |
-| CA6 | T010, T012 | T021, T022, T023 |
-| CA7 | T011 | T020, T022, T023 |
-| CA8 | T011 | T020, T022, T023 |
-| CA9 | T010 | T021, T022 |
+| CA6 | T010, T012, T015 | T021, T022, T023 |
+| CA7 | T011, T013 | T020, T022, T023 |
+| CA8 | T011, T013 | T020, T022, T023 |
+| CA9 | T010, T015 | T021, T022 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -164,19 +178,19 @@ Formato:
 | app/Autorizacion/GestionPersonal.php | T021 |
 | app/Providers/AppServiceProvider.php | T021 |
 | app/Http/Controllers/PersonalController.php | T004, T022 |
-| resources/views/personal/show.blade.php | T023 |
+| resources/views/personal/show.blade.php | T023, T025 |
 | resources/views/personal/partials/citas-fuera.blade.php | T023 |
-| public/css/app.css | T003 |
+| public/css/app.css | T003, T024 |
 | public/css/citas.css | T003 |
-| docs/design/system.md, docs/design/system.html | T001 |
+| docs/design/system.md, docs/design/system.html | T001, T042 |
 | tests/Feature/HorarioDentistaTest.php | T010 |
 | tests/Feature/CitasFueraDelHorarioTest.php | T011 |
 | tests/Feature/HorarioDentistaVistasTest.php | T012 |
 | docs/architecture.md | T090 |
-| docs/security.md | T091 |
+| docs/security.md | T091, T043 |
 | docs/roadmap.md | T041 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
 | Mensajes en español que dicen qué corregir | T010 (texto exacto de CA2, CA3, CA4 y CA5), T011 (recuento) |
-| WCAG 2.1 AA en lo nuevo o modificado | T012 (errores asociados, solo tokens y pares de contraste) · verificación manual de T023 |
+| WCAG 2.1 AA en lo nuevo o modificado | T012, T015 (errores asociados, solo tokens y pares de contraste sacados de las reglas) · verificación manual de T023, T024 y T025 |

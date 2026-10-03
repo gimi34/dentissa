@@ -1,7 +1,7 @@
 ---
 id: 027
 slug: horarios-validos
-status: implemented
+status: approved
 created: 2026-10-02
 extends: [005]
 ---
@@ -138,3 +138,4 @@ Cada brecha, contradicción o supuesto resuelto, con su origen (`shared/contract
 | 2026-10-02 | Decisión del horario sin días confirmada por el usuario (pasa de supuesto a fuente `usuario`) | /analyze A15 |
 | 2026-10-02 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-03 | Implementada: los 9 criterios pasan sus tests (`HorarioDentistaTest`, `CitasFueraDelHorarioTest`, `HorarioDentistaVistasTest`) | /implement T092 |
+| 2026-10-03 | Vuelve a approved: /review ronda 1 pide cambios (R1–R7, R10, R15; tareas T013–T015, T024, T025, T042, T043) | /review |
