@@ -12,11 +12,11 @@ stack:
   database: mariadb 10.11 (docker)
   package_manager: composer (+ npm para assets)
 packages: []                   # solo monorepo: [{ path: apps/web, type: frontend }, …]
-constitution_version: 1.0.0
+constitution_version: 1.1.0
 workflow:
   enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
   legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md
-skills_version: 1.8.1          # versión del paquete de skills con que se inicializó
+skills_version: 1.11.0         # versión del paquete de skills con que se inicializó
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
   platform: TODO(init) por definir (sin presupuesto; ver docs/deployment.md)
@@ -27,12 +27,15 @@ security:
   owasp_top10_edition: 2025
   asvs_level: 2
   sensitive_data: [personal, health, credentials]
-  tools:                       # comandos; vacío si no hay herramienta configurada
-    secrets: gitleaks detect --no-banner
-    sast: semgrep scan --config p/php --error
-    sca: composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high
-    containers: trivy fs --severity HIGH,CRITICAL .
-    dast: null                 # solo contra staging
+  tools:                       # status: propuesta | instalada | en-ci | no-aplica. Solo se ejecutan
+                               # instalada y en-ci; no-aplica lleva su motivo en docs/security.md.
+                               # en-ci: las cuatro corren en .github/workflows/ai-dd.yml y en local con
+                               # sus imágenes Docker (decisión del usuario, 2026-10-02).
+    secrets: { command: "gitleaks detect --no-banner", status: en-ci }
+    sast: { command: "semgrep scan --config p/php --metrics=off --error", status: en-ci }
+    sca: { command: "composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high", status: en-ci }
+    containers: { command: "trivy fs --severity HIGH,CRITICAL .", status: en-ci }
+    dast: { command: null, status: no-aplica }   # solo contra staging, que no existe (docs/security.md)
   agent:
     min_package_age_days: 7
     protected_paths:           # además de las de shared/agent-security.md
@@ -48,8 +51,16 @@ observability:
     required: true
     events: [login, login_failed, logout, access_denied, sensitive_read, sensitive_write, role_change, account_change]
     retention: 5 años (decisión del usuario, 2026-09-28)
+design:                        # solo proyectos con interfaz (frontend, fullstack, mobile)
+  status: approved             # none | declined | draft | approved — extraído del código y aprobado (decisión del usuario, 2026-10-02)
+  source: extracted            # chosen | extracted | null
+  system: docs/design/system.md
+  html: docs/design/system.html
+  canvas: null
+  widths: [390, 1440]          # escritorio; móvil como deuda DS8 (decisión del usuario, 2026-10-02)
 skills:
-  enabled: [design]            # p. ej. [design]
+  enabled: []                  # `design` (plugin oficial de Anthropic) no está instalado; quitado
+                               # en el upgrade a 1.11.0 (decisión del usuario, 2026-10-02)
 paths:
   constitution: docs/constitution.md
   architecture: docs/architecture.md

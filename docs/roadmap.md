@@ -16,6 +16,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); 027 prevista; 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD3.a, RD3.b, RD3.c, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS8.a, RS8.b, RS15.b, OB4.b, OB6.b, OB7.a; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | — | pendiente |
+| 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
      cubre y las que deja fuera con su destino. Nunca resume un riesgo citando solo su número. -->
@@ -54,7 +55,21 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Formatear el código existente con Pint en un cambio aislado (nunca se ha ejecutado; deriva generalizada).
 - Unificar convenciones de rutas (`/crear` vs `/create`, `/edit` vs `/editar`, nombres con y sin `.index`).
 - `Route::resource('servicios')` expone `show` sin método; `ServiciosController@index` ignora el buscador.
-- Objetivo de accesibilidad sin definir (propuesto WCAG 2.1 AA).
+- Objetivo de accesibilidad: WCAG 2.1 AA (decisión del usuario, 2026-10-02); principio P9 de la
+  constitución y objetivo 6. Sistema de diseño extraído en `docs/design/system.md`.
+- Deuda de diseño fuera del objetivo 6 (`docs/design/system.md`, se corrige al tocar cada pantalla;
+  decisión del usuario, 2026-10-02):
+  - DS3: `--text-muted` vale lo mismo que `--text`; no hay texto secundario.
+  - DS4: 871 `style=""` en las vistas, 17 tamaños de letra y ninguna escala de espaciado ni tipografía;
+    sidebar `#c75078` fuera de los tokens.
+  - DS5: 14 bloques `<style>` redefinen `.field`; `citas.css` solo en 7 vistas; `auth.css` redefine tokens.
+  - DS8: la app no se adapta a móvil (sin `@media`); empezar por las pantallas del paciente.
+  - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
+  - DS10: el movimiento no respeta `prefers-reduced-motion`.
+  - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
+- `layouts/app.blade.php:244` mete la contraseña generada con `{{ }}` dentro de un `onclick` de
+  JavaScript en lugar de `@js()` (P4); riesgo bajo, porque la genera el sistema. Corregirlo en la spec
+  que toque usuarios o el layout (upgrade a AI-DD 1.11.0, decisión del usuario, 2026-10-02).
 - Deuda de la spec 025 (/review, aceptada sin tarea; liberada en v0.2.0):
   - 025/R8: `SET SESSION innodb_lock_wait_timeout` en `ReservaCitas` deja 5 s fijados en la conexión
     para el resto de la petición; restaurar el valor o usar `SET STATEMENT … FOR` si aparecen procesos

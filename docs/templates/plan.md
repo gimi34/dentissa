@@ -10,11 +10,12 @@ created: {{date}}
 {{resumen}}
 
 ## Constitution Check
-| Principio | Resultado | Justificación / ajuste |
-|---|---|---|
-| P1 {{nombre}} | ✅ / ➖ / ❌ | |
+| Principio | Resultado | Justificación / ajuste | Cómo se verifica |
+|---|---|---|---|
+| P1 {{nombre}} | ✅ / ➖ / ❌ | | {{test: … · lint: … · manual: … · — si ➖}} |
 
-Evaluar **todos** los principios. ➖ = no aplica (con motivo). Un ❌ solo se admite como
+Evaluar **todos** los principios. ➖ = no aplica (con motivo). Todo ✅ dice cómo se verifica; un
+principio con número, umbral o prohibición comprobable se verifica con test o lint. Un ❌ solo se admite como
 `❌ aceptado: <motivo> — aprobado por el usuario el <fecha>`; si no, el plan queda `blocked`.
 
 ## Cambios por módulo
@@ -32,7 +33,7 @@ Evaluar **todos** los principios. ➖ = no aplica (con motivo). Un ❌ solo se a
      en otro caso, una línea explicando por qué no aplica. -->
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
-| TM1 | {{Spoofing / Tampering / Repudiation / Information disclosure / DoS / Elevation}} | {{A0x:año}} | {{…}} | {{…}} | {{…}} |
+| TM1 | {{Spoofing / Tampering / Repudiation / Information disclosure / DoS / Elevation}} | {{A0x:año}} {{· MASVS-… en mobile}} | {{…}} | {{…}} | {{…}} |
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |

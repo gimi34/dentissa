@@ -65,15 +65,20 @@ No hay rutas API, webhooks, colas ni tareas programadas.
   con hashes (datos ficticios y repo privado, confirmado por el usuario, 2026-09-28).
 
 ## Herramientas
-Adoptadas en la entrevista (decisión del usuario, 2026-09-28); **ninguna está instalada todavía**.
+Adoptadas en la entrevista (decisión del usuario, 2026-09-28). Desde la spec 024 corren en el CI
+(`.github/workflows/ai-dd.yml`) y en local con sus imágenes Docker (`zricethezav/gitleaks:v8.21.2`,
+`semgrep/semgrep:1.99.0`, `aquasec/trivy:0.57.1`); estado `en-ci` (decisión del usuario, 2026-10-02).
 
-| Tipo | Herramienta | Comando | Cuándo corre |
-|---|---|---|---|
-| Secretos | gitleaks | `gitleaks detect --no-banner` | /implement, CI |
-| SAST | semgrep | `semgrep scan --config p/php --error` | /implement (archivos tocados), /review |
-| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | /review, /release |
-| Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | /review, /release |
-| DAST | ninguna | — | — |
+| Tipo | Herramienta | Comando | Estado | Cuándo corre |
+|---|---|---|---|---|
+| Secretos | gitleaks | `gitleaks detect --no-banner` | en-ci | /implement, /review, CI |
+| SAST | semgrep | `semgrep scan --config p/php --metrics=off --error` | en-ci | /implement (archivos tocados), /review, CI |
+| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | en-ci | /review, /release, CI |
+| Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | en-ci | /review, /release, CI |
+| DAST | ninguna | — | no-aplica: no hay staging (`docs/deployment.md`, objetivo 5); se decide al crearlo | — |
+
+`--metrics=off`: semgrep descarga `p/php` de semgrep.dev, y sin esa opción enviaría métricas de uso
+a ese servicio (upgrade a AI-DD 1.11.0, decisión del usuario, 2026-10-02).
 
 ## Permisos del agente
 Reglas base en `shared/agent-security.md` del plugin. Específicas de este proyecto:

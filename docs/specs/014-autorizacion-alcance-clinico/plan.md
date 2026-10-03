@@ -28,6 +28,7 @@ esquema ni modelos nuevos; la spec 013 podrá migrar estos Gates a Policies cuan
 | P6 Sin vulnerabilidades críticas/altas en producción | ✅ | No añade dependencias. Las vulnerabilidades previas (RS16) se atienden en una spec propia antes de cualquier release (decisión del usuario, 2026-09-28). |
 | P7 Auditoría de datos sensibles | ✅ | CA11 y CA12 emiten eventos con `App\Auditoria\Auditoria` (spec 020); las lecturas en modo crítico (fallo cerrado). Prerrequisito: spec 020 implementada antes (decisión del usuario, 2026-09-28). |
 | P8 Correlación y logs limpios | ➖ | La spec no añade logs. La correlación (`X-Request-Id`) la aporta la spec 020; los eventos de CA11/CA12 la heredan del `Context`. |
+| P9 La interfaz usa solo el sistema de diseño | ➖ pendiente | Principio añadido en la constitución 1.1.0 (2026-10-02), después de aprobar este plan; se evalúa en el próximo `/plan 014 --fix` (toca `pacientes/index` y `expedientes/create`). |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |

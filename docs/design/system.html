@@ -1,0 +1,639 @@
+<!doctype html>
+<!--
+  Sistema de diseño de Dentissa, EXTRAÍDO del código el 2026-10-02 (upgrade a AI-DD 1.11.0,
+  source: extracted). Muestra la app tal como está, sin mejoras: los pares en rojo son deuda de
+  diseño (DS1, DS2 en docs/design/system.md), no se corrigen aquí. Autocontenido: sin fuentes,
+  scripts ni imágenes externas. La app carga Roboto desde Google Fonts; aquí se usa Roboto si está
+  instalada en el equipo y, si no, la fuente del sistema.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — sistema de diseño extraído</title>
+
+<style id="viewer">
+  /* Marco del visor: neutro y discreto, para que destaque la opción y no el visor. */
+  :root {
+    --ui-bg: #f6f7f8; --ui-panel: #ffffff; --ui-text: #1d2125; --ui-muted: #5b636b;
+    --ui-line: #d9dde1; --ui-ok: #1e7a3c; --ui-fail: #b42318; --ui-focus: #1f5fd1;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-viewer="light"]) {
+      --ui-bg: #17191c; --ui-panel: #1f2226; --ui-text: #e8eaed; --ui-muted: #a3a9b0;
+      --ui-line: #343940; --ui-ok: #6fd08c; --ui-fail: #ff8a80; --ui-focus: #8ab4ff;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--ui-bg); color: var(--ui-text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+  .v-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+  .v-head { padding: 40px 0 24px; border-bottom: 1px solid var(--ui-line); }
+  .v-project { margin: 0 0 4px; color: var(--ui-muted); }
+  .v-head h1 { margin: 0 0 12px; font-size: 28px; line-height: 1.2; }
+  .v-why { margin: 0 0 6px; max-width: 70ch; }
+  .v-risk { margin: 0; max-width: 70ch; color: var(--ui-muted); }
+  .v-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .v-toggle { font: inherit; padding: 8px 14px; min-height: 40px; border-radius: 8px; cursor: pointer;
+              border: 1px solid var(--ui-line); background: var(--ui-panel); color: var(--ui-text); }
+  .v-toggle[aria-pressed="true"] { border-color: var(--ui-text); box-shadow: inset 0 0 0 1px var(--ui-text); }
+  .v-toc { position: sticky; top: 0; z-index: 5; background: var(--ui-bg); border-bottom: 1px solid var(--ui-line); }
+  .v-toc ul { display: flex; gap: 20px; margin: 0; padding: 12px 0; list-style: none; overflow-x: auto; }
+  .v-toc a { text-decoration: none; color: var(--ui-muted); white-space: nowrap; }
+  .v-toc a:hover { color: var(--ui-text); }
+  .v-section { padding: 36px 0; border-bottom: 1px solid var(--ui-line); }
+  .v-section > h2 { margin: 0 0 6px; font-size: 20px; }
+  .v-section > .v-note { margin: 0 0 20px; color: var(--ui-muted); max-width: 70ch; }
+  .v-stage { background: var(--ui-panel); border: 1px solid var(--ui-line); border-radius: 12px; overflow: hidden; }
+  .v-stage > .opt { padding: 24px; }
+  .v-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .v-swatch { margin: 0; }
+  .v-chip { height: 64px; border-radius: 8px; border: 1px solid var(--ui-line); }
+  .v-swatch figcaption { margin-top: 6px; font-size: 13px; color: var(--ui-muted); }
+  .v-swatch code { color: var(--ui-text); font-size: 13px; }
+  .v-pairs { margin: 24px 0 0; padding: 0; list-style: none; display: grid; gap: 8px;
+             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .v-pair { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 2px;
+            padding: 10px 12px; border-radius: 8px; border: 1px solid var(--ui-line); background: var(--ui-panel); }
+  .v-pair-sample { grid-row: span 2; width: 44px; height: 32px; border-radius: 6px; display: grid;
+                   place-items: center; font-weight: 600; }
+  .v-pair-ratio { grid-column: 2; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .v-pair[data-ok="true"] .v-pair-ratio { color: var(--ui-ok); }
+  .v-pair[data-ok="false"] .v-pair-ratio { color: var(--ui-fail); font-weight: 600; }
+  .v-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .v-label { display: block; margin: 0 0 10px; font-size: 13px; color: var(--ui-muted); }
+  .v-frames { display: grid; gap: 28px; }
+  .v-frame figcaption { margin: 0 0 8px; color: var(--ui-muted); font-size: 13px; }
+  .v-viewport { border: 1px solid var(--ui-line); border-radius: 12px; overflow: hidden; background: var(--ui-panel); }
+  .v-scaler { transform-origin: 0 0; }
+  .v-scaler > .opt { min-height: var(--frame-h, 720px); }
+  .v-motion { margin: 0; padding-left: 20px; max-width: 75ch; }
+  .v-motion li { margin-bottom: 10px; }
+  .v-foot { padding: 28px 0 48px; color: var(--ui-muted); font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<style id="tokens">
+  /* Valores reales de public/css/app.css (:root) con el nombre semántico de system.md → "Rol". */
+  .opt {
+    --color-bg: #FDF5F8;            /* --bg / --p50 */
+    --color-surface: #FFFFFF;       /* --white */
+    --color-text: #000000;          /* --text */
+    --color-text-muted: #000000;    /* --text-muted (igual que --text, DS3) */
+    --color-text-light: #9B8290;    /* --text-light */
+    --color-primary: #D4537E;       /* --p400 */
+    --color-on-primary: #FFFFFF;
+    --color-link: #B83C65;          /* --p500 */
+    --color-accent-text: #993556;   /* --p600 */
+    --color-accent-bg: #FBEAF0;     /* --p100 */
+    --color-border: #F0DCE4;        /* --border */
+    --color-focus: #ED93B1;         /* --p300 */
+    --color-danger: #A32D2D;        /* --red */
+    --color-danger-bg: #FCEBEB;     /* --red-bg */
+    --color-success: #1D9E75;       /* --green */
+    --color-success-bg: #E1F5EE;    /* --green-bg */
+    --color-warning: #854F0B;       /* --amber */
+    --color-warning-bg: #FAEEDA;    /* --amber-bg */
+    --color-info: #185FA5;          /* --blue */
+    --color-info-bg: #E6F1FB;       /* --blue-bg */
+    --color-sidebar: #c75078;       /* literal de .sidebar, no es token (DS4) */
+    --color-on-sidebar: #f9eef2;    /* blanco al 90 % sobre el sidebar (texto del menú) */
+    --color-on-sidebar-muted: #ebc2d0; /* blanco al 65 % sobre el sidebar (.nav-label) */
+
+    --font-sans: "Roboto", system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
+    --text-h1: 19px; --text-h2: 15px; --text-body: 13.5px; --text-small: 11.5px;
+    --weight-regular: 400; --weight-strong: 500;
+
+    /* No existe escala de espaciado (DS4): valores literales más usados en las vistas. */
+    --space-1: 4px; --space-2: 6px; --space-3: 8px; --space-4: 10px;
+    --space-5: 14px; --space-6: 16px; --space-7: 20px; --space-8: 28px;
+    --space-gutter: 28px;           /* .content y barra superior */
+    --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+    --border-width: 1px;
+    --shadow-1: none;               /* la app no usa sombras */
+    --touch-min: 32px;              /* alto real de .btn; no hay objetivo de toque (DS6) */
+
+    --duration-fast: 150ms; --duration-base: 150ms;
+    --ease-out: ease;
+  }
+  .opt[data-motion="reduced"] { --duration-fast: 0ms; --duration-base: 0ms; }
+  @media (prefers-reduced-motion: reduce) { .opt { --duration-fast: 0ms; --duration-base: 0ms; } }
+</style>
+
+<style id="components">
+  /* Componentes de la plantilla con los valores reales de Dentissa (sin mejoras). */
+  .opt { background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);
+         font-size: var(--text-body); line-height: 1.5; }
+  .opt :focus-visible { outline: calc(var(--border-width) * 2) solid var(--color-focus); outline-offset: 2px; }
+  .opt .t-h1 { font-size: var(--text-h1); line-height: 1.2; font-weight: var(--weight-strong); margin: 0; }
+  .opt .t-h2 { font-size: var(--text-h2); line-height: 1.3; font-weight: var(--weight-strong); margin: 0; }
+  .opt .t-body { font-size: var(--text-body); margin: 0; }
+  .opt .t-small { font-size: var(--text-small); color: var(--color-text-muted); margin: 0; }
+  .opt .t-mono { font-family: var(--font-mono); }
+
+  .opt .c-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+                min-height: var(--touch-min); min-width: var(--touch-min); padding: 0 var(--space-5);
+                border-radius: var(--radius-md); border: var(--border-width) solid transparent;
+                font: inherit; font-weight: var(--weight-strong); cursor: pointer;
+                transition: background-color var(--duration-fast) var(--ease-out); }
+  .opt .c-btn--primary { background: var(--color-primary); color: var(--color-on-primary); }
+  .opt .c-btn--secondary { background: transparent; color: var(--color-text); border-color: var(--color-border); }
+  .opt .c-btn--danger { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
+  .opt .c-btn:hover, .opt .c-btn.is-hover { filter: brightness(0.94); }
+  .opt .c-btn.is-focus { outline: calc(var(--border-width) * 2) solid var(--color-focus); outline-offset: 2px; }
+  .opt .c-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .opt .c-btn[aria-busy="true"]::before { content: ""; width: 1em; height: 1em; border-radius: 50%;
+                border: 2px solid currentColor; border-right-color: transparent;
+                animation: opt-spin calc(var(--duration-base) * 4) linear infinite; }
+  .opt[data-motion="reduced"] .c-btn[aria-busy="true"]::before { animation: none; border-right-color: currentColor; opacity: .5; }
+  @keyframes opt-spin { to { transform: rotate(360deg); } }
+
+  .opt .c-field { display: grid; gap: var(--space-1); }
+  .opt .c-field label { font-weight: var(--weight-strong); }
+  .opt .c-field input { font: inherit; color: var(--color-text); background: var(--color-surface);
+                min-height: var(--touch-min); padding: 0 var(--space-3); border-radius: var(--radius-sm);
+                border: var(--border-width) solid var(--color-border); }
+  .opt .c-field .c-help { font-size: var(--text-small); color: var(--color-text-muted); margin: 0; }
+  .opt .c-field.is-error input { border-color: var(--color-danger); border-width: calc(var(--border-width) * 2); }
+  .opt .c-field.is-error .c-help { color: var(--color-danger); }
+
+  .opt .c-list { list-style: none; margin: 0; padding: 0; }
+  .opt .c-list > li { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min);
+                padding: var(--space-3) 0; border-bottom: var(--border-width) solid var(--color-border); }
+  .opt .c-card { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5);
+                border: var(--border-width) solid var(--color-border); }
+
+  .opt .c-alert { display: grid; gap: var(--space-1); padding: var(--space-4); border-radius: var(--radius-md);
+                border: var(--border-width) solid currentColor; }
+  .opt .c-alert--error { color: var(--color-danger); }
+  .opt .c-alert--success { color: var(--color-success); }
+  .opt .c-alert--warning { color: var(--color-text); background: var(--color-warning-bg); border-color: var(--color-warning); }
+  .opt .c-alert p { margin: 0; color: var(--color-text); }
+  .opt .c-dialog { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5);
+                box-shadow: var(--shadow-1); display: grid; gap: var(--space-4); max-width: 360px; }
+
+  .opt .c-state { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-5) 0; }
+
+  .opt .c-screen { display: grid; gap: var(--space-5); padding: var(--space-5) var(--space-gutter); }
+  .opt .c-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+                padding: var(--space-3) var(--space-gutter); border-bottom: var(--border-width) solid var(--color-border); }
+
+  /* Ajustes al aspecto real de Dentissa: solo tokens. */
+  .opt .c-btn { min-height: var(--touch-min); min-width: 0; padding: 0 var(--space-6);
+                border-radius: var(--radius-sm); font-size: 13px; }
+  .opt .c-btn--secondary { color: var(--color-accent-text); background: var(--color-surface); border-color: var(--color-focus); }
+  .opt .c-btn--danger { background: var(--color-danger); color: var(--color-on-primary); }
+  .opt .c-field label { font-size: 11px; font-weight: var(--weight-strong); color: var(--color-text-light);
+                        text-transform: uppercase; letter-spacing: .04em; }
+  .opt .c-field input { font-size: var(--text-body); min-height: 36px; }
+  .opt .c-field .c-help { color: var(--color-text-light); }
+  .opt .c-card { border-radius: var(--radius-md); padding: 22px; }
+  .opt .c-alert--error { background: var(--color-danger-bg); }
+  .opt .c-alert--success { background: var(--color-success-bg); }
+  .opt .c-badge { display: inline-block; padding: 2px var(--space-4); border-radius: 20px; font-size: 11px;
+                  font-weight: var(--weight-strong); }
+  .opt .c-badge--agendada { background: var(--color-accent-bg); color: var(--color-accent-text); }
+  .opt .c-badge--confirmada { background: var(--color-info-bg); color: var(--color-info); }
+  .opt .c-badge--en_curso { background: var(--color-warning-bg); color: var(--color-warning); }
+  .opt .c-badge--completada { background: var(--color-success-bg); color: var(--color-success); }
+  .opt .c-badge--cancelada { background: var(--color-danger-bg); color: var(--color-danger); }
+  .opt .c-app { display: grid; grid-template-columns: 242px 1fr; min-height: inherit; }
+  .opt .c-sidebar { background: var(--color-sidebar); color: var(--color-on-sidebar); padding: var(--space-7) var(--space-5);
+                    display: grid; align-content: start; gap: var(--space-3); font-size: var(--text-body); }
+  .opt .c-sidebar .c-navlabel { color: var(--color-on-sidebar-muted); font-size: 10px; text-transform: uppercase;
+                                letter-spacing: .08em; margin: var(--space-5) 0 0; }
+  .opt .c-sidebar .c-navitem { padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); }
+  .opt .c-sidebar .c-navitem.is-active { background: var(--color-accent-bg); color: var(--color-accent-text); }
+  .opt .c-topbar { height: 60px; display: flex; align-items: center; justify-content: space-between;
+                   padding: 0 var(--space-gutter); background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); }
+  .opt .c-content { padding: var(--space-gutter); display: grid; gap: var(--space-7); align-content: start; }
+  .opt .c-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-6); }
+  .opt .c-stat { font-size: 28px; font-weight: 600; line-height: 1; }
+  .opt .c-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .opt .c-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
+                     color: var(--color-text-light); font-weight: var(--weight-strong); padding: var(--space-4) var(--space-6); }
+  .opt .c-table td { padding: var(--space-5) var(--space-6); border-top: var(--border-width) solid var(--color-border); }
+  .opt .c-auth { display: grid; grid-template-columns: 1fr 1fr; min-height: inherit; }
+  .opt .c-auth-hero { background: var(--color-primary); color: var(--color-on-primary); padding: 48px; display: grid; align-content: center; gap: var(--space-5); }
+  .opt .c-auth-form { padding: 48px; display: grid; align-content: center; gap: var(--space-6); background: var(--color-surface); }
+  .opt .c-auth-form .c-btn { min-height: 43px; width: 100%; font-size: 15px; }
+  .opt .c-link { color: var(--color-link); }
+  @media (max-width: 760px) { .opt .c-auth { grid-template-columns: 1fr; } .opt .c-auth-hero { display: none; } }
+</style>
+</head>
+
+<body>
+<header class="v-head">
+  <div class="v-wrap">
+    <p class="v-project">Dentissa — sistema de diseño extraído del código (status: draft)</p>
+    <h1>La app tal como está hoy</h1>
+    <p class="v-why">Paleta rosa de marca sobre fondo rosa muy claro, tarjetas blancas y barra lateral rosa intensa; interfaz densa (13–13,5 px) pensada para escritorio. Objetivo: WCAG 2.1 AA.</p>
+    <p class="v-risk">Lo que sale en rojo es deuda de diseño (DS1–DS11 en docs/design/system.md): se documenta, no se corrige aquí.</p>
+    <div class="v-controls">
+      <button type="button" class="v-toggle" id="toggle-scheme" aria-pressed="false">Modo oscuro</button>
+      <button type="button" class="v-toggle" id="toggle-motion" aria-pressed="false">Sin movimiento</button>
+    </div>
+  </div>
+</header>
+
+<nav class="v-toc" aria-label="Secciones">
+  <div class="v-wrap">
+    <ul>
+      <li><a href="#color">Color</a></li>
+      <li><a href="#tipografia">Tipografía</a></li>
+      <li><a href="#espaciado">Espaciado y forma</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#pantallas">Pantallas</a></li>
+      <li><a href="#movimiento">Movimiento</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="v-wrap">
+  <section class="v-section" id="color">
+    <h2>Color</h2>
+    <p class="v-note">Cada par muestra su contraste calculado. Mínimo: 4.5:1 en texto y 3:1 en bordes de
+      control y anillo de foco. Los pares en rojo no cumplen: son deuda (DS1, DS2).</p>
+    <div class="v-swatches" id="swatches"></div>
+    <ul class="v-pairs" id="pairs">
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-bg" data-min="4.5">Texto sobre fondo</li>
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-surface" data-min="4.5">Texto sobre tarjeta</li>
+      <li class="v-pair" data-fg="--color-text-light" data-bg="--color-surface" data-min="4.5">Etiquetas, ayudas y th (--text-light)</li>
+      <li class="v-pair" data-fg="--color-text-light" data-bg="--color-bg" data-min="4.5">--text-light sobre fondo</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-primary" data-min="4.5">Texto del botón principal</li>
+      <li class="v-pair" data-fg="--color-link" data-bg="--color-surface" data-min="4.5">Enlaces y acento (--p500)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-accent-bg" data-min="4.5">Menú activo y badge rosa</li>
+      <li class="v-pair" data-fg="--color-on-sidebar" data-bg="--color-sidebar" data-min="4.5">Texto del menú (blanco 90 %)</li>
+      <li class="v-pair" data-fg="--color-on-sidebar-muted" data-bg="--color-sidebar" data-min="4.5">Etiquetas del menú (blanco 65 %)</li>
+      <li class="v-pair" data-fg="--color-danger" data-bg="--color-danger-bg" data-min="4.5">Error y badge rojo</li>
+      <li class="v-pair" data-fg="--color-success" data-bg="--color-success-bg" data-min="4.5">Éxito y badge verde</li>
+      <li class="v-pair" data-fg="--color-warning" data-bg="--color-warning-bg" data-min="4.5">Aviso y badge ámbar</li>
+      <li class="v-pair" data-fg="--color-info" data-bg="--color-info-bg" data-min="4.5">Badge azul (confirmada)</li>
+      <li class="v-pair" data-fg="--color-border" data-bg="--color-surface" data-min="3">Borde de campo sobre tarjeta</li>
+      <li class="v-pair" data-fg="--color-focus" data-bg="--color-surface" data-min="3">Foco del campo (--p300)</li>
+    </ul>
+  </section>
+
+  <section class="v-section" id="tipografia">
+    <h2>Tipografía</h2>
+    <p class="v-note">Roboto, cargada desde Google Fonts en la app (DS9). No hay tokens de tipografía: 17 tamaños distintos en el CSS; aquí, los niveles más usados.</p>
+    <div class="v-stage"><div class="opt">
+      <p class="t-h1">Citas</p>
+      <p class="t-h2">Historial de cambios</p>
+      <p class="t-body">Pablo Paciente · Limpieza dental con Diego Primero.</p>
+      <p class="t-small">lunes 5 de octubre de 2026 · 10:00 hrs</p>
+      <p class="t-body"><span class="c-stat">12</span> citas del rango</p>
+    </div></div>
+  </section>
+
+  <section class="v-section" id="espaciado">
+    <h2>Espaciado y forma</h2>
+    <p class="v-note">No existe escala de espaciado (DS4): las barras son los valores literales más usados. Radios reales; el "toque mínimo" es el alto real de un botón (32px, DS6).</p>
+    <div class="v-stage"><div class="opt" id="space-demo"></div></div>
+  </section>
+
+  <section class="v-section" id="componentes">
+    <h2>Componentes</h2>
+    <p class="v-note">Hover, foco, deshabilitado y carga se muestran con el aspecto de la plantilla: en la app real los botones solo tienen hover (DS2, DS7).</p>
+    <div class="v-stage"><div class="opt">
+      <div class="v-grid">
+        <div>
+          <span class="v-label">Botones: reposo, hover, foco, deshabilitado, cargando</span>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-3)">
+            <button class="c-btn c-btn--primary" type="button">Guardar cita</button>
+            <button class="c-btn c-btn--primary is-hover" type="button" tabindex="-1">Guardar cita</button>
+            <button class="c-btn c-btn--primary is-focus" type="button" tabindex="-1">Guardar cita</button>
+            <button class="c-btn c-btn--primary" type="button" disabled>Guardar cita</button>
+            <button class="c-btn c-btn--primary" type="button" aria-busy="true" tabindex="-1">Guardando</button>
+            <button class="c-btn c-btn--secondary" type="button">Cancelar</button>
+            <button class="c-btn c-btn--danger" type="button">Eliminar servicio</button>
+          </div>
+        </div>
+        <div>
+          <span class="v-label">Campos: normal y con error</span>
+          <div style="display:grid;gap:var(--space-6)">
+            <div class="c-field">
+              <label for="f1">Hora</label>
+              <input id="f1" value="10:00">
+              <p class="c-help">Formato HH:MM, dentro del horario del dentista.</p>
+            </div>
+            <div class="c-field is-error">
+              <label for="f2">Motivo del cambio</label>
+              <input id="f2" value="Texto de más de 500 caracteres…" aria-invalid="true" aria-describedby="f2e">
+              <p class="c-help" id="f2e">El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="v-label">Badges de estado de la cita</span>
+          <ul class="c-list">
+            <li><span class="c-badge c-badge--agendada">Agendada</span></li>
+            <li><span class="c-badge c-badge--confirmada">Confirmada</span></li>
+            <li><span class="c-badge c-badge--en_curso">En curso</span></li>
+            <li><span class="c-badge c-badge--completada">Completada</span></li>
+            <li><span class="c-badge c-badge--cancelada">Cancelada</span></li>
+          </ul>
+        </div>
+        <div>
+          <span class="v-label">Avisos y diálogo</span>
+          <div style="display:grid;gap:var(--space-3)">
+            <div class="c-alert c-alert--error" role="alert"><strong>Esta cita ya no se puede cancelar.</strong><p>Si necesitas ayuda, llama a la clínica.</p></div>
+            <div class="c-alert c-alert--success" role="status"><strong>Estado actualizado correctamente.</strong></div>
+            <div class="c-alert c-alert--warning"><strong>La cita aún no empieza.</strong><p>Podrás marcarla como «En curso» a partir de las 10:00 del 05/10/2026.</p></div>
+            <div class="c-dialog" role="dialog" aria-labelledby="d1">
+              <p class="t-h2" id="d1">¿Eliminar el servicio Limpieza dental?</p>
+              <p class="t-body">Ya no aparecerá al agendar nuevas citas.</p>
+              <div style="display:flex;gap:var(--space-3);justify-content:end">
+                <button class="c-btn c-btn--secondary" type="button">Cancelar</button>
+                <button class="c-btn c-btn--danger" type="button">Eliminar servicio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="v-label">Estados de pantalla: vacío (existe), cargando y error (no existen en la app, DS7)</span>
+          <div class="c-state"><p class="t-h2">No hay citas en este rango</p><p class="t-small">Cambia las fechas o agenda una cita nueva.</p><button class="c-btn c-btn--primary" type="button">Nueva cita</button></div>
+          <div class="c-state"><button class="c-btn c-btn--secondary" type="button" aria-busy="true" tabindex="-1">Cargando citas…</button></div>
+          <div class="c-state"><p class="t-body">No se pudieron cargar las citas.</p><button class="c-btn c-btn--secondary" type="button">Reintentar</button></div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="v-section" id="pantallas">
+    <h2>Pantallas</h2>
+    <p class="v-note">Maquetas con los valores reales, sin capturas (decisión del usuario, 2026-10-02). A 390 px se ve cómo queda hoy la app, que no se adapta a móvil (DS8); el login sí se adapta.</p>
+    <div class="v-frames">
+      <figure class="v-frame" id="login-m" data-width="390" data-height="760">
+        <figcaption>Inicio de sesión a 390 px</figcaption>
+        <div class="v-viewport"><div class="v-scaler"><div class="opt">
+        <div class="c-auth">
+          <div class="c-auth-hero"><p class="t-h1" style="font-size:30px;color:inherit">Tu sonrisa, en buenas manos</p><p class="t-body" style="color:inherit">Agenda tus citas y consulta tu historial en Dentissa.</p></div>
+          <div class="c-auth-form">
+            <p class="t-h1" style="font-size:28px">Iniciar sesión</p>
+            <div class="c-field"><label for="l1">Correo</label><input id="l1" value="paciente@example.test"></div>
+            <div class="c-field"><label for="l2">Contraseña</label><input id="l2" type="password" value="secreto-de-pruebas"></div>
+            <button class="c-btn c-btn--primary" type="button">Entrar</button>
+            <button class="c-btn c-btn--secondary" type="button">Continuar con Google</button>
+            <p class="t-small">¿No tienes cuenta? <span class="c-link">Regístrate</span></p>
+          </div>
+        </div>
+        </div></div></div>
+      </figure>
+      <figure class="v-frame" id="login-d" data-width="1440" data-height="760">
+        <figcaption>Inicio de sesión a 1440 px</figcaption>
+        <div class="v-viewport"><div class="v-scaler"><div class="opt">
+        <div class="c-auth">
+          <div class="c-auth-hero"><p class="t-h1" style="font-size:30px;color:inherit">Tu sonrisa, en buenas manos</p><p class="t-body" style="color:inherit">Agenda tus citas y consulta tu historial en Dentissa.</p></div>
+          <div class="c-auth-form">
+            <p class="t-h1" style="font-size:28px">Iniciar sesión</p>
+            <div class="c-field"><label for="l1">Correo</label><input id="l1" value="paciente@example.test"></div>
+            <div class="c-field"><label for="l2">Contraseña</label><input id="l2" type="password" value="secreto-de-pruebas"></div>
+            <button class="c-btn c-btn--primary" type="button">Entrar</button>
+            <button class="c-btn c-btn--secondary" type="button">Continuar con Google</button>
+            <p class="t-small">¿No tienes cuenta? <span class="c-link">Regístrate</span></p>
+          </div>
+        </div>
+        </div></div></div>
+      </figure>
+      <figure class="v-frame" id="citas-m" data-width="390" data-height="760">
+        <figcaption>Agenda del personal (citas) a 390 px — sin adaptar (DS8)</figcaption>
+        <div class="v-viewport"><div class="v-scaler"><div class="opt">
+        <div class="c-app">
+          <nav class="c-sidebar" aria-label="Menú">
+            <strong style="font-size:var(--text-h2)">Dentissa</strong>
+            <p class="c-navlabel">Principal</p>
+            <span class="c-navitem">Home</span>
+            <span class="c-navitem is-active">Citas</span>
+            <span class="c-navitem">Pacientes</span>
+            <span class="c-navitem">Personal</span>
+            <span class="c-navitem">Servicios</span>
+          </nav>
+          <div><div class="c-topbar"><p class="t-h1">Citas</p><button class="c-btn c-btn--primary" type="button">Nueva cita</button></div>
+            <div class="c-content">
+              <div class="c-stats">
+                <div class="c-card"><p class="c-stat">12</p><p class="t-small">Citas del rango</p></div>
+                <div class="c-card"><p class="c-stat">7</p><p class="t-small">Agendadas</p></div>
+                <div class="c-card"><p class="c-stat">4</p><p class="t-small">Completadas</p></div>
+                <div class="c-card"><p class="c-stat">1</p><p class="t-small">Canceladas</p></div>
+              </div>
+              <div class="c-card" style="padding:0">
+                <table class="c-table">
+                  <thead><tr><th>Paciente</th><th>Dentista</th><th>Fecha</th><th>Estado</th></tr></thead>
+                  <tbody>
+                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>05/10 · 10:00</td><td><span class="c-badge c-badge--confirmada">Confirmada</span></td></tr>
+                    <tr><td>Paula Otra</td><td>Dora Segunda</td><td>05/10 · 11:30</td><td><span class="c-badge c-badge--agendada">Agendada</span></td></tr>
+                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>06/10 · 09:00</td><td><span class="c-badge c-badge--en_curso">En curso</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div></div>
+        </div>
+        </div></div></div>
+      </figure>
+      <figure class="v-frame" id="citas-d" data-width="1440" data-height="760">
+        <figcaption>Agenda del personal (citas) a 1440 px</figcaption>
+        <div class="v-viewport"><div class="v-scaler"><div class="opt">
+        <div class="c-app">
+          <nav class="c-sidebar" aria-label="Menú">
+            <strong style="font-size:var(--text-h2)">Dentissa</strong>
+            <p class="c-navlabel">Principal</p>
+            <span class="c-navitem">Home</span>
+            <span class="c-navitem is-active">Citas</span>
+            <span class="c-navitem">Pacientes</span>
+            <span class="c-navitem">Personal</span>
+            <span class="c-navitem">Servicios</span>
+          </nav>
+          <div><div class="c-topbar"><p class="t-h1">Citas</p><button class="c-btn c-btn--primary" type="button">Nueva cita</button></div>
+            <div class="c-content">
+              <div class="c-stats">
+                <div class="c-card"><p class="c-stat">12</p><p class="t-small">Citas del rango</p></div>
+                <div class="c-card"><p class="c-stat">7</p><p class="t-small">Agendadas</p></div>
+                <div class="c-card"><p class="c-stat">4</p><p class="t-small">Completadas</p></div>
+                <div class="c-card"><p class="c-stat">1</p><p class="t-small">Canceladas</p></div>
+              </div>
+              <div class="c-card" style="padding:0">
+                <table class="c-table">
+                  <thead><tr><th>Paciente</th><th>Dentista</th><th>Fecha</th><th>Estado</th></tr></thead>
+                  <tbody>
+                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>05/10 · 10:00</td><td><span class="c-badge c-badge--confirmada">Confirmada</span></td></tr>
+                    <tr><td>Paula Otra</td><td>Dora Segunda</td><td>05/10 · 11:30</td><td><span class="c-badge c-badge--agendada">Agendada</span></td></tr>
+                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>06/10 · 09:00</td><td><span class="c-badge c-badge--en_curso">En curso</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div></div>
+        </div>
+        </div></div></div>
+      </figure>
+      <figure class="v-frame" id="detalle-d" data-width="1440" data-height="760">
+        <figcaption>Detalle de cita con cambio de estado a 1440 px</figcaption>
+        <div class="v-viewport"><div class="v-scaler"><div class="opt">
+        <div class="c-app">
+          <nav class="c-sidebar" aria-label="Menú">
+            <strong style="font-size:var(--text-h2)">Dentissa</strong>
+            <p class="c-navlabel">Principal</p>
+            <span class="c-navitem">Home</span>
+            <span class="c-navitem is-active">Citas</span>
+            <span class="c-navitem">Pacientes</span>
+            <span class="c-navitem">Personal</span>
+            <span class="c-navitem">Servicios</span>
+          </nav>
+          <div><div class="c-topbar"><p class="t-h1">Detalle de cita</p><button class="c-btn c-btn--secondary" type="button" style="color:var(--color-danger);border-color:transparent">Cancelar cita</button></div>
+            <div class="c-content" style="grid-template-columns:1fr 360px">
+              <div class="c-card" style="display:grid;gap:var(--space-5);align-content:start">
+                <p class="t-h1">Limpieza dental</p>
+                <p class="t-small">lunes 5 de octubre de 2026 · 10:00 hrs</p>
+                <span class="c-badge c-badge--confirmada" style="justify-self:start">Confirmada</span>
+                <p class="t-h2" style="margin-top:var(--space-6)">Historial de cambios</p>
+                <ul class="c-list">
+                  <li><span class="t-small">05/10 15:02</span> Agendada → Confirmada · por Adela Administra · Confirmó por teléfono</li>
+                </ul>
+              </div>
+              <div class="c-card" style="display:grid;gap:var(--space-5);align-content:start">
+                <p class="t-h2">Cambiar estado</p>
+                <label style="display:flex;gap:var(--space-4);align-items:center"><input type="radio" name="e" style="accent-color:var(--color-primary)"> <span class="c-badge c-badge--en_curso">En curso</span></label>
+                <label style="display:flex;gap:var(--space-4);align-items:center"><input type="radio" name="e" style="accent-color:var(--color-primary)"> <span class="c-badge c-badge--cancelada">Cancelada</span></label>
+                <div class="c-field"><label for="m1">Motivo del cambio (opcional)</label><input id="m1" value="Paciente confirmó por teléfono"></div>
+                <button class="c-btn c-btn--primary" type="button">Actualizar estado</button>
+              </div>
+            </div></div>
+        </div>
+        </div></div></div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="v-section" id="movimiento">
+    <h2>Movimiento</h2>
+    <ul class="v-motion">
+      <li><strong>Hover de botones y menú</strong>: <code>transition: all 0.15s</code> en color y fondo. Sin movimiento: hoy no existe versión estática (DS10).</li>
+      <li><strong>Entrada del login y del registro</strong>: animaciones <code>fadeUpLogin</code> y <code>fadeUpRegister</code> (opacidad y desplazamiento). Sin movimiento: no existe (DS10).</li>
+      <li><strong>Modales</strong>: <code>modalIn</code> en usuarios y transición en servicios. Sin movimiento: no existe (DS10).</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="v-wrap v-foot">
+  <p>Generado por ai-dd para Dentissa el 2026-10-02. Sistema: <code>docs/design/system.md</code>.</p>
+</footer>
+
+<script>
+(() => {
+  const opts = () => document.querySelectorAll('.opt');
+  const probe = document.createElement('span');
+  probe.style.display = 'none';
+
+  // Color resuelto de un token dentro de la primera .opt (respeta el modo activo).
+  function rgbOf(token) {
+    const host = document.querySelector('.opt');
+    host.appendChild(probe);
+    probe.style.color = `var(${token})`;
+    const m = getComputedStyle(probe).color.match(/[\d.]+/g);
+    probe.remove();
+    return m ? m.slice(0, 3).map(Number) : null;
+  }
+  const lum = ([r, g, b]) => {
+    const c = [r, g, b].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const hex = rgb => '#' + rgb.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+
+  const tokens = [...document.getElementById('tokens').textContent.matchAll(/(--color-[\w-]+)\s*:/g)]
+    .map(m => m[1]).filter((t, i, a) => a.indexOf(t) === i);
+
+  function paint() {
+    const sw = document.getElementById('swatches');
+    sw.innerHTML = '';
+    for (const t of tokens) {
+      const rgb = rgbOf(t);
+      if (!rgb) continue;
+      const f = document.createElement('figure');
+      f.className = 'v-swatch';
+      f.innerHTML = `<div class="v-chip" style="background:${hex(rgb)}"></div>` +
+                    `<figcaption><code>${t}</code><br>${hex(rgb)}</figcaption>`;
+      sw.appendChild(f);
+    }
+    for (const li of document.querySelectorAll('.v-pair')) {
+      const fg = rgbOf(li.dataset.fg), bg = rgbOf(li.dataset.bg);
+      const min = parseFloat(li.dataset.min);
+      li.querySelectorAll('.v-pair-sample, .v-pair-ratio').forEach(n => n.remove());
+      if (!fg || !bg) continue;
+      const r = ratio(fg, bg);
+      li.dataset.ok = String(r >= min);
+      li.insertAdjacentHTML('afterbegin',
+        `<span class="v-pair-sample" aria-hidden="true" style="color:${hex(fg)};background:${hex(bg)};` +
+        `box-shadow:inset 0 0 0 1px ${hex(fg)}33">Aa</span>`);
+      li.insertAdjacentHTML('beforeend',
+        `<span class="v-pair-ratio">${r.toFixed(2)}:1 ${r >= min ? 'cumple' : 'no cumple'} (mín. ${min})</span>`);
+    }
+  }
+
+  function spaceDemo() {
+    const host = document.getElementById('space-demo');
+    const cs = getComputedStyle(host);
+    const rows = [1, 2, 3, 4, 5, 6, 7, 8].map(n => {
+      const v = cs.getPropertyValue(`--space-${n}`).trim();
+      return `<div style="display:flex;align-items:center;gap:var(--space-3)">` +
+        `<span class="t-small" style="flex:none;width:9.5em;white-space:nowrap">--space-${n} ${v}</span>` +
+        `<span style="height:var(--space-3);width:var(--space-${n});background:var(--color-primary);border-radius:2px"></span></div>`;
+    }).join('');
+    const radii = ['sm', 'md', 'lg'].map(r =>
+      `<div style="display:grid;gap:var(--space-1);justify-items:center">` +
+      `<span style="width:64px;height:48px;background:var(--color-surface);border:var(--border-width) solid var(--color-border);border-radius:var(--radius-${r})"></span>` +
+      `<span class="t-small">--radius-${r}</span></div>`).join('');
+    host.innerHTML = `<div class="v-grid"><div style="display:grid;gap:var(--space-2)">${rows}</div>` +
+      `<div style="display:grid;gap:var(--space-5);align-content:start">` +
+      `<div style="display:flex;gap:var(--space-5)">${radii}</div>` +
+      `<div style="display:flex;align-items:center;gap:var(--space-3)">` +
+      `<span style="width:var(--touch-min);height:var(--touch-min);border:var(--border-width) dashed var(--color-text-muted);border-radius:var(--radius-sm)"></span>` +
+      `<span class="t-small">--touch-min ${cs.getPropertyValue('--touch-min').trim()}: objetivo de toque mínimo</span></div></div></div>`;
+  }
+
+  // Las pantallas anchas se dibujan a su ancho real y se escalan al espacio disponible.
+  function fit() {
+    for (const fr of document.querySelectorAll('.v-frame')) {
+      const w = parseFloat(fr.dataset.width) || 390, h = parseFloat(fr.dataset.height) || 720;
+      const vp = fr.querySelector('.v-viewport'), sc = fr.querySelector('.v-scaler');
+      const avail = fr.clientWidth - 2;
+      const k = Math.min(1, avail / w);
+      sc.style.width = w + 'px';
+      sc.style.setProperty('--frame-h', h + 'px');
+      sc.style.transform = `scale(${k})`;
+      vp.style.width = Math.ceil(w * k + 2) + 'px';
+      vp.style.height = Math.ceil(h * k + 2) + 'px';
+      sc.querySelector('.opt').style.minHeight = h + 'px';
+    }
+  }
+
+  const hasDark = /\[data-scheme="dark"\]\s*\{[^}]*--color/.test(document.getElementById('tokens').textContent);
+  const bScheme = document.getElementById('toggle-scheme');
+  if (!hasDark) bScheme.hidden = true;
+  bScheme.addEventListener('click', () => {
+    const on = bScheme.getAttribute('aria-pressed') !== 'true';
+    bScheme.setAttribute('aria-pressed', String(on));
+    opts().forEach(o => on ? o.setAttribute('data-scheme', 'dark') : o.removeAttribute('data-scheme'));
+    paint();
+  });
+  const bMotion = document.getElementById('toggle-motion');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const setMotion = on => {
+    bMotion.setAttribute('aria-pressed', String(on));
+    opts().forEach(o => on ? o.setAttribute('data-motion', 'reduced') : o.removeAttribute('data-motion'));
+  };
+  bMotion.addEventListener('click', () => setMotion(bMotion.getAttribute('aria-pressed') !== 'true'));
+  if (reduced) setMotion(true);
+
+  paint(); spaceDemo(); fit();
+  addEventListener('resize', fit);
+})();
+</script>
+</body>
+</html>

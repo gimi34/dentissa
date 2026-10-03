@@ -42,8 +42,16 @@ Problema dice que la spec atiende el riesgo **parcialmente**.
 <!-- if la feature toca datos sensibles, autenticación o permisos -->
 
 ## Auditoría
-Eventos que deben quedar registrados, cada uno como criterio `CA` verificable:
+Eventos que deben quedar registrados, cada uno como criterio `CA` verificable (si
+`.ai/project.yaml → observability.audit.required` es `false`, "No aplica" y el motivo):
 - {{evento}} → registra {{actor, acción, recurso, resultado}} (ver `docs/observability.md`)
+<!-- endif -->
+
+<!-- if la spec tiene interfaz -->
+
+## Diseño
+{{qué debe sentir quien la usa y qué pantallas toca}}. Sistema: [docs/design/system.md](../../design/system.md).
+{{Si es un rediseño: "Rediseño de <pantallas>: /plan genera las opciones."}}
 <!-- endif -->
 
 ## Requisitos no funcionales
@@ -52,8 +60,12 @@ Eventos que deben quedar registrados, cada uno como criterio `CA` verificable:
 ## Preguntas abiertas
 - [NECESITA ACLARACIÓN] {{…}}   <!-- máximo 3; con alguna abierta la spec no puede aprobarse -->
 
-## Supuestos
-- {{decisión razonable tomada sin preguntar, para revisión del usuario}}
+## Decisiones
+Cada brecha, contradicción o supuesto resuelto, con su origen (`shared/contract.md` → "Decisiones").
+
+| Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
+|---|---|---|---|---|
+| {{date}} | {{brecha · contradicción · implícita · supuesto · diseño · cierre}} | {{…}} | {{…}} | {{usuario · ruta del documento · /skill e ID}} |
 
 ## Notas para /plan
 - {{preferencias técnicas mencionadas por el usuario; no son requisitos}}
