@@ -150,8 +150,9 @@ Formato:
   - nota: por corrección: RS12.b → "en curso (spec 027)" (pasará a mitigada en la release); RS12.c sigue pendiente con "horario de dentista: spec 027"; "Dónde se aplica" gana el Gate `definir-horario`. `deployment.md` y `observability.md` sin cambios (sin variables, migraciones ni logs nuevos).
 
   `docs/deployment.md` y `docs/observability.md` no cambian.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
   - nota: spec 027 → `implemented` (2026-10-03) con CA1–CA9 marcados: sus tests pasan; `docs/specs/README.md` actualizado.
+  - nota: 2026-10-03, tras las tareas de /review r1: spec de nuevo en `implemented`; CA1–CA9 siguen marcados (152 tests en verde).
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
