@@ -156,6 +156,7 @@ Formato:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
+  - nota: decisión del usuario (2026-10-03, `/release 027`): versión v0.4.0 sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración: el usuario sube `feature/027-horarios-validos` y fusiona su PR contra `main` con el CI en verde (merge commit, sin squash); después, `/release` crea el tag anotado `v0.4.0` sobre el merge commit, lo sube con confirmación y cierra la spec. Puerta de seguridad (2026-10-03): composer audit 0 críticas/altas (2 bajas en EX1, 1 media en RS17), npm audit 0; trivy solo con el falso positivo de `vendor/` (027/R20).
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
 - [ ] T098 Marcar spec como `released`
