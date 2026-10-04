@@ -81,12 +81,18 @@ Formato:
   - nota: 2026-10-03, tras T024 (/review r1): spec de nuevo en `implemented`; CA1–CA7 siguen marcados (152 tests en verde).
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación
+- [x] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: decisión del usuario (2026-10-03, `/release 029`): versión v0.4.1 (parche) sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración: el usuario sube `feature/029-dependencias-al-dia` y fusiona su PR contra `main` con el CI en verde (merge commit); después, `/release` crea el tag anotado `v0.4.1` sobre el merge commit, lo sube con confirmación y cierra la spec. Puerta de seguridad (2026-10-03): `composer audit --locked` sin filtro y `npm audit` sin avisos.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
-- [ ] T098 Marcar spec como `released`: además, como pasos de la release (plan D6, /analyze A1), EX1 sale de "Excepciones aceptadas", RS17.a → mitigada (vX.Y.Z), el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente, `composer audit --locked` sin filtro sigue sin avisos, y el tag es anterior al 2026-10-31
+- [x] T096 Aprobación humana para producción
+  - nota: no aplica: sin entorno de producción (`docs/deployment.md`, objetivo 5). Versión v0.4.1 sin despliegue, por decisión del usuario (2026-10-03).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+  - nota: no aplica: sin entornos. Integración en `main` con el PR #15 (merge commit `5b4fab9`, mismo contenido que `48902cf`); el usuario confirmó el CI en verde. Tag anotado `v0.4.1` sobre `5b4fab9`, publicado el 2026-10-03, antes del 2026-10-31.
+- [x] T098 Marcar spec como `released`: además, como pasos de la release (plan D6, /analyze A1), EX1 sale de "Excepciones aceptadas", RS17.a → mitigada (vX.Y.Z), el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente, `composer audit --locked` sin filtro sigue sin avisos, y el tag es anterior al 2026-10-31
   - nota: A12 — al liberar se comprueba la última frase de CA7: EX1 fuera de "Excepciones aceptadas" y RS17.a mitigada con su versión.
+  - nota: 2026-10-03: spec `released` (v0.4.1); README actualizado.
+  - nota: A1 — CA7 en la release: EX1 fuera de "Excepciones aceptadas" (retirada en v0.4.1), RS17.a mitigada (v0.4.1) y `composer audit --locked` sin filtro sin avisos sin registrar ("No security vulnerability advisories found", 2026-10-03).
+  - nota: A2 — roadmap: la entrada de EX1 y la de dependencias citan la 029 como atendida (liberada en v0.4.1).
+  - nota: el texto del riesgo de dependencias de la 024 ya no cita EX1 como vigente; el tag es del 2026-10-03, antes del vencimiento (2026-10-31).
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

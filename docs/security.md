@@ -92,9 +92,11 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 - Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com
 
 ## Excepciones aceptadas
+Ninguna vigente. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, aprobada el
+2026-09-29) se retiró en v0.4.1 (spec 029, 2026-10-03): sus avisos quedaron corregidos.
+
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
-| EX1 | `laravel/framework` 12.62.0 (CVE-2026-102279, XSS en la página de depuración; corregido en 12.69.0) y `league/flysystem` 3.35.1 (CVE-2026-102601, normalización de rutas; corregido en 3.35.3) | Baja | Publicados el 2026-09-29, después del plan de la spec 024. Actualizar Laravel arrastra 42 paquetes, y la 12.69.3 aún no cumple los 7 días (spec 024, D10). No pertenece a RS16 (severidad baja, fuera de P6). Al vencer, el usuario decide si se actualizan en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan` o `/release` posterior al vencimiento | el usuario, 2026-09-29 | 2026-10-31 (sus dos avisos quedan corregidos en la spec 029: `laravel/framework` v12.69.2 y `league/flysystem` 3.36.0; la excepción se retira al liberarla) |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -245,7 +247,7 @@ Correcciones:
 
 ### RS16 · Alta — Dependencias con vulnerabilidades conocidas (A03 Software Supply Chain Failures)
 **Mitigado en v0.1.0 (spec 024, 2026-10-02):** RS16.a, RS16.b y RS16.c mitigadas. Los dos avisos
-bajos posteriores quedan cubiertos por la excepción EX1, que vence el 2026-10-31.
+bajos posteriores, cubiertos por la excepción EX1, se corrigieron en v0.4.1 (spec 029), y EX1 se retiró.
 
 Línea base de `/plan 014` (2026-09-28): `composer audit` reporta 10 avisos altos y 6 medios en
 `league/commonmark` 2.8.2 y `guzzlehttp/guzzle` (transitivas de Laravel); `npm audit` reporta 2
@@ -267,6 +269,8 @@ Correcciones:
 - RS16.c Volver a ejecutar `composer audit` y `npm audit --audit-level=high` sin hallazgos críticos ni altos — estado: mitigada (v0.1.0)
 
 ### RS17 · Media — Vulnerabilidad media en `phpseclib/phpseclib` (A03 Software Supply Chain Failures)
+**Mitigado en v0.4.1 (spec 029, 2026-10-03):** `phpseclib/phpseclib` 3.0.57.
+
 Detectada el 2026-10-03 en la review de la spec 027 (`composer audit --locked`): `phpseclib/phpseclib`
 3.0.55, dependencia transitiva, tiene CVE-2026-84308 (multiplicación escalar X25519 sin tiempo
 constante, que permite recuperar la clave privada), corregida en 3.0.57. Es media: queda fuera de
@@ -274,7 +278,7 @@ P6, que solo bloquea críticas y altas, y el comando SCA del CI ignora las media
 introduce (no cambia `composer.lock`).
 
 Correcciones:
-- RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: en curso (spec 029)
+- RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: mitigada (v0.4.1)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en

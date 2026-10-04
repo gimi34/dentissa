@@ -30,8 +30,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   detectado en `/plan 014`): spec propia de actualización antes de cualquier release (decisión
   del usuario, 2026-09-28). Se atiende en la spec [024](specs/024-dependencias-seguras/spec.md),
   sin objetivo propio (decisión del usuario, 2026-09-29). Hecho: liberada en v0.1.0 (2026-10-02);
-  RS16 mitigado. Avisos posteriores (EX1, que vence el 2026-10-31, y RS17): spec
-  [029](specs/029-dependencias-al-dia/spec.md), sin objetivo propio.
+  RS16 mitigado. Avisos posteriores (EX1 y RS17): spec
+  [029](specs/029-dependencias-al-dia/spec.md), sin objetivo propio. Hecho: liberada en v0.4.1
+  (2026-10-03); EX1 retirada y RS17 mitigado.
 - 024/R8: la evidencia de T022 no registra que `integrity` y `resolved` coincidan con el registro
   (comprobado en `/review`: coinciden las 48). En próximas specs de dependencias, compararlos con
   `npm view <p>@<v> dist.integrity dist.tarball` (/review 024, aceptado sin tarea).
@@ -44,7 +45,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - EX1 (`docs/security.md`, spec 024, D10): actualizar `laravel/framework` a ≥ 12.69.0 y
   `league/flysystem` a ≥ 3.35.3 antes del 2026-10-31. Al vencer, el usuario decide si se actualizan
   en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan`
-  o `/release` posterior al 2026-10-31 (decisión del usuario, 2026-09-29).
+  o `/release` posterior al 2026-10-31 (decisión del usuario, 2026-09-29). Hecho: spec 029 en
+  v0.4.1 (2026-10-03), con `laravel/framework` v12.69.2 y `league/flysystem` 3.36.0; EX1 retirada.
 - Retirar `overrides.rolldown` (fijado en 1.2.9) de `package.json` cuando `rolldown` 1.2.11 o
   posterior lleve al menos 7 días publicada, para que `npm audit fix` pueda volver a actualizarlo
   (spec 024, D2; /review 024 R7).
