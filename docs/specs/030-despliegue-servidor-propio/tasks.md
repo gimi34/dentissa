@@ -24,6 +24,7 @@ Formato:
 - **Re-análisis omitido** (decisión del usuario, 2026-10-04): T015 y T034 se añadieron durante
   `/implement` (colación del volcado, hallazgo de la prueba de humo de T027) sin repetir `/analyze`;
   cumplen las reglas de `/tasks` y las revisa `/review`.
+  T035 y T036 (escaneo de imágenes de T033) siguen el mismo criterio.
 
 ## Constitution Check
 | Principio | Resultado | Justificación | Cómo se verifica |
@@ -141,6 +142,12 @@ Formato:
   - nota: añadida durante /implement: ver T015. No repara la base local ya creada (haría falta recrear su volumen); solo evita el fallo en una base nueva.
   - nota: T015 pasa (`ConfiguracionProduccionTest` 11/11). `docker compose up -d` recreó `db` conservando el volumen; `@@collation_server` = `utf8mb4_unicode_ci`; `dentissa_test` intacta (21 tablas). Suite completa: 180 en verde (1384 aserciones). Recreado con aprobación del usuario (2026-10-04), por si otra sesión usaba la base.
   - nota: la base `dentissa` de este equipo sigue con `utf8mb4_general_ci` y sin `fk_horario_personal`, `fk_pacientes_usuario` ni `fk_personal_usuario`: para repararla habría que borrar el volumen `dentissa_db_data` y recargar el volcado (lo decide el usuario; los tests usan `dentissa_test`, que está bien).
+- [x] T035 Aplicar en las imágenes de producción las correcciones de paquetes del sistema ya publicadas: `apt-get upgrade -y` en la etapa `app` y `apk upgrade --no-cache` en la etapa `web` de `docker/prod/Dockerfile` (plan D14, P6) — docker/prod/Dockerfile — hecho cuando: las dos etapas se construyen, `trivy image --severity HIGH,CRITICAL` de `app` y `web` ya no muestra ningún aviso con versión corregida en Debian o Alpine, T014 sigue en verde y la nota recoge el antes y el después — cubre: CA10
+  - nota: añadida durante /implement: T033 encontró avisos altos con corrección publicada en paquetes del sistema de `app` y `web` (decisión del usuario, 2026-10-04: actualizar y llevar el resto a una excepción).
+  - nota: las dos etapas se construyen (`php artisan --version` → Laravel 12.69.2; `nginx -t` ok). `trivy image --severity HIGH,CRITICAL` (aquasec/trivy:0.57.1): `app` pasa de 169 avisos (48 altas con corrección) a 121 sin ninguno con versión corregida (114 altas y 3 críticas "affected" y 4 altas "fix_deferred" de Debian 13); `web` pasa de 2 altas con corrección (libexpat, pcre2) a 0. T014 sigue en verde (11/11).
+  - nota: lo que queda en `app` no tiene corrección publicada en Debian: `linux-libc-dev` (cabeceras del kernel que no se ejecutan en el contenedor), libxml2 (una crítica de denegación de servicio), util-linux, curl, ncurses, systemd y perl; va a la excepción EX2 (T036).
+- [ ] T036 Registrar la excepción EX2 en `docs/security.md` → Excepciones aceptadas: avisos altos y críticos sin corrección publicada de las imágenes de producción tras T035 (Debian 13 de `app`: `linux-libc-dev`, libxml2, util-linux, curl…; `mariadb:10.11.18` y `cloudflare/cloudflared:2026.9.3`, cuya corrección llega con imágenes nuevas), con motivo, aprobada por el usuario el 2026-10-04 y vencimiento 2026-10-31; y el riesgo RS18 (imágenes base con avisos) con su corrección RS18.a (refrescar las imágenes fijadas con ≥ 7 días y volver a escanear antes del vencimiento), pendiente → roadmap (T051) — docs/security.md — hecho cuando: la fila de EX2 tiene hallazgo, severidad, motivo, aprobación y vencimiento, y RS18 aparece en Riesgos conocidos con RS18.a pendiente — cubre: CA10 — depende: T035
+  - nota: añadida durante /implement: ver T035 (decisión del usuario, 2026-10-04, vencimiento 2026-10-31).
 
 ## Ensayo en el servidor (plan D13, `cloudflared` parado)
 - [ ] T040 Preparar el servidor y hacer el primer despliegue interno, con aprobación explícita previa del usuario anotada (/analyze A5): el usuario sube la rama, ejecuta `preparar-servidor.sh`, clona con la deploy key en `/opt/dentissa/app`, crea `app.env`, `db.env` y `tunnel.env` en `/opt/dentissa/entorno` (permisos 600), ejecuta `desplegar.sh <commit>` cronometrado (primer despliegue, sin copia previa), `dentissa:rotar-credenciales --confirmar` (guarda las contraseñas fuera del chat) y `verificar.sh --interna`; además, una petición interna a `web` con `CF-Connecting-IP` y un `X-Forwarded-For` falso deja en el access log la IP de `CF-Connecting-IP` (test de TM4; control de TM5) — (sin archivos; nota en tasks.md) — hecho cuando: la nota recoge la aprobación, `verificar.sh --interna` sale todo OK, `desplegar.sh` tarda ≤ 15 min sin la verificación, el access log muestra la IP de `CF-Connecting-IP`, `cloudflared` no está en marcha (`docker compose ps`) y la nota recoge los tiempos y la salida sin secretos — cubre: CA1, CA4, CA8, CA10 — depende: T020, T021, T022, T023, T027, T028, T029, T030, T031, T032, T033
@@ -181,7 +188,7 @@ Formato:
 | CA7 | T044 | T030 |
 | CA8 | T010, T014, T040 | T021, T022, T026, T027 |
 | CA9 | T045 | T027 |
-| CA10 | T014, T015, T033, T042 | T002, T024, T025, T026, T027, T031, T034 |
+| CA10 | T014, T015, T033, T042 | T002, T024, T025, T026, T027, T031, T034, T035, T036 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -191,7 +198,7 @@ Formato:
 | TM4 | T020, T026, T027 | T011, T014, T040, T097 |
 | TM5 | T023, T040 | T012, T042 |
 | TM6 | T025, T026, T027, T028 | T014, T026, T042, T050 |
-| TM7 | T024, T026, T027 | T014, T042 |
+| TM7 | T024, T026, T027, T035 | T014, T033, T042 |
 | TM8 | T029, T030 | T043, T044 |
 | TM9 | T020, T026 | T011, T014, T031, T097 |
 | TM10 | T020 | T011 |
@@ -204,7 +211,7 @@ Formato:
 | routes/web.php | T022 |
 | app/Http/Controllers/AuthController.php | T021 |
 | app/Console/Commands/RotarCredencialesVolcado.php | T012, T023 |
-| docker/prod/Dockerfile | T026 |
+| docker/prod/Dockerfile | T026, T035 |
 | docker/nginx/dentissa.prod.conf | T026 |
 | docker-compose.prod.yml | T027 |
 | docker-compose.yml | T024, T034 |
@@ -217,7 +224,7 @@ Formato:
 | deploy/README.md | T032 |
 | tests/Feature/*.php (5 nuevos) | T010, T011, T012, T013, T014, T015 |
 | docs/adr/0005-produccion-servidor-propio-cloudflare-tunnel.md | T090 (creado y aceptado en `/plan`) |
-| docs/deployment.md, docs/security.md, docs/observability.md | T003 (dominio), T091 |
+| docs/deployment.md, docs/security.md, docs/observability.md | T003 (dominio), T036 (EX2, RS18), T091 |
 | docs/roadmap.md | T051 |
 | docs/architecture.md | T090 |
 
