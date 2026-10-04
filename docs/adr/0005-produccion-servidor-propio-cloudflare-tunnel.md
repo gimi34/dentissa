@@ -21,10 +21,12 @@ tiene un equipo con Ubuntu Server 24.04 en su red local y un dominio gestionado 
   la imagen, sin dependencias de desarrollo ni secretos. Todas las imágenes base van fijadas por
   versión exacta, iguales en local y producción.
 - La IP del cliente se toma de `CF-Connecting-IP` en nginx (`real_ip`, solo desde la red de
-  Docker). Laravel confía en el proxy para el protocolo y el host, pero no para la IP.
+  Docker). Laravel confía en el proxy solo para el protocolo (`X-Forwarded-Proto`), no para la
+  IP, el host ni el puerto (spec 030, D3).
 - El servidor se prepara y se opera con scripts versionados en `deploy/`, que el usuario ejecuta
   por SSH. El código llega por un clon de GitHub con deploy key de solo lectura y `checkout` del
-  tag. Los secretos viven en `/opt/dentissa/.env.production`, solo en el servidor.
+  tag. Los secretos viven solo en el servidor, en un archivo por servicio (`app.env`, `db.env` y
+  `tunnel.env`) en `/opt/dentissa/entorno`, fuera del clon `/opt/dentissa/app` (spec 030, D15).
 - Antes de cada despliegue se hace una copia de la base en `/var/backups/dentissa`. La vuelta atrás
   es el tag anterior más, si hace falta, la copia.
 

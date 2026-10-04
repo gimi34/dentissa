@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-09-28
+updated: 2026-10-04
 ---
 
 # Arquitectura de Dentissa
@@ -21,10 +21,10 @@ en el volcado `database/dentissa.sql`, que Docker carga al inicializar la base.
 ## Diagrama de componentes
 ```mermaid
 flowchart LR
-  B[Navegador<br/>HTML + JS inline] -->|HTTP :8000 formularios @csrf| NX[nginx:alpine]
+  B[Navegador<br/>HTML + JS inline] -->|HTTP 127.0.0.1:8000 formularios @csrf| NX[nginx 1.30.5-alpine]
   B -->|fuente Roboto| GF[Google Fonts]
   NX -->|estáticos| PUB[public/css, images]
-  NX -->|FastCGI :9000| APP[php-fpm 8.4 · Laravel 12]
+  NX -->|FastCGI :9000| APP[php-fpm 8.4.25 · Laravel 12]
   subgraph APP_INT[Monolito Laravel]
     R[routes/web.php] --> MW[web + PreventBackHistory<br/>auth + role:]
     MW --> C[Controladores<br/>Auth · Register · Google · Dashboard<br/>Citas · ClienteCitas · Pacientes<br/>Expedientes · Personal · Servicios<br/>Usuario · Perfil]
@@ -38,14 +38,16 @@ flowchart LR
   C -->|Socialite OAuth| G[Google OAuth]
   DUMP[database/dentissa.sql] -->|initdb una sola vez| DB
   MIG[database/migrations] -->|artisan migrate| DB
-  PMA[phpMyAdmin :8080] --> DB
+  PMA[phpMyAdmin 127.0.0.1:8080, solo local] --> DB
 ```
+El diagrama es el entorno local. En producción (spec 030) la entrada es el túnel de Cloudflare
+y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 
 ## Módulos
 | Módulo | Ruta | Responsabilidad | Depende de |
 |---|---|---|---|
-| Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google | `usuarios`, Socialite |
-| Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista | `usuarios`, `pacientes`, `personal` |
+| Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google. Límite de intentos (spec 030): el login cuenta fallos por correo e IP (5 por minuto, `RateLimiter` en el controlador) y la vuelta de Google pasa por el limitador `google`; los dos rechazos emiten `Lockout` | `usuarios`, Socialite, caché (limitadores) |
+| Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista; `POST /registro` y `/registro/contacto` pasan por el limitador `registro` (5 por minuto por IP, spec 030) | `usuarios`, `pacientes`, `personal`, caché (limitadores) |
 | Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol | `citas`, `pacientes`, `asistente_dentista` |
 | Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas y cancelación de citas con alcance por rol (vía `app/Autorizacion/AlcanceClinico.php`); el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y el cambio de estado y "eliminar" en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
 | Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y cancelar en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `servicios` |
@@ -61,6 +63,9 @@ flowchart LR
 | Usuarios | `app/Http/Controllers/UsuarioController.php` | Administración de cuentas y roles | `usuarios` |
 | Perfil | `app/Http/Controllers/PerfilController.php` | Perfil y contraseña del cliente | `usuarios`, `pacientes` |
 | Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php` | Rol por grupo de rutas; cabeceras no-cache | `usuarios.rol` |
+| Límites de intentos | `app/Providers/AppServiceProvider.php` (limitadores `registro` y `google`), `AuthController::login`, `routes/web.php` (`throttle:`) | 5 intentos por minuto; mismo mensaje en los tres casos, que no revela si la cuenta existe (spec 030, CA8) | caché (`CACHE_STORE=database` en producción) |
+| Proxy | `bootstrap/app.php` (`trustProxies`) | Detrás de nginx y el túnel, Laravel solo confía en `X-Forwarded-Proto` (URL y redirecciones en https); la IP real la pone nginx en `REMOTE_ADDR` (spec 030, D3) | — |
+| Comandos | `app/Console/Commands/RotarCredencialesVolcado.php` | `dentissa:rotar-credenciales --confirmar`: contraseña aleatoria para cada cuenta del volcado con contraseña, mostrada una sola vez (spec 030, CA5) | `usuarios` |
 
 Los controladores no se llaman entre sí; se acoplan a través del esquema compartido. Los mismos
 controladores sirven a varios roles bajo prefijos `/admin`, `/dentista`, `/asistente`; `/cliente`
@@ -128,8 +133,32 @@ autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio
 - Cómo se regenera: no aplica.
 
 ## Despliegue
-Solo existe un entorno local con Docker Compose (`app` php-fpm, `nginx`, `db` MariaDB,
-`phpmyadmin`). Se planean staging y producción con despliegue manual, aún sin plataforma elegida.
+Dos entornos (spec 030, [ADR 0005](adr/0005-produccion-servidor-propio-cloudflare-tunnel.md)):
+- **Local:** Docker Compose (`app` php-fpm, `nginx`, `db` MariaDB, `phpmyadmin`), con los puertos
+  solo en `127.0.0.1` y las imágenes con versión exacta.
+- **Producción:** servidor propio (Ubuntu Server 24.04) con `docker-compose.prod.yml`. Staging no
+  existe.
+
+```mermaid
+flowchart LR
+  U[Navegador] -->|HTTPS| CF[Cloudflare]
+  CF -->|túnel saliente| CFD[cloudflared]
+  subgraph SRV[Servidor propio · red produccion 172.28.0.0/24 · sin puertos publicados]
+    CFD -->|HTTP| WEB[web · nginx<br/>real_ip de CF-Connecting-IP<br/>http → 301 https]
+    WEB -->|FastCGI :9000| APPP[app · php-fpm<br/>código en la imagen]
+    APPP --> DBP[(db · MariaDB<br/>usuario dentissa_app)]
+  end
+  ADM[Responsable por SSH<br/>solo red local, solo clave] -->|deploy/*.sh| SRV
+```
+
+- `docker/prod/Dockerfile`: imágenes multietapa `app` (sin dependencias de desarrollo, secretos ni
+  volcado; paquetes del sistema actualizados al construir) y `web` (nginx con `public/` y
+  `docker/nginx/dentissa.prod.conf`).
+- `deploy/`: scripts que el responsable ejecuta por SSH (preparar el servidor, desplegar, copia,
+  restauración, vuelta atrás y verificación) y la guía `deploy/README.md`.
+- Secretos en `app.env`, `db.env` y `tunnel.env` fuera del clon; volúmenes `db_data`, `storage` y
+  `nginx_logs`.
+
 Detalle en [deployment.md](deployment.md).
 
 ## Evidencia (solo si status=inferred)
@@ -141,7 +170,7 @@ Detalle en [deployment.md](deployment.md).
 | Esquema solo en volcado | `database/dentissa.sql`, `database/migrations/*`, `database/testing/bootstrap-test-db.sh` | alta |
 | Vite/Tailwind sin uso real | `vite.config.js`, `resources/views/welcome.blade.php`, `layouts/app.blade.php` | alta |
 | Integración Google OAuth | `GoogleAuthController.php`, `config/services.php` | alta |
-| Entorno solo local | `docker-compose.yml`, `Dockerfile`, `docker/nginx/dentissa.conf` | alta |
+| Entornos local y producción | `docker-compose.yml`, `Dockerfile`, `docker-compose.prod.yml`, `docker/prod/Dockerfile`, `docker/nginx/dentissa.prod.conf`, `deploy/` | alta |
 
 ## Deuda técnica y riesgos observados
 - Esquema del dominio no reproducible desde migraciones; el volcado está desfasado respecto a las
@@ -152,4 +181,5 @@ Detalle en [deployment.md](deployment.md).
 - `Route::resource('servicios')` registra `show`, que el controlador no implementa.
 - Convenciones inconsistentes de rutas (`/crear` vs `/create`, `/edit` vs `/editar`, nombres con y
   sin `.index`).
-- `docker-compose.yml` monta `./docker/php/local.ini`, pero el archivo está en `docker/nginx/php/local.ini`.
+- ~~`docker-compose.yml` monta `./docker/php/local.ini`, pero el archivo está en `docker/nginx/php/local.ini`.~~
+  Corregido en la spec 030 (RD4.a).
