@@ -21,6 +21,9 @@ Formato:
   ni contraseñas generadas, y la nota recoge solo resultados (sin secretos). Antes de T040 y de
   T044 (que instalan una versión en el servidor), el usuario da su aprobación explícita y la nota
   la recoge (spec, Decisiones; /analyze A5).
+- **Re-análisis omitido** (decisión del usuario, 2026-10-04): T015 y T034 se añadieron durante
+  `/implement` (colación del volcado, hallazgo de la prueba de humo de T027) sin repetir `/analyze`;
+  cumplen las reglas de `/tasks` y las revisa `/review`.
 
 ## Constitution Check
 | Principio | Resultado | Justificación | Cómo se verifica |
@@ -67,6 +70,9 @@ Formato:
   - nota: los casos de local (puertos, imágenes y montaje) van separados de los de producción para que T024 los haga pasar antes de que existan los archivos de producción.
   - nota: el montaje se comprueba con `is_file`: en este equipo `docker/php/local.ini` existe como carpeta vacía que creó Docker al montar un origen inexistente (RD4), y `file_exists` daba el caso por bueno.
   - nota: A23 — "sin root": el bloque `app` no contiene `MARIADB_ROOT_PASSWORD` y el bloque `db` declara `MARIADB_USER` con un valor distinto de `root`; por eso el nombre de usuario (no secreto) va en el Compose y la contraseña en `db.env` (T027). Las imágenes fijadas incluyen `COPY --from=` que no sea una etapa propia.
+- [x] T015 Añadir a `ConfiguracionProduccionTest` un caso que exija que el servicio `db` de los dos Compose arranque con `--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci`, la colación del volcado (sin ella, `horarios_dentista` hereda otra colación, su clave foránea no se crea y la carga del volcado se corta en una base nueva) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: el caso falla por la razón esperada en `docker-compose.yml` y pasa en `docker-compose.prod.yml` — cubre: CA1, CA10
+  - nota: añadida durante /implement: la prueba de humo de T027 mostró que el volcado no carga entero en una base nueva sin esa colación; en producción ya se corrigió en T027 y en local la base `dentissa` de este equipo carece de `fk_horario_personal`, `fk_pacientes_usuario` y `fk_personal_usuario` (decisión del usuario, 2026-10-04: tarea nueva).
+  - nota: `test_la_base_arranca_con_la_colacion_del_volcado` falla por la razón esperada en `docker-compose.yml` ("db no arranca con la colación del volcado") y pasa en `docker-compose.prod.yml` (comprobado ejecutándolo solo sobre el de producción). `pint --test` pasa.
 
 ## Implementación — aplicación
 - [x] T020 [P] Añadir `trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_PROTO)`: solo el protocolo, sin `X_FORWARDED_FOR`, `X_FORWARDED_HOST` ni `X_FORWARDED_PORT` (plan D3; control de TM4, TM9 y TM10) — bootstrap/app.php — hecho cuando: T011 pasa y se comprueba rompiendo (añadir `X_FORWARDED_FOR` hace fallar el caso de la IP; añadir `X_FORWARDED_HOST` o `X_FORWARDED_PORT`, los de host y puerto; quitar `trustProxies`, los de https), anotado — cubre: CA2 — depende: T011
@@ -114,6 +120,8 @@ Formato:
 - [ ] T031 [P] Escribir `verificar.sh [--interna]` según Cambios por módulo: `/up` responde 200 (por la red de Docker con `--interna`; por la dirección pública sin él, con redirección de `/` a https y `http://<subdominio>/login` respondiendo 301 a `https://`, A35); dentro de `app`, `APP_ENV=production`, `APP_DEBUG=false`, `LOG_LEVEL=info`, `APP_KEY` no vacía y `CACHE_STORE` distinto de `array`, sin imprimir valores secretos; ningún puerto publicado por Compose y nada escuchando fuera de `localhost` salvo SSH; `upload_max_filesize` y `date.timezone` iguales a `local.ini`; sale con código distinto de 0 si algo falla (control de TM2; test de TM9 en producción) — deploy/verificar.sh — hecho cuando: `bash -n` pasa y cada comprobación imprime OK o FALLO con su nombre — cubre: CA1, CA3, CA4, CA10
 - [ ] T032 [P] Escribir la guía paso a paso del servidor (contenido de Cambios por módulo, más el ensayo de D13 con la aprobación previa a cada ensayo, el acceso interno por túnel SSH al contenedor `web` para probar sin exponer, y que el token y las contraseñas nunca se pegan en el chat) — deploy/README.md — hecho cuando: cubre preparar, túnel de Cloudflare (y la opción "Always Use HTTPS" como refuerzo de D18), deploy key, el clon en `/opt/dentissa/app`, los tres archivos de entorno en `/opt/dentissa/entorno` con sus variables (solo nombres, permisos 600, nunca dentro del clon), cómo generar `APP_KEY`, primer despliegue, rotar credenciales, copia a tu PC con `scp`, volver atrás, abrir el túnel y el redirect de Google — cubre: CA1
 - [ ] T033 Escanear las imágenes antes del ensayo (plan D14, P6): `trivy image --severity HIGH,CRITICAL` (imagen `aquasec/trivy` fijada del proyecto) sobre cada imagen base fijada de producción (php, composer, nginx, mariadb, cloudflared) y sobre las construidas en T026 (`app` y `web`) — (sin archivos; nota en tasks.md) — hecho cuando: ninguna crítica ni alta, con la salida anotada; si alguna no tiene corrección publicada, la tarea queda con `bloqueo:` hasta que el usuario decida una excepción con motivo, aprobador y vencimiento en `docs/security.md` — cubre: CA10 — depende: T026, T027
+- [ ] T034 Arrancar el servicio `db` de `docker-compose.yml` con `--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci`, como en producción. Ruta protegida (`docker-compose.yml`): cambio aprobado por el usuario el 2026-10-04 junto con esta tarea — docker-compose.yml — hecho cuando: T015 pasa, `docker compose up -d` recrea `db` sin perder el volumen y la suite sigue en verde — cubre: CA1, CA10 — depende: T015
+  - nota: añadida durante /implement: ver T015. No repara la base local ya creada (haría falta recrear su volumen); solo evita el fallo en una base nueva.
 
 ## Ensayo en el servidor (plan D13, `cloudflared` parado)
 - [ ] T040 Preparar el servidor y hacer el primer despliegue interno, con aprobación explícita previa del usuario anotada (/analyze A5): el usuario sube la rama, ejecuta `preparar-servidor.sh`, clona con la deploy key en `/opt/dentissa/app`, crea `app.env`, `db.env` y `tunnel.env` en `/opt/dentissa/entorno` (permisos 600), ejecuta `desplegar.sh <commit>` cronometrado (primer despliegue, sin copia previa), `dentissa:rotar-credenciales --confirmar` (guarda las contraseñas fuera del chat) y `verificar.sh --interna`; además, una petición interna a `web` con `CF-Connecting-IP` y un `X-Forwarded-For` falso deja en el access log la IP de `CF-Connecting-IP` (test de TM4; control de TM5) — (sin archivos; nota en tasks.md) — hecho cuando: la nota recoge la aprobación, `verificar.sh --interna` sale todo OK, `desplegar.sh` tarda ≤ 15 min sin la verificación, el access log muestra la IP de `CF-Connecting-IP`, `cloudflared` no está en marcha (`docker compose ps`) y la nota recoge los tiempos y la salida sin secretos — cubre: CA1, CA4, CA8, CA10 — depende: T020, T021, T022, T023, T027, T028, T029, T030, T031, T032, T033
@@ -145,7 +153,7 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T040, T046 | T030, T031, T032 |
+| CA1 | T015, T040, T046 | T027, T030, T031, T032, T034 |
 | CA2 | T011, T014 | T020, T026 |
 | CA3 | T014, T041 | T024, T027, T028, T031 |
 | CA4 | T013, T040 | T031 |
@@ -154,7 +162,7 @@ Formato:
 | CA7 | T044 | T030 |
 | CA8 | T010, T014, T040 | T021, T022, T026, T027 |
 | CA9 | T045 | T027 |
-| CA10 | T014, T033, T042 | T002, T024, T025, T026, T027, T031 |
+| CA10 | T014, T015, T033, T042 | T002, T024, T025, T026, T027, T031, T034 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -180,7 +188,7 @@ Formato:
 | docker/prod/Dockerfile | T026 |
 | docker/nginx/dentissa.prod.conf | T026 |
 | docker-compose.prod.yml | T027 |
-| docker-compose.yml | T024 |
+| docker-compose.yml | T024, T034 |
 | Dockerfile | T024 |
 | .dockerignore, .gitignore | T025 |
 | deploy/preparar-servidor.sh | T028 |
@@ -188,7 +196,7 @@ Formato:
 | deploy/desplegar.sh, deploy/volver.sh | T030 |
 | deploy/verificar.sh | T031 |
 | deploy/README.md | T032 |
-| tests/Feature/*.php (5 nuevos) | T010, T011, T012, T013, T014 |
+| tests/Feature/*.php (5 nuevos) | T010, T011, T012, T013, T014, T015 |
 | docs/adr/0005-produccion-servidor-propio-cloudflare-tunnel.md | T090 (creado y aceptado en `/plan`) |
 | docs/deployment.md, docs/security.md, docs/observability.md | T003 (dominio), T091 |
 | docs/roadmap.md | T051 |

@@ -220,4 +220,23 @@ class ConfiguracionProduccionTest extends TestCase
     {
         $this->assertMontaLocalIni('docker-compose.prod.yml');
     }
+
+    /**
+     * Añadido durante /implement (T015): `horarios_dentista` no declara
+     * colación y hereda la de la base; si no es la del volcado
+     * (`utf8mb4_unicode_ci`), su clave foránea no se crea y la carga del
+     * volcado se corta en una base nueva.
+     */
+    public function test_la_base_arranca_con_la_colacion_del_volcado(): void
+    {
+        foreach (['docker-compose.yml', 'docker-compose.prod.yml'] as $archivo) {
+            $db = $this->servicios($this->leer($archivo))['db'] ?? '';
+
+            $this->assertMatchesRegularExpression(
+                '/^    command:.*--character-set-server=utf8mb4\s.*--collation-server=utf8mb4_unicode_ci\s*$/m',
+                $db,
+                "{$archivo}: db no arranca con la colación del volcado.",
+            );
+        }
+    }
 }
