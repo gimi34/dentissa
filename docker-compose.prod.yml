@@ -1,0 +1,92 @@
+# Spec 030 (ADR 0005): producción en el servidor propio, expuesta solo por el
+# túnel de Cloudflare. Ningún servicio publica puertos; la única entrada es
+# cloudflared → web → app → db, dentro de la red "produccion".
+#
+# Secretos: un archivo por servicio en ${DENTISSA_ENV_DIR:-/opt/dentissa/entorno}
+# (carpeta 700 fuera del clon /opt/dentissa/app, archivos 600). Cada servicio
+# lee solo el suyo (D15); web no recibe ninguno. Ver deploy/README.md.
+#
+# cloudflared no lo arrancan los scripts de deploy/: se abre a mano en la
+# liberación (Rollout) y desde entonces vuelve solo tras un reinicio.
+name: dentissa-prod
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+      target: app
+    restart: unless-stopped
+    env_file:
+      - ${DENTISSA_ENV_DIR:-/opt/dentissa/entorno}/app.env
+    volumes:
+      - storage:/var/www/storage
+      - ./docker/nginx/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
+    networks:
+      - produccion
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+      target: web
+    restart: unless-stopped
+    volumes:
+      - nginx_logs:/var/log/nginx
+    networks:
+      - produccion
+    depends_on:
+      - app
+
+  db:
+    image: mariadb:10.11.18
+    restart: unless-stopped
+    # La base nace con la colación del volcado: una tabla sin colación propia
+    # (horarios_dentista) la hereda, y con otra su clave foránea no se crea.
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - ${DENTISSA_ENV_DIR:-/opt/dentissa/entorno}/db.env
+    environment:
+      MARIADB_DATABASE: dentissa
+      # Usuario propio de la aplicación (no root); su contraseña va en db.env.
+      MARIADB_USER: dentissa_app
+    volumes:
+      - db_data:/var/lib/mysql
+      # Solo se carga la primera vez, con el volumen db_data vacío.
+      - ./database/dentissa.sql:/docker-entrypoint-initdb.d/dentissa.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    networks:
+      - produccion
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.3
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    env_file:
+      - ${DENTISSA_ENV_DIR:-/opt/dentissa/entorno}/tunnel.env
+    networks:
+      - produccion
+    depends_on:
+      - web
+
+volumes:
+  db_data:
+  storage:
+  nginx_logs:
+
+# Subred fija: es la única desde la que nginx acepta CF-Connecting-IP (TM4).
+# No es "internal": app y cloudflared necesitan salida a internet (Google y
+# Cloudflare).
+networks:
+  produccion:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
