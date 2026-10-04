@@ -261,7 +261,8 @@ Formato:
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: no hay staging (plan D2, decisión del usuario 2026-10-03); las comprobaciones públicas van en T097.
   - nota: /release 030 (2026-10-04): versión v0.5.0 (minor), decisión del usuario. Sin staging (plan D2): las comprobaciones de staging no aplican y las públicas van en T097. Integración: rama fusionada con `origin/main` (`6e6c877`, solo documentación); el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después se crea y sube el tag anotado `v0.5.0` sobre el merge commit, con confirmación. Puerta de seguridad: `composer audit --locked` y `npm audit` sin avisos; `trivy image` dentro de EX2 (vence 2026-10-31).
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-10-04 para v0.5.0 ("desplegar v0.5.0 a producción", tras el resumen de la puerta de aprobación: sin staging, sin migraciones ni flags, EX2 vigente, riesgos P7/OB4.a/RS15.b/RS8 aceptados, rollback `stop cloudflared` o `volver.sh ca4d5bf <copia>`).
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `desplegar.sh vX.Y.Z` (verifica por la red interna), arrancar `cloudflared` y `verificar.sh` contra la dirección pública; vigilar 15 min los 5xx de `web` y `app`
   - verificación manual (liberación, spec CA1): dirección pública con HTTPS, login con una cuenta de prueba de cada rol, y agendar y cancelar una cita ficticia.
   - verificación manual (CA2, TM9): `curl -I` de `/` y del login por `https://`: `Location` en https y cookie de sesión con `Secure`; `curl -I http://<subdominio>/login` → 301 a `https://` (A35).
