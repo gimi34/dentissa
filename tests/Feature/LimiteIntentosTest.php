@@ -181,6 +181,35 @@ class LimiteIntentosTest extends TestCase
         $this->assertAuthenticatedAs($bloqueado);
     }
 
+    /**
+     * /review R1: la base compara el correo con `utf8mb4_unicode_ci`, que iguala
+     * mayúsculas, acentos y letras de ancho completo (`ｌimite.…` entra en la
+     * cuenta de `limite.…`). Laravel ya pliega los acentos al limpiar la clave del
+     * limitador, pero no el ancho completo: cada variante abriría un contador
+     * nuevo. Las variantes de la misma cuenta deben compartir el límite.
+     */
+    public function test_las_variantes_del_correo_comparten_el_limite(): void
+    {
+        $usuario = $this->crearUsuario();
+        $sufijo = substr($usuario->email, strlen('limite'));
+        $variantes = [
+            'ｌimite'.$sufijo,
+            'lｉmite'.$sufijo,
+            'liｍite'.$sufijo,
+            'limｉte'.$sufijo,
+            'limiｔe'.$sufijo,
+        ];
+
+        foreach ($variantes as $variante) {
+            $this->intentarLogin($variante, 'contrasena-equivocada');
+        }
+
+        $this->intentarLogin($usuario->email, 'secreto-de-pruebas');
+
+        $this->assertGuest();
+        $this->assertMatchesRegularExpression(self::MENSAJE, (string) $this->errorEmail());
+    }
+
     public function test_el_alta_admite_cinco_intentos_por_minuto_y_direccion(): void
     {
         // Contador común: tres en `/registro` y dos en `/registro/contacto`.
