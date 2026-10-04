@@ -16,7 +16,7 @@ constitution_version: 1.2.1
 workflow:
   enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
   legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md
-skills_version: 1.11.0         # versión del paquete de skills con que se inicializó
+skills_version: 1.11.2         # versión del paquete de skills (upgrade desde 1.11.0 el 2026-10-04)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
   platform: TODO(init) por definir (sin presupuesto; ver docs/deployment.md)
@@ -26,6 +26,7 @@ deploy:
 security:
   owasp_top10_edition: 2025
   asvs_level: 2
+  masvs_level: null              # solo mobile (no aplica: fullstack)
   sensitive_data: [personal, health, credentials]
   tools:                       # status: propuesta | instalada | en-ci | no-aplica. Solo se ejecutan
                                # instalada y en-ci; no-aplica lleva su motivo en docs/security.md.
@@ -52,7 +53,7 @@ observability:
     events: [login, login_failed, logout, access_denied, sensitive_read, sensitive_write, role_change, account_change]
     retention: 5 años (decisión del usuario, 2026-09-28)
 design:                        # solo proyectos con interfaz (frontend, fullstack, mobile)
-  status: approved             # none | declined | draft | approved — extraído del código y aprobado (decisión del usuario, 2026-10-02)
+  status: approved             # none | declined | draft | approved — re-extraído con AI-DD 1.11.2 y aprobado (decisión del usuario, 2026-10-04)
   source: extracted            # chosen | extracted | null
   system: docs/design/system.md
   html: docs/design/system.html
@@ -77,3 +78,9 @@ verification:                  # lo llena la Fase 4
   - { command: "php artisan test", result: fail, note: "PHP 8.2 local: composer.lock exige >= 8.4.1 (RD7); Docker no estaba en marcha para correrlo en el contenedor" }
   - { command: "vendor/bin/pint --test", result: fail, note: "no ejecutado: mismo motivo; /init no tocó archivos PHP" }
   - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso" }
+template_hashes:              # huellas de docs/templates/ al copiarlas (aidd.py templates --yaml)
+  adr.md: 479eaebd1fed
+  plan.md: 475640938449
+  review.md: 4e22b9063245
+  spec.md: 0408aa3527d3
+  tasks.md: 77ed236f954b

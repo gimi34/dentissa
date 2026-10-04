@@ -63,13 +63,20 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Deuda de diseño fuera del objetivo 6 (`docs/design/system.md`, se corrige al tocar cada pantalla;
   decisión del usuario, 2026-10-02):
   - DS3: `--text-muted` vale lo mismo que `--text`; no hay texto secundario.
-  - DS4: 871 `style=""` en las vistas, 17 tamaños de letra y ninguna escala de espaciado ni tipografía;
-    sidebar `#c75078` fuera de los tokens.
-  - DS5: 14 bloques `<style>` redefinen `.field`; `citas.css` solo en 7 vistas; `auth.css` redefine tokens.
-  - DS8: la app no se adapta a móvil (sin `@media`); empezar por las pantallas del paciente.
+  - DS4: 861 `style=""` en las vistas, 20 tamaños de letra y la escala de espaciado solo en las reglas de
+    la 027; sidebar `#C75078` fuera de los tokens.
+  - DS5: 11 bloques `<style>` redefinen `.field`; `citas.css` solo en 7 vistas; `auth.css` redefine tokens.
+  - DS8: la app no se adapta a móvil (sin `@media`): a 390 px, 52 de 60 vistas se desbordan; empezar
+    por las pantallas del paciente.
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
   - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
+  - DS12: crear y editar servicio muestran los campos con la fuente del navegador (Arial 13.33px) y el
+    desplegable gris.
+  - DS13: el campo de hora del horario (110px) recorta "AM/PM" con el formato de 12 h.
+  - DS14: emojis mezclados con los iconos SVG en el panel del paciente.
+  - DS15: favicon vacío, isotipo sin uso y títulos "Dashboard" por defecto en servicios.
+  (DS12–DS15 añadidas en la re-extracción del 2026-10-04, decisión del usuario.)
 - `layouts/app.blade.php:244` mete la contraseña generada con `{{ }}` dentro de un `onclick` de
   JavaScript en lugar de `@js()` (P4); riesgo bajo, porque la genera el sistema. Corregirlo en la spec
   que toque usuarios o el layout (upgrade a AI-DD 1.11.0, decisión del usuario, 2026-10-02).
@@ -185,3 +192,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   12 s en Docker Desktop sobre Windows (unos 0,24 s por test más la espera de 1 s del test de
   bloqueo). Medirlo en el CI de Linux antes de decidir si se ajusta el límite o los tests
   (decisión del usuario, 2026-10-02).
+- Re-extraer el sistema de diseño con el método de AI-DD 1.11.2 (`/init --upgrade --redo-design`).
+  Hecho el 2026-10-04: `system.md` 1.2.0 con 60 vistas capturadas a 390 y 1440 px, deuda conciliada
+  (DS1–DS11 vigentes, DS12–DS15 nuevas) y la versión anterior en `docs/design/history/`.
+- En la lista de pacientes de la dentista, el botón "Nuevo paciente" apunta a
+  `asistente.pacientes.create`, así que la dentista recibe 403 (`resources/views/pacientes/index.blade.php:5`;
+  detectado en la re-extracción del diseño, 2026-10-04).
