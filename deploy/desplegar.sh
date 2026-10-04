@@ -103,8 +103,19 @@ main() {
     paso "Verificación interna"
     if ! bash deploy/verificar.sh --interna; then
         echo
-        echo "La verificación falló. Para volver a la versión anterior:"
-        echo "    bash deploy/volver.sh ${anterior}${copia:+ ${copia}}"
+        if [[ -z "${copia}" ]]; then
+            # Primer despliegue (/review R4): no hay versión anterior a la que
+            # volver, y las contraseñas del volcado aún no están rotadas, así que
+            # "contraseñas del README" falla siempre en este punto.
+            echo "Primer despliegue: si el único FALLO es \"contraseñas del README\", es lo esperado."
+            echo "Rota ahora las credenciales del volcado y repite la verificación:"
+            echo "    docker compose -f docker-compose.prod.yml exec -u www-data app php artisan dentissa:rotar-credenciales --confirmar"
+            echo "    bash deploy/verificar.sh --interna"
+            echo "Si falla algo más, para el despliegue: docker compose -f docker-compose.prod.yml down"
+        else
+            echo "La verificación falló. Para volver a la versión anterior:"
+            echo "    bash deploy/volver.sh ${anterior} ${copia}"
+        fi
         exit 1
     fi
 }

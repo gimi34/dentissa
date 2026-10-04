@@ -151,8 +151,12 @@ bash deploy/verificar.sh --interna
 
 `dentissa:rotar-credenciales` muestra **una sola vez** la contraseña nueva de cada
 cuenta del volcado: guárdala en tu gestor de contraseñas, nunca en el chat ni en
-el repositorio. `desplegar.sh` termina con `verificar.sh --interna`; si algo
-falla, te dice cómo volver atrás.
+el repositorio. `desplegar.sh` termina con `verificar.sh --interna`. **En el
+primer despliegue esa verificación falla siempre en "contraseñas del README"**,
+porque las credenciales del volcado aún no están rotadas: el script lo avisa y
+no propone volver atrás (no hay versión anterior). Rota las credenciales y
+repite `bash deploy/verificar.sh --interna`; entonces debe salir todo OK. En
+los despliegues siguientes, si algo falla, te dice cómo volver atrás.
 
 ### Probar la aplicación sin exponerla
 
