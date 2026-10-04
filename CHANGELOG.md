@@ -5,6 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.11.2
+- Validador `.ai/bin/aidd.py` 1.11.2: cada plan guarda `constitution_version` y se valida contra
+  esa versión; avisos de specs cerradas como "heredados"; comando `templates`.
+- Plantilla del plan con `constitution_version`; huellas de las plantillas en `project.yaml`
+  (`template_hashes`) y clave `masvs_level` (no aplica).
+- Planes abiertos con su versión de la constitución: 014 y 020 (1.0.0) y 030 (1.2.1).
+
 ## [0.4.1] - 2026-10-03
 
 ### Security
