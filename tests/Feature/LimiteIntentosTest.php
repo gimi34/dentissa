@@ -226,6 +226,36 @@ class LimiteIntentosTest extends TestCase
         $this->assertMatchesRegularExpression(self::MENSAJE, (string) $this->errorEmail());
     }
 
+    /**
+     * /review R6: con IPv6, un cliente suele controlar un /64 entero. Los límites
+     * cuentan las direcciones de un mismo /64 como un solo origen.
+     */
+    public function test_las_ipv6_del_mismo_prefijo_comparten_el_limite(): void
+    {
+        // Alta: cinco direcciones del mismo /64 agotan el límite.
+        foreach (['a', 'b', 'c', 'd', 'e'] as $interfaz) {
+            $this->intentarAlta("2001:db8:1:2::{$interfaz}");
+        }
+        $this->intentarAlta('2001:db8:1:2::f');
+        $this->assertMatchesRegularExpression(self::MENSAJE, (string) $this->errorEmail());
+
+        // Desde otro /64 el alta sigue abierta.
+        $otro = 'alta.'.Str::random(8).'@example.test';
+        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8:1:3::1'])
+            ->post('/registro', $this->altaValida($otro));
+        $this->assertDatabaseHas('usuarios', ['email' => $otro]);
+        $this->post('/logout');
+
+        // Login: cinco fallos de la misma cuenta desde direcciones del mismo /64.
+        $usuario = $this->crearUsuario();
+        foreach (['1', '2', '3', '4', '5'] as $interfaz) {
+            $this->intentarLogin($usuario->email, 'contrasena-equivocada', "2001:db8:9:9::{$interfaz}");
+        }
+        $this->intentarLogin($usuario->email, 'secreto-de-pruebas', '2001:db8:9:9::6');
+        $this->assertGuest();
+        $this->assertMatchesRegularExpression(self::MENSAJE, (string) $this->errorEmail());
+    }
+
     public function test_el_alta_admite_cinco_intentos_por_minuto_y_direccion(): void
     {
         // Contador común: tres en `/registro` y dos en `/registro/contacto`.
