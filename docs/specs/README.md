@@ -32,7 +32,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 026 | [estados-cita](026-estados-cita/spec.md) | Agenda | released (v0.3.0) | — | — (2026-10-02) |
 | 027 | [horarios-validos](027-horarios-validos/spec.md) | Agenda | released (v0.4.0) | — | — (2026-10-02) |
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
-| 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | approved | — | — (2026-10-03) |
+| 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | implemented | — | — (2026-10-04) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
