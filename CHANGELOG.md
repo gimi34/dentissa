@@ -11,6 +11,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 - Plantilla del plan con `constitution_version`; huellas de las plantillas en `project.yaml`
   (`template_hashes`) y clave `masvs_level` (no aplica).
 - Planes abiertos con su versión de la constitución: 014 y 020 (1.0.0) y 030 (1.2.1).
+- Sistema de diseño re-extraído (1.2.0): capturas reales de las 60 vistas a 390 y 1440 px con datos
+  de prueba, medidas de estilo, inventario de vistas y deuda conciliada (DS12–DS15 nuevas); la versión
+  anterior queda en `docs/design/history/`.
 
 ## [0.4.1] - 2026-10-03
 
