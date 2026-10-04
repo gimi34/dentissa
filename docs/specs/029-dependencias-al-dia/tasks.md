@@ -82,6 +82,7 @@ Formato:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
+  - nota: decisión del usuario (2026-10-03, `/release 029`): versión v0.4.1 (parche) sin despliegue, porque staging y producción no existen (`docs/deployment.md`, objetivo 5); T095–T097 se marcarán "no aplica" al cerrar. Integración: el usuario sube `feature/029-dependencias-al-dia` y fusiona su PR contra `main` con el CI en verde (merge commit); después, `/release` crea el tag anotado `v0.4.1` sobre el merge commit, lo sube con confirmación y cierra la spec. Puerta de seguridad (2026-10-03): `composer audit --locked` sin filtro y `npm audit` sin avisos.
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
 - [ ] T098 Marcar spec como `released`: además, como pasos de la release (plan D6, /analyze A1), EX1 sale de "Excepciones aceptadas", RS17.a → mitigada (vX.Y.Z), el texto del riesgo de dependencias de la 024 deja de citar EX1 como vigente, `composer audit --locked` sin filtro sigue sin avisos, y el tag es anterior al 2026-10-31
