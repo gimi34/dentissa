@@ -34,10 +34,10 @@ class AppServiceProvider extends ServiceProvider
         // Horario del dentista (spec 027): solo la administración, y solo sobre dentistas.
         Gate::define('definir-horario', [GestionPersonal::class, 'definirHorario']);
 
-        // Límites de intentos (spec 030, CA8): 5 por minuto por IP, cuente o no
+        // Límites de intentos (spec 030, CA8): 5 por minuto por IP (IPv6 por su /64), cuente o no
         // el resultado. El mensaje es el del login y no revela si la cuenta existe.
         RateLimiter::for('registro', fn (Request $request) => Limit::perMinute(5)
-            ->by($request->ip())
+            ->by(AuthController::origenLimite($request))
             ->response(fn (Request $request, array $headers) => back()
                 ->withErrors(['email' => AuthController::mensajeDemasiadosIntentos((int) $headers['Retry-After'])])
                 ->withInput($request->except('password', 'password_confirmation'))));
@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
         // La vuelta de Google es un intento de login: el rechazo emite Lockout
         // para la auditoría de la spec 020 (excepción P7).
         RateLimiter::for('google', fn (Request $request) => Limit::perMinute(5)
-            ->by($request->ip())
+            ->by(AuthController::origenLimite($request))
             ->response(function (Request $request, array $headers) {
                 event(new Lockout($request));
 

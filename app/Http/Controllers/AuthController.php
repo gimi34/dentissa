@@ -38,7 +38,30 @@ class AuthController extends Controller
 
         $sujeto = $cuenta !== null ? 'cuenta:'.$cuenta : 'correo:'.Str::lower($email);
 
-        return 'login:'.$sujeto.'|'.$request->ip();
+        return 'login:'.$sujeto.'|'.self::origenLimite($request);
+    }
+
+    /**
+     * Origen que cuentan los límites de intentos: la IPv4 tal cual y la IPv6
+     * reducida a su prefijo /64, que un cliente suele controlar entero
+     * (/review R6). Las IPv4 escritas como IPv6 (`::ffff:a.b.c.d`) cuentan
+     * como su IPv4.
+     */
+    public static function origenLimite(Request $request): string
+    {
+        $ip = (string) $request->ip();
+
+        if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return $ip;
+        }
+
+        $binaria = inet_pton($ip);
+
+        if (str_starts_with($binaria, str_repeat("\0", 10)."\xff\xff")) {
+            return inet_ntop(substr($binaria, 12));
+        }
+
+        return inet_ntop(substr($binaria, 0, 8).str_repeat("\0", 8)).'/64';
     }
 
     public function loginForm()
