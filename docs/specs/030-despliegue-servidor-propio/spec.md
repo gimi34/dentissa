@@ -1,7 +1,7 @@
 ---
 id: 030
 slug: despliegue-servidor-propio
-status: approved
+status: implemented
 created: 2026-10-03
 extends: [001, 002]
 ---
@@ -170,3 +170,4 @@ inicio de sesión.
 | 2026-10-03 | Vuelve a `draft`: CA1 se verifica desde dentro del servidor; CA3 incluye local; Cobertura de riesgos con correcciones divididas (RD1.d, RD3.d, RS7.e, OB4.c, OB7.b, RS13.b) y RS13.a; excepción P7; `extends: [001, 002]`; supuestos confirmados | /analyze A1, A2, A4, A5, A6, A25, A26, A30, A34 |
 | 2026-10-03 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-04 | Implementada (T092): CA1–CA10 por sus tests y por los ensayos en el servidor (T040–T046); la verificación pública queda para la liberación | /implement |
+| 2026-10-04 | Implementada de nuevo tras /review r1 (T060–T071: R1–R6, R8–R11, R19) | /implement |
