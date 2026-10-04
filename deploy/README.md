@@ -119,7 +119,7 @@ cut -d= -f1 app.env                               # solo los nombres
 aparezca en pantalla (la primera vez construye la imagen):
 ```bash
 cd /opt/dentissa/app
-CLAVE=$(docker compose -f docker-compose.prod.yml run --rm --no-deps app php artisan key:generate --show | tail -n 1 | tr -d '\r')
+CLAVE=$(docker compose -f docker-compose.prod.yml run --rm --no-deps -u www-data app php artisan key:generate --show | tail -n 1 | tr -d '\r')
 echo "$CLAVE" | grep -c '^base64:'                 # debe dar 1; si da 0, no sigas
 sed -i '/^APP_KEY=/d' /opt/dentissa/entorno/app.env
 printf 'APP_KEY=%s\n' "$CLAVE" >> /opt/dentissa/entorno/app.env
@@ -145,7 +145,7 @@ cada ensayo (desplegar, volver atrás, restaurar la base o reiniciar el servidor
 ```bash
 cd /opt/dentissa/app
 bash deploy/desplegar.sh <tag o commit>      # el primero anuncia "sin copia previa"
-docker compose -f docker-compose.prod.yml exec app php artisan dentissa:rotar-credenciales --confirmar
+docker compose -f docker-compose.prod.yml exec -u www-data app php artisan dentissa:rotar-credenciales --confirmar
 bash deploy/verificar.sh --interna
 ```
 

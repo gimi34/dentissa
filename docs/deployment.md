@@ -84,14 +84,14 @@ vez (`docker compose -f docker-compose.prod.yml up -d cloudflared`) y desde ento
 tras un reinicio. Tiempo ensayado: 86 s el primer despliegue y 10 s uno posterior, sin la
 verificación (spec 030, T040 y T044).
 
-Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec app php artisan
+Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
 fuera del repositorio y del chat).
 
 ## Migraciones de base de datos
 - Cuándo se aplican: en local, a mano con `php artisan migrate` después de que Docker cargue el
   volcado. En producción, `desplegar.sh` las aplica después de la copia y antes de cambiar el
-  tráfico, con la imagen nueva (`docker compose run --rm app php artisan migrate --force`).
+  tráfico, con la imagen nueva (`docker compose run --rm -u www-data app php artisan migrate --force`).
 - Patrón: expand → migrate → contract (compatibles con la versión anterior)
 - Comando: `php artisan migrate --force`
 - Limitación actual: el esquema del dominio solo existe en `database/dentissa.sql`; las

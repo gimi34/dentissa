@@ -88,14 +88,14 @@ main() {
     esperar_db
 
     paso "Migraciones (con la imagen nueva, antes de cambiar el tráfico)"
-    "${compose[@]}" run --rm app php artisan migrate --force
+    "${compose[@]}" run --rm -u www-data app php artisan migrate --force
 
     paso "Levantando app y web"
     "${compose[@]}" up -d app web
 
     paso "Cachés"
-    "${compose[@]}" exec -T app php artisan config:cache
-    "${compose[@]}" exec -T app php artisan route:cache
+    "${compose[@]}" exec -T -u www-data app php artisan config:cache
+    "${compose[@]}" exec -T -u www-data app php artisan route:cache
 
     echo
     echo "Despliegue de ${ref} en ${SECONDS} s (sin la verificación). Anterior: ${anterior}. Copia: ${copia:-ninguna}"

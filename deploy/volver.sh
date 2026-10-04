@@ -65,8 +65,8 @@ main() {
     "${compose[@]}" up -d app web
 
     paso "Cachés"
-    "${compose[@]}" exec -T app php artisan config:cache
-    "${compose[@]}" exec -T app php artisan route:cache
+    "${compose[@]}" exec -T -u www-data app php artisan config:cache
+    "${compose[@]}" exec -T -u www-data app php artisan route:cache
 
     echo
     echo "Vuelta a ${ref} en ${SECONDS} s (sin la verificación)."
