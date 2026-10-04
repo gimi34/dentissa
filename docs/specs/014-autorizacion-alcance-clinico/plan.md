@@ -1,6 +1,7 @@
 ---
 spec: 014-autorizacion-alcance-clinico
 status: approved   # draft | approved | blocked
+constitution_version: 1.0.0   # versión con la que se evaluó el Constitution Check (upgrade a AI-DD 1.11.2)
 created: 2026-09-28
 ---
 

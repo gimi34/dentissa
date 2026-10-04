@@ -185,3 +185,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   12 s en Docker Desktop sobre Windows (unos 0,24 s por test más la espera de 1 s del test de
   bloqueo). Medirlo en el CI de Linux antes de decidir si se ajusta el límite o los tests
   (decisión del usuario, 2026-10-02).
+- Re-extraer el sistema de diseño con el método de AI-DD 1.11.2 (`/init --upgrade --redo-design`):
+  capturas reales de todas las vistas con datos de prueba, textos y logo de la app, inventario de
+  vistas y deuda `DS` conciliada (se conservan los IDs vigentes). `system.html` actual no refleja
+  fielmente la app. Pospuesto tras la spec 030 (decisión del usuario, 2026-10-04).

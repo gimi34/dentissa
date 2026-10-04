@@ -1,6 +1,7 @@
 ---
 spec: 030-despliegue-servidor-propio
 status: approved
+constitution_version: 1.2.1   # versión con la que se evaluó el Constitution Check (upgrade a AI-DD 1.11.2)
 created: 2026-10-03
 ---
 
