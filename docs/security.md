@@ -89,7 +89,7 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 - Rutas protegidas adicionales: `AIDLC.md`, `aidlc/`, `docker-compose.yml`, `Dockerfile`,
   `database/dentissa.sql`
 - Servicios externos aprobados para enviar código o datos: ninguno
-- Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com
+- Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com, hub.docker.com (solo para consultar la fecha de publicación de las etiquetas de imagen al fijar versiones; aprobado por el usuario el 2026-10-03, spec 030, /analyze A28)
 
 ## Excepciones aceptadas
 Ninguna vigente. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, aprobada el
