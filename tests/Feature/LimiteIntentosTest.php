@@ -210,6 +210,22 @@ class LimiteIntentosTest extends TestCase
         $this->assertMatchesRegularExpression(self::MENSAJE, (string) $this->errorEmail());
     }
 
+    /** /review R5: un login correcto reinicia el contador de fallos de la cuenta. */
+    public function test_un_login_correcto_reinicia_el_contador(): void
+    {
+        $usuario = $this->crearUsuario();
+
+        $this->fallarLogin($usuario->email, 4);
+        $this->intentarLogin($usuario->email, 'secreto-de-pruebas')->assertRedirect('/cliente');
+        $this->post('/logout');
+
+        $this->fallarLogin($usuario->email, 5);
+        $this->assertSame('Credenciales incorrectas', $this->errorEmail());
+
+        $this->intentarLogin($usuario->email, 'contrasena-equivocada');
+        $this->assertMatchesRegularExpression(self::MENSAJE, (string) $this->errorEmail());
+    }
+
     public function test_el_alta_admite_cinco_intentos_por_minuto_y_direccion(): void
     {
         // Contador común: tres en `/registro` y dos en `/registro/contacto`.
