@@ -1,0 +1,184 @@
+# Producción en el servidor propio
+
+Guía paso a paso para preparar el servidor (Ubuntu Server 24.04), desplegar
+Dentissa y abrirla a internet con Cloudflare Tunnel (spec 030, ADR 0005).
+Todos los comandos se ejecutan **en el servidor, por SSH, desde la cuenta de
+despliegue** (la cuenta creada al instalar Ubuntu), salvo los marcados "en tu PC".
+
+> **Nunca pegues en el chat** el token del túnel, contraseñas, `APP_KEY` ni el
+> contenido de los archivos de entorno. Para pedir ayuda, pega solo la salida de
+> los scripts, que no muestra secretos.
+
+| Ruta en el servidor | Contenido |
+|---|---|
+| `/opt/dentissa/app` | clon del repositorio (solo lectura desde GitHub) |
+| `/opt/dentissa/entorno` | `app.env`, `db.env` y `tunnel.env` (carpeta 700, archivos 600, **fuera del clon**) |
+| `/var/backups/dentissa` | copias de la base (carpeta 700, copias 600, las 14 más recientes) |
+
+## 1. Preparar el servidor (una sola vez)
+
+1. **En tu PC**, copia tu clave pública al servidor y comprueba que entras sin
+   contraseña:
+   ```bash
+   ssh-copy-id <cuenta>@<IP del servidor>
+   ssh <cuenta>@<IP del servidor>
+   ```
+2. Todavía no hay clon en el servidor: **en tu PC**, desde tu copia del
+   repositorio en la rama o tag que vas a desplegar, envía solo el script; luego,
+   en el servidor, ejecútalo con la red local desde la que vas a administrar:
+   ```bash
+   scp deploy/preparar-servidor.sh <cuenta>@<IP del servidor>:   # en tu PC
+   sudo bash preparar-servidor.sh 192.168.1.0/24                  # en el servidor
+   ```
+   Si la cuenta no tiene clave autorizada, el script se detiene sin cambiar nada.
+3. **Antes de cerrar la sesión**, abre otra por SSH y comprueba que entras con tu
+   clave. Después cierra sesión y vuelve a entrar para usar `docker` sin `sudo`.
+
+## 2. Clave de despliegue de solo lectura y clon
+
+1. Crea una clave solo para leer el repositorio:
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/dentissa_deploy -N "" -C "dentissa-servidor"
+   cat ~/.ssh/dentissa_deploy.pub
+   ```
+2. En GitHub: repositorio → **Settings → Deploy keys → Add deploy key**, pega la
+   clave pública y deja **sin marcar** "Allow write access".
+3. Dile a SSH que use esa clave para GitHub y clona en `/opt/dentissa/app`:
+   ```bash
+   printf 'Host github.com\n  IdentityFile ~/.ssh/dentissa_deploy\n  IdentitiesOnly yes\n' >> ~/.ssh/config
+   chmod 600 ~/.ssh/config
+   git clone git@github.com:gimi34/dentissa.git /opt/dentissa/app
+   cd /opt/dentissa/app
+   ```
+
+## 3. Túnel de Cloudflare
+
+1. En Cloudflare: **Zero Trust → Networks → Tunnels → Create a tunnel →
+   Cloudflared**, nombre `dentissa`, entorno **Docker**. De la orden que muestra,
+   copia **solo el token** (la cadena larga tras `--token`).
+2. En **Public Hostname**, añade el subdominio (p. ej. `dentissa.tudominio.com`)
+   con servicio **HTTP** y URL **`web:80`**.
+3. Recomendado, como refuerzo de la redirección a https que ya hace nginx: en el
+   dominio, **SSL/TLS → Edge Certificates → Always Use HTTPS** activado.
+4. **No arranques el túnel todavía**: se abre en la liberación (sección 9).
+
+## 4. Archivos de entorno
+
+Crea los tres archivos en `/opt/dentissa/entorno` (nunca dentro del clon), con
+un editor (`nano`) y permisos 600. Aquí solo van los nombres de las variables:
+
+- **`app.env`**
+  - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://<subdominio>`, `LOG_LEVEL=info`
+  - `APP_KEY` (se genera en el paso siguiente)
+  - `SESSION_DRIVER=file`, `SESSION_SECURE_COOKIE=true`, `SESSION_DOMAIN=` (vacío), `CACHE_STORE=database`
+  - `DB_CONNECTION=mariadb`, `DB_HOST=db`, `DB_PORT=3306`, `DB_DATABASE=dentissa`,
+    `DB_USERNAME=dentissa_app`, `DB_PASSWORD` (la misma que `MARIADB_PASSWORD`)
+  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://<subdominio>/auth/google/callback`
+- **`db.env`**: `MARIADB_PASSWORD` y `MARIADB_ROOT_PASSWORD` (dos contraseñas
+  largas distintas, p. ej. `openssl rand -base64 32`). La base (`dentissa`) y el
+  usuario (`dentissa_app`) ya vienen en el Compose.
+- **`tunnel.env`**: `TUNNEL_TOKEN` (el token del paso 3).
+
+```bash
+cd /opt/dentissa/entorno
+nano app.env && nano db.env && nano tunnel.env
+chmod 600 app.env db.env tunnel.env
+ls -l
+```
+
+**Generar `APP_KEY`** sin arrancar la base, y copiarla a `app.env`:
+```bash
+cd /opt/dentissa/app
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml run --rm --no-deps app php artisan key:generate --show
+```
+
+## 5. Google
+
+En Google Cloud Console → **APIs & Services → Credentials** → el cliente OAuth
+de Dentissa → **Authorized redirect URIs**, añade
+`https://<subdominio>/auth/google/callback`. Sin esto, el login con Google falla
+en producción.
+
+## 6. Ensayo y primer despliegue (sin exponer)
+
+Mientras el túnel está parado, nadie de fuera llega a la aplicación. Antes de
+cada ensayo (desplegar, volver atrás, restaurar la base o reiniciar el servidor)
+**confirma en el chat tu aprobación**: queda anotada en `tasks.md`.
+
+```bash
+cd /opt/dentissa/app
+bash deploy/desplegar.sh <tag o commit>      # el primero anuncia "sin copia previa"
+docker compose -f docker-compose.prod.yml exec app php artisan dentissa:rotar-credenciales --confirmar
+bash deploy/verificar.sh --interna
+```
+
+`dentissa:rotar-credenciales` muestra **una sola vez** la contraseña nueva de cada
+cuenta del volcado: guárdala en tu gestor de contraseñas, nunca en el chat ni en
+el repositorio. `desplegar.sh` termina con `verificar.sh --interna`; si algo
+falla, te dice cómo volver atrás.
+
+### Probar la aplicación sin exponerla
+
+`web` no publica puertos. Para entrar desde tu PC, abre un túnel SSH a su IP en
+la red de Docker:
+
+```bash
+# En el servidor: IP de web
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dentissa-prod-web-1
+# En tu PC:
+ssh -L 8081:<IP de web>:80 <cuenta>@<IP del servidor>
+```
+
+Abre **`http://localhost:8081`** (exactamente `localhost`). La cookie de sesión
+es `Secure` y el navegador solo la envía por http cuando el sitio es
+`localhost`; con la IP del servidor el login fallaría sin motivo aparente.
+
+## 7. Copias de la base
+
+`desplegar.sh` hace una copia antes de cada despliegue (salvo el primero). A mano:
+
+```bash
+bash deploy/respaldar.sh
+```
+
+Tras cada despliegue, llévate la copia más reciente a tu PC (**en tu PC**):
+
+```bash
+scp <cuenta>@<IP del servidor>:/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz .
+```
+
+Las copias contienen datos personales y de salud y aún van sin cifrar (spec 031):
+guárdalas en una carpeta solo tuya.
+
+Restaurar una copia (borra la base y la recrea desde la copia; pide confirmación):
+
+```bash
+docker compose -f docker-compose.prod.yml stop app web
+bash deploy/restaurar.sh /var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz
+docker compose -f docker-compose.prod.yml up -d app web
+```
+
+## 8. Volver a la versión anterior
+
+```bash
+bash deploy/volver.sh <tag o commit anterior>            # sin cambios de base
+bash deploy/volver.sh <tag o commit anterior> <copia>    # si la versión nueva migró la base
+```
+
+Con copia, `volver.sh` para `app` y `web`, restaura la base y levanta la versión
+anterior. Termina con `verificar.sh --interna`. Para dejar la aplicación sin
+exposición al instante: `docker compose -f docker-compose.prod.yml stop cloudflared`.
+
+## 9. Abrir el túnel (liberación)
+
+Solo en `/release`, con aprobación explícita:
+
+```bash
+bash deploy/desplegar.sh vX.Y.Z
+docker compose -f docker-compose.prod.yml up -d cloudflared
+bash deploy/verificar.sh           # ahora también por la dirección pública
+```
+
+Desde entonces `cloudflared` vuelve solo tras un reinicio. Los scripts de
+despliegue nunca lo arrancan ni lo paran.
