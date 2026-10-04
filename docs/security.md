@@ -46,24 +46,28 @@ updated: 2026-09-28
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
 |---|---|---|---|
-| `GET/POST /login` | HTTP público | no | sin rate limiting |
-| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | sin rate limiting ni captcha |
-| `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email |
+| `GET/POST /login` | HTTP público | no | 5 fallos por minuto por correo e IP (spec 030) |
+| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | 5 peticiones por minuto por IP en las dos rutas (spec 030); sin captcha |
+| `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
 | `/asistente/*` | HTTP | sí, `role:asistente` | pacientes y expedientes sin filtro de alcance |
 | `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente` |
-| phpMyAdmin `:8080`, MariaDB `:3306` | red (Docker local) | root | publicados en todas las interfaces |
+| phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
+| Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
+| SSH del servidor de producción | red local | clave | solo desde la red local (`ufw`), sin contraseña ni root (spec 030) |
 
 No hay rutas API, webhooks, colas ni tareas programadas.
 
 ## Manejo de secretos
 - Dónde se guardan: `.env` local no versionado (en `.gitignore`). Credenciales de BD de desarrollo
-  escritas en `docker-compose.yml` y `phpunit.xml`. Para staging y producción: TODO(init)
-  (depende de la plataforma, ver [deployment.md](deployment.md)).
-- Rotación: no hay procedimiento.
+  escritas en `docker-compose.yml` y `phpunit.xml`. En producción (spec 030): `app.env`, `db.env` y
+  `tunnel.env` en `/opt/dentissa/entorno` del servidor (carpeta 700, archivos 600, fuera del clon,
+  excluidos de git y de la imagen); cada servicio lee solo el suyo (ver [deployment.md](deployment.md)).
+- Rotación: las contraseñas de las cuentas del volcado se rotan en producción con
+  `php artisan dentissa:rotar-credenciales --confirmar` (spec 030); el resto, sin procedimiento.
 - `README.md` contiene contraseñas de cuentas de prueba y `database/dentissa.sql` datos ficticios
   con hashes (datos ficticios y repo privado, confirmado por el usuario, 2026-09-28).
 
@@ -145,9 +149,9 @@ en el callback de Google. Permite fuerza bruta y altas masivas (cada alta asigna
 Evidencia: `routes/web.php:17-27`; specs 001, 002.
 
 Correcciones:
-- RS4.a Throttle por IP + email en `POST /login` — estado: pendiente
-- RS4.b Throttle por IP en `POST /registro` y `/registro/contacto` — estado: pendiente
-- RS4.c Throttle en `/auth/google/callback` — estado: pendiente
+- RS4.a Throttle por IP + email en `POST /login` — estado: en curso (spec 030)
+- RS4.b Throttle por IP en `POST /registro` y `/registro/contacto` — estado: en curso (spec 030)
+- RS4.c Throttle en `/auth/google/callback` — estado: en curso (spec 030)
 
 ### RS5 · Media — Vinculación automática de Google por email (A07 Authentication Failures)
 `GoogleAuthController` vincula una cuenta existente de cualquier rol (incluido admin) si el email
@@ -167,20 +171,23 @@ tests. Datos ficticios y repo privado (confirmado por el usuario, 2026-09-28), p
 Correcciones:
 - RS6.a Quitar las contraseñas de `README.md` y documentar cómo crear cuentas de prueba — estado: pendiente
 - RS6.b Sustituir el volcado por migraciones + seeder con datos sintéticos (Faker) — estado: pendiente
-- RS6.c Cambiar las contraseñas de las cuentas del volcado en cualquier entorno compartido antes de desplegar — estado: pendiente
+- RS6.c Cambiar las contraseñas de las cuentas del volcado en cualquier entorno compartido antes de desplegar — estado: en curso (spec 030)
 - RS6.d Purgar del historial de git el volcado con datos y las contraseñas del README, coordinado con el equipo (reescritura de historial y force-push) (decisión del usuario, 2026-09-28) — estado: pendiente
 
 ### RS7 · Media — Configuración Docker insegura si se reutiliza fuera de local (A02 Security Misconfiguration)
 Root de MariaDB con contraseña trivial y `MYSQL_ALLOW_EMPTY_PASSWORD`, puertos 3306 y 8080
 (phpMyAdmin) publicados en todas las interfaces, `.dockerignore` con una sola línea (la imagen
 copiaría `.env`, `.git` y el volcado), `composer:latest` y `phpmyadmin:latest` sin fijar.
-Evidencia: `docker-compose.yml`, `Dockerfile`, `.dockerignore`.
+Evidencia: `docker-compose.yml`, `Dockerfile`, `.dockerignore`. La spec 030 corrige local y crea
+una configuración de producción aparte; lo que pide staging queda pendiente (/analyze 030 A1:
+RS7.a se divide en producción y staging).
 
 Correcciones:
-- RS7.a Configuración de staging/prod separada, con credenciales por variables o secretos y usuario de BD no root — estado: pendiente
-- RS7.b Publicar puertos solo en `127.0.0.1` y dejar phpMyAdmin exclusivamente en local — estado: pendiente
-- RS7.c Ampliar `.dockerignore` (`.env*`, `.git`, `node_modules`, `vendor`, `database/*.sql`, `storage`) — estado: pendiente
-- RS7.d Fijar las imágenes por versión (composer, phpmyadmin, nginx) — estado: pendiente
+- RS7.a Configuración de producción separada, con credenciales por variables o secretos y usuario de BD no root — estado: en curso (spec 030)
+- RS7.b Publicar puertos solo en `127.0.0.1` y dejar phpMyAdmin exclusivamente en local — estado: en curso (spec 030)
+- RS7.c Ampliar `.dockerignore` (`.env*`, `.git`, `node_modules`, `vendor`, `database/*.sql`, `storage`) — estado: en curso (spec 030)
+- RS7.d Fijar las imágenes por versión (composer, phpmyadmin, nginx) — estado: en curso (spec 030)
+- RS7.e Configuración de staging separada, con los mismos requisitos que RS7.a — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### RS8 · Media — Faltan cabeceras de seguridad (A02 Security Misconfiguration)
 Ni la app ni nginx envían CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options,
@@ -226,10 +233,12 @@ Correcciones:
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)
 El registro público responde con un mensaje explícito de "correo ya registrado". Evidencia:
-`RegisterController.php`; spec 002.
+`RegisterController.php`; spec 002. La spec 030 añade el límite de intentos en el alta; el mensaje
+genérico queda pendiente (/analyze 030 A34: RS13.a se divide).
 
 Correcciones:
-- RS13.a Mensaje genérico y throttle (ver RS4.b) en el alta — estado: pendiente
+- RS13.a Throttle en el alta (ver RS4.b) — estado: en curso (spec 030)
+- RS13.b Mensaje genérico en el alta, que no revele si el correo ya tiene cuenta — estado: pendiente (→ objetivo 2)
 
 ### RS14 · Baja — Campos privilegiados asignables en masa (A01 Broken Access Control)
 `Usuario::$fillable` incluye `rol`, `activo` y `password_hash`. Hoy siempre se usan arrays

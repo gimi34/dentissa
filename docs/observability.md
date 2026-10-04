@@ -13,7 +13,7 @@ cubierta.
 | Capacidad | Herramienta | Estado | Evidencia |
 |---|---|---|---|
 | Logs de aplicación | Monolog (Laravel), canal `stack` → `single` | presente (config de fábrica); el código no escribe ni un log: 0 llamadas a `Log::`/`logger()`/`report()` | `config/logging.php`, grep en `app/` |
-| Agregación de logs | ninguna | — | `laravel.log` en el directorio del proyecto montado; logs de nginx dentro del contenedor sin volumen |
+| Agregación de logs | ninguna | — | local: `laravel.log` en el directorio del proyecto montado. Producción (spec 030): `laravel.log` en el volumen `storage` y `dentissa-access.log`/`dentissa-error.log` de nginx en el volumen `nginx_logs`, que sobreviven a reinicios y a recrear los contenedores |
 | Correlación por petición | ninguna | — | `bootstrap/app.php` sin middleware ni `Context::add` |
 | Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados de cita) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026) |
 | Métricas | ninguna | — | `composer.json` sin Pulse/Telescope/Prometheus |
@@ -27,8 +27,10 @@ cubierta.
   obligatorios `timestamp`, `level`, `request_id`, `actor_id` (si hay sesión), `message`, `context`.
 - Nivel por entorno: local `debug` (confirmado por el usuario, 2026-09-28: igual que
   `.env.example`) · staging `info` · producción `info` (decisión del usuario, 2026-09-28).
-- Destino y retención: local `storage/logs/laravel.log` sin rotación. Staging/prod: TODO(init)
-  según plataforma (propuesto `stderr` si es PaaS o `daily` con 14 días en VPS).
+- Destino y retención: local `storage/logs/laravel.log` sin rotación. Producción (spec 030):
+  `storage/logs/laravel.log` en el volumen `storage` y los logs de nginx en el volumen
+  `nginx_logs` (`dentissa-access.log`, `dentissa-error.log`), sin rotación todavía; nivel `info`
+  y `APP_DEBUG=false`, comprobados por `deploy/verificar.sh` en cada despliegue. Staging: no existe.
 - Qué **nunca** se registra: datos personales (nombre, email, teléfono, dirección, fecha de
   nacimiento), datos de salud (alergias, diagnóstico, tratamiento, receta, notas), contraseñas y
   contraseñas generadas, tokens de sesión y OAuth, secretos, cuerpos completos de petición y
@@ -111,11 +113,15 @@ Correcciones:
 ### OB4 · Media — Riesgo de datos sensibles en logs por excepciones de BD
 Una `QueryException` no capturada incluye el SQL con los valores enlazados; en los inserts y
 updates de pacientes, expedientes y usuarios eso volcaría datos clínicos y hashes en
-`laravel.log`. `withExceptions` está vacío. → roadmap objetivos 3 y 5.
+`laravel.log`. `withExceptions` está vacío. → roadmap objetivos 3 y 5. La spec 030 abre producción
+con OB4.a pendiente (residuo aceptado por el usuario, /analyze 030 A26: datos ficticios y logs solo
+en el servidor; la 023 antes de tener datos reales) y comprueba la configuración en cada despliegue;
+lo que pide staging queda pendiente (/analyze 030 A1: OB4.b se divide).
 
 Correcciones:
 - OB4.a Redactar los bindings de `QueryException` (y campos sensibles) en `bootstrap/app.php → withExceptions` — estado: pendiente
-- OB4.b `APP_DEBUG=false` y `APP_ENV=production` verificados en el checklist de despliegue de staging y prod — estado: pendiente
+- OB4.b `APP_DEBUG=false` y `APP_ENV=production` verificados en el checklist de despliegue de producción — estado: en curso (spec 030)
+- OB4.c Lo mismo en el checklist de despliegue de staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### OB5 · Media — `historial_citas` incompleto y duplicado
 El trigger registra cambios de estado sin actor; con motivo, el controlador inserta una segunda
@@ -137,13 +143,17 @@ Correcciones:
 
 ### OB7 · Baja — Logs de nginx se pierden al recrear el contenedor
 nginx escribe en `/var/log/nginx/` dentro del contenedor, sin volumen ni stdout. → roadmap objetivo 5.
+En producción, la spec 030 los lleva al volumen `nginx_logs` (ensayado: se conservan tras reiniciar
+el servidor); staging no existe (/analyze 030 A1: OB7.a se divide).
 
 Correcciones:
-- OB7.a Enviar los logs de nginx a stdout/stderr o a un volumen en staging y prod — estado: pendiente
+- OB7.a Enviar los logs de nginx a stdout/stderr o a un volumen en producción — estado: en curso (spec 030)
+- OB7.b Lo mismo en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ## Brechas por confirmar
-- `laravel.log` crecerá sin rotación en staging/prod — depende de: `LOG_CHANNEL`/`LOG_STACK` de esos
-  entornos, que aún no existen — cómo confirmarla: al definir la plataforma (roadmap objetivo 5).
+- `laravel.log` y los logs de nginx crecerán sin rotación en producción (volúmenes `storage` y
+  `nginx_logs`, spec 030) — depende de: el uso real — cómo confirmarla: vigilar el tamaño de los
+  volúmenes tras la liberación y decidir `LOG_CHANNEL=daily` o rotación (roadmap objetivo 3).
 - ~~La base de producción podría no tener el trigger `trg_historial_cita`~~ — resuelta: la spec 026
   retira el trigger con una migración idempotente y el historial lo escribe la aplicación.
 
