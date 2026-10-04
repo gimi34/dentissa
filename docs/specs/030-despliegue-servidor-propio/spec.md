@@ -1,7 +1,7 @@
 ---
 id: 030
 slug: despliegue-servidor-propio
-status: implemented
+status: approved
 created: 2026-10-03
 extends: [001, 002]
 ---

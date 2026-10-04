@@ -196,6 +196,32 @@ Formato:
 - [x] T046 Verificación manual interna de la aplicación desplegada, por el usuario, con acceso por túnel SSH al contenedor `web` (guía de T032): login con una cuenta de prueba de cada rol (con las contraseñas rotadas) y agendar y cancelar una cita ficticia — (sin archivos; nota en tasks.md) — hecho cuando: el usuario lo confirma y la nota recoge la fecha · verificación manual: login por rol y cita ficticia en el servidor, sin exponer — cubre: CA1 — depende: T040
   - nota: verificación manual OK 2026-10-04 (usuario): por túnel SSH al contenedor `web` (`ssh -N -L 8081:<IP de web>:80`, `http://localhost:8081`), con el servidor en `ca4d5bf` tras la vuelta atrás de T044, entraron las cuatro cuentas de prueba (admin, dentista, asistente y paciente) con las contraseñas rotadas, y una cita ficticia se agendó y se canceló. El login con Google no se prueba por `localhost` (su redirect es el público): queda para la liberación (T097).
 
+## Correcciones de /review (ronda 1)
+- [ ] T060 Añadir a `LimiteIntentosTest` el caso `test_las_variantes_del_correo_comparten_el_limite`: con una cuenta cuyo correo tiene una vocal (p. ej. `limite.…@example.test`), cinco fallos desde la misma IP alternando el correo en mayúsculas y con esa vocal acentuada (`límite.…`), y el 6.º intento con el correo original y la contraseña correcta se rechaza con el mensaje de límite — tests/Feature/LimiteIntentosTest.php — hecho cuando: el caso falla por la razón esperada (la variante acentuada abre otro contador y el 6.º entra) y el resto del archivo sigue en verde — cubre: CA8
+  - nota: añadida por /review: R1
+- [ ] T061 Añadir a `LimiteIntentosTest` el caso `test_un_login_correcto_reinicia_el_contador`: cuatro fallos, un login correcto, `logout`, y cinco fallos más sin bloqueo (el 5.º todavía con "Credenciales incorrectas"); el 6.º sí se rechaza con el mensaje de límite — tests/Feature/LimiteIntentosTest.php — hecho cuando: pasa y se comprueba rompiendo (sin `RateLimiter::clear()` en `AuthController` el caso falla), anotado — cubre: CA8 — depende: T060
+  - nota: añadida por /review: R5
+- [ ] T062 Añadir a `LimiteIntentosTest` el caso `test_las_ipv6_del_mismo_prefijo_comparten_el_limite`: cinco altas desde direcciones distintas del mismo /64 (`2001:db8:1:2::a` … `::e`) y la 6.ª desde `2001:db8:1:2::f` se rechaza, mientras que desde `2001:db8:1:3::1` (otro /64) se acepta; y cinco fallos de login de la misma cuenta desde direcciones distintas del mismo /64 bloquean el 6.º — tests/Feature/LimiteIntentosTest.php — hecho cuando: el caso falla por la razón esperada (cada dirección abre su contador) — cubre: CA8 — depende: T061
+  - nota: añadida por /review: R6
+- [ ] T063 Contar los intentos de login por la identidad de la cuenta: si el correo corresponde a una cuenta (buscada con la misma comparación que la autenticación), la clave del limitador es su id más el origen; si no, el correo en minúsculas más el origen. El mensaje y la respuesta no cambian (no revelan si la cuenta existe) (control de TM3) — app/Http/Controllers/AuthController.php — hecho cuando: T060 y T061 pasan, `LimiteIntentosTest` sigue en verde salvo T062, y se comprueba rompiendo (volver a la clave por correo hace fallar T060), anotado — cubre: CA8 — depende: T060, T061
+  - nota: añadida por /review: R1
+- [ ] T064 Contar el origen de los tres límites (login, `registro` y `google`) como la IPv4 tal cual y la IPv6 reducida a su prefijo /64 (control de TM3 y TM4) — app/Http/Controllers/AuthController.php, app/Providers/AppServiceProvider.php — hecho cuando: T062 pasa, `LimiteIntentosTest` entero en verde, la suite sigue en verde y se comprueba rompiendo (con la IP exacta falla T062), anotado — cubre: CA8 — depende: T062, T063
+  - nota: añadida por /review: R6
+- [ ] T065 `desplegar.sh` distingue "la base no tiene datos" de "no se pudo comprobar": si el volumen de la base existe y la comprobación termina con error, se detiene con `error` antes de tocar nada (control de TM8) — deploy/desplegar.sh — hecho cuando: `bash -n` pasa y, probado en local con la función aislada: sin volumen → primer despliegue; volumen vacío → primer despliegue; volumen con datos → copia; volumen con datos y la comprobación fallando (sin `db.env`) → error y parada — cubre: CA6
+  - nota: añadida por /review: R2
+- [ ] T066 Ejecutar como `www-data` todas las órdenes `artisan` dentro de `app` en `desplegar.sh`, `volver.sh` y la guía (`migrate`, `config:cache`, `route:cache`, `dentissa:rotar-credenciales`, `key:generate`), para que ningún archivo de `storage` quede de root — deploy/desplegar.sh, deploy/volver.sh, deploy/README.md — hecho cuando: `bash -n` pasa en los dos scripts, `grep` no encuentra ninguna orden `artisan` sobre `app` sin `-u www-data` en los tres archivos, y en local `docker compose -f docker-compose.prod.yml run --rm --no-deps -u www-data app php artisan --version` funciona — cubre: CA9 — depende: T065
+  - nota: añadida por /review: R3
+- [ ] T067 En el primer despliegue, `desplegar.sh` no propone `volver.sh` si falla la verificación: avisa de que hay que rotar las credenciales del volcado y repetir `verificar.sh --interna`; la guía (§6) explica que en el primer despliegue la verificación falla en "contraseñas del README" hasta rotarlas — deploy/desplegar.sh, deploy/README.md — hecho cuando: `bash -n` pasa y, leído en el código, el primer despliegue (sin copia) muestra ese aviso en lugar de la vuelta atrás; la guía lo dice — cubre: CA1 — depende: T066
+  - nota: añadida por /review: R4
+- [ ] T068 Endurecer `verificar.sh`: `php` dentro de `app` como `www-data`; el bloque de configuración exige su código de salida 0 y todas sus líneas, con temporal de `mktemp` y `trap`; las comprobaciones públicas llaman a `curl` directamente, sin `bash -c`; nuevas comprobaciones de `post_max_size` igual a `local.ini` y de que el usuario de la base no es `root` — deploy/verificar.sh — hecho cuando: `bash -n` pasa y, ejecutado contra una pila de producción de prueba en local (valores desechables, sin `cloudflared`), todas las comprobaciones salen OK salvo `ss` (no existe en Windows) — cubre: CA3, CA4, CA5, CA10 — depende: T066
+  - nota: añadida por /review: R3, R9, R10, R11
+- [ ] T069 `restaurar.sh`: si la carga falla después del `DROP DATABASE`, sale con error y un mensaje que dice que la base quedó vacía y cómo repetir la restauración con la misma copia — deploy/restaurar.sh — hecho cuando: `bash -n` pasa y, leído en el código, la carga tiene su `|| error …` con ese mensaje — cubre: CA6
+  - nota: añadida por /review: R8
+- [ ] T070 Corregir en el Constitution Check del plan (P5) el nombre del test: `test_los_archivos_de_entorno_quedan_fuera_del_paquete_y_del_repo` — docs/specs/030-despliegue-servidor-propio/plan.md — hecho cuando: el plan cita un test que existe en `ConfiguracionProduccionTest`
+  - nota: añadida por /review: R19
+- [ ] T071 En el servidor (lo ejecuta el usuario, con aprobación previa anotada): comprobar la propiedad de `storage/logs` dentro de `app`, devolverla a `www-data` si es de root, y comprobar que `www-data` puede escribir en `laravel.log` — (sin archivos; nota en tasks.md) — hecho cuando: `storage/logs/laravel.log` es de `www-data` y una escritura de prueba como `www-data` funciona, anotado — cubre: CA9 — depende: T066
+  - nota: añadida por /review: R3
+
 ## Integración y documentación
 - [x] T050 Verificación final: `php artisan test` (recuento de T001 más los tests nuevos, en verde), `vendor/bin/pint --test` sobre los PHP tocados, `composer audit --locked` y `npm audit` con 0 críticas o altas, semgrep `p/php` sobre `app/` y `bootstrap/` sin hallazgos nuevos, gitleaks sobre `impl_base..HEAD` sin hallazgos, trivy fs sin hallazgos salvo el falso positivo conocido (027/R20), `trivy image --severity HIGH,CRITICAL` sobre las imágenes `app` y `web` finales sin críticas ni altas (o con excepción vigente) y `aidd.py validate` sin errores — (sin archivos; nota en tasks.md) — hecho cuando: todo en verde y anotado — depende: T022, T023, T027, T046
   - nota: 2026-10-04: `php artisan test` → 180 en verde (1384 aserciones; línea base de T001: 152, más 28 nuevos); `pint --test` pasa en los 10 PHP tocados por la spec; `composer audit --locked` sin avisos; `npm audit` → 0; semgrep `p/php` sobre `app`, `bootstrap` y `routes` sin hallazgos (código 0); gitleaks sobre `1a4e7cc..HEAD` sin fugas; trivy fs: solo el falso positivo conocido de `vendor/mockery/mockery/docs/requirements.txt` (027/R20); `trivy image --severity HIGH,CRITICAL` de las imágenes finales: `web` sin avisos y `app` con 114 altas y 3 críticas "affected" y 4 altas "fix_deferred", ninguna con corrección, todas dentro de la excepción vigente EX2 (vence 2026-10-31); `aidd.py validate` sin errores.
@@ -211,7 +237,7 @@ Formato:
   - nota: divisiones (/analyze A1, A34): RD1.a, RD3.c, RS7.a, OB4.b y OB7.a pasan a referirse a producción, y se crean RD1.d, RD3.d, RS7.e, OB4.c y OB7.b (staging), pendientes → objetivo 5; RS13.a pasa a ser el límite del alta y RS13.b (mensaje genérico) queda pendiente → objetivo 2.
   - nota: estados: RD1.a, RD1.b, RD3.a, RD3.b, RD3.c, RD4.a (`deployment.md`), RS4.a, RS4.b, RS4.c, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS13.a (`security.md`), OB4.b y OB7.a (`observability.md`) → "en curso (spec 030)"; ninguna figura como mitigada antes de la release y las de fuera no cambian. `security.md` también recoge la nueva superficie de ataque (túnel, SSH) y el manejo de secretos de producción; `observability.md`, dónde están los logs en producción.
   - nota: el validador marca 7 errores en `docs/roadmap.md` por las correcciones nuevas sin declarar en los objetivos; los resuelve T051.
-- [x] T092 Marcar spec como `implemented`: CA2, CA4, CA5 y CA8 por sus tests y las comprobaciones de T040 y T042; CA3, CA6, CA7, CA9 y CA10 por T041–T045 y T024; CA1 por T040 y T046 (despliegue desde cero sin exponer y verificación desde dentro del servidor; la verificación pública es parte de la liberación, T097)
+- [ ] T092 Marcar spec como `implemented`: CA2, CA4, CA5 y CA8 por sus tests y las comprobaciones de T040 y T042; CA3, CA6, CA7, CA9 y CA10 por T041–T045 y T024; CA1 por T040 y T046 (despliegue desde cero sin exponer y verificación desde dentro del servidor; la verificación pública es parte de la liberación, T097)
   - nota: spec 030 → `implemented` (2026-10-04) con CA1–CA10 marcados: CA2, CA4, CA5 y CA8 por sus tests (`ProxyHttpsTest`, `ErroresProduccionTest`, `RotarCredencialesTest`, `LimiteIntentosTest`, `ConfiguracionProduccionTest`) y por T040 y T042; CA3, CA6, CA7, CA9 y CA10 por T041–T045, T024 y T034; CA1 por T040 y T046 (despliegue desde cero sin exponer y verificación desde dentro del servidor). La verificación por la dirección pública, el login con Google y CA8 con la IP real son parte de la liberación (T097). Suite 180 en verde; `docs/specs/README.md` actualizado.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -228,27 +254,27 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T015, T040, T046 | T027, T030, T031, T032, T034, T037 |
+| CA1 | T015, T040, T046 | T027, T030, T031, T032, T034, T037, T067 |
 | CA2 | T011, T014 | T020, T026 |
-| CA3 | T014, T041 | T024, T027, T028, T031, T038 |
-| CA4 | T013, T040 | T031 |
-| CA5 | T012, T014, T042 | T023, T025, T027 |
-| CA6 | T043 | T029, T030, T037 |
+| CA3 | T014, T041 | T024, T027, T028, T031, T038, T068 |
+| CA4 | T013, T040 | T031, T068 |
+| CA5 | T012, T014, T042 | T023, T025, T027, T068 |
+| CA6 | T043 | T029, T030, T037, T065, T069 |
 | CA7 | T044 | T030 |
-| CA8 | T010, T014, T040 | T021, T022, T026, T027 |
-| CA9 | T045 | T027 |
+| CA8 | T010, T014, T040, T060, T061, T062 | T021, T022, T026, T027, T063, T064 |
+| CA9 | T045, T071 | T027, T066 |
 | CA10 | T014, T015, T033, T042 | T002, T024, T025, T026, T027, T031, T034, T035, T036 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
 | TM1 | T024, T027, T028 | T014, T041 |
 | TM2 | T031 | T013, T040 |
-| TM3 | T021, T022 | T010 |
+| TM3 | T021, T022, T063, T064 | T010, T060, T061, T062 |
 | TM4 | T020, T026, T027 | T011, T014, T040, T097 |
 | TM5 | T023, T040 | T012, T042 |
 | TM6 | T025, T026, T027, T028 | T014, T026, T042, T050 |
 | TM7 | T024, T026, T027, T035 | T014, T033, T042 |
-| TM8 | T029, T030 | T043, T044 |
+| TM8 | T029, T030, T065 | T043, T044 |
 | TM9 | T020, T026 | T011, T014, T031, T097 |
 | TM10 | T020 | T011 |
 | TM11 | T028, T029 | T043 |
@@ -256,9 +282,9 @@ Formato:
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | bootstrap/app.php | T020 |
-| app/Providers/AppServiceProvider.php | T022 |
+| app/Providers/AppServiceProvider.php | T022, T064 |
 | routes/web.php | T022 |
-| app/Http/Controllers/AuthController.php | T021 |
+| app/Http/Controllers/AuthController.php | T021, T063, T064 |
 | app/Console/Commands/RotarCredencialesVolcado.php | T012, T023 |
 | docker/prod/Dockerfile | T026, T035 |
 | docker/nginx/dentissa.prod.conf | T026 |
@@ -267,11 +293,11 @@ Formato:
 | Dockerfile | T024 |
 | .dockerignore, .gitignore | T025 |
 | deploy/preparar-servidor.sh | T028 |
-| deploy/respaldar.sh, deploy/restaurar.sh | T029 |
-| deploy/desplegar.sh, deploy/volver.sh | T030, T037 |
-| deploy/verificar.sh | T031, T038 |
-| deploy/README.md | T032, T037 |
-| tests/Feature/*.php (5 nuevos) | T010, T011, T012, T013, T014, T015 |
+| deploy/respaldar.sh, deploy/restaurar.sh | T029, T069 |
+| deploy/desplegar.sh, deploy/volver.sh | T030, T037, T065, T066, T067 |
+| deploy/verificar.sh | T031, T038, T068 |
+| deploy/README.md | T032, T037, T066, T067 |
+| tests/Feature/*.php (5 nuevos) | T010, T011, T012, T013, T014, T015, T060, T061, T062 |
 | docs/adr/0005-produccion-servidor-propio-cloudflare-tunnel.md | T090 (creado y aceptado en `/plan`) |
 | docs/deployment.md, docs/security.md, docs/observability.md | T003 (dominio), T036 (EX2, RS18), T091 |
 | docs/roadmap.md | T051 |
