@@ -30,7 +30,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   detectado en `/plan 014`): spec propia de actualización antes de cualquier release (decisión
   del usuario, 2026-09-28). Se atiende en la spec [024](specs/024-dependencias-seguras/spec.md),
   sin objetivo propio (decisión del usuario, 2026-09-29). Hecho: liberada en v0.1.0 (2026-10-02);
-  RS16 mitigado.
+  RS16 mitigado. Avisos posteriores (EX1, que vence el 2026-10-31, y RS17): spec
+  [029](specs/029-dependencias-al-dia/spec.md), sin objetivo propio.
 - 024/R8: la evidencia de T022 no registra que `integrity` y `resolved` coincidan con el registro
   (comprobado en `/review`: coinciden las 48). En próximas specs de dependencias, compararlos con
   `npm view <p>@<v> dist.integrity dist.tarball` (/review 024, aceptado sin tarea).

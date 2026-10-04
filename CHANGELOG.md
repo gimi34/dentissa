@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-03
+
+### Security
+- Se actualizan las bibliotecas del servidor que tenían avisos de seguridad conocidos (el
+  framework, la gestión de archivos y la biblioteca criptográfica que usa el acceso con Google),
+  sin cambios en lo que hace la aplicación. La verificación de dependencias ya no reporta ningún
+  aviso de ninguna severidad (spec 029).
+
 ## [0.4.0] - 2026-10-03
 
 ### Added

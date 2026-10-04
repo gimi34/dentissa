@@ -6,9 +6,13 @@ use Tests\TestCase;
 
 /**
  * Versiones mínimas corregidas de las dependencias con avisos de `composer audit`
- * y `npm audit` del 2026-09-29 (spec 024, TM4). Impiden que vuelva un lockfile
- * vulnerable. Casi todas corrigen avisos críticos o altos; `follow-redirects` se
- * incluye a propósito aunque su aviso era moderado (tabla del plan).
+ * y `npm audit`. Impiden que vuelva un lockfile vulnerable.
+ *
+ * - Spec 024 (avisos del 2026-09-29, TM4): corrigen avisos críticos o altos, salvo
+ *   `follow-redirects`, que se incluye a propósito aunque su aviso era moderado.
+ * - Spec 029 (avisos del 2026-10-03): `laravel/framework` y `league/flysystem`
+ *   corrigen avisos bajos y `phpseclib/phpseclib` uno medio (su CA1 exige cero
+ *   avisos de cualquier severidad).
  *
  * No abren sesión ni tocan la base de datos: leen `composer.lock` y
  * `package-lock.json`, no lo instalado en `vendor` o `node_modules`.
@@ -21,6 +25,10 @@ class DependenciasSegurasTest extends TestCase
     private const MINIMAS_SERVIDOR = [
         'guzzlehttp/guzzle' => [7 => '7.15.2'],
         'league/commonmark' => [2 => '2.10.0'],
+        // Spec 029: CVE-2026-102279 (baja), CVE-2026-102601 (baja) y CVE-2026-84308 (media).
+        'laravel/framework' => [12 => '12.69.0'],
+        'league/flysystem' => [3 => '3.35.3'],
+        'phpseclib/phpseclib' => [3 => '3.0.57'],
     ];
 
     /**

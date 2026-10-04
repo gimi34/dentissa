@@ -94,7 +94,7 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 ## Excepciones aceptadas
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
-| EX1 | `laravel/framework` 12.62.0 (CVE-2026-102279, XSS en la página de depuración; corregido en 12.69.0) y `league/flysystem` 3.35.1 (CVE-2026-102601, normalización de rutas; corregido en 3.35.3) | Baja | Publicados el 2026-09-29, después del plan de la spec 024. Actualizar Laravel arrastra 42 paquetes, y la 12.69.3 aún no cumple los 7 días (spec 024, D10). No pertenece a RS16 (severidad baja, fuera de P6). Al vencer, el usuario decide si se actualizan en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan` o `/release` posterior al vencimiento | el usuario, 2026-09-29 | 2026-10-31 |
+| EX1 | `laravel/framework` 12.62.0 (CVE-2026-102279, XSS en la página de depuración; corregido en 12.69.0) y `league/flysystem` 3.35.1 (CVE-2026-102601, normalización de rutas; corregido en 3.35.3) | Baja | Publicados el 2026-09-29, después del plan de la spec 024. Actualizar Laravel arrastra 42 paquetes, y la 12.69.3 aún no cumple los 7 días (spec 024, D10). No pertenece a RS16 (severidad baja, fuera de P6). Al vencer, el usuario decide si se actualizan en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan` o `/release` posterior al vencimiento | el usuario, 2026-09-29 | 2026-10-31 (sus dos avisos quedan corregidos en la spec 029: `laravel/framework` v12.69.2 y `league/flysystem` 3.36.0; la excepción se retira al liberarla) |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -274,7 +274,7 @@ P6, que solo bloquea críticas y altas, y el comando SCA del CI ignora las media
 introduce (no cambia `composer.lock`).
 
 Correcciones:
-- RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: pendiente → spec de actualización de dependencias, antes del vencimiento de EX1 (2026-10-31), respetando los 7 días de antigüedad de la versión (decisión del usuario, 2026-10-03)
+- RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: en curso (spec 029)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en
