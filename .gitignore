@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+# Spec 030: archivos de entorno de producción (app.env, db.env, tunnel.env).
+*.env
 .phpactor.json
 .phpunit.result.cache
 /.fleet
