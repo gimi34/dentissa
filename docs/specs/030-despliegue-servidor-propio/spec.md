@@ -40,7 +40,7 @@ aplicación quedará abierta a todo internet.
 - [ ] CA5 (abuso) · Dado el entorno de producción, cuando alguien prueba las contraseñas de las cuentas del volcado que figuran en el repositorio o en su documentación, entonces ninguna funciona. Además, las credenciales de producción (base de datos, clave de la aplicación y acceso con Google) no están en el repositorio ni en el paquete de la aplicación, y la base de datos no se usa con su cuenta de máximo privilegio.
 - [ ] CA6 · Dado un despliegue, cuando empieza, entonces antes de cualquier cambio queda una copia de seguridad fechada de la base de datos fuera de la aplicación; y restaurar esa copia deja la base exactamente como estaba, algo que se ha ensayado al menos una vez.
 - [ ] CA7 · Dado un despliegue que falla en la verificación posterior, cuando el responsable sigue el procedimiento documentado de vuelta atrás, entonces la versión anterior vuelve a funcionar y pasa la misma verificación en 15 minutos o menos. Se ha ensayado al menos una vez antes de dar la spec por terminada.
-- [ ] CA8 (abuso) · Dado un atacante, cuando hace más de 5 intentos fallidos en 1 minuto (de inicio de sesión con el mismo correo desde la misma dirección, de alta de cuenta desde la misma dirección, o de vuelta del acceso con Google desde la misma dirección), entonces los siguientes se rechazan temporalmente con un mensaje que dice cuánto esperar, sin revelar si la cuenta existe. Una persona legítima vuelve a poder entrar al terminar la espera.
+- [ ] CA8 (abuso) · Dado un atacante, cuando en 1 minuto supera 5 intentos (fallidos de inicio de sesión con el mismo correo desde la misma dirección, o de cualquier tipo de alta de cuenta o de vuelta del acceso con Google desde la misma dirección), entonces los siguientes se rechazan temporalmente con un mensaje que dice cuánto esperar, sin revelar si la cuenta existe. Una persona legítima vuelve a poder entrar al terminar la espera.
 - [ ] CA9 · Dado un reinicio del servidor o de los servicios de la aplicación, cuando termina, entonces la aplicación vuelve a estar disponible por sí sola en 5 minutos o menos, y los registros del servidor web y de la aplicación anteriores al reinicio se conservan.
 - [ ] CA10 · Dada una versión liberada, cuando se construye y despliega en el servidor, entonces usa las mismas versiones fijas de todos sus componentes que en local, y la configuración del lenguaje del servidor (límites de subida y zona horaria) se aplica de verdad; el paquete de la aplicación no incluye secretos, el repositorio de git, dependencias de desarrollo ni el volcado de datos.
 
@@ -64,7 +64,7 @@ aplicación quedará abierta a todo internet.
   - Como atacante en internet o en la red local, intento conectarme a la base de datos, a su herramienta de administración o a otro servicio del servidor → no hay ninguna vía abierta (CA3).
   - Como atacante, provoco errores para ver detalles internos → solo veo un mensaje genérico (CA4).
   - Como atacante, pruebo las contraseñas del volcado publicadas en el repositorio → ninguna funciona (CA5).
-  - Como atacante, pruebo contraseñas sin límite, creo cuentas en masa o abuso del acceso con Google → se rechaza temporalmente tras 5 intentos fallidos por minuto (CA8).
+  - Como atacante, pruebo contraseñas sin límite, creo cuentas en masa o abuso del acceso con Google → se rechaza temporalmente tras 5 intentos por minuto: los fallidos en el inicio de sesión y todos en el alta y en Google (CA8).
 
 ## Cobertura de riesgos
 | Corrección | Alcance | Criterios / motivo y destino |
@@ -125,7 +125,8 @@ intentos se registrarán como login fallido; esta spec no lo crea.
 | 2026-10-03 | implícita | Modo de depuración y nivel de registros fuera de local | Depuración apagada y nivel `info` | `docs/constitution.md` P8 |
 | 2026-10-03 | implícita | ¿Los datos de producción son reales? | No, ficticios (proyecto académico) | `docs/deployment.md` (Entornos) |
 | 2026-10-03 | implícita | El registro de auditoría de los logins fallidos | Depende de la spec 020 | `docs/observability.md` (Registro de auditoría) |
-| 2026-10-03 | supuesto | Umbral del límite de intentos | Más de 5 intentos fallidos en 1 minuto, por correo y dirección (inicio de sesión) o por dirección (alta y Google) | /specify |
+| 2026-10-03 | supuesto | Umbral del límite de intentos | Más de 5 intentos en 1 minuto, por correo y dirección (inicio de sesión) o por dirección (alta y Google) | /specify |
+| 2026-10-03 | brecha | ¿Qué intentos cuentan en el alta y en la vuelta de Google? Contar solo los fallidos no frena las altas masivas que salen bien (RS4.b) | En el inicio de sesión, los fallidos; en el alta y en Google, todos | usuario (/plan 030) |
 | 2026-10-03 | supuesto | ¿Desde dónde se administra el servidor? | Solo desde la red local, por acceso remoto con clave y sin contraseña | /specify |
 | 2026-10-03 | supuesto | Tiempos de despliegue, vuelta atrás y reinicio | 15, 15 y 5 minutos | /specify (ventana de 15 minutos de `docs/deployment.md`) |
 
@@ -147,3 +148,5 @@ intentos se registrarán como login fallido; esta spec no lo crea.
 |---|---|---|
 | 2026-10-03 | Creación | /specify: despliegue en un servidor propio con Cloudflare Tunnel (objetivo 5) |
 | 2026-10-03 | Aprobada | Decisión del usuario |
+| 2026-10-03 | CA8: en el alta y en Google cuentan todos los intentos, no solo los fallidos. Vuelve a `draft` | /plan 030, decisión del usuario |
+| 2026-10-03 | Aprobada de nuevo | Decisión del usuario |
