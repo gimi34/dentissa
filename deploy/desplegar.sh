@@ -39,9 +39,16 @@ esperar_db() {
 # ¿Tiene datos la base? No basta con que exista el volumen: `run --rm` de app
 # (p. ej. al generar APP_KEY) lo crea vacío. Se mira su contenido con la imagen
 # y el volumen del propio servicio db, sin arrancar la base.
+#
+# Si el volumen existe pero no se puede mirar (falta db.env, Docker falla…), se
+# detiene: nunca se despliega sin copia por no haber podido comprobarlo
+# (/review R2).
 base_con_datos() {
     docker volume inspect "${proyecto}_db_data" > /dev/null 2>&1 || return 1
-    [[ -n "$("${compose[@]}" run --rm --no-deps -T --entrypoint ls db -A /var/lib/mysql 2>/dev/null)" ]]
+    local contenido
+    contenido="$("${compose[@]}" run --rm --no-deps -T --entrypoint ls db -A /var/lib/mysql)" \
+        || error "no se pudo comprobar si la base tiene datos (docker compose run db); no se despliega"
+    [[ -n "${contenido}" ]]
 }
 
 main() {
