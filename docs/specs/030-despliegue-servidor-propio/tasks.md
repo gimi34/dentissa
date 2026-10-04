@@ -231,8 +231,9 @@ Formato:
 - [x] T069 `restaurar.sh`: si la carga falla después del `DROP DATABASE`, sale con error y un mensaje que dice que la base quedó vacía y cómo repetir la restauración con la misma copia — deploy/restaurar.sh — hecho cuando: `bash -n` pasa y, leído en el código, la carga tiene su `|| error …` con ese mensaje — cubre: CA6
   - nota: añadida por /review: R8
   - nota: R8 — `bash -n` pasa. Leído en el código: la carga de la copia tiene su `|| error …`, así que si falla después del `DROP DATABASE` el script sale con 1 y dice que la base quedó vacía o a medias, que la copia sigue intacta y cómo repetir la restauración con la misma copia antes de levantar `app` y `web`.
-- [ ] T070 Corregir en el Constitution Check del plan (P5) el nombre del test: `test_los_archivos_de_entorno_quedan_fuera_del_paquete_y_del_repo` — docs/specs/030-despliegue-servidor-propio/plan.md — hecho cuando: el plan cita un test que existe en `ConfiguracionProduccionTest`
+- [x] T070 Corregir en el Constitution Check del plan (P5) el nombre del test: `test_los_archivos_de_entorno_quedan_fuera_del_paquete_y_del_repo` — docs/specs/030-despliegue-servidor-propio/plan.md — hecho cuando: el plan cita un test que existe en `ConfiguracionProduccionTest`
   - nota: añadida por /review: R19
+  - nota: R19 — el Constitution Check del plan (P5) cita ahora `ConfiguracionProduccionTest::test_los_archivos_de_entorno_quedan_fuera_del_paquete_y_del_repo`, que existe; no hay más referencias al nombre antiguo.
 - [ ] T071 En el servidor (lo ejecuta el usuario, con aprobación previa anotada): comprobar la propiedad de `storage/logs` dentro de `app`, devolverla a `www-data` si es de root, y comprobar que `www-data` puede escribir en `laravel.log` — (sin archivos; nota en tasks.md) — hecho cuando: `storage/logs/laravel.log` es de `www-data` y una escritura de prueba como `www-data` funciona, anotado — cubre: CA9 — depende: T066
   - nota: añadida por /review: R3
 
