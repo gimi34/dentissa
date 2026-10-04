@@ -1,7 +1,8 @@
 ---
 id: 029
 slug: dependencias-al-dia
-status: implemented
+status: released
+released: v0.4.1 (2026-10-03)
 created: 2026-10-03
 extends: []
 ---
@@ -103,3 +104,4 @@ cambia de comportamiento; CA5 solo comprueba que no hay regresión.
 | 2026-10-03 | Implementada: CA1–CA7 comprobados (CA7 en T040; su última frase, en la release, T098) | /implement T092 |
 | 2026-10-03 | Vuelve a approved: /review ronda 1 pide corregir R1 (docblock del test; tarea T024) | /review |
 | 2026-10-03 | Implementada de nuevo con la corrección de /review r1 (T024) | /implement T092 |
+| 2026-10-03 | Liberada en v0.4.1 (PR #15, merge commit `5b4fab9`, tag `v0.4.1`), sin despliegue | /release |
