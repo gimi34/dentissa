@@ -1,17 +1,12 @@
 <!doctype html>
-<!--
-  Sistema de diseño de Dentissa, EXTRAÍDO del código el 2026-10-02 (upgrade a AI-DD 1.11.0,
-  source: extracted). Muestra la app tal como está, sin mejoras: los pares en rojo son deuda de
-  diseño (DS1, DS2 en docs/design/system.md), no se corrigen aquí. Autocontenido: sin fuentes,
-  scripts ni imágenes externas. La app carga Roboto desde Google Fonts; aquí se usa Roboto si está
-  instalada en el equipo y, si no, la fuente del sistema.
--->
+<!-- Sistema de diseño de Dentissa, extraído del código y de capturas reales (AI-DD 1.11.2,
+     2026-10-04). Generado a partir de option.html: nada está dibujado a mano; las pantallas y los
+     componentes son capturas de la app con datos de prueba. Fuente: docs/design/system.md. -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dentissa — sistema de diseño extraído</title>
-
+<title>Dentissa — Sistema de diseño (extraído)</title>
 <style id="viewer">
   /* Marco del visor: neutro y discreto, para que destaque la opción y no el visor. */
   :root {
@@ -72,196 +67,114 @@
   .v-viewport { border: 1px solid var(--ui-line); border-radius: 12px; overflow: hidden; background: var(--ui-panel); }
   .v-scaler { transform-origin: 0 0; }
   .v-scaler > .opt { min-height: var(--frame-h, 720px); }
+  /* Cada marco es un contenedor: las reglas responsivas de la opción usan @container, no @media,
+     para que el marco de 390 px se vea como la app a 390 px aunque la ventana sea ancha. */
+  .v-scaler > .opt, .v-stage > .opt { container-type: inline-size; }
   .v-motion { margin: 0; padding-left: 20px; max-width: 75ch; }
   .v-motion li { margin-bottom: 10px; }
   .v-foot { padding: 28px 0 48px; color: var(--ui-muted); font-size: 13px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 
+<style id="viewer-extracted">
+  /* Galería de capturas reales (sistema extraído): sin escalar, a su tamaño o al ancho disponible. */
+  .v-brand { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .v-brand-logo { background: #C75078; border-radius: 12px; padding: 12px 18px; }
+  .v-brand-logo img { display: block; height: 72px; width: auto; }
+  .v-shots { display: grid; gap: 28px; }
+  .v-shot-group > h3 { margin: 8px 0 12px; font-size: 16px; }
+  .v-shot-row { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr); align-items: start;
+                padding: 16px 0; border-top: 1px solid var(--ui-line); }
+  .v-shot { margin: 0; min-width: 0; }
+  .v-shot figcaption { margin: 0 0 6px; color: var(--ui-muted); font-size: 13px; }
+  .v-shot .v-box { border: 1px solid var(--ui-line); border-radius: 10px; overflow: auto; max-height: 720px; background: var(--ui-panel); }
+  .v-shot img { display: block; max-width: 100%; height: auto; }
+  .v-shot-title { grid-column: 1 / -1; margin: 0; font-weight: 600; }
+  .v-gap { padding: 16px; border: 1px dashed var(--ui-line); border-radius: 10px; color: var(--ui-muted); }
+  .v-crops { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .v-crop { margin: 0; }
+  .v-crop img { display: block; max-width: 100%; height: auto; border: 1px solid var(--ui-line); border-radius: 8px; background: #FDF5F8; }
+  .v-crop figcaption { margin-top: 6px; font-size: 13px; color: var(--ui-muted); }
+  .v-debt { margin: 0; padding-left: 20px; max-width: 90ch; }
+  .v-debt li { margin-bottom: 6px; }
+  @media (max-width: 760px) { .v-shot-row { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<style id="fonts">
+  /* Roboto no está en el repositorio: la app la carga de Google Fonts (DS9). Esta página usa la
+     fuente del sistema; las capturas muestran la tipografía real. */
+</style>
+
 <style id="tokens">
-  /* Valores reales de public/css/app.css (:root) con el nombre semántico de system.md → "Rol". */
+  /* Valores reales de public/css/app.css:3-49 con su nombre semántico de AI-DD. */
   .opt {
     --color-bg: #FDF5F8;            /* --bg / --p50 */
     --color-surface: #FFFFFF;       /* --white */
     --color-text: #000000;          /* --text */
     --color-text-muted: #000000;    /* --text-muted (igual que --text, DS3) */
-    --color-text-light: #9B8290;    /* --text-light */
+    --color-text-light: #9B8290;    /* --text-light: etiquetas y th */
     --color-primary: #D4537E;       /* --p400 */
     --color-on-primary: #FFFFFF;
     --color-link: #B83C65;          /* --p500 */
     --color-accent-text: #993556;   /* --p600 */
-    --color-accent-bg: #FBEAF0;     /* --p100 */
     --color-border: #F0DCE4;        /* --border */
-    --color-focus: #993556;         /* --focus-ring = --p600 (spec 027) */
-    --color-focus-legacy: #ED93B1;  /* --p300: foco actual de los campos (DS2) */
-    --color-border-control: #D4537E; /* --border-control = --p400 (spec 027) */
-    --color-border-active: #F4C0D1; /* --p200: borde de fila activa y de .btn-outline */
+    --color-border-control: #D4537E;/* --border-control (solo el horario) */
+    --color-focus: #993556;         /* --focus-ring */
+    --color-focus-legacy: #ED93B1;  /* --p300, foco del código previo */
     --color-danger: #A32D2D;        /* --red */
-    --color-danger-bg: #FCEBEB;     /* --red-bg */
+    --color-danger-bg: #FCEBEB;
     --color-success: #1D9E75;       /* --green */
-    --color-success-bg: #E1F5EE;    /* --green-bg */
+    --color-success-bg: #E1F5EE;
     --color-warning: #854F0B;       /* --amber */
-    --color-warning-bg: #FAEEDA;    /* --amber-bg */
+    --color-warning-bg: #FAEEDA;
     --color-info: #185FA5;          /* --blue */
-    --color-info-bg: #E6F1FB;       /* --blue-bg */
-    --color-sidebar: #c75078;       /* literal de .sidebar, no es token (DS4) */
-    --color-on-sidebar: #f9eef2;    /* blanco al 90 % sobre el sidebar (texto del menú) */
-    --color-on-sidebar-muted: #ebc2d0; /* blanco al 65 % sobre el sidebar (.nav-label) */
+    --color-info-bg: #E6F1FB;
+    --color-sidebar: #C75078;       /* literal en app.css:63 (DS4) */
+    --color-on-sidebar: #F9EEF2;  /* blanco al 90 % sobre la barra lateral */
+    --color-nav-label: #EBC2D0;    /* blanco al 65 % (.nav-label) */
 
-    --font-sans: "Roboto", system-ui, sans-serif;
+    --font-sans: Roboto, system-ui, sans-serif;
     --font-mono: ui-monospace, monospace;
-    --text-h1: 19px; --text-h2: 15px; --text-body: 13.5px; --text-small: 11.5px;
+    --text-h1: 19px; --text-h2: 15px; --text-body: 13.5px; --text-small: 11px;
     --weight-regular: 400; --weight-strong: 500;
 
-    /* Escala de espaciado (spec 027, system.md 1.1.0). */
     --space-1: 4px; --space-2: 6px; --space-3: 8px; --space-4: 10px;
     --space-5: 14px; --space-6: 16px; --space-7: 20px; --space-8: 28px;
-    --space-gutter: 28px;           /* .content y barra superior */
+    --space-gutter: 28px;
     --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
     --border-width: 1px;
-    --focus-ring-width: 2px; --focus-ring-offset: 2px;
-    --field-time-width: 110px;      /* campo de hora del horario */
-    --shadow-1: none;               /* la app no usa sombras */
-    --touch-min: 32px;              /* alto real de .btn; no hay objetivo de toque (DS6) */
+    --shadow-1: none;
+    --touch-min: 31px;              /* NO es token: altura medida del botón (DS6) */
 
     --duration-fast: 150ms; --duration-base: 150ms;
     --ease-out: ease;
   }
   .opt[data-motion="reduced"] { --duration-fast: 0ms; --duration-base: 0ms; }
   @media (prefers-reduced-motion: reduce) { .opt { --duration-fast: 0ms; --duration-base: 0ms; } }
-</style>
-
-<style id="components">
-  /* Componentes de la plantilla con los valores reales de Dentissa (sin mejoras). */
   .opt { background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);
          font-size: var(--text-body); line-height: 1.5; }
-  .opt :focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
-  .opt .t-h1 { font-size: var(--text-h1); line-height: 1.2; font-weight: var(--weight-strong); margin: 0; }
-  .opt .t-h2 { font-size: var(--text-h2); line-height: 1.3; font-weight: var(--weight-strong); margin: 0; }
+  .opt .t-h1 { font-size: var(--text-h1); font-weight: var(--weight-strong); margin: 0; }
+  .opt .t-h2 { font-size: var(--text-h2); font-weight: var(--weight-strong); margin: 0; }
   .opt .t-body { font-size: var(--text-body); margin: 0; }
-  .opt .t-small { font-size: var(--text-small); color: var(--color-text-muted); margin: 0; }
+  .opt .t-small { font-size: var(--text-small); color: var(--color-text-light); margin: 0; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
   .opt .t-mono { font-family: var(--font-mono); }
-
-  .opt .c-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-                min-height: var(--touch-min); min-width: var(--touch-min); padding: 0 var(--space-5);
-                border-radius: var(--radius-md); border: var(--border-width) solid transparent;
-                font: inherit; font-weight: var(--weight-strong); cursor: pointer;
-                transition: background-color var(--duration-fast) var(--ease-out); }
-  .opt .c-btn--primary { background: var(--color-primary); color: var(--color-on-primary); }
-  .opt .c-btn--secondary { background: transparent; color: var(--color-text); border-color: var(--color-border); }
-  .opt .c-btn--danger { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
-  .opt .c-btn:hover, .opt .c-btn.is-hover { filter: brightness(0.94); }
-  .opt .c-btn.is-focus { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
-  .opt .c-btn:disabled { opacity: .5; cursor: not-allowed; }
-  .opt .c-btn[aria-busy="true"]::before { content: ""; width: 1em; height: 1em; border-radius: 50%;
-                border: 2px solid currentColor; border-right-color: transparent;
-                animation: opt-spin calc(var(--duration-base) * 4) linear infinite; }
-  .opt[data-motion="reduced"] .c-btn[aria-busy="true"]::before { animation: none; border-right-color: currentColor; opacity: .5; }
-  @keyframes opt-spin { to { transform: rotate(360deg); } }
-
-  .opt .c-field { display: grid; gap: var(--space-1); }
-  .opt .c-field label { font-weight: var(--weight-strong); }
-  .opt .c-field input { font: inherit; color: var(--color-text); background: var(--color-surface);
-                min-height: var(--touch-min); padding: 0 var(--space-3); border-radius: var(--radius-sm);
-                border: var(--border-width) solid var(--color-border); }
-  .opt .c-field .c-help { font-size: var(--text-small); color: var(--color-text-muted); margin: 0; }
-  .opt .c-field.is-error input { border-color: var(--color-danger); border-width: calc(var(--border-width) * 2); }
-  .opt .c-field.is-error .c-help { color: var(--color-danger); }
-
-  .opt .c-list { list-style: none; margin: 0; padding: 0; }
-  .opt .c-list > li { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min);
-                padding: var(--space-3) 0; border-bottom: var(--border-width) solid var(--color-border); }
-  .opt .c-card { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5);
-                border: var(--border-width) solid var(--color-border); }
-
-  /* Día del horario y lista de citas (spec 027): mismos nombres que en app.css. */
-  .opt .horario-dia { display: flex; align-items: center; gap: var(--space-5);
-                padding: var(--space-4) var(--space-5); border-radius: var(--radius-sm);
-                background: transparent; border: var(--border-width) solid var(--color-border); }
-  .opt .horario-dia--activo { background: var(--color-bg); border-color: var(--color-border-active); }
-  .opt .horario-dia__dia { display: flex; align-items: center; gap: var(--space-3); min-width: var(--field-time-width); cursor: pointer; }
-  .opt .horario-dia__dia input { accent-color: var(--color-primary); width: var(--space-6); height: var(--space-6); }
-  .opt .horario-dia__nombre { font-size: var(--text-body); font-weight: var(--weight-regular); color: var(--color-text-muted); }
-  .opt .horario-dia--activo .horario-dia__nombre { font-weight: var(--weight-strong); color: var(--color-text); }
-  .opt .horario-dia__horas { display: flex; align-items: center; gap: var(--space-3); flex: 1; }
-  .opt .horario-dia__nota { font-size: var(--text-small); color: var(--color-text-muted); }
-  .opt .horario-dia .field { width: var(--field-time-width); padding: var(--space-2) var(--space-4);
-                font: inherit; font-size: var(--text-body); border-radius: var(--radius-sm);
-                background: var(--color-surface); border: var(--border-width) solid var(--color-border-control); }
-  .opt .field-hint { font-size: var(--text-small); margin: var(--space-1) 0 0; }
-  .opt .field-hint-error { color: var(--color-danger); }
-  .opt .lista-citas { list-style: none; margin: 0; padding: 0; }
-  .opt .lista-citas > li { display: flex; align-items: center; gap: var(--space-5);
-                padding: var(--space-5) var(--space-6); color: var(--color-text);
-                border-bottom: var(--border-width) solid var(--color-border); }
-  .opt .lista-citas .c-btn { margin-left: auto; color: var(--color-accent-text); border-color: var(--color-border-active); }
-
-  .opt .c-alert { display: grid; gap: var(--space-1); padding: var(--space-4); border-radius: var(--radius-md);
-                border: var(--border-width) solid currentColor; }
-  .opt .c-alert--error { color: var(--color-danger); }
-  .opt .c-alert--success { color: var(--color-success); }
-  .opt .c-alert--warning { color: var(--color-text); background: var(--color-warning-bg); border-color: var(--color-warning); }
-  .opt .c-alert p { margin: 0; color: var(--color-text); }
-  .opt .c-dialog { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5);
-                box-shadow: var(--shadow-1); display: grid; gap: var(--space-4); max-width: 360px; }
-
-  .opt .c-state { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-5) 0; }
-
-  .opt .c-screen { display: grid; gap: var(--space-5); padding: var(--space-5) var(--space-gutter); }
-  .opt .c-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-                padding: var(--space-3) var(--space-gutter); border-bottom: var(--border-width) solid var(--color-border); }
-
-  /* Ajustes al aspecto real de Dentissa: solo tokens. */
-  .opt .c-btn { min-height: var(--touch-min); min-width: 0; padding: 0 var(--space-6);
-                border-radius: var(--radius-sm); font-size: 13px; }
-  .opt .c-btn--secondary { color: var(--color-accent-text); background: var(--color-surface); border-color: var(--color-focus); }
-  .opt .c-btn--danger { background: var(--color-danger); color: var(--color-on-primary); }
-  .opt .c-field label { font-size: 11px; font-weight: var(--weight-strong); color: var(--color-text-light);
-                        text-transform: uppercase; letter-spacing: .04em; }
-  .opt .c-field input { font-size: var(--text-body); min-height: 36px; }
-  .opt .c-field .c-help { color: var(--color-text-light); }
-  .opt .c-card { border-radius: var(--radius-md); padding: 22px; }
-  .opt .c-alert--error { background: var(--color-danger-bg); }
-  .opt .c-alert--success { background: var(--color-success-bg); }
-  .opt .c-badge { display: inline-block; padding: 2px var(--space-4); border-radius: 20px; font-size: 11px;
-                  font-weight: var(--weight-strong); }
-  .opt .c-badge--agendada { background: var(--color-accent-bg); color: var(--color-accent-text); }
-  .opt .c-badge--confirmada { background: var(--color-info-bg); color: var(--color-info); }
-  .opt .c-badge--en_curso { background: var(--color-warning-bg); color: var(--color-warning); }
-  .opt .c-badge--completada { background: var(--color-success-bg); color: var(--color-success); }
-  .opt .c-badge--cancelada { background: var(--color-danger-bg); color: var(--color-danger); }
-  .opt .c-app { display: grid; grid-template-columns: 242px 1fr; min-height: inherit; }
-  .opt .c-sidebar { background: var(--color-sidebar); color: var(--color-on-sidebar); padding: var(--space-7) var(--space-5);
-                    display: grid; align-content: start; gap: var(--space-3); font-size: var(--text-body); }
-  .opt .c-sidebar .c-navlabel { color: var(--color-on-sidebar-muted); font-size: 10px; text-transform: uppercase;
-                                letter-spacing: .08em; margin: var(--space-5) 0 0; }
-  .opt .c-sidebar .c-navitem { padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); }
-  .opt .c-sidebar .c-navitem.is-active { background: var(--color-accent-bg); color: var(--color-accent-text); }
-  .opt .c-topbar { height: 60px; display: flex; align-items: center; justify-content: space-between;
-                   padding: 0 var(--space-gutter); background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); }
-  .opt .c-content { padding: var(--space-gutter); display: grid; gap: var(--space-7); align-content: start; }
-  .opt .c-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-6); }
-  .opt .c-stat { font-size: 28px; font-weight: 600; line-height: 1; }
-  .opt .c-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .opt .c-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
-                     color: var(--color-text-light); font-weight: var(--weight-strong); padding: var(--space-4) var(--space-6); }
-  .opt .c-table td { padding: var(--space-5) var(--space-6); border-top: var(--border-width) solid var(--color-border); }
-  .opt .c-auth { display: grid; grid-template-columns: 1fr 1fr; min-height: inherit; }
-  .opt .c-auth-hero { background: var(--color-primary); color: var(--color-on-primary); padding: 48px; display: grid; align-content: center; gap: var(--space-5); }
-  .opt .c-auth-form { padding: 48px; display: grid; align-content: center; gap: var(--space-6); background: var(--color-surface); }
-  .opt .c-auth-form .c-btn { min-height: 43px; width: 100%; font-size: 15px; }
-  .opt .c-link { color: var(--color-link); }
-  @media (max-width: 760px) { .opt .c-auth { grid-template-columns: 1fr; } .opt .c-auth-hero { display: none; } }
 </style>
 </head>
 
 <body>
 <header class="v-head">
   <div class="v-wrap">
-    <p class="v-project">Dentissa — sistema de diseño extraído del código (status: draft)</p>
-    <h1>La app tal como está hoy</h1>
-    <p class="v-why">Paleta rosa de marca sobre fondo rosa muy claro, tarjetas blancas y barra lateral rosa intensa; interfaz densa (13–13,5 px) pensada para escritorio. Objetivo: WCAG 2.1 AA.</p>
-    <p class="v-risk">Lo que sale en rojo es deuda de diseño (DS1–DS11 en docs/design/system.md): se documenta, no se corrige aquí.</p>
+    <div class="v-brand">
+      <div class="v-brand-logo"><img src="data:image/png;base64,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" alt="Melissa López N. · Odontología integral"></div>
+      <div>
+        <p class="v-project">Dentissa — sistema de diseño extraído del código · versión 1.2.0 (borrador)</p>
+        <h1>Lo que la app muestra hoy</h1>
+      </div>
+    </div>
+    <p class="v-why">Paleta rosa sobre fondo rosa muy claro, tarjetas blancas con borde suave y una barra lateral
+      rosa intensa con el menú de cada rol. Densa (13–13.5 px) y pensada para escritorio.</p>
+    <p class="v-risk">Sin mejoras: lo que no cumple WCAG 2.1 AA está en rojo y en "Deuda de diseño" (DS1–DS15).
+      Capturas del 2026-10-04 con datos de prueba anonimizados.</p>
     <div class="v-controls">
       <button type="button" class="v-toggle" id="toggle-scheme" aria-pressed="false">Modo oscuro</button>
       <button type="button" class="v-toggle" id="toggle-motion" aria-pressed="false">Sin movimiento</button>
@@ -278,6 +191,7 @@
       <li><a href="#componentes">Componentes</a></li>
       <li><a href="#pantallas">Pantallas</a></li>
       <li><a href="#movimiento">Movimiento</a></li>
+      <li><a href="#deuda">Deuda</a></li>
     </ul>
   </div>
 </nav>
@@ -285,301 +199,119 @@
 <main class="v-wrap">
   <section class="v-section" id="color">
     <h2>Color</h2>
-    <p class="v-note">Cada par muestra su contraste calculado. Mínimo: 4.5:1 en texto y 3:1 en bordes de
-      control y anillo de foco. Los pares en rojo no cumplen: son deuda (DS1, DS2).</p>
+    <p class="v-note">Tokens reales de <code>public/css/app.css</code>. Cada par muestra su contraste calculado:
+      mínimo 4.5:1 en texto y 3:1 en bordes de control y foco. Los pares en rojo son deuda (DS1, DS2).</p>
     <div class="v-swatches" id="swatches"></div>
     <ul class="v-pairs" id="pairs">
       <li class="v-pair" data-fg="--color-text" data-bg="--color-bg" data-min="4.5">Texto sobre fondo</li>
-      <li class="v-pair" data-fg="--color-text" data-bg="--color-surface" data-min="4.5">Texto sobre tarjeta</li>
-      <li class="v-pair" data-fg="--color-text-light" data-bg="--color-surface" data-min="4.5">Etiquetas, ayudas y th (--text-light)</li>
-      <li class="v-pair" data-fg="--color-text-light" data-bg="--color-bg" data-min="4.5">--text-light sobre fondo</li>
-      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-primary" data-min="4.5">Texto del botón principal</li>
-      <li class="v-pair" data-fg="--color-link" data-bg="--color-surface" data-min="4.5">Enlaces y acento (--p500)</li>
-      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-accent-bg" data-min="4.5">Menú activo y badge rosa</li>
-      <li class="v-pair" data-fg="--color-on-sidebar" data-bg="--color-sidebar" data-min="4.5">Texto del menú (blanco 90 %)</li>
-      <li class="v-pair" data-fg="--color-on-sidebar-muted" data-bg="--color-sidebar" data-min="4.5">Etiquetas del menú (blanco 65 %)</li>
-      <li class="v-pair" data-fg="--color-danger" data-bg="--color-danger-bg" data-min="4.5">Error y badge rojo</li>
-      <li class="v-pair" data-fg="--color-success" data-bg="--color-success-bg" data-min="4.5">Éxito y badge verde</li>
-      <li class="v-pair" data-fg="--color-warning" data-bg="--color-warning-bg" data-min="4.5">Aviso y badge ámbar</li>
-      <li class="v-pair" data-fg="--color-info" data-bg="--color-info-bg" data-min="4.5">Badge azul (confirmada)</li>
-      <li class="v-pair" data-fg="--color-border" data-bg="--color-surface" data-min="3">Borde de campo sobre tarjeta</li>
-      <li class="v-pair" data-fg="--color-focus-legacy" data-bg="--color-surface" data-min="3">Foco actual de los campos (--p300, DS2)</li>
-      <li class="v-pair" data-fg="--color-focus" data-bg="--color-surface" data-min="3">Anillo de foco --focus-ring (--p600) sobre tarjeta</li>
-      <li class="v-pair" data-fg="--color-focus" data-bg="--color-bg" data-min="3">Anillo de foco sobre fondo y fila activa</li>
-      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de control --border-control (--p400) sobre tarjeta</li>
-      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-bg" data-min="3">Borde de control sobre fila activa (--p50)</li>
-      <li class="v-pair" data-fg="--color-text-muted" data-bg="--color-bg" data-min="4.5">Nombre del día y notas (--text-muted) sobre fila activa</li>
-      <li class="v-pair" data-fg="--color-danger" data-bg="--color-bg" data-min="4.5">Error de un día sobre fila activa</li>
+      <li class="v-pair" data-fg="--color-text-muted" data-bg="--color-bg" data-min="4.5">Texto secundario sobre fondo (igual que el principal, DS3)</li>
+      <li class="v-pair" data-fg="--color-text-light" data-bg="--color-surface" data-min="4.5">Etiqueta de campo y th sobre blanco (DS1)</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-primary" data-min="4.5">Texto del botón principal (DS1)</li>
+      <li class="v-pair" data-fg="--color-link" data-bg="--color-surface" data-min="4.5">Enlace sobre blanco</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="4.5">Menú activo y botón de contorno</li>
+      <li class="v-pair" data-fg="--color-on-sidebar" data-bg="--color-sidebar" data-min="4.5">Menú de la barra lateral (DS1)</li>
+      <li class="v-pair" data-fg="--color-nav-label" data-bg="--color-sidebar" data-min="4.5">Encabezado del menú .nav-label (DS1)</li>
+      <li class="v-pair" data-fg="--color-danger" data-bg="--color-danger-bg" data-min="4.5">Badge y aviso de error</li>
+      <li class="v-pair" data-fg="--color-success" data-bg="--color-success-bg" data-min="4.5">Badge &quot;Completada&quot; y aviso de éxito (DS1)</li>
+      <li class="v-pair" data-fg="--color-warning" data-bg="--color-warning-bg" data-min="4.5">Badge &quot;En curso&quot;</li>
+      <li class="v-pair" data-fg="--color-info" data-bg="--color-info-bg" data-min="4.5">Badge &quot;Confirmada&quot;</li>
+      <li class="v-pair" data-fg="--color-border" data-bg="--color-surface" data-min="3">Borde de campo sobre blanco (DS2)</li>
+      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de control del horario</li>
+      <li class="v-pair" data-fg="--color-focus" data-bg="--color-bg" data-min="3">Anillo de foco (horario y lista de citas)</li>
+      <li class="v-pair" data-fg="--color-focus-legacy" data-bg="--color-surface" data-min="3">Foco del código previo (DS2)</li>
     </ul>
   </section>
 
   <section class="v-section" id="tipografia">
     <h2>Tipografía</h2>
-    <p class="v-note">Roboto, cargada desde Google Fonts en la app (DS9). Tokens de tamaño <code>--text-body</code> (13.5px) y <code>--text-small</code> (11.5px) y de peso <code>--weight-regular</code>/<code>--weight-strong</code>, en <code>app.css</code> desde la spec 027; el resto de los 17 tamaños del CSS sigue sin token (DS4).</p>
-    <div class="v-stage"><div class="opt">
-      <p class="t-h1">Citas</p>
-      <p class="t-h2">Historial de cambios</p>
-      <p class="t-body">Pablo Paciente · Limpieza dental con Diego Primero.</p>
-      <p class="t-small">lunes 5 de octubre de 2026 · 10:00 hrs</p>
-      <p class="t-body"><span class="c-stat">12</span> citas del rango</p>
+    <p class="v-note">Roboto (Google Fonts, sin aprobar: DS9). Tamaños medidos: título de página 19px/500,
+      sección 15px/500, cuerpo 13.5px (tabla 13px), etiquetas 11px/600 en <code>--text-light</code>. Textos
+      copiados de las vistas.</p>
+    <div class="v-stage"><div class="opt" style="padding:24px">
+      <p class="t-h1">Dashboard</p>
+      <p class="t-h2">Citas de hoy</p>
+      <p class="t-body">Carlos Paciente 1 · Consulta general · 15:00</p>
+      <p class="t-small">Buscar paciente / dentista</p>
+      <p class="t-body t-mono">ID 3f6dfe4a-bfaf-11f1</p>
     </div></div>
   </section>
 
   <section class="v-section" id="espaciado">
     <h2>Espaciado y forma</h2>
-    <p class="v-note">Escala de espaciado <code>--space-1</code> … <code>--space-8</code> (spec 027), en <code>app.css</code>. Radios reales; el "toque mínimo" es el alto real de un botón (32px, DS6).</p>
-    <div class="v-stage"><div class="opt" id="space-demo"></div></div>
+    <p class="v-note">Escala de la spec 027 (solo la usan sus reglas; el resto son literales, DS4) y radios
+      reales. No hay token de toque mínimo: el cuadro punteado mide la altura real del botón, 31px,
+      por debajo de 44px (DS6).</p>
+    <div class="v-stage"><div class="opt" id="space-demo" style="padding:24px"></div></div>
   </section>
 
   <section class="v-section" id="componentes">
     <h2>Componentes</h2>
-    <p class="v-note">Hover, foco, deshabilitado y carga se muestran con el aspecto de la plantilla: en la app real los botones solo tienen hover (DS2, DS7).</p>
-    <div class="v-stage"><div class="opt">
-      <div class="v-grid">
-        <div>
-          <span class="v-label">Botones: reposo, hover, foco, deshabilitado, cargando</span>
-          <div style="display:flex;flex-wrap:wrap;gap:var(--space-3)">
-            <button class="c-btn c-btn--primary" type="button">Guardar cita</button>
-            <button class="c-btn c-btn--primary is-hover" type="button" tabindex="-1">Guardar cita</button>
-            <button class="c-btn c-btn--primary is-focus" type="button" tabindex="-1">Guardar cita</button>
-            <button class="c-btn c-btn--primary" type="button" disabled>Guardar cita</button>
-            <button class="c-btn c-btn--primary" type="button" aria-busy="true" tabindex="-1">Guardando</button>
-            <button class="c-btn c-btn--secondary" type="button">Cancelar</button>
-            <button class="c-btn c-btn--danger" type="button">Eliminar servicio</button>
-          </div>
-        </div>
-        <div>
-          <span class="v-label">Campos: normal y con error</span>
-          <div style="display:grid;gap:var(--space-6)">
-            <div class="c-field">
-              <label for="f1">Hora</label>
-              <input id="f1" value="10:00">
-              <p class="c-help">Formato HH:MM, dentro del horario del dentista.</p>
-            </div>
-            <div class="c-field is-error">
-              <label for="f2">Motivo del cambio</label>
-              <input id="f2" value="Texto de más de 500 caracteres…" aria-invalid="true" aria-describedby="f2e">
-              <p class="c-help" id="f2e">El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.</p>
-            </div>
-          </div>
-        </div>
-        <div>
-          <span class="v-label">Día del horario: activo, inactivo y con error (spec 027)</span>
-          <div style="display:grid;gap:var(--space-1)">
-            <div class="horario-dia horario-dia--activo">
-              <label class="horario-dia__dia"><input type="checkbox" checked><span class="horario-dia__nombre">Lunes</span></label>
-              <div class="horario-dia__horas"><input class="field" type="time" value="09:00" aria-label="Inicio del lunes"><span class="horario-dia__nota">a</span><input class="field" type="time" value="14:00" aria-label="Fin del lunes"><span class="horario-dia__nota">5.0h</span></div>
-            </div>
-            <div class="horario-dia">
-              <label class="horario-dia__dia"><input type="checkbox"><span class="horario-dia__nombre">Martes</span></label>
-              <span class="horario-dia__nota">No disponible</span>
-            </div>
-            <div class="horario-dia horario-dia--activo">
-              <label class="horario-dia__dia"><input type="checkbox" checked><span class="horario-dia__nombre">Miércoles</span></label>
-              <div class="horario-dia__horas"><input class="field" type="time" value="18:00" aria-label="Inicio del miércoles"><span class="horario-dia__nota">a</span><input class="field" type="time" value="09:00" aria-label="Fin del miércoles" aria-invalid="true" aria-describedby="hd3"></div>
-            </div>
-            <p class="field-hint field-hint-error" id="hd3">La hora de fin debe ser posterior a la de inicio, el mismo día.</p>
-          </div>
-        </div>
-        <div>
-          <span class="v-label">Lista de citas fuera del horario (spec 027): «Ver cita» con el anillo de foco</span>
-          <ul class="lista-citas">
-            <li><span>Pablo Paciente</span><span>05/10/2026</span><span>10:00</span><span class="c-badge c-badge--agendada">Agendada</span><a class="c-btn" href="#componentes">Ver cita</a></li>
-            <li><span>Ana Ejemplo</span><span>07/10/2026</span><span>18:30</span><span class="c-badge c-badge--confirmada">Confirmada</span><a class="c-btn" href="#componentes">Ver cita</a></li>
-          </ul>
-        </div>
-        <div>
-          <span class="v-label">Badges de estado de la cita</span>
-          <ul class="c-list">
-            <li><span class="c-badge c-badge--agendada">Agendada</span></li>
-            <li><span class="c-badge c-badge--confirmada">Confirmada</span></li>
-            <li><span class="c-badge c-badge--en_curso">En curso</span></li>
-            <li><span class="c-badge c-badge--completada">Completada</span></li>
-            <li><span class="c-badge c-badge--cancelada">Cancelada</span></li>
-          </ul>
-        </div>
-        <div>
-          <span class="v-label">Avisos y diálogo</span>
-          <div style="display:grid;gap:var(--space-3)">
-            <div class="c-alert c-alert--error" role="alert"><strong>Esta cita ya no se puede cancelar.</strong><p>Si necesitas ayuda, llama a la clínica.</p></div>
-            <div class="c-alert c-alert--success" role="status"><strong>Estado actualizado correctamente.</strong></div>
-            <div class="c-alert c-alert--warning"><strong>La cita aún no empieza.</strong><p>Podrás marcarla como «En curso» a partir de las 10:00 del 05/10/2026.</p></div>
-            <div class="c-dialog" role="dialog" aria-labelledby="d1">
-              <p class="t-h2" id="d1">¿Eliminar el servicio Limpieza dental?</p>
-              <p class="t-body">Ya no aparecerá al agendar nuevas citas.</p>
-              <div style="display:flex;gap:var(--space-3);justify-content:end">
-                <button class="c-btn c-btn--secondary" type="button">Cancelar</button>
-                <button class="c-btn c-btn--danger" type="button">Eliminar servicio</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <span class="v-label">Estados de pantalla: vacío (existe), cargando y error (no existen en la app, DS7)</span>
-          <div class="c-state"><p class="t-h2">No hay citas en este rango</p><p class="t-small">Cambia las fechas o agenda una cita nueva.</p><button class="c-btn c-btn--primary" type="button">Nueva cita</button></div>
-          <div class="c-state"><button class="c-btn c-btn--secondary" type="button" aria-busy="true" tabindex="-1">Cargando citas…</button></div>
-          <div class="c-state"><p class="t-body">No se pudieron cargar las citas.</p><button class="c-btn c-btn--secondary" type="button">Reintentar</button></div>
-        </div>
+    <p class="v-note">Recortes de las capturas de la app a 1440 px (no son maquetas). Los botones solo tienen
+      hover: no hay foco propio, deshabilitado ni carga (DS2, DS7).</p>
+    <div class="v-stage"><div style="padding:24px">
+      <div class="v-crops">
+        <figure class="v-crop"><img src="capturas/componentes/boton-primario.png" alt="Botón principal (.btn-primary, 31px de alto)" loading="lazy"><figcaption>Botón principal (.btn-primary, 31px de alto)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/boton-contorno.png" alt="Botón de contorno (.btn-outline)" loading="lazy"><figcaption>Botón de contorno (.btn-outline)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/boton-pequeno.png" alt="Botón pequeño (.btn-sm, 22–27px)" loading="lazy"><figcaption>Botón pequeño (.btn-sm, 22–27px)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/campo.png" alt="Campo de formulario (.field) con su etiqueta" loading="lazy"><figcaption>Campo de formulario (.field) con su etiqueta</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/tabla.png" alt="Tabla de citas con th, filas y badges" loading="lazy"><figcaption>Tabla de citas con th, filas y badges</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/badges-estado.png" alt="Badges de estado en la tabla" loading="lazy"><figcaption>Badges de estado en la tabla</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/tarjeta-resumen.png" alt="Tarjeta de resumen (.stat-card)" loading="lazy"><figcaption>Tarjeta de resumen (.stat-card)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/barra-lateral.png" alt="Barra lateral con el menú del administrador" loading="lazy"><figcaption>Barra lateral con el menú del administrador</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/barra-superior.png" alt="Barra superior (60px) con título y acción" loading="lazy"><figcaption>Barra superior (60px) con título y acción</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/estado-vacio.png" alt="Pantalla &quot;en construcción&quot; (placeholder)" loading="lazy"><figcaption>Pantalla &quot;en construcción&quot; (placeholder)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/historial.png" alt="Historial de la cita (.timeline)" loading="lazy"><figcaption>Historial de la cita (.timeline)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/horario-dia.png" alt="Día del horario (spec 027): campos de hora recortados (DS13)" loading="lazy"><figcaption>Día del horario (spec 027): campos de hora recortados (DS13)</figcaption></figure>
+        <figure class="v-crop"><img src="capturas/componentes/lista-citas.png" alt="Lista de citas fuera del horario (spec 027)" loading="lazy"><figcaption>Lista de citas fuera del horario (spec 027)</figcaption></figure>
       </div>
     </div></div>
   </section>
 
   <section class="v-section" id="pantallas">
     <h2>Pantallas</h2>
-    <p class="v-note">Maquetas con los valores reales, sin capturas (decisión del usuario, 2026-10-02). A 390 px se ve cómo queda hoy la app, que no se adapta a móvil (DS8); el login sí se adapta.</p>
-    <div class="v-frames">
-      <figure class="v-frame" id="login-m" data-width="390" data-height="760">
-        <figcaption>Inicio de sesión a 390 px</figcaption>
-        <div class="v-viewport"><div class="v-scaler"><div class="opt">
-        <div class="c-auth">
-          <div class="c-auth-hero"><p class="t-h1" style="font-size:30px;color:inherit">Tu sonrisa, en buenas manos</p><p class="t-body" style="color:inherit">Agenda tus citas y consulta tu historial en Dentissa.</p></div>
-          <div class="c-auth-form">
-            <p class="t-h1" style="font-size:28px">Iniciar sesión</p>
-            <div class="c-field"><label for="l1">Correo</label><input id="l1" value="paciente@example.test"></div>
-            <div class="c-field"><label for="l2">Contraseña</label><input id="l2" type="password" value="secreto-de-pruebas"></div>
-            <button class="c-btn c-btn--primary" type="button">Entrar</button>
-            <button class="c-btn c-btn--secondary" type="button">Continuar con Google</button>
-            <p class="t-small">¿No tienes cuenta? <span class="c-link">Regístrate</span></p>
-          </div>
-        </div>
-        </div></div></div>
-      </figure>
-      <figure class="v-frame" id="login-d" data-width="1440" data-height="760">
-        <figcaption>Inicio de sesión a 1440 px</figcaption>
-        <div class="v-viewport"><div class="v-scaler"><div class="opt">
-        <div class="c-auth">
-          <div class="c-auth-hero"><p class="t-h1" style="font-size:30px;color:inherit">Tu sonrisa, en buenas manos</p><p class="t-body" style="color:inherit">Agenda tus citas y consulta tu historial en Dentissa.</p></div>
-          <div class="c-auth-form">
-            <p class="t-h1" style="font-size:28px">Iniciar sesión</p>
-            <div class="c-field"><label for="l1">Correo</label><input id="l1" value="paciente@example.test"></div>
-            <div class="c-field"><label for="l2">Contraseña</label><input id="l2" type="password" value="secreto-de-pruebas"></div>
-            <button class="c-btn c-btn--primary" type="button">Entrar</button>
-            <button class="c-btn c-btn--secondary" type="button">Continuar con Google</button>
-            <p class="t-small">¿No tienes cuenta? <span class="c-link">Regístrate</span></p>
-          </div>
-        </div>
-        </div></div></div>
-      </figure>
-      <figure class="v-frame" id="citas-m" data-width="390" data-height="760">
-        <figcaption>Agenda del personal (citas) a 390 px — sin adaptar (DS8)</figcaption>
-        <div class="v-viewport"><div class="v-scaler"><div class="opt">
-        <div class="c-app">
-          <nav class="c-sidebar" aria-label="Menú">
-            <strong style="font-size:var(--text-h2)">Dentissa</strong>
-            <p class="c-navlabel">Principal</p>
-            <span class="c-navitem">Home</span>
-            <span class="c-navitem is-active">Citas</span>
-            <span class="c-navitem">Pacientes</span>
-            <span class="c-navitem">Personal</span>
-            <span class="c-navitem">Servicios</span>
-          </nav>
-          <div><div class="c-topbar"><p class="t-h1">Citas</p><button class="c-btn c-btn--primary" type="button">Nueva cita</button></div>
-            <div class="c-content">
-              <div class="c-stats">
-                <div class="c-card"><p class="c-stat">12</p><p class="t-small">Citas del rango</p></div>
-                <div class="c-card"><p class="c-stat">7</p><p class="t-small">Agendadas</p></div>
-                <div class="c-card"><p class="c-stat">4</p><p class="t-small">Completadas</p></div>
-                <div class="c-card"><p class="c-stat">1</p><p class="t-small">Canceladas</p></div>
-              </div>
-              <div class="c-card" style="padding:0">
-                <table class="c-table">
-                  <thead><tr><th>Paciente</th><th>Dentista</th><th>Fecha</th><th>Estado</th></tr></thead>
-                  <tbody>
-                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>05/10 · 10:00</td><td><span class="c-badge c-badge--confirmada">Confirmada</span></td></tr>
-                    <tr><td>Paula Otra</td><td>Dora Segunda</td><td>05/10 · 11:30</td><td><span class="c-badge c-badge--agendada">Agendada</span></td></tr>
-                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>06/10 · 09:00</td><td><span class="c-badge c-badge--en_curso">En curso</span></td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div></div>
-        </div>
-        </div></div></div>
-      </figure>
-      <figure class="v-frame" id="citas-d" data-width="1440" data-height="760">
-        <figcaption>Agenda del personal (citas) a 1440 px</figcaption>
-        <div class="v-viewport"><div class="v-scaler"><div class="opt">
-        <div class="c-app">
-          <nav class="c-sidebar" aria-label="Menú">
-            <strong style="font-size:var(--text-h2)">Dentissa</strong>
-            <p class="c-navlabel">Principal</p>
-            <span class="c-navitem">Home</span>
-            <span class="c-navitem is-active">Citas</span>
-            <span class="c-navitem">Pacientes</span>
-            <span class="c-navitem">Personal</span>
-            <span class="c-navitem">Servicios</span>
-          </nav>
-          <div><div class="c-topbar"><p class="t-h1">Citas</p><button class="c-btn c-btn--primary" type="button">Nueva cita</button></div>
-            <div class="c-content">
-              <div class="c-stats">
-                <div class="c-card"><p class="c-stat">12</p><p class="t-small">Citas del rango</p></div>
-                <div class="c-card"><p class="c-stat">7</p><p class="t-small">Agendadas</p></div>
-                <div class="c-card"><p class="c-stat">4</p><p class="t-small">Completadas</p></div>
-                <div class="c-card"><p class="c-stat">1</p><p class="t-small">Canceladas</p></div>
-              </div>
-              <div class="c-card" style="padding:0">
-                <table class="c-table">
-                  <thead><tr><th>Paciente</th><th>Dentista</th><th>Fecha</th><th>Estado</th></tr></thead>
-                  <tbody>
-                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>05/10 · 10:00</td><td><span class="c-badge c-badge--confirmada">Confirmada</span></td></tr>
-                    <tr><td>Paula Otra</td><td>Dora Segunda</td><td>05/10 · 11:30</td><td><span class="c-badge c-badge--agendada">Agendada</span></td></tr>
-                    <tr><td>Pablo Paciente</td><td>Diego Primero</td><td>06/10 · 09:00</td><td><span class="c-badge c-badge--en_curso">En curso</span></td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div></div>
-        </div>
-        </div></div></div>
-      </figure>
-      <figure class="v-frame" id="detalle-d" data-width="1440" data-height="760">
-        <figcaption>Detalle de cita con cambio de estado a 1440 px</figcaption>
-        <div class="v-viewport"><div class="v-scaler"><div class="opt">
-        <div class="c-app">
-          <nav class="c-sidebar" aria-label="Menú">
-            <strong style="font-size:var(--text-h2)">Dentissa</strong>
-            <p class="c-navlabel">Principal</p>
-            <span class="c-navitem">Home</span>
-            <span class="c-navitem is-active">Citas</span>
-            <span class="c-navitem">Pacientes</span>
-            <span class="c-navitem">Personal</span>
-            <span class="c-navitem">Servicios</span>
-          </nav>
-          <div><div class="c-topbar"><p class="t-h1">Detalle de cita</p><button class="c-btn c-btn--secondary" type="button" style="color:var(--color-danger);border-color:transparent">Cancelar cita</button></div>
-            <div class="c-content" style="grid-template-columns:1fr 360px">
-              <div class="c-card" style="display:grid;gap:var(--space-5);align-content:start">
-                <p class="t-h1">Limpieza dental</p>
-                <p class="t-small">lunes 5 de octubre de 2026 · 10:00 hrs</p>
-                <span class="c-badge c-badge--confirmada" style="justify-self:start">Confirmada</span>
-                <p class="t-h2" style="margin-top:var(--space-6)">Historial de cambios</p>
-                <ul class="c-list">
-                  <li><span class="t-small">05/10 15:02</span> Agendada → Confirmada · por Adela Administra · Confirmó por teléfono</li>
-                </ul>
-              </div>
-              <div class="c-card" style="display:grid;gap:var(--space-5);align-content:start">
-                <p class="t-h2">Cambiar estado</p>
-                <label style="display:flex;gap:var(--space-4);align-items:center"><input type="radio" name="e" style="accent-color:var(--color-primary)"> <span class="c-badge c-badge--en_curso">En curso</span></label>
-                <label style="display:flex;gap:var(--space-4);align-items:center"><input type="radio" name="e" style="accent-color:var(--color-primary)"> <span class="c-badge c-badge--cancelada">Cancelada</span></label>
-                <div class="c-field"><label for="m1">Motivo del cambio (opcional)</label><input id="m1" value="Paciente confirmó por teléfono"></div>
-                <button class="c-btn c-btn--primary" type="button">Actualizar estado</button>
-              </div>
-            </div></div>
-        </div>
-        </div></div></div>
-      </figure>
+    <p class="v-note">Las 60 vistas de la app, capturadas a 390 y 1440 px con Playwright y datos de prueba
+      (inventario completo en <code>system.md</code>). A 390 px la mayoría no se adapta y la página es más ancha
+      que la pantalla (DS8): la captura lo muestra tal cual.</p>
+    <div class="v-shots">
+<div class="v-shot-group"><h3>Acceso</h3><div class="v-shot-row"><p class="v-shot-title">Inicio de sesión</p><figure class="v-shot" id="auth-login-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/auth-login-390.png" alt="Inicio de sesión a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="auth-login-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/auth-login-1440.png" alt="Inicio de sesión a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Inicio de sesión con error</p><figure class="v-shot" id="auth-login-error-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/auth-login-error-390.png" alt="Inicio de sesión con error a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="auth-login-error-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/auth-login-error-1440.png" alt="Inicio de sesión con error a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Registro, paso 1 (cuenta)</p><figure class="v-shot" id="auth-registro-paso1-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/auth-registro-paso1-390.png" alt="Registro, paso 1 (cuenta) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="auth-registro-paso1-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/auth-registro-paso1-1440.png" alt="Registro, paso 1 (cuenta) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Registro, paso 2 (contacto)</p><figure class="v-shot" id="auth-registro-paso2-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/auth-registro-paso2-390.png" alt="Registro, paso 2 (contacto) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="auth-registro-paso2-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/auth-registro-paso2-1440.png" alt="Registro, paso 2 (contacto) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Registro con errores</p><figure class="v-shot" id="auth-registro-error-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/auth-registro-error-390.png" alt="Registro con errores a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="auth-registro-error-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/auth-registro-error-1440.png" alt="Registro con errores a 1440 px" loading="lazy"></div></figure></div></div><div class="v-shot-group"><h3>Administración</h3><div class="v-shot-row"><p class="v-shot-title">Panel del administrador</p><figure class="v-shot" id="admin-dashboard-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/admin-dashboard-390.png" alt="Panel del administrador a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="admin-dashboard-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/admin-dashboard-1440.png" alt="Panel del administrador a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Servicios</p><figure class="v-shot" id="servicios-index-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/servicios-index-390.png" alt="Servicios a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="servicios-index-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/servicios-index-1440.png" alt="Servicios a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Servicios: diálogo de eliminar</p><figure class="v-shot" id="servicios-modal-eliminar-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/servicios-modal-eliminar-390.png" alt="Servicios: diálogo de eliminar a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="servicios-modal-eliminar-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/servicios-modal-eliminar-1440.png" alt="Servicios: diálogo de eliminar a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo servicio</p><figure class="v-shot" id="servicios-create-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/servicios-create-390.png" alt="Nuevo servicio a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="servicios-create-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/servicios-create-1440.png" alt="Nuevo servicio a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo servicio con errores</p><figure class="v-shot" id="servicios-create-error-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/servicios-create-error-390.png" alt="Nuevo servicio con errores a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="servicios-create-error-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/servicios-create-error-1440.png" alt="Nuevo servicio con errores a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Editar servicio</p><figure class="v-shot" id="servicios-edit-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/servicios-edit-390.png" alt="Editar servicio a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="servicios-edit-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/servicios-edit-1440.png" alt="Editar servicio a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Citas</p><figure class="v-shot" id="citas-index-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-index-admin-390.png" alt="Citas a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-index-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-index-admin-1440.png" alt="Citas a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nueva cita</p><figure class="v-shot" id="citas-create-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-create-admin-390.png" alt="Nueva cita a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-create-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-create-admin-1440.png" alt="Nueva cita a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Detalle de cita</p><figure class="v-shot" id="citas-show-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-show-admin-390.png" alt="Detalle de cita a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-show-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-show-admin-1440.png" alt="Detalle de cita a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Pacientes</p><figure class="v-shot" id="pacientes-index-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-index-admin-390.png" alt="Pacientes a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-index-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-index-admin-1440.png" alt="Pacientes a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo paciente</p><figure class="v-shot" id="pacientes-create-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-create-admin-390.png" alt="Nuevo paciente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-create-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-create-admin-1440.png" alt="Nuevo paciente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Ficha del paciente</p><figure class="v-shot" id="pacientes-show-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-show-admin-390.png" alt="Ficha del paciente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-show-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-show-admin-1440.png" alt="Ficha del paciente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Editar paciente</p><figure class="v-shot" id="pacientes-edit-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-edit-admin-390.png" alt="Editar paciente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-edit-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-edit-admin-1440.png" alt="Editar paciente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo expediente</p><figure class="v-shot" id="expedientes-create-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/expedientes-create-admin-390.png" alt="Nuevo expediente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="expedientes-create-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/expedientes-create-admin-1440.png" alt="Nuevo expediente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Expediente</p><figure class="v-shot" id="expedientes-show-admin-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/expedientes-show-admin-390.png" alt="Expediente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="expedientes-show-admin-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/expedientes-show-admin-1440.png" alt="Expediente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Personal</p><figure class="v-shot" id="personal-index-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-index-390.png" alt="Personal a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-index-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-index-1440.png" alt="Personal a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo miembro del personal</p><figure class="v-shot" id="personal-create-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-create-390.png" alt="Nuevo miembro del personal a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-create-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-create-1440.png" alt="Nuevo miembro del personal a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo personal: asistente</p><figure class="v-shot" id="personal-create-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-create-asistente-390.png" alt="Nuevo personal: asistente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-create-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-create-asistente-1440.png" alt="Nuevo personal: asistente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Ficha de dentista (horario)</p><figure class="v-shot" id="personal-show-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-show-dentista-390.png" alt="Ficha de dentista (horario) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-show-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-show-dentista-1440.png" alt="Ficha de dentista (horario) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Ficha de asistente</p><figure class="v-shot" id="personal-show-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-show-asistente-390.png" alt="Ficha de asistente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-show-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-show-asistente-1440.png" alt="Ficha de asistente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Ficha de administrativo</p><figure class="v-shot" id="personal-show-administrador-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-show-administrador-390.png" alt="Ficha de administrativo a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-show-administrador-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-show-administrador-1440.png" alt="Ficha de administrativo a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Editar personal</p><figure class="v-shot" id="personal-edit-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/personal-edit-390.png" alt="Editar personal a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="personal-edit-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/personal-edit-1440.png" alt="Editar personal a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Reportes (en construcción)</p><figure class="v-shot" id="admin-reportes-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/admin-reportes-390.png" alt="Reportes (en construcción) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="admin-reportes-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/admin-reportes-1440.png" alt="Reportes (en construcción) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Usuarios</p><figure class="v-shot" id="usuarios-index-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/usuarios-index-390.png" alt="Usuarios a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="usuarios-index-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/usuarios-index-1440.png" alt="Usuarios a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Usuarios: diálogo de activar o desactivar</p><figure class="v-shot" id="usuarios-modal-estado-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/usuarios-modal-estado-390.png" alt="Usuarios: diálogo de activar o desactivar a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="usuarios-modal-estado-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/usuarios-modal-estado-1440.png" alt="Usuarios: diálogo de activar o desactivar a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo usuario</p><figure class="v-shot" id="usuarios-create-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/usuarios-create-390.png" alt="Nuevo usuario a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="usuarios-create-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/usuarios-create-1440.png" alt="Nuevo usuario a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Detalle de usuario</p><figure class="v-shot" id="usuarios-show-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/usuarios-show-390.png" alt="Detalle de usuario a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="usuarios-show-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/usuarios-show-1440.png" alt="Detalle de usuario a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Editar usuario</p><figure class="v-shot" id="usuarios-edit-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/usuarios-edit-390.png" alt="Editar usuario a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="usuarios-edit-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/usuarios-edit-1440.png" alt="Editar usuario a 1440 px" loading="lazy"></div></figure></div></div><div class="v-shot-group"><h3>Dentista</h3><div class="v-shot-row"><p class="v-shot-title">Panel de la dentista</p><figure class="v-shot" id="dentista-dashboard-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/dentista-dashboard-390.png" alt="Panel de la dentista a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="dentista-dashboard-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/dentista-dashboard-1440.png" alt="Panel de la dentista a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Citas (dentista)</p><figure class="v-shot" id="citas-index-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-index-dentista-390.png" alt="Citas (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-index-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-index-dentista-1440.png" alt="Citas (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nueva cita (dentista)</p><figure class="v-shot" id="citas-create-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-create-dentista-390.png" alt="Nueva cita (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-create-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-create-dentista-1440.png" alt="Nueva cita (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Detalle de cita (dentista)</p><figure class="v-shot" id="citas-show-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-show-dentista-390.png" alt="Detalle de cita (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-show-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-show-dentista-1440.png" alt="Detalle de cita (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Pacientes (dentista)</p><figure class="v-shot" id="pacientes-index-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-index-dentista-390.png" alt="Pacientes (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-index-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-index-dentista-1440.png" alt="Pacientes (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Ficha del paciente (dentista)</p><figure class="v-shot" id="pacientes-show-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-show-dentista-390.png" alt="Ficha del paciente (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-show-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-show-dentista-1440.png" alt="Ficha del paciente (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Editar paciente (dentista)</p><figure class="v-shot" id="pacientes-edit-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-edit-dentista-390.png" alt="Editar paciente (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-edit-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-edit-dentista-1440.png" alt="Editar paciente (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Expedientes</p><figure class="v-shot" id="expedientes-index-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/expedientes-index-dentista-390.png" alt="Expedientes a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="expedientes-index-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/expedientes-index-dentista-1440.png" alt="Expedientes a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo expediente (dentista)</p><figure class="v-shot" id="expedientes-create-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/expedientes-create-dentista-390.png" alt="Nuevo expediente (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="expedientes-create-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/expedientes-create-dentista-1440.png" alt="Nuevo expediente (dentista) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Expediente (dentista)</p><figure class="v-shot" id="expedientes-show-dentista-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/expedientes-show-dentista-390.png" alt="Expediente (dentista) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="expedientes-show-dentista-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/expedientes-show-dentista-1440.png" alt="Expediente (dentista) a 1440 px" loading="lazy"></div></figure></div></div><div class="v-shot-group"><h3>Asistente</h3><div class="v-shot-row"><p class="v-shot-title">Panel de la asistente</p><figure class="v-shot" id="asistente-dashboard-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/asistente-dashboard-390.png" alt="Panel de la asistente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="asistente-dashboard-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/asistente-dashboard-1440.png" alt="Panel de la asistente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Mis doctores</p><figure class="v-shot" id="asistente-doctores-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/asistente-doctores-390.png" alt="Mis doctores a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="asistente-doctores-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/asistente-doctores-1440.png" alt="Mis doctores a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Citas (asistente)</p><figure class="v-shot" id="citas-index-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-index-asistente-390.png" alt="Citas (asistente) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-index-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-index-asistente-1440.png" alt="Citas (asistente) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nueva cita (asistente)</p><figure class="v-shot" id="citas-create-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-create-asistente-390.png" alt="Nueva cita (asistente) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-create-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-create-asistente-1440.png" alt="Nueva cita (asistente) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Detalle de cita (asistente)</p><figure class="v-shot" id="citas-show-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-show-asistente-390.png" alt="Detalle de cita (asistente) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-show-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-show-asistente-1440.png" alt="Detalle de cita (asistente) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Pacientes (asistente)</p><figure class="v-shot" id="pacientes-index-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-index-asistente-390.png" alt="Pacientes (asistente) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-index-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-index-asistente-1440.png" alt="Pacientes (asistente) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Nuevo paciente (asistente)</p><figure class="v-shot" id="pacientes-create-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-create-asistente-390.png" alt="Nuevo paciente (asistente) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-create-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-create-asistente-1440.png" alt="Nuevo paciente (asistente) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Ficha del paciente (asistente)</p><figure class="v-shot" id="pacientes-show-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/pacientes-show-asistente-390.png" alt="Ficha del paciente (asistente) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="pacientes-show-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/pacientes-show-asistente-1440.png" alt="Ficha del paciente (asistente) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Expediente (asistente, solo lectura)</p><figure class="v-shot" id="expedientes-show-asistente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/expedientes-show-asistente-390.png" alt="Expediente (asistente, solo lectura) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="expedientes-show-asistente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/expedientes-show-asistente-1440.png" alt="Expediente (asistente, solo lectura) a 1440 px" loading="lazy"></div></figure></div></div><div class="v-shot-group"><h3>Paciente</h3><div class="v-shot-row"><p class="v-shot-title">Panel del paciente</p><figure class="v-shot" id="cliente-dashboard-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/cliente-dashboard-390.png" alt="Panel del paciente a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="cliente-dashboard-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/cliente-dashboard-1440.png" alt="Panel del paciente a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Mis citas (próximas)</p><figure class="v-shot" id="citas-index-cliente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-index-cliente-390.png" alt="Mis citas (próximas) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-index-cliente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-index-cliente-1440.png" alt="Mis citas (próximas) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Mis citas (pasadas)</p><figure class="v-shot" id="citas-index-cliente-pasadas-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-index-cliente-pasadas-390.png" alt="Mis citas (pasadas) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-index-cliente-pasadas-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-index-cliente-pasadas-1440.png" alt="Mis citas (pasadas) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Detalle de mi cita</p><figure class="v-shot" id="citas-show-cliente-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/citas-show-cliente-390.png" alt="Detalle de mi cita a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="citas-show-cliente-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/citas-show-cliente-1440.png" alt="Detalle de mi cita a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Agendar cita</p><figure class="v-shot" id="cliente-agendar-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/cliente-agendar-390.png" alt="Agendar cita a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="cliente-agendar-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/cliente-agendar-1440.png" alt="Agendar cita a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Mi perfil</p><figure class="v-shot" id="cliente-perfil-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/cliente-perfil-390.png" alt="Mi perfil a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="cliente-perfil-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/cliente-perfil-1440.png" alt="Mi perfil a 1440 px" loading="lazy"></div></figure></div></div><div class="v-shot-group"><h3>Errores</h3><div class="v-shot-row"><p class="v-shot-title">Error 403 (por defecto de Laravel)</p><figure class="v-shot" id="error-403-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/error-403-390.png" alt="Error 403 (por defecto de Laravel) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="error-403-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/error-403-1440.png" alt="Error 403 (por defecto de Laravel) a 1440 px" loading="lazy"></div></figure></div><div class="v-shot-row"><p class="v-shot-title">Error 404 (por defecto de Laravel)</p><figure class="v-shot" id="error-404-390"><figcaption>390 px</figcaption><div class="v-box"><img src="capturas/error-404-390.png" alt="Error 404 (por defecto de Laravel) a 390 px" loading="lazy"></div></figure><figure class="v-shot" id="error-404-1440"><figcaption>1440 px</figcaption><div class="v-box"><img src="capturas/error-404-1440.png" alt="Error 404 (por defecto de Laravel) a 1440 px" loading="lazy"></div></figure></div></div><div class="v-shot-group"><h3>Sin captura</h3><div class="v-shot-row"><p class="v-shot-title">Registro con Google: contacto</p><div class="v-gap">no accesible: exige volver del acceso con Google</div></div><div class="v-shot-row"><p class="v-shot-title">Registro con Google: contacto con errores</p><div class="v-gap">no accesible: misma sesión de Google</div></div><div class="v-shot-row"><p class="v-shot-title">Aviso flash de éxito</p><div class="v-gap">sin captura: estado transitorio tras una acción</div></div><div class="v-shot-row"><p class="v-shot-title">Aviso flash de error</p><div class="v-gap">sin captura: estado transitorio tras una acción fallida</div></div><div class="v-shot-row"><p class="v-shot-title">Aviso de contraseña generada</p><div class="v-gap">sin captura: solo tras un alta sin contraseña</div></div></div>
     </div>
   </section>
 
   <section class="v-section" id="movimiento">
     <h2>Movimiento</h2>
     <ul class="v-motion">
-      <li><strong>Hover de botones y menú</strong>: <code>transition: all 0.15s</code> en color y fondo. Sin movimiento: hoy no existe versión estática (DS10).</li>
-      <li><strong>Entrada del login y del registro</strong>: animaciones <code>fadeUpLogin</code> y <code>fadeUpRegister</code> (opacidad y desplazamiento). Sin movimiento: no existe (DS10).</li>
-      <li><strong>Modales</strong>: <code>modalIn</code> en usuarios y transición en servicios. Sin movimiento: no existe (DS10).</li>
+      <li><strong>Hover</strong>: <code>all 0.15s</code> en botones, menú y accesos rápidos (<code>translateY(-1px)</code>). Sin movimiento: no existe versión reducida (DS10).</li>
+      <li><strong>Entrada del acceso y del registro</strong>: animación <code>fadeUp</code>. Sin movimiento: no existe versión reducida (DS10).</li>
+      <li><strong>Diálogos</strong>: animación <code>modalIn</code>. Sin movimiento: no existe versión reducida (DS10).</li>
+    </ul>
+  </section>
+
+  <section class="v-section" id="deuda">
+    <h2>Deuda de diseño</h2>
+    <p class="v-note">Resumen; el detalle, la evidencia y la corrección propuesta están en <code>system.md</code>.</p>
+    <ul class="v-debt">
+      <li><strong>DS1</strong>: Texto con contraste &lt; 4.5:1: botón principal, etiquetas y th, verde de éxito, menú y .nav-label, hover de &quot;Cerrar sesión&quot;</li>
+      <li><strong>DS2</strong>: Foco e indicadores invisibles: borde de campo 1.31:1, foco antiguo 2.23:1</li>
+      <li><strong>DS3</strong>: --text-muted igual que --text: sin texto secundario</li>
+      <li><strong>DS4</strong>: Valores fijos: 861 style=&quot;&quot;, 20 tamaños de letra, barra lateral literal</li>
+      <li><strong>DS5</strong>: Componentes duplicados: 11 redefiniciones de .field, citas.css en 7 vistas, auth.css redefine tokens</li>
+      <li><strong>DS6</strong>: Toque &lt; 44px: botón 31px, .btn-sm 22–27px, campo 34–38px, menú 35px</li>
+      <li><strong>DS7</strong>: Sin estados de carga ni deshabilitado, errores 403/404 de Laravel, flash sin aria-live, diálogos no accesibles</li>
+      <li><strong>DS8</strong>: Sin adaptación a móvil: 52 de 60 vistas se desbordan a 390px</li>
+      <li><strong>DS9</strong>: Roboto desde Google Fonts sin aprobar; DM Sans y DM Mono sin cargar</li>
+      <li><strong>DS10</strong>: Sin prefers-reduced-motion</li>
+      <li><strong>DS11</strong>: Restos sin uso: Tailwind, Vite, welcome, clases y tokens sin uso</li>
+      <li><strong>DS12</strong>: Servicios: campos con la fuente del navegador (Arial 13.33px) y desplegable gris</li>
+      <li><strong>DS13</strong>: Campo de hora de 110px que recorta AM/PM</li>
+      <li><strong>DS14</strong>: Emojis mezclados con iconos SVG en el panel del paciente</li>
+      <li><strong>DS15</strong>: Favicon vacío, isotipo sin uso y títulos &quot;Dashboard&quot; por defecto</li>
     </ul>
   </section>
 </main>
 
 <footer class="v-wrap v-foot">
-  <p>Generado por ai-dd para Dentissa el 2026-10-02. Sistema: <code>docs/design/system.md</code>.</p>
+  <p>Generado por AI-DD 1.11.2 para Dentissa el 2026-10-04 a partir de capturas de la app. Sistema:
+    <code>docs/design/system.md</code>. Versión anterior: <code>history/system.v1.html</code>.</p>
 </footer>
 
 <script>
@@ -591,6 +323,7 @@
   // Color resuelto de un token dentro de la primera .opt (respeta el modo activo).
   function rgbOf(token) {
     const host = document.querySelector('.opt');
+    if (!getComputedStyle(host).getPropertyValue(token).trim()) return null;  // token no definido
     host.appendChild(probe);
     probe.style.color = `var(${token})`;
     const m = getComputedStyle(probe).color.match(/[\d.]+/g);
@@ -623,7 +356,13 @@
       const fg = rgbOf(li.dataset.fg), bg = rgbOf(li.dataset.bg);
       const min = parseFloat(li.dataset.min);
       li.querySelectorAll('.v-pair-sample, .v-pair-ratio').forEach(n => n.remove());
-      if (!fg || !bg) continue;
+      li.hidden = false;
+      if (!fg || !bg) {
+        if (li.hasAttribute('data-optional')) { li.hidden = true; continue; }
+        li.dataset.ok = 'false';
+        li.insertAdjacentHTML('beforeend', `<span class="v-pair-ratio">falta el token ${!fg ? li.dataset.fg : li.dataset.bg}</span>`);
+        continue;
+      }
       const r = ratio(fg, bg);
       li.dataset.ok = String(r >= min);
       li.insertAdjacentHTML('afterbegin',

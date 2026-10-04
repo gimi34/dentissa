@@ -53,7 +53,7 @@ observability:
     events: [login, login_failed, logout, access_denied, sensitive_read, sensitive_write, role_change, account_change]
     retention: 5 años (decisión del usuario, 2026-09-28)
 design:                        # solo proyectos con interfaz (frontend, fullstack, mobile)
-  status: approved             # none | declined | draft | approved — extraído del código y aprobado (decisión del usuario, 2026-10-02)
+  status: approved             # none | declined | draft | approved — re-extraído con AI-DD 1.11.2 y aprobado (decisión del usuario, 2026-10-04)
   source: extracted            # chosen | extracted | null
   system: docs/design/system.md
   html: docs/design/system.html
