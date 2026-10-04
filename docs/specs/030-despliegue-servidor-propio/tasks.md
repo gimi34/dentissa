@@ -24,7 +24,7 @@ Formato:
 - **Re-análisis omitido** (decisión del usuario, 2026-10-04): T015 y T034 se añadieron durante
   `/implement` (colación del volcado, hallazgo de la prueba de humo de T027) sin repetir `/analyze`;
   cumplen las reglas de `/tasks` y las revisa `/review`.
-  T035 y T036 (escaneo de imágenes de T033) siguen el mismo criterio.
+  T035 y T036 (escaneo de imágenes de T033) y T037 (fallo visto al preparar T040) siguen el mismo criterio.
 
 ## Constitution Check
 | Principio | Resultado | Justificación | Cómo se verifica |
@@ -152,6 +152,10 @@ Formato:
 - [x] T036 Registrar la excepción EX2 en `docs/security.md` → Excepciones aceptadas: avisos altos y críticos sin corrección publicada de las imágenes de producción tras T035 (Debian 13 de `app`: `linux-libc-dev`, libxml2, util-linux, curl…; `mariadb:10.11.18` y `cloudflare/cloudflared:2026.9.3`, cuya corrección llega con imágenes nuevas), con motivo, aprobada por el usuario el 2026-10-04 y vencimiento 2026-10-31; y el riesgo RS18 (imágenes base con avisos) con su corrección RS18.a (refrescar las imágenes fijadas con ≥ 7 días y volver a escanear antes del vencimiento), pendiente → roadmap (T051) — docs/security.md — hecho cuando: la fila de EX2 tiene hallazgo, severidad, motivo, aprobación y vencimiento, y RS18 aparece en Riesgos conocidos con RS18.a pendiente — cubre: CA10 — depende: T035
   - nota: añadida durante /implement: ver T035 (decisión del usuario, 2026-10-04, vencimiento 2026-10-31).
   - nota: `docs/security.md`: EX2 en Excepciones aceptadas (hallazgo por imagen tras T035, severidad alta y crítica, motivo, aprobada por el usuario el 2026-10-04, vence el 2026-10-31) y "Vigente: EX2" en el texto de la sección; RS18 en Riesgos conocidos con RS18.a (refrescar imágenes con ≥ 7 días y volver a escanear antes del vencimiento) pendiente → roadmap, que T051 lleva a Pendientes.
+- [x] T037 Corregir la detección del primer despliegue y la guía: `desplegar.sh` decide si hace la copia previa según si la base **tiene datos** (el volumen de `db` existe y no está vacío, comprobado con la imagen y el volumen del propio servicio `db`), arrancando y esperando a `db` antes de copiar; `deploy/README.md` muestra cada archivo de entorno como bloque de una variable por línea y genera `APP_KEY` guardándola en `app.env` sin mostrarla — deploy/desplegar.sh, deploy/README.md — hecho cuando: `bash -n` pasa; leído en el código, con el volumen vacío (creado por `run --rm --no-deps app`) se anuncia el primer despliegue y con datos se hace la copia; la guía ya no lista variables separadas por comas — cubre: CA1, CA6 — depende: T030, T032
+  - nota: añadida durante /implement: al preparar T040, generar `APP_KEY` con `run --rm --no-deps app` (paso de la guía) creó vacío el volumen `dentissa-prod_db_data`, y `desplegar.sh` lo habría tomado por un despliegue con datos e intentado copiar una base parada; además, la guía listaba las variables de `app.env` separadas por comas y el usuario las copió así (decisión del usuario, 2026-10-04: corregir ahora y ensayar con el commit nuevo).
+  - nota: `bash -n` pasa. `desplegar.sh` decide con `base_con_datos()`: el volumen `dentissa-prod_db_data` existe y `ls -A /var/lib/mysql` (imagen y volumen del propio servicio `db`, con `run --rm --no-deps`, sin arrancar la base) no sale vacío; si hay datos, levanta `db`, espera a que esté sana y copia. Probado en local en los tres casos: sin volumen → primer despliegue; volumen vacío creado por `run --rm --no-deps app` → primer despliegue; volumen con un archivo → copia.
+  - nota: `deploy/README.md`: cada archivo de entorno aparece como bloque de una variable por línea, con comprobaciones que no muestran valores (`grep -vnE`, `cut -d= -f1`), y `APP_KEY` se genera y se guarda en `app.env` sin mostrarla; la guía ya no lista variables separadas por comas.
 
 ## Ensayo en el servidor (plan D13, `cloudflared` parado)
 - [ ] T040 Preparar el servidor y hacer el primer despliegue interno, con aprobación explícita previa del usuario anotada (/analyze A5): el usuario sube la rama, ejecuta `preparar-servidor.sh`, clona con la deploy key en `/opt/dentissa/app`, crea `app.env`, `db.env` y `tunnel.env` en `/opt/dentissa/entorno` (permisos 600), ejecuta `desplegar.sh <commit>` cronometrado (primer despliegue, sin copia previa), `dentissa:rotar-credenciales --confirmar` (guarda las contraseñas fuera del chat) y `verificar.sh --interna`; además, una petición interna a `web` con `CF-Connecting-IP` y un `X-Forwarded-For` falso deja en el access log la IP de `CF-Connecting-IP` (test de TM4; control de TM5) — (sin archivos; nota en tasks.md) — hecho cuando: la nota recoge la aprobación, `verificar.sh --interna` sale todo OK, `desplegar.sh` tarda ≤ 15 min sin la verificación, el access log muestra la IP de `CF-Connecting-IP`, `cloudflared` no está en marcha (`docker compose ps`) y la nota recoge los tiempos y la salida sin secretos — cubre: CA1, CA4, CA8, CA10 — depende: T020, T021, T022, T023, T027, T028, T029, T030, T031, T032, T033
@@ -183,12 +187,12 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T015, T040, T046 | T027, T030, T031, T032, T034 |
+| CA1 | T015, T040, T046 | T027, T030, T031, T032, T034, T037 |
 | CA2 | T011, T014 | T020, T026 |
 | CA3 | T014, T041 | T024, T027, T028, T031 |
 | CA4 | T013, T040 | T031 |
 | CA5 | T012, T014, T042 | T023, T025, T027 |
-| CA6 | T043 | T029, T030 |
+| CA6 | T043 | T029, T030, T037 |
 | CA7 | T044 | T030 |
 | CA8 | T010, T014, T040 | T021, T022, T026, T027 |
 | CA9 | T045 | T027 |
@@ -223,9 +227,9 @@ Formato:
 | .dockerignore, .gitignore | T025 |
 | deploy/preparar-servidor.sh | T028 |
 | deploy/respaldar.sh, deploy/restaurar.sh | T029 |
-| deploy/desplegar.sh, deploy/volver.sh | T030 |
+| deploy/desplegar.sh, deploy/volver.sh | T030, T037 |
 | deploy/verificar.sh | T031 |
-| deploy/README.md | T032 |
+| deploy/README.md | T032, T037 |
 | tests/Feature/*.php (5 nuevos) | T010, T011, T012, T013, T014, T015 |
 | docs/adr/0005-produccion-servidor-propio-cloudflare-tunnel.md | T090 (creado y aceptado en `/plan`) |
 | docs/deployment.md, docs/security.md, docs/observability.md | T003 (dominio), T036 (EX2, RS18), T091 |

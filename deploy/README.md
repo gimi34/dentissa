@@ -64,34 +64,70 @@ despliegue** (la cuenta creada al instalar Ubuntu), salvo los marcados "en tu PC
 
 ## 4. Archivos de entorno
 
-Crea los tres archivos en `/opt/dentissa/entorno` (nunca dentro del clon), con
-un editor (`nano`) y permisos 600. Aquí solo van los nombres de las variables:
+Crea los tres archivos en `/opt/dentissa/entorno` (nunca dentro del clon) con
+`nano`, y ponles permisos 600. **Una variable por línea, con la forma
+`NOMBRE=valor`**: sin comas, sin espacios alrededor del `=` y sin comillas. En
+`nano`, guarda con `Ctrl+O` y `Enter`, y sal con `Ctrl+X`. Para las contraseñas,
+`openssl rand -hex 24` da valores sin caracteres problemáticos.
 
-- **`app.env`**
-  - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://<subdominio>`, `LOG_LEVEL=info`
-  - `APP_KEY` (se genera en el paso siguiente)
-  - `SESSION_DRIVER=file`, `SESSION_SECURE_COOKIE=true`, `SESSION_DOMAIN=` (vacío), `CACHE_STORE=database`
-  - `DB_CONNECTION=mariadb`, `DB_HOST=db`, `DB_PORT=3306`, `DB_DATABASE=dentissa`,
-    `DB_USERNAME=dentissa_app`, `DB_PASSWORD` (la misma que `MARIADB_PASSWORD`)
-  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://<subdominio>/auth/google/callback`
-- **`db.env`**: `MARIADB_PASSWORD` y `MARIADB_ROOT_PASSWORD` (dos contraseñas
-  largas distintas, p. ej. `openssl rand -base64 32`). La base (`dentissa`) y el
-  usuario (`dentissa_app`) ya vienen en el Compose.
-- **`tunnel.env`**: `TUNNEL_TOKEN` (el token del paso 3).
+**`app.env`** (pon tus valores donde van los `<…>`; `APP_KEY` se rellena después):
+```
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://<subdominio>
+APP_KEY=
+LOG_LEVEL=info
+SESSION_DRIVER=file
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=
+CACHE_STORE=database
+DB_CONNECTION=mariadb
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=dentissa
+DB_USERNAME=dentissa_app
+DB_PASSWORD=<la misma que MARIADB_PASSWORD de db.env>
+GOOGLE_CLIENT_ID=<client id>
+GOOGLE_CLIENT_SECRET=<client secret>
+GOOGLE_REDIRECT_URI=https://<subdominio>/auth/google/callback
+```
+
+**`db.env`** (dos contraseñas distintas; la base `dentissa` y el usuario
+`dentissa_app` ya vienen en el Compose):
+```
+MARIADB_PASSWORD=<contraseña del usuario de la base>
+MARIADB_ROOT_PASSWORD=<otra contraseña, la de root>
+```
+
+**`tunnel.env`** (solo la cadena larga que va tras `--token` en Cloudflare):
+```
+TUNNEL_TOKEN=<token>
+```
 
 ```bash
 cd /opt/dentissa/entorno
-nano app.env && nano db.env && nano tunnel.env
+nano app.env
+nano db.env
+nano tunnel.env
 chmod 600 app.env db.env tunnel.env
 ls -l
+grep -vnE '^[A-Z_]+=' app.env db.env tunnel.env   # no debe imprimir nada
+cut -d= -f1 app.env                               # solo los nombres
 ```
 
-**Generar `APP_KEY`** sin arrancar la base, y copiarla a `app.env`:
+**Generar `APP_KEY`** sin arrancar la base y guardarla en `app.env` sin que
+aparezca en pantalla (la primera vez construye la imagen):
 ```bash
 cd /opt/dentissa/app
-docker compose -f docker-compose.prod.yml build app
-docker compose -f docker-compose.prod.yml run --rm --no-deps app php artisan key:generate --show
+CLAVE=$(docker compose -f docker-compose.prod.yml run --rm --no-deps app php artisan key:generate --show | tail -n 1 | tr -d '\r')
+echo "$CLAVE" | grep -c '^base64:'                 # debe dar 1; si da 0, no sigas
+sed -i '/^APP_KEY=/d' /opt/dentissa/entorno/app.env
+printf 'APP_KEY=%s\n' "$CLAVE" >> /opt/dentissa/entorno/app.env
+unset CLAVE
+grep -c '^APP_KEY=base64:' /opt/dentissa/entorno/app.env   # debe dar 1
 ```
+Esta orden crea vacío el volumen de la base; `desplegar.sh` lo detecta y trata
+igualmente el primer despliegue como tal.
 
 ## 5. Google
 

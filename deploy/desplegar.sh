@@ -36,6 +36,14 @@ esperar_db() {
     error "la base no está sana tras 5 minutos (docker compose -f docker-compose.prod.yml logs db)"
 }
 
+# ¿Tiene datos la base? No basta con que exista el volumen: `run --rm` de app
+# (p. ej. al generar APP_KEY) lo crea vacío. Se mira su contenido con la imagen
+# y el volumen del propio servicio db, sin arrancar la base.
+base_con_datos() {
+    docker volume inspect "${proyecto}_db_data" > /dev/null 2>&1 || return 1
+    [[ -n "$("${compose[@]}" run --rm --no-deps -T --entrypoint ls db -A /var/lib/mysql 2>/dev/null)" ]]
+}
+
 main() {
     local ref="${1:-}"
     [[ -n "${ref}" ]] || error "indica la versión: bash deploy/desplegar.sh <tag o commit>"
@@ -53,10 +61,12 @@ main() {
 
     paso "Copia de la base"
     local copia=""
-    if docker volume inspect "${proyecto}_db_data" > /dev/null 2>&1; then
+    if base_con_datos; then
+        "${compose[@]}" up -d db
+        esperar_db
         copia="$(bash deploy/respaldar.sh | tee /dev/stderr | tail -n 1)" || error "falló la copia de la base; no se despliega"
     else
-        echo "Primer despliegue: no existe el volumen de la base, se sigue sin copia previa."
+        echo "Primer despliegue: la base aún no tiene datos, se sigue sin copia previa."
     fi
 
     paso "Obteniendo ${ref}"
