@@ -60,7 +60,7 @@ En la aplicación cambian tres cosas:
 | `deploy/preparar-servidor.sh` (nuevo) | Se ejecuta una vez, con sudo, en el Ubuntu recién instalado: actualiza el sistema, activa `unattended-upgrades`, instala Docker Engine desde el repositorio oficial y configura `ufw` (deniega todo lo entrante y permite SSH solo desde la red local). SSH queda solo con clave (`PasswordAuthentication no`, `PermitRootLogin no`) **después** de comprobar que existe una clave autorizada. Crea `/opt/dentissa` y `/var/backups/dentissa` | Alto: puede dejar al usuario sin acceso si se ejecuta mal; el script lo comprueba antes |
 | `deploy/respaldar.sh` (nuevo) | `mariadb-dump` de la base a `/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz` (permisos 600); conserva las 14 más recientes | Bajo |
 | `deploy/restaurar.sh` (nuevo) | Restaura una copia en la base, previa confirmación escrita | Medio |
-| `deploy/desplegar.sh` (nuevo) | `desplegar.sh vX.Y.Z`: comprueba el árbol, hace la copia (`respaldar.sh`), `git fetch --tags` y `checkout` del tag, construye las imágenes, `up -d`, `migrate --force`, `config:cache` y `route:cache`, y ejecuta `verificar.sh`. Si falla la verificación, lo indica y propone `volver.sh` | Medio |
+| `deploy/desplegar.sh` (nuevo) | `desplegar.sh <tag o commit>` (en producción, siempre el tag `vX.Y.Z`; un commit solo en el ensayo de D13): comprueba el árbol, hace la copia (`respaldar.sh`), `git fetch --tags` y `checkout` de la referencia, construye las imágenes, `up -d` de `app`, `web` y `db` (nunca arranca ni para `cloudflared`), `migrate --force`, `config:cache` y `route:cache`, y ejecuta `verificar.sh`. Si falla la verificación, lo indica y propone `volver.sh` | Medio |
 | `deploy/volver.sh` (nuevo) | `volver.sh vX.Y.Z-anterior [copia]`: `checkout` del tag anterior, construcción y `up`; si hubo migración, restaura la copia indicada; después ejecuta `verificar.sh` | Medio |
 | `deploy/verificar.sh` (nuevo) | Verificación posterior: `GET /up` por la dirección pública (200); `APP_DEBUG=false` y `APP_ENV=production` dentro de `app`; ningún puerto de Docker publicado (`docker compose ps`) ni escuchando fuera de `localhost`, salvo SSH (`ss -tlnp`); `upload_max_filesize` y `date.timezone` iguales a `local.ini`; HTTPS en la redirección de `/` | Bajo |
 | `deploy/README.md` (nuevo) | Guía paso a paso: preparar el servidor, crear el túnel en Cloudflare (Zero Trust → Tunnels, hostname público → `http://web:80`), la deploy key de solo lectura en GitHub, `/opt/dentissa/.env.production`, primer despliegue, rotar credenciales, copia a tu PC con `scp`, volver atrás y registrar el redirect de Google | Bajo |
@@ -125,10 +125,10 @@ Sin migraciones ni cambios de esquema.
   - El montaje de `local.ini` apunta a un archivo que existe.
   - `db` usa `MARIADB_USER` y la app no usa root.
   - Falla hoy.
-- **Comprobaciones en el servidor (P2 1.2.1), anotadas en su tarea:**
-  - `deploy/verificar.sh` en el primer despliegue (CA1, CA3, CA4, CA10).
+- **Comprobaciones en el servidor (P2 1.2.1), anotadas en su tarea.** Se hacen en el ensayo de D13, durante `/implement` y con `cloudflared` parado, salvo las que necesitan la dirección pública (CA1, CA2 y CA8 con la IP real), que se hacen en `/release`:
+  - `deploy/verificar.sh --interna` en el ensayo (CA3, CA4, CA10) y `verificar.sh` contra la dirección pública en `/release` (CA1).
   - Desde otro equipo de la red: `nmap` o intento de conexión a 3306, 8080 y 80 del servidor, todos cerrados, y SSH con contraseña rechazado (CA3).
-  - Login con las contraseñas del README rechazado en producción (CA5).
+  - Las contraseñas del README no autentican en el servidor tras rotarlas (CA5).
   - Copia y restauración ensayadas, con la base igual por recuento de filas y suma de comprobación del volcado (CA6).
   - Vuelta atrás ensayada, cronometrada en 15 minutos o menos (CA7).
   - `sudo reboot` del servidor, cronometrado en 5 minutos o menos, y los logs anteriores siguen en sus volúmenes (CA9).
@@ -191,17 +191,20 @@ Casos de abuso de la spec → amenazas: CA3 → TM1; CA4 → TM2; CA5 → TM5 y 
   - login por rol y una cita ficticia agendada y cancelada.
 
 ## Rollout
-- Este es el **primer despliegue a producción** del proyecto. Lo ejecuta `/release 030` siguiendo
-  `docs/deployment.md` (actualizado en esta spec), con aprobación explícita del usuario.
-- Orden del primer despliegue:
-  1. `preparar-servidor.sh`;
-  2. clonar el repo con la deploy key;
-  3. crear `/opt/dentissa/.env.production`;
-  4. `desplegar.sh vX.Y.Z` con `cloudflared` **parado**;
-  5. `dentissa:rotar-credenciales --confirmar`;
-  6. `verificar.sh` contra la red interna;
-  7. arrancar `cloudflared`;
-  8. `verificar.sh` contra la dirección pública.
+- Este es el **primer despliegue a producción** del proyecto, en dos tiempos (D13):
+  - **Ensayo en `/implement`, sin exposición** (con `cloudflared` parado, nadie de fuera llega):
+    1. `preparar-servidor.sh`;
+    2. clonar el repo con la deploy key;
+    3. crear `/opt/dentissa/.env.production`;
+    4. `desplegar.sh <commit>` de la rama;
+    5. `dentissa:rotar-credenciales --confirmar`;
+    6. `verificar.sh --interna`;
+    7. ensayos de CA3, CA6, CA7, CA9 y CA10.
+  - **Apertura en `/release 030`**, siguiendo `docs/deployment.md` (actualizado en esta spec) y con aprobación explícita del usuario:
+    1. `desplegar.sh vX.Y.Z` (el tag de la versión);
+    2. `verificar.sh --interna`;
+    3. arrancar `cloudflared` (`docker compose -f docker-compose.prod.yml up -d cloudflared`);
+    4. `verificar.sh` contra la dirección pública y comprobaciones de CA1, CA2 y CA8.
 - Feature flag: no aplica. El límite de intentos está siempre activo, y la exposición se controla
   arrancando o parando `cloudflared`.
 - Compatibilidad: en local, `trustProxies` y los limitadores se comportan igual; el Compose de local
@@ -232,6 +235,7 @@ Casos de abuso de la spec → amenazas: CA3 → TM1; CA4 → TM2; CA5 → TM5 y 
 - **D10 · Límites (RS4):** login por `email|ip` contando solo fallos, en el controlador; alta (contador común de los dos pasos) y Google por IP con `RateLimiter::for` y `throttle`. Todos de 5 por minuto (spec CA8 retocado, decisión del usuario, 2026-10-03).
 - **D11 · Logs persistentes (OB7.a):** volúmenes `storage` y `nginx_logs`; se descarta depender del log de Docker, que se pierde al recrear el contenedor.
 - **D12 · `local.ini` (RD4.a):** los dos Compose montan `docker/nginx/php/local.ini`, el archivo real; se descarta moverlo para no tocar más archivos.
+- **D13 · Ensayo en el servidor durante `/implement`** (decisión del usuario, 2026-10-03): los criterios que solo se comprueban en el servidor (CA3, CA6, CA7, CA9 y CA10) se ensayan antes de T092, con la rama desplegada por commit y `cloudflared` parado, de modo que la aplicación no queda expuesta antes de la aprobación de `/release`. En `/release` solo se despliega el tag, se abre el túnel y se comprueba lo público (CA1, CA2 y CA8 con la IP real). Se descarta dejarlo todo para `/release`: esos criterios no podrían marcarse en T092.
 
 ## Impacto en arquitectura
 Al implementar (T090/T091):
