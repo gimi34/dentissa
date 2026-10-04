@@ -1,90 +1,84 @@
 ---
 result: fail
-round: 1
-mode: full
+round: 2
+mode: delta
 constitution_version: 1.2.1
 date: 2026-10-03
-spec_sha: 6b7238aa703a
-plan_sha: bc6e47874e1c
-tasks_sha: 03171226af8d
+spec_sha: d7dce91e4569
+plan_sha: 622714d22347
+tasks_sha: 1c798b5930ed
 ---
 
 # Análisis · 030 Producción en un servidor propio expuesto a internet
 
 ## Resumen
-`fail`. El análisis es completo y lo hizo un subagente independiente; cada hallazgo se verificó contra
-los documentos de origen. Los hallazgos críticos son tres:
-- correcciones de riesgo que también piden staging se marcarían mitigadas enteras (A1);
-- la parte de local de RS7.b no está ni dentro ni fuera (A2);
-- P7 se da por "no aplica" sin una excepción aceptada, aunque la spec toca el login (A4).
+`fail`. Análisis delta con subagente: el diff contra la ronda 1 ocupa unos 100 KB. De los 22 hallazgos
+corregidos de la ronda 1, 17 quedan resueltos y 5 resueltos con efecto nuevo.
 
-Hay además varios altos de ejecutabilidad en `desplegar.sh`, el archivo de entorno y el escaneo de
-imágenes. El usuario resolvió todas las decisiones pendientes el 2026-10-03 y aceptó 12 hallazgos
-menores como notas de tarea.
+Hay dos altos nuevos, que el usuario decide corregir:
+- **A35:** nada obliga a redirigir a https la entrada por `http://`, así que el login podría
+  servirse sin cifrar hasta Cloudflare (CA2, TM9).
+- **A36:** los archivos de entorno por servicio ya no quedan excluidos del paquete, y el plan no
+  fija dónde va el clon (P5).
 
-Conteo: CRÍTICA 3 · ALTA 9 · MEDIA 19 · BAJA 3
+Los siete medios y bajos se aceptan como notas de tarea.
+
+Conteo: CRÍTICA 0 · ALTA 2 · MEDIA 5 · BAJA 2
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 10 / 10 (CA1, CA2 y CA8 con su parte pública solo en T097 → A6) |
-| Amenazas con control y test | 7 / 9 (TM4 sin test de nginx antes de T097 → A14; cookie de TM9 sin comprobar en el servidor → A15); faltan dos amenazas (A13, A29) |
-| Principios de la constitución evaluados | 9 / 9 |
+| Criterios con tarea de test e implementación | 10 / 10 (a CA2 le falta la entrada por http → A35) |
+| Amenazas con control y test | 11 / 11 (al control de TM9 le falta la entrada por http → A35) |
+| Principios de la constitución evaluados | 9 / 9 (P5 → A36; P7 con excepción aceptada) |
 
 ## Seguimiento de rondas anteriores
-Primera ronda.
+Ronda anterior: [history/analysis.r1.md](history/analysis.r1.md).
+
+| ID | Severidad | Estado | Evidencia |
+|---|---|---|---|
+| A1 | CRÍTICA | resuelto | La spec (Cobertura de riesgos) divide las correcciones y saca las de staging (RD1.d, RD3.d, RS7.e, OB4.c, OB7.b) → objetivo 5. T091 crea las nuevas y T098 deja abiertos sus riesgos |
+| A2 | CRÍTICA | resuelto | Spec CA3 y RS7.b dentro; plan `docker-compose.yml` con puertos en `127.0.0.1`; T014 y T024 |
+| A3 | ALTA | resuelto | T098 va riesgo por riesgo y coincide con `deployment.md`, `security.md` y `observability.md` |
+| A4 | CRÍTICA | resuelto | Fila `contradicción` con fuente `usuario`; P7 ❌ aceptado; `Lockout` en T010, T021 y T022; T051 (detalle → A42) |
+| A5 | ALTA | resuelto con efecto nuevo (→ A39) | Fila `contradicción` y aprobación en T040 y T044; la spec y el plan dicen "antes de cada ensayo" |
+| A6 | ALTA | resuelto | CA1 reescrito; T092 y T097 |
+| A7 | ALTA | resuelto con efecto nuevo (→ A41) | D17 y T030; generar `APP_KEY` con `run` crea la base antes del primer despliegue |
+| A8 | ALTA | resuelto | `desplegar.sh` y `volver.sh` con `--interna`; Rollout |
+| A9 | ALTA | resuelto con efecto nuevo (→ A36) | D15 y Contratos con un archivo por servicio; los nombres ya no quedan excluidos del paquete |
+| A10 | ALTA | resuelto | `DENTISSA_ENV_DIR` y T027 |
+| A11 | ALTA | resuelto | D14, T033 (antes de T040) y T050 |
+| A13 | MEDIA | resuelto | `trustProxies` solo con el protocolo; TM10; T011 y T020 |
+| A14 | MEDIA | resuelto | Subred `172.28.0.0/24` coherente en D3, la conf, el Compose y T014, T026, T027 y T040 |
+| A16 | MEDIA | resuelto con efecto nuevo (→ A41) | Contratos de `app.env`; T031 y T032 |
+| A20 | MEDIA | resuelto con efecto nuevo (→ A40) | D17: se migra antes de levantar y se restaura antes de levantar la versión anterior |
+| A22 | MEDIA | resuelto | D16 y T028 |
+| A25 | MEDIA | resuelto | `extends: [001, 002]` y T098 |
+| A26 | ALTA | resuelto | Fila `contradicción` con fuente `usuario` y T051 |
+| A28 | MEDIA | resuelto | T003; T024 y T027 con la aprobación de rutas protegidas |
+| A29 | MEDIA | resuelto | TM11; T028, T029 y T043 |
+| A30 | MEDIA | resuelto | Filas con fuente `usuario (/analyze A30)` |
+| A34 | MEDIA | resuelto | RS13.a dentro y RS13.b fuera; T091, T051 y T098 |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A1 | Cobertura de riesgos | CRÍTICA | tasks T098; spec, Cobertura de riesgos; `deployment.md` RD1.a y RD3.c; `security.md` RS7.a; `observability.md` OB4.b y OB7.a | En su documento de origen, RD1.a, RD3.c, RS7.a, OB4.b y OB7.a incluyen staging, que la spec deja fuera. T098 las marcaría mitigadas enteras, y la parte de staging desaparecería del seguimiento. | Decisión del usuario: dividir. En su documento, cada una se parte en producción (dentro, que mitiga la 030) y staging (corrección nueva, pendiente → objetivo 5). Ajustar la Cobertura de riesgos de la spec, T091 y T098 (`/specify --edit`, `/tasks --fix`). |
-| A2 | Cobertura de riesgos | CRÍTICA | `security.md` RS7.b; spec, Cobertura de riesgos; T024, T098 | RS7.b también pide que en local los puertos se publiquen solo en `127.0.0.1`. `docker-compose.yml` publica 3306 (root/root) y 8080 en todas las interfaces, y ninguna tarea lo cambia. | Decisión del usuario: incluirlo. En local, todos los `ports` quedan en `127.0.0.1` (test: caso de T014 que falla con un puerto sin `127.0.0.1:`); `/plan --fix` (Cambios por módulo, Trazabilidad), `/tasks --fix` (T014, T024). |
-| A3 | Cobertura de riesgos | ALTA | T098 | La conclusión por riesgo de T098 contradice la spec: dice que RD3, RS7 y OB7 "siguen con correcciones de fuera pendientes" cuando todas sus correcciones están dentro, y omite RD4. | Tras A1 y A2, T098 enumera riesgo por riesgo qué pasa a mitigado (RS4, RD4…) y cuál sigue abierto, con la corrección pendiente concreta (`/tasks --fix`). |
-| A4 | Constitución (P7) | CRÍTICA | plan, Constitution Check P7; T021; spec, Auditoría | P7 exige auditar los logins fallidos y la 030 modifica `AuthController::login`. El plan marca P7 como ➖ sin excepción aceptada. Además, el rechazo por límite no pasa por `Auth::attempt`, así que no dispara ningún evento que la 020 pueda escuchar. | Decisión del usuario: excepción P7 hasta la 020, registrada en la spec (Decisiones, fuente `usuario`) y en el roadmap. El rechazo por límite emite el evento estándar de bloqueo del framework (test: `Event::fake` en `LimiteIntentosTest`) para que la 020 lo audite sin tocar el login. `/specify --edit`, `/plan --fix`, `/tasks --fix` (T010, T021). |
-| A5 | Constitución (Gobierno) | ALTA | plan D13; T040, T044; `deployment.md` (despliegue solo de tags); spec, RNF | D13 instala en el servidor de producción commits sin revisar, aunque sin exponer, sin una fila `contradicción` con fuente `usuario` y sin registrar la aprobación. | Decisión del usuario: excepción con aprobación. Fila `contradicción` en la spec. T040 y T044 exigen la aprobación explícita del usuario antes de ejecutarse, anotada. `deployment.md` (T091) recoge el ensayo sin exposición. La fila del RNF de aprobación cita T040, T044 y T096. |
-| A6 | Inconsistencia | ALTA | spec CA1; T092 | CA1 exige "una versión liberada" que "responde en su dirección pública", pero T092 lo marcaría por un ensayo interno de un commit. | Decisión del usuario: reescribir CA1 (`/specify --edit`) como despliegue desde cero con verificación por la red interna, que se marca en T092. La comprobación pública (HTTPS, login por rol y cita) es verificación del Rollout en T097, junto con las partes públicas de CA2 y CA8. Ajustar la Trazabilidad del plan y T092. |
-| A7 | Inconsistencia | ALTA | plan, `deploy/desplegar.sh`; T030, T040 | `desplegar.sh` hace la copia primero y se detiene si falla. En el primer despliegue no hay base, así que no podría completarse. Tampoco espera a que `db` termine de cargar el volcado antes de migrar. | `/plan --fix`: el primer despliegue funciona sin copia previa y lo indica en su salida, y la migración solo empieza cuando `db` responde. `/tasks --fix` T030: `hecho cuando` lo comprueba leyendo el código, y T040 lo ejercita. |
-| A8 | Inconsistencia | ALTA | plan, `deploy/desplegar.sh` y Rollout; T030 | `desplegar.sh` "ejecuta `verificar.sh`" sin modo. Sin `--interna` fallaría en el ensayo y en el primer paso de la release, con el túnel parado. | `/plan --fix`: `desplegar.sh` y `volver.sh` verifican siempre por la red interna, y la verificación pública es un paso aparte del Rollout. `/tasks --fix` T030. |
-| A9 | Inconsistencia / Seguridad | ALTA | plan, Contratos (variables) y `docker-compose.prod.yml`; T027 | Un único `env_file` para los cuatro servicios no cuadra con los nombres que espera cada imagen (MariaDB, la app y `cloudflared`; `TUNNEL_TOKEN` frente a `CLOUDFLARE_TUNNEL_TOKEN`). Además, cada servicio recibiría los secretos de los demás. | `/plan --fix`: cada servicio recibe solo sus variables, con los nombres exactos fijados en Contratos (test: caso de T014 que comprueba que `cloudflared` y `db` no reciben el entorno de la app). `/tasks --fix` T014, T027, T032. |
-| A10 | Ambigüedad | ALTA | T027 | `docker compose config` "con un archivo de entorno de prueba" no se puede ejecutar en el equipo de desarrollo con una ruta absoluta de Linux, y no se dice cómo sustituirla. | `/plan --fix` (junto con A9): la ruta de los archivos de entorno es configurable, con valor por defecto en `/opt/dentissa`. `/tasks --fix` T027: la ruta del archivo de prueba, con solo nombres de variables. |
-| A11 | Seguridad (P6) | ALTA | plan, Constitution Check P6; T002, T050 | Llegan a producción imágenes base nuevas y solo se ejecuta `trivy fs`, que no analiza sus paquetes del sistema. El plan dice "T040" y las tareas, T050. | `/plan --fix`: las imágenes base fijadas y las construidas (`app`, `web`) pasan `trivy image` sin críticas ni altas antes del ensayo, o con una excepción registrada. `/tasks --fix`: tarea antes de T040. |
-| A12 | Inconsistencia (orden) | MEDIA | T040, T050 | Los escáneres de T050 van después del ensayo en el servidor. | Aceptado como nota de T040. |
-| A13 | Seguridad | MEDIA | plan D3 y Modelo de amenazas; T011, T020 | Con `trustProxies(at: '*')`, Laravel acepta `X-Forwarded-Host` y `X-Forwarded-Port` de cualquier cliente, lo que permite inyectar host y puerto en URLs y redirecciones. No hay ninguna amenaza para esto, y T011 habla de "desde el proxy" sin poder distinguirlo. | `/plan --fix`: nueva TM. Un `X-Forwarded-Host` o `X-Forwarded-Port` ajeno no cambia `url('/')` ni las redirecciones (test: caso nuevo en `ProxyHttpsTest`). Control a elegir en el plan. `/tasks --fix` T011, T020. |
-| A14 | Cobertura (TM4) | MEDIA | plan `dentissa.prod.conf` y `docker-compose.prod.yml`; T027, T040; tabla de amenazas | `real_ip` confía en `172.16.0.0/12`, pero la subred de la red de Compose no se fija. El control de nginx solo se prueba en T097, que no figura en la Cobertura de TM4. | `/plan --fix`: la red de producción tiene una subred fija dentro del rango de confianza (test: caso de T014). En el ensayo, una petición con `CF-Connecting-IP` y un `X-Forwarded-For` falso deja la IP de `CF-Connecting-IP` en el access log (comprobación en T040). T097 entra en la Cobertura de TM4. |
-| A15 | Cobertura (CA2, TM9) | MEDIA | T011, T031 | El caso de la cookie `Secure` de T011 ya pasa hoy (es de caracterización). `verificar.sh` no comprueba `SESSION_SECURE_COOKIE`, `APP_URL` ni el redirect de Google en https. | Aceptado como nota de T011 y T031. |
-| A16 | Cobertura | MEDIA | plan, Contratos (variables); T031, T032 | Las variables de producción no incluyen `APP_KEY` (ni cómo generarla sin `.env`), `CACHE_STORE` (los limitadores dependen de él) ni `SESSION_DRIVER`. | `/plan --fix` Contratos. `/tasks --fix` T031 (`APP_KEY` no vacía, `CACHE_STORE` distinto de `array`) y T032 (cómo generar la clave). |
-| A17 | Inconsistencia | MEDIA | plan, Trazabilidad CA6; T043 | El recuento de filas no detecta un UPDATE; la Estrategia pedía además una suma de comprobación. | Aceptado como nota de T043. |
-| A18 | Cobertura | MEDIA | T044; spec CA7 | CA7 pide pasar "la misma verificación" tras la vuelta atrás, incluidos el login por rol y la cita. | Aceptado como nota de T044. |
-| A19 | Cobertura | MEDIA | T045, T097; spec CA9 | El reinicio se ensaya con el túnel parado y nunca se comprueba que `cloudflared` vuelva solo. | Aceptado como nota de T097. |
-| A20 | Inconsistencia | MEDIA | plan, `desplegar.sh` y `volver.sh`; `deployment.md` (migrar antes de cambiar el tráfico) | `desplegar.sh` levanta la versión nueva y migra después; `volver.sh` levanta y restaura después. `deployment.md` pide lo contrario. | `/plan --fix`: migrar antes de levantar la versión nueva y restaurar antes de levantar la anterior. Si se mantiene otro orden, registrarlo como decisión. `/tasks --fix` T030. |
-| A21 | Inconsistencia | MEDIA | T030 | `desplegar.sh` y `volver.sh` hacen `checkout` del repositorio que los contiene mientras bash los está leyendo. | Aceptado como nota de T030. |
-| A22 | Ambigüedad | MEDIA | T028; spec, Notas para /plan | Con sudo, `~` es `/root`, así que la comprobación de la clave mira donde no toca. No se define el usuario de despliegue ni sus permisos (grupo `docker`, `/opt/dentissa`, copias). | `/plan --fix`: el usuario de despliegue y sus permisos; la comprobación de clave usa el usuario que invoca sudo. `/tasks --fix` T028. |
-| A23 | Ambigüedad | MEDIA | T014 | "La app no usa root" no se puede comprobar como texto del Compose, y `COPY --from=` escapa a la comprobación de imágenes fijadas. | Aceptado como nota de T014. |
-| A24 | Inconsistencia | MEDIA | plan, `AuthController`; T021 | "Si se superan 5 fallos" frente a "tras 5 fallos se rechaza el 6.º": error de uno en el umbral. | Aceptado como nota de T021. |
-| A25 | Inconsistencia (`extends`) | MEDIA | spec frontmatter; 001 CA9; 002 CA7 | La 030 cambia el comportamiento de la 001 (límite en login y Google) y de la 002 (límite en el alta) con `extends: []`. | `/specify --edit`: `extends: [001, 002]`, declarando que resuelve en parte 001 CA9 (límite sí; el registro, en la 020) y 002 CA7. T098 los actualiza al liberar. |
-| A26 | Duplicación y conflicto | ALTA | spec, Decisiones; 020 plan P8 (decisión del usuario 2026-09-28: la 023 antes de producción) | La 030 abre producción con OB4.a fuera, en contra de una decisión anterior del usuario. Además, la 020 añade `scheduler` solo al Compose de local. | Decisión del usuario: aceptar el residuo (datos ficticios, logs solo en el servidor; la 023 antes de tener datos reales). Fila `contradicción` en la spec (`/specify --edit`). En el roadmap, la 020 debe añadir `scheduler` a `docker-compose.prod.yml` y probar sus triggers sin root (T091). |
-| A27 | Duplicación y conflicto | BAJA | T020, T022; 014 y 020 | 014, 020 y 030 editan `AppServiceProvider.php`, `bootstrap/app.php` y `routes/web.php`. | Aceptado como nota de T020, T022. |
-| A28 | Seguridad | MEDIA | T002, T024, T027; `security.md`, Permisos del agente | T002 consulta `hub.docker.com`, que no está aprobado. T024 y T027 tocan rutas protegidas sin aprobación registrada. | Decisión del usuario: aprobar ambas cosas. `hub.docker.com` pasa a los dominios del agente en `security.md` (T091; T002 lo anota) y T024 y T027 quedan aprobadas como cambios en rutas protegidas (`/tasks --fix`). |
-| A29 | Seguridad | MEDIA | plan, Modelo de amenazas y D9; spec, Datos sensibles | Ninguna amenaza cubre las copias de seguridad, que contienen datos personales y de salud, van sin cifrar y se copian por `scp` a un PC. | `/plan --fix`: nueva TM con control parcial (permisos 600, 14 copias, `scp` por SSH) y residuo → 031 (RS15.b). Test: comprobación de permisos en T043. |
-| A30 | Ambigüedad | MEDIA | spec, Decisiones (filas `supuesto`) | Hay tres supuestos sin confirmar que condicionan el diseño: el umbral de 5 por minuto, la administración solo desde la red local y los tiempos de 15, 15 y 5 minutos. | Decisión del usuario: los tres confirmados. Pasan a fuente `usuario` (`/specify --edit`). |
-| A31 | Cobertura | MEDIA | T031; spec CA5 | Las contraseñas se rotan una sola vez. Si se recrea la base, el volcado devuelve las del README y nada lo detecta. | Aceptado como nota de T031. |
-| A32 | Ambigüedad | BAJA | T090 | T090 no sigue el formato de tarea. | Aceptado como nota de T090. |
-| A33 | Seguridad | BAJA | T032, T046 | La prueba por túnel SSH con cookie `Secure` solo funciona entrando por `localhost`. | Aceptado como nota de T032. |
-| A34 | Cobertura de riesgos | MEDIA | spec, Cobertura de riesgos; `security.md` RS13.a | RS13.a (mensaje genérico y límite en el alta) recibe el límite de la 030, pero no aparece en la tabla. | `/specify --edit`: si una corrección se cumple solo en parte, se divide en su documento (A1). El límite del alta va dentro (CA8) y el mensaje genérico fuera, con destino. T091 y T098 lo reflejan. |
+| A35 | Seguridad / Cobertura (CA2, TM9) | ALTA | plan `bootstrap/app.php`, D3, `verificar.sh`, TM9; T020, T031, T097 | Con `trustProxies` solo para el protocolo, CA2 se cumple por https. Pero `X-Forwarded-Proto` refleja el protocolo del visitante, y nada garantiza que `http://<subdominio>` se redirija a https (HSTS va a la 031). La app serviría el login por http. | Decisión del usuario: corregir. Toda petición por `http://` a la dirección pública recibe una redirección permanente a `https://` antes de servir una página (comprobación: `verificar.sh` en modo público y T097 con `curl -I http://<subdominio>/login` → 301/308 a https). TM9 cita el control. `/plan --fix A35`, `/tasks --fix A35`. |
+| A36 | Seguridad (P5; CA5, CA10) | ALTA | plan Contratos, D15, `.dockerignore`, P5; T014, T025, T040, T042 | `app.env`, `db.env` y `tunnel.env` no coinciden con `.env*` de `.dockerignore` ni con `.gitignore`, y el plan no fija dónde va el clon. Con el clon en `/opt/dentissa`, entrarían en la imagen `app`, y `desplegar.sh` los vería como no rastreados. | Decisión del usuario: corregir. Ningún archivo de entorno del servidor puede entrar en el contexto de construcción ni en la imagen, esté donde esté el clon (comprobación: caso de T014 y listado de la imagen en T026 y T042 sin esos nombres). `/plan --fix A36`, `/tasks --fix A36`. |
+| A37 | Inconsistencia | MEDIA | ADR 0005 (Decisión) frente a D3 y D15; T090 | El ADR dice que Laravel confía en el proxy "para el protocolo y el host" y cita `.env.production`. | Aceptado como nota de T090. |
+| A38 | Ambigüedad | MEDIA | plan, `docker-compose.prod.yml` ("red interna"); T027 | "Red interna" podría implementarse con `internal: true`, que corta la salida de `cloudflared` y de `app` (Google). | Aceptado como nota de T027. |
+| A39 | Inconsistencia | MEDIA | spec y plan ("antes de cada ensayo"); T043, T045 | La aprobación previa solo figura en T040 y T044; T043 (restaurar) y T045 (reiniciar) no la piden. | Aceptado como nota de T043, T045. |
+| A40 | Inconsistencia | MEDIA | plan `volver.sh`, D17; T030, T044 | `volver.sh` restaura la copia mientras la versión que falló sigue atendiendo peticiones. | Aceptado como nota de T030, T044. |
+| A41 | Inconsistencia | MEDIA | plan `deploy/README.md`, D17; T032, T040 | Generar `APP_KEY` con `docker compose run --rm app` arranca `db` (por `depends_on`) y crea la base antes del primer despliegue, y la rama "sin copia previa" ya no se ejerce. | Aceptado como nota de T032, T040. |
+| A42 | Inconsistencia | BAJA | spec Auditoría ("cada rechazo"); plan P7; T010 | La spec pide que cada rechazo sea identificable, y el plan emite `Lockout` solo en el login y en Google. | Aceptado como nota de T010. |
+| A43 | Cobertura | BAJA | plan Cambios por módulo e Impacto; T003, T051 | `docs/roadmap.md` (T051) no figura en el plan, y el plan asigna `hub.docker.com` a T090/T091 cuando lo hace T003. | Aceptado como nota de T003, T051. |
 
 ## Decisiones pendientes del usuario
-Ninguna. Todas se resolvieron el 2026-10-03:
-- **A1:** dividir.
-- **A2:** incluir.
-- **A4:** excepción P7 hasta la 020, con el evento de bloqueo.
-- **A5:** excepción con aprobación anotada.
-- **A6:** reescribir CA1.
-- **A26:** aceptar el residuo de OB4.a.
-- **A28:** aprobar `hub.docker.com` y las rutas protegidas.
-- **A30:** confirmar los tres supuestos.
+Ninguna. El 2026-10-03 el usuario decidió corregir A35 y A36 con `--fix` y aceptar los demás como
+notas.
 
 ## Aceptados
-Aceptados por el usuario el 2026-10-03:
+Aceptados por el usuario el 2026-10-03 (ronda 1, siguen vigentes; ver [history/analysis.r1.md](history/analysis.r1.md)):
 - **A12** → nota de T040: antes del primer despliegue en el servidor, gitleaks, semgrep `p/php`, `composer audit` y `npm audit` sobre la rama sin hallazgos críticos ni altos, con la salida anotada. T050 los repite al final.
 - **A15** → nota de T011, T031: en T011, el caso de la cookie `Secure` es de caracterización y se comprueba rompiéndolo (`session.secure=false`). `verificar.sh` comprueba además `SESSION_SECURE_COOKIE=true`, y `APP_URL` y `GOOGLE_REDIRECT_URI` en https, sin imprimir valores secretos.
 - **A17** → nota de T043: además del recuento de filas, `CHECKSUM TABLE` por tabla igual antes y después de restaurar.
@@ -97,3 +91,12 @@ Aceptados por el usuario el 2026-10-03:
 - **A31** → nota de T031: `verificar.sh` comprueba que ninguna contraseña del README autentica, sin imprimirlas.
 - **A32** → nota de T090: archivos (`docs/architecture.md`, ADR 0005), hecho cuando (secciones de Impacto en arquitectura presentes y ADR `accepted`) y depende (T040).
 - **A33** → nota de T032: la guía avisa de que la prueba por túnel SSH debe abrirse en `http://localhost:<puerto>`, porque por otra dirección la cookie `Secure` no se envía.
+
+Aceptados por el usuario el 2026-10-03 (ronda 2):
+- **A37** → nota de T090: el ADR 0005 se alinea con D3 (Laravel solo confía en el protocolo) y D15 (un archivo de entorno por servicio); T090 lo comprueba leyendo el ADR.
+- **A38** → nota de T027: la red de producción no publica puertos pero no se declara `internal: true`. `cloudflared` y `app` necesitan salida a internet (Cloudflare, Google), y T040 lo comprueba con una petición de salida desde `app`.
+- **A39** → nota de T043, T045: restaurar la base y reiniciar el servidor también son operaciones de ensayo. El usuario da su aprobación explícita antes, y la nota la recoge.
+- **A40** → nota de T030, T044: `volver.sh` detiene `app` y `web` antes de restaurar la copia, para que ninguna versión atienda peticiones contra un esquema a medio restaurar. En T044, los logs de `app` y `web` no muestran 5xx durante la vuelta atrás.
+- **A41** → nota de T032, T040: la guía genera `APP_KEY` sin arrancar `db` (`run --rm --no-deps`), y T040 anota la salida de `desplegar.sh` anunciando el primer despliegue sin copia previa.
+- **A42** → nota de T010: el texto de la spec ("cada rechazo") se cumple así: el login y Google emiten `Lockout` (login fallido para la 020), y el rechazo del alta se identifica por su limitador y su respuesta, no por un evento de login. El caso de T010 lo fija.
+- **A43** → nota de T003, T051: `docs/roadmap.md` (T051) y `docs/security.md` (T003, dominio) son archivos de la spec aunque el plan no los liste en Cambios por módulo; la tabla de módulos de `tasks.md` los recoge.
