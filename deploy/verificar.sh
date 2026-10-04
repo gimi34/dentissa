@@ -91,7 +91,9 @@ main() {
     fi
     if command -v ss > /dev/null; then
         local abiertos
-        abiertos="$(ss -Htln | awk '{print $4}' | grep -vE '^(127\.[0-9.]+|\[::1\]|::1):' | grep -vE ':22$' || true)"
+        # Locales: 127.x y ::1, también con sufijo de interfaz (127.0.0.53%lo:53,
+        # el DNS de systemd-resolved).
+        abiertos="$(ss -Htln | awk '{print $4}' | grep -vE '^(127\.[0-9.]+|\[::1\]|::1)(%[^:]+)?:' | grep -vE ':22$' || true)"
         if [[ -z "${abiertos}" ]]; then
             ok "nada escucha fuera de localhost salvo SSH"
         else
