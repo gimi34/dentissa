@@ -1,1 +1,27 @@
+# Spec 030 (RS7.c, TM6): el paquete de la aplicación no lleva secretos, el
+# repositorio de git, dependencias que se instalan dentro, datos ni archivos
+# del flujo de trabajo.
+
+# Secretos: .env de local y los archivos de entorno de producción.
+.env*
+**/*.env
+
+# Repositorio y dependencias (composer y npm instalan dentro de la imagen).
+.git
+node_modules
+vendor
+
+# Volcado con datos y cuentas.
+database/*.sql
+
+# Estado en tiempo de ejecución (la imagen crea la estructura vacía).
+storage/*
 public/storage
+
+# Ni tests, ni documentación, ni el flujo de trabajo.
+tests
+docs
+.ai
+aidlc
+.claude
+.github

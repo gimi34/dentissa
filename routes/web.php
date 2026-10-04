@@ -18,13 +18,13 @@ Route::get('/login', [AuthController::class,  'loginForm'])->name('login');
 Route::post('/login', [AuthController::class,  'login']);
 Route::post('/logout', [AuthController::class,  'logout'])->name('logout');
 Route::get('/registro', [RegisterController::class, 'showForm'])->name('register');
-Route::post('/registro', [RegisterController::class, 'register']);
+Route::post('/registro', [RegisterController::class, 'register'])->middleware('throttle:registro');
 
 Route::get('/registro/contacto', [RegisterController::class, 'contactoForm'])->name('register.contacto');
-Route::post('/registro/contacto', [RegisterController::class, 'contactoStore']);
+Route::post('/registro/contacto', [RegisterController::class, 'contactoStore'])->middleware('throttle:registro');
 
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:google')->name('auth.google.callback');
 
 // ── Raíz ────────────────────────────────────────────────────────────────
 Route::get('/', function () {

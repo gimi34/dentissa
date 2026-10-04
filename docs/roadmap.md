@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-28
+updated: 2026-10-04
 ---
 
 # Roadmap
@@ -12,10 +12,10 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | # | Objetivo | Criterio de éxito | Spec | Estado |
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
-| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); 015–019 previstas | pendiente |
-| 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
+| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS13.b, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4); 015–019 previstas | pendiente |
+| 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b y OB4.c → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); 028 prevista (reprogramar); 013 (parte 3) | pendiente |
-| 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD3.a, RD3.b, RD3.c, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS8.a, RS8.b, RS15.b, OB4.b, OB6.b, OB7.a; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | — | pendiente |
+| 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (publicar en un servidor propio con Cloudflare Tunnel); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
@@ -195,6 +195,30 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Re-extraer el sistema de diseño con el método de AI-DD 1.11.2 (`/init --upgrade --redo-design`).
   Hecho el 2026-10-04: `system.md` 1.2.0 con 60 vistas capturadas a 390 y 1440 px, deuda conciliada
   (DS1–DS11 vigentes, DS12–DS15 nuevas) y la versión anterior en `docs/design/history/`.
+- Excepción P7 de la spec 030: los logins fallidos y los rechazos por límite de intentos no se
+  registran como eventos de auditoría hasta la spec 020; el login y la vuelta de Google ya emiten
+  `Illuminate\Auth\Events\Lockout` en cada rechazo para que la 020 los audite sin tocar el login
+  (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+- Residuo de OB4.a aceptado al abrir producción con la spec 030: los errores de base de datos pueden
+  dejar SQL con sus valores en `laravel.log` del servidor. Se acepta con datos ficticios; la spec 023
+  (OB4.a) debe liberarse antes de tener datos reales (spec 030, /analyze A26; decisión del usuario,
+  2026-10-03).
+- La spec 020 debe añadir su servicio `scheduler` (purga de la auditoría) también a
+  `docker-compose.prod.yml` y probar sus triggers con el usuario de base `dentissa_app`, sin root
+  (spec 030, /analyze A26).
+- Staging (objetivo 5): RD1.d (restauración probada en staging), RD3.d (TLS en staging), RS7.e
+  (configuración de staging separada), OB4.c (checklist de staging) y OB7.b (logs de nginx en
+  staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1).
+- RS13.b (objetivo 2): mensaje genérico en el alta que no revele si el correo ya tiene cuenta; la
+  spec 030 solo añade el límite de intentos (RS13.a) (/analyze A34).
+- RS18.a: refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más
+  nuevas con 7 días o más y volver a escanear con `trivy image` antes del 2026-10-31, cuando vence
+  la excepción EX2; renovarla o retirarla según el resultado (spec 030, T036; decisión del usuario,
+  2026-10-04).
+- Entorno local: la base `dentissa` de un equipo creado antes de la spec 030 cargó el volcado a
+  medias (la colación de la base cortaba la carga en `horarios_dentista`) y le faltan
+  `fk_horario_personal`, `fk_pacientes_usuario` y `fk_personal_usuario`. Para repararla hay que
+  recrear su volumen (`docker compose down -v` borra los datos locales) (spec 030, T034).
 - En la lista de pacientes de la dentista, el botón "Nuevo paciente" apunta a
   `asistente.pacientes.create`, así que la dentista recibe 403 (`resources/views/pacientes/index.blade.php:5`;
   detectado en la re-extracción del diseño, 2026-10-04).

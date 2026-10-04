@@ -46,24 +46,28 @@ updated: 2026-09-28
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
 |---|---|---|---|
-| `GET/POST /login` | HTTP público | no | sin rate limiting |
-| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | sin rate limiting ni captcha |
-| `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email |
+| `GET/POST /login` | HTTP público | no | 5 fallos por minuto por correo e IP (spec 030) |
+| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | 5 peticiones por minuto por IP en las dos rutas (spec 030); sin captcha |
+| `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
 | `/asistente/*` | HTTP | sí, `role:asistente` | pacientes y expedientes sin filtro de alcance |
 | `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente` |
-| phpMyAdmin `:8080`, MariaDB `:3306` | red (Docker local) | root | publicados en todas las interfaces |
+| phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
+| Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
+| SSH del servidor de producción | red local | clave | solo desde la red local (`ufw`), sin contraseña ni root (spec 030) |
 
 No hay rutas API, webhooks, colas ni tareas programadas.
 
 ## Manejo de secretos
 - Dónde se guardan: `.env` local no versionado (en `.gitignore`). Credenciales de BD de desarrollo
-  escritas en `docker-compose.yml` y `phpunit.xml`. Para staging y producción: TODO(init)
-  (depende de la plataforma, ver [deployment.md](deployment.md)).
-- Rotación: no hay procedimiento.
+  escritas en `docker-compose.yml` y `phpunit.xml`. En producción (spec 030): `app.env`, `db.env` y
+  `tunnel.env` en `/opt/dentissa/entorno` del servidor (carpeta 700, archivos 600, fuera del clon,
+  excluidos de git y de la imagen); cada servicio lee solo el suyo (ver [deployment.md](deployment.md)).
+- Rotación: las contraseñas de las cuentas del volcado se rotan en producción con
+  `php artisan dentissa:rotar-credenciales --confirmar` (spec 030); el resto, sin procedimiento.
 - `README.md` contiene contraseñas de cuentas de prueba y `database/dentissa.sql` datos ficticios
   con hashes (datos ficticios y repo privado, confirmado por el usuario, 2026-09-28).
 
@@ -89,14 +93,15 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 - Rutas protegidas adicionales: `AIDLC.md`, `aidlc/`, `docker-compose.yml`, `Dockerfile`,
   `database/dentissa.sql`
 - Servicios externos aprobados para enviar código o datos: ninguno
-- Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com
+- Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com, hub.docker.com (solo para consultar la fecha de publicación de las etiquetas de imagen al fijar versiones; aprobado por el usuario el 2026-10-03, spec 030, /analyze A28)
 
 ## Excepciones aceptadas
-Ninguna vigente. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, aprobada el
+Vigente: EX2. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, aprobada el
 2026-09-29) se retiró en v0.4.1 (spec 029, 2026-10-03): sus avisos quedaron corregidos.
 
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
+| EX2 | Avisos sin corrección publicada en las imágenes de producción (`trivy image`, 2026-10-04, spec 030 T033/T035, RS18). `app` (`php:8.4.25-fpm`, Debian 13, ya con `apt-get upgrade`): 114 altas y 3 críticas "affected" y 4 altas "fix_deferred" (`linux-libc-dev`, libxml2 con CVE-2026-6653, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.18`: 23 altas y 1 crítica (openssl de Ubuntu y Go de `gosu`), corregidas en imágenes más nuevas que aún no cumplen 7 días. `cloudflare/cloudflared:2026.9.3`: 2 altas de libssl, pendientes de imagen nueva. `web` queda sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; el 64 % es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescar las imágenes fijadas con ≥ 7 días (RS18.a). Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04 | 2026-10-31 |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -144,9 +149,9 @@ en el callback de Google. Permite fuerza bruta y altas masivas (cada alta asigna
 Evidencia: `routes/web.php:17-27`; specs 001, 002.
 
 Correcciones:
-- RS4.a Throttle por IP + email en `POST /login` — estado: pendiente
-- RS4.b Throttle por IP en `POST /registro` y `/registro/contacto` — estado: pendiente
-- RS4.c Throttle en `/auth/google/callback` — estado: pendiente
+- RS4.a Throttle por IP + email en `POST /login` — estado: en curso (spec 030)
+- RS4.b Throttle por IP en `POST /registro` y `/registro/contacto` — estado: en curso (spec 030)
+- RS4.c Throttle en `/auth/google/callback` — estado: en curso (spec 030)
 
 ### RS5 · Media — Vinculación automática de Google por email (A07 Authentication Failures)
 `GoogleAuthController` vincula una cuenta existente de cualquier rol (incluido admin) si el email
@@ -166,20 +171,23 @@ tests. Datos ficticios y repo privado (confirmado por el usuario, 2026-09-28), p
 Correcciones:
 - RS6.a Quitar las contraseñas de `README.md` y documentar cómo crear cuentas de prueba — estado: pendiente
 - RS6.b Sustituir el volcado por migraciones + seeder con datos sintéticos (Faker) — estado: pendiente
-- RS6.c Cambiar las contraseñas de las cuentas del volcado en cualquier entorno compartido antes de desplegar — estado: pendiente
+- RS6.c Cambiar las contraseñas de las cuentas del volcado en cualquier entorno compartido antes de desplegar — estado: en curso (spec 030)
 - RS6.d Purgar del historial de git el volcado con datos y las contraseñas del README, coordinado con el equipo (reescritura de historial y force-push) (decisión del usuario, 2026-09-28) — estado: pendiente
 
 ### RS7 · Media — Configuración Docker insegura si se reutiliza fuera de local (A02 Security Misconfiguration)
 Root de MariaDB con contraseña trivial y `MYSQL_ALLOW_EMPTY_PASSWORD`, puertos 3306 y 8080
 (phpMyAdmin) publicados en todas las interfaces, `.dockerignore` con una sola línea (la imagen
 copiaría `.env`, `.git` y el volcado), `composer:latest` y `phpmyadmin:latest` sin fijar.
-Evidencia: `docker-compose.yml`, `Dockerfile`, `.dockerignore`.
+Evidencia: `docker-compose.yml`, `Dockerfile`, `.dockerignore`. La spec 030 corrige local y crea
+una configuración de producción aparte; lo que pide staging queda pendiente (/analyze 030 A1:
+RS7.a se divide en producción y staging).
 
 Correcciones:
-- RS7.a Configuración de staging/prod separada, con credenciales por variables o secretos y usuario de BD no root — estado: pendiente
-- RS7.b Publicar puertos solo en `127.0.0.1` y dejar phpMyAdmin exclusivamente en local — estado: pendiente
-- RS7.c Ampliar `.dockerignore` (`.env*`, `.git`, `node_modules`, `vendor`, `database/*.sql`, `storage`) — estado: pendiente
-- RS7.d Fijar las imágenes por versión (composer, phpmyadmin, nginx) — estado: pendiente
+- RS7.a Configuración de producción separada, con credenciales por variables o secretos y usuario de BD no root — estado: en curso (spec 030)
+- RS7.b Publicar puertos solo en `127.0.0.1` y dejar phpMyAdmin exclusivamente en local — estado: en curso (spec 030)
+- RS7.c Ampliar `.dockerignore` (`.env*`, `.git`, `node_modules`, `vendor`, `database/*.sql`, `storage`) — estado: en curso (spec 030)
+- RS7.d Fijar las imágenes por versión (composer, phpmyadmin, nginx) — estado: en curso (spec 030)
+- RS7.e Configuración de staging separada, con los mismos requisitos que RS7.a — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### RS8 · Media — Faltan cabeceras de seguridad (A02 Security Misconfiguration)
 Ni la app ni nginx envían CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options,
@@ -225,10 +233,12 @@ Correcciones:
 
 ### RS13 · Baja — Enumeración de cuentas en el registro (A07 Authentication Failures)
 El registro público responde con un mensaje explícito de "correo ya registrado". Evidencia:
-`RegisterController.php`; spec 002.
+`RegisterController.php`; spec 002. La spec 030 añade el límite de intentos en el alta; el mensaje
+genérico queda pendiente (/analyze 030 A34: RS13.a se divide).
 
 Correcciones:
-- RS13.a Mensaje genérico y throttle (ver RS4.b) en el alta — estado: pendiente
+- RS13.a Throttle en el alta (ver RS4.b) — estado: en curso (spec 030)
+- RS13.b Mensaje genérico en el alta, que no revele si el correo ya tiene cuenta — estado: pendiente (→ objetivo 2)
 
 ### RS14 · Baja — Campos privilegiados asignables en masa (A01 Broken Access Control)
 `Usuario::$fillable` incluye `rol`, `activo` y `password_hash`. Hoy siempre se usan arrays
@@ -279,6 +289,16 @@ introduce (no cambia `composer.lock`).
 
 Correcciones:
 - RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: mitigada (v0.4.1)
+
+### RS18 · Alta — Imágenes base de producción con avisos sin corrección (A03 Software Supply Chain Failures)
+Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 030 (T033): la base
+Debian 13 de `php:8.4.25-fpm` arrastra avisos altos y críticos sin corrección publicada, y
+`mariadb:10.11.18` y `cloudflare/cloudflared:2026.9.3` tienen avisos ya corregidos en imágenes más
+nuevas. Las correcciones publicadas de los paquetes del sistema de `app` y `web` se aplican al
+construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-10-31.
+
+Correcciones:
+- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes del 2026-10-31; renovar o retirar EX2 según el resultado — estado: pendiente (→ roadmap)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en

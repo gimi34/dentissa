@@ -1,37 +1,60 @@
 ---
 status: inferred
-updated: 2026-09-28
+updated: 2026-10-04
 ---
 
 # Despliegue de Dentissa
 
 > Regla innegociable: ningún deploy a producción sin aprobación humana explícita.
 
-Hoy solo existe el entorno local con Docker Compose. Staging y producción están planificados
-(decisión del usuario, 2026-09-28), sin plataforma elegida todavía (sin presupuesto).
+Hay dos entornos: el local de cada integrante, con Docker Compose, y producción, en el servidor
+propio del responsable del proyecto (Ubuntu Server 24.04), expuesto a internet solo por un túnel de
+Cloudflare (spec 030, [ADR 0005](adr/0005-produccion-servidor-propio-cloudflare-tunnel.md)).
+Staging no existe: el único servidor es producción (decisión del usuario, 2026-10-03).
 
 ## Entornos
 | Entorno | URL | Rama / disparador | Aprobación | Datos |
 |---|---|---|---|---|
-| dev (local) | http://localhost:8000 (phpMyAdmin :8080) | cualquier rama, `docker compose up -d` | ninguna | ficticios (volcado `database/dentissa.sql`) |
-| staging | TODO(init) | manual, desde `main` | el equipo | sintéticos (seeder) |
-| prod | TODO(init) | manual, desde un tag `vX.Y.Z` | **humana: el responsable del proyecto (gimi34)** (decisión del usuario, 2026-09-28) | ficticios (proyecto académico) |
+| dev (local) | http://localhost:8000 (phpMyAdmin :8080), solo desde el propio equipo | cualquier rama, `docker compose up -d` | ninguna | ficticios (volcado `database/dentissa.sql`) |
+| staging | — (no existe; pendiente, RD1.d, RD3.d) | — | — | — |
+| prod | https://dentissa.app (túnel de Cloudflare) | manual, `deploy/desplegar.sh vX.Y.Z` desde el tag | **humana: el responsable del proyecto (gimi34)** (decisión del usuario, 2026-09-28) | ficticios (proyecto académico), con las contraseñas del volcado rotadas |
+
+**Ensayos sin exposición** (spec 030, D13): durante `/implement`, con el túnel parado, se puede
+desplegar en el servidor un commit de la rama para ensayar copia, restauración, vuelta atrás y
+reinicio. Cada ensayo exige antes la aprobación explícita del responsable, anotada en `tasks.md`.
+Nadie de fuera llega a la aplicación mientras `cloudflared` está parado.
 
 ## Plataforma e infraestructura
-- Local: `Dockerfile` (php:8.4-fpm + extensiones pdo_mysql, mbstring, exif, pcntl, bcmath, gd,
-  zip; Composer desde `composer:latest`), `docker-compose.yml` con `app`, `nginx` (8000:80),
-  `db` (mariadb:10.11, 3306 publicado, volumen `dentissa_db_data`, carga el volcado en
-  `docker-entrypoint-initdb.d` solo la primera vez) y `phpmyadmin` (8080). Configuración nginx en
-  `docker/nginx/dentissa.conf`. Sin IaC.
-- Staging y prod: TODO(init) plataforma por definir. Opciones gratuitas a evaluar en un ADR:
-  VPS educativo con el mismo Compose endurecido, o un PaaS con capa gratuita (Render, Railway,
-  Fly.io). Requisitos mínimos: PHP 8.2+, MariaDB/MySQL, TLS, variables de entorno como secretos,
-  backups de BD.
+- **Local:** `Dockerfile` (`php:8.4.25-fpm` + extensiones pdo_mysql, mbstring, exif, pcntl, bcmath,
+  gd, zip; Composer desde `composer:2.10.2`), `docker-compose.yml` con `app`, `nginx`
+  (`nginx:1.30.5-alpine`, `127.0.0.1:8000`), `db` (`mariadb:10.11.18`, `127.0.0.1:3306`, colación
+  `utf8mb4_unicode_ci`, volumen `dentissa_db_data`, carga el volcado solo la primera vez) y
+  `phpmyadmin` (`phpmyadmin:5.2.2`, `127.0.0.1:8080`). PHP lee `docker/nginx/php/local.ini`.
+  Configuración nginx en `docker/nginx/dentissa.conf`. Todas las imágenes con versión exacta.
+- **Producción** (ADR 0005): servidor propio con Ubuntu Server 24.04, Docker Engine y
+  `docker-compose.prod.yml` (proyecto `dentissa-prod`):
+  - `cloudflared` (`cloudflare/cloudflared:2026.9.3`): túnel saliente hacia Cloudflare, única
+    entrada; HTTPS en el borde de Cloudflare.
+  - `web` (nginx de `docker/prod/Dockerfile`, etapa `web`): `public/` y
+    `docker/nginx/dentissa.prod.conf`; toma la IP real de `CF-Connecting-IP` solo desde la red
+    `172.28.0.0/24` y redirige con 301 a `https://` lo que llega por `http://`.
+  - `app` (php-fpm de `docker/prod/Dockerfile`, etapa `app`): el código dentro de la imagen, sin
+    dependencias de desarrollo ni secretos, con los paquetes del sistema actualizados al construir.
+  - `db` (`mariadb:10.11.18`): usuario propio `dentissa_app` (no root), colación
+    `utf8mb4_unicode_ci`, volumen `db_data`; el volcado solo en la primera carga.
+  - Ningún servicio publica puertos; `restart: unless-stopped`; volúmenes `db_data`, `storage`
+    (logs de Laravel y sesiones) y `nginx_logs`.
+  - Servidor: `ufw` deniega todo lo entrante salvo SSH desde la red local; SSH solo con clave y sin
+    root; actualizaciones automáticas de seguridad (`deploy/preparar-servidor.sh`).
+  - Código: clon de GitHub con deploy key de solo lectura en `/opt/dentissa/app`.
+  - Secretos: `app.env`, `db.env` y `tunnel.env` en `/opt/dentissa/entorno` (carpeta 700, archivos
+    600, fuera del clon); cada servicio lee solo el suyo.
+- Guía paso a paso del servidor: [`deploy/README.md`](../deploy/README.md).
 
 ## Pipeline
 ```mermaid
 flowchart LR
-  PR --> CI[validador AI-DD + tests + Pint + seguridad] --> Merge[main] --> Staging[deploy manual a staging] --> Aprob{Aprobación humana} --> Prod[deploy manual del tag]
+  PR --> CI[validador AI-DD + tests + Pint + seguridad] --> Merge[main] --> Tag[tag vX.Y.Z] --> Aprob{Aprobación humana} --> Prod[deploy/desplegar.sh en el servidor]
 ```
 - `.github/workflows/ai-dd.yml` (creado por `/init`, decisión del usuario, 2026-09-28): valida
   los artefactos del flujo, corre tests y Pint sobre los archivos cambiados y los escáneres de
@@ -39,6 +62,7 @@ flowchart LR
   completo. No despliega.
 - Rama única `main`; trabajo en ramas `feature/NNN-slug` con PR (Conventional Commits, decisión
   del usuario, 2026-09-28).
+- El despliegue es manual: lo ejecuta el responsable por SSH en el servidor (spec 030, D6).
 
 ## Cómo desplegar
 ```bash
@@ -46,17 +70,33 @@ flowchart LR
 docker compose up -d
 docker compose exec app composer install
 docker compose exec app php artisan migrate      # aplica las migraciones sobre el volcado (incluida la de la spec 026)
-# staging: TODO(init) — procedimiento manual a definir con la plataforma (roadmap objetivo 5)
-# producción: TODO(init) — igual que staging, desde un tag vX.Y.Z y solo con aprobación humana
+
+# Producción, en el servidor por SSH, solo con aprobación humana explícita
+cd /opt/dentissa/app
+bash deploy/desplegar.sh vX.Y.Z                  # copia, checkout, build, db, migrate, app y web, cachés, verificación interna
+bash deploy/verificar.sh                         # con el túnel abierto: también por la dirección pública
 ```
+`desplegar.sh`, en orden: árbol limpio; copia de la base con `respaldar.sh` si la base tiene datos
+(el primer despliegue lo anuncia y sigue sin copia); `git fetch --tags` y `checkout`; construcción
+de `app` y `web`; `db` sana; `migrate --force` con la imagen nueva; `up -d app web`; cachés;
+`verificar.sh --interna`. Nunca arranca ni para `cloudflared`: el túnel se abre a mano la primera
+vez (`docker compose -f docker-compose.prod.yml up -d cloudflared`) y desde entonces vuelve solo
+tras un reinicio. Tiempo ensayado: 86 s el primer despliegue y 10 s uno posterior, sin la
+verificación (spec 030, T040 y T044).
+
+Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
+dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
+fuera del repositorio y del chat).
 
 ## Migraciones de base de datos
-- Cuándo se aplican: hoy, a mano con `php artisan migrate` después de que Docker cargue el
-  volcado. En staging/prod: después del backup y antes de cambiar el tráfico a la nueva versión.
+- Cuándo se aplican: en local, a mano con `php artisan migrate` después de que Docker cargue el
+  volcado. En producción, `desplegar.sh` las aplica después de la copia y antes de cambiar el
+  tráfico, con la imagen nueva (`docker compose run --rm -u www-data app php artisan migrate --force`).
 - Patrón: expand → migrate → contract (compatibles con la versión anterior)
 - Comando: `php artisan migrate --force`
 - Limitación actual: el esquema del dominio solo existe en `database/dentissa.sql`; las
-  migraciones no pueden crear la base desde cero (ver RD2).
+  migraciones no pueden crear la base desde cero (ver RD2). Una base nueva necesita la colación
+  `utf8mb4_unicode_ci` para que el volcado cargue entero (spec 030, T015 y T034).
 - Spec 026: la migración `2026_10_02_000000_retirar_trigger_historial_cita` va en el mismo paso que
   el código. Sin ella, el código nuevo y el trigger escribirían dos filas de historial; con ella y
   el código anterior, los cambios de estado quedarían sin historial. Rollback:
@@ -68,51 +108,73 @@ docker compose exec app php artisan migrate      # aplica las migraciones sobre 
   `HistorialCitaTest` encontrará dos filas por cambio. El CI ya ejecuta `migrate` tras cargar el
   volcado.
 
+## Copias de seguridad
+- `deploy/respaldar.sh`: `mariadb-dump` dentro de `db` (sin contraseñas en la línea de comandos) a
+  `/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz` (carpeta 700, copia 600); conserva las 14
+  más recientes. `desplegar.sh` la ejecuta antes de cada despliegue.
+- Tras cada despliegue, el responsable se lleva la copia más reciente a su PC con `scp`.
+- `deploy/restaurar.sh <copia>`: con confirmación escrita, borra la base y la recrea desde la copia
+  (queda exactamente como estaba). Ensayado el 2026-10-04 (spec 030, T043): mismas filas y
+  `CHECKSUM TABLE` en las 18 tablas.
+- Sin cifrar todavía (RS15.b → spec 031).
+
 ## Rollback
-No existe procedimiento de rollback (confirmado por el usuario, 2026-09-28). Propuesta a validar
-en roadmap objetivo 5:
-1. Antes de cada deploy: `mysqldump` de la base del entorno a un archivo con fecha, fuera del
-   servidor de la app.
-2. Si falla la verificación post-deploy: volver a desplegar el tag anterior.
-3. Si hubo migración no compatible: `php artisan migrate:rollback --step=N` (probado antes en
-   staging) o restaurar el backup del paso 1.
-- Tiempo estimado: TODO(init)
-- Si hubo migración: ver paso 3.
+1. Para dejar la aplicación sin exposición al instante:
+   `docker compose -f docker-compose.prod.yml stop cloudflared`.
+2. Volver a la versión anterior: `bash deploy/volver.sh <tag anterior>`.
+3. Si la versión que se abandona migró la base: `bash deploy/volver.sh <tag anterior> <copia>`,
+   con la copia que dejó `desplegar.sh`. `volver.sh` para `app` y `web`, restaura la copia y
+   levanta la versión anterior.
+- Tiempo ensayado: 27 s con restauración de la base (spec 030, T044); objetivo, 15 minutos o menos.
+- Si hubo migración no compatible y no hay copia: `php artisan migrate:rollback --step=N`.
 
 ## Variables de entorno
 | Nombre | dev | staging | prod | Dónde se configura |
 |---|---|---|---|---|
-| APP_NAME, APP_ENV, APP_KEY, APP_DEBUG, APP_URL | ✓ | ✓ | ✓ | `.env` local · TODO(init) gestor de la plataforma |
-| APP_LOCALE, APP_FALLBACK_LOCALE, APP_FAKER_LOCALE, BCRYPT_ROUNDS | ✓ | ✓ | ✓ | `.env` |
-| CLINICA_ZONA_HORARIA (zona de la hora de las citas; por defecto America/Mexico_City; spec 026) | ✓ | ✓ | ✓ | `.env` |
-| LOG_CHANNEL, LOG_STACK, LOG_DEPRECATIONS_CHANNEL, LOG_LEVEL | ✓ | ✓ | ✓ | `.env` |
-| DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD | ✓ | ✓ | ✓ | `.env` · secretos de la plataforma |
-| SESSION_DRIVER, SESSION_LIFETIME, SESSION_ENCRYPT, SESSION_PATH, SESSION_DOMAIN | ✓ | ✓ | ✓ | `.env` |
-| GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI | ✓ | ✓ | ✓ | `.env` · secretos de la plataforma |
-| CACHE_STORE, QUEUE_CONNECTION, FILESYSTEM_DISK, MAIL_* | ✓ | ✓ | ✓ | `.env` (sin uso real hoy) |
+| APP_NAME, APP_ENV, APP_KEY, APP_DEBUG, APP_URL | ✓ | — | ✓ | `.env` local · `app.env` en el servidor |
+| APP_LOCALE, APP_FALLBACK_LOCALE, APP_FAKER_LOCALE, BCRYPT_ROUNDS | ✓ | — | ✓ (valores por defecto) | `.env` · `app.env` |
+| CLINICA_ZONA_HORARIA (zona de la hora de las citas; por defecto America/Mexico_City; spec 026) | ✓ | — | ✓ (valor por defecto) | `.env` · `app.env` |
+| LOG_CHANNEL, LOG_STACK, LOG_DEPRECATIONS_CHANNEL, LOG_LEVEL | ✓ | — | ✓ (`LOG_LEVEL=info`) | `.env` · `app.env` |
+| DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD | ✓ | — | ✓ (`DB_USERNAME=dentissa_app`) | `.env` · `app.env` |
+| SESSION_DRIVER, SESSION_LIFETIME, SESSION_ENCRYPT, SESSION_PATH, SESSION_DOMAIN, SESSION_SECURE_COOKIE | ✓ | — | ✓ (`file`, `SESSION_SECURE_COOKIE=true`) | `.env` · `app.env` |
+| GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI | ✓ | — | ✓ (redirect en https) | `.env` · `app.env` |
+| CACHE_STORE | ✓ | — | ✓ (`database`: los límites de intentos necesitan un almacén compartido) | `.env` · `app.env` |
+| QUEUE_CONNECTION, FILESYSTEM_DISK, MAIL_* | ✓ | — | — | `.env` (sin uso real hoy) |
+| MARIADB_PASSWORD, MARIADB_ROOT_PASSWORD | — | — | ✓ | `db.env` en el servidor (solo el servicio `db`) |
+| TUNNEL_TOKEN | — | — | ✓ | `tunnel.env` en el servidor (solo `cloudflared`) |
+| DENTISSA_ENV_DIR (carpeta de los archivos de entorno; por defecto `/opt/dentissa/entorno`) | — | — | opcional | entorno del shell que ejecuta Compose |
 
-(Solo nombres. Nunca valores.)
+(Solo nombres. Nunca valores. En el servidor, cada archivo de entorno con permisos 600 y fuera del clon.)
 
 ## Verificación post-deploy
+- `bash deploy/verificar.sh --interna` (lo ejecutan `desplegar.sh` y `volver.sh`) y, con el túnel
+  abierto, `bash deploy/verificar.sh`. Comprueba, sin mostrar secretos: servicios en marcha;
+  `GET /up` 200; `APP_ENV=production`, `APP_DEBUG=false`, `LOG_LEVEL=info`, `APP_KEY` definida,
+  `CACHE_STORE` distinto de `array`, `SESSION_SECURE_COOKIE=true`, `APP_URL` y
+  `GOOGLE_REDIRECT_URI` en https; que ninguna contraseña del README autentica; ningún puerto
+  publicado ni nada escuchando fuera de localhost salvo SSH; `local.ini` aplicado; y en modo
+  público, `/up` 200, redirección de `/` a https y `http://<host>/login` → 301 a `https://`.
+- Smoke tests: login de una cuenta de prueba por rol, agendar y cancelar una cita ficticia. Sin
+  exponer, por túnel SSH al contenedor `web` (`http://localhost:<puerto>`, ver `deploy/README.md`).
 - Health check: `GET /up` (hoy no comprueba la BD; ver OB6).
-- Smoke tests: login de una cuenta de prueba por rol, abrir agenda, agendar y cancelar una cita
-  ficticia. TODO(init): automatizarlos.
-- Checklist de configuración: `APP_ENV=production`, `APP_DEBUG=false`, `LOG_LEVEL=info`,
-  `SESSION_SECURE_COOKIE=true`, phpMyAdmin no expuesto, puertos de BD no públicos.
-- Logs: `storage/logs/laravel.log` en local · Métricas: ninguna · Alertas: ninguna (ver [observability.md](observability.md))
+- Logs: `storage/logs/laravel.log` en el volumen `storage` y `dentissa-access.log` /
+  `dentissa-error.log` de nginx en el volumen `nginx_logs`; se conservan tras reiniciar el servidor
+  (ensayado, spec 030, T045). Métricas: ninguna · Alertas: ninguna (ver [observability.md](observability.md)).
 - Trazabilidad: busca por `request_id` una petición de los smoke tests y confirma que sus logs
   y eventos de auditoría llegan al destino esperado (cuando exista la correlación, OB2).
 
 ## Riesgos conocidos
 <!-- IDs `RD<n>` y correcciones `RD<n>.<letra>`, con el mismo formato que docs/security.md. -->
 ### RD1 · Alta — Sin rollback ni backups de base de datos
-No hay procedimiento para revertir un deploy ni ninguna copia de seguridad de la BD
-(`routes/console.php` sin tareas; no aparece `mysqldump`). → roadmap objetivo 5.
+Hasta la spec 030 no había procedimiento para revertir un deploy ni copias de la BD. La 030 añade
+copias, restauración y vuelta atrás ensayadas en producción; lo que pide staging sigue pendiente
+(/analyze 030 A1: RD1.a se divide en producción y staging). → roadmap objetivo 5.
 
 Correcciones:
-- RD1.a Backup automático o scriptado de la BD antes de cada deploy y restauración probada en staging — estado: pendiente
-- RD1.b Procedimiento documentado y ensayado de redeploy del tag anterior — estado: pendiente
+- RD1.a Backup scriptado de la BD antes de cada deploy y restauración probada, en producción — estado: en curso (spec 030)
+- RD1.b Procedimiento documentado y ensayado de redeploy del tag anterior — estado: en curso (spec 030)
 - RD1.c Toda migración nueva con `down()` probado en staging — estado: pendiente
+- RD1.d Restauración del backup probada en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### RD2 · Alta — Esquema del dominio no reproducible desde migraciones
 Las 9 tablas de dominio, las vistas y el trigger solo existen en `database/dentissa.sql`; las
@@ -127,19 +189,23 @@ Correcciones:
 - RD2.d Retirar el volcado de `docker-entrypoint-initdb.d` — estado: pendiente
 
 ### RD3 · Media — Staging y producción sin plataforma ni configuración
-No hay plataforma elegida, ni configuración de producción, ni TLS. → roadmap objetivo 5.
+La spec 030 elige la plataforma (servidor propio con Cloudflare Tunnel, ADR 0005) y crea la
+configuración de producción con HTTPS; staging sigue sin existir (/analyze 030 A1: RD3.c se divide
+en producción y staging). → roadmap objetivo 5.
 
 Correcciones:
-- RD3.a Elegir plataforma gratuita y registrarla en un ADR — estado: pendiente
-- RD3.b Configuración de producción (Compose de prod o equivalente) con `APP_ENV=production`, `APP_DEBUG=false` y secretos — estado: pendiente
-- RD3.c TLS en staging y prod — estado: pendiente
+- RD3.a Elegir plataforma gratuita y registrarla en un ADR — estado: en curso (spec 030)
+- RD3.b Configuración de producción (Compose de prod o equivalente) con `APP_ENV=production`, `APP_DEBUG=false` y secretos — estado: en curso (spec 030)
+- RD3.c TLS en producción — estado: en curso (spec 030)
+- RD3.d TLS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### RD4 · Media — Configuración de PHP no se aplica en Docker
-`docker-compose.yml` monta `./docker/php/local.ini`, que en el repo es un directorio vacío; el
-archivo real está en `docker/nginx/php/local.ini` (límites de subida, zona horaria). → roadmap objetivo 5.
+`docker-compose.yml` montaba `./docker/php/local.ini`, que en el repo no existe (Docker crea una
+carpeta vacía); el archivo real está en `docker/nginx/php/local.ini` (límites de subida, zona
+horaria). La spec 030 corrige el montaje en los dos Compose.
 
 Correcciones:
-- RD4.a Corregir la ruta del montaje o mover el archivo — estado: pendiente
+- RD4.a Corregir la ruta del montaje o mover el archivo — estado: en curso (spec 030)
 
 ### RD5 · Baja — Build de assets sin versión de Node fijada
 Node no está fijado (`.nvmrc`/`engines`) y el Dockerfile no lo instala; Vite y Tailwind apenas se

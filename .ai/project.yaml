@@ -19,10 +19,10 @@ workflow:
 skills_version: 1.11.2         # versión del paquete de skills (upgrade desde 1.11.0 el 2026-10-04)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
-  platform: TODO(init) por definir (sin presupuesto; ver docs/deployment.md)
-  environments: [dev, staging, prod]
+  platform: servidor propio (Ubuntu Server 24.04) con Docker Compose y Cloudflare Tunnel (ADR 0005, spec 030)
+  environments: [dev, prod]   # staging pendiente (RD1.d, RD3.d)
   prod_approval: human         # innegociable
-  rollback: TODO(init) no existe; propuesto redeploy del tag anterior + restaurar backup previo de BD (RD1)
+  rollback: deploy/volver.sh <tag anterior> [copia de la base] (docs/deployment.md, ensayado en la spec 030)
 security:
   owasp_top10_edition: 2025
   asvs_level: 2
