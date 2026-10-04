@@ -42,7 +42,10 @@ main() {
 
     echo "Cargando la copia…"
     gzip -cd "${copia}" | "${compose[@]}" exec -T db sh -c \
-        'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -uroot "$MARIADB_DATABASE"'
+        'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -uroot "$MARIADB_DATABASE"' \
+        || error "la carga falló y la base '${base}' quedó vacía o a medias (/review R8).
+La copia sigue intacta; repite la restauración con ella antes de levantar app y web:
+    bash deploy/restaurar.sh ${copia}"
 
     echo "Restaurada '${base}' desde ${copia}."
 }
