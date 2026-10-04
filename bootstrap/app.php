@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Middleware\PreventBackHistory;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,15 +15,21 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
+        // Detrás de cloudflared y nginx (spec 030, D3): solo se confía en el
+        // protocolo. La IP real la pone nginx en REMOTE_ADDR desde
+        // CF-Connecting-IP; X-Forwarded-For, -Host y -Port los podría enviar
+        // cualquier cliente (TM4, TM10).
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_PROTO);
+
         // Alias de middlewares personalizados
         $middleware->alias([
-            'role'         => \App\Http\Middleware\RoleMiddleware::class,
-            'no-cache'     => \App\Http\Middleware\PreventBackHistory::class,
+            'role' => RoleMiddleware::class,
+            'no-cache' => PreventBackHistory::class,
         ]);
 
         // Aplica no-cache a todas las rutas protegidas con auth
         $middleware->appendToGroup('web', [
-            \App\Http\Middleware\PreventBackHistory::class,
+            PreventBackHistory::class,
         ]);
 
     })
