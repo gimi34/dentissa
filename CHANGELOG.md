@@ -5,6 +5,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-04
+
+### Added
+- Entorno de producción en un servidor propio, publicado en internet solo a través de un túnel de
+  Cloudflare con conexión segura: ningún puerto abierto en el router ni en el servidor, y la base de
+  datos y su administrador inaccesibles desde fuera (spec 030).
+- Procedimiento documentado y scripts para preparar el servidor, desplegar una versión, hacer y
+  restaurar copias de la base y volver a la versión anterior, todos ensayados en el servidor (spec 030).
+- Comando para cambiar las contraseñas de las cuentas de prueba antes de abrir producción (spec 030).
+
+### Security
+- Límite de 5 intentos por minuto en el inicio de sesión (por cuenta y dirección), en el alta de
+  cuentas y en la vuelta del acceso con Google, con un mensaje que no revela si la cuenta existe
+  (spec 030).
+- Las direcciones y redirecciones de la aplicación usan siempre conexión segura detrás del túnel, y
+  quien entra por `http://` se redirige a `https://` (spec 030).
+- En los equipos de desarrollo, la base de datos y su administrador ya solo aceptan conexiones del
+  propio equipo (spec 030).
+- Producción muestra errores genéricos sin detalles internos y comprueba su configuración en cada
+  despliegue (spec 030).
+
 ### Changed — flujo AI-DD actualizado a 1.11.2
 - Validador `.ai/bin/aidd.py` 1.11.2: cada plan guarda `constitution_version` y se valida contra
   esa versión; avisos de specs cerradas como "heredados"; comando `templates`.
