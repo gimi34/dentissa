@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Usuario;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,22 @@ class AuthController extends Controller
         return "Demasiados intentos. Vuelve a intentarlo en {$segundos} segundos.";
     }
 
+    /**
+     * Clave del límite del login: la cuenta y el origen. La cuenta se busca con
+     * la misma comparación que la autenticación (colación de `usuarios.email`),
+     * así que las variantes de un correo que entran en la misma cuenta
+     * comparten contador (/review R1). Si no hay cuenta, cuenta el correo en
+     * minúsculas; la respuesta es la misma en los dos casos.
+     */
+    private function claveLimiteLogin(string $email, Request $request): string
+    {
+        $cuenta = Usuario::where('email', $email)->value('id');
+
+        $sujeto = $cuenta !== null ? 'cuenta:'.$cuenta : 'correo:'.Str::lower($email);
+
+        return 'login:'.$sujeto.'|'.$request->ip();
+    }
+
     public function loginForm()
     {
         return view('auth.login');
@@ -39,7 +56,7 @@ class AuthController extends Controller
         // Con 5 fallos en la ventana, el siguiente intento se rechaza sin
         // intentar autenticar. Lockout deja el rechazo a la vista de la
         // auditoría de la spec 020 (excepción P7).
-        $clave = 'login:'.Str::lower($credentials['email']).'|'.$request->ip();
+        $clave = $this->claveLimiteLogin($credentials['email'], $request);
 
         if (RateLimiter::tooManyAttempts($clave, self::MAX_FALLOS_LOGIN)) {
             event(new Lockout($request));
