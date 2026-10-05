@@ -146,12 +146,14 @@ Correcciones:
 ### RS4 · Alta — Sin límite de intentos en login, registro y OAuth (A07 Authentication Failures)
 No hay `throttle` ni `RateLimiter` en `POST /login`, `POST /registro`, `/registro/contacto` ni
 en el callback de Google. Permite fuerza bruta y altas masivas (cada alta asigna un dentista).
+**Mitigado en v0.5.0 (spec 030, 2026-10-04):** RS4.a, RS4.b y RS4.c mitigadas; comprobado en
+producción con la IP real del cliente detrás del túnel.
 Evidencia: `routes/web.php:17-27`; specs 001, 002.
 
 Correcciones:
-- RS4.a Throttle por IP + email en `POST /login` — estado: en curso (spec 030)
-- RS4.b Throttle por IP en `POST /registro` y `/registro/contacto` — estado: en curso (spec 030)
-- RS4.c Throttle en `/auth/google/callback` — estado: en curso (spec 030)
+- RS4.a Throttle por IP + email en `POST /login` — estado: mitigada (v0.5.0)
+- RS4.b Throttle por IP en `POST /registro` y `/registro/contacto` — estado: mitigada (v0.5.0)
+- RS4.c Throttle en `/auth/google/callback` — estado: mitigada (v0.5.0)
 
 ### RS5 · Media — Vinculación automática de Google por email (A07 Authentication Failures)
 `GoogleAuthController` vincula una cuenta existente de cualquier rol (incluido admin) si el email
@@ -171,7 +173,7 @@ tests. Datos ficticios y repo privado (confirmado por el usuario, 2026-09-28), p
 Correcciones:
 - RS6.a Quitar las contraseñas de `README.md` y documentar cómo crear cuentas de prueba — estado: pendiente
 - RS6.b Sustituir el volcado por migraciones + seeder con datos sintéticos (Faker) — estado: pendiente
-- RS6.c Cambiar las contraseñas de las cuentas del volcado en cualquier entorno compartido antes de desplegar — estado: en curso (spec 030)
+- RS6.c Cambiar las contraseñas de las cuentas del volcado en cualquier entorno compartido antes de desplegar — estado: mitigada (v0.5.0)
 - RS6.d Purgar del historial de git el volcado con datos y las contraseñas del README, coordinado con el equipo (reescritura de historial y force-push) (decisión del usuario, 2026-09-28) — estado: pendiente
 
 ### RS7 · Media — Configuración Docker insegura si se reutiliza fuera de local (A02 Security Misconfiguration)
@@ -183,10 +185,10 @@ una configuración de producción aparte; lo que pide staging queda pendiente (/
 RS7.a se divide en producción y staging).
 
 Correcciones:
-- RS7.a Configuración de producción separada, con credenciales por variables o secretos y usuario de BD no root — estado: en curso (spec 030)
-- RS7.b Publicar puertos solo en `127.0.0.1` y dejar phpMyAdmin exclusivamente en local — estado: en curso (spec 030)
-- RS7.c Ampliar `.dockerignore` (`.env*`, `.git`, `node_modules`, `vendor`, `database/*.sql`, `storage`) — estado: en curso (spec 030)
-- RS7.d Fijar las imágenes por versión (composer, phpmyadmin, nginx) — estado: en curso (spec 030)
+- RS7.a Configuración de producción separada, con credenciales por variables o secretos y usuario de BD no root — estado: mitigada (v0.5.0)
+- RS7.b Publicar puertos solo en `127.0.0.1` y dejar phpMyAdmin exclusivamente en local — estado: mitigada (v0.5.0)
+- RS7.c Ampliar `.dockerignore` (`.env*`, `.git`, `node_modules`, `vendor`, `database/*.sql`, `storage`) — estado: mitigada (v0.5.0)
+- RS7.d Fijar las imágenes por versión (composer, phpmyadmin, nginx) — estado: mitigada (v0.5.0)
 - RS7.e Configuración de staging separada, con los mismos requisitos que RS7.a — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### RS8 · Media — Faltan cabeceras de seguridad (A02 Security Misconfiguration)
@@ -237,7 +239,7 @@ El registro público responde con un mensaje explícito de "correo ya registrado
 genérico queda pendiente (/analyze 030 A34: RS13.a se divide).
 
 Correcciones:
-- RS13.a Throttle en el alta (ver RS4.b) — estado: en curso (spec 030)
+- RS13.a Throttle en el alta (ver RS4.b) — estado: mitigada (v0.5.0)
 - RS13.b Mensaje genérico en el alta, que no revele si el correo ya tiene cuenta — estado: pendiente (→ objetivo 2)
 
 ### RS14 · Baja — Campos privilegiados asignables en masa (A01 Broken Access Control)

@@ -171,8 +171,8 @@ copias, restauración y vuelta atrás ensayadas en producción; lo que pide stag
 (/analyze 030 A1: RD1.a se divide en producción y staging). → roadmap objetivo 5.
 
 Correcciones:
-- RD1.a Backup scriptado de la BD antes de cada deploy y restauración probada, en producción — estado: en curso (spec 030)
-- RD1.b Procedimiento documentado y ensayado de redeploy del tag anterior — estado: en curso (spec 030)
+- RD1.a Backup scriptado de la BD antes de cada deploy y restauración probada, en producción — estado: mitigada (v0.5.0)
+- RD1.b Procedimiento documentado y ensayado de redeploy del tag anterior — estado: mitigada (v0.5.0)
 - RD1.c Toda migración nueva con `down()` probado en staging — estado: pendiente
 - RD1.d Restauración del backup probada en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
@@ -194,18 +194,19 @@ configuración de producción con HTTPS; staging sigue sin existir (/analyze 030
 en producción y staging). → roadmap objetivo 5.
 
 Correcciones:
-- RD3.a Elegir plataforma gratuita y registrarla en un ADR — estado: en curso (spec 030)
-- RD3.b Configuración de producción (Compose de prod o equivalente) con `APP_ENV=production`, `APP_DEBUG=false` y secretos — estado: en curso (spec 030)
-- RD3.c TLS en producción — estado: en curso (spec 030)
+- RD3.a Elegir plataforma gratuita y registrarla en un ADR — estado: mitigada (v0.5.0)
+- RD3.b Configuración de producción (Compose de prod o equivalente) con `APP_ENV=production`, `APP_DEBUG=false` y secretos — estado: mitigada (v0.5.0)
+- RD3.c TLS en producción — estado: mitigada (v0.5.0)
 - RD3.d TLS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### RD4 · Media — Configuración de PHP no se aplica en Docker
 `docker-compose.yml` montaba `./docker/php/local.ini`, que en el repo no existe (Docker crea una
 carpeta vacía); el archivo real está en `docker/nginx/php/local.ini` (límites de subida, zona
 horaria). La spec 030 corrige el montaje en los dos Compose.
+**Mitigado en v0.5.0 (spec 030, 2026-10-04):** RD4.a mitigada.
 
 Correcciones:
-- RD4.a Corregir la ruta del montaje o mover el archivo — estado: en curso (spec 030)
+- RD4.a Corregir la ruta del montaje o mover el archivo — estado: mitigada (v0.5.0)
 
 ### RD5 · Baja — Build de assets sin versión de Node fijada
 Node no está fijado (`.nvmrc`/`engines`) y el Dockerfile no lo instala; Vite y Tailwind apenas se
