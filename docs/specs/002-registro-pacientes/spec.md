@@ -25,7 +25,7 @@ asignados a un dentista para poder agendar.
 - [ ] CA4 · Dado un visitante que viene del callback de Google sin cuenta, cuando completa `POST /registro/contacto` (teléfono, datos demográficos y términos), entonces se crea el usuario sin contraseña y su paciente.
 - [ ] CA5 · Dado el alta, cuando se crea la cuenta, entonces el rol es siempre `cliente` (fijado en el servidor, no viene del formulario).
 - [ ] CA6 · Dada una contraseña de menos de 8 caracteres, cuando se envía el registro, entonces se rechaza.
-- [ ] CA7 (abuso) · Como bot, envío cientos de registros → se limitan por IP. **HOY NO SE CUMPLE: no hay throttle ni captcha.**
+- [x] CA7 (abuso) · Como bot, envío cientos de registros → se limitan por IP. resuelto por 030 (v0.5.0)
 - [ ] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → la respuesta no lo revela. **HOY NO SE CUMPLE: mensaje explícito de correo ya registrado.**
 
 ## Fuera de alcance
@@ -61,3 +61,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-10-04 | Comportamiento modificado por 030 en v0.5.0 | /release |

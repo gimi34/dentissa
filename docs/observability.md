@@ -120,7 +120,7 @@ lo que pide staging queda pendiente (/analyze 030 A1: OB4.b se divide).
 
 Correcciones:
 - OB4.a Redactar los bindings de `QueryException` (y campos sensibles) en `bootstrap/app.php → withExceptions` — estado: pendiente
-- OB4.b `APP_DEBUG=false` y `APP_ENV=production` verificados en el checklist de despliegue de producción — estado: en curso (spec 030)
+- OB4.b `APP_DEBUG=false` y `APP_ENV=production` verificados en el checklist de despliegue de producción — estado: mitigada (v0.5.0)
 - OB4.c Lo mismo en el checklist de despliegue de staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### OB5 · Media — `historial_citas` incompleto y duplicado
@@ -147,7 +147,7 @@ En producción, la spec 030 los lleva al volumen `nginx_logs` (ensayado: se cons
 el servidor); staging no existe (/analyze 030 A1: OB7.a se divide).
 
 Correcciones:
-- OB7.a Enviar los logs de nginx a stdout/stderr o a un volumen en producción — estado: en curso (spec 030)
+- OB7.a Enviar los logs de nginx a stdout/stderr o a un volumen en producción — estado: mitigada (v0.5.0)
 - OB7.b Lo mismo en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ## Brechas por confirmar

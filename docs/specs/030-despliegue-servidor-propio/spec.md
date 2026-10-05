@@ -1,7 +1,8 @@
 ---
 id: 030
 slug: despliegue-servidor-propio
-status: implemented
+status: released
+released: v0.5.0 (2026-10-04)
 created: 2026-10-03
 extends: [001, 002]
 ---
@@ -171,3 +172,4 @@ inicio de sesión.
 | 2026-10-03 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-04 | Implementada (T092): CA1–CA10 por sus tests y por los ensayos en el servidor (T040–T046); la verificación pública queda para la liberación | /implement |
 | 2026-10-04 | Implementada de nuevo tras /review r1 (T060–T071: R1–R6, R8–R11, R19) | /implement |
+| 2026-10-04 | Liberada en v0.5.0 (PR #18, merge commit `63a611e`, tag `v0.5.0`) y desplegada en producción en https://dentissa.app | /release |

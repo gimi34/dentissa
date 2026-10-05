@@ -12,10 +12,10 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | # | Objetivo | Criterio de éxito | Spec | Estado |
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
-| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS13.b, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4); 015–019 previstas | pendiente |
+| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS13.b, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b y OB4.c → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); 028 prevista (reprogramar); 013 (parte 3) | pendiente |
-| 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (publicar en un servidor propio con Cloudflare Tunnel); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
+| 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
@@ -99,6 +99,35 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 025/R16: actualizar en el plan de la 025 (TM2 y Trazabilidad) el nombre del test unido en T024.
   - 025/R17: las migraciones de la spec 013 deben crear `idx_citas_dentista` con ese nombre, porque
     `ReservaCitas` lo fuerza (lo cubre `ReservaConcurrenteTest`).
+- Deuda de la spec 030 (liberada en v0.5.0; /review, aceptada sin tarea):
+  - 030/R7: el caso de la cookie `Secure` de `ProxyHttpsTest` es de caracterización de
+    `session.secure`; en producción lo protege `verificar.sh` (`SESSION_SECURE_COOKIE=true`).
+  - 030/R12: las contraseñas candidatas de `verificar.sh` salen del README por patrón; revisarlo al
+    cerrar RS6.a (sin contraseñas en el README, 0 candidatas).
+  - 030/R13: `dentissa:rotar-credenciales` cambia todas las cuentas con contraseña; limitarlo a las
+    del volcado o pedir confirmación por número antes de usarlo con usuarios reales.
+  - 030/R14: el desbloqueo pasada la espera solo se prueba en el login (falta en el alta y en Google).
+  - 030/R15: `apt-get upgrade`/`apk upgrade` solo en producción (paquetes del sistema distintos de local).
+  - 030/R16: ventana entre `tooManyAttempts` y `hit` en el login con peticiones simultáneas.
+  - 030/R17: separar `db` en una red `internal` solo con `app`.
+  - 030/R18: endurecer tres regex de `ConfiguracionProduccionTest` (`.env` a secas, todas las
+    apariciones de `DENTISSA_ENV_DIR`, redirección a nivel de `server`).
+  - 030/R20: mover el mensaje común de límite y `origenLimite` fuera del controlador.
+  - 030/R21: test del caso `password_hash = ''` del comando de credenciales.
+- Incidencias de la liberación de la spec 030 (T097, 2026-10-04/05):
+  - El callback de Google responde 500 cuando llega sin un inicio previo
+    (`Laravel\Socialite\Two\InvalidStateException` sin capturar en `GoogleAuthController::callback`;
+    ocurrió una vez desde una IP de Google). Capturar los fallos de Socialite y volver al login con
+    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05).
+  - Documentar en `deployment.md` que, tras cambiar un archivo de `/opt/dentissa/entorno`, hay que
+    recrear el servicio con `up -d --force-recreate <servicio>` (y en `app`, `config:cache`): un
+    `up -d` no relee el archivo (el token del túnel y las credenciales de Google tardaron por eso).
+  - `verificar.sh` debe fallar si `GOOGLE_CLIENT_ID` no tiene formato de id (sigue el marcador de la
+    guía), y la guía de entorno debe advertirlo.
+  - Las respuestas llevan `x-powered-by: PHP/8.4.25`: `expose_php = Off` en la imagen de producción
+    (junto con las cabeceras de la spec 031).
+  - Documentar el acceso de administración desde fuera de casa (Tailscale) en `deployment.md` y
+    actualizar la fila del SSH en `security.md` (hoy "solo desde la red local") cuando se instale.
 - Deuda de la spec 027 (liberada en v0.4.0; /review, aceptada sin tarea):
   - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
     repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
