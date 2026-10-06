@@ -1,7 +1,7 @@
 ---
 id: 031
 slug: endurecer-produccion
-status: draft
+status: approved
 created: 2026-10-05
 extends: [001, 030]
 ---
@@ -124,3 +124,4 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-06 | CA11: refresco y escaneo de imágenes (RS18.a dentro). Vuelve a `draft` | /plan 031, decisión del usuario |
 | 2026-10-06 | Aprobada de nuevo (al aprobar el plan) | Decisión del usuario |
 | 2026-10-06 | CA8 declara el fallo conocido al volver a versiones anteriores (modifica 030 CA7); la excepción P7 vence con la 021; HSTS como decisión del usuario. Vuelve a `draft` | /analyze 031 A2, A9, A16 |
+| 2026-10-06 | Aprobada de nuevo | Decisión del usuario |
