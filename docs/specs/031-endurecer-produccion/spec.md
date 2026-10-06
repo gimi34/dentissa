@@ -1,7 +1,7 @@
 ---
 id: 031
 slug: endurecer-produccion
-status: approved
+status: draft
 created: 2026-10-05
 extends: [001, 030]
 ---
@@ -38,7 +38,7 @@ van a la spec 032.
 - [ ] CA5 (abuso) · Dado un visitante que llega a la vuelta del acceso con Google sin haberlo iniciado, con el inicio caducado, tras cancelarlo en Google o con datos manipulados, cuando llega, entonces vuelve al inicio de sesión con el mensaje «No se pudo iniciar sesión con Google. Inténtalo de nuevo.». No inicia sesión, no se crea ni se vincula ninguna cuenta, no hay error del servidor, y la visita sigue contando para el límite de intentos de la vuelta de Google (030 CA8).
 - [ ] CA6 · Dada la configuración de producción con las credenciales de Google vacías o con el texto de ejemplo de la guía, cuando se ejecuta la verificación posterior al despliegue, entonces falla e indica cuál falta, sin mostrar ningún valor. La guía de configuración de producción avisa de que hay que sustituirlas.
 - [ ] CA7 · Dado un cambio en la configuración guardada de un servicio de producción (credenciales, clave del túnel), cuando el responsable sigue el procedimiento documentado, entonces el servicio pasa a usar el valor nuevo. Si un servicio en marcha usa una configuración distinta de la guardada, la verificación posterior al despliegue falla y dice qué servicio es, sin mostrar valores.
-- [ ] CA8 · Dado el responsable fuera de su red local con un dispositivo suyo autorizado en la red privada del proyecto, cuando se conecta a la administración del servidor, entonces entra con su clave, sin contraseña. Esta vía se suma al acceso desde la red local y reemplaza en ese punto a 030 CA3, que solo permitía la red local. Tras un reinicio del servidor, la vía vuelve a funcionar sola en 5 minutos o menos.
+- [ ] CA8 · Dado el responsable fuera de su red local con un dispositivo suyo autorizado en la red privada del proyecto, cuando se conecta a la administración del servidor, entonces entra con su clave, sin contraseña. Esta vía se suma al acceso desde la red local y reemplaza en ese punto a 030 CA3, que solo permitía la red local. Tras un reinicio del servidor, la vía vuelve a funcionar sola en 5 minutos o menos. Con esta vía activa, volver a una versión anterior a esta spec da en la verificación posterior un único fallo conocido y documentado (un servicio de la red privada escucha fuera del propio equipo); en eso se modifica 030 CA7 para esas versiones.
 - [ ] CA9 (abuso) · Dado un atacante en internet, cuando busca una vía de administración en la dirección pública de la casa del responsable o del servidor, entonces no encuentra ningún puerto abierto. Desde un dispositivo que no pertenece a la red privada no llega al servidor, aunque conozca su dirección privada. Con contraseña no se entra por ninguna vía.
 - [ ] CA10 · Dado un dispositivo autorizado que se pierde o deja de usarse, cuando el responsable sigue el procedimiento documentado para retirarlo, entonces ese dispositivo deja de llegar al servidor y los demás siguen entrando.
 - [ ] CA11 · Dada la versión liberada, cuando se construye, entonces cada imagen usa la versión más nueva publicada hace 7 días o más dentro de su misma rama (sin cambio de versión mayor ni menor), y el escaneo de imágenes no da hallazgos críticos ni altos sin una excepción vigente. La excepción de las imágenes (EX2) se renueva solo para lo que no tenga corrección publicada, o se retira.
@@ -76,9 +76,9 @@ van a la spec 032.
 ## Auditoría
 No aplica en esta spec, por la excepción a P7 de la spec 030 (aceptada por el usuario el
 2026-10-03; `docs/roadmap.md`): los inicios de sesión fallidos, también los de Google, no se
-registran como eventos de auditoría hasta la spec 020. El fallo de la vuelta de Google (CA5) debe
-quedar identificable como inicio de sesión fallido, para que la 020 lo registre sin volver a cambiar
-el acceso con Google.
+registran como eventos de auditoría hasta la spec 021, que registra los eventos de acceso sobre el
+registro que crea la 020. El fallo de la vuelta de Google (CA5) debe quedar identificable como inicio
+de sesión fallido, para que la 021 lo registre sin volver a cambiar el acceso con Google.
 
 ## Diseño
 Solo cambia un mensaje en la pantalla de inicio de sesión (CA5), con el bloque de errores que ya
@@ -100,11 +100,12 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-05 | brecha | Cifrar el disco exige reinstalar el servidor | Solo se cifran las copias (spec 032); el disco, como riesgo aceptado con fecha de revisión mientras los datos sean ficticios | usuario |
 | 2026-10-05 | brecha | ¿Qué hacer con el error del servidor en la vuelta de Google? | Corregirlo en una spec, sin una v0.5.1 aparte | usuario (/release 030, T097) |
 | 2026-10-05 | implícita | ¿Cuenta un fallo de la vuelta de Google para el límite de intentos? | Sí: en la vuelta de Google cuentan todos los intentos | `docs/specs/030-despliegue-servidor-propio/spec.md` (CA8) |
-| 2026-10-05 | implícita | ¿Se registra en la auditoría el fallo de la vuelta de Google? | No hasta la spec 020 (excepción P7 de la 030) | `docs/roadmap.md` (Excepción P7 de la spec 030) |
+| 2026-10-05 | implícita | ¿Se registra en la auditoría el fallo de la vuelta de Google? | No hasta la spec 021 (excepción P7 de la 030; la 020 deja los eventos de acceso a la 021) | `docs/roadmap.md` (Excepción P7 de la spec 030), `docs/specs/020-auditoria-base/spec.md` (Cobertura de riesgos: eventos de acceso → 021) · usuario (/analyze 031 A9) |
 | 2026-10-05 | implícita | ¿Puede desplegarse sin aprobación? | No: aprobación humana explícita del responsable | `docs/deployment.md` (regla innegociable) |
-| 2026-10-05 | supuesto | Duración de la indicación de conexión segura y alcance | 180 días, con subdominios; sin inscripción en la lista de precarga, porque la extensión del dominio ya la exige | lista de precarga de los navegadores (`.app`) |
+| 2026-10-06 | brecha | Duración de la indicación de conexión segura y alcance | 180 días, con subdominios; sin inscripción en la lista de precarga, porque la extensión del dominio ya la exige | usuario (180 días, 2026-10-06; /analyze 031 A16) |
 | 2026-10-05 | supuesto | Cuánta dirección enviar al ir a otro sitio | Solo el dominio a otros sitios; la dirección completa dentro de la aplicación | valor habitual |
 | 2026-10-06 | brecha | ¿Entra el refresco de imágenes de RS18.a, que vence el 2026-10-31? La 031 ya reconstruye las imágenes | Sí: CA11, en un solo despliegue antes del vencimiento | usuario (/plan 031) |
+| 2026-10-06 | contradicción | 030 CA7 exige que la versión anterior pase la misma verificación, y con la red privada activa la verificación de una versión anterior a la 031 da un fallo | Se acepta ese único fallo conocido y documentado al volver a una versión anterior a la 031 (CA8) | usuario (/analyze 031 A2) |
 | 2026-10-05 | supuesto | Texto del fallo de la vuelta de Google | «No se pudo iniciar sesión con Google. Inténtalo de nuevo.» | valor razonable |
 
 ## Notas para /plan
@@ -122,3 +123,4 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-06 | Aprobada (la indicación de conexión segura se queda en 180 días) | Decisión del usuario |
 | 2026-10-06 | CA11: refresco y escaneo de imágenes (RS18.a dentro). Vuelve a `draft` | /plan 031, decisión del usuario |
 | 2026-10-06 | Aprobada de nuevo (al aprobar el plan) | Decisión del usuario |
+| 2026-10-06 | CA8 declara el fallo conocido al volver a versiones anteriores (modifica 030 CA7); la excepción P7 vence con la 021; HSTS como decisión del usuario. Vuelve a `draft` | /analyze 031 A2, A9, A16 |

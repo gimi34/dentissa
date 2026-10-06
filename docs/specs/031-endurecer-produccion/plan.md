@@ -1,6 +1,6 @@
 ---
 spec: 031-endurecer-produccion
-status: approved
+status: draft
 constitution_version: 1.2.1
 created: 2026-10-06
 ---
@@ -40,8 +40,8 @@ con corrección disponible) → se corrige en esta spec (D12; decisión del usua
 | P4 Entrada validada y SQL con bindings | ✅ | La vuelta de Google solo mira si llega el parámetro `error`; no lo guarda ni lo muestra. Sin SQL nuevo. | lint: semgrep `p/php` sobre los archivos tocados |
 | P5 Nada sensible en el repo | ✅ | Sin secretos nuevos. El alta en Tailscale es interactiva, sin clave de autorización en el repo. `verificar.sh` y `aplicar-entorno.sh` nunca imprimen valores. | lint: gitleaks · manual: revisión de la salida de `verificar.sh` |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | El aviso alto de npm se corrige (D12). Composer, sin avisos. Las imágenes se refrescan y pasan `trivy image`; EX2 se renueva solo para lo que no tenga corrección publicada, o se retira (D13, CA11). | lint: `npm audit`, `composer audit --locked`, `trivy image` |
-| P7 Auditoría de datos sensibles | ❌ aceptado | El fallo de la vuelta de Google es un login fallido y no se audita hasta la 020/021: excepción P7 de la 030, aprobada por el usuario el 2026-10-03 y recogida en la sección Auditoría de la 031, aprobada el 2026-10-06. Se emite `Failed` para que la 021 lo registre sin tocar el controlador — aprobado por el usuario el 2026-10-06. | test: `GoogleVueltaFallidaTest::test_el_fallo_cuenta_como_login_fallido` |
-| P8 Correlación y logs limpios | ✅ | Sin `Log::` nuevos: la correlación por petición todavía no existe (020). La depuración apagada y el nivel `info` no cambian. | manual: revisión del diff y `verificar.sh` |
+| P7 Auditoría de datos sensibles | ❌ aceptado | El fallo de la vuelta de Google es un login fallido y no se audita hasta la 021: excepción P7 de la 030 (vence con la 021, que registra los eventos de acceso; /analyze A9), aprobada por el usuario el 2026-10-03 y recogida en la sección Auditoría de la 031, aprobada el 2026-10-06. Se emite `Failed` para que la 021 lo registre sin tocar el controlador — aprobado por el usuario el 2026-10-06. | test: `GoogleVueltaFallidaTest::test_el_fallo_cuenta_como_login_fallido` |
+| P8 Correlación y logs limpios | ✅ | Sin `Log::` nuevos. Los errores del proveedor se siguen reportando por el gestor de excepciones, como hoy, sin datos personales ni secretos (el mensaje de Guzzle lleva el método, la dirección del servicio de tokens y un extracto de la respuesta, no el cuerpo de la petición); la vuelta sin inicio o cancelada no se reporta (/analyze A12). La correlación por petición todavía no existe (020). La depuración apagada y el nivel `info` no cambian. | test: `GoogleVueltaFallidaTest` (reporte del error del proveedor, ninguno del estado inválido) · manual: revisión del diff y `verificar.sh` |
 | P9 La interfaz usa solo el sistema de diseño | ➖ | Sin cambios visuales: el mensaje de la vuelta de Google se muestra con el bloque de errores del login. | — |
 
 ## Cambios por módulo
@@ -64,8 +64,11 @@ con corrección disponible) → se corrige en esta spec (D12; decisión del usua
 | `tests/Feature/CabecerasSeguridadTest.php` (nuevo), `tests/Feature/GoogleVueltaFallidaTest.php` (nuevo), `tests/Feature/ConfiguracionProduccionTest.php` | ver Estrategia de pruebas | — |
 | `docs/deployment.md`, `docs/security.md`, `docs/architecture.md`, `docs/roadmap.md`, `docs/adr/0006-administracion-remota-tailscale.md` (nuevo) | acceso remoto, aplicar el entorno, fila del SSH, RS8.a y RS8.b divididas (RS8.c y RS8.d nuevas), RS18.a, EX2 e infraestructura | — |
 
-Sin solapes con las specs en curso: los planes aprobados de la 014 y la 020 no tocan
-`GoogleAuthController`, nginx ni `deploy/`. La 020/021 escuchará `Failed` y `Lockout`.
+Solapes con las specs en curso (/analyze A10): la 014 no toca estos archivos. La 020 añade a los dos
+Compose un servicio `scheduler` que lee `app.env`; por eso D7 y D8 no usan una lista fija de
+servicios sino los del Compose, y cubrirán ese servicio sin cambios. Si la 020 se fusiona antes,
+la 031 conserva su servicio al tocar los Compose (T030); si después, la 020 hereda las comprobaciones.
+La 020/021 escuchará `Failed` y `Lockout`.
 
 ## Contratos y datos
 - **Vuelta de Google** (`GET /auth/google/callback`, `throttle:google` sin cambios):
@@ -79,14 +82,16 @@ Sin solapes con las specs en curso: los planes aprobados de la 014 y la 020 no t
 
   En los fallos: sin sesión, sin `google_registro` en la sesión, sin crear ni vincular cuentas, y
   `event(new Failed('web', null, ['proveedor' => 'google']))`. El mensaje es una constante pública
-  del controlador.
+  del controlador. Solo el error del proveedor (`GuzzleException`) se reporta con `report($e)`, para
+  que un fallo de configuración como `invalid_client` siga dejando rastro en `laravel.log`; la vuelta
+  cancelada o sin inicio no se reporta (/analyze A12).
 - **Cabeceras** (todas con `always`, en local y en producción salvo HSTS):
-  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net; font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`
+  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`
   - `X-Frame-Options: DENY`
   - `X-Content-Type-Options: nosniff`
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - Solo en producción: `Strict-Transport-Security: max-age=15552000; includeSubDomains`
-- **`deploy/aplicar-entorno.sh <app|cloudflared>`:**
+- **`deploy/aplicar-entorno.sh <servicio>`** (cualquier servicio del Compose de producción salvo `db`; /analyze A10):
   - recrea el servicio (`up -d --force-recreate --no-deps`);
   - en `app`, `config:cache` y `route:cache` como `www-data`;
   - después, `verificar.sh --interna`;
@@ -95,9 +100,16 @@ Sin solapes con las specs en curso: los planes aprobados de la 014 y la 020 no t
 - **`deploy/verificar.sh`:** salida `OK`/`FALLO` como hasta ahora, nunca con valores.
   - Configuración: pasa de 10 a 12 comprobaciones (CA6).
   - Secciones nuevas:
-    - «Entorno aplicado» (CA7);
-    - «Cabeceras» (interna y pública);
+    - «Entorno aplicado» (CA7), sobre todo servicio del Compose en marcha;
+    - «Cabeceras»: por la red interna, en `/login`, un `.css`, un 404 y la 301 que genera nginx
+      (petición interna con `X-Forwarded-Proto: http`); por la dirección pública, solo en las
+      respuestas https (`/login`), con HSTS. La 301 pública de `http://` la genera el borde de
+      Cloudflare («Always Use HTTPS»), no es una respuesta de la aplicación y se sigue comprobando
+      solo su destino https (/analyze A3);
     - «Administración remota» (`tailscaled` en marcha, SSH sin contraseña).
+  - Las secciones corren en los dos modos (`--interna` y completo). Desde la 031 la red privada forma
+    parte de la configuración esperada del servidor: sin `tailscaled` en marcha, la sección da FALLO
+    a propósito (/analyze A1).
 - Sin migraciones, sin datos nuevos y sin cambios en `.ai/project.yaml`.
 
 ## Estrategia de pruebas
@@ -171,9 +183,9 @@ Sin solapes con las specs en curso: los planes aprobados de la 014 y la 020 no t
 | TM6 | Spoofing/DoS: vuelta de Google falsificada, repetida o sin inicio (login CSRF, 500 en masa) | A07:2025 | `GoogleAuthController` | Se mantiene la comprobación del `state` de Socialite; el fallo vuelve al login sin sesión ni cuentas, y el límite sigue contando | `GoogleVueltaFallidaTest` |
 | TM7 | Repudiation: los fallos de Google no dejan rastro para la auditoría | A09:2025 | `GoogleAuthController` | Evento `Failed` (la 021 lo registrará; excepción P7) | `GoogleVueltaFallidaTest::test_el_fallo_cuenta_como_login_fallido` |
 | TM8 | Tampering: un servicio sigue con una configuración caducada o de ejemplo sin que se note | A02:2025 | `verificar.sh`, `aplicar-entorno.sh` | Comprobaciones de CA6 y CA7; recreación con un solo script | `verificar.sh` comprobado rompiendo en el servidor |
-| TM9 | Elevation: SSH accesible desde internet, o adivinación de contraseñas | A07:2025 | servidor | Sin puertos (Tailscale solo abre conexiones salientes), OpenSSH solo con clave, `ufw` | `verificar.sh` (puertos y SSH sin contraseña); comprobador de puertos externo |
+| TM9 | Elevation: SSH accesible desde internet, o adivinación de contraseñas | A07:2025 | servidor | Sin puertos en el router (Tailscale solo abre conexiones salientes); ACL del tailnet que solo deja llegar al servidor por tcp:22 (las reglas de `tailscaled` aceptan lo que entra por `tailscale0` antes que `ufw`, así que `ufw` no es el control; /analyze A6); OpenSSH solo con clave | `verificar.sh` (puertos y SSH sin contraseña); comprobador de puertos externo; puerto de prueba no alcanzable desde la red privada (T041) |
 | TM10 | Spoofing: un dispositivo perdido conserva el acceso | A07:2025 | red privada, `authorized_keys` | Retirar el dispositivo del tailnet y su clave (guía §11) | ensayo de CA10 |
-| TM11 | Supply chain: paquete de Tailscale manipulado | A03:2025 | `preparar-acceso-remoto.sh` | Repositorio oficial con `signed-by` y actualizaciones automáticas | `ConfiguracionProduccionTest` |
+| TM11 | Supply chain: paquete de Tailscale manipulado | A03:2025 | `preparar-acceso-remoto.sh` | Repositorio oficial con `signed-by`; su origen se añade a las actualizaciones automáticas del sistema (/analyze A7) | `ConfiguracionProduccionTest`; `unattended-upgrade --dry-run -d` en el ensayo (T041) |
 | TM12 | Elevation: el SSH de Tailscale salta la política de OpenSSH | A07:2025 | `preparar-acceso-remoto.sh` | `--ssh=false` | `ConfiguracionProduccionTest`; `tailscale debug prefs` en el ensayo |
 | TM13 | Supply chain: imágenes base con vulnerabilidades conocidas (RS18) | A03:2025 | Dockerfiles, Compose | Refresco a versiones con 7 días o más y `trivy image` | escaneo anotado en la tarea (CA11) |
 
@@ -183,15 +195,15 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: cabeceras de protección sin romper pantallas | `comunes.conf`, `dentissa.conf`, `dentissa.prod.conf` (D1, D2) | `CabecerasSeguridadTest`; `verificar.sh` (cabeceras). Verificación manual: recorrer las pantallas de cada rol en local (en `/implement`) y por la dirección pública (en `/release`) con la consola del navegador sin bloqueos de la CSP |
+| CA1: cabeceras de protección sin romper pantallas | `comunes.conf`, `dentissa.conf`, `dentissa.prod.conf` (D1, D2) | `CabecerasSeguridadTest`; `verificar.sh` (cabeceras: por la red interna en páginas, estáticos, errores y la 301 de nginx; por la pública en las respuestas https). Verificación manual: recorrer las pantallas de cada rol en local (en `/implement`) y por la dirección pública (en `/release`) con la consola del navegador sin bloqueos de la CSP |
 | CA2 (abuso): clickjacking | `comunes.conf` (D2) | `CabecerasSeguridadTest` (`frame-ancestors` y `X-Frame-Options`). Verificación manual: una página local de prueba con `<iframe>` no muestra la app |
 | CA3: solo https durante 180 días, no en local | `produccion.conf` (D3) | `CabecerasSeguridadTest`; `verificar.sh` (pública) |
 | CA4 (abuso): sin versiones en las cabeceras | `server_tokens off`, `expose_php = Off` (D4) | `CabecerasSeguridadTest`; `verificar.sh` (sin `X-Powered-By` y `Server` sin versión en `/login`, en un `.css` y en un 404) |
-| CA5 (abuso): fallo de la vuelta de Google → login | `GoogleAuthController` (D5) | `GoogleVueltaFallidaTest` (seis casos) |
+| CA5 (abuso): fallo de la vuelta de Google → login | `GoogleAuthController` (D5) | `GoogleVueltaFallidaTest` (siete casos, con el reporte del error del proveedor) |
 | CA6: credenciales de Google de ejemplo | `verificar.sh` (D6), `deploy/README.md` §4 y §5 | `verificar.sh` comprobado rompiendo en el servidor |
 | CA7: configuración aplicada | `verificar.sh` (D7), `aplicar-entorno.sh` (D8), `deploy/README.md` §10 | prueba de concepto de D7; `verificar.sh` comprobado rompiendo; `aplicar-entorno.sh` en el ensayo |
 | CA8: administración desde fuera, vuelve sola tras reiniciar | `preparar-acceso-remoto.sh` (D9), `verificar.sh` (D11), `deploy/README.md` §11 | ensayo: `ssh` por la red privada desde el móvil con datos y `sudo reboot` cronometrado; `verificar.sh` (`tailscaled` en marcha) |
-| CA9 (abuso): sin puertos ni contraseña | D9, D11 | `verificar.sh` (puertos y SSH sin contraseña); comprobador de puertos externo; `nmap` desde la red privada; `ConfiguracionProduccionTest` (script) |
+| CA9 (abuso): sin puertos ni contraseña | D9, D11 | `verificar.sh` (puertos y SSH sin contraseña); comprobador de puertos externo; `nmap` y puerto de prueba desde la red privada (ACL); `ConfiguracionProduccionTest` (script) |
 | CA10: retirar un dispositivo | `deploy/README.md` §11 | ensayo con un dispositivo de prueba |
 | CA11: imágenes refrescadas y escaneadas | Dockerfiles y Compose (D13), `docs/security.md` (EX2) | fechas de Docker Hub y `trivy image` anotados en la tarea; `ConfiguracionProduccionTest::test_las_imagenes_de_produccion_tienen_version_exacta_e_iguales_a_local` |
 | RNF: ninguna pantalla pierde funciones ni contenido | D2 | verificación manual de CA1 |
@@ -205,15 +217,16 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
 | TM6: vuelta de Google falsificada o repetida | `GoogleAuthController` | `GoogleVueltaFallidaTest` |
 | TM7: fallos de Google sin rastro | `GoogleAuthController` (`Failed`) | `GoogleVueltaFallidaTest::test_el_fallo_cuenta_como_login_fallido` |
 | TM8: configuración caducada o de ejemplo | `verificar.sh`, `aplicar-entorno.sh` | `verificar.sh` comprobado rompiendo en el servidor |
-| TM9: SSH desde internet o con contraseña | `preparar-acceso-remoto.sh`, `verificar.sh` | `verificar.sh` (puertos, SSH sin contraseña); comprobador de puertos externo |
+| TM9: SSH desde internet o con contraseña | `preparar-acceso-remoto.sh`, ACL del tailnet (guía §11), `verificar.sh` | `verificar.sh` (puertos, SSH sin contraseña); comprobador de puertos externo; puerto de prueba desde la red privada |
 | TM10: dispositivo perdido | `deploy/README.md` §11 | ensayo de CA10 |
-| TM11: paquete de Tailscale manipulado | `preparar-acceso-remoto.sh` (`signed-by`) | `ConfiguracionProduccionTest` |
+| TM11: paquete de Tailscale manipulado | `preparar-acceso-remoto.sh` (`signed-by`, origen en las actualizaciones automáticas) | `ConfiguracionProduccionTest`; `unattended-upgrade --dry-run -d` (T041) |
 | TM12: SSH de Tailscale | `preparar-acceso-remoto.sh` (`--ssh=false`) | `ConfiguracionProduccionTest`; `tailscale debug prefs` en el ensayo |
 | TM13: imágenes vulnerables | Dockerfiles y Compose (D13) | `trivy image` anotado (CA11) |
 
 ## Observabilidad
-- **Logs nuevos:** ninguno. La correlación por petición todavía no existe (spec 020, P8), y los
-  fallos de Google quedan identificados por el evento `Failed`.
+- **Logs nuevos:** ninguno. Los errores del proveedor de Google se siguen reportando por el gestor
+  de excepciones, como hoy (nivel `error`, sin datos personales); la vuelta cancelada o sin inicio
+  solo emite `Failed` (/analyze A12). La correlación por petición todavía no existe (spec 020, P8).
 - **Eventos de auditoría:** ninguno se registra en esta spec (excepción P7). `Failed` se emite en
   `GoogleAuthController::callback` y lo comprueba
   `GoogleVueltaFallidaTest::test_el_fallo_cuenta_como_login_fallido`.
@@ -226,10 +239,11 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
 - **Feature flag:** no aplica. Es configuración de nginx y PHP más una corrección del
   controlador, y la CSP se prueba en local antes de liberar.
 - **Orden de despliegue:**
-  1. **Durante `/implement`, con aprobación explícita antes de cada ensayo:** instalar Tailscale
-     con `preparar-acceso-remoto.sh` y hacer los ensayos de CA8–CA10. Además, desplegar un commit
-     de la rama sin cambiar el túnel para comprobar `verificar.sh`, `aplicar-entorno.sh` y las
-     imágenes refrescadas.
+  1. **Durante `/implement`, con aprobación explícita antes de cada ensayo, en este orden:**
+     instalar Tailscale con `preparar-acceso-remoto.sh` y hacer los ensayos de CA8–CA10 (T041,
+     T042); después, desplegar un commit de la rama sin cambiar el túnel para comprobar
+     `verificar.sh`, `aplicar-entorno.sh` y las imágenes refrescadas, y volver a `v0.5.0` (T040;
+     /analyze A1).
   2. **En `/release` (v0.6.0, minor), con aprobación:**
      - `desplegar.sh v0.6.0`, que verifica por la red interna;
      - `verificar.sh` con la dirección pública;
@@ -239,9 +253,14 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
 - **Compatibilidad:** sin migraciones ni cambios de datos. HSTS queda guardado 180 días en los
   navegadores, sin efecto práctico porque el dominio solo funciona con https.
 - **Rollback:**
-  - `volver.sh v0.5.0`, sin copia porque no hay migraciones, en 15 minutos o menos;
-  - Tailscale se desactiva con `sudo tailscale down` (o se desinstala), y el acceso desde la red
-    local sigue igual.
+  - `volver.sh v0.5.0`, sin copia porque no hay migraciones, en 15 minutos o menos. Con Tailscale
+    activo, el `verificar.sh` de v0.5.0 da un único FALLO conocido («nada escucha fuera de
+    localhost salvo SSH», por `tailscaled` en su dirección de la red privada); es el resultado
+    esperado, documentado en la guía y ensayado en T040 (spec CA8, decisión del usuario; modifica
+    030 CA7 para versiones anteriores a la 031; /analyze A2). Las versiones desde la 031 lo admiten.
+  - Tailscale no forma parte de la vuelta atrás de la aplicación. Si se desactiva, la sección
+    «Administración remota» de `verificar.sh` da FALLO a propósito, y el acceso desde la red local
+    sigue igual.
 - **Métricas a vigilar tras el deploy:**
   - 5xx en `dentissa-access.log` y errores en `laravel.log`;
   - la consola del navegador en las pantallas principales de cada rol;
@@ -258,7 +277,8 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
   Descartado: un middleware de Laravel, que no cubre los estáticos ni las respuestas propias de
   nginx; y el panel de Cloudflare, que no queda en el repo ni se puede probar.
 - **D2 · Valores de las cabeceras.** Los del contrato. La CSP admite el código incrustado actual
-  (`'unsafe-inline'`) y las fuentes de Google y Bunny. Corrección RS8.a dividida: RS8.a, dentro
+  (`'unsafe-inline'`) y las fuentes de Google (Bunny solo lo usa `welcome.blade.php`, que no tiene
+  ruta; /analyze A18). Corrección RS8.a dividida: RS8.a, dentro
   (CA1 y CA2); RS8.d, la CSP estricta, fuera → roadmap, por pantallas (decisión del usuario,
   2026-10-05). Descartado: `Content-Security-Policy-Report-Only`, que no protege.
 - **D3 · HSTS.** `max-age=15552000; includeSubDomains` (180 días, decisión del usuario,
@@ -272,6 +292,9 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
   - Solo alrededor de `Socialite::driver('google')->user()` se capturan
     `Laravel\Socialite\Two\InvalidStateException` y `GuzzleHttp\Exception\GuzzleException`.
   - En los tres casos se emite `Failed` y se vuelve a `login` con el mensaje.
+  - Solo la `GuzzleException` se reporta con `report($e)` (decisión del usuario, /analyze A12): un
+    error de credenciales o de red de Google sigue dejando rastro; la vuelta cancelada o sin inicio,
+    no (es ruido de visitantes).
   - `throttle:google` sigue contando todas las vueltas.
   - Sin `Log::` nuevo (P8).
 
@@ -281,26 +304,39 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
   `client_secret` no esté vacío ni contenga `<`, `>` o espacios. El fallo dice cuál es, sin el
   valor.
 - **D7 · Configuración aplicada (CA7).**
-  - `verificar.sh` toma el entorno resuelto de cada servicio con `docker compose config --format
-    json` y lo compara con `Config.Env` de `docker inspect`, solo para las claves que declara el
-    Compose, con el `python3` del sistema.
+  - `verificar.sh` toma el entorno resuelto de cada servicio del Compose en marcha (sin lista fija,
+    /analyze A10) con `docker compose config --format json` y lo compara con `Config.Env` de
+    `docker inspect`, solo para las claves que declara el Compose, con el `python3` del sistema.
   - Imprime `OK` o `FALLO <servicio> usa una configuración distinta de la guardada (N variables)`,
     sin valores.
-  - Si `cloudflared` está parado, no lo compara. En `db`, el fallo avisa de que `db.env` solo se
+  - Un servicio parado (p. ej. `cloudflared` antes de abrir el túnel) no se compara. En `db`, el fallo avisa de que `db.env` solo se
     aplica al crear la base.
 
   Descartado: leer los `.env` a mano, que falla con las comillas y la interpolación de Compose. Se
   confirma con una prueba de concepto al empezar `/implement`.
-- **D8 · Aplicar un cambio de entorno.** `deploy/aplicar-entorno.sh <app|cloudflared>` (contrato).
+- **D8 · Aplicar un cambio de entorno.** `deploy/aplicar-entorno.sh <servicio>` (contrato): cualquier
+  servicio del Compose de producción salvo `db`, para que un servicio nuevo (el `scheduler` de la
+  020) quede cubierto sin cambiar el script (/analyze A10).
   Descartado: solo documentarlo, porque en la liberación de la 030 se olvidó el paso dos veces.
 - **D9 · Administración desde fuera** → [ADR 0006](../../adr/0006-administracion-remota-tailscale.md).
   Script `deploy/preparar-acceso-remoto.sh` (sudo, idempotente; decisión del usuario, 2026-10-06):
   - instala Tailscale desde `pkgs.tailscale.com/stable/ubuntu` (`noble`) con `signed-by` y sin
     `curl | sh`;
   - `systemctl enable --now tailscaled`;
-  - `tailscale up --ssh=false`, con un alta interactiva;
-  - `ufw allow in on tailscale0 to any port 22 proto tcp`;
-  - indica desactivar la caducidad de la clave del servidor en la consola.
+  - `tailscale up --ssh=false --accept-dns=false`, con un alta interactiva (sin cambiar el DNS del
+    servidor, /analyze A21);
+  - añade el origen de Tailscale a las actualizaciones automáticas del sistema
+    (`Unattended-Upgrade::Allowed-Origins` en un archivo propio de `/etc/apt/apt.conf.d/`;
+    decisión del usuario, /analyze A7);
+  - `ufw allow in on tailscale0 to any port 22 proto tcp`, solo como defensa adicional: las reglas
+    de `tailscaled` aceptan lo que entra por `tailscale0` antes que `ufw`;
+  - indica desactivar la caducidad de la clave del servidor y aplicar la ACL del tailnet en la
+    consola.
+
+  **Control del acceso por la red privada (decisión del usuario, /analyze A6):** una ACL del tailnet
+  que solo deja llegar al servidor por tcp:22, copiada en la guía §11 y aplicada en la consola de
+  Tailscale. Se comprueba en T041 con un puerto de prueba que escucha en el servidor y no es
+  alcanzable desde la red privada.
 
   Descartado: Cloudflare Access para SSH, abrir un puerto en el router y WireGuard propio (ver el
   ADR).
@@ -311,6 +347,8 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
   - Se distribuye por un repositorio oficial firmado.
   - El `postinst` solo registra la unidad de systemd.
   - El plan Personal es gratuito, así que cumple la restricción de no tener presupuesto.
+  - La versión instalada y su fecha de publicación se anotan en T041; las siguientes llegan por las
+    actualizaciones automáticas del sistema, igual que los paquetes de Ubuntu (/analyze A7).
 - **D11 · Administración en `verificar.sh`.**
   - La regla «nada escucha fuera de localhost salvo SSH» admite las direcciones de Tailscale
     (`100.64.0.0/10` y `fd7a:115c:a1e0::/48`), donde escucha la API entre nodos de `tailscaled`.
@@ -329,8 +367,9 @@ Estado de las correcciones al liberar:
 - RS8.a y RS8.b → mitigadas;
 - RS8.c y RS8.d → pendientes (objetivo 5 y roadmap);
 - RS8 sigue abierto;
-- RS18.a → mitigada;
-- RS18 mitigado solo si EX2 se retira.
+- RS18.a → mitigada al refrescar, escanear y decidir sobre EX2 (/analyze A4). Lo que no tenga
+  corrección publicada queda cubierto por EX2 renovada, con su nuevo vencimiento;
+- RS18 → mitigado (su única corrección, mitigada), con el residuo que siga en EX2 hasta su vencimiento.
 
 ## Impacto en arquitectura
 - `docs/architecture.md`, infraestructura de producción: cabeceras de seguridad en nginx y acceso
@@ -352,9 +391,11 @@ Estado de las correcciones al liberar:
   (la entrada con Google es un enlace). Lo cubre el recorrido de CA1.
 - **Falsos FALLO de CA7 por cómo resuelve Compose los valores.** Se hace una prueba de concepto al
   empezar `/implement`. Si no cuadra, se compara clave a clave solo en `app` y `cloudflared`.
-- **Las reglas de `tailscaled` aceptan lo que llega por `tailscale0`.** El control real es que el
-  tailnet solo tiene dispositivos del responsable. Está en el ADR 0006 y se comprueba con `nmap`
-  desde la red privada (solo el 22).
+- **Las reglas de `tailscaled` aceptan lo que llega por `tailscale0`.** El control es la ACL del
+  tailnet (solo tcp:22 hacia el servidor), además de que solo hay dispositivos del responsable.
+  Está en el ADR 0006 y se comprueba en T041 con `nmap` y un puerto de prueba desde la red privada.
+- **Volver a v0.5.0 con Tailscale activo da un FALLO en su `verificar.sh`.** Es el resultado
+  esperado y documentado (Rollback, /analyze A2).
 - **La clave del servidor en Tailscale caduca y el acceso desde fuera se pierde.** Se desactiva la
   caducidad (guía §11). El acceso desde la red local sigue.
 - **Una imagen refrescada cambia de comportamiento.** El ensayo en el servidor con

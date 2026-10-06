@@ -22,7 +22,12 @@ dispositivo perdido. No hay presupuesto.
   de autorización en el repositorio. La caducidad de la clave del servidor se desactiva en la consola.
 - El acceso sigue siendo OpenSSH con clave y sin contraseña. El SSH propio de Tailscale queda
   desactivado (`--ssh=false`) para que no salte esa política.
-- `ufw` permite el 22 por `tailscale0`, además de la red local.
+- Una ACL del tailnet solo deja llegar al servidor por tcp:22 (copiada en `deploy/README.md` y
+  aplicada en la consola). Es el control real: las reglas de `tailscaled` aceptan lo que entra por
+  `tailscale0` antes que `ufw`, y la regla de `ufw` para `tailscale0` queda solo como defensa
+  adicional (spec 031, /analyze A6).
+- El servidor no acepta el DNS de la red privada (`--accept-dns=false`), para no cambiar la
+  resolución de los contenedores.
 - Para retirar un dispositivo se quita del tailnet y su clave de `authorized_keys` (`deploy/README.md`).
 - `deploy/verificar.sh` comprueba que `tailscaled` está en marcha y que SSH no ofrece contraseña.
 
@@ -37,7 +42,10 @@ dispositivo perdido. No hay presupuesto.
 ## Consecuencias
 - Depende de un servicio de terceros para coordinar la red privada. Si cae, sigue el acceso desde
   la red local.
-- Las reglas de `tailscaled` aceptan lo que llega por `tailscale0`: el control real es que el tailnet
-  solo tiene dispositivos del responsable. Se comprueba en el ensayo (solo el 22 abierto).
-- El cliente de Tailscale se actualiza con las actualizaciones automáticas del sistema.
+- El acceso por la red privada depende de la ACL del tailnet y de que solo haya dispositivos del
+  responsable. Se comprueba en el ensayo con un puerto de prueba no alcanzable.
+- El script añade el origen de Tailscale a las actualizaciones automáticas del sistema, así que el
+  cliente se actualiza como los paquetes de Ubuntu (spec 031, /analyze A7).
+- Volver a una versión anterior a la 031 con Tailscale activo da un FALLO conocido en su
+  `verificar.sh` (spec 031 CA8).
 - Cambia la vía administrativa de la spec 030 (CA3): se suma la red privada a la red local.
