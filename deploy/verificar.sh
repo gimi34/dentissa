@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9) y spec 031 (CA1, CA3, CA4, CA6;
-# TM1–TM5, TM8): verificación posterior a cada despliegue en producción.
+# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9) y spec 031 (CA1, CA3, CA4, CA6–CA9;
+# TM1–TM5, TM8, TM9): verificación posterior a cada despliegue en producción.
 #
 #     bash deploy/verificar.sh --interna   # por la red de Docker (túnel parado o abierto)
 #     bash deploy/verificar.sh             # además, por la dirección pública (túnel abierto)
@@ -141,8 +141,13 @@ main() {
     if command -v ss > /dev/null; then
         local abiertos
         # Locales: 127.x y ::1, también con sufijo de interfaz (127.0.0.53%lo:53,
-        # el DNS de systemd-resolved).
-        abiertos="$(ss -Htln | awk '{print $4}' | grep -vE '^(127\.[0-9.]+|\[::1\]|::1)(%[^:]+)?:' | grep -vE ':22$' || true)"
+        # el DNS de systemd-resolved). Spec 031 (D11): también las direcciones de la
+        # red privada (100.64.0.0/10 y fd7a:115c:a1e0::/48), donde escucha la API
+        # entre nodos de tailscaled; desde fuera de la red privada no se alcanzan.
+        abiertos="$(ss -Htln | awk '{print $4}' \
+            | grep -vE '^(127\.[0-9.]+|\[::1\]|::1)(%[^:]+)?:' \
+            | grep -vE '^(100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9.]+|\[fd7a:115c:a1e0:[0-9a-f:]*\])(%[^:]+)?:' \
+            | grep -vE ':22$' || true)"
         if [[ -z "${abiertos}" ]]; then
             ok "nada escucha fuera de localhost salvo SSH"
         else
@@ -150,6 +155,89 @@ main() {
         fi
     else
         fallo "nada escucha fuera de localhost salvo SSH (falta el comando ss)"
+    fi
+
+    echo "== Entorno aplicado (spec 031, CA7)"
+    # Cada servicio del Compose en marcha, sin lista fija (/analyze A10): su entorno
+    # resuelto por "compose config" contra el del contenedor. Los valores no salen
+    # del proceso de python3 ni pasan por argumentos (/analyze A15, T002).
+    local entorno
+    entorno="$(python3 - "${compose[@]}" 2>&1 <<'PY'
+import json, subprocess, sys
+
+compose = sys.argv[1:]
+
+
+def salida(*args):
+    return subprocess.run(list(args), capture_output=True, text=True, check=True).stdout
+
+
+def entorno(lista):
+    return dict(e.split('=', 1) for e in (lista or []))
+
+
+try:
+    config = json.loads(salida(*compose, 'config', '--format', 'json'))
+    en_marcha = set(salida(*compose, 'ps', '--status', 'running', '--services').split())
+except Exception as error:
+    print(f'FALLO entorno aplicado: no se pudo leer el Compose ({type(error).__name__})')
+    sys.exit(0)
+
+for nombre, servicio in sorted(config['services'].items()):
+    if nombre not in en_marcha:
+        print(f'OK    {nombre} parado: no se compara')
+        continue
+    # compose config escapa el $ literal como $$ (T002).
+    esperado = {k: ('' if v is None else str(v).replace('$$', '$')) for k, v in (servicio.get('environment') or {}).items()}
+    contenedor = salida(*compose, 'ps', '-q', nombre).split()[0]
+    info = json.loads(salida('docker', 'inspect', contenedor))[0]
+    actual = entorno(info['Config']['Env'])
+    de_imagen = entorno(json.loads(salida('docker', 'image', 'inspect', info['Image']))[0]['Config'].get('Env'))
+    distintas = [k for k in esperado if actual.get(k) != esperado[k]]
+    sobrantes = [k for k in actual if k not in esperado and actual[k] != de_imagen.get(k)]
+    n = len(distintas) + len(sobrantes)
+    if n == 0:
+        print(f'OK    {nombre} usa la configuración guardada')
+    elif nombre == 'db':
+        print(f'FALLO db usa una configuración distinta de la guardada ({n} variables): db.env solo se aplica al crear la base (ver deploy/README.md)')
+    else:
+        print(f'FALLO {nombre} usa una configuración distinta de la guardada ({n} variables): bash deploy/aplicar-entorno.sh {nombre}')
+PY
+)"
+    if grep -qE '^(OK|FALLO) ' <<< "${entorno}"; then
+        grep -E '^(OK|FALLO) ' <<< "${entorno}"
+        FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${entorno}" || true)))
+    else
+        fallo "entorno aplicado: no se pudo comparar (¿falta python3?)"
+    fi
+
+    echo "== Administración remota (spec 031, CA8, CA9)"
+    # Desde la 031 la red privada es parte de la configuración esperada: sin
+    # tailscaled en marcha, FALLO a propósito (/analyze A1).
+    local estado_red
+    if command -v tailscale > /dev/null; then
+        estado_red="$(tailscale status --json 2>/dev/null | python3 -c 'import json, sys; print(json.load(sys.stdin).get("BackendState", ""))' 2>/dev/null || true)"
+        if [[ "${estado_red}" == "Running" ]]; then
+            ok "red privada (tailscaled) conectada"
+        else
+            fallo "red privada (tailscaled) conectada (estado: ${estado_red:-desconocido})"
+        fi
+    else
+        fallo "red privada: Tailscale no está instalado (deploy/preparar-acceso-remoto.sh)"
+    fi
+    # SSH no ofrece contraseña: se pide la lista de métodos sin intentar ninguno y
+    # sin guardar la clave de host. Sin lista, FALLO (/analyze A5).
+    local metodos
+    metodos="$(ssh -o BatchMode=yes -o PubkeyAuthentication=no -o PasswordAuthentication=no \
+        -o KbdInteractiveAuthentication=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+        -o ConnectTimeout=5 -o LogLevel=ERROR localhost true 2>&1 \
+        | grep -oE 'Permission denied \([^)]*\)' | head -n 1 || true)"
+    if [[ -z "${metodos}" ]]; then
+        fallo "SSH sin contraseña: no se obtuvo la lista de métodos de autenticación"
+    elif grep -qE 'password|keyboard-interactive' <<< "${metodos}"; then
+        fallo "SSH sin contraseña: el servidor ofrece ${metodos#Permission denied }"
+    else
+        ok "SSH sin contraseña: solo ofrece ${metodos#Permission denied }"
     fi
 
     echo "== PHP con local.ini (CA10)"
