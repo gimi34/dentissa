@@ -114,20 +114,26 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     apariciones de `DENTISSA_ENV_DIR`, redirección a nivel de `server`).
   - 030/R20: mover el mensaje común de límite y `origenLimite` fuera del controlador.
   - 030/R21: test del caso `password_hash = ''` del comando de credenciales.
-- Incidencias de la liberación de la spec 030 (T097, 2026-10-04/05):
+- Incidencias de la liberación de la spec 030 (T097, 2026-10-04/05). Atendidas por la spec
+  [031](specs/031-endurecer-produccion/spec.md) (CA4–CA8), en curso:
   - El callback de Google responde 500 cuando llega sin un inicio previo
     (`Laravel\Socialite\Two\InvalidStateException` sin capturar en `GoogleAuthController::callback`;
     ocurrió una vez desde una IP de Google). Capturar los fallos de Socialite y volver al login con
-    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05).
+    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05). → 031 CA5.
   - Documentar en `deployment.md` que, tras cambiar un archivo de `/opt/dentissa/entorno`, hay que
     recrear el servicio con `up -d --force-recreate <servicio>` (y en `app`, `config:cache`): un
     `up -d` no relee el archivo (el token del túnel y las credenciales de Google tardaron por eso).
+    → 031 CA7 (`deploy/aplicar-entorno.sh` y la sección «Entorno aplicado» de `verificar.sh`).
   - `verificar.sh` debe fallar si `GOOGLE_CLIENT_ID` no tiene formato de id (sigue el marcador de la
-    guía), y la guía de entorno debe advertirlo.
+    guía), y la guía de entorno debe advertirlo. → 031 CA6.
   - Las respuestas llevan `x-powered-by: PHP/8.4.25`: `expose_php = Off` en la imagen de producción
-    (junto con las cabeceras de la spec 031).
+    (junto con las cabeceras de la spec 031). → 031 CA4.
   - Documentar el acceso de administración desde fuera de casa (Tailscale) en `deployment.md` y
     actualizar la fila del SSH en `security.md` (hoy "solo desde la red local") cuando se instale.
+    → 031 CA8–CA10 (ADR 0006).
+- RS8.d (de la spec 031): política de contenido estricta, sin `'unsafe-inline'`. Requiere sacar de
+  las vistas los scripts incrustados (unas 8), los manejadores `on…` (11) y los `style=""` (32);
+  se hace por pantallas, al tocar cada una (decisión del usuario, 2026-10-05).
 - Deuda de la spec 027 (liberada en v0.4.0; /review, aceptada sin tarea):
   - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
     repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
@@ -225,9 +231,11 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   Hecho el 2026-10-04: `system.md` 1.2.0 con 60 vistas capturadas a 390 y 1440 px, deuda conciliada
   (DS1–DS11 vigentes, DS12–DS15 nuevas) y la versión anterior en `docs/design/history/`.
 - Excepción P7 de la spec 030: los logins fallidos y los rechazos por límite de intentos no se
-  registran como eventos de auditoría hasta la spec 020; el login y la vuelta de Google ya emiten
-  `Illuminate\Auth\Events\Lockout` en cada rechazo para que la 020 los audite sin tocar el login
-  (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+  registran como eventos de auditoría hasta la spec 021, que registra los eventos de acceso sobre
+  el registro que crea la 020 (plazo corregido en la spec 031, /analyze A9; decisión del usuario,
+  2026-10-06). El login y la vuelta de Google ya emiten `Illuminate\Auth\Events\Lockout` en cada
+  rechazo, y la vuelta de Google fallida emite `Illuminate\Auth\Events\Failed` (spec 031), para
+  que la 021 los audite sin tocar el login (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
 - Residuo de OB4.a aceptado al abrir producción con la spec 030: los errores de base de datos pueden
   dejar SQL con sus valores en `laravel.log` del servidor. Se acepta con datos ficticios; la spec 023
   (OB4.a) debe liberarse antes de tener datos reales (spec 030, /analyze A26; decisión del usuario,
@@ -237,7 +245,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   (spec 030, /analyze A26).
 - Staging (objetivo 5): RD1.d (restauración probada en staging), RD3.d (TLS en staging), RS7.e
   (configuración de staging separada), OB4.c (checklist de staging) y OB7.b (logs de nginx en
-  staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1).
+  staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1);
+  y RS8.c (conexión segura obligatoria en staging), creada al dividir RS8.b en la spec 031.
 - RS13.b (objetivo 2): mensaje genérico en el alta que no revele si el correo ya tiene cuenta; la
   spec 030 solo añade el límite de intentos (RS13.a) (/analyze A34).
 - RS18.a: refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más
