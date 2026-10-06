@@ -51,6 +51,13 @@ despliegue** (la cuenta creada al instalar Ubuntu), salvo los marcados "en tu PC
    cd /opt/dentissa/app
    ```
 
+### Red privada de administración (antes del primer despliegue)
+
+Con el clon ya hecho, instala la red privada para administrar el servidor desde
+fuera de casa siguiendo la **§11** (`sudo bash deploy/preparar-acceso-remoto.sh`,
+caducidad de la clave y ACL). Desde la spec 031, `verificar.sh` la exige: sin
+ella, la primera verificación daría un FALLO en «Administración remota».
+
 ## 3. Túnel de Cloudflare
 
 1. En Cloudflare: **Zero Trust → Networks → Tunnels → Create a tunnel →
@@ -91,6 +98,13 @@ GOOGLE_CLIENT_ID=<client id>
 GOOGLE_CLIENT_SECRET=<client secret>
 GOOGLE_REDIRECT_URI=https://<subdominio>/auth/google/callback
 ```
+
+> **Sustituye todos los `<…>`**, también `GOOGLE_CLIENT_ID` y
+> `GOOGLE_CLIENT_SECRET`: si se quedan con el texto de ejemplo, Google responde
+> `invalid_client`. `verificar.sh` lo comprueba sin mostrar los valores
+> («GOOGLE_CLIENT_ID con formato de id de Google» y «GOOGLE_CLIENT_SECRET
+> definido…») y da FALLO mientras sigan los marcadores. El id real termina en
+> `.apps.googleusercontent.com`.
 
 **`db.env`** (dos contraseñas distintas; la base `dentissa` y el usuario
 `dentissa_app` ya vienen en el Compose):
@@ -134,7 +148,8 @@ igualmente el primer despliegue como tal.
 En Google Cloud Console → **APIs & Services → Credentials** → el cliente OAuth
 de Dentissa → **Authorized redirect URIs**, añade
 `https://<subdominio>/auth/google/callback`. Sin esto, el login con Google falla
-en producción.
+en producción. El id y el secreto de ese mismo cliente son los que van en
+`app.env` (§4), en lugar de los marcadores.
 
 ## 6. Ensayo y primer despliegue (sin exponer)
 
@@ -210,6 +225,12 @@ Con copia, `volver.sh` para `app` y `web`, restaura la base y levanta la versió
 anterior. Termina con `verificar.sh --interna`. Para dejar la aplicación sin
 exposición al instante: `docker compose -f docker-compose.prod.yml stop cloudflared`.
 
+**Volver a una versión anterior a la 031 (p. ej. `v0.5.0`) con la red privada
+activa:** el `verificar.sh` de esa versión da **un único FALLO conocido**, en
+«nada escucha fuera de localhost salvo SSH», porque `tailscaled` escucha en su
+dirección de la red privada. Es lo esperado (spec 031 CA8). Cualquier otro FALLO
+no lo es.
+
 ## 9. Abrir el túnel (liberación)
 
 Solo en `/release`, con aprobación explícita:
@@ -222,3 +243,69 @@ bash deploy/verificar.sh           # ahora también por la dirección pública
 
 Desde entonces `cloudflared` vuelve solo tras un reinicio. Los scripts de
 despliegue nunca lo arrancan ni lo paran.
+
+## 10. Cambiar un archivo de entorno
+
+Un `up -d` normal **no relee** `app.env` ni `tunnel.env`: el contenedor sigue con
+los valores antiguos. Tras editar el archivo, recrea su servicio:
+
+```bash
+nano /opt/dentissa/entorno/app.env        # o tunnel.env
+bash deploy/aplicar-entorno.sh app        # o cloudflared, o el servicio que lea ese archivo
+```
+
+`aplicar-entorno.sh` recrea el servicio, en `app` vuelve a generar las cachés de
+configuración y rutas, y termina con `verificar.sh --interna`. Su sección
+«Entorno aplicado» da FALLO si algún servicio en marcha usa una configuración
+distinta de la guardada, y dice cuál (sin mostrar valores).
+
+**`db.env` es distinto:** MariaDB solo lo lee al crear la base. Cambiar
+`MARIADB_PASSWORD` ahí no cambia la contraseña real. Para cambiarla, entra en la
+base con la contraseña actual y cámbiala con `ALTER USER`; después pon la nueva
+en `db.env` y en `DB_PASSWORD` de `app.env` y ejecuta
+`bash deploy/aplicar-entorno.sh app`. `aplicar-entorno.sh db` se niega a
+propósito.
+
+## 11. Administrar desde fuera de casa (red privada)
+
+El servidor y tus dispositivos se unen a una red privada de Tailscale (ADR 0006).
+No se abre ningún puerto en el router y se sigue entrando por SSH **con tu clave**.
+
+1. **En el servidor** (por SSH desde casa):
+   ```bash
+   cd /opt/dentissa/app
+   sudo bash deploy/preparar-acceso-remoto.sh
+   ```
+   Abre el enlace que muestra e inicia sesión con tu cuenta. Al final te da la
+   dirección del servidor en la red privada (`100.x.y.z`).
+2. **En la consola** de Tailscale (login.tailscale.com):
+   - **Machines →** el servidor **→ … → Disable key expiry**. Si no, dentro de unos
+     meses el servidor sale de la red y solo podrías volver a conectarlo desde casa.
+   - **Access controls:** sustituye la política por esta (pon la dirección del
+     servidor). Solo deja llegar al servidor por el puerto 22; las reglas de
+     Tailscale van antes que `ufw`, así que **esta ACL es el control real**:
+     ```json
+     {
+       "hosts": { "dentissa-server": "100.x.y.z" },
+       "acls": [
+         { "action": "accept", "src": ["autogroup:member"], "dst": ["dentissa-server:22"] }
+       ]
+     }
+     ```
+3. **En cada dispositivo tuyo** (PC o móvil): instala Tailscale e inicia sesión con
+   la misma cuenta. Para el móvil, además, un cliente SSH (por ejemplo Termius)
+   con una clave propia de ese dispositivo, añadida a `~/.ssh/authorized_keys`
+   del servidor desde casa.
+4. **Entrar desde fuera:**
+   ```bash
+   ssh <cuenta>@100.x.y.z        # o ssh <cuenta>@dentissa-server si usas MagicDNS
+   ```
+5. **Comprobar:** `bash deploy/verificar.sh --interna` debe dar OK en
+   «Administración remota» (red privada conectada y SSH sin contraseña).
+
+**Retirar un dispositivo** (perdido o que ya no usas):
+1. En la consola, **Machines →** ese dispositivo **→ … → Remove**. Deja de llegar
+   al servidor por la red privada.
+2. En el servidor, borra su clave de `~/.ssh/authorized_keys` (cada clave lleva al
+   final un comentario con su nombre). Así tampoco entra desde la red local.
+3. Comprueba desde otro dispositivo que sigues entrando.
