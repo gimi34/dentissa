@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9): verificación posterior a cada
-# despliegue en producción.
+# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9) y spec 031 (CA1, CA3, CA4, CA6;
+# TM1–TM5, TM8): verificación posterior a cada despliegue en producción.
 #
 #     bash deploy/verificar.sh --interna   # por la red de Docker (túnel parado o abierto)
 #     bash deploy/verificar.sh             # además, por la dirección pública (túnel abierto)
@@ -18,6 +18,31 @@ fallo() {
     echo "FALLO $*"
     FALLOS=$((FALLOS + 1))
 }
+# Spec 031 (CA1, CA3, CA4): cabeceras de seguridad de una respuesta. Recibe el
+# nombre de la comprobación, las cabeceras (salida de curl -D -) y "hsts" si
+# además debe llevar la conexión segura obligatoria de al menos 180 días.
+revisar_cabeceras() {
+    local nombre="$1" cabeceras="$2" hsts="${3:-}" faltan=()
+    grep -iqE "^content-security-policy:.*frame-ancestors 'none'" <<< "${cabeceras}" || faltan+=("CSP")
+    grep -iqE '^x-frame-options: *DENY' <<< "${cabeceras}" || faltan+=("X-Frame-Options")
+    grep -iqE '^x-content-type-options: *nosniff' <<< "${cabeceras}" || faltan+=("X-Content-Type-Options")
+    grep -iqE '^referrer-policy: *strict-origin-when-cross-origin' <<< "${cabeceras}" || faltan+=("Referrer-Policy")
+    grep -iqE '^x-powered-by:' <<< "${cabeceras}" && faltan+=("sin X-Powered-By")
+    grep -iqE '^server:.*[0-9]' <<< "${cabeceras}" && faltan+=("Server sin versión")
+    if [[ "${hsts}" == "hsts" ]]; then
+        local edad
+        edad="$(grep -ioE '^strict-transport-security:.*max-age=[0-9]+' <<< "${cabeceras}" | grep -oE '[0-9]+$' || true)"
+        if [[ -z "${edad}" || "${edad}" -lt 15552000 ]] || ! grep -iqE '^strict-transport-security:.*includeSubDomains' <<< "${cabeceras}"; then
+            faltan+=("HSTS de 180 días con subdominios")
+        fi
+    fi
+    if [[ "${#faltan[@]}" -eq 0 ]]; then
+        ok "cabeceras de ${nombre}"
+    else
+        fallo "cabeceras de ${nombre}: ${faltan[*]}"
+    fi
+}
+
 # Código PHP que arranca la aplicación dentro del contenedor app.
 ARRANQUE='require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c = function ($ok, $txt) { echo ($ok ? "OK    " : "FALLO ").$txt.PHP_EOL; };'
 
@@ -44,7 +69,7 @@ main() {
     fi
 
     echo "== Configuración de producción (sin mostrar valores secretos)"
-    # Diez comprobaciones; si php termina con error o faltan líneas, las que no
+    # Doce comprobaciones; si php termina con error o faltan líneas, las que no
     # llegaron a ejecutarse cuentan como fallo (/review R9).
     local config codigo lineas
     config="$("${php[@]}" -r "${ARRANQUE}"'
@@ -60,13 +85,31 @@ main() {
         $c(str_starts_with((string) config("services.google.redirect"), "https://"), "GOOGLE_REDIRECT_URI en https");
         $c(config("database.connections.".config("database.default").".username") !== "root", "usuario de la base distinto de root");
         $c(! str_starts_with((string) Illuminate\Support\Facades\DB::selectOne("SELECT CURRENT_USER() AS u")->u, "root@"), "la app no se conecta como root");
+        $c((bool) preg_match("/^[0-9]+-[0-9a-z]+\\.apps\\.googleusercontent\\.com\$/", (string) config("services.google.client_id")), "GOOGLE_CLIENT_ID con formato de id de Google (no el de ejemplo de la guía)");
+        $secreto = (string) config("services.google.client_secret");
+        $c($secreto !== "" && ! preg_match("/[<>\\s]/", $secreto), "GOOGLE_CLIENT_SECRET definido y sin el texto de ejemplo de la guía");
     ')"
     codigo=$?
     [[ -n "${config}" ]] && echo "${config}"
     FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${config}" || true)))
     lineas="$(grep -cE '^(OK|FALLO) ' <<< "${config}" || true)"
-    if [[ "${codigo}" -ne 0 || "${lineas}" -ne 10 ]]; then
-        fallo "configuración de app: php terminó con código ${codigo} y dio ${lineas} de 10 comprobaciones"
+    if [[ "${codigo}" -ne 0 || "${lineas}" -ne 12 ]]; then
+        fallo "configuración de app: php terminó con código ${codigo} y dio ${lineas} de 12 comprobaciones"
+    fi
+
+    echo "== Cabeceras por la red interna (spec 031)"
+    # curl dentro de web y sin -L: la 301 se juzga por sus propias cabeceras, sin
+    # seguir la redirección (/analyze A29).
+    local cabeceras
+    for ruta in /login /css/app.css /no-existe-verificacion; do
+        cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1${ruta}" 2>/dev/null | tr -d '\r')"
+        revisar_cabeceras "${ruta} (interna)" "${cabeceras}"
+    done
+    cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - -H "X-Forwarded-Proto: http" "http://127.0.0.1/login" 2>/dev/null | tr -d '\r')"
+    if grep -qE '^HTTP/[0-9.]+ 301' <<< "${cabeceras}" && grep -iqE '^location: https://' <<< "${cabeceras}"; then
+        revisar_cabeceras "la 301 de nginx (interna)" "${cabeceras}"
+    else
+        fallo "la petición interna con X-Forwarded-Proto: http responde 301 a https"
     fi
 
     echo "== Contraseñas publicadas en el README (CA5)"
@@ -139,12 +182,17 @@ main() {
             else
                 fallo "/ redirige a https"
             fi
+            # La 301 pública la genera el borde de Cloudflare ("Always Use HTTPS"): no
+            # es una respuesta de la aplicación y solo se comprueba su destino
+            # (spec 031, /analyze A3).
             cabeceras="$(curl -sI "http://${host}/login")"
             if grep -qE '^HTTP/[0-9.]+ 301' <<< "${cabeceras}" && grep -iqE '^location: https://' <<< "${cabeceras}"; then
                 ok "http://${host}/login responde 301 a https"
             else
                 fallo "http://${host}/login responde 301 a https"
             fi
+            cabeceras="$(curl -sS -o /dev/null -D - "${url}/login" 2>/dev/null | tr -d '\r')"
+            revisar_cabeceras "${url}/login (pública)" "${cabeceras}" hsts
         fi
     fi
 
