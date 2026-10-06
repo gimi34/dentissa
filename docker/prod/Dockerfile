@@ -66,4 +66,6 @@ FROM nginx:1.30.5-alpine AS web
 RUN apk upgrade --no-cache
 
 COPY docker/nginx/dentissa.prod.conf /etc/nginx/conf.d/default.conf
+# Cabeceras de seguridad que incluye la configuración (spec 031, D1).
+COPY docker/nginx/seguridad /etc/nginx/snippets/dentissa
 COPY --from=app /var/www/public /var/www/public
