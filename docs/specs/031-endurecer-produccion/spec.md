@@ -1,7 +1,7 @@
 ---
 id: 031
 slug: endurecer-produccion
-status: draft
+status: approved
 created: 2026-10-05
 extends: [001, 030]
 ---
@@ -118,3 +118,4 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-05 | Creación | /specify: endurecer producción tras la 030 (objetivo 5) |
+| 2026-10-06 | Aprobada (la indicación de conexión segura se queda en 180 días) | Decisión del usuario |
