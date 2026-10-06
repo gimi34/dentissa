@@ -41,6 +41,7 @@ van a la spec 032.
 - [ ] CA8 · Dado el responsable fuera de su red local con un dispositivo suyo autorizado en la red privada del proyecto, cuando se conecta a la administración del servidor, entonces entra con su clave, sin contraseña. Esta vía se suma al acceso desde la red local y reemplaza en ese punto a 030 CA3, que solo permitía la red local. Tras un reinicio del servidor, la vía vuelve a funcionar sola en 5 minutos o menos.
 - [ ] CA9 (abuso) · Dado un atacante en internet, cuando busca una vía de administración en la dirección pública de la casa del responsable o del servidor, entonces no encuentra ningún puerto abierto. Desde un dispositivo que no pertenece a la red privada no llega al servidor, aunque conozca su dirección privada. Con contraseña no se entra por ninguna vía.
 - [ ] CA10 · Dado un dispositivo autorizado que se pierde o deja de usarse, cuando el responsable sigue el procedimiento documentado para retirarlo, entonces ese dispositivo deja de llegar al servidor y los demás siguen entrando.
+- [ ] CA11 · Dada la versión liberada, cuando se construye, entonces cada imagen usa la versión más nueva publicada hace 7 días o más dentro de su misma rama (sin cambio de versión mayor ni menor), y el escaneo de imágenes no da hallazgos críticos ni altos sin una excepción vigente. La excepción de las imágenes (EX2) se renueva solo para lo que no tenga corrección publicada, o se retira.
 
 ## Fuera de alcance
 - Una política de contenido estricta, sin scripts, manejadores ni estilos incrustados en las vistas: requiere cambiar unas 40 vistas → roadmap, al tocar cada pantalla (decisión del usuario, 2026-10-05).
@@ -48,7 +49,6 @@ van a la spec 032.
 - Cifrado del disco del servidor: exige reinstalarlo. Se propone aceptarlo como riesgo mientras los datos sean ficticios, con fecha de revisión, en la spec 032 (decisión del usuario, 2026-10-05).
 - Staging, y la indicación de usar solo conexión segura en staging → roadmap, objetivo 5.
 - Inscribir el dominio en la lista de precarga de los navegadores: el dominio ya exige conexión segura en los navegadores por su extensión.
-- Refrescar las imágenes antes del vencimiento de EX2 (RS18.a) → sigue en el roadmap, aunque puede liberarse junto con esta spec.
 - Cambiar los permisos de los roles, el límite de intentos o lo que se registra en la auditoría.
 
 ## Seguridad y privacidad
@@ -71,7 +71,7 @@ van a la spec 032.
 | RS8.d — política de contenido estricta, sin código incrustado en las vistas (nueva al dividir RS8.a) | fuera | Requiere cambiar unas 40 vistas (decisión del usuario, 2026-10-05) → roadmap, por pantallas |
 | RS8.b — indicación de usar solo conexión segura, en producción (corrección dividida) | dentro | CA3 |
 | RS8.c — lo mismo en staging (nueva al dividir RS8.b) | fuera | No hay staging → roadmap, objetivo 5 |
-| RS18.a — refrescar las imágenes y volver a escanearlas antes de que venza EX2 (2026-10-31) | fuera | Sigue en el roadmap (spec 030, T036); puede liberarse junto con esta spec si cae antes del vencimiento |
+| RS18.a — refrescar las imágenes y volver a escanearlas antes de que venza EX2 (2026-10-31) | dentro | CA11 (decisión del usuario, /plan 031) |
 
 ## Auditoría
 No aplica en esta spec, por la excepción a P7 de la spec 030 (aceptada por el usuario el
@@ -104,6 +104,7 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-05 | implícita | ¿Puede desplegarse sin aprobación? | No: aprobación humana explícita del responsable | `docs/deployment.md` (regla innegociable) |
 | 2026-10-05 | supuesto | Duración de la indicación de conexión segura y alcance | 180 días, con subdominios; sin inscripción en la lista de precarga, porque la extensión del dominio ya la exige | lista de precarga de los navegadores (`.app`) |
 | 2026-10-05 | supuesto | Cuánta dirección enviar al ir a otro sitio | Solo el dominio a otros sitios; la dirección completa dentro de la aplicación | valor habitual |
+| 2026-10-06 | brecha | ¿Entra el refresco de imágenes de RS18.a, que vence el 2026-10-31? La 031 ya reconstruye las imágenes | Sí: CA11, en un solo despliegue antes del vencimiento | usuario (/plan 031) |
 | 2026-10-05 | supuesto | Texto del fallo de la vuelta de Google | «No se pudo iniciar sesión con Google. Inténtalo de nuevo.» | valor razonable |
 
 ## Notas para /plan
@@ -119,3 +120,5 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 |---|---|---|
 | 2026-10-05 | Creación | /specify: endurecer producción tras la 030 (objetivo 5) |
 | 2026-10-06 | Aprobada (la indicación de conexión segura se queda en 180 días) | Decisión del usuario |
+| 2026-10-06 | CA11: refresco y escaneo de imágenes (RS18.a dentro). Vuelve a `draft` | /plan 031, decisión del usuario |
+| 2026-10-06 | Aprobada de nuevo (al aprobar el plan) | Decisión del usuario |
