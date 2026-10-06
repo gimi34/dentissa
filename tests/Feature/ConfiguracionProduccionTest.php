@@ -239,4 +239,21 @@ class ConfiguracionProduccionTest extends TestCase
             );
         }
     }
+
+    /**
+     * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
+     * instala desde el repositorio oficial firmado, sin ejecutar scripts
+     * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
+     * OpenSSH con clave) y con su origen en las actualizaciones automáticas.
+     */
+    public function test_el_acceso_remoto_usa_el_repositorio_firmado_y_openssh(): void
+    {
+        $script = $this->leer('deploy/preparar-acceso-remoto.sh');
+
+        $this->assertMatchesRegularExpression('#^[^\#\n]*signed-by=\S+[^\n]*https://pkgs\.tailscale\.com/stable/ubuntu#m', $script, 'El repositorio de Tailscale debe declararse con signed-by.');
+        $this->assertDoesNotMatchRegularExpression('/\|\s*(sudo\s+)?(ba)?sh\b/', $script, 'No se ejecuta ningún script descargado.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*\btailscale up\b[^\n]*--ssh=false/m', $script, 'tailscale up debe desactivar el SSH de Tailscale.');
+        $this->assertMatchesRegularExpression('/Unattended-Upgrade::Allowed-Origins/', $script, 'El origen de Tailscale debe entrar en las actualizaciones automáticas.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*ufw allow in on tailscale0 to any port 22 proto tcp/m', $script);
+    }
 }
