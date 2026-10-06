@@ -1,7 +1,7 @@
 ---
 spec: 031-endurecer-produccion
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 031 Endurecer producción tras la apertura
