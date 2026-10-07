@@ -1,7 +1,7 @@
 ---
 id: 032
 slug: alertas-cifrado-copias
-status: draft
+status: approved
 created: 2026-10-07
 extends: [030]
 ---
@@ -117,3 +117,4 @@ Ninguna.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-07 | Creación en borrador | `/specify 032` |
+| 2026-10-07 | Aprobada | Aprobación del usuario |
