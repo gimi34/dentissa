@@ -292,6 +292,10 @@ No se abre ningún puerto en el router y se sigue entrando por SSH **con tu clav
        ]
      }
      ```
+     Borra **todo** lo anterior: la política de por defecto trae un bloque `"grants"`
+     con `{"src": ["*"], "dst": ["*"], "ip": ["*"]}` que permite cualquier conexión
+     y anula esta regla aunque la añadas (ensayo de T041), y una sección `"ssh"`
+     del SSH propio de Tailscale, que aquí no se usa.
 3. **En cada dispositivo tuyo** (PC o móvil): instala Tailscale e inicia sesión con
    la misma cuenta. Para el móvil, además, un cliente SSH (por ejemplo Termius)
    con una clave propia de ese dispositivo, añadida a `~/.ssh/authorized_keys`
