@@ -51,21 +51,24 @@ main() {
 
     # ── Actualizaciones automáticas ─────────────────────────────────────────
     paso "Actualizaciones automáticas de Tailscale"
-    # Origen y archivo del repositorio tal como los publica: "apt-cache policy",
-    # sin paquete, lista cada fuente con su línea "release o=…,a=…" (/analyze A22).
-    local campos origen archivo
+    # Origen y nombre de la versión del repositorio tal como los publica:
+    # "apt-cache policy", sin paquete, lista cada fuente con su línea
+    # "release o=…,n=…" (/analyze A22). El de Tailscale no publica "a=" (archive),
+    # así que Allowed-Origins ("origen:archivo") no lo cubre; se usa
+    # Origins-Pattern con el origen y el nombre de la versión (T041).
+    local campos origen version
     campos="$(apt-cache policy | awk '/pkgs\.tailscale\.com/ { getline; if ($1 == "release") { print $2; exit } }')"
     origen="$(tr ',' '\n' <<< "${campos}" | sed -n 's/^o=//p')"
-    archivo="$(tr ',' '\n' <<< "${campos}" | sed -n 's/^a=//p')"
-    [[ -n "${origen}" && -n "${archivo}" ]] || error "no se pudieron leer los campos del repositorio de Tailscale (apt-cache policy)"
+    version="$(tr ',' '\n' <<< "${campos}" | sed -n 's/^n=//p')"
+    [[ -n "${origen}" && -n "${version}" ]] || error "no se pudieron leer los campos del repositorio de Tailscale (apt-cache policy)"
     cat > "${ACTUALIZACIONES}" <<CONF
 // Spec 031 (ADR 0006): Tailscale se actualiza como los paquetes de Ubuntu.
 // Campos del repositorio: ${campos}
-Unattended-Upgrade::Allowed-Origins {
-    "${origen}:${archivo}";
+Unattended-Upgrade::Origins-Pattern {
+    "origin=${origen},codename=${version}";
 };
 CONF
-    echo "Origen permitido: ${origen}:${archivo}"
+    echo "Origen permitido: origin=${origen},codename=${version}"
 
     # ── Servicio, cortafuegos y conexión ────────────────────────────────────
     paso "Servicio tailscaled"

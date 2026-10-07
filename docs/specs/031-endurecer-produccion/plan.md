@@ -326,8 +326,9 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
   - `tailscale up --ssh=false --accept-dns=false`, con un alta interactiva (sin cambiar el DNS del
     servidor, /analyze A21);
   - añade el origen de Tailscale a las actualizaciones automáticas del sistema
-    (`Unattended-Upgrade::Allowed-Origins` en un archivo propio de `/etc/apt/apt.conf.d/`;
-    decisión del usuario, /analyze A7);
+    (`Unattended-Upgrade::Origins-Pattern` con `origin` y `codename` en un archivo propio de
+    `/etc/apt/apt.conf.d/`; decisión del usuario, /analyze A7). Corregido en T041: el repositorio
+    de Tailscale no publica `a=` (archive), así que `Allowed-Origins` no lo cubría;
   - `ufw allow in on tailscale0 to any port 22 proto tcp`, solo como defensa adicional: las reglas
     de `tailscaled` aceptan lo que entra por `tailscale0` antes que `ufw`;
   - indica desactivar la caducidad de la clave del servidor y aplicar la ACL del tailnet en la

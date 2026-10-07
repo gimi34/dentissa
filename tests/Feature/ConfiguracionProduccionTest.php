@@ -253,7 +253,10 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('#^[^\#\n]*signed-by=\S+[^\n]*https://pkgs\.tailscale\.com/stable/ubuntu#m', $script, 'El repositorio de Tailscale debe declararse con signed-by.');
         $this->assertDoesNotMatchRegularExpression('/\|\s*(sudo\s+)?(ba)?sh\b/', $script, 'No se ejecuta ningún script descargado.');
         $this->assertMatchesRegularExpression('/^[^#\n]*\btailscale up\b[^\n]*--ssh=false/m', $script, 'tailscale up debe desactivar el SSH de Tailscale.');
-        $this->assertMatchesRegularExpression('/Unattended-Upgrade::Allowed-Origins/', $script, 'El origen de Tailscale debe entrar en las actualizaciones automáticas.');
+        // El repositorio de Tailscale no publica "a=" (archive), solo "o=" y "n=":
+        // Allowed-Origins ("origen:archivo") no lo cubre, Origins-Pattern sí (T041).
+        $this->assertMatchesRegularExpression('/^[^#\n]*Unattended-Upgrade::Origins-Pattern/m', $script, 'El origen de Tailscale debe entrar en las actualizaciones automáticas.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*"origin=\$\{\w+\},codename=\$\{\w+\}"/m', $script, 'El patrón debe usar el origen y el nombre de la versión del repositorio.');
         $this->assertMatchesRegularExpression('/^[^#\n]*ufw allow in on tailscale0 to any port 22 proto tcp/m', $script);
     }
 }
