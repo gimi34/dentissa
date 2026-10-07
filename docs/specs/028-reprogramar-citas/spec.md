@@ -1,7 +1,7 @@
 ---
 id: 028
 slug: reprogramar-citas
-status: draft
+status: approved
 created: 2026-10-07
 extends: [003, 004, 026]
 ---
@@ -116,3 +116,4 @@ Ninguna.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-07 | Creación en borrador | `/specify 028` |
+| 2026-10-07 | Aprobada | Aprobación del usuario |
