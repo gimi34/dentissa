@@ -35,6 +35,9 @@ class EstadosCita
     /** Estados que solo se pueden marcar cuando la cita ya empezó (CA8). */
     public const REQUIEREN_INICIO = ['en_curso', 'no_asistio'];
 
+    /** Antelación mínima con la que el paciente cancela o reprograma su cita (spec 028, D4). */
+    public const ANTELACION_PACIENTE_HORAS = 24;
+
     private const ERRORES_DE_BLOQUEO = [1205, 1213];
 
     public function __construct(private ConnectionInterface $db) {}
@@ -99,6 +102,36 @@ class EstadosCita
         return $this->inicio($cita)->lessThanOrEqualTo(Carbon::now());
     }
 
+    /**
+     * El paciente está dentro de plazo si faltan 24 horas o más para el inicio de la cita,
+     * en la zona de la clínica (borde incluido; spec 028, CA2 y CA3).
+     */
+    public function dentroDelPlazoDelPaciente(object $cita): bool
+    {
+        return Carbon::now()->addHours(self::ANTELACION_PACIENTE_HORAS)->lessThanOrEqualTo($this->inicio($cita));
+    }
+
+    /**
+     * Si la cita se puede reprogramar ahora (spec 028, CA2 y CA5): no está cerrada, no ha
+     * empezado y, para el paciente, está dentro de plazo. La cita debe leerse con bloqueo.
+     *
+     * @throws CambioDeEstadoNoPermitido
+     */
+    public function comprobarReprogramable(object $cita, Usuario $actor): void
+    {
+        if (in_array($cita->estado, self::CERRADOS, true)) {
+            throw CambioDeEstadoNoPermitido::cerrada($cita->estado);
+        }
+
+        if ($cita->estado === 'en_curso' || $this->haEmpezado($cita)) {
+            throw CambioDeEstadoNoPermitido::yaEmpezoPersonal();
+        }
+
+        if ($actor->rol === 'cliente' && ! $this->dentroDelPlazoDelPaciente($cita)) {
+            throw CambioDeEstadoNoPermitido::fueraDePlazo();
+        }
+    }
+
     /** Hora de inicio de la cita en la zona horaria de la clínica. */
     public function inicio(object $cita): Carbon
     {
@@ -153,8 +186,15 @@ class EstadosCita
             throw CambioDeEstadoNoPermitido::antesDeTiempo($nuevo, $this->inicio($cita));
         }
 
-        if ($actor->rol === 'cliente' && $nuevo === 'cancelada' && $this->haEmpezado($cita)) {
-            throw CambioDeEstadoNoPermitido::yaEmpezo();
+        if ($actor->rol === 'cliente' && $nuevo === 'cancelada') {
+            // Una cita ya empezada conserva el mensaje de la 026; si aún no empieza, rige el plazo (spec 028, D17).
+            if ($this->haEmpezado($cita)) {
+                throw CambioDeEstadoNoPermitido::yaEmpezo();
+            }
+
+            if (! $this->dentroDelPlazoDelPaciente($cita)) {
+                throw CambioDeEstadoNoPermitido::fueraDePlazo();
+            }
         }
     }
 }

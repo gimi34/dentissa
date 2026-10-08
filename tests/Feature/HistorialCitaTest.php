@@ -58,8 +58,8 @@ class HistorialCitaTest extends TestCase
         $this->actingAs($this->admin)->delete("/admin/citas/{$eliminada}")->assertStatus(302);
         $this->assertUnaEntrada($eliminada, $this->admin->id, 'confirmada', 'cancelada', null, 'eliminar del admin');
 
-        // El paciente cancela antes de que empiece (09:30 en la clínica).
-        Carbon::setTestNow(Carbon::parse('2026-10-05 15:30:00', 'UTC'));
+        // El paciente cancela con 24 horas o más de antelación (spec 028, CA3): el domingo a las 09:30.
+        Carbon::setTestNow(Carbon::parse('2026-10-04 15:30:00', 'UTC'));
         $delPaciente = $this->cita($this->d1, $this->p1, 'agendada', self::INICIO);
         $this->actingAs($this->paciente1)->patch("/cliente/citas/{$delPaciente}/cancelar")->assertStatus(302);
         $this->assertUnaEntrada($delPaciente, $this->paciente1->id, 'agendada', 'cancelada', null, 'paciente');
