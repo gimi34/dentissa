@@ -1,0 +1,283 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Agenda\CambioDeEstadoNoPermitido;
+use Carbon\Carbon;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\Feature\Concerns\EscenarioEstadosCita;
+use Tests\TestCase;
+
+/**
+ * El paciente reprograma y cancela con 24 horas o más de antelación (spec 028, CA2, CA3,
+ * CA5, CA6 y CA9; TM4).
+ *
+ * La cita de referencia es de D1, el martes 2026-10-06 a las 10:00 en la clínica (16:00 UTC).
+ * A las 16:00 UTC del lunes faltan exactamente 24 horas (dentro de plazo); a las 16:01, no.
+ */
+class ReprogramarCitaPacienteTest extends TestCase
+{
+    use DatabaseTransactions, EscenarioEstadosCita;
+
+    private const CITA = '2026-10-06 10:00';
+
+    private const PLAZO = 'Faltan menos de 24 horas para tu cita: ya no puedes cambiarla ni cancelarla desde aquí. Llama a la clínica.';
+
+    private const AVISO_CORTO = 'Faltan menos de 24 h: llama a la clínica para cambiarla.';
+
+    private const YA_EMPEZO = 'Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica.';
+
+    private const NO_REPROGRAMABLE = 'Esta cita ya no se puede reprogramar. Si necesitas ayuda, llama a la clínica.';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->crearEscenario();
+        $this->conHorarios();
+        $this->ahora('16:00');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
+    // ── CA2 ───────────────────────────────────────────────────────────
+
+    public function test_el_paciente_reprograma_con_24_horas_o_mas(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'confirmada', self::CITA);
+
+        $this->reprogramar($this->paciente1, $cita, '2026-10-07', '11:00')
+            ->assertRedirect("/cliente/citas/{$cita}");
+
+        $this->assertSame('2026-10-07 11:00', $this->fechaHoraDe($cita));
+        $this->assertSame('agendada', $this->estadoDe($cita));
+    }
+
+    public function test_el_hueco_nuevo_puede_empezar_en_menos_de_24_horas(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        // Las 12:00 de hoy en la clínica: faltan 2 horas, pero el plazo se mide sobre la cita actual.
+        $this->reprogramar($this->paciente1, $cita, '2026-10-05', '12:00')->assertSessionHasNoErrors();
+
+        $this->assertSame('2026-10-05 12:00', $this->fechaHoraDe($cita));
+    }
+
+    public function test_con_menos_de_24_horas_se_rechaza_con_el_mensaje_de_plazo(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+        $this->ahora('16:01');
+
+        $this->reprogramar($this->paciente1, $cita, '2026-10-07', '11:00')
+            ->assertStatus(302)
+            ->assertSessionHas('error', self::PLAZO);
+
+        $this->assertSame(self::CITA, $this->fechaHoraDe($cita));
+    }
+
+    public function test_el_detalle_oculta_reprogramar_fuera_de_plazo_y_explica_por_que(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        $dentro = $this->acciones("/cliente/citas/{$cita}", 'acciones-cita');
+        $this->assertStringContainsString("/cliente/citas/{$cita}/reprogramar", $dentro);
+        $this->assertStringContainsString("/cliente/citas/{$cita}/cancelar", $dentro);
+        $this->assertStringNotContainsString(self::PLAZO, $dentro);
+
+        $this->ahora('16:01');
+        $fuera = $this->acciones("/cliente/citas/{$cita}", 'acciones-cita');
+        $this->assertStringNotContainsString("/cliente/citas/{$cita}/reprogramar", $fuera);
+        $this->assertStringNotContainsString("/cliente/citas/{$cita}/cancelar", $fuera);
+        $this->assertStringContainsString(self::PLAZO, $fuera);
+
+        // A40: con la cita ya empezada, el texto de «ya empezó» de la 026.
+        $empezada = $this->cita($this->d1, $this->p1, 'agendada', '2026-10-05 09:30');
+        $acciones = $this->acciones("/cliente/citas/{$empezada}", 'acciones-cita');
+        $this->assertStringContainsString(self::YA_EMPEZO, $acciones);
+        $this->assertStringNotContainsString("/cliente/citas/{$empezada}/reprogramar", $acciones);
+        $this->assertStringNotContainsString("/cliente/citas/{$empezada}/cancelar", $acciones);
+    }
+
+    public function test_la_lista_muestra_el_aviso_corto_fuera_de_plazo(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        $dentro = $this->acciones('/cliente/citas', "acciones-{$cita}");
+        $this->assertStringContainsString("/cliente/citas/{$cita}/reprogramar", $dentro);
+        $this->assertStringContainsString("/cliente/citas/{$cita}/cancelar", $dentro);
+        $this->assertStringNotContainsString(self::AVISO_CORTO, $dentro);
+
+        $this->ahora('16:01');
+        $fuera = $this->acciones('/cliente/citas', "acciones-{$cita}");
+        $this->assertStringNotContainsString("/cliente/citas/{$cita}/reprogramar", $fuera);
+        $this->assertStringNotContainsString("/cliente/citas/{$cita}/cancelar", $fuera);
+        $this->assertStringContainsString(self::AVISO_CORTO, $fuera);
+
+        // A40 y A52: con la cita ya empezada (sale en «pasadas», deuda D4), ni botones ni aviso; «Ver» sigue.
+        $empezada = $this->cita($this->d1, $this->p1, 'agendada', '2026-10-05 09:30');
+        $acciones = $this->acciones('/cliente/citas?filtro=pasadas', "acciones-{$empezada}");
+        $this->assertStringNotContainsString("/cliente/citas/{$empezada}/reprogramar", $acciones);
+        $this->assertStringNotContainsString("/cliente/citas/{$empezada}/cancelar", $acciones);
+        $this->assertStringNotContainsString(self::AVISO_CORTO, $acciones);
+        $this->assertStringContainsString("/cliente/citas/{$empezada}\"", $acciones);
+    }
+
+    public function test_el_paciente_ve_el_motivo_si_su_cita_no_se_puede_mover(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+        $this->ahora('16:01');
+
+        $html = $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}/reprogramar")
+            ->assertOk()
+            ->assertSee(self::PLAZO)
+            ->assertSee(route('cliente.citas.show', $cita), false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('name="fecha"', $html);
+        $this->assertStringNotContainsString('id="no-reagendar"', $html);
+    }
+
+    // ── CA3 ───────────────────────────────────────────────────────────
+
+    public function test_el_paciente_cancela_con_24_horas_o_mas(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        $this->actingAs($this->paciente1)->patch("/cliente/citas/{$cita}/cancelar")->assertStatus(302);
+
+        $this->assertSame('cancelada', $this->estadoDe($cita));
+    }
+
+    public function test_el_paciente_no_cancela_con_menos_de_24_horas(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+        $this->ahora('16:01');
+
+        $this->actingAs($this->paciente1)->patch("/cliente/citas/{$cita}/cancelar")
+            ->assertStatus(302)
+            ->assertSessionHas('error', self::PLAZO);
+
+        $this->assertSame('agendada', $this->estadoDe($cita));
+    }
+
+    // ── CA6 ───────────────────────────────────────────────────────────
+
+    public function test_el_paciente_cancela_con_motivo_desde_la_pantalla(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        $html = $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}/reprogramar")->assertOk()->getContent();
+        $seccion = (string) $this->seccion($html, 'no-reagendar');
+        $this->assertStringContainsString(route('cliente.citas.cancelar', $cita), $seccion);
+        $this->assertStringContainsString('name="motivo"', $seccion);
+
+        $this->actingAs($this->paciente1)
+            ->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => 'Me mudo de ciudad', 'formulario' => 'no-reagendar'])
+            ->assertStatus(302);
+
+        $this->assertSame('cancelada', $this->estadoDe($cita));
+        $entrada = $this->entradasDeHistorial($cita)->sole();
+        $this->assertSame('Me mudo de ciudad', $entrada->motivo);
+        $this->assertSame($this->paciente1->id, $entrada->cambiado_por);
+    }
+
+    // ── CA5 (paciente) ────────────────────────────────────────────────
+
+    public function test_el_paciente_no_ve_estados_internos(): void
+    {
+        $casos = [
+            'completada' => $this->cita($this->d1, $this->p1, 'completada', self::CITA),
+            'no asistió' => $this->cita($this->d1, $this->p1, 'no_asistio', self::CITA),
+            'en curso' => $this->cita($this->d1, $this->p1, 'en_curso', '2026-10-05 09:45'),
+            'agendada ya empezada' => $this->cita($this->d1, $this->p1, 'agendada', '2026-10-05 09:30'),
+        ];
+
+        foreach ($casos as $caso => $cita) {
+            $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}/reprogramar")
+                ->assertOk()
+                ->assertSee(self::NO_REPROGRAMABLE);
+
+            $this->reprogramar($this->paciente1, $cita, '2026-10-07', '11:00')
+                ->assertStatus(302)
+                ->assertSessionHas('error', self::NO_REPROGRAMABLE);
+
+            foreach (['completada', 'no_asistio', 'en_curso'] as $estado) {
+                $this->assertStringNotContainsString(
+                    CambioDeEstadoNoPermitido::etiqueta($estado),
+                    (string) session('error'),
+                    "{$caso}: el mensaje no nombra estados internos.",
+                );
+            }
+        }
+    }
+
+    // ── CA9 y TM4 ─────────────────────────────────────────────────────
+
+    public function test_fuera_de_plazo_se_rechaza_aunque_se_envie_a_mano(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'confirmada', self::CITA);
+        $this->ahora('16:01');
+
+        $this->reprogramar($this->paciente1, $cita, '2026-10-07', '11:00')->assertSessionHas('error', self::PLAZO);
+        $this->actingAs($this->paciente1)
+            ->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => 'Enviado a mano', 'formulario' => 'no-reagendar'])
+            ->assertSessionHas('error', self::PLAZO);
+
+        $this->assertSame(self::CITA, $this->fechaHoraDe($cita));
+        $this->assertSame('confirmada', $this->estadoDe($cita));
+        $this->assertCount(0, $this->entradasDeHistorial($cita));
+    }
+
+    public function test_los_mensajes_de_validacion_de_la_cancelacion_estan_en_espanol(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        $this->actingAs($this->paciente1)->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => ['lista']]);
+        $this->assertSame('El motivo debe ser un texto.', $this->errorDe('motivo'));
+
+        $this->actingAs($this->paciente1)->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => str_repeat('a', 501)]);
+        $this->assertSame('El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.', $this->errorDe('motivo'));
+
+        $this->assertSame('agendada', $this->estadoDe($cita));
+    }
+
+    public function test_las_listas_en_el_formulario_no_dan_error_del_servidor(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+        $formulario = "/cliente/citas/{$cita}/reprogramar";
+
+        foreach (['fecha', 'hora', 'motivo', 'formulario'] as $campo) {
+            $datos = ['fecha' => '2026-10-07', 'hora' => '11:00', 'motivo' => null, 'formulario' => 'reprogramar'];
+            $datos[$campo] = ['lista'];
+
+            $respuesta = $this->actingAs($this->paciente1)->from($formulario)->patch($formulario, $datos);
+            $this->assertNotSame(500, $respuesta->status(), $campo);
+
+            // A34: al volver al formulario con la entrada anterior, nunca hay un 500.
+            $this->actingAs($this->paciente1)->get($formulario)->assertOk();
+        }
+
+        $this->assertSame(self::CITA, $this->fechaHoraDe($cita));
+    }
+
+    // ── Apoyo ──────────────────────────────────────────────────────────
+
+    /** Fija "ahora" el lunes 2026-10-05 a esa hora UTC. */
+    private function ahora(string $hora): void
+    {
+        Carbon::setTestNow(Carbon::parse("2026-10-05 {$hora}:00", 'UTC'));
+    }
+
+    /** HTML del bloque con ese `id` en la página, como paciente. */
+    private function acciones(string $url, string $id): string
+    {
+        $html = $this->actingAs($this->paciente1)->get($url)->assertOk()->getContent();
+        $bloque = $this->seccion($html, $id);
+        $this->assertNotNull($bloque, "La página {$url} no tiene #{$id}.");
+
+        return $bloque;
+    }
+}
