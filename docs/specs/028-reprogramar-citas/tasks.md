@@ -1,7 +1,7 @@
 ---
 spec: 028-reprogramar-citas
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 028 Reprogramar citas
