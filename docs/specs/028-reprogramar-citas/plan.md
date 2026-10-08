@@ -1,6 +1,6 @@
 ---
 spec: 028-reprogramar-citas
-status: approved
+status: draft
 constitution_version: 1.2.1
 created: 2026-10-07
 ---
@@ -50,9 +50,9 @@ la regla de estados, así que vale igual para cancelar desde el panel y desde la
 | `resources/views/citas/reprogramar.blade.php`, `citas/cliente-reprogramar.blade.php` (nuevos) | Pantallas del personal y del paciente con el parcial y sus rutas. | bajo |
 | `resources/views/citas/show.blade.php` | En «Acciones rápidas», que pasa a `id="acciones"`: «Ver expediente del paciente», «Reprogramar» (`.btn btn-outline`, si `puede_reprogramar`) y «Agendar otra cita» (antes «Reagendar / Nueva cita», mismo destino; decisión del usuario, 2026-10-08; A44). En `id="historial"`: «Reprogramada del … al …» y el cambio de estado si lo hubo; la línea «por …» pasa a una clase en `--text` (A32). Los dos bloques (`#acciones` y `#historial`) quedan sin `style=`, dentro de `.formulario-accesible` (A2, A35). `#estado` no se toca. | bajo |
 | `resources/views/citas/cliente-show.blade.php`, `cliente-index.blade.php` | «Reprogramar» y «Cancelar» (`.btn-danger`) solo dentro del plazo; fuera, el aviso de plazo en el detalle y el aviso corto en el listado (A13, A40). Los bloques tocados quedan sin `style=`, dentro de `.formulario-accesible`: en el detalle, el contenido de `topbar-actions` dentro de `id="acciones-cita"`; en la lista, la celda de acciones de cada fila dentro de `id="acciones-{id de la cita}"` (A2, A35). La confirmación existente de «Cancelar» no cambia (DS7). | bajo |
-| `public/css/app.css` | `.btn-danger` con tokens (`--red`, `--red-bg`) y foco visible (`--focus-ring*`); componente `.formulario-accesible` (D11); las reglas del historial que hoy van en línea pasan a clases con tokens (`.timeline-time` con `--timeline-time-width`, punto en `--p300`, estado anterior en `--text`, estado nuevo en `--p600`, autor en `--text` con `--text-small`); token nuevo `--timeline-time-width: 100px` en `:root`; `.formulario-accesible .field:focus` con borde `--border-control` y sin sombra, para ganar a `citas.css` en `citas/show` (A37); `.formulario-accesible .badge-green` con `color: var(--text)` (A31). Ninguna regla nueva declara familia, px, hex, rgb ni pesos literales. Solo añadidos. | bajo |
+| `public/css/app.css` | `.btn-danger` con tokens (`--red`, `--red-bg`) y foco visible (`--focus-ring*`); componente `.formulario-accesible` (D11); las reglas del historial que hoy van en línea pasan a reglas acotadas a `.formulario-accesible`, sin tocar las globales que usa `dashboard/dentista` (A49): `.formulario-accesible .timeline-time` con `--timeline-time-width`, `.formulario-accesible .timeline-dot` en `--p300`, y `.historial-estado-anterior` (`--text`), `.historial-estado-nuevo` (`--p600`) y `.historial-autor` (`--text`, `--text-small`, `margin-top: var(--space-1)`); clases de maquetación de los bloques tocados, también acotadas y solo con tokens (A48, tabla "Maquetación de los bloques tocados"); token nuevo `--timeline-time-width: 100px` en `:root`; `.formulario-accesible .field:focus` con borde `--border-control` y sin sombra, para ganar a `citas.css` en `citas/show` (A37); `.formulario-accesible .badge-green` con `color: var(--text)` (A31). Ninguna regla nueva declara familia, px, hex, rgb ni pesos literales. Solo añadidos. | bajo |
 | `docs/design/system.md`, `system.html` | Componentes `.btn-danger` y «Formulario accesible», y la pantalla de reprogramar; versión 1.3.0. | bajo |
-| `tests/Feature/` | Nuevos: `ReprogramarCitaTest`, `ReprogramarCitaRolesTest`, `ReprogramarCitaPacienteTest`, `ReprogramarConcurrenteTest`, `ReprogramarCitaVistasTest`. Modificados (D6): `EstadosCitaRolesTest` (plazo del paciente), `EstadosCitaTransicionesTest` (texto de `vuelta` por rol), `HistorialCitaTest` (el caso del paciente pasa a una cita con ≥ 24 h) y `EstadosCitaVistasTest` (los dos tests del paciente). | — |
+| `tests/Feature/` | Nuevos: `ReprogramarCitaTest`, `ReprogramarCitaRolesTest`, `ReprogramarCitaPacienteTest`, `ReprogramarConcurrenteTest`, `ReprogramarCitaVistasTest`. Modificados (D6): `EstadosCitaRolesTest` (plazo del paciente), `EstadosCitaTransicionesTest` (texto de `vuelta` por rol), `HistorialCitaTest` (el caso del paciente pasa a una cita con ≥ 24 h) y `EstadosCitaVistasTest` (un test del paciente, A40). | — |
 
 ## Contratos y datos
 
@@ -140,10 +140,29 @@ toca: la migración se aplica después de cargarlo, como la de la 026.
   avanzan en esta pantalla.
 - **`--timeline-time-width`** (100px), el ancho actual de la hora en el historial, para que la regla
   `.timeline-time` no lleve un valor literal (A37).
-- **Badge verde dentro del componente:** `--text` sobre `--green-bg` (≈ 19:1) en lugar de `--green`
+- **Badge verde dentro del componente:** `--text` sobre `--green-bg` (18.50:1) en lugar de `--green`
   (2.98:1, DS1); el resto de la app no cambia (decisión del usuario, 2026-10-08; A31).
 - **Pantalla «Reprogramar cita»** en `system.md` → Pantallas principales; sus capturas a 390 y 1440 px
-  se añaden cuando la pantalla existe (tarea de las vistas del paciente).
+  se añaden cuando la pantalla existe (tarea de capturas, después de las vistas del paciente).
+- `system.md` sube a 1.3.0 con su fila en "Decisiones". Lo hace la primera tarea, antes del código.
+
+### Maquetación de los bloques tocados (A48)
+Sustituyen a los `style=` de los bloques que se tocan; todas con ámbito `.formulario-accesible` y
+solo tokens (decisión del usuario, 2026-10-08: las crea la tarea del CSS; las tareas de vistas solo
+las usan):
+
+| Clase | Bloque | Valores (antes en línea → token) |
+|---|---|---|
+| `.acciones-columna` | `#acciones` (detalle del personal) | flex en columna, `gap: var(--space-3)` (8px); sus `.btn` con `justify-content: center` |
+| `.acciones-fila` | `#acciones-{id}` (lista del paciente) | flex, `gap: var(--space-1)` (4px), `justify-content: flex-end` |
+| `.form-en-linea` | formularios de «Cancelar» en `#acciones-cita` y `#acciones-{id}` | `display: inline` |
+| `.aviso-plazo` | aviso de plazo (detalle) y aviso corto (lista) | `font-size: var(--text-body)` (antes 13px), `color: var(--text)` |
+| `.historial-lista` | contenedor de `#historial` | `padding: var(--space-2) var(--space-7)` (6px 20px) |
+| `.historial-vacio` | vacío de `#historial` | `padding: var(--space-7)` (antes 22px; decisión del usuario, 2026-10-08) |
+
+`test_las_reglas_css_nuevas_solo_usan_tokens` revisa los selectores que empiezan por
+`.formulario-accesible` y `.btn-danger` (A49), y los tests de «solo usa el sistema» de los bloques
+siguen exigiendo cero `style=`.
 
 ### Pares de contraste (A32)
 El test de contraste comprueba esta lista, frente sobre fondo, y además cada `color` de las reglas
@@ -161,7 +180,6 @@ nuevas sobre el `background` de su propia regla (o sobre `--white` y `--p50` si 
 | Anillo de foco | `--focus-ring` | `--white`, `--p50` | 3:1 |
 
 El punto del historial (`--p300`) es decorativo: el estado se lee en el texto.
-- `system.md` sube a 1.3.0 con su fila en "Decisiones". Lo hace la primera tarea, antes del código.
 
 ## Estrategia de pruebas
 - **Feature (PHPUnit, `DatabaseTransactions`, `dentissa_test`)** con el escenario de
@@ -174,7 +192,8 @@ El punto del historial (`--p300`) es decorativo: el estado se lee en el texto.
     validación en español, A8; bordes de franja y la cita de otro dentista, 025 CA3 y CA7).
   - `ReprogramarCitaRolesTest`: CA8 y P3 (admin, asistente dentro y fuera de alcance, dentista en
     las rutas de otros grupos, paciente con cita propia y ajena, personal en la ruta del paciente),
-    GET y PATCH; el GET de una cita que no se puede mover, por rol y por caso (A6).
+    GET y PATCH; el GET de una cita que no se puede mover, por rol del personal y por caso (A6; el del
+    paciente, en `ReprogramarCitaPacienteTest`, A50).
   - `ReprogramarCitaPacienteTest`: CA2, CA3 y CA6 del paciente (borde exacto de 24 h aceptado y
     23 h 59 min rechazado, el hueco nuevo dentro de menos de 24 h aceptado, cancelar con motivo desde
     la pantalla (GET con `#no-reagendar` y PATCH), mensaje de plazo, cita cerrada o en curso sin
@@ -226,13 +245,13 @@ Casos de abuso de la spec: CA8 → TM1, TM2; CA9 → TM3, TM4, TM5; CA10 → TM6
 | CA2: paciente con ≥ 24 h reprograma; con menos, rechazo y sin botón | `EstadosCita`, `ClienteCitasController`, vistas del paciente | Feature `ReprogramarCitaPacienteTest::test_el_paciente_reprograma_con_24_horas_o_mas`, `test_el_hueco_nuevo_puede_empezar_en_menos_de_24_horas`, `test_con_menos_de_24_horas_se_rechaza_con_el_mensaje_de_plazo`, `test_el_detalle_oculta_reprogramar_fuera_de_plazo_y_explica_por_que`, `test_la_lista_muestra_el_aviso_corto_fuera_de_plazo` (A13) |
 | CA3: paciente cancela solo con ≥ 24 h (reemplaza 026 CA7) | `EstadosCita::comprobar`, `ClienteCitasController::cancelar` | Feature `ReprogramarCitaPacienteTest::test_el_paciente_cancela_con_24_horas_o_mas` (caracterización: se rompe haciendo que `cancelar` rechace siempre), `test_el_paciente_no_cancela_con_menos_de_24_horas`; `EstadosCitaRolesTest`, `HistorialCitaTest` y `EstadosCitaVistasTest` actualizados (D6) |
 | CA4: regla de hueco de la 025 sin contar la propia cita; pasada o igual rechazadas | `ReservaCitas::comprobarHueco`, `ReprogramacionCitas` | Feature `ReprogramarCitaTest::test_aplica_la_regla_de_agenda_al_nuevo_hueco` (sin horario, fuera de franja, solape, seguidas, canceladas no cuentan), `test_la_propia_cita_no_cuenta_como_conflicto`, `test_una_fecha_pasada_o_igual_se_rechaza`, `test_la_nueva_hora_se_interpreta_en_la_zona_de_la_clinica` (A4) |
-| CA5: confirmada → agendada; cerradas y empezadas no se mueven; no se reabren | `EstadosCita::comprobarReprogramable`, `ReprogramacionCitas` | Feature `test_una_confirmada_vuelve_a_agendada`, `test_una_cita_cerrada_o_empezada_no_se_reprograma`, `ReprogramarCitaRolesTest::test_el_formulario_de_una_cita_que_no_se_puede_mover_muestra_el_motivo` (A6), `ReprogramarCitaPacienteTest::test_el_paciente_no_ve_estados_internos` (A7); `EstadosCitaTransicionesTest::test_volver_a_agendada_nunca_se_permite` sin cambios en el cambio de estado (A3) y `test_el_mensaje_de_volver_a_agendada_depende_del_rol` (A18) |
+| CA5: confirmada → agendada; cerradas y empezadas no se mueven; no se reabren | `EstadosCita::comprobarReprogramable`, `ReprogramacionCitas` | Feature `test_una_confirmada_vuelve_a_agendada`, `test_una_cita_cerrada_o_empezada_no_se_reprograma`, `ReprogramarCitaRolesTest::test_el_formulario_de_una_cita_que_no_se_puede_mover_muestra_el_motivo` (A6), `ReprogramarCitaPacienteTest::test_el_paciente_ve_el_motivo_si_su_cita_no_se_puede_mover` (A50), `test_el_paciente_no_ve_estados_internos` (A7); `EstadosCitaTransicionesTest::test_volver_a_agendada_nunca_se_permite` sin cambios en el cambio de estado (A3) y `test_el_mensaje_de_volver_a_agendada_depende_del_rol` (A18) |
 | CA6: cancelar definitivamente desde la pantalla, con las reglas de la 026 | parcial `reprogramar`, `CitasController@updateEstado`, `ClienteCitasController@cancelar` | Feature `ReprogramarCitaVistasTest::test_la_seccion_no_reagendar_cancela_con_motivo`, `test_el_detalle_del_dentista_no_enlaza_a_reprogramar`, `test_cada_formulario_muestra_sus_valores_y_errores_en_su_seccion` (A5); `ReprogramarCitaPacienteTest::test_el_paciente_cancela_con_motivo_desde_la_pantalla` (GET y PATCH) · verificación manual: la sección «No reagendar» separada y marcada como irreversible, a 390 y 1440 px, contra `system.html` |
 | CA7: una sola entrada de historial con autor, fechas, estado y motivo; los rechazos no dejan | migración, `ReprogramacionCitas`, `citas/show` | Feature `ReprogramarCitaTest::test_la_reprogramacion_deja_una_sola_entrada_de_historial`, `test_un_rechazo_no_deja_historial`; `ReprogramarCitaVistasTest::test_el_historial_muestra_la_reprogramacion` |
 | CA8 (abuso): dentista, asistente fuera de alcance y paciente ajeno rechazados | rutas, Gate `reprogramar-cita` | Feature `ReprogramarCitaRolesTest` (GET y PATCH por rol, permitido y denegado); `test_fuera_de_alcance_tampoco_cancela_definitivamente` (caracterización: se rompe `CambiarEstadoCita::alcance`) |
 | CA9 (abuso): formulario manipulado, mal formado o fuera de plazo | validación, `ReprogramacionCitas`, `EstadosCita` | Feature `ReprogramarCitaTest::test_los_campos_anadidos_a_mano_no_cambian_la_cita`, `test_una_fecha_u_hora_mal_formada_da_error_de_validacion`, `test_los_mensajes_de_validacion_estan_en_espanol` (A8); `ReprogramarCitaPacienteTest::test_fuera_de_plazo_se_rechaza_aunque_se_envie_a_mano`, `test_los_mensajes_de_validacion_de_la_cancelacion_estan_en_espanol` (A8) |
 | CA10 (abuso): dos peticiones por el mismo hueco, sin 500 | `ReprogramacionCitas` (bloqueo) | Feature `ReprogramarConcurrenteTest::test_la_reprogramacion_espera_al_bloqueo_del_dentista_y_responde_no_disponible`, `test_reprogramar_y_agendar_el_mismo_hueco_solo_guarda_uno`, `test_un_interbloqueo_se_convierte_en_no_disponible` |
-| TM1: dentista o asistente fuera de alcance | rutas, Gate | Feature `ReprogramarCitaRolesTest::test_el_dentista_no_puede_reprogramar`, `test_el_asistente_no_reprograma_citas_de_dentistas_no_asignados` |
+| TM1: dentista o asistente fuera de alcance | rutas, Gate | Feature `ReprogramarCitaRolesTest::test_el_dentista_no_puede_reprogramar`, `test_el_asistente_no_reprograma_citas_de_dentistas_no_asignados`, `test_el_personal_no_puede_usar_la_ruta_del_paciente` (A50) |
 | TM2: IDOR del paciente | `ClienteCitasController`, Gate | Feature `ReprogramarCitaRolesTest::test_el_paciente_no_encuentra_la_cita_de_otro` (con su cita propia → 200 en el mismo test) |
 | TM3: campos añadidos a mano | controladores | Feature `ReprogramarCitaTest::test_los_campos_anadidos_a_mano_no_cambian_la_cita` |
 | TM4: el paciente salta el plazo | `EstadosCita` | Feature `ReprogramarCitaPacienteTest::test_fuera_de_plazo_se_rechaza_aunque_se_envie_a_mano` |
@@ -244,7 +263,7 @@ Casos de abuso de la spec: CA8 → TM1, TM2; CA9 → TM3, TM4, TM5; CA10 → TM6
 | TM10: reabrir una cerrada o mover una empezada | `EstadosCita` | Feature `ReprogramarCitaTest::test_una_cita_cerrada_o_empezada_no_se_reprograma` |
 | TM11: motivo sin escapar | `citas/show` | Feature `ReprogramarCitaVistasTest::test_el_motivo_de_la_reprogramacion_se_muestra_escapado` |
 | RNF: mensajes en español que dicen qué hacer | `CambioDeEstadoNoPermitido`, `CitaNoAgendable`, `ReprogramacionCitas::mensajesDeEntrada()` | Feature: los tests de CA2, CA4 y CA5 asertan el texto exacto; `test_los_mensajes_de_validacion_estan_en_espanol` y el de la cancelación del paciente (A8) |
-| RNF: WCAG 2.1 AA en lo nuevo | parcial, vistas, `.btn-danger`, `.formulario-accesible` | Feature `ReprogramarCitaVistasTest::test_los_pares_de_contraste_cumplen_aa`, `test_las_reglas_css_nuevas_solo_usan_tokens`, `test_los_controles_tienen_foco_visible`, `test_lo_nuevo_solo_usa_el_sistema_en_la_pantalla_del_personal`, `…_en_la_pantalla_del_paciente`, `…_en_el_detalle_del_personal`, `…_en_el_detalle_del_paciente`, `…_en_la_lista_del_paciente`, `test_los_errores_del_personal_van_asociados_a_su_campo`, `test_los_errores_del_paciente_van_asociados_a_su_campo` · verificación manual: foco visible con teclado y lectura de errores a 390 y 1440 px contra `system.html` (A1, A2, A16) |
+| RNF: WCAG 2.1 AA en lo nuevo | parcial, vistas, `.btn-danger`, `.formulario-accesible` | Feature `ReprogramarCitaVistasTest::test_los_pares_de_contraste_cumplen_aa`, `test_las_reglas_css_nuevas_solo_usan_tokens`, `test_los_controles_tienen_foco_visible`, `test_el_estado_completada_se_ve_con_contraste_aa` (personal; A50), `test_lo_nuevo_solo_usa_el_sistema_en_la_pantalla_del_personal`, `…_en_la_pantalla_del_paciente`, `…_en_el_detalle_del_personal`, `…_en_el_detalle_del_paciente`, `…_en_la_lista_del_paciente`, `test_los_errores_del_personal_van_asociados_a_su_campo`, `test_los_errores_del_paciente_van_asociados_a_su_campo` · verificación manual: foco visible con teclado y lectura de errores a 390 y 1440 px contra `system.html` (A1, A2, A16) |
 | RNF: ninguna entrada produce un 500 | validación, mapeo de bloqueos | Feature: los tests de CA9 y CA10 asertan respuesta distinta de 500 |
 
 ## Observabilidad
@@ -328,6 +347,10 @@ Casos de abuso de la spec: CA8 → TM1, TM2; CA9 → TM3, TM4, TM5; CA10 → TM6
 - **D16. Confirmada → agendada** (A3). Reemplaza 026 CA1 solo al reprogramar (spec 028 CA5,
   contradicción resuelta por el usuario); el cambio de estado sigue rechazando la vuelta a
   «Agendada», con el mensaje según el rol (A18).
+- **D17. Plazo y citas ya empezadas** (A55). El «faltan menos» de spec CA3 se aplica a citas que
+  aún no empiezan; una cita ya empezada se sigue rechazando con el mensaje de `yaEmpezo()` de 026 CA7
+  (decisión del usuario, 2026-10-08; A40). Test sin cambios:
+  `EstadosCitaRolesTest::test_el_paciente_no_puede_cancelar_una_cita_que_ya_empezo`.
 - **D9. Excepciones de la constitución** P3, P7 y P8: las mismas que en la 026, con destino 014 y
   015, 022 y 020, y 023 (decisión del usuario, 2026-10-07).
 
