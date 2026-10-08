@@ -66,6 +66,18 @@ class CambioDeEstadoNoPermitido extends RuntimeException
         return new self('yaEmpezo', 'Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica.');
     }
 
+    /** Spec 028: el paciente cancela o reprograma con menos de 24 horas de antelación. */
+    public static function fueraDePlazo(): self
+    {
+        return new self('fueraDePlazo', 'Faltan menos de 24 horas para tu cita: ya no puedes cambiarla ni cancelarla desde aquí. Llama a la clínica.');
+    }
+
+    /** Spec 028: el personal intenta reprogramar una cita en curso o que ya empezó. */
+    public static function yaEmpezoPersonal(): self
+    {
+        return new self('yaEmpezoPersonal', 'Esta cita ya empezó y no se puede reprogramar.');
+    }
+
     public static function ocupada(): self
     {
         return new self('ocupada', 'Otra persona está cambiando esta cita en este momento. Recarga la página y vuelve a intentarlo.');
