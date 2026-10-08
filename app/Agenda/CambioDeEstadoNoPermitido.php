@@ -39,9 +39,12 @@ class CambioDeEstadoNoPermitido extends RuntimeException
         return new self('cerrada', "Esta cita ya está {$como} y no puede cambiar de estado. Para volver a atender al paciente, agenda una cita nueva.");
     }
 
-    public static function vuelta(): self
+    /** El mensaje dice cómo mover la cita según quién lo intenta (spec 028, CA5). */
+    public static function vuelta(string $rol): self
     {
-        return new self('vuelta', 'Una cita no puede volver a «Agendada». Si hay que moverla, cancélala y agenda una nueva.');
+        return new self('vuelta', $rol === 'dentista'
+            ? 'Una cita no puede volver a «Agendada». Pide a tu asistente o a la administración que la reprogramen.'
+            : 'Una cita no puede volver a «Agendada». Si hay que moverla, usa «Reprogramar».');
     }
 
     /** @param  string[]  $desde  estados de origen permitidos para `$nuevo` */

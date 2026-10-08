@@ -142,7 +142,7 @@ class EstadosCita
         }
 
         if (! array_key_exists($nuevo, self::TRANSICIONES)) {
-            throw CambioDeEstadoNoPermitido::vuelta();
+            throw CambioDeEstadoNoPermitido::vuelta($actor->rol);
         }
 
         if (! in_array($cita->estado, self::TRANSICIONES[$nuevo], true)) {
