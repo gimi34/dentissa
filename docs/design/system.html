@@ -105,6 +105,26 @@
      fuente del sistema; las capturas muestran la tipografía real. */
 </style>
 
+<style id="componentes-028">
+  /* Muestras vivas de la spec 028 con los tokens de .opt (valores de app.css). */
+  .opt { --focus-ring: #993556; --focus-ring-width: 2px; --focus-ring-offset: 2px;
+         --timeline-time-width: 100px; --color-link-bg: #B83C65; }
+  .opt .m-row { display: flex; flex-wrap: wrap; gap: var(--space-6); align-items: flex-start; }
+  .opt .m-btn { display: inline-flex; align-items: center; padding: var(--space-3) var(--space-6);
+                border-radius: var(--radius-sm); font: inherit; font-weight: var(--weight-strong); cursor: pointer; }
+  .opt .m-btn-danger { color: var(--color-danger); background: var(--color-danger-bg);
+                       border: var(--border-width) solid var(--color-danger); }
+  .opt .m-btn-primary { color: var(--color-on-primary); background: var(--color-link-bg); border: 0; }
+  .opt .m-focus { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+  .opt .m-form { background: var(--color-surface); border-radius: var(--radius-md); padding: var(--space-7);
+                 display: grid; gap: var(--space-3); max-width: 340px; }
+  .opt .m-label { color: var(--color-text); font-weight: var(--weight-strong); }
+  .opt .m-field { font: inherit; padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm);
+                  border: var(--border-width) solid var(--color-border-control); background: var(--color-surface); }
+  .opt .m-error { color: var(--color-danger); margin: 0; }
+  .opt .m-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px;
+                  color: var(--color-text); background: var(--color-success-bg); }
+</style>
 <style id="tokens">
   /* Valores reales de public/css/app.css:3-49 con su nombre semántico de AI-DD. */
   .opt {
@@ -263,6 +283,27 @@
         <figure class="v-crop"><img src="capturas/componentes/historial.png" alt="Historial de la cita (.timeline)" loading="lazy"><figcaption>Historial de la cita (.timeline)</figcaption></figure>
         <figure class="v-crop"><img src="capturas/componentes/horario-dia.png" alt="Día del horario (spec 027): campos de hora recortados (DS13)" loading="lazy"><figcaption>Día del horario (spec 027): campos de hora recortados (DS13)</figcaption></figure>
         <figure class="v-crop"><img src="capturas/componentes/lista-citas.png" alt="Lista de citas fuera del horario (spec 027)" loading="lazy"><figcaption>Lista de citas fuera del horario (spec 027)</figcaption></figure>
+      </div>
+    </div></div>
+    <h3 id="componentes-028">Botón de peligro y Formulario accesible (spec 028)</h3>
+    <p class="v-note">Muestras vivas, no capturas: la pantalla aún no existe. Valores de <code>app.css</code>;
+      el foco se muestra fijo para verlo sin teclado.</p>
+    <div class="v-stage"><div class="opt">
+      <div class="m-row">
+        <div>
+          <p class="t-body">.btn-danger en reposo y con foco</p>
+          <div class="m-row">
+            <button type="button" class="m-btn m-btn-danger">Cancelar la cita definitivamente</button>
+            <button type="button" class="m-btn m-btn-danger m-focus">Con foco</button>
+          </div>
+        </div>
+        <form class="m-form" onsubmit="return false" aria-label="Muestra del Formulario accesible">
+          <span class="m-badge">Completada</span>
+          <label class="m-label" for="m-hora">Hora</label>
+          <input class="m-field m-focus" id="m-hora" value="09:59" aria-invalid="true" aria-describedby="m-hora-error">
+          <p class="m-error" id="m-hora-error" role="alert">Elige una fecha y hora que aún no hayan pasado.</p>
+          <button type="button" class="m-btn m-btn-primary">Guardar nueva fecha</button>
+        </form>
       </div>
     </div></div>
   </section>
