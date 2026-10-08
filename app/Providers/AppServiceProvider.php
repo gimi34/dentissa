@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Autorizacion\CambiarEstadoCita;
 use App\Autorizacion\GestionPersonal;
+use App\Autorizacion\ReprogramarCita;
 use App\Http\Controllers\AuthController;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         // Estados de la cita (spec 026): alcance antes de validar, y alcance + rol al cambiar.
         Gate::define('gestionar-cita', [CambiarEstadoCita::class, 'alcance']);
         Gate::define('cambiar-estado-cita', [CambiarEstadoCita::class, 'autorizar']);
+        Gate::define('reprogramar-cita', [ReprogramarCita::class, 'autorizar']);
 
         // Horario del dentista (spec 027): solo la administración, y solo sobre dentistas.
         Gate::define('definir-horario', [GestionPersonal::class, 'definirHorario']);
