@@ -114,11 +114,12 @@ class ReservaCitas
     /**
      * Comprueba que el dentista puede atender de `$inicio` a `$fin`: día con horario,
      * encaje en la franja y sin solape (CA2–CA7). Se llama dentro de una transacción
-     * ya abierta, después de `bloquearDentista`.
+     * ya abierta, después de `bloquearDentista`. Al reprogramar, la propia cita no cuenta
+     * como conflicto (`$excluirCitaId`, spec 028 D2).
      *
      * @throws CitaNoAgendable
      */
-    public function comprobarHueco(string $dentistaId, Carbon $inicio, Carbon $fin): void
+    public function comprobarHueco(string $dentistaId, Carbon $inicio, Carbon $fin, ?string $excluirCitaId = null): void
     {
         $horario = $this->db->table('horarios_dentista')
             ->where('personal_id', $dentistaId)
@@ -137,7 +138,7 @@ class ReservaCitas
             throw CitaNoAgendable::fueraDeFranja($franjaInicio, $franjaFin);
         }
 
-        $this->comprobarSolape($dentistaId, $inicio, $fin);
+        $this->comprobarSolape($dentistaId, $inicio, $fin, $excluirCitaId);
     }
 
     private function reservarConBloqueo(array $cita): string
@@ -172,7 +173,7 @@ class ReservaCitas
      * Solape estricto con las citas del mismo día y dentista que siguen
      * ocupando el hueco: las citas seguidas no chocan (CA5).
      */
-    private function comprobarSolape(string $dentistaId, Carbon $inicio, Carbon $fin): void
+    private function comprobarSolape(string $dentistaId, Carbon $inicio, Carbon $fin, ?string $excluirCitaId = null): void
     {
         $citas = $this->db->table('citas')
             // Por el índice del dentista: el FOR UPDATE solo bloquea citas de este
@@ -180,6 +181,7 @@ class ReservaCitas
             ->forceIndex('idx_citas_dentista')
             ->where('dentista_id', $dentistaId)
             ->whereNotIn('estado', self::ESTADOS_LIBRES)
+            ->when($excluirCitaId !== null, fn ($consulta) => $consulta->where('id', '!=', $excluirCitaId))
             ->whereBetween('fecha_hora', [$inicio->copy()->startOfDay(), $fin])
             // Lectura con bloqueo: ve la última versión confirmada aunque la reserva
             // corra dentro de una transacción exterior con una vista de lectura previa.
