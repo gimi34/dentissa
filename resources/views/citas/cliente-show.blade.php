@@ -2,18 +2,22 @@
 @section('title', 'Detalle de cita')
 
 @section('topbar-actions')
-    @if($cita->puede_cancelar)
-        <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" style="display:inline">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-ghost"
-                    style="color:var(--red)"
-                    onclick="return confirm('¿Deseas cancelar esta cita?')">
-                Cancelar cita
-            </button>
-        </form>
-    @elseif($cita->aviso_cancelar)
-        <span style="font-size:13px;color:var(--text-muted)">{{ $cita->aviso_cancelar }}</span>
-    @endif
+    <div class="formulario-accesible">
+        <div id="acciones-cita">
+            @if($cita->puede_cancelar)
+                <a href="{{ route('cliente.citas.reprogramar', $cita->id) }}" class="btn btn-outline">Reprogramar</a>
+                <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" class="form-en-linea">
+                    @csrf @method('PATCH')
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('¿Deseas cancelar esta cita?')">
+                        Cancelar cita
+                    </button>
+                </form>
+            @elseif($cita->aviso_plazo)
+                <p class="aviso-plazo">{{ $cita->aviso_plazo }}</p>
+            @endif
+        </div>
+    </div>
 @endsection
 
 @section('content')

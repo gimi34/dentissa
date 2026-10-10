@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Gate;
 
 class ClienteCitasController extends Controller
 {
+    // Aviso del listado cuando faltan menos de 24 horas (spec 028, A13).
+    private const AVISO_PLAZO_CORTO = 'Faltan menos de 24 h: llama a la clínica para cambiarla.';
+
     private function pacienteActual()
     {
         return DB::table('pacientes')->where('usuario_id', auth()->id())->first();
@@ -50,7 +53,15 @@ class ClienteCitasController extends Controller
             }
 
             $citas = $query->paginate(10)->withQueryString()
-                ->through(fn ($cita) => $this->conPuedeCancelar($cita, $estados));
+                ->through(function ($cita) use ($estados) {
+                    $cita = $this->conPuedeCancelar($cita, $estados);
+                    // Solo si aún no empieza: una cita ya empezada no lleva aviso en la lista (A40).
+                    $cita->aviso_plazo_corto = $this->fueraDePlazo($cita, $estados) && ! $estados->haEmpezado($cita)
+                        ? self::AVISO_PLAZO_CORTO
+                        : null;
+
+                    return $cita;
+                });
         }
 
         return view('citas.cliente-index', compact('citas', 'pasadas'));
@@ -86,10 +97,12 @@ class ClienteCitasController extends Controller
         }
 
         $cita = $this->conPuedeCancelar($cita, $estados);
-        // Si ya empezó, se explica por qué no se puede cancelar en lugar de quitar el botón sin más.
-        $cita->aviso_cancelar = in_array($cita->estado, ['agendada', 'confirmada'], true) && ! $cita->puede_cancelar
-            ? CambioDeEstadoNoPermitido::yaEmpezo()->getMessage()
-            : null;
+        // Fuera de plazo se explica por qué no hay botones en lugar de quitarlos sin más (A40).
+        $cita->aviso_plazo = match (true) {
+            ! $this->fueraDePlazo($cita, $estados) => null,
+            $estados->haEmpezado($cita) => CambioDeEstadoNoPermitido::yaEmpezo()->getMessage(),
+            default => CambioDeEstadoNoPermitido::fueraDePlazo()->getMessage(),
+        };
 
         return view('citas.cliente-show', compact('cita'));
     }
@@ -212,13 +225,20 @@ class ClienteCitasController extends Controller
             : $e->getMessage();
     }
 
-    // El paciente puede cancelar una cita agendada o confirmada que aún no empieza (CA7).
+    // El paciente cancela o reprograma una cita agendada o confirmada con 24 horas o más (spec 028, CA2 y CA3).
     private function conPuedeCancelar(object $cita, EstadosCita $estados): object
     {
         $cita->puede_cancelar = in_array($cita->estado, ['agendada', 'confirmada'], true)
-            && ! $estados->haEmpezado($cita);
+            && $estados->dentroDelPlazoDelPaciente($cita);
+        $cita->puede_reprogramar = $cita->puede_cancelar;
 
         return $cita;
+    }
+
+    // Agendada o confirmada, pero ya sin las 24 horas de antelación.
+    private function fueraDePlazo(object $cita, EstadosCita $estados): bool
+    {
+        return in_array($cita->estado, ['agendada', 'confirmada'], true) && ! $cita->puede_cancelar;
     }
 
     // ── AGENDAR (form) ────────────────────────────────────────────────
