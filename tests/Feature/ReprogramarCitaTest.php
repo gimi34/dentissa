@@ -273,13 +273,16 @@ class ReprogramarCitaTest extends TestCase
         foreach ($casos as $caso) {
             $this->actingAs($this->admin)->from($formulario)
                 ->patch($formulario, ['fecha' => $caso['fecha'], 'hora' => $caso['hora']])
-                ->assertRedirect($formulario)
-                ->assertSessionHasErrors($caso['campo']);
+                ->assertRedirect($formulario);
+            // El error se lee antes del GET (R3): después ya no está en la sesión, y `assertSessionHasErrors`
+            // aquí haría que el GET no lo recibiera.
+            $mensaje = $this->errorDe($caso['campo']);
+            $this->assertNotSame('', $mensaje, "Debe haber un error en {$caso['campo']}.");
 
             // A34: al volver al formulario con la entrada anterior (también listas), nunca hay un 500.
             $this->actingAs($this->admin)->get($formulario)
                 ->assertOk()
-                ->assertSee($this->errorDe($caso['campo']));
+                ->assertSee($mensaje);
         }
 
         $this->assertSame(self::MANANA, $this->fechaHoraDe($cita));
