@@ -32,6 +32,8 @@ class ReprogramarCitaTest extends TestCase
 
     private const YA_EMPEZO = 'Esta cita ya empezó y no se puede reprogramar.';
 
+    private const DURACION_INVALIDA = 'La duración del servicio no es válida.';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -135,6 +137,45 @@ class ReprogramarCitaTest extends TestCase
         $this->reprogramar($this->admin, $cita, '2026-10-07', '10:15')->assertSessionHasNoErrors();
 
         $this->assertSame('2026-10-07 10:15', $this->fechaHoraDe($cita));
+    }
+
+    // ── Casos que reprogramar también rechaza (/review 028: R7, R9, R10) ──
+
+    public function test_no_se_reprograma_la_cita_de_un_dentista_inactivo(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+        DB::table('usuarios')->where('id', $this->dentista1->id)->update(['activo' => 0]);
+
+        $this->reprogramar($this->admin, $cita, '2026-10-07', '11:00')->assertStatus(302);
+
+        $this->assertSame(self::NO_DISPONIBLE, $this->errorDe('hora'));
+        $this->assertSame(self::MANANA, $this->fechaHoraDe($cita));
+        $this->assertCount(0, $this->entradasDeHistorial($cita));
+    }
+
+    public function test_la_misma_hora_con_segundos_se_rechaza_como_igual(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'confirmada', self::MANANA);
+        DB::table('citas')->where('id', $cita)->update(['fecha_hora' => '2026-10-06 10:00:30']);
+
+        $this->reprogramar($this->admin, $cita, '2026-10-06', '10:00')->assertStatus(302);
+
+        $this->assertSame(self::MISMA_FECHA, $this->errorDe('hora'));
+        $this->assertSame('2026-10-06 10:00:30', (string) DB::table('citas')->where('id', $cita)->value('fecha_hora'));
+        $this->assertSame('confirmada', $this->estadoDe($cita));
+        $this->assertCount(0, $this->entradasDeHistorial($cita));
+    }
+
+    public function test_una_cita_sin_duracion_no_se_reprograma(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+        DB::table('citas')->where('id', $cita)->update(['duracion_min' => 0]);
+
+        $this->reprogramar($this->admin, $cita, '2026-10-07', '11:00')->assertStatus(302);
+
+        $this->assertSame(self::DURACION_INVALIDA, $this->errorDe('hora'));
+        $this->assertSame(self::MANANA, $this->fechaHoraDe($cita));
+        $this->assertCount(0, $this->entradasDeHistorial($cita));
     }
 
     public function test_una_fecha_pasada_o_igual_se_rechaza(): void
