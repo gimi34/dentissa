@@ -177,7 +177,10 @@ existentes.
   `var(--border-width)` `var(--border-control)` (3.93:1 sobre `--white`, 3.67:1 sobre `--p50`);
   con foco, el mismo borde y sin sombra.
 - **Botón principal** (`.btn-primary`): blanco sobre `var(--p500)` (5.42:1).
-- **Foco:** `:focus-visible` en campos, botones y enlaces con `--focus-ring` (7.00:1),
+- **Casilla** (`.campo-casilla`): casilla y etiqueta en fila con `gap: var(--space-3)`; la casilla
+  mide `var(--space-6)` y usa `accent-color: var(--border-control)` (3.93:1 sobre `--white`); la
+  etiqueta es su objetivo de toque ampliado. La usa la confirmación de «No reagendar» (WCAG 3.3.4).
+- **Foco:** `:focus-visible` en campos, casillas, botones y enlaces con `--focus-ring` (7.00:1),
   `--focus-ring-width` y `--focus-ring-offset`.
 - **Badge verde** («Completada»): `var(--text)` sobre `var(--green-bg)` (18.50:1) en lugar de
   `--green` (2.98:1).
@@ -289,8 +292,9 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
 tarjeta con el resumen de la cita (paciente o dentista, servicio, fecha, hora y badge de estado), el
 formulario de fecha, hora y motivo con «Guardar nueva fecha», y aparte la sección «No reagendar» con
-su motivo y `.btn-danger` «Cancelar la cita definitivamente» y el texto «No se puede deshacer», sin
-confirmación nativa. Si la cita ya no se puede mover, muestra el motivo y un enlace al detalle. Sus
+su motivo, una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (validada en el
+servidor, sin JS ni confirmación nativa) y `.btn-danger` «Cancelar la cita definitivamente», con el
+texto «No se puede deshacer». Si la cita ya no se puede mover, muestra el motivo y un enlace al detalle. Sus
 capturas a 390 y 1440 px son del 2026-10-10 (spec 028, T032), con `capturar.mjs` y solo esas dos vistas.
 
 A 390 px, 54 de las 62 vistas se desbordan en horizontal: la página mide de 472 a 1157 px de ancho
@@ -429,3 +433,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-04 | diseño | ¿Se aprueba el sistema re-extraído (1.2.0)? | Aprobado tal como está; la deuda DS1–DS15 sigue pendiente (DS12–DS15 fuera del objetivo 6, al tocar cada pantalla) | usuario |
 | 2026-10-04 | implícita | Una vista que responde 5xx con la depuración activa muestra detalles internos | El guion no guarda capturas de respuestas 5xx | `docs/constitution.md` P5 |
 | 2026-10-08 | diseño | ¿Qué incorpora el sistema para reprogramar citas (spec 028)? | Versión 1.3.0: botón de peligro `.btn-danger`; componente acotado «Formulario accesible» (`.formulario-accesible`) que cumple AA donde se usa sin cambiar el resto de la app, con el badge verde en `--text`, reglas del historial acotadas y clases de maquetación; token `--timeline-time-width`; pantalla «Reprogramar cita» (capturas en T032); sin `confirm()` nuevo | usuario (plan 028, D11, D12; /analyze A1, A31, A37, A48, A49) |
+| 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |

@@ -105,6 +105,19 @@
                         @endif
                     </div>
 
+                    {{-- Confirmación de una acción irreversible, sin JS (WCAG 3.3.4; /review 028 R6). --}}
+                    @php $error = $errorDe('confirmar', 'no-reagendar'); @endphp
+                    <div class="campo">
+                        <div class="campo-casilla">
+                            <input type="checkbox" name="confirmar" id="cancelar-confirmar" value="1" required
+                                   @if($error) aria-invalid="true" aria-describedby="cancelar-confirmar-error" @endif>
+                            <label class="field-label" for="cancelar-confirmar">Entiendo que la cancelación no se puede deshacer</label>
+                        </div>
+                        @if($error)
+                            <p class="field-hint field-hint-error" id="cancelar-confirmar-error" role="alert">{{ $error }}</p>
+                        @endif
+                    </div>
+
                     <button type="submit" class="btn btn-danger">Cancelar la cita definitivamente</button>
                 </form>
             </section>

@@ -496,7 +496,8 @@ tr:hover td { background: var(--p50); }
 .formulario-accesible .aviso-plazo { font-size: var(--text-body); color: var(--text); }
 .formulario-accesible .field:focus-visible,
 .formulario-accesible .btn:focus-visible,
-.formulario-accesible a:focus-visible {
+.formulario-accesible a:focus-visible,
+.formulario-accesible .campo-casilla input:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
 }
@@ -508,6 +509,8 @@ tr:hover td { background: var(--p50); }
 .formulario-accesible .form-en-linea { display: inline; }
 .formulario-accesible .historial-lista { padding: var(--space-2) var(--space-7); }
 .formulario-accesible .historial-vacio { padding: var(--space-7); }
+.formulario-accesible .campo-casilla { display: flex; align-items: center; gap: var(--space-3); }
+.formulario-accesible .campo-casilla input { width: var(--space-6); height: var(--space-6); margin: 0; accent-color: var(--border-control); }
 
 /* Historial de la cita: acotado al componente; las reglas globales `.timeline-*` (panel del dentista) no cambian. */
 .formulario-accesible .timeline-time { width: var(--timeline-time-width); }
