@@ -256,11 +256,18 @@ class ReprogramarCitaPacienteTest extends TestCase
             $respuesta = $this->actingAs($this->paciente1)->from($formulario)->patch($formulario, $datos);
             $this->assertNotSame(500, $respuesta->status(), $campo);
 
+            if ($campo === 'formulario') {
+                // D10: `formulario` solo lo lee la vista; con fecha y hora válidas, la cita se mueve.
+                $respuesta->assertSessionHasNoErrors();
+                $this->assertSame('2026-10-07 11:00', $this->fechaHoraDe($cita));
+            } else {
+                $respuesta->assertSessionHasErrors($campo);
+                $this->assertSame(self::CITA, $this->fechaHoraDe($cita), $campo);
+            }
+
             // A34: al volver al formulario con la entrada anterior, nunca hay un 500.
             $this->actingAs($this->paciente1)->get($formulario)->assertOk();
         }
-
-        $this->assertSame(self::CITA, $this->fechaHoraDe($cita));
     }
 
     // ── Apoyo ──────────────────────────────────────────────────────────

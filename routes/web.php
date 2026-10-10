@@ -155,6 +155,8 @@ Route::middleware('auth')->prefix('cliente')->name('cliente.')->group(function (
     Route::get('/citas', [ClienteCitasController::class, 'index'])->name('citas');
     Route::get('/citas/{id}', [ClienteCitasController::class, 'show'])->name('citas.show');
     Route::patch('/citas/{id}/cancelar', [ClienteCitasController::class, 'cancelar'])->middleware('role:cliente')->name('citas.cancelar');
+    Route::get('/citas/{id}/reprogramar', [ClienteCitasController::class, 'reprogramarForm'])->middleware('role:cliente')->name('citas.reprogramar');
+    Route::patch('/citas/{id}/reprogramar', [ClienteCitasController::class, 'reprogramar'])->middleware('role:cliente')->name('citas.reprogramar.update');
 
     Route::get('/agendar', [ClienteCitasController::class, 'agendarForm'])->name('agendar');
     Route::post('/agendar', [ClienteCitasController::class, 'agendarStore'])->name('agendar.store');

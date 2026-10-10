@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
+use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +95,7 @@ class ClienteCitasController extends Controller
     }
 
     // ── CANCELAR ───────────────────────────────────────────────────────
-    public function cancelar(string $id, EstadosCita $estados)
+    public function cancelar(Request $request, string $id, EstadosCita $estados)
     {
         $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id', 'estado', 'fecha_hora']);
         if (! $cita) {
@@ -103,18 +104,112 @@ class ClienteCitasController extends Controller
         // La cita de otro paciente responde 404, como antes.
         Gate::authorize('cambiar-estado-cita', [$cita, 'cancelada']);
 
+        // Desde «No reagendar» llega un motivo opcional (spec 028, CA6).
+        $data = $request->validate([
+            'motivo' => 'nullable|string|max:500',
+        ], [
+            'motivo.string' => 'El motivo debe ser un texto.',
+            'motivo.max' => 'El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.',
+        ]);
+
         try {
-            $estados->cambiar($id, 'cancelada', auth()->user(), null);
+            $estados->cambiar($id, 'cancelada', auth()->user(), $data['motivo'] ?? null);
         } catch (CambioDeEstadoNoPermitido $e) {
             // El paciente no ve estados internos (spec 026, CA2 y D7).
             $mensaje = in_array($e->tipo, ['cerrada', 'transicion', 'vuelta'], true)
                 ? 'Esta cita ya no se puede cancelar. Si necesitas ayuda, llama a la clínica.'
                 : $e->getMessage();
 
-            return back()->with('error', $mensaje);
+            return back()->withInput()->with('error', $mensaje);
         }
 
         return back()->with('success', 'Tu cita fue cancelada.');
+    }
+
+    // ── REPROGRAMAR ────────────────────────────────────────────────────
+    // Spec 028: el paciente mueve su cita con 24 horas o más de antelación (CA2).
+    public function reprogramarForm(string $id, EstadosCita $estados)
+    {
+        $cita = $this->citaDelPaciente($id);
+        Gate::authorize('reprogramar-cita', $cita);
+
+        return view('citas.cliente-reprogramar', [
+            'cita' => $cita,
+            'motivoNoReprogramable' => $this->motivoNoReprogramable($cita, $estados),
+            'rutaGuardar' => route('cliente.citas.reprogramar.update', $id),
+            'rutaCancelar' => route('cliente.citas.cancelar', $id),
+            'camposCancelar' => [],
+            'rutaDetalle' => route('cliente.citas.show', $id),
+        ]);
+    }
+
+    public function reprogramar(Request $request, string $id, ReprogramacionCitas $reprogramacion)
+    {
+        $cita = $this->citaDelPaciente($id);
+        Gate::authorize('reprogramar-cita', $cita);
+
+        // Solo fecha, hora y motivo: dentista, servicio, duración o estado enviados a mano se ignoran (CA9).
+        $data = $request->validate(ReprogramacionCitas::reglasDeEntrada(), ReprogramacionCitas::mensajesDeEntrada());
+
+        try {
+            $reprogramacion->reprogramar($id, $data['fecha'], $data['hora'], auth()->user(), $data['motivo'] ?? null);
+        } catch (CitaNoAgendable $rechazo) {
+            // Junto al campo de la hora, como el agendado de la 025 (D14).
+            return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
+        } catch (CambioDeEstadoNoPermitido $e) {
+            return back()->withInput()->with('error', $this->mensajeParaElPaciente($e));
+        }
+
+        return redirect()->route('cliente.citas.show', $id)->with('success', 'Tu cita fue reprogramada.');
+    }
+
+    /** La cita del paciente que ha iniciado sesión, o 404 si no es suya (TM2). */
+    private function citaDelPaciente(string $id): object
+    {
+        $paciente = $this->pacienteActual();
+        abort_unless($paciente, 404);
+
+        $cita = DB::table('citas')
+            ->join('personal', 'citas.dentista_id', '=', 'personal.id')
+            ->join('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
+            ->leftJoin('servicios', 'citas.servicio_id', '=', 'servicios.id')
+            ->where('citas.id', $id)
+            ->where('citas.paciente_id', $paciente->id)
+            ->select(
+                'citas.id',
+                'citas.dentista_id',
+                'citas.paciente_id',
+                'citas.fecha_hora',
+                'citas.duracion_min',
+                'citas.estado',
+                DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
+                'servicios.nombre AS servicio'
+            )
+            ->first();
+
+        abort_unless($cita, 404);
+
+        return $cita;
+    }
+
+    /** Motivo por el que el paciente no puede mover la cita, o null si puede (A6). */
+    private function motivoNoReprogramable(object $cita, EstadosCita $estados): ?string
+    {
+        try {
+            $estados->comprobarReprogramable($cita, auth()->user());
+
+            return null;
+        } catch (CambioDeEstadoNoPermitido $e) {
+            return $this->mensajeParaElPaciente($e);
+        }
+    }
+
+    // Una cita cerrada, en curso o ya empezada se explica sin estados internos (A7, A41).
+    private function mensajeParaElPaciente(CambioDeEstadoNoPermitido $e): string
+    {
+        return in_array($e->tipo, ['cerrada', 'yaEmpezoPersonal', 'transicion', 'vuelta'], true)
+            ? 'Esta cita ya no se puede reprogramar. Si necesitas ayuda, llama a la clínica.'
+            : $e->getMessage();
     }
 
     // El paciente puede cancelar una cita agendada o confirmada que aún no empieza (CA7).
