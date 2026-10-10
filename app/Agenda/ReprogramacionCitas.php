@@ -101,10 +101,24 @@ class ReprogramacionCitas
 
         $this->estados->comprobarReprogramable($cita, $actor);
 
+        // Como al agendar: solo con un dentista activo (025 CA10) y una duración válida, que el
+        // solape estricto necesita (/review 028: R7, R10).
+        $dentistaActivo = $this->db->table('personal')
+            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+            ->where('personal.id', $cita->dentista_id)
+            ->value('usuarios.activo');
+        if ((int) $dentistaActivo !== 1) {
+            throw CitaNoAgendable::noDisponible();
+        }
+        if ((int) $cita->duracion_min < 1) {
+            throw CitaNoAgendable::duracionInvalida();
+        }
+
         // «Ya pasó» se decide con la hora de la clínica (D13); el hueco, con la hora local sin
-        // zona, como se guarda `fecha_hora` y como lo comprueba la reserva (A42).
+        // zona, como se guarda `fecha_hora` y como lo comprueba la reserva (A42). La hora elegida
+        // va al minuto, así que «igual» compara al minuto aunque `fecha_hora` tenga segundos (R9).
         $instante = Carbon::createFromFormat('Y-m-d H:i', $fecha.' '.$hora, config('clinica.zona_horaria'))->startOfMinute();
-        if ($instante->equalTo($this->estados->inicio($cita))) {
+        if ($instante->equalTo($this->estados->inicio($cita)->startOfMinute())) {
             throw CitaNoAgendable::mismaFechaYHora();
         }
         if ($instante->lessThanOrEqualTo(Carbon::now())) {
