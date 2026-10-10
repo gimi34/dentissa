@@ -113,7 +113,7 @@
         <div class="formulario-accesible">
             <div id="historial">
                 <div class="section-head">
-                    <span class="section-title">Historial de cambios</span>
+                    <h2 class="section-title">Historial de cambios</h2>
                 </div>
                 <div class="card card-0">
                     @if($historial->count() > 0)
