@@ -205,6 +205,20 @@ class ReprogramarCitaVistasTest extends TestCase
         $this->assertMatchesRegularExpression('/class="historial-autor"[^>]*>\s*por Adela Administra/', $historial);
     }
 
+    public function test_el_historial_tiene_su_encabezado(): void
+    {
+        $conEntradas = $this->cita($this->d1, $this->p1, 'agendada', self::FUTURA);
+        $this->entradaDeReprogramacion($conEntradas, 'Motivo');
+        $sinEntradas = $this->cita($this->d1, $this->p1, 'agendada', '2026-10-08 10:00');
+
+        foreach (['con entradas' => $conEntradas, 'sin entradas' => $sinEntradas] as $caso => $cita) {
+            $html = $this->actingAs($this->admin)->get("/admin/citas/{$cita}")->assertOk()->getContent();
+            $encabezados = (new DOMXPath($this->dom($html)))
+                ->query("//*[@id='historial']//h2[normalize-space()='Historial de cambios']");
+            $this->assertSame(1, $encabezados->length, "{$caso}: «Historial de cambios» es un encabezado (WCAG 1.3.1).");
+        }
+    }
+
     public function test_el_motivo_de_la_reprogramacion_se_muestra_escapado(): void
     {
         $cita = $this->cita($this->d1, $this->p1, 'agendada', self::FUTURA);
