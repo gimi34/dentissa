@@ -118,8 +118,9 @@ class ReprogramarCitaVistasTest extends TestCase
 
             $this->actingAs($usuario)->from($formulario)
                 ->patch("/{$grupo}/citas/{$cita}/estado", ['estado' => 'cancelada', 'motivo' => 'Sin casilla', 'formulario' => 'no-reagendar'])
-                ->assertRedirect($formulario)
-                ->assertSessionHasErrors(['confirmar' => self::CONFIRMAR]);
+                ->assertRedirect($formulario);
+            // Se lee antes del GET: `assertSessionHasErrors` haría que el GET ya no recibiera los errores.
+            $this->assertSame(self::CONFIRMAR, $this->errorDe('confirmar'));
             $this->assertSame('agendada', $this->estadoDe($cita), "{$grupo}: sin casilla no se cancela.");
             $this->assertCount(0, $this->entradasDeHistorial($cita));
 

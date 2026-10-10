@@ -117,12 +117,18 @@ class ClienteCitasController extends Controller
         // La cita de otro paciente responde 404, como antes.
         Gate::authorize('cambiar-estado-cita', [$cita, 'cancelada']);
 
-        // Desde «No reagendar» llega un motivo opcional (spec 028, CA6).
+        // Desde «No reagendar» llega un motivo opcional (spec 028, CA6) y la casilla de
+        // confirmación obligatoria (/review 028 R6).
         $data = $request->validate([
             'motivo' => 'nullable|string|max:500',
+            'formulario' => 'nullable|string|in:reprogramar,no-reagendar',
+            'confirmar' => 'exclude_unless:formulario,no-reagendar|accepted',
         ], [
             'motivo.string' => 'El motivo debe ser un texto.',
             'motivo.max' => 'El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.',
+            'formulario.string' => 'El formulario enviado no es válido.',
+            'formulario.in' => 'El formulario enviado no es válido.',
+            'confirmar.accepted' => 'Marca la casilla para confirmar que quieres cancelar la cita.',
         ]);
 
         try {
@@ -134,6 +140,11 @@ class ClienteCitasController extends Controller
                 : $e->getMessage();
 
             return back()->withInput()->with('error', $mensaje);
+        }
+
+        // Tras cancelar desde «No reagendar», la pantalla de reprogramar ya no aplica: al detalle (R1).
+        if (($data['formulario'] ?? null) === 'no-reagendar') {
+            return redirect()->route('cliente.citas.show', $id)->with('success', 'Tu cita fue cancelada.');
         }
 
         return back()->with('success', 'Tu cita fue cancelada.');

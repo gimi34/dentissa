@@ -204,8 +204,9 @@ class ReprogramarCitaPacienteTest extends TestCase
         // Sin la casilla, no se cancela y el error va junto a ella.
         $this->actingAs($this->paciente1)->from($formulario)
             ->patch("/cliente/citas/{$cita}/cancelar", ['formulario' => 'no-reagendar'])
-            ->assertRedirect($formulario)
-            ->assertSessionHasErrors(['confirmar' => self::CONFIRMAR]);
+            ->assertRedirect($formulario);
+        // Se lee antes del GET: `assertSessionHasErrors` haría que el GET ya no recibiera los errores.
+        $this->assertSame(self::CONFIRMAR, $this->errorDe('confirmar'));
         $this->assertSame('agendada', $this->estadoDe($cita));
         $this->assertCount(0, $this->entradasDeHistorial($cita));
         $html = $this->actingAs($this->paciente1)->get($formulario)->assertOk()->getContent();
