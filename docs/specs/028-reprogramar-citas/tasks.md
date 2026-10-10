@@ -230,7 +230,8 @@ Formato:
   - `docs/observability.md`: sin cambios (sin logs, eventos ni métricas nuevos; el historial ya registra reprogramaciones y cancelaciones).
   - `docs/deployment.md`: la migración de la 028 solo añade columnas con nulo y va en el mismo paso que el código; la vuelta atrás no necesita revertirla.
   - nota: hecho 2026-10-10: `security.md` (Dónde se aplica, fila `/cliente/*` de la superficie y nota de RS2.a, sin cambiar de estado; ningún riesgo cambia), `deployment.md` (Migraciones) y `observability.md` sin cambios.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: spec 028 → `implemented` (2026-10-10) con CA1–CA10 marcados por sus tests, todos en verde (242): `ReprogramarCitaTest` (CA1, CA4, CA5, CA7, CA9), `ReprogramarCitaPacienteTest` (CA2, CA3, CA5, CA6, CA9), `ReprogramarCitaRolesTest` (CA8), `ReprogramarConcurrenteTest` (CA10), `ReprogramarCitaVistasTest` (CA1, CA6, CA7) y los de la 026 actualizados (D6); verificación manual del usuario en T025 y T029. Cierre: suite, Pint, `npm run build` y gitleaks en verde; `docs/specs/README.md` al día.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
