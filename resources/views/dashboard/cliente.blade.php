@@ -49,14 +49,24 @@
                         </div>
                         <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
                             @include('partials.badge-estado', ['estado' => $proximaCita->estado])
-                            <a href="/cliente/citas/{{ $proximaCita->id }}" class="btn btn-outline btn-sm">Ver detalles</a>
-                            @if($proximaCita->estado === 'agendada')
-                                <form action="/cliente/citas/{{ $proximaCita->id }}/cancelar" method="POST" style="display:inline">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red)"
-                                        onclick="return confirm('¿Deseas cancelar esta cita?')">Cancelar</button>
-                                </form>
-                            @endif
+                            {{-- Acciones con el plazo de 24 horas del paciente (spec 028; /review 028 R2). --}}
+                            <div class="formulario-accesible">
+                                <div id="acciones-proxima" class="acciones-fila">
+                                    <a href="{{ route('cliente.citas.show', $proximaCita->id) }}" class="btn btn-outline btn-sm">Ver detalles</a>
+                                    @if($proximaCita->puede_reprogramar)
+                                        <a href="{{ route('cliente.citas.reprogramar', $proximaCita->id) }}" class="btn btn-outline btn-sm">Reprogramar</a>
+                                    @endif
+                                    @if($proximaCita->puede_cancelar)
+                                        <form action="{{ route('cliente.citas.cancelar', $proximaCita->id) }}" method="POST" class="form-en-linea">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('¿Deseas cancelar esta cita?')">Cancelar</button>
+                                        </form>
+                                    @elseif($proximaCita->aviso_plazo_corto)
+                                        <p class="aviso-plazo">{{ $proximaCita->aviso_plazo_corto }}</p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

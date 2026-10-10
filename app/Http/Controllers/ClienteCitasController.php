@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 class ClienteCitasController extends Controller
 {
     // Aviso del listado cuando faltan menos de 24 horas (spec 028, A13).
-    private const AVISO_PLAZO_CORTO = 'Faltan menos de 24 h: llama a la clínica para cambiarla.';
+    public const AVISO_PLAZO_CORTO = 'Faltan menos de 24 h: llama a la clínica para cambiarla.';
 
     private function pacienteActual()
     {
