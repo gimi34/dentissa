@@ -110,45 +110,53 @@
         @endif
 
         {{-- Historial de cambios --}}
-        <div id="historial">
-            <div class="section-head">
-                <span class="section-title">Historial de cambios</span>
-            </div>
-            <div class="card card-0">
-                @if($historial->count() > 0)
-                    <div style="padding:6px 20px">
-                        @foreach($historial as $h)
-                            <div class="timeline-item">
-                                <div class="timeline-time" style="width:100px">
-                                    {{ \Carbon\Carbon::parse($h->fecha)->format('d/m H:i') }}
-                                </div>
-                                <div class="timeline-dot" style="background:var(--p300)"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">
-                                        @if($h->estado_anterior && $h->estado_nuevo)
-                                            <span style="color:var(--text-muted)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
-                                            → <span style="color:var(--p600)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
-                                        @elseif($h->estado_nuevo)
-                                            Estado: <span style="color:var(--p600)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
-                                        @else
-                                            Cambio registrado
+        <div class="formulario-accesible">
+            <div id="historial">
+                <div class="section-head">
+                    <span class="section-title">Historial de cambios</span>
+                </div>
+                <div class="card card-0">
+                    @if($historial->count() > 0)
+                        <div class="historial-lista">
+                            @foreach($historial as $h)
+                                <div class="timeline-item">
+                                    <div class="timeline-time">
+                                        {{ \Carbon\Carbon::parse($h->fecha)->format('d/m H:i') }}
+                                    </div>
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            @if($h->fecha_hora_anterior && $h->fecha_hora_nueva)
+                                                Reprogramada del {{ \Carbon\Carbon::parse($h->fecha_hora_anterior)->format('d/m/Y H:i') }} al {{ \Carbon\Carbon::parse($h->fecha_hora_nueva)->format('d/m/Y H:i') }}
+                                                @if($h->estado_anterior && $h->estado_nuevo && $h->estado_anterior !== $h->estado_nuevo)
+                                                    <br><span class="historial-estado-anterior">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
+                                                    → <span class="historial-estado-nuevo">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
+                                                @endif
+                                            @elseif($h->estado_anterior && $h->estado_nuevo)
+                                                <span class="historial-estado-anterior">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
+                                                → <span class="historial-estado-nuevo">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
+                                            @elseif($h->estado_nuevo)
+                                                Estado: <span class="historial-estado-nuevo">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
+                                            @else
+                                                Cambio registrado
+                                            @endif
+                                        </div>
+                                        @if($h->motivo)
+                                            <div class="timeline-sub">{{ $h->motivo }}</div>
                                         @endif
-                                    </div>
-                                    @if($h->motivo)
-                                        <div class="timeline-sub">{{ $h->motivo }}</div>
-                                    @endif
-                                    <div style="font-size:11.5px;color:var(--text-light);margin-top:2px">
-                                        por {{ trim($h->cambiado_por_nombre) ?: 'Sistema' }}
+                                        <div class="historial-autor">
+                                            por {{ trim($h->cambiado_por_nombre) ?: 'Sistema' }}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="empty-state" style="padding:22px">
-                        <p>Sin cambios de estado registrados</p>
-                    </div>
-                @endif
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-state historial-vacio">
+                            <p>Sin cambios de estado registrados</p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -231,15 +239,21 @@
         </div>
 
         {{-- Acciones rápidas --}}
-        <div style="display:flex;flex-direction:column;gap:8px">
-            <a href="{{ route("$rp.pacientes.show", $cita->paciente_id) }}"
-               class="btn btn-outline" style="justify-content:center">
-               Ver expediente del paciente
-            </a>
-            <a href="{{ route("$rp.citas.create", ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
-               class="btn btn-ghost" style="justify-content:center">
-               Reagendar / Nueva cita
-            </a>
+        <div class="formulario-accesible">
+            <div id="acciones" class="acciones-columna">
+                <a href="{{ route("$rp.pacientes.show", $cita->paciente_id) }}" class="btn btn-outline">
+                   Ver expediente del paciente
+                </a>
+                @if($cita->puede_reprogramar)
+                    <a href="{{ route("$rp.citas.reprogramar", $cita->id) }}" class="btn btn-outline">
+                       Reprogramar
+                    </a>
+                @endif
+                <a href="{{ route("$rp.citas.create", ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
+                   class="btn btn-ghost">
+                   Agendar otra cita
+                </a>
+            </div>
         </div>
 
     </div>
