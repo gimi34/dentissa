@@ -367,7 +367,6 @@ class CitasController extends Controller
         return back()->with('success', 'Estado actualizado correctamente.');
     }
 
-    // ── UPDATE NOTAS ───────────────────────────────────────────────────
     // ── REPROGRAMAR (spec 028) ─────────────────────────────────────────
     public function reprogramarForm(string $id, EstadosCita $estados)
     {
@@ -425,6 +424,7 @@ class CitasController extends Controller
         }
     }
 
+    // ── UPDATE NOTAS ───────────────────────────────────────────────────
     public function updateNotas(Request $request, string $id)
     {
         $data = $request->validate([

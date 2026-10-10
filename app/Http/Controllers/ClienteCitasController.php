@@ -56,7 +56,7 @@ class ClienteCitasController extends Controller
                 ->through(function ($cita) use ($estados) {
                     $cita = $this->conPuedeCancelar($cita, $estados);
                     // Solo si aún no empieza: una cita ya empezada no lleva aviso en la lista (A40).
-                    $cita->aviso_plazo_corto = $this->fueraDePlazo($cita, $estados) && ! $estados->haEmpezado($cita)
+                    $cita->aviso_plazo_corto = $this->fueraDePlazo($cita) && ! $estados->haEmpezado($cita)
                         ? self::AVISO_PLAZO_CORTO
                         : null;
 
@@ -99,7 +99,7 @@ class ClienteCitasController extends Controller
         $cita = $this->conPuedeCancelar($cita, $estados);
         // Fuera de plazo se explica por qué no hay botones en lugar de quitarlos sin más (A40).
         $cita->aviso_plazo = match (true) {
-            ! $this->fueraDePlazo($cita, $estados) => null,
+            ! $this->fueraDePlazo($cita) => null,
             $estados->haEmpezado($cita) => CambioDeEstadoNoPermitido::yaEmpezo()->getMessage(),
             default => CambioDeEstadoNoPermitido::fueraDePlazo()->getMessage(),
         };
@@ -246,8 +246,9 @@ class ClienteCitasController extends Controller
         return $cita;
     }
 
-    // Agendada o confirmada, pero ya sin las 24 horas de antelación.
-    private function fueraDePlazo(object $cita, EstadosCita $estados): bool
+    // Agendada o confirmada, pero ya sin las 24 horas de antelación. Lee `puede_cancelar`, que
+    // calcula antes `conPuedeCancelar`.
+    private function fueraDePlazo(object $cita): bool
     {
         return in_array($cita->estado, ['agendada', 'confirmada'], true) && ! $cita->puede_cancelar;
     }
