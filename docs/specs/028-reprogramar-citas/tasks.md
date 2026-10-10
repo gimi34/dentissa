@@ -199,6 +199,36 @@ Formato:
 - [x] T032 Capturar solo las dos pantallas nuevas a 390 y 1440 px con `capturar.mjs` (T031) y enlazarlas en `system.md` → Pantallas principales, en «Inventario de vistas» y en `system.html` — docs/design/capturas/ (generado por capturar.mjs), docs/design/system.md, docs/design/system.html — hecho cuando: existen las cuatro capturas nuevas; `git status docs/design/capturas/` solo muestra esas cuatro; `system.md` (pantalla e inventario) y `system.html` las enlazan; el validador da 0 errores en `docs/design` y `system.html` sigue sin recursos externos — cubre: CA6 — depende: T031
   - nota: capturadas el 2026-10-10 con el procedimiento de la cabecera de `capturar.mjs` (base `dentissa_capturas` desde el volcado ficticio, anonimizada, con el horario del dentista y dos citas agendadas futuras: `cita_reprogramar` de cliente2 el 20-10 10:00 y `cita_reprogramar_cliente` de cliente1 el 21-10 11:00; contraseña aleatoria fuera del repo) y `node capturar.mjs citas-reprogramar-admin citas-reprogramar-cliente`: «todo capturado», HTTP 200, `git status docs/design/capturas/` solo muestra las cuatro. Base, servidor de :8001, volumen `dentissa_pw_node` y carpeta temporal borrados; la imagen de Playwright se conserva. A 390 px las dos miden 498 px por la barra lateral fija (DS8): el contenido nuevo cabe en su columna; los recuentos de DS8 en `system.md` y `system.html` pasan a 54 de 62 y el inventario a 62 de 67. `system.html` sin recursos externos y sus 137 imágenes existen; `validate` (con las comprobaciones de diseño): 0 errores.
 
+## Correcciones de /review (ronda 1)
+Decisiones del usuario del 2026-10-10 en `/review 028`: R6 con casilla obligatoria (modifica D12, que seguía «sin `confirm()`»), con la que el controlador pasa a validar y leer `formulario` (modifica D10); R7 rechaza reprogramar a un dentista inactivo; R9, R10, R12 y R18 se corrigen ahora.
+
+- [ ] T060 Escribir los tests de la cancelación confirmada desde «No reagendar» y de la vuelta al detalle. En `ReprogramarCitaVistasTest` (admin y asistente) y `ReprogramarCitaPacienteTest`, en tests nuevos: `#no-reagendar` tiene un `input type="checkbox" name="confirmar" value="1"` con su `<label for>` «Entiendo que la cancelación no se puede deshacer»; el PATCH con `formulario=no-reagendar` sin `confirmar` da el error «Marca la casilla para confirmar que quieres cancelar la cita.» en `confirmar`, la cita no cambia y no deja historial, y el GET pinta ese error en `#no-reagendar` asociado a la casilla (`aria-invalid` y `aria-describedby`); con `confirmar=1` redirige al detalle de la cita del rol (`/{admin,asistente}/citas/{id}`, `/cliente/citas/{id}`) y, siguiendo la redirección, se ve «Estado actualizado correctamente.» o «Tu cita fue cancelada.» y no el motivo de cita cerrada. Los tests existentes que envían `formulario=no-reagendar` añaden `confirmar=1` (`test_la_seccion_no_reagendar_cancela_con_motivo`, `test_cada_formulario_muestra_sus_valores_y_errores_en_su_seccion`, `test_el_paciente_cancela_con_motivo_desde_la_pantalla`, `test_fuera_de_plazo_se_rechaza_aunque_se_envie_a_mano`, `test_fuera_de_alcance_tampoco_cancela_definitivamente`); cancelar sin `formulario` (lista, detalle y `#estado`) sigue sin pedir la casilla — tests/Feature/ReprogramarCitaVistasTest.php, tests/Feature/ReprogramarCitaPacienteTest.php, tests/Feature/ReprogramarCitaRolesTest.php — hecho cuando: los tests nuevos fallan hoy por la razón esperada (no hay casilla, la cita se cancela sin ella y la redirección vuelve a `/reprogramar`) y los existentes actualizados siguen en verde — cubre: CA6, CA8 — depende: T092
+  - nota: añadida por /review: R1, R6
+- [ ] T061 Añadir la casilla a «No reagendar» en el parcial: un `.campo` con el checkbox `confirmar` (`value="1"`, `required`), su etiqueta y el error de `confirmar` solo en esa sección (`id="cancelar-confirmar-error"`, `aria-invalid`, `aria-describedby`, `role="alert"`), antes del botón; en `app.css`, si hace falta colocar casilla y etiqueta en fila, una regla `.formulario-accesible .campo-casilla` solo con tokens; en `system.md`, el párrafo de «Reprogramar cita» y la fila de decisiones dicen «casilla obligatoria» en lugar de «sin confirmación nativa» (decisión del usuario, 2026-10-10, R6) — resources/views/citas/partials/reprogramar.blade.php, public/css/app.css, docs/design/system.md — hecho cuando: pasan las aserciones de vista de T060 (casilla, etiqueta y error asociado), `test_las_reglas_css_nuevas_solo_usan_tokens`, `test_los_pares_de_contraste_cumplen_aa` y los de «solo usa el sistema» de las dos pantallas · verificación manual: la sección «No reagendar» del personal y del paciente a 390 y 1440 px contra `docs/design/system.html` (la casilla se marca con la etiqueta, foco visible con teclado, el error se lee junto a la casilla; a 390 px no añade desbordamiento propio) — cubre: CA6 — depende: T060
+  - nota: añadida por /review: R6
+- [ ] T062 Validar y usar `formulario` y `confirmar` en las dos cancelaciones: en `CitasController::updateEstado` y `ClienteCitasController::cancelar`, `formulario` `nullable|string|in:reprogramar,no-reagendar` (mensaje «El formulario enviado no es válido.») y `confirmar` `exclude_unless:formulario,no-reagendar|accepted` (mensaje «Marca la casilla para confirmar que quieres cancelar la cita.»); con éxito y `formulario` igual a `no-reagendar`, redirección al detalle de la cita del rol con el mismo mensaje de éxito; en otro caso, `back()` como hoy — app/Http/Controllers/CitasController.php, app/Http/Controllers/ClienteCitasController.php — hecho cuando: pasan dos veces todos los tests de T060; la suite completa está en verde; `pint --test` pasa en los dos controladores — cubre: CA6, CA8 — depende: T060, T061
+  - nota: añadida por /review: R1, R6
+- [ ] T063 Escribir los tests del panel de inicio del paciente: en `ReprogramarCitaPacienteTest`, `test_el_panel_de_inicio_respeta_el_plazo` sobre `#acciones-proxima` de `GET /cliente` (cita de D1 del 2026-10-06 a las 10:00): a las 16:00 UTC, enlace a `/cliente/citas/{id}/reprogramar` y formulario a `/cancelar`, también con la cita confirmada; a las 16:01, ninguno de los dos y el aviso corto «Faltan menos de 24 h: llama a la clínica para cambiarla.»; con la cita ya empezada, ni botones ni aviso y sigue «Ver detalles». En `ReprogramarCitaVistasTest`, `test_lo_nuevo_solo_usa_el_sistema_en_el_panel_del_paciente`: `#acciones-proxima` dentro de `.formulario-accesible`, sin `style=` y con «Cancelar» en `.btn-danger` — tests/Feature/ReprogramarCitaPacienteTest.php, tests/Feature/ReprogramarCitaVistasTest.php — hecho cuando: los dos tests fallan hoy porque el panel no tiene `#acciones-proxima` — cubre: CA2, CA3 — depende: T062
+  - nota: añadida por /review: R2
+- [ ] T064 Aplicar el plazo en el panel de inicio del paciente: `DashboardController::cliente` recibe `EstadosCita` y añade a la próxima cita `puede_cancelar` y `puede_reprogramar` (agendada o confirmada y `dentroDelPlazoDelPaciente`) y `aviso_plazo_corto` (agendada o confirmada, aún no empezada y fuera de plazo; el texto de `ClienteCitasController::AVISO_PLAZO_CORTO`, que pasa a público); en `dashboard/cliente.blade.php`, «Ver detalles», «Reprogramar» (`.btn btn-outline btn-sm`), «Cancelar» (`.btn btn-danger btn-sm` en `.form-en-linea`, con la confirmación existente) o el aviso corto (`.aviso-plazo`) van en `<div id="acciones-proxima" class="acciones-fila">` dentro de `.formulario-accesible`, sin `style=`; el badge de estado no cambia — app/Http/Controllers/DashboardController.php, resources/views/dashboard/cliente.blade.php, app/Http/Controllers/ClienteCitasController.php — hecho cuando: pasan dos veces los tests de T063; la suite completa está en verde; `pint --test` pasa en los dos controladores · verificación manual: el panel del paciente con la próxima cita dentro y fuera de plazo a 390 y 1440 px contra `docs/design/system.html` (foco visible, aviso legible; a 390 px no añade desbordamiento propio) — cubre: CA2, CA3 — depende: T063
+  - nota: añadida por /review: R2
+- [ ] T065 Corregir la aserción vacía de `test_una_fecha_u_hora_mal_formada_da_error_de_validacion`: guardar `$mensaje = $this->errorDe($caso['campo'])` justo después del PATCH, exigir `assertNotSame('', $mensaje)` y hacer `assertSee($mensaje)` en el GET — tests/Feature/ReprogramarCitaTest.php — hecho cuando: el test pasa y, quitando un momento el pintado del error en el parcial, falla; restaurado y anotado — cubre: CA9 — depende: T092
+  - nota: añadida por /review: R3
+- [ ] T066 Corregir `test_el_paciente_no_ve_estados_internos`: cada caso empieza con la sesión limpia (`$this->flushSession()`) antes del GET, y el GET comprueba además que no aparecen `name="fecha"` ni `id="no-reagendar"` — tests/Feature/ReprogramarCitaPacienteTest.php — hecho cuando: el test pasa y, haciendo un momento que `reprogramarForm` del paciente pase `motivoNoReprogramable` nulo, falla en los cuatro casos; restaurado y anotado — cubre: CA5 — depende: T060
+  - nota: añadida por /review: R4
+- [ ] T067 Escribir `test_el_historial_tiene_su_encabezado` en `ReprogramarCitaVistasTest`: en el detalle del personal, `//*[@id='historial']//h2[normalize-space()='Historial de cambios']` existe, con y sin entradas — tests/Feature/ReprogramarCitaVistasTest.php — hecho cuando: el test falla hoy porque el título es un `<span>` — cubre: CA7 — depende: T063
+  - nota: añadida por /review: R5
+- [ ] T068 Cambiar en `citas/show.blade.php` el título del historial a `<h2 class="section-title">Historial de cambios</h2>`, con el mismo aspecto que los `<h2 class="section-title">` de la pantalla de reprogramar (sin estilos nuevos salvo, si hace falta, un margen a cero acotado a `.formulario-accesible` con tokens en `app.css`) — resources/views/citas/show.blade.php, public/css/app.css — hecho cuando: pasan `test_el_historial_tiene_su_encabezado` y `test_lo_nuevo_solo_usa_el_sistema_en_el_detalle_del_personal`; `test_las_reglas_css_nuevas_solo_usan_tokens` sigue en verde · verificación manual: el historial del detalle del personal a 1440 px se ve igual que antes salvo la semántica (mismo tamaño y separación del título) — cubre: CA7 — depende: T067
+  - nota: añadida por /review: R5
+- [ ] T069 Escribir en `ReprogramarCitaTest` los tests de los casos que reprogramar no rechaza: `test_no_se_reprograma_la_cita_de_un_dentista_inactivo` (el usuario de D1 con `activo = 0`: error en `hora` con el mensaje de hueco no disponible de la 025, la cita no cambia y no deja historial); `test_la_misma_hora_con_segundos_se_rechaza_como_igual` (`fecha_hora` 2026-10-06 10:00:30 y nueva hora 2026-10-06 10:00: error en `hora` «La cita ya está en esa fecha y hora. Elige otra.»); `test_una_cita_sin_duracion_no_se_reprograma` (`duracion_min = 0`: error en `hora` con el mensaje de `CitaNoAgendable::duracionInvalida()`) — tests/Feature/ReprogramarCitaTest.php — hecho cuando: los tres fallan hoy porque la reprogramación se acepta — cubre: CA4 — depende: T065
+  - nota: añadida por /review: R7, R9, R10 (R7, decisión del usuario, 2026-10-10)
+- [ ] T070 En `ReprogramacionCitas::reprogramarConBloqueo`, después de `comprobarReprogramable`: si el usuario del dentista no está activo, `CitaNoAgendable::noDisponible()`; si `duracion_min` es menor que 1, `CitaNoAgendable::duracionInvalida()`; y la comparación de «igual a la actual» usa `inicio($cita)->startOfMinute()` — app/Agenda/ReprogramacionCitas.php — hecho cuando: pasan dos veces los tests de T069; `ReprogramarConcurrenteTest` y la suite completa están en verde; `pint --test` y `semgrep scan --config p/php --metrics=off --error` pasan en el archivo — cubre: CA4 — depende: T069
+  - nota: añadida por /review: R7, R9, R10
+- [ ] T071 Usar `puede_reprogramar` para el enlace «Reprogramar» en el detalle y la lista del paciente («Cancelar» sigue con `puede_cancelar`), sin cambiar lo que se muestra hoy — resources/views/citas/cliente-show.blade.php, resources/views/citas/cliente-index.blade.php — hecho cuando: siguen en verde `test_el_detalle_oculta_reprogramar_fuera_de_plazo_y_explica_por_que`, `test_la_lista_muestra_el_aviso_corto_fuera_de_plazo`, los de «solo usa el sistema» del detalle y la lista del paciente y `EstadosCitaVistasTest` — cubre: CA2 — depende: T064
+  - nota: añadida por /review: R12
+- [ ] T072 Ordenar sin cambiar comportamiento: en `CitasController`, el encabezado `// ── UPDATE NOTAS` pasa justo encima de `updateNotas` y la sección de reprogramar lleva el suyo (`// ── REPROGRAMAR`); en `ClienteCitasController`, `fueraDePlazo(object $cita)` quita el parámetro `$estados` sin uso y documenta que lee `puede_cancelar` (lo calcula `conPuedeCancelar`) — app/Http/Controllers/CitasController.php, app/Http/Controllers/ClienteCitasController.php — hecho cuando: la suite completa está en verde y `pint --test` pasa en los dos controladores — cubre: CA2 — depende: T064
+  - nota: añadida por /review: R18
+
 ## Integración y documentación
 - [x] T040 Hacer la verificación final — (sin archivos) — hecho cuando:
   - `php artisan test` completo da la línea base de T002 más los tests de T011–T015, todos en verde;
@@ -229,9 +259,10 @@ Formato:
   - `docs/security.md`: la corrección pendiente que pide `role:cliente` en todo el grupo `/cliente` añade a su nota que las rutas de reprogramar del paciente ya lo tienen (spec 028; el resto del grupo → spec 015), sin cambiar de estado (A25). Ningún riesgo cambia de estado.
   - `docs/observability.md`: sin cambios (sin logs, eventos ni métricas nuevos; el historial ya registra reprogramaciones y cancelaciones).
   - `docs/deployment.md`: la migración de la 028 solo añade columnas con nulo y va en el mismo paso que el código; la vuelta atrás no necesita revertirla.
-  - nota: hecho 2026-10-10: `security.md` (Dónde se aplica, fila `/cliente/*` de la superficie y nota de RS2.a, sin cambiar de estado; ningún riesgo cambia), `deployment.md` (Migraciones) y `observability.md` sin cambios.
-- [x] T092 Marcar spec como `implemented`
+  - nota: hecho 2026-10-10: `security.md` (Dónde se aplica, fila `/cliente/*` de la superficie y nota de la corrección pendiente de `role:cliente` en el grupo `/cliente`, sin cambiar de estado; ningún riesgo cambia), `deployment.md` (Migraciones) y `observability.md` sin cambios.
+- [ ] T092 Marcar spec como `implemented`
   - nota: spec 028 → `implemented` (2026-10-10) con CA1–CA10 marcados por sus tests, todos en verde (242): `ReprogramarCitaTest` (CA1, CA4, CA5, CA7, CA9), `ReprogramarCitaPacienteTest` (CA2, CA3, CA5, CA6, CA9), `ReprogramarCitaRolesTest` (CA8), `ReprogramarConcurrenteTest` (CA10), `ReprogramarCitaVistasTest` (CA1, CA6, CA7) y los de la 026 actualizados (D6); verificación manual del usuario en T025 y T029. Cierre: suite, Pint, `npm run build` y gitleaks en verde; `docs/specs/README.md` al día.
+  - nota: desmarcada por /review 028 r1 (`changes_requested`, 2026-10-10): se vuelve a marcar tras T060–T072.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
@@ -246,14 +277,14 @@ Formato:
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T011, T015 | T022, T024, T025, T026 |
-| CA2 | T013, T015 | T020, T021, T027, T028, T029 |
-| CA3 | T013, T021 | T020, T021, T027, T028 |
-| CA4 | T011 | T004, T020, T022, T025 |
-| CA5 | T011, T012, T013, T030 | T020, T021, T022, T025, T027, T030 |
-| CA6 | T013, T015 | T001, T024, T026, T027, T031, T032 |
-| CA7 | T011, T015 | T003, T022, T025, T026 |
-| CA8 | T012, T040 | T023, T025, T027 |
-| CA9 | T011, T013, T040 | T022, T025, T027 |
+| CA2 | T013, T015, T063 | T020, T021, T027, T028, T029, T064, T071, T072 |
+| CA3 | T013, T021, T063 | T020, T021, T027, T028, T064 |
+| CA4 | T011, T069 | T004, T020, T022, T025, T070 |
+| CA5 | T011, T012, T013, T030, T066 | T020, T021, T022, T025, T027, T030 |
+| CA6 | T013, T015, T060 | T001, T024, T026, T027, T031, T032, T061, T062 |
+| CA7 | T011, T015, T067 | T003, T022, T025, T026, T068 |
+| CA8 | T012, T040, T060 | T023, T025, T027, T062 |
+| CA9 | T011, T013, T040, T065 | T022, T025, T027 |
 | CA10 | T014, T040 | T004, T022, T025 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
@@ -273,21 +304,22 @@ Formato:
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | app/Agenda/ReservaCitas.php | T004, T022 |
-| app/Agenda/ReprogramacionCitas.php | T022 |
+| app/Agenda/ReprogramacionCitas.php | T022, T070 |
 | app/Agenda/EstadosCita.php | T021, T030 |
 | app/Agenda/CambioDeEstadoNoPermitido.php | T020, T030 |
 | app/Agenda/CitaNoAgendable.php | T020 |
 | app/Autorizacion/ReprogramarCita.php | T023 |
 | app/Providers/AppServiceProvider.php | T023 |
-| app/Http/Controllers/CitasController.php | T025 |
-| app/Http/Controllers/ClienteCitasController.php | T027, T028 |
+| app/Http/Controllers/CitasController.php | T025, T062, T072 |
+| app/Http/Controllers/ClienteCitasController.php | T027, T028, T062, T064, T072 |
 | routes/web.php | T025, T027 |
 | database/migrations/2026_10_07_000000_reprogramacion_en_historial_citas.php | T003 |
-| resources/views/citas/partials/reprogramar.blade.php | T024 |
+| resources/views/citas/partials/reprogramar.blade.php | T024, T061 |
 | resources/views/citas/reprogramar.blade.php, citas/cliente-reprogramar.blade.php | T024, T027 |
-| resources/views/citas/show.blade.php | T026 |
-| resources/views/citas/cliente-show.blade.php, cliente-index.blade.php | T028, T029 |
-| public/css/app.css | T024 |
+| resources/views/citas/show.blade.php | T026, T068 |
+| resources/views/citas/cliente-show.blade.php, cliente-index.blade.php | T028, T029, T071 |
+| public/css/app.css | T024, T061, T068 |
+| app/Http/Controllers/DashboardController.php, resources/views/dashboard/cliente.blade.php (añadido por /review: R2) | T064 |
 | docs/design/system.md, system.html | T001, T032 |
 | docs/design/capturar.mjs, docs/design/capturas/ (pantalla «Reprogramar cita», A36) | T031, T032 |
 | tests/Feature/ (nuevos y modificados) | T010, T011, T012, T013, T014, T015, T021, T028, T030 |
