@@ -8,6 +8,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\TestCase;
 
@@ -128,6 +129,30 @@ class ReprogramarCitaPacienteTest extends TestCase
         $this->assertStringNotContainsString("/cliente/citas/{$empezada}/cancelar", $acciones);
         $this->assertStringNotContainsString(self::AVISO_CORTO, $acciones);
         $this->assertStringContainsString("/cliente/citas/{$empezada}\"", $acciones);
+    }
+
+    public function test_el_panel_de_inicio_respeta_el_plazo(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+
+        // Dentro de plazo: «Reprogramar» y «Cancelar», sin aviso; también con la cita confirmada.
+        foreach (['agendada', 'confirmada'] as $estado) {
+            DB::table('citas')->where('id', $cita)->update(['estado' => $estado]);
+            $dentro = $this->acciones('/cliente', 'acciones-proxima');
+            $this->assertStringContainsString("/cliente/citas/{$cita}/reprogramar", $dentro, "{$estado}: ofrece reprogramar.");
+            $this->assertStringContainsString("/cliente/citas/{$cita}/cancelar", $dentro, "{$estado}: ofrece cancelar.");
+            $this->assertStringNotContainsString(self::AVISO_CORTO, $dentro);
+        }
+
+        // Fuera de plazo: ni «Reprogramar» ni «Cancelar», el aviso corto y sigue «Ver detalles».
+        DB::table('citas')->where('id', $cita)->update(['estado' => 'agendada']);
+        $this->ahora('16:01');
+        $fuera = $this->acciones('/cliente', 'acciones-proxima');
+        $this->assertStringNotContainsString("/cliente/citas/{$cita}/reprogramar", $fuera);
+        $this->assertStringNotContainsString("/cliente/citas/{$cita}/cancelar", $fuera);
+        $this->assertStringContainsString(self::AVISO_CORTO, $fuera);
+        $this->assertStringContainsString("/cliente/citas/{$cita}\"", $fuera);
+        $this->assertStringContainsString('Ver detalles', $fuera);
     }
 
     public function test_el_paciente_ve_el_motivo_si_su_cita_no_se_puede_mover(): void

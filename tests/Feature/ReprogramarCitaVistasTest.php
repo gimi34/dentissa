@@ -362,6 +362,18 @@ class ReprogramarCitaVistasTest extends TestCase
         $this->assertMatchesRegularExpression('/<button[^>]*class="[^"]*btn-danger/', $acciones, '«Cancelar» con .btn-danger.');
     }
 
+    public function test_lo_nuevo_solo_usa_el_sistema_en_el_panel_del_paciente(): void
+    {
+        $this->cita($this->d1, $this->p1, 'agendada', self::FUTURA);
+
+        $html = $this->actingAs($this->paciente1)->get('/cliente')->assertOk()->getContent();
+
+        $this->assertDentroDelComponente($html, 'acciones-proxima');
+        $acciones = (string) $this->seccion($html, 'acciones-proxima');
+        $this->assertSinEstilosEnLinea($acciones);
+        $this->assertMatchesRegularExpression('/<button[^>]*class="[^"]*btn-danger/', $acciones, '«Cancelar» con .btn-danger.');
+    }
+
     public function test_lo_nuevo_solo_usa_el_sistema_en_la_lista_del_paciente(): void
     {
         $citas = [
