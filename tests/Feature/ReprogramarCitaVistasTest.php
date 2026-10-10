@@ -29,6 +29,8 @@ class ReprogramarCitaVistasTest extends TestCase
 
     private const MAX_MOTIVO = 'El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.';
 
+    private const CONFIRMAR = 'Marca la casilla para confirmar que quieres cancelar la cita.';
+
     /** Selectores cuyas reglas son nuevas en la 028 (A49): todo lo demás de app.css es previo. */
     private const AMBITO_NUEVO = '/\.formulario-accesible|\.btn-danger/';
 
@@ -96,11 +98,53 @@ class ReprogramarCitaVistasTest extends TestCase
         $this->assertStringNotContainsString('confirm(', $seccion, 'D12: sin confirmación nativa.');
 
         $this->actingAs($this->admin)
-            ->patch("/admin/citas/{$cita}/estado", ['estado' => 'cancelada', 'motivo' => 'No vuelve a la clínica', 'formulario' => 'no-reagendar'])
+            ->patch("/admin/citas/{$cita}/estado", ['estado' => 'cancelada', 'motivo' => 'No vuelve a la clínica', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
             ->assertStatus(302);
 
         $this->assertSame('cancelada', $this->estadoDe($cita));
         $this->assertSame('No vuelve a la clínica', $this->entradasDeHistorial($cita)->sole()->motivo);
+    }
+
+    // ── «No reagendar»: casilla de confirmación y vuelta al detalle (R6, R1) ──
+
+    public function test_no_reagendar_pide_confirmar_la_cancelacion(): void
+    {
+        foreach (['admin' => $this->admin, 'asistente' => $this->asistente] as $grupo => $usuario) {
+            $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+            $formulario = "/{$grupo}/citas/{$cita}/reprogramar";
+
+            $casilla = $this->casillaDeConfirmar($this->bloque($usuario, $formulario, 'no-reagendar'));
+            $this->assertSame('', $casilla->getAttribute('aria-invalid'), "{$grupo}: sin error, la casilla no es inválida.");
+
+            $this->actingAs($usuario)->from($formulario)
+                ->patch("/{$grupo}/citas/{$cita}/estado", ['estado' => 'cancelada', 'motivo' => 'Sin casilla', 'formulario' => 'no-reagendar'])
+                ->assertRedirect($formulario)
+                ->assertSessionHasErrors(['confirmar' => self::CONFIRMAR]);
+            $this->assertSame('agendada', $this->estadoDe($cita), "{$grupo}: sin casilla no se cancela.");
+            $this->assertCount(0, $this->entradasDeHistorial($cita));
+
+            $html = $this->actingAs($usuario)->get($formulario)->assertOk()->getContent();
+            $this->assertErrorDeLaCasilla((string) $this->seccion($html, 'no-reagendar'));
+            $this->assertStringNotContainsString(self::CONFIRMAR, (string) $this->seccion($html, 'nueva-fecha'));
+        }
+    }
+
+    public function test_tras_cancelar_desde_no_reagendar_se_vuelve_al_detalle(): void
+    {
+        foreach (['admin' => $this->admin, 'asistente' => $this->asistente] as $grupo => $usuario) {
+            $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+
+            $this->actingAs($usuario)->from("/{$grupo}/citas/{$cita}/reprogramar")
+                ->patch("/{$grupo}/citas/{$cita}/estado", ['estado' => 'cancelada', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
+                ->assertRedirect("/{$grupo}/citas/{$cita}");
+            $this->assertSame('cancelada', $this->estadoDe($cita));
+
+            // El detalle (con su #estado), no la pantalla de reprogramar, y el aviso de éxito.
+            $html = $this->actingAs($usuario)->get("/{$grupo}/citas/{$cita}")->assertOk()->getContent();
+            $this->assertStringContainsString('Estado actualizado correctamente.', $html);
+            $this->assertNotNull($this->seccion($html, 'estado'), "{$grupo}: aterriza en el detalle.");
+            $this->assertNull($this->seccion($html, 'reprogramar-cita'), "{$grupo}: no vuelve a la pantalla de reprogramar.");
+        }
     }
 
     public function test_cada_formulario_muestra_sus_valores_y_errores_en_su_seccion(): void
@@ -121,7 +165,7 @@ class ReprogramarCitaVistasTest extends TestCase
 
         // Cancelación rechazada con la cita abierta (A33): el error, dentro de «No reagendar».
         $this->actingAs($this->admin)->from($formulario)
-            ->patch("/admin/citas/{$cita}/estado", ['estado' => 'cancelada', 'motivo' => str_repeat('b', 501), 'formulario' => 'no-reagendar']);
+            ->patch("/admin/citas/{$cita}/estado", ['estado' => 'cancelada', 'motivo' => str_repeat('b', 501), 'formulario' => 'no-reagendar', 'confirmar' => '1']);
         $html = $this->actingAs($this->admin)->get($formulario)->getContent();
         $this->assertStringContainsString(self::MAX_MOTIVO, (string) $this->seccion($html, 'no-reagendar'));
         $this->assertStringNotContainsString(self::MAX_MOTIVO, (string) $this->seccion($html, 'nueva-fecha'));
@@ -451,6 +495,33 @@ class ReprogramarCitaVistasTest extends TestCase
         }
 
         return $hallados;
+    }
+
+    /** La casilla `confirmar` de «No reagendar», con su etiqueta asociada. */
+    private function casillaDeConfirmar(string $seccion): DOMElement
+    {
+        $xpath = new DOMXPath($this->dom($seccion));
+        $casilla = $xpath->query("//input[@type='checkbox'][@name='confirmar'][@value='1']")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $casilla, 'Falta la casilla de confirmar.');
+        $id = $casilla->getAttribute('id');
+        $this->assertNotSame('', $id, 'La casilla necesita un id para su etiqueta.');
+        $etiqueta = $xpath->query("//label[@for='{$id}']")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $etiqueta, 'La casilla no tiene etiqueta asociada.');
+        $this->assertSame('Entiendo que la cancelación no se puede deshacer', trim(preg_replace('/\s+/u', ' ', $etiqueta->textContent)));
+
+        return $casilla;
+    }
+
+    /** El error de la casilla se pinta en su sección y va asociado a ella. */
+    private function assertErrorDeLaCasilla(string $seccion): void
+    {
+        $casilla = $this->casillaDeConfirmar($seccion);
+        $this->assertSame('true', $casilla->getAttribute('aria-invalid'), 'La casilla se marca como inválida.');
+        $descrito = $casilla->getAttribute('aria-describedby');
+        $this->assertNotSame('', $descrito, 'La casilla apunta a su error.');
+        $error = (new DOMXPath($this->dom($seccion)))->query("//*[@id='{$descrito}']")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $error, 'El error de la casilla está en su sección.');
+        $this->assertSame(self::CONFIRMAR, trim($error->textContent));
     }
 
     private function dom(string $html): DOMDocument

@@ -113,10 +113,10 @@ class ReprogramarCitaRolesTest extends TestCase
         $deD2 = $this->cita($this->d2, $this->p2, 'agendada', self::FUTURA);
 
         $this->actingAs($this->asistente)
-            ->patch("/asistente/citas/{$deD2}/estado", ['estado' => 'cancelada', 'motivo' => 'Desde No reagendar', 'formulario' => 'no-reagendar'])
+            ->patch("/asistente/citas/{$deD2}/estado", ['estado' => 'cancelada', 'motivo' => 'Desde No reagendar', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
             ->assertForbidden();
         $this->actingAs($this->paciente1)
-            ->patch("/cliente/citas/{$deD2}/cancelar", ['motivo' => 'Desde No reagendar', 'formulario' => 'no-reagendar'])
+            ->patch("/cliente/citas/{$deD2}/cancelar", ['motivo' => 'Desde No reagendar', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
             ->assertNotFound();
 
         $this->assertSame('agendada', $this->estadoDe($deD2));

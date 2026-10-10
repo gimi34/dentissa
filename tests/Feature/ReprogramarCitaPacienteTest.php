@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Agenda\CambioDeEstadoNoPermitido;
 use Carbon\Carbon;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\TestCase;
@@ -28,6 +31,8 @@ class ReprogramarCitaPacienteTest extends TestCase
     private const YA_EMPEZO = 'Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica.';
 
     private const NO_REPROGRAMABLE = 'Esta cita ya no se puede reprogramar. Si necesitas ayuda, llama a la clínica.';
+
+    private const CONFIRMAR = 'Marca la casilla para confirmar que quieres cancelar la cita.';
 
     protected function setUp(): void
     {
@@ -175,13 +180,57 @@ class ReprogramarCitaPacienteTest extends TestCase
         $this->assertStringContainsString('name="motivo"', $seccion);
 
         $this->actingAs($this->paciente1)
-            ->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => 'Me mudo de ciudad', 'formulario' => 'no-reagendar'])
+            ->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => 'Me mudo de ciudad', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
             ->assertStatus(302);
 
         $this->assertSame('cancelada', $this->estadoDe($cita));
         $entrada = $this->entradasDeHistorial($cita)->sole();
         $this->assertSame('Me mudo de ciudad', $entrada->motivo);
         $this->assertSame($this->paciente1->id, $entrada->cambiado_por);
+    }
+
+    public function test_el_paciente_confirma_la_cancelacion_desde_la_pantalla(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+        $formulario = "/cliente/citas/{$cita}/reprogramar";
+
+        $html = $this->actingAs($this->paciente1)->get($formulario)->assertOk()->getContent();
+        $xpath = new DOMXPath($this->dom((string) $this->seccion($html, 'no-reagendar')));
+        $casilla = $xpath->query("//input[@type='checkbox'][@name='confirmar'][@value='1']")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $casilla, 'Falta la casilla de confirmar.');
+        $etiqueta = $xpath->query("//label[@for='{$casilla->getAttribute('id')}']")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $etiqueta, 'La casilla no tiene etiqueta asociada.');
+
+        // Sin la casilla, no se cancela y el error va junto a ella.
+        $this->actingAs($this->paciente1)->from($formulario)
+            ->patch("/cliente/citas/{$cita}/cancelar", ['formulario' => 'no-reagendar'])
+            ->assertRedirect($formulario)
+            ->assertSessionHasErrors(['confirmar' => self::CONFIRMAR]);
+        $this->assertSame('agendada', $this->estadoDe($cita));
+        $this->assertCount(0, $this->entradasDeHistorial($cita));
+        $html = $this->actingAs($this->paciente1)->get($formulario)->assertOk()->getContent();
+        $xpath = new DOMXPath($this->dom((string) $this->seccion($html, 'no-reagendar')));
+        $casilla = $xpath->query("//input[@name='confirmar']")->item(0);
+        $this->assertSame('true', $casilla->getAttribute('aria-invalid'));
+        $error = $xpath->query("//*[@id='{$casilla->getAttribute('aria-describedby')}']")->item(0);
+        $this->assertSame(self::CONFIRMAR, trim((string) $error?->textContent));
+
+        // Con la casilla, se cancela y vuelve al detalle, sin el aviso de que ya no se puede mover (R1).
+        $this->actingAs($this->paciente1)->from($formulario)
+            ->patch("/cliente/citas/{$cita}/cancelar", ['formulario' => 'no-reagendar', 'confirmar' => '1'])
+            ->assertRedirect("/cliente/citas/{$cita}");
+        $this->assertSame('cancelada', $this->estadoDe($cita));
+        $html = $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}")->assertOk()->getContent();
+        $this->assertStringContainsString('Tu cita fue cancelada.', $html);
+        $this->assertStringNotContainsString(self::NO_REPROGRAMABLE, $html);
+
+        // Desde el detalle o la lista (sin `formulario`), cancelar no pide la casilla.
+        $otra = $this->cita($this->d1, $this->p1, 'agendada', '2026-10-07 10:00');
+        $this->actingAs($this->paciente1)->from('/cliente/citas')
+            ->patch("/cliente/citas/{$otra}/cancelar")
+            ->assertRedirect('/cliente/citas')
+            ->assertSessionHasNoErrors();
+        $this->assertSame('cancelada', $this->estadoDe($otra));
     }
 
     // ── CA5 (paciente) ────────────────────────────────────────────────
@@ -223,7 +272,7 @@ class ReprogramarCitaPacienteTest extends TestCase
 
         $this->reprogramar($this->paciente1, $cita, '2026-10-07', '11:00')->assertSessionHas('error', self::PLAZO);
         $this->actingAs($this->paciente1)
-            ->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => 'Enviado a mano', 'formulario' => 'no-reagendar'])
+            ->patch("/cliente/citas/{$cita}/cancelar", ['motivo' => 'Enviado a mano', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
             ->assertSessionHas('error', self::PLAZO);
 
         $this->assertSame(self::CITA, $this->fechaHoraDe($cita));
@@ -271,6 +320,16 @@ class ReprogramarCitaPacienteTest extends TestCase
     }
 
     // ── Apoyo ──────────────────────────────────────────────────────────
+
+    private function dom(string $html): DOMDocument
+    {
+        $dom = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        libxml_clear_errors();
+
+        return $dom;
+    }
 
     /** Fija "ahora" el lunes 2026-10-05 a esa hora UTC. */
     private function ahora(string $hora): void
