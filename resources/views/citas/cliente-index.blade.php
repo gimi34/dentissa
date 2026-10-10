@@ -56,8 +56,10 @@
                             <div class="formulario-accesible">
                                 <div id="acciones-{{ $cita->id }}" class="acciones-fila">
                                     <a href="{{ route('cliente.citas.show', $cita->id) }}" class="btn btn-outline btn-sm">Ver</a>
-                                    @if($cita->puede_cancelar)
+                                    @if($cita->puede_reprogramar)
                                         <a href="{{ route('cliente.citas.reprogramar', $cita->id) }}" class="btn btn-outline btn-sm">Reprogramar</a>
+                                    @endif
+                                    @if($cita->puede_cancelar)
                                         <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" class="form-en-linea">
                                             @csrf @method('PATCH')
                                             <button type="submit" class="btn btn-danger btn-sm"
