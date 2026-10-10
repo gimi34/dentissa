@@ -271,9 +271,14 @@ class ReprogramarCitaPacienteTest extends TestCase
         ];
 
         foreach ($casos as $caso => $cita) {
-            $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}/reprogramar")
+            // Sesión limpia: el aviso del PATCH del caso anterior lo pintaría el layout (R4).
+            $this->flushSession();
+            $html = $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}/reprogramar")
                 ->assertOk()
-                ->assertSee(self::NO_REPROGRAMABLE);
+                ->assertSee(self::NO_REPROGRAMABLE)
+                ->getContent();
+            $this->assertStringNotContainsString('name="fecha"', $html, "{$caso}: sin formulario de nueva fecha.");
+            $this->assertStringNotContainsString('id="no-reagendar"', $html, "{$caso}: sin «No reagendar».");
 
             $this->reprogramar($this->paciente1, $cita, '2026-10-07', '11:00')
                 ->assertStatus(302)
