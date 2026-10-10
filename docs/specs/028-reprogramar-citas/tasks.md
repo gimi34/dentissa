@@ -219,15 +219,17 @@ Formato:
   - residuo P7: sin evento formal de la reprogramación → spec 022, y sin registro de los 403 del Gate `reprogramar-cita` → spec 020;
   - residuo P8: `QueryException` con el motivo en el log → spec 023.
   - nota: las cuatro viñetas van tras las de la spec 025 en «Pendientes y deuda», con el mismo formato (excepción, destino y decisión del usuario del 2026-10-07).
-- [ ] T090 Actualizar `docs/architecture.md`:
+- [x] T090 Actualizar `docs/architecture.md`:
   - Módulos: la fila Agenda menciona `app/Agenda/ReprogramacionCitas.php` y `ReservaCitas::comprobarHueco`; `app/Autorizacion/ReprogramarCita.php`.
   - Gates: `reprogramar-cita`.
   - "Esquema": `historial_citas` con `fecha_hora_anterior` y `fecha_hora_nueva`.
-- [ ] T091 Actualizar la documentación de seguridad, observabilidad y despliegue:
+  - nota: hecho 2026-10-10: resumen (piezas de `app/Agenda/` y Gates), filas de Agenda (personal, cliente, regla), fila nueva «Agenda (reprogramación)», fila de Autorización de citas con `ReprogramarCita.php` y `reprogramar-cita`, flujo del historial, esquema (columnas nuevas de la migración) y Backend.
+- [x] T091 Actualizar la documentación de seguridad, observabilidad y despliegue:
   - `docs/security.md → Dónde se aplica`: el Gate `reprogramar-cita` y las rutas de reprogramar por rol (sin ruta en el grupo del dentista; `role:cliente` en las del paciente).
   - `docs/security.md`: la corrección pendiente que pide `role:cliente` en todo el grupo `/cliente` añade a su nota que las rutas de reprogramar del paciente ya lo tienen (spec 028; el resto del grupo → spec 015), sin cambiar de estado (A25). Ningún riesgo cambia de estado.
   - `docs/observability.md`: sin cambios (sin logs, eventos ni métricas nuevos; el historial ya registra reprogramaciones y cancelaciones).
   - `docs/deployment.md`: la migración de la 028 solo añade columnas con nulo y va en el mismo paso que el código; la vuelta atrás no necesita revertirla.
+  - nota: hecho 2026-10-10: `security.md` (Dónde se aplica, fila `/cliente/*` de la superficie y nota de RS2.a, sin cambiar de estado; ningún riesgo cambia), `deployment.md` (Migraciones) y `observability.md` sin cambios.
 - [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)

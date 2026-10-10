@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-04
+updated: 2026-10-10
 ---
 
 # Arquitectura de Dentissa
@@ -9,13 +9,13 @@ updated: 2026-10-04
 Monolito Laravel 12 con MVC clásico que renderiza HTML en el servidor con Blade (aplicación
 multipágina, sin API ni SPA). Casi toda la lógica de negocio y el acceso a datos viven dentro de
 13 controladores. Las piezas de servicio están en `app/Agenda/`: `ReservaCitas.php` (spec 025), con la
-regla de agenda, `EstadosCita.php` (spec 026), con los estados de la cita, y `HorarioDentista.php`
-(spec 027), con el horario del dentista. Los Gates de citas y de personal viven en
-`app/Autorizacion/` (specs 026 y 027), y la regla de validación `HoraFinPosterior`, en `app/Rules/`; no hay repositorios, Policies, Form Requests, eventos ni jobs.
+regla de agenda, `EstadosCita.php` (spec 026), con los estados de la cita, `HorarioDentista.php`
+(spec 027), con el horario del dentista, y `ReprogramacionCitas.php` (spec 028), con la reprogramación. Los Gates de citas y de personal viven en
+`app/Autorizacion/` (specs 026, 027 y 028), y la regla de validación `HoraFinPosterior`, en `app/Rules/`; no hay repositorios, Policies, Form Requests, eventos ni jobs.
 El acceso a datos es casi siempre Query Builder (`DB::table` con joins manuales); solo `usuarios`
 y `servicios` tienen modelo Eloquent. La autorización combina un middleware propio `role:` con
-comprobaciones en cada controlador y, para los cambios de estado de las citas, los Gates
-`gestionar-cita` y `cambiar-estado-cita`. El esquema del dominio no está en migraciones: vive
+comprobaciones en cada controlador y, para los cambios de estado y la reprogramación de las citas,
+los Gates `gestionar-cita`, `cambiar-estado-cita` y `reprogramar-cita`. El esquema del dominio no está en migraciones: vive
 en el volcado `database/dentissa.sql`, que Docker carga al inicializar la base.
 
 ## Diagrama de componentes
@@ -49,12 +49,13 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google. Límite de intentos (spec 030): el login cuenta fallos por correo e IP (5 por minuto, `RateLimiter` en el controlador) y la vuelta de Google pasa por el limitador `google`; los dos rechazos emiten `Lockout` | `usuarios`, Socialite, caché (limitadores) |
 | Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista; `POST /registro` y `/registro/contacto` pasan por el limitador `registro` (5 por minuto por IP, spec 030) | `usuarios`, `pacientes`, `personal`, caché (limitadores) |
 | Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol | `citas`, `pacientes`, `asistente_dentista` |
-| Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas y cancelación de citas con alcance por rol (vía `app/Autorizacion/AlcanceClinico.php`); el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y el cambio de estado y "eliminar" en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
-| Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar y cancelar; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php`, y cancelar en `app/Agenda/EstadosCita.php` | `citas`, `horarios_dentista`, `servicios` |
-| Agenda (regla) | `app/Agenda/ReservaCitas.php`, `app/Agenda/CitaNoAgendable.php` | Regla de agenda única (horario del día, encaje en la franja, solape estricto) y guardado de la cita en una transacción que bloquea primero la fila del dentista (spec 025) | `personal` (bloqueo), `horarios_dentista`, `citas` |
+| Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas, reprogramación y cancelación de citas con alcance por rol (vía `app/Autorizacion/AlcanceClinico.php`); el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php`, el cambio de estado y "eliminar" en `app/Agenda/EstadosCita.php`, y la reprogramación en `app/Agenda/ReprogramacionCitas.php` (spec 028) | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
+| Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar, reprogramar y cancelar con 24 horas o más de antelación; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php`, cancelar en `app/Agenda/EstadosCita.php` y reprogramar en `app/Agenda/ReprogramacionCitas.php` (spec 028) | `citas`, `horarios_dentista`, `servicios`, `historial_citas` |
+| Agenda (regla) | `app/Agenda/ReservaCitas.php`, `app/Agenda/CitaNoAgendable.php` | Regla de agenda única (horario del día, encaje en la franja, solape estricto) y guardado de la cita en una transacción que bloquea primero la fila del dentista (spec 025); `bloquearDentista` y `comprobarHueco` (con la cita que se excluye al reprogramar) son públicos para la reprogramación (spec 028) | `personal` (bloqueo), `horarios_dentista`, `citas` |
 | Agenda (estados) | `app/Agenda/EstadosCita.php`, `app/Agenda/CambioDeEstadoNoPermitido.php` | Transiciones de estado, estados cerrados, regla "ya empezó" en la zona de la clínica (`config/clinica.php`) y guardado del cambio con una sola entrada de historial con autor, en una transacción que bloquea primero la fila de la cita (spec 026) | `citas` (bloqueo), `historial_citas` |
+| Agenda (reprogramación) | `app/Agenda/ReprogramacionCitas.php` | Mueve una cita a otra fecha y hora sin cambiar dentista, servicio ni duración: en una transacción bloquea el dentista y la cita, comprueba con `EstadosCita::comprobarReprogramable` que no esté cerrada ni empezada (y el plazo de 24 h del paciente), rechaza fechas pasadas o iguales, aplica la regla de `ReservaCitas::comprobarHueco` sin contar la propia cita, devuelve una confirmada a agendada y escribe una sola entrada de historial con las dos fechas (spec 028) | `personal` (bloqueo), `citas` (bloqueo), `horarios_dentista`, `historial_citas` |
 | Agenda (horario) | `app/Agenda/HorarioDentista.php`, `app/Agenda/HorarioNoGuardado.php`, `app/Rules/HoraFinPosterior.php` | Guardado del horario semanal del dentista en una transacción que bloquea primero su fila de `personal` (el mismo bloqueo que la reserva), cálculo de las citas futuras agendadas o confirmadas que quedan fuera (misma regla de franja que `ReservaCitas`) y validación de que la hora de fin sea posterior a la de inicio sin error 500 con entradas manipuladas (spec 027) | `personal` (bloqueo), `horarios_dentista`, `citas`, `pacientes`, `usuarios` |
-| Autorización de citas | `app/Autorizacion/AlcanceClinico.php`, `app/Autorizacion/CambiarEstadoCita.php` | Alcance del personal sobre las citas (ADR 0003) y Gates `gestionar-cita` y `cambiar-estado-cita`, registrados en `AppServiceProvider` (spec 026) | `personal`, `asistente_dentista`, `pacientes` |
+| Autorización de citas | `app/Autorizacion/AlcanceClinico.php`, `app/Autorizacion/CambiarEstadoCita.php`, `app/Autorizacion/ReprogramarCita.php` | Alcance del personal sobre las citas (ADR 0003) y Gates `gestionar-cita` y `cambiar-estado-cita` (spec 026) y `reprogramar-cita` (spec 028: administración, asistente y paciente, nunca el dentista), registrados en `AppServiceProvider` | `personal`, `asistente_dentista`, `pacientes` |
 | Autorización de personal | `app/Autorizacion/GestionPersonal.php` | Gate `definir-horario`, registrado en `AppServiceProvider`: solo la administración, y solo sobre un dentista (otro tipo de personal → 404) (spec 027) | `personal` |
 | Pacientes | `app/Http/Controllers/PacientesController.php` | CRUD de pacientes y alta de su usuario | `usuarios`, `pacientes`, `expedientes`, `citas` |
 | Expedientes | `app/Http/Controllers/ExpedientesController.php` | Expediente clínico ligado a una cita | `expedientes`, `citas` |
@@ -82,7 +83,9 @@ Ejemplo: el personal agenda una cita.
    solapes, e inserta la cita. Un rechazo vuelve al formulario como error del campo hora.
 5. Responde `redirect()` con flash `success`, que muestra `layouts/app.blade.php`.
 Al cambiar el estado de una cita, `EstadosCita` escribe una sola fila en `historial_citas`, con
-autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio (spec 026).
+autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio (spec 026). Al
+reprogramarla, `ReprogramacionCitas` escribe también una sola fila, con la fecha y hora anterior y la
+nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 
 ## Datos
 - Motor: MariaDB 10.11 en Docker (el volcado se generó con 10.4.32). PKs UUID `char(36)`.
@@ -96,7 +99,8 @@ autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio
 - Esquema: las tablas de dominio, las vistas y el trigger `trg_historial_cita` solo existen en
   `database/dentissa.sql`. Las migraciones crean tablas de infraestructura (`users`, `sessions`,
   `cache`, `jobs`…) y `asistente_dentista`, alteran `usuarios` y `pacientes`, que ninguna migración
-  crea, y retiran el trigger (spec 026). El
+  crea, retiran el trigger (spec 026) y añaden a `historial_citas` `fecha_hora_anterior` y
+  `fecha_hora_nueva` (`DATETIME NULL`, spec 028). El
   esquema no se puede recrear desde migraciones sobre una base vacía.
 
 ## Integraciones externas
@@ -122,7 +126,7 @@ autor, estado anterior y nuevo, y motivo, en la misma transacción que el cambio
 - Autenticación y autorización: sesión de Laravel (guard `web`) sobre `App\Models\Usuario`;
   middleware `role:` por grupo de rutas; comprobaciones de fila en controladores
   (`aplicarAlcanceRol`, `autorizadoParaCita`, que delegan en `AlcanceClinico`), y Gates para los
-  cambios de estado de las citas (spec 026). Detalle en [security.md](security.md).
+  cambios de estado (spec 026) y la reprogramación (spec 028) de las citas. Detalle en [security.md](security.md).
 - Observabilidad: sin logs propios, sin correlación, sin auditoría; ver [observability.md](observability.md).
 - Seguridad: CSRF por defecto, consultas con bindings, sin `{!! !!}`; riesgos en [security.md](security.md).
 
