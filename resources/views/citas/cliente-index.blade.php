@@ -53,15 +53,20 @@
                         <td style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
                         <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
                         <td>
-                            <div style="display:flex;gap:4px;justify-content:flex-end">
-                                <a href="{{ route('cliente.citas.show', $cita->id) }}" class="btn btn-outline btn-sm">Ver</a>
-                                @if($cita->puede_cancelar)
-                                    <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" style="display:inline">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red)"
-                                            onclick="return confirm('¿Deseas cancelar esta cita?')">Cancelar</button>
-                                    </form>
-                                @endif
+                            <div class="formulario-accesible">
+                                <div id="acciones-{{ $cita->id }}" class="acciones-fila">
+                                    <a href="{{ route('cliente.citas.show', $cita->id) }}" class="btn btn-outline btn-sm">Ver</a>
+                                    @if($cita->puede_cancelar)
+                                        <a href="{{ route('cliente.citas.reprogramar', $cita->id) }}" class="btn btn-outline btn-sm">Reprogramar</a>
+                                        <form action="{{ route('cliente.citas.cancelar', $cita->id) }}" method="POST" class="form-en-linea">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('¿Deseas cancelar esta cita?')">Cancelar</button>
+                                        </form>
+                                    @elseif($cita->aviso_plazo_corto)
+                                        <p class="aviso-plazo">{{ $cita->aviso_plazo_corto }}</p>
+                                    @endif
+                                </div>
                             </div>
                         </td>
                     </tr>
