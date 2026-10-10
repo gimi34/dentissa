@@ -196,6 +196,22 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Spec 013 (prueba de arquitectura, CA10): debe permitir que `App\Agenda\ReservaCitas` bloquee la
   fila de `personal` (tabla de Identidad) o migrar ese acceso a una interfaz de Identidad para
   bloquear a un dentista (spec 025, D11, A27).
+- Gate del detalle de la cita del personal (`GET /{rol}/citas/{id}`, que ahora también calcula
+  `puede_reprogramar`) → spec 014; `role:cliente` y Gate en "Mis citas" (`GET /cliente/citas`) y en
+  el detalle del paciente (`GET /cliente/citas/{id}`) → spec 015. Excepción P3 de la spec 028: esas
+  rutas solo ganan los datos para mostrar u ocultar «Reprogramar» y el plazo; las rutas nuevas de
+  reprogramar ya tienen rol y el Gate `reprogramar-cita` (decisión del usuario, 2026-10-07).
+- Al retomar `/plan 014 --fix`: partir del Gate `reprogramar-cita` registrado en
+  `AppServiceProvider` (`App\Autorizacion\ReprogramarCita`) y de `puede_reprogramar` en
+  `CitasController@show` (spec 028).
+- Auditoría de la reprogramación y de la cancelación desde «No reagendar»: hoy solo quedan en el
+  historial de la cita (autor, fechas y motivo), sin evento formal → spec 022; los 403 del Gate
+  `reprogramar-cita` no se registran → spec 020 (registro central de accesos denegados). Excepción P7
+  de la spec 028 (decisión del usuario, 2026-10-07).
+- Residuo de SQL con bindings en el log: si el `update` de la cita o el `insert` del historial de
+  `ReprogramacionCitas` fallan con una `QueryException` distinta de 1205/1213, el reporte por defecto
+  registra el SQL con sus valores, motivo incluido → spec 023 (OB4.a). Excepción P8 de la spec 028
+  (decisión del usuario, 2026-10-07).
 - Comparaciones de fecha que siguen en UTC aunque las citas guardan la hora local de la clínica:
   paneles, próximas y pasadas del paciente, `after_or_equal:today` del alta y fechas del historial
   de la cita, mostradas sin convertir. La spec 026 solo usa `config('clinica.zona_horaria')` para

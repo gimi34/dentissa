@@ -213,11 +213,12 @@ Formato:
   — cubre: CA8, CA9, CA10
   - nota: A45 — `trivy fs` se compara con la línea base del plan; EX2 cubre `trivy image` y se revisa en `/release`.
   - nota: 2026-10-10, rama en `39e7fe6`. (1) `php artisan test`: 242 passed (183 de la línea base de T002 + 59 de T011–T015), todos en verde. (2) Pint `--test`: PASS en los 21 archivos PHP tocados desde `impl_base`. (3) semgrep 1.99.0 `--config p/php --metrics=off --error` sobre los 10 archivos de `app/` y `database/migrations/` tocados y `routes/web.php`: sin hallazgos. (4) gitleaks v8.21.2 `detect`: 321 commits, sin fugas. (5) `composer audit --locked`: sin avisos; `npm audit --audit-level=high`: 2 críticas (`shell-quote`) y 1 alta (`source-map-js`), igual que la línea base del plan (corregidas en la 031); trivy 0.57.1 `fs --severity HIGH,CRITICAL` (sin `vendor/` ni `node_modules/`): sin hallazgos ni secretos (excluye las dependencias de desarrollo de npm, como el CI). EX2 (imágenes, vence el 2026-10-31) se revisa en `/release`. (6) `git diff 961c9e4 -- app/`: ninguna llamada `Log::` nueva. (7) `route:list --path=dentista`: ninguna ruta de reprogramar. (8) `dentissa_test`: 8 usuarios, 2 citas, 1 historial, 1 personal, 6 pacientes, los recuentos de T002.
-- [ ] T041 Añadir en `docs/roadmap.md → Pendientes` cuatro viñetas que citan la spec 028 — docs/roadmap.md — hecho cuando: existen las viñetas de:
+- [x] T041 Añadir en `docs/roadmap.md → Pendientes` cuatro viñetas que citan la spec 028 — docs/roadmap.md — hecho cuando: existen las viñetas de:
   - excepción P3: `GET /{rol}/citas/{id}` (con `puede_reprogramar`) recibe su Gate en la 014; "Mis citas" y el detalle del paciente, `role:cliente` en la 015;
   - `/plan 014 --fix` debe partir del Gate `reprogramar-cita` en `AppServiceProvider` y de `puede_reprogramar` en `CitasController@show`;
   - residuo P7: sin evento formal de la reprogramación → spec 022, y sin registro de los 403 del Gate `reprogramar-cita` → spec 020;
   - residuo P8: `QueryException` con el motivo en el log → spec 023.
+  - nota: las cuatro viñetas van tras las de la spec 025 en «Pendientes y deuda», con el mismo formato (excepción, destino y decisión del usuario del 2026-10-07).
 - [ ] T090 Actualizar `docs/architecture.md`:
   - Módulos: la fila Agenda menciona `app/Agenda/ReprogramacionCitas.php` y `ReservaCitas::comprobarHueco`; `app/Autorizacion/ReprogramarCita.php`.
   - Gates: `reprogramar-cita`.
