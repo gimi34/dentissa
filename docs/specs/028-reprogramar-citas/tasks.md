@@ -268,6 +268,7 @@ Decisiones del usuario del 2026-10-10 en `/review 028`: R6 con casilla obligator
   - Gates: `reprogramar-cita`.
   - "Esquema": `historial_citas` con `fecha_hora_anterior` y `fecha_hora_nueva`.
   - nota: hecho 2026-10-10: resumen (piezas de `app/Agenda/` y Gates), filas de Agenda (personal, cliente, regla), fila nueva «Agenda (reprogramación)», fila de Autorización de citas con `ReprogramarCita.php` y `reprogramar-cita`, flujo del historial, esquema (columnas nuevas de la migración) y Backend.
+  - nota: tras /review r1 (2026-10-10): fila de Paneles (el panel del paciente aplica el plazo, T064) y fila de «Agenda (reprogramación)» (dentista activo, duración válida y comparación al minuto, T070). `deployment.md` y `security.md` sin cambios: ni variables ni pasos nuevos, y la casilla de «No reagendar» no es un control de seguridad.
 - [x] T091 Actualizar la documentación de seguridad, observabilidad y despliegue:
   - `docs/security.md → Dónde se aplica`: el Gate `reprogramar-cita` y las rutas de reprogramar por rol (sin ruta en el grupo del dentista; `role:cliente` en las del paciente).
   - `docs/security.md`: la corrección pendiente que pide `role:cliente` en todo el grupo `/cliente` añade a su nota que las rutas de reprogramar del paciente ya lo tienen (spec 028; el resto del grupo → spec 015), sin cambiar de estado (A25). Ningún riesgo cambia de estado.
