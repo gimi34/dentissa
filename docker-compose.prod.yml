@@ -42,7 +42,7 @@ services:
       - app
 
   db:
-    image: mariadb:10.11.18
+    image: mariadb:10.11.19
     restart: unless-stopped
     # La base nace con la colación del volcado: una tabla sin colación propia
     # (horarios_dentista) la hereda, y con otra su clave foránea no se crea.
