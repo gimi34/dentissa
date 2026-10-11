@@ -340,6 +340,23 @@ class MovilPacienteTest extends TestCase
         $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--focus-ring'], $tokens['--white']));
     }
 
+    public function test_menu_js_cumple_su_contrato(): void
+    {
+        $archivo = public_path('js/menu.js');
+        $this->assertFileExists($archivo);
+        $js = file_get_contents($archivo);
+
+        // Comprobación de texto del contrato del plan; el comportamiento lo mide capturar.mjs --medir.
+        $this->assertMatchesRegularExpression('/document\.documentElement\.classList\.add\(\s*[\'"]menu-js[\'"]\s*\)/', $js, 'Marca html.menu-js al cargar.');
+        foreach (["'Escape'", 'inert', 'aria-expanded', 'aria-current', 'getComputedStyle', '.menu-btn', '.menu-cerrar', '.menu-velo'] as $pieza) {
+            $this->assertStringContainsString($pieza, $js, "menu.js usa {$pieza}.");
+        }
+        $this->assertMatchesRegularExpression('/\.focus\(/', $js, 'Mueve el foco al abrir y al cerrar.');
+        foreach (['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'eval(', 'new Function', 'max-width'] as $prohibido) {
+            $this->assertStringNotContainsString($prohibido, $js, "menu.js no usa {$prohibido}.");
+        }
+    }
+
     /** @return array<string, Usuario> */
     private function usuarios(): array
     {
