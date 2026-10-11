@@ -1,6 +1,6 @@
 ---
 spec: 033-movil-paciente
-status: approved
+status: draft
 constitution_version: 1.2.1
 created: 2026-10-11
 ---
@@ -36,7 +36,7 @@ sistema (A1, decisión del usuario).
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas: `menu.js` es código propio y Playwright ya se usa en su contenedor (`capturar.mjs`). Línea base del 2026-10-11: `composer audit` y `npm audit` sin avisos | lint: composer audit, npm audit y trivy fs en T040 |
 | P7 Auditoría | ➖ | No toca datos sensibles, autenticación ni permisos (spec, Auditoría) | — |
 | P8 Correlación y logs limpios | ➖ | Sin logs nuevos | — |
-| P9 La interfaz usa solo el sistema de diseño | ✅ | Valores nuevos primero en `system.md` (T001): los diez tokens de «Cambios a incorporar al sistema» y el punto de corte documentado. Toda regla nueva de `movil.css` y de `app.css` usa solo tokens, también las duraciones; `z-index` queda fuera de P9 (no es color, tipografía, espaciado, radio, sombra ni duración) y se documenta. Los bloques tocados pierden sus `style=""`. Los pares de color nuevos (menú y bloque `/* Spec 033 */`) cumplen AA, los bordes de los controles nuevos usan `--border-control` (≥ 3:1), la sección actual y la pestaña activa llevan una señal que no es color, y todos los controles del menú tienen foco visible (A2, A4, A5, A16, A32, A35) | test: `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_los_pares_del_menu_cumplen_aa`, `test_los_colores_del_bloque_033_cumplen_aa`, `test_la_seleccion_no_depende_solo_del_color`, `test_los_controles_del_menu_tienen_foco_visible`, `test_los_bloques_tocados_no_tienen_estilos_en_linea` · manual: pantallas a 320, 390 y 1440 contra `system.html` |
+| P9 La interfaz usa solo el sistema de diseño | ✅ | Valores nuevos primero en `system.md` (T001): los diez tokens de «Cambios a incorporar al sistema» y el punto de corte documentado. Toda regla nueva de `movil.css` y de `app.css` usa solo tokens, también las duraciones; `z-index` queda fuera de P9 (no es color, tipografía, espaciado, radio, sombra ni duración) y se documenta. Los bloques tocados pierden sus `style=""`. Los pares de color nuevos (menú y bloque `/* Spec 033 */`) cumplen AA, los bordes de los controles nuevos usan `--border-control` (≥ 3:1), la sección actual y la pestaña activa llevan una señal que no es color, y todos los controles del menú tienen foco visible (A2, A4, A5, A16, A32, A35) | test: `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_los_pares_del_menu_cumplen_aa`, `test_los_colores_del_bloque_033_cumplen_aa`, `test_la_seleccion_no_depende_solo_del_color`, `test_el_aspecto_de_los_botones_nuevos_usa_tokens`, `test_los_controles_del_menu_tienen_foco_visible`, `test_los_bloques_tocados_no_tienen_estilos_en_linea` · manual: pantallas a 320, 390 y 1440 contra `system.html` |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
@@ -57,7 +57,8 @@ sistema (A1, decisión del usuario).
 Sin endpoints, migraciones ni datos nuevos.
 
 **Hoja `movil.css`.**
-- **Fuera de toda media query**, solo dos reglas:
+- **Fuera de toda media query**, solo dos reglas, al principio del archivo (antes de la media
+  query, para que las de dentro ganen por orden con la misma especificidad, A40):
   - `.menu-btn, .menu-cerrar, .menu-velo, .sidebar-marca { display: none; }`, que oculta los
     elementos nuevos en el escritorio;
   - `.main, .grid-auto > *, .grid-2 > *, .grid-3 > * { min-width: 0; }`. Evita que un hijo flexible
@@ -79,7 +80,7 @@ Sin endpoints, migraciones ni datos nuevos.
     - `.nav-item` en `--text`; activo, `--p100` con `--p600` y la marca
       `box-shadow: inset var(--border-width-strong) 0 0 var(--p600)`, que no es solo color (A5);
     - `.nav-label` en `--p600`;
-    - `.sidebar-logo img { display: none; }` y `.sidebar-marca` visible, porque el logo con
+    - `.sidebar-logo img { display: none; }` y `.sidebar-marca { display: block; }`, porque el logo con
       `mix-blend-mode: screen` desaparece sobre blanco (A9): `color: var(--p600)`,
       `font-size: var(--text-marca)`, `font-weight: var(--weight-strong)`;
     - `.sidebar-logo` con `justify-content: space-between`, `min-height: var(--topbar-h)` y
@@ -88,8 +89,8 @@ Sin endpoints, migraciones ni datos nuevos.
     - `.user-name` con `white-space: normal` y `overflow-wrap: anywhere`;
     - `.btn-logout` con borde `--border-width` `--border-control` (≥ 3:1) y, en hover, `--p100`
       con `--p600` (A16, A35).
-  - **Botones nuevos** (A35): `.menu-btn` y `.menu-cerrar` con `display: inline-flex`,
-    `align-items: center`, `justify-content: center`, `gap: var(--space-2)`,
+  - **Botones nuevos** (A35): `.menu-btn` y `.menu-cerrar`, sin `display` (solo lo pone la regla
+    con `html.menu-js`, A40), con `align-items: center`, `justify-content: center`, `gap: var(--space-2)`,
     `padding: 0 var(--space-4)`, fondo `--white`, texto `--p600`, borde `--border-width` solid
     `--border-control`, `border-radius: var(--radius-sm)`, `font: inherit`,
     `font-size: var(--text-body)` y `font-weight: var(--weight-strong)`; su icono SVG, de
@@ -115,11 +116,13 @@ Sin endpoints, migraciones ni datos nuevos.
       `.menu-cerrar`, `.field`, `select`, `textarea`,
       `input:not([type=checkbox]):not([type=radio]):not([type=hidden])`, `.pestanas-citas a` y
       `.migas a`;
-    - `min-width: var(--touch-min)` en `.menu-cerrar`, `.pestanas-citas a` y `.migas a`, que pasan a
-      `display: inline-flex` con `align-items: center` y `justify-content: center` (A30);
+    - `min-width: var(--touch-min)` en `.menu-cerrar`, `.pestanas-citas a` y `.migas a`; los enlaces
+      de pestañas y migas pasan a `display: inline-flex` con `align-items: center` y
+      `justify-content: center` (A30). `.menu-cerrar` no recibe `display` aquí (A40);
     - la casilla conserva su tamaño, y la zona de 44 px la da su etiqueta:
-      `.campo-casilla label { display: flex; align-items: center; min-height: var(--touch-min); }`
-      (A20, A33).
+      `.formulario-accesible .campo-casilla label { display: flex; align-items: center;
+      min-height: var(--touch-min); }`, que gana a `.formulario-accesible .field-label`
+      (`display: block`, `app.css:485`) por especificidad (A20, A33, A41).
   - **Foco:** `.menu-btn`, `.menu-cerrar`, `.nav-item` y `.btn-logout` con
     `:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset); }` (A16).
@@ -215,7 +218,9 @@ bloque (T014), se añade a esta tabla con `/plan --fix` antes de tocarlo.
     condiciones:
     - fuera de toda media query, solo las dos reglas previstas;
     - la transición, solo bajo `prefers-reduced-motion: no-preference`;
-    - sin JS, `.sidebar` estático;
+    - sin JS, `.sidebar` estático, y ninguna regla sin `html.menu-js` da `display` a `.menu-btn`
+      ni a `.menu-cerrar`; `.sidebar-marca` con `display: block` dentro de la media query, y las dos
+      reglas globales al principio del archivo (A40);
     - `overflow-y: auto` en `.sidebar`;
     - la lista de toque, sin casillas ni radios, con `min-width` e `inline-flex` en los enlaces de
       pestañas y migas, y la etiqueta de la casilla con `min-height`;
@@ -271,7 +276,10 @@ bloque (T014), se añade a esta tabla con `/plan --fix` antes de tocarlo.
   - **En horizontal, a 844 × 390:** con el menú abierto se alcanzan, desplazando el panel, el último
     enlace y «Cerrar sesión» (CA7, A10).
   - **Sin JS, a 390:** una pasada con JavaScript desactivado no se desborda, el menú no tapa
-    contenido y no hay botón «Menú» (A3).
+    contenido, el `display` calculado de «Menú» y «Cerrar menú» es `none` y la marca de texto se ve
+    (A3, A40).
+  - **Casilla, a 390:** en reprogramar, la etiqueta mide ≥ 44 px de alto y el centro vertical de su
+    texto coincide (±2 px) con el de la casilla (A41).
   - **A 1440:** el botón, el velo y la marca de texto ocultos, y la barra lateral visible (CA8).
 - **Línea base del escritorio** (A8, A31): tras T014 y antes de cualquier cambio de estilos, capturas
   a 1440 de las 7 vistas y del menú de cada rol, y a 1024 y 1440 de las vistas del personal que usan
@@ -304,7 +312,7 @@ datos de la página. Encaja con la CSP de la 031.
 | RNF: WCAG 2.1 AA (1.4.10, 1.3.4, 2.4.7, 4.1.2, 1.4.1) | `movil.css`, layout, `menu.js` | `test_los_pares_del_menu_cumplen_aa`, `test_los_colores_del_bloque_033_cumplen_aa`, `test_la_seleccion_no_depende_solo_del_color`, `test_los_controles_del_menu_tienen_foco_visible`, `test_la_seccion_actual_lleva_aria_current` · test en navegador: `--medir` |
 | RNF: toque ≥ 44 × 44 | tokens, `movil.css` | `test_los_controles_tienen_toque_minimo` · test en navegador: `--medir` |
 | RNF: medido a 320, 390, 1440 y 844 × 390 | `capturar.mjs`, `.ai/project.yaml` | test en navegador: `--medir`; `test_los_tokens_y_anchos_coinciden_con_el_sistema` |
-| P9: solo tokens | `movil.css`, `app.css` | `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens` |
+| P9: solo tokens | `movil.css`, `app.css` | `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_el_aspecto_de_los_botones_nuevos_usa_tokens` |
 
 ## Observabilidad
 No aplica: no toca datos sensibles, autenticación ni permisos, y no añade logs, eventos ni métricas.
