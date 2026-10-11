@@ -5,6 +5,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Security
+- Herramientas de desarrollo actualizadas sin avisos críticos ni altos de `npm audit` (`shell-quote`
+  1.11.0 y `source-map-js` 1.2.2). No llegan a producción, que no instala dependencias de npm. Se
+  adelanta de la spec 031, T004.
+
 ### Changed — flujo AI-DD actualizado a 1.11.5
 - Solo cambia la versión del flujo: las novedades de 1.11.3–1.11.5 (opciones de diseño con idea
   propia, rehacer opciones y afinar un eje) aplican a proyectos sin sistema de diseño aprobado; el
