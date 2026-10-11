@@ -67,10 +67,10 @@ Primera ronda.
 | A26 | Redacción | BAJA | T001 | «en parte (033)» no es un estado de deuda de `system.md`; DS10 no se actualiza | «en curso: …» en DS6 y DS8; DS10 «en curso (033, solo el menú del móvil)» |
 
 ## Decisiones pendientes del usuario
-- **A1:** en los bloques que se tocan, ¿se añaden al sistema los tokens que falten para conservar el
-  aspecto exacto a 1440 (CA8 tal cual), o se ajustan al token más cercano (p. ej. `gap` 12 → 16px),
-  aceptando cambios mínimos a 1440 (exige `/specify --edit 033` de CA8)?
-- **A7:** ¿qué va antes, la 033 o la 020? La que vaya después actualiza la lista del menú de admin.
+Respondidas el 2026-10-11:
+- **A1:** se añaden al sistema los tokens que falten, con los valores de hoy (CA8 sin cambios).
+- **A7:** la 033 va antes que la 020; la 020 actualizará la lista del menú de admin.
+- Los 26 hallazgos se corrigen ahora con `/plan --fix` y `/tasks --fix` (decisión del usuario).
 
 ## Aceptados
 (Ninguno todavía.)
