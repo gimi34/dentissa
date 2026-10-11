@@ -36,6 +36,7 @@ class ClienteCitasController extends Controller
                 ->where('citas.paciente_id', $paciente->id)
                 ->select(
                     'citas.id',
+                    'citas.dentista_id',
                     'citas.fecha_hora',
                     'citas.duracion_min',
                     'citas.estado',
@@ -81,6 +82,7 @@ class ClienteCitasController extends Controller
             ->where('citas.paciente_id', $paciente->id)
             ->select(
                 'citas.id',
+                'citas.dentista_id',
                 'citas.fecha_hora',
                 'citas.duracion_min',
                 'citas.estado',
@@ -228,10 +230,11 @@ class ClienteCitasController extends Controller
         }
     }
 
-    // Una cita cerrada, en curso o ya empezada se explica sin estados internos (A7, A41).
+    // Una cita cerrada, en curso o ya empezada, o con el dentista inactivo o sin duración, se explica
+    // sin estados internos (A7, A41; /review 028 R19).
     private function mensajeParaElPaciente(CambioDeEstadoNoPermitido $e): string
     {
-        return in_array($e->tipo, ['cerrada', 'yaEmpezoPersonal', 'transicion', 'vuelta'], true)
+        return in_array($e->tipo, ['cerrada', 'yaEmpezoPersonal', 'dentistaInactivo', 'sinDuracion'], true)
             ? 'Esta cita ya no se puede reprogramar. Si necesitas ayuda, llama a la clínica.'
             : $e->getMessage();
     }
@@ -241,7 +244,8 @@ class ClienteCitasController extends Controller
     {
         $cita->puede_cancelar = in_array($cita->estado, ['agendada', 'confirmada'], true)
             && $estados->dentroDelPlazoDelPaciente($cita);
-        $cita->puede_reprogramar = $cita->puede_cancelar;
+        // Reprogramar pide además lo que comprueba la pantalla: dentista activo y duración válida (R19).
+        $cita->puede_reprogramar = $cita->puede_cancelar && $this->motivoNoReprogramable($cita, $estados) === null;
 
         return $cita;
     }
