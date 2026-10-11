@@ -34,7 +34,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 028 | [reprogramar-citas](028-reprogramar-citas/spec.md) | Agenda | released (v0.6.0) | — | — (2026-10-11) |
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
-| 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | draft | — | — (2026-10-11) |
+| 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | approved | — | — (2026-10-11) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
