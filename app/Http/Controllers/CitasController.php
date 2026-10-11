@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
+use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
 use App\Autorizacion\AlcanceClinico;
 use Carbon\Carbon;
@@ -294,6 +295,9 @@ class CitasController extends Controller
         // Solo las transiciones que este usuario puede hacer ahora (spec 026).
         $disponibles = $estados->disponibles(auth()->user(), $cita);
         $aviso = $this->avisoDeEstado($cita, $disponibles, $estados->haEmpezado($cita), $estados->inicio($cita));
+        // «Reprogramar» solo si el rol puede y la cita aún se puede mover (spec 028).
+        $cita->puede_reprogramar = Gate::allows('reprogramar-cita', $cita)
+            && $this->motivoNoReprogramable($cita, $estados) === null;
 
         return view('citas.show', compact('cita', 'historial', 'disponibles', 'aviso'));
     }
@@ -328,28 +332,102 @@ class CitasController extends Controller
         // El alcance va antes de validar: fuera de alcance es 403 con cualquier entrada.
         Gate::authorize('gestionar-cita', $cita);
 
-        // Las notas internas no se aceptan aquí (spec 026, CA11).
+        // Las notas internas no se aceptan aquí (spec 026, CA11). Desde «No reagendar» (spec 028)
+        // la cancelación exige marcar la casilla de confirmación (/review 028 R6, R23).
         $data = $request->validate([
             'estado' => 'required|string|in:'.implode(',', ['agendada', ...array_keys(EstadosCita::TRANSICIONES)]),
             'motivo' => 'nullable|string|max:500',
+            'formulario' => 'nullable|string|in:reprogramar,no-reagendar',
+            'confirmar' => 'exclude_unless:formulario,no-reagendar|exclude_unless:estado,cancelada|accepted',
         ], [
             'estado.required' => 'Elige un estado válido.',
             'estado.string' => 'Elige un estado válido.',
             'estado.in' => 'Elige un estado válido.',
             'motivo.string' => 'El motivo debe ser un texto.',
             'motivo.max' => 'El motivo puede tener como máximo 500 caracteres. Acórtalo y vuelve a intentarlo.',
+            'formulario.string' => 'El formulario enviado no es válido.',
+            'formulario.in' => 'El formulario enviado no es válido.',
+            'confirmar.accepted' => 'Marca la casilla para confirmar que quieres cancelar la cita.',
         ]);
 
         Gate::authorize('cambiar-estado-cita', [$cita, $data['estado']]);
+        $desdeNoReagendar = ($data['formulario'] ?? null) === 'no-reagendar' && $data['estado'] === 'cancelada';
 
         try {
             $estados->cambiar($id, $data['estado'], auth()->user(), $data['motivo'] ?? null);
         } catch (CambioDeEstadoNoPermitido $e) {
+            // Desde «No reagendar» la sección puede ya no mostrarse: el rechazo va como aviso (R20).
+            if ($desdeNoReagendar) {
+                return back()->withInput()->with('error', $e->getMessage());
+            }
+
             // Se conserva el motivo escrito para no tener que volver a teclearlo.
             return back()->withInput()->withErrors(['estado' => $e->getMessage()]);
         }
 
+        // Tras cancelar desde «No reagendar», la pantalla de reprogramar ya no aplica: al detalle (R1).
+        if ($desdeNoReagendar) {
+            return redirect()->route(auth()->user()->rol.'.citas.show', $id)->with('success', 'Estado actualizado correctamente.');
+        }
+
         return back()->with('success', 'Estado actualizado correctamente.');
+    }
+
+    // ── REPROGRAMAR (spec 028) ─────────────────────────────────────────
+    public function reprogramarForm(string $id, EstadosCita $estados)
+    {
+        $cita = $this->queryBase()->where('citas.id', $id)->first();
+        if (! $cita) {
+            abort(404);
+        }
+        Gate::authorize('reprogramar-cita', $cita);
+
+        $rp = auth()->user()->rol;
+
+        return view('citas.reprogramar', [
+            'cita' => $cita,
+            'motivoNoReprogramable' => $this->motivoNoReprogramable($cita, $estados),
+            'rutaGuardar' => route("{$rp}.citas.reprogramar.update", $id),
+            // La cancelación definitiva es el cambio de estado de la 026 (D5).
+            'rutaCancelar' => route("{$rp}.citas.estado", $id),
+            'camposCancelar' => ['estado' => 'cancelada'],
+            'rutaDetalle' => route("{$rp}.citas.show", $id),
+        ]);
+    }
+
+    public function reprogramar(Request $request, string $id, ReprogramacionCitas $reprogramacion)
+    {
+        $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id']);
+        if (! $cita) {
+            abort(404);
+        }
+        Gate::authorize('reprogramar-cita', $cita);
+
+        // Solo fecha, hora y motivo: dentista, servicio, duración o estado enviados a mano se ignoran (CA9).
+        $data = $request->validate(ReprogramacionCitas::reglasDeEntrada(), ReprogramacionCitas::mensajesDeEntrada());
+
+        try {
+            $reprogramacion->reprogramar($id, $data['fecha'], $data['hora'], auth()->user(), $data['motivo'] ?? null);
+        } catch (CitaNoAgendable $rechazo) {
+            // Junto al campo de la hora, como el agendado de la 025 (D14).
+            return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
+        } catch (CambioDeEstadoNoPermitido $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route(auth()->user()->rol.'.citas.show', $id)->with('success', 'Cita reprogramada correctamente.');
+    }
+
+    /** Motivo por el que la cita ya no se puede mover, o null si se puede (spec 028, A6). */
+    private function motivoNoReprogramable(object $cita, EstadosCita $estados): ?string
+    {
+        try {
+            $estados->comprobarReprogramable($cita, auth()->user());
+
+            return null;
+        } catch (CambioDeEstadoNoPermitido $e) {
+            return $e->getMessage();
+        }
     }
 
     // ── UPDATE NOTAS ───────────────────────────────────────────────────

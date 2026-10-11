@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-09-28
+updated: 2026-10-10
 ---
 
 # Seguridad de Dentissa
@@ -40,8 +40,13 @@ updated: 2026-09-28
   `app/Autorizacion/CambiarEstadoCita.php`; la cancelación del paciente exige además `role:cliente`
   (spec 026). El horario del dentista (`POST /admin/personal/{id}/horarios`) y su sección en la
   ficha usan, además de `role:admin`, el Gate `definir-horario` (`app/Autorizacion/GestionPersonal.php`):
-  solo la administración y solo sobre un dentista; otro tipo de personal → 404 (spec 027). No hay
-  Policies.
+  solo la administración y solo sobre un dentista; otro tipo de personal → 404 (spec 027). La
+  reprogramación (`GET` y `PATCH /{admin,asistente,cliente}/citas/{id}/reprogramar`) exige el rol
+  del grupo con middleware (`role:admin`, `role:asistente`, `role:cliente`; no hay ruta en el grupo
+  del dentista) y el Gate `reprogramar-cita` (`app/Autorizacion/ReprogramarCita.php`): primero el
+  alcance de la 026 (personal fuera de alcance → 403; cita de otro paciente → 404) y después el
+  rol (el dentista no reprograma); el paciente busca además la cita entre las suyas (spec 028). No
+  hay Policies.
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
@@ -54,7 +59,7 @@ updated: 2026-09-28
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
 | `/asistente/*` | HTTP | sí, `role:asistente` | pacientes y expedientes sin filtro de alcance |
-| `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente` |
+| `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente`, salvo en cancelar (spec 026) y reprogramar (spec 028) |
 | phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
 | SSH del servidor de producción | red local | clave | solo desde la red local (`ufw`), sin contraseña ni root (spec 030) |
@@ -131,7 +136,7 @@ El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usar
 Evidencia: `routes/web.php:147`, `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; resto del grupo → spec 015)
+- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; reprogramar del paciente, `GET` y `PATCH /cliente/citas/{id}/reprogramar`, con `role:cliente`: spec 028; resto del grupo → spec 015)
 - RS2.b `PerfilController::update` no crea ficha de paciente para usuarios que no son cliente — estado: pendiente
 
 ### RS3 · Alta — Usuarios desactivados conservan su sesión (A07 Authentication Failures)

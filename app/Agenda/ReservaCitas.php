@@ -91,25 +91,38 @@ class ReservaCitas
         }
     }
 
-    private function reservarConBloqueo(array $cita): string
+    /**
+     * Bloquea la fila del dentista hasta el final de la transacción. Se llama dentro
+     * de una transacción ya abierta y antes de leer horario y citas: así las lecturas
+     * siguientes ven las citas que confirmó la reserva anterior.
+     *
+     * @throws CitaNoAgendable si el dentista ya no existe
+     */
+    public function bloquearDentista(string $id): void
     {
         // Entero propio, no entrada del usuario.
         $this->db->statement('SET SESSION innodb_lock_wait_timeout = '.(int) $this->esperaBloqueoSegundos);
 
-        // Primero el bloqueo del dentista: así las lecturas siguientes ven las
-        // citas que confirmó la reserva anterior.
-        $dentista = $this->db->table('personal')->where('id', $cita['dentista_id'])->lockForUpdate()->first(['id']);
+        $dentista = $this->db->table('personal')->where('id', $id)->lockForUpdate()->first(['id']);
 
         if ($dentista === null) {
             // El dentista dejó de existir entre la validación y la reserva.
             throw CitaNoAgendable::noDisponible();
         }
+    }
 
-        $inicio = Carbon::createFromFormat('Y-m-d H:i', $cita['fecha'].' '.$cita['hora'])->startOfMinute();
-        $fin = $inicio->copy()->addMinutes((int) $cita['duracion_min']);
-
+    /**
+     * Comprueba que el dentista puede atender de `$inicio` a `$fin`: día con horario,
+     * encaje en la franja y sin solape (CA2–CA7). Se llama dentro de una transacción
+     * ya abierta, después de `bloquearDentista`. Al reprogramar, la propia cita no cuenta
+     * como conflicto (`$excluirCitaId`, spec 028 D2).
+     *
+     * @throws CitaNoAgendable
+     */
+    public function comprobarHueco(string $dentistaId, Carbon $inicio, Carbon $fin, ?string $excluirCitaId = null): void
+    {
         $horario = $this->db->table('horarios_dentista')
-            ->where('personal_id', $cita['dentista_id'])
+            ->where('personal_id', $dentistaId)
             ->where('dia_semana', $inicio->isoWeekday())
             ->first();
 
@@ -117,14 +130,25 @@ class ReservaCitas
             throw CitaNoAgendable::sinHorario();
         }
 
-        $franjaInicio = Carbon::parse($cita['fecha'].' '.$horario->hora_inicio);
-        $franjaFin = Carbon::parse($cita['fecha'].' '.$horario->hora_fin);
+        $dia = $inicio->format('Y-m-d');
+        $franjaInicio = Carbon::parse($dia.' '.$horario->hora_inicio);
+        $franjaFin = Carbon::parse($dia.' '.$horario->hora_fin);
 
         if ($inicio->lt($franjaInicio) || $fin->gt($franjaFin)) {
             throw CitaNoAgendable::fueraDeFranja($franjaInicio, $franjaFin);
         }
 
-        $this->comprobarSolape($cita['dentista_id'], $inicio, $fin);
+        $this->comprobarSolape($dentistaId, $inicio, $fin, $excluirCitaId);
+    }
+
+    private function reservarConBloqueo(array $cita): string
+    {
+        $this->bloquearDentista($cita['dentista_id']);
+
+        $inicio = Carbon::createFromFormat('Y-m-d H:i', $cita['fecha'].' '.$cita['hora'])->startOfMinute();
+        $fin = $inicio->copy()->addMinutes((int) $cita['duracion_min']);
+
+        $this->comprobarHueco($cita['dentista_id'], $inicio, $fin);
 
         $id = (string) Str::uuid();
         $this->db->table('citas')->insert([
@@ -149,7 +173,7 @@ class ReservaCitas
      * Solape estricto con las citas del mismo día y dentista que siguen
      * ocupando el hueco: las citas seguidas no chocan (CA5).
      */
-    private function comprobarSolape(string $dentistaId, Carbon $inicio, Carbon $fin): void
+    private function comprobarSolape(string $dentistaId, Carbon $inicio, Carbon $fin, ?string $excluirCitaId = null): void
     {
         $citas = $this->db->table('citas')
             // Por el índice del dentista: el FOR UPDATE solo bloquea citas de este
@@ -157,6 +181,7 @@ class ReservaCitas
             ->forceIndex('idx_citas_dentista')
             ->where('dentista_id', $dentistaId)
             ->whereNotIn('estado', self::ESTADOS_LIBRES)
+            ->when($excluirCitaId !== null, fn ($consulta) => $consulta->where('id', '!=', $excluirCitaId))
             ->whereBetween('fecha_hora', [$inicio->copy()->startOfDay(), $fin])
             // Lectura con bloqueo: ve la última versión confirmada aunque la reserva
             // corra dentro de una transacción exterior con una vista de lectura previa.

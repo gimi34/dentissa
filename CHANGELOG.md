@@ -5,6 +5,37 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-11
+
+### Added
+- La administración y los asistentes (con las citas de sus dentistas) pueden reprogramar una cita
+  agendada o confirmada que aún no ha empezado: solo cambian la fecha y la hora, con la misma regla de
+  agenda que al agendar y sin que la propia cita cuente como conflicto (spec 028).
+- El paciente puede reprogramar sus citas desde su panel, su lista y el detalle si faltan 24 horas o
+  más (spec 028).
+- En la pantalla de reprogramar, la opción «No reagendar» cancela la cita definitivamente, con un
+  motivo opcional y una casilla para confirmar que no se puede deshacer (spec 028).
+- El historial de la cita muestra cada reprogramación con la fecha y hora anteriores y las nuevas,
+  quién la hizo y el motivo (spec 028).
+
+### Changed
+- El paciente solo puede cancelar una cita con 24 horas o más de antelación; antes podía hasta el
+  inicio. Con menos tiempo se le pide que llame a la clínica (spec 028).
+- Una cita confirmada que se reprograma vuelve a agendada (spec 028).
+- Si una cita no se puede mover porque ya empezó, está cerrada, su dentista ya no está activo o no
+  tiene duración, la pantalla lo explica y no ofrece el formulario (spec 028).
+
+### Security
+- Herramientas de desarrollo actualizadas sin avisos críticos ni altos de `npm audit` (`shell-quote`
+  1.11.0 y `source-map-js` 1.2.2). No llegan a producción, que no instala dependencias de npm. Se
+  adelanta de la spec 031, T004.
+
+### Changed — flujo AI-DD actualizado a 1.11.5
+- Solo cambia la versión del flujo: las novedades de 1.11.3–1.11.5 (opciones de diseño con idea
+  propia, rehacer opciones y afinar un eje) aplican a proyectos sin sistema de diseño aprobado; el
+  de Dentissa es extraído y está aprobado (1.2.0), así que no se tocan. Validador y plantillas sin
+  cambios.
+
 ## [0.5.0] - 2026-10-04
 
 ### Added

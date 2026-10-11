@@ -244,8 +244,8 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
      T042); después, desplegar un commit de la rama sin cambiar el túnel para comprobar
      `verificar.sh`, `aplicar-entorno.sh` y las imágenes refrescadas, y volver a `v0.5.0` (T040;
      /analyze A1).
-  2. **En `/release` (v0.6.0, minor), con aprobación:**
-     - `desplegar.sh v0.6.0`, que verifica por la red interna;
+  2. **En `/release` (v0.7.0, minor; era v0.6.0, que usó la 028), con aprobación:**
+     - `desplegar.sh v0.7.0`, que verifica por la red interna;
      - `verificar.sh` con la dirección pública;
      - recorrer las pantallas por la dirección pública;
      - vuelta de Google correcta y cancelada;

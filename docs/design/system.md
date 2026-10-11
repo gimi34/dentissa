@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.2.0
+version: 1.3.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [390, 1440]
 created: 2026-10-02
-updated: 2026-10-04
+updated: 2026-10-10
 ---
 
 # Sistema de diseño de Dentissa
@@ -121,6 +121,8 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - foco: `--focus-ring-width` (2px) y `--focus-ring-offset` (2px).
 - **Sombras:** solo en el acceso (botones y campos) y en el diálogo de servicios. La app interna no
   usa sombras en tarjetas.
+- **Hora del historial (spec 028):** `--timeline-time-width` (100px), el ancho que hoy lleva en línea
+  la hora del historial de la cita; lo usa `.formulario-accesible .timeline-time`.
 - **Campo de hora:** `--field-time-width` (110px). Recorta el texto "AM"/"PM" con el formato de
   12 h del navegador (medido, DS13).
 - **Toque mínimo: no definido.** Alturas medidas (DS6):
@@ -144,8 +146,11 @@ Recortes reales de las capturas en `capturas/componentes/` (vista en `system.htm
   (blanco con el logo de Google).
 - **Estados:** solo `:hover`. No hay foco propio (queda el del navegador), ni deshabilitado, ni
   carga (DS2, DS7).
-- **Peligro:** no existe un botón de peligro. Se hace en línea con `color: var(--red)` y
-  `background: var(--red-bg)`, como "Desactivar" en la ficha del personal.
+- **Peligro (spec 028):** `.btn-danger`, texto `var(--red)` sobre `var(--red-bg)` (6.13:1), borde
+  `var(--border-width)` `var(--red)` (7.07:1 sobre `--white`) y foco `outline: var(--focus-ring-width)
+  solid var(--focus-ring)` con `var(--focus-ring-offset)`. Para acciones irreversibles («Cancelar la
+  cita definitivamente») y el «Cancelar» del panel del paciente. Las pantallas anteriores siguen
+  haciéndolo en línea, como "Desactivar" en la ficha del personal (DS4).
 
 ### Campo de formulario
 - `.field`, `.field-label` y `.field-error` están en `public/css/citas.css`, que solo cargan 7
@@ -160,6 +165,45 @@ Recortes reales de las capturas en `capturas/componentes/` (vista en `system.htm
   `aria-invalid` solo en el horario.
 - Acceso: campos de 14px, de 40–42px de alto y radio 10px, con icono a la izquierda, foco en
   `--p300` y error en `--red`.
+
+### Formulario accesible (spec 028)
+`.formulario-accesible` es un contenedor que da a lo que lleva dentro valores que cumplen WCAG 2.1 AA
+sin cambiar el resto de la app (los `.field`, `.field-label` y `.btn-primary` globales no cumplen:
+DS1, DS2). Lo usan la pantalla «Reprogramar cita» y los bloques que la spec 028 toca en vistas
+existentes.
+- **Etiqueta** (`.field-label`): `var(--text)` (21:1 sobre `--white`, 19.59:1 sobre `--p50`).
+- **Campo** (`.field`): definido completo, sin depender de `citas.css`; familia heredada
+  (`font-family: inherit`), tamaño `--text-body`, espaciado y radio con tokens, borde
+  `var(--border-width)` `var(--border-control)` (3.93:1 sobre `--white`, 3.67:1 sobre `--p50`);
+  con foco, el mismo borde y sin sombra.
+- **Botón principal** (`.btn-primary`): blanco sobre `var(--p500)` (5.42:1).
+- **Casilla** (`.campo-casilla`): casilla y etiqueta en fila con `gap: var(--space-3)`; la casilla
+  mide `var(--space-6)` y usa `accent-color: var(--border-control)` (3.93:1 sobre `--white`); la
+  etiqueta es su objetivo de toque ampliado. La usa la confirmación de «No reagendar» (WCAG 3.3.4).
+- **Foco:** `:focus-visible` en campos, casillas, botones y enlaces con `--focus-ring` (7.00:1),
+  `--focus-ring-width` y `--focus-ring-offset`.
+- **Badge verde** («Completada»): `var(--text)` sobre `var(--green-bg)` (18.50:1) en lugar de
+  `--green` (2.98:1).
+- **Historial:** `.timeline-time` con `--timeline-time-width`, punto en `--p300` (decorativo: el
+  estado se lee en el texto), `.historial-estado-anterior` en `--text`, `.historial-estado-nuevo` en
+  `--p600` y `.historial-autor` en `--text` con `--text-small`. Las reglas globales `.timeline-*`
+  (panel del dentista) no cambian.
+- **Maquetación:** `.acciones-columna` (columna, `--space-3`), `.acciones-fila` (fila a la derecha,
+  `--space-1`), `.form-en-linea` (formulario en línea), `.aviso-plazo` (`--text-body` en `--text`),
+  `.historial-lista` (`--space-2` `--space-7`) e `.historial-vacio` (`--space-7`).
+
+Pares de contraste que comprueba el test de la spec 028:
+
+| Uso | Frente | Fondo | Contraste |
+|---|---|---|---|
+| Etiqueta, aviso, autor y estado anterior del historial | `--text` | `--white` / `--p50` | 21.00:1 / 19.59:1 |
+| Botón principal | `--white` | `--p500` | 5.42:1 |
+| `.btn-danger` | `--red` | `--red-bg` | 6.13:1 |
+| Errores del campo | `--red` | `--white` / `--p50` | 7.07:1 / 6.60:1 |
+| Estado nuevo del historial, `.btn-outline` | `--p600` | `--white` | 7.00:1 |
+| Badges | `--p600`/`--p100`, `--blue`/`--blue-bg`, `--amber`/`--amber-bg`, `--text`/`--green-bg`, `--red`/`--red-bg`, `--text-muted`/`--p50` | — | 6.05, 5.70, 5.87, 18.50, 6.13 y 19.59:1 |
+| Borde de campo y de `.btn-danger` (≥ 3:1) | `--border-control` / `--red` | `--white`, `--p50` | 3.93 y 3.67:1 / 7.07 y 6.60:1 |
+| Anillo de foco (≥ 3:1) | `--focus-ring` | `--white` / `--p50` | 7.00:1 / 6.54:1 |
 
 ### Día del horario (spec 027)
 - `.horario-dia`: fila de un día, con casilla, nombre, dos campos de hora y la duración.
@@ -242,8 +286,18 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Citas (agenda del personal) | `system.html#citas-index-admin-390` | `system.html#citas-index-admin-1440` | filtros, tabla, badges |
 | Ficha de la dentista con horario | `system.html#personal-show-dentista-390` | `system.html#personal-show-dentista-1440` | día del horario, lista de citas, tabla |
 | Panel del paciente | `system.html#cliente-dashboard-390` | `system.html#cliente-dashboard-1440` | banner, próxima cita, historial, accesos |
+| Reprogramar cita (personal) | `system.html#citas-reprogramar-admin-390` | `system.html#citas-reprogramar-admin-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
+| Reprogramar cita (paciente) | `system.html#citas-reprogramar-cliente-390` | `system.html#citas-reprogramar-cliente-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
 
-A 390 px, 52 de las 60 vistas se desbordan en horizontal: la página mide de 472 a 1157 px de ancho
+**Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
+tarjeta con el resumen de la cita (paciente o dentista, servicio, fecha, hora y badge de estado), el
+formulario de fecha, hora y motivo con «Guardar nueva fecha», y aparte la sección «No reagendar» con
+su motivo, una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (validada en el
+servidor, sin JS ni confirmación nativa) y `.btn-danger` «Cancelar la cita definitivamente», con el
+texto «No se puede deshacer». Si la cita ya no se puede mover, muestra el motivo y un enlace al detalle. Sus
+capturas a 390 y 1440 px son del 2026-10-10 (spec 028, T032), con `capturar.mjs` y solo esas dos vistas.
+
+A 390 px, 54 de las 62 vistas se desbordan en horizontal: la página mide de 472 a 1157 px de ancho
 (DS8). Solo el acceso, el registro, los errores, los reportes y la edición del paciente por la
 dentista no se desbordan.
 
@@ -252,8 +306,10 @@ dentista no se desbordan.
 Todas las vistas de la app (rutas, plantillas, diálogos y pasos sin URL propia), capturadas el
 2026-10-04 con Playwright 1.63.0 sobre una base de datos **solo de prueba**: el volcado ficticio
 anonimizado, una cuenta por rol `<rol>1@dentissa.test` y citas, un expediente y un horario de
-prueba. El guion es [capturar.mjs](capturar.mjs). Resultado: **60 de 65** vistas y estados
-capturados; los 5 restantes no son accesibles sin Google o son avisos transitorios.
+prueba. El guion es [capturar.mjs](capturar.mjs). Resultado: **62 de 67** vistas y estados
+capturados; los 5 restantes no son accesibles sin Google o son avisos transitorios. Las dos
+pantallas de reprogramar (spec 028) se capturaron el 2026-10-10 eligiéndolas en el guion, sin
+rehacer el resto de la galería.
 
 | Vista | Ruta / plantilla | Rol | Capturas | Estado |
 |---|---|---|---|---|
@@ -271,6 +327,7 @@ capturados; los 5 restantes no son accesibles sin Google o son avisos transitori
 | Citas | /admin/citas · citas/index | admin | capturas/citas-index-admin-390.png · capturas/citas-index-admin-1440.png | capturada |
 | Nueva cita | /admin/citas/crear · citas/create | admin | capturas/citas-create-admin-390.png · capturas/citas-create-admin-1440.png | capturada |
 | Detalle de cita | /admin/citas/{id} · citas/show | admin | capturas/citas-show-admin-390.png · capturas/citas-show-admin-1440.png | capturada |
+| Reprogramar cita (personal) | /admin/citas/{id}/reprogramar · citas/reprogramar | admin | capturas/citas-reprogramar-admin-390.png · capturas/citas-reprogramar-admin-1440.png | capturada |
 | Pacientes | /admin/pacientes · pacientes/index | admin | capturas/pacientes-index-admin-390.png · capturas/pacientes-index-admin-1440.png | capturada |
 | Nuevo paciente | /admin/pacientes/crear · pacientes/create | admin | capturas/pacientes-create-admin-390.png · capturas/pacientes-create-admin-1440.png | capturada |
 | Ficha del paciente | /admin/pacientes/{id} · pacientes/show | admin | capturas/pacientes-show-admin-390.png · capturas/pacientes-show-admin-1440.png | capturada |
@@ -313,6 +370,7 @@ capturados; los 5 restantes no son accesibles sin Google o son avisos transitori
 | Mis citas (próximas) | /cliente/citas · citas/cliente-index | cliente | capturas/citas-index-cliente-390.png · capturas/citas-index-cliente-1440.png | capturada |
 | Mis citas (pasadas) | /cliente/citas?filtro=pasadas · citas/cliente-index | cliente | capturas/citas-index-cliente-pasadas-390.png · capturas/citas-index-cliente-pasadas-1440.png | capturada |
 | Detalle de mi cita | /cliente/citas/{id} · citas/cliente-show | cliente | capturas/citas-show-cliente-390.png · capturas/citas-show-cliente-1440.png | capturada |
+| Reprogramar mi cita | /cliente/citas/{id}/reprogramar · citas/cliente-reprogramar | cliente | capturas/citas-reprogramar-cliente-390.png · capturas/citas-reprogramar-cliente-1440.png | capturada |
 | Agendar cita | /cliente/agendar · citas/cliente-agendar | cliente | capturas/cliente-agendar-390.png · capturas/cliente-agendar-1440.png | capturada |
 | Mi perfil | /cliente/perfil · cliente/perfil | cliente | capturas/cliente-perfil-390.png · capturas/cliente-perfil-1440.png | capturada |
 | Error 403 (por defecto de Laravel) | /admin con rol dentista · vista por defecto del framework | dentista | capturas/error-403-390.png · capturas/error-403-1440.png | capturada |
@@ -341,14 +399,14 @@ se corrige cuando una spec toca la pantalla o como objetivo del roadmap. Se conc
 
 | ID | Problema | Dónde (evidencia) | Corrección propuesta | Estado |
 |---|---|---|---|---|
-| DS1 | Texto con contraste < 4.5:1 (medido): botón principal 3.93:1, etiquetas y `th` en `--text-light` 3.51:1, verde de éxito 2.98:1, menú de la barra lateral 3.82:1, `.nav-label` 2.72:1, hover de "Cerrar sesión" (`--p600` sobre `#FF0000`) 1.75:1 | `public/css/app.css:15,19-20,63,107,117,171,210`, `citas.css:12`; capturas `admin-dashboard-1440`, `citas-index-admin-1440` | Oscurecer `--p400` del botón (o usar `--p500`), `--text-light` y `--green`; texto del menú en blanco puro; quitar `#FF0000` | pendiente |
-| DS2 | Foco e indicadores invisibles: borde de campo 1.31:1, foco `--p300` 2.23:1 con halo al 7%, `outline: none` en campos y sin `:focus-visible` en botones | `public/css/citas.css:20,29`, `app.css:194-219`, `auth.css:204-221` | Token `--color-focus` ≥ 3:1 y `:focus-visible` en botones, campos y enlaces | en curso: `--focus-ring` y `--border-control` existen; se aplican en el horario de la ficha del personal (spec 027) |
+| DS1 | Texto con contraste < 4.5:1 (medido): botón principal 3.93:1, etiquetas y `th` en `--text-light` 3.51:1, verde de éxito 2.98:1, menú de la barra lateral 3.82:1, `.nav-label` 2.72:1, hover de "Cerrar sesión" (`--p600` sobre `#FF0000`) 1.75:1 | `public/css/app.css:15,19-20,63,107,117,171,210`, `citas.css:12`; capturas `admin-dashboard-1440`, `citas-index-admin-1440` | Oscurecer `--p400` del botón (o usar `--p500`), `--text-light` y `--green`; texto del menú en blanco puro; quitar `#FF0000` | en curso: dentro de `.formulario-accesible` (pantalla de reprogramar y bloques que toca la spec 028) el botón principal va sobre `--p500`, las etiquetas en `--text` y el badge verde con texto `--text` |
+| DS2 | Foco e indicadores invisibles: borde de campo 1.31:1, foco `--p300` 2.23:1 con halo al 7%, `outline: none` en campos y sin `:focus-visible` en botones | `public/css/citas.css:20,29`, `app.css:194-219`, `auth.css:204-221` | Token `--color-focus` ≥ 3:1 y `:focus-visible` en botones, campos y enlaces | en curso: `--focus-ring` y `--border-control` existen; se aplican en el horario de la ficha del personal (spec 027) y dentro de `.formulario-accesible` (spec 028) |
 | DS3 | `--text-muted` vale lo mismo que `--text` (#000): no hay jerarquía de texto secundario (medido: todo el texto secundario sale en negro) | `public/css/app.css:13-14` | Definir un secundario que cumpla 4.5:1 | pendiente |
 | DS4 | Valores fijos: 861 `style=""` en las vistas, 20 tamaños de letra, escala de espaciado solo en las reglas de la 027; barra lateral `#C75078` y radios literales fuera de los tokens | `resources/views/**`, `public/css/app.css:63,171` | Tokens de espaciado y tipografía; migrar los estilos en línea al tocar cada pantalla | en curso: escala de espaciado, `--text-body`, `--text-small` y pesos (spec 027); filas y campos de la sección de horario de la ficha sin estilos en línea |
 | DS5 | Componentes duplicados o contradictorios: 11 bloques `<style>` dentro del contenido redefinen `.field` (borde 1.5px, radio 5px, 'DM Sans'), `citas.css` solo en 7 vistas, y `auth.css` redefine tokens (`--text-light: #000`) | `expedientes/create:139`, `pacientes/create:200`, `usuarios/index:208`…, `public/css/auth.css:8-26` | Una sola hoja de componentes cargada por el layout | en curso: `.field-hint` y `.field-hint-error` pasan a `app.css` (spec 027) |
 | DS6 | Objetivo de toque < 44px (medido): botón 31px, `.btn-sm` 22–27px, campo 34–38px, elemento del menú 35px | `public/css/app.css:194-219,353-356`, `citas.css:16-30`; medidas de las 104 vistas con menú | `min-height` con un token `--touch-min` | pendiente |
 | DS7 | Estados y semántica que faltan: sin deshabilitado ni carga, sin páginas de error propias (403 y 404 de Laravel en inglés), mensajes flash sin `aria-live`, diálogos sin `role="dialog"` ni manejo del foco, 5 `confirm()` nativos, títulos de sección como `span` | `layouts/app.blade.php:207-253`, `servicios/index:121-193`, `usuarios/index:215-299`; capturas `error-403`, `error-404` | Componentes de aviso y diálogo accesibles, estados de carga y páginas de error con la marca | pendiente |
-| DS8 | La app no se adapta a móvil (medido): a 390 px, 52 de 60 vistas se desbordan en horizontal (472–1157px de ancho), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | pendiente |
+| DS8 | La app no se adapta a móvil (medido): a 390 px, 54 de 62 vistas se desbordan en horizontal (472–1157px de ancho; las dos de reprogramar, 498px por la barra lateral), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | pendiente |
 | DS9 | Tipografía: Roboto se carga desde Google Fonts sin aprobación en `security.md`; 'DM Sans' y 'DM Mono' se nombran sin cargarse (medido: los campos de usuarios caen a la sans-serif genérica); el peso 300 se carga y no se usa | `layouts/app.blade.php:7`, `usuarios/create:127`, `usuarios/index:210`, `servicios/index:37`, `expedientes/create:110` | Autoalojar Roboto o aprobar el servicio; quitar las familias no cargadas y los pesos sin uso | pendiente |
 | DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:374` | Bloque `prefers-reduced-motion: reduce` | pendiente |
 | DS11 | Restos sin uso: Tailwind 4, Vite y `welcome.blade.php` (ninguna ruta los sirve); clases sin uso (`.logo-icon`, `.appt-card`, `.alert-item`…, y en `auth.css` `.brand-logo`, `.features`…); tokens `--space-7` y `--space-8` sin uso | `package.json`, `vite.config.js`, `resources/views/welcome.blade.php`, `public/css/app.css:37-38,80-94,379,409-417`, `auth.css` | Retirarlos o decidir migrar a ellos | pendiente |
@@ -374,3 +432,5 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-04 | diseño | ¿Con qué herramienta se capturan? | Playwright 1.63.0 en un contenedor Docker temporal (`mcr.microsoft.com/playwright:v1.63.0-noble`); en el repo solo queda el guion `capturar.mjs` | usuario |
 | 2026-10-04 | diseño | ¿Se aprueba el sistema re-extraído (1.2.0)? | Aprobado tal como está; la deuda DS1–DS15 sigue pendiente (DS12–DS15 fuera del objetivo 6, al tocar cada pantalla) | usuario |
 | 2026-10-04 | implícita | Una vista que responde 5xx con la depuración activa muestra detalles internos | El guion no guarda capturas de respuestas 5xx | `docs/constitution.md` P5 |
+| 2026-10-08 | diseño | ¿Qué incorpora el sistema para reprogramar citas (spec 028)? | Versión 1.3.0: botón de peligro `.btn-danger`; componente acotado «Formulario accesible» (`.formulario-accesible`) que cumple AA donde se usa sin cambiar el resto de la app, con el badge verde en `--text`, reglas del historial acotadas y clases de maquetación; token `--timeline-time-width`; pantalla «Reprogramar cita» (capturas en T032); sin `confirm()` nuevo | usuario (plan 028, D11, D12; /analyze A1, A31, A37, A48, A49) |
+| 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |

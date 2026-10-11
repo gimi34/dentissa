@@ -54,6 +54,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/citas', [CitasController::class, 'store'])->name('citas.store');
     Route::get('/citas/{id}', [CitasController::class, 'show'])->name('citas.show');
     Route::patch('/citas/{id}/estado', [CitasController::class, 'updateEstado'])->name('citas.estado');
+    // Reprogramar la cita (spec 028); el dentista no tiene estas rutas.
+    Route::get('/citas/{id}/reprogramar', [CitasController::class, 'reprogramarForm'])->name('citas.reprogramar');
+    Route::patch('/citas/{id}/reprogramar', [CitasController::class, 'reprogramar'])->name('citas.reprogramar.update');
     Route::patch('/citas/{id}/notas', [CitasController::class, 'updateNotas'])->name('citas.notas');
     Route::delete('/citas/{id}', [CitasController::class, 'destroy'])->name('citas.destroy');
 
@@ -133,6 +136,9 @@ Route::middleware(['auth', 'role:asistente'])->prefix('asistente')->name('asiste
     Route::post('/citas', [CitasController::class, 'store'])->name('citas.store');
     Route::get('/citas/{id}', [CitasController::class, 'show'])->name('citas.show');
     Route::patch('/citas/{id}/estado', [CitasController::class, 'updateEstado'])->name('citas.estado');
+    // Reprogramar la cita (spec 028); el dentista no tiene estas rutas.
+    Route::get('/citas/{id}/reprogramar', [CitasController::class, 'reprogramarForm'])->name('citas.reprogramar');
+    Route::patch('/citas/{id}/reprogramar', [CitasController::class, 'reprogramar'])->name('citas.reprogramar.update');
 
     Route::get('/pacientes', [PacientesController::class, 'index'])->name('pacientes');
     Route::get('/pacientes/crear', [PacientesController::class, 'create'])->name('pacientes.create');
@@ -149,6 +155,8 @@ Route::middleware('auth')->prefix('cliente')->name('cliente.')->group(function (
     Route::get('/citas', [ClienteCitasController::class, 'index'])->name('citas');
     Route::get('/citas/{id}', [ClienteCitasController::class, 'show'])->name('citas.show');
     Route::patch('/citas/{id}/cancelar', [ClienteCitasController::class, 'cancelar'])->middleware('role:cliente')->name('citas.cancelar');
+    Route::get('/citas/{id}/reprogramar', [ClienteCitasController::class, 'reprogramarForm'])->middleware('role:cliente')->name('citas.reprogramar');
+    Route::patch('/citas/{id}/reprogramar', [ClienteCitasController::class, 'reprogramar'])->middleware('role:cliente')->name('citas.reprogramar.update');
 
     Route::get('/agendar', [ClienteCitasController::class, 'agendarForm'])->name('agendar');
     Route::post('/agendar', [ClienteCitasController::class, 'agendarStore'])->name('agendar.store');

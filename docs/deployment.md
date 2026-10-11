@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-04
+updated: 2026-10-10
 ---
 
 # Despliegue de Dentissa
@@ -102,6 +102,12 @@ fuera del repositorio y del chat).
   el código anterior, los cambios de estado quedarían sin historial. Rollback:
   `php artisan migrate:rollback --step=1` (recrea el trigger) y volver a desplegar la versión
   anterior.
+- Spec 028: la migración `2026_10_07_000000_reprogramacion_en_historial_citas` solo añade a
+  `historial_citas` `fecha_hora_anterior` y `fecha_hora_nueva` (`DATETIME NULL`) y va en el mismo
+  paso que el código. El código anterior ignora las columnas, así que la vuelta atrás
+  (`deploy/volver.sh <tag anterior>`) no necesita revertirla ni restaurar la copia; las entradas de
+  reprogramación siguen en la tabla y la versión anterior las muestra como un cambio de estado sin
+  fechas.
 - Base de tests: `database/testing/bootstrap-test-db.sh` recarga el volcado, que trae el trigger, y
   no ejecuta migraciones. Después hay que ejecutar
   `docker compose exec -e DB_DATABASE=dentissa_test app php artisan migrate --force`; si no,
