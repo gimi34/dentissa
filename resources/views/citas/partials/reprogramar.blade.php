@@ -87,7 +87,7 @@
                     <h2 class="section-title" id="no-reagendar-titulo">No reagendar</h2>
                 </div>
                 <p class="aviso-plazo">Si la cita no se va a reagendar, puedes cancelarla definitivamente. No se puede deshacer.</p>
-                <form method="POST" action="{{ $rutaCancelar }}">
+                <form method="POST" action="{{ $rutaCancelar }}" novalidate>
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="formulario" value="no-reagendar">
