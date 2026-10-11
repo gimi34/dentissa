@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Usuario;
+use Carbon\Carbon;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -24,6 +25,13 @@ class MovilPacienteTest extends TestCase
     private const MOVIL = ['@media (max-width: 899px)'];
 
     private const CON_MOVIMIENTO = ['@media (max-width: 899px)', '@media (prefers-reduced-motion: no-preference)'];
+
+    /** Tokens que añade la spec 033 (system.md 1.4.0, T001). */
+    private const TOKENS_033 = [
+        '--touch-min' => '44px', '--overlay' => 'rgba(0, 0, 0, 0.45)', '--menu-movil-w' => '300px',
+        '--duration-fast' => '0.15s', '--topbar-h' => '60px', '--border-width-strong' => '2px',
+        '--text-meta' => '13px', '--logo-max-w' => '160px', '--icon-md' => '18px', '--text-marca' => '16px',
+    ];
 
     /** Enlaces del menú por rol, tal como están hoy (la 020 añadirá «Auditoría» al de admin). */
     private const SECCIONES = [
@@ -357,6 +365,112 @@ class MovilPacienteTest extends TestCase
         }
     }
 
+    public function test_los_bloques_tocados_no_tienen_estilos_en_linea(): void
+    {
+        $cita = $this->citaFuturaDelPaciente();
+
+        foreach (['/cliente/citas' => 'Próximas', '/cliente/citas?filtro=pasadas' => 'Pasadas'] as $url => $activa) {
+            $xpath = $this->xpath($this->actingAs($this->paciente1)->get($url)->assertOk()->getContent());
+            $pestanas = $xpath->query("//*[@id='pestanas-citas']");
+            $this->assertSame(1, $pestanas->length, "{$url}: bloque #pestanas-citas.");
+            $this->assertStringContainsString('pestanas-citas', $pestanas->item(0)->getAttribute('class'), "{$url}: usa .pestanas-citas.");
+            $this->assertSame(0, $xpath->query("//*[@id='pestanas-citas']/descendant-or-self::*[@style]")->length, "{$url}: pestañas sin style=.");
+            $actuales = $xpath->query("//*[@id='pestanas-citas']//a[@aria-current='page']");
+            $this->assertSame(1, $actuales->length, "{$url}: una sola pestaña actual.");
+            $this->assertSame($activa, trim($actuales->item(0)->textContent), "{$url}: la actual es «{$activa}».");
+            $this->assertStringContainsString('activa', $actuales->item(0)->getAttribute('class'), "{$url}: la actual lleva .activa.");
+            $this->assertSame(1, $xpath->query("//*[@id='pestanas-citas']//a[contains(concat(' ', normalize-space(@class), ' '), ' activa ')]")->length, "{$url}: una sola .activa.");
+        }
+
+        foreach (["/cliente/citas/{$cita}", '/cliente/agendar'] as $url) {
+            $xpath = $this->xpath($this->actingAs($this->paciente1)->get($url)->assertOk()->getContent());
+            $migas = $xpath->query("//*[@id='migas']");
+            $this->assertSame(1, $migas->length, "{$url}: bloque #migas.");
+            $this->assertStringContainsString('migas', $migas->item(0)->getAttribute('class'), "{$url}: usa .migas.");
+            $this->assertSame(0, $xpath->query("//*[@id='migas']/descendant-or-self::*[@style]")->length, "{$url}: migas sin style=.");
+            $this->assertSame(1, $xpath->query("//*[@id='migas']//*[contains(@class,'migas-actual')]")->length, "{$url}: página actual en .migas-actual.");
+        }
+    }
+
+    public function test_las_reglas_nuevas_de_app_css_solo_usan_tokens(): void
+    {
+        // Control positivo de literales() sobre un cuerpo de ejemplo.
+        $this->assertCount(2, $this->literales('margin-bottom: 20px; color: #000;'));
+
+        $reglas = [];
+        foreach ($this->analizarCss($this->bloque033()) as [$selector, $cuerpo]) {
+            $this->assertSame([], $this->literales($cuerpo), "{$selector}: solo tokens.");
+            $reglas[$selector] = $this->normalizar($cuerpo);
+        }
+
+        // Cada clase reproduce todas las declaraciones de su style="" de hoy (plan, «Bloques tocados»; A27).
+        $esperadas = [
+            '.sidebar-logo img' => ['width: 100%', 'max-width: var(--logo-max-w)', 'object-fit: contain', 'display: block', 'margin: 0 auto', 'mix-blend-mode: screen'],
+            '.user-card-texto' => ['min-width: 0'],
+            '.pestanas-citas' => ['display: flex', 'gap: var(--space-2)', 'margin-bottom: var(--space-7)', 'border-bottom: var(--border-width) solid var(--border)'],
+            '.pestanas-citas a' => ['padding: var(--space-4) var(--space-1)', 'font-size: var(--text-body)', 'font-weight: var(--weight-strong)', 'text-decoration: none', 'color: var(--text-muted)', 'border-bottom: var(--border-width-strong) solid transparent'],
+            '.pestanas-citas a:first-child' => ['margin-right: var(--space-7)'],
+            '.pestanas-citas a.activa' => ['color: var(--p500)', 'border-bottom-color: var(--p400)'],
+            '.migas' => ['display: flex', 'align-items: center', 'gap: var(--space-3)', 'margin-bottom: var(--space-7)', 'font-size: var(--text-meta)', 'color: var(--text-muted)'],
+            '.migas a' => ['color: var(--text-muted)', 'text-decoration: none'],
+            '.migas-actual' => ['color: var(--text)'],
+        ];
+        foreach ($esperadas as $selector => $declaraciones) {
+            $this->assertArrayHasKey($selector, $reglas, "Falta {$selector} en el bloque /* Spec 033 */ de app.css.");
+            $obtenidas = array_map('trim', array_filter(explode(';', $reglas[$selector])));
+            sort($obtenidas);
+            sort($declaraciones);
+            $this->assertSame($declaraciones, $obtenidas, "{$selector}: exactamente las declaraciones de hoy.");
+        }
+    }
+
+    public function test_los_colores_del_bloque_033_cumplen_aa(): void
+    {
+        $tokens = $this->tokensDeColor();
+        $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens['--text-muted'], $tokens['--bg']), 'Pestaña y migas sobre el fondo.');
+        $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens['--p500'], $tokens['--bg']), 'Pestaña activa sobre el fondo.');
+        $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--p400'], $tokens['--bg']), 'Indicador de la pestaña activa.');
+
+        // La pestaña activa se distingue por su borde, no solo por el color (A32).
+        $reglas = [];
+        foreach ($this->analizarCss($this->bloque033()) as [$selector, $cuerpo]) {
+            $reglas[$selector] = $this->normalizar($cuerpo);
+        }
+        $this->assertStringContainsString('border-bottom: var(--border-width-strong) solid transparent', $reglas['.pestanas-citas a'] ?? '');
+        $this->assertStringContainsString('border-bottom-color: var(--p400)', $reglas['.pestanas-citas a.activa'] ?? '');
+    }
+
+    public function test_los_tokens_y_anchos_coinciden_con_el_sistema(): void
+    {
+        $sistema = file_get_contents(base_path('docs/design/system.md'));
+        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
+
+        foreach (self::TOKENS_033 as $token => $valor) {
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'`[^\n]{0,8}'.preg_quote($valor, '/').'/', $sistema, "system.md documenta {$token} = {$valor}.");
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $root[1] ?? '', "app.css define {$token}: {$valor}.");
+        }
+
+        $this->assertMatchesRegularExpression('/^widths: \[320, 390, 1440\]/m', $sistema, 'widths de system.md.');
+        $this->assertMatchesRegularExpression('/^\s+widths: \[320, 390, 1440\]/m', file_get_contents(base_path('.ai/project.yaml')), 'design.widths de project.yaml.');
+    }
+
+    /** Caracterización: los campos ya abren el selector o teclado del móvil que les corresponde (CA5). */
+    public function test_los_campos_conservan_su_tipo(): void
+    {
+        $cita = $this->citaFuturaDelPaciente();
+        $campos = [
+            '/cliente/agendar' => ['fecha' => 'date', 'hora' => 'time'],
+            "/cliente/citas/{$cita}/reprogramar" => ['fecha' => 'date', 'hora' => 'time'],
+            '/cliente/perfil' => ['telefono' => 'tel', 'email' => 'email', 'fecha_nacimiento' => 'date'],
+        ];
+        foreach ($campos as $url => $tipos) {
+            $xpath = $this->xpath($this->actingAs($this->paciente1)->get($url)->assertOk()->getContent());
+            foreach ($tipos as $nombre => $tipo) {
+                $this->assertSame(1, $xpath->query("//input[@name='{$nombre}'][@type='{$tipo}']")->length, "{$url}: {$nombre} es type={$tipo}.");
+            }
+        }
+    }
+
     /** @return array<string, Usuario> */
     private function usuarios(): array
     {
@@ -399,6 +513,24 @@ class MovilPacienteTest extends TestCase
         preg_match_all('/(?<![\w-])\d+(\.\d+)?m?s\b/', $cuerpo, $m);
 
         return $m[0];
+    }
+
+    /** Bloque `/* Spec 033 *\/` de app.css, del comentario al final del archivo. */
+    private function bloque033(): string
+    {
+        $css = file_get_contents(public_path('css/app.css'));
+        $inicio = strpos($css, '/* Spec 033');
+        $this->assertNotFalse($inicio, 'app.css debe tener el bloque /* Spec 033 */.');
+
+        return substr($css, $inicio);
+    }
+
+    /** Cita agendada de P1 que empieza dentro de más de 24 h, con el reloj fijado. */
+    private function citaFuturaDelPaciente(): string
+    {
+        $this->travelTo(Carbon::parse('2026-10-05 16:00:00', 'UTC'));
+
+        return $this->cita($this->d1, $this->p1, 'agendada', '2026-10-07 10:00');
     }
 
     private function xpath(string $html): DOMXPath
