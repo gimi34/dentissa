@@ -16,7 +16,7 @@ constitution_version: 1.2.1
 workflow:
   enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
   legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md
-skills_version: 1.11.2         # versión del paquete de skills (upgrade desde 1.11.0 el 2026-10-04)
+skills_version: 1.11.5         # versión del paquete de skills (upgrade desde 1.11.2 el 2026-10-09)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
   platform: servidor propio (Ubuntu Server 24.04) con Docker Compose y Cloudflare Tunnel (ADR 0005, spec 030)

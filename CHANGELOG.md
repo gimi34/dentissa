@@ -5,6 +5,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.11.5
+- Solo cambia la versión del flujo: las novedades de 1.11.3–1.11.5 (opciones de diseño con idea
+  propia, rehacer opciones y afinar un eje) aplican a proyectos sin sistema de diseño aprobado; el
+  de Dentissa es extraído y está aprobado (1.2.0), así que no se tocan. Validador y plantillas sin
+  cambios.
+
 ## [0.5.0] - 2026-10-04
 
 ### Added
