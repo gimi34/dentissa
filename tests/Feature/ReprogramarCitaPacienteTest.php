@@ -155,6 +155,24 @@ class ReprogramarCitaPacienteTest extends TestCase
         $this->assertStringContainsString('Ver detalles', $fuera);
     }
 
+    public function test_con_el_dentista_inactivo_el_paciente_solo_puede_cancelar(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);
+        DB::table('usuarios')->where('id', $this->dentista1->id)->update(['activo' => 0]);
+
+        foreach (['/cliente/citas' => "acciones-{$cita}", "/cliente/citas/{$cita}" => 'acciones-cita', '/cliente' => 'acciones-proxima'] as $url => $bloque) {
+            $acciones = $this->acciones($url, $bloque);
+            $this->assertStringNotContainsString("/cliente/citas/{$cita}/reprogramar", $acciones, "{$url}: sin «Reprogramar».");
+            $this->assertStringContainsString("/cliente/citas/{$cita}/cancelar", $acciones, "{$url}: «Cancelar» sigue.");
+        }
+
+        $html = $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}/reprogramar")
+            ->assertOk()
+            ->assertSee(self::NO_REPROGRAMABLE)
+            ->getContent();
+        $this->assertStringNotContainsString('name="fecha"', $html);
+    }
+
     public function test_el_paciente_ve_el_motivo_si_su_cita_no_se_puede_mover(): void
     {
         $cita = $this->cita($this->d1, $this->p1, 'agendada', self::CITA);

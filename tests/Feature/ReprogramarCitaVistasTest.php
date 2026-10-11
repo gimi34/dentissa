@@ -31,6 +31,10 @@ class ReprogramarCitaVistasTest extends TestCase
 
     private const CONFIRMAR = 'Marca la casilla para confirmar que quieres cancelar la cita.';
 
+    private const DENTISTA_INACTIVO = 'El dentista de esta cita ya no está activo y no se puede reprogramar. Cancélala o agenda una cita nueva con otro dentista.';
+
+    private const SIN_DURACION = 'Esta cita no tiene una duración válida y no se puede reprogramar. Cancélala o agenda una cita nueva.';
+
     /** Selectores cuyas reglas son nuevas en la 028 (A49): todo lo demás de app.css es previo. */
     private const AMBITO_NUEVO = '/\.formulario-accesible|\.btn-danger/';
 
@@ -68,6 +72,30 @@ class ReprogramarCitaVistasTest extends TestCase
                     $this->bloque($usuario, "/{$grupo}/citas/{$cita}", 'acciones'),
                     "{$grupo}, {$caso}: sin «Reprogramar».",
                 );
+            }
+        }
+    }
+
+    public function test_sin_dentista_activo_o_sin_duracion_no_se_ofrece_reprogramar(): void
+    {
+        $casos = [
+            'dentista inactivo' => [self::DENTISTA_INACTIVO, fn () => DB::table('usuarios')->where('id', $this->dentista1->id)->update(['activo' => 0])],
+            'sin duración' => [self::SIN_DURACION, fn (string $cita) => DB::table('citas')->where('id', $cita)->update(['duracion_min' => 0])],
+        ];
+
+        foreach ($casos as $caso => [$mensaje, $preparar]) {
+            DB::table('usuarios')->where('id', $this->dentista1->id)->update(['activo' => 1]);
+            $cita = $this->cita($this->d1, $this->p1, 'agendada', self::FUTURA);
+            $preparar($cita);
+
+            foreach (['admin' => $this->admin, 'asistente' => $this->asistente] as $grupo => $usuario) {
+                $acciones = $this->bloque($usuario, "/{$grupo}/citas/{$cita}", 'acciones');
+                $this->assertStringNotContainsString("/citas/{$cita}/reprogramar", $acciones, "{$caso}, {$grupo}: sin «Reprogramar».");
+
+                $html = $this->actingAs($usuario)->get("/{$grupo}/citas/{$cita}/reprogramar")->assertOk()->getContent();
+                $this->assertStringContainsString(e($mensaje), $html, "{$caso}, {$grupo}: explica el motivo.");
+                $this->assertStringNotContainsString('name="fecha"', $html);
+                $this->assertStringNotContainsString('id="no-reagendar"', $html);
             }
         }
     }

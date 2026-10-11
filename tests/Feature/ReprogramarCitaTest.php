@@ -32,7 +32,9 @@ class ReprogramarCitaTest extends TestCase
 
     private const YA_EMPEZO = 'Esta cita ya empezó y no se puede reprogramar.';
 
-    private const DURACION_INVALIDA = 'La duración del servicio no es válida.';
+    private const DENTISTA_INACTIVO = 'El dentista de esta cita ya no está activo y no se puede reprogramar. Cancélala o agenda una cita nueva con otro dentista.';
+
+    private const SIN_DURACION = 'Esta cita no tiene una duración válida y no se puede reprogramar. Cancélala o agenda una cita nueva.';
 
     protected function setUp(): void
     {
@@ -146,9 +148,12 @@ class ReprogramarCitaTest extends TestCase
         $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
         DB::table('usuarios')->where('id', $this->dentista1->id)->update(['activo' => 0]);
 
-        $this->reprogramar($this->admin, $cita, '2026-10-07', '11:00')->assertStatus(302);
+        // R19: el motivo real, como aviso, y no un error de la hora que invita a probar otra.
+        $this->reprogramar($this->admin, $cita, '2026-10-07', '11:00')
+            ->assertStatus(302)
+            ->assertSessionHas('error', self::DENTISTA_INACTIVO);
 
-        $this->assertSame(self::NO_DISPONIBLE, $this->errorDe('hora'));
+        $this->assertSame('', $this->errorDe('hora'));
         $this->assertSame(self::MANANA, $this->fechaHoraDe($cita));
         $this->assertCount(0, $this->entradasDeHistorial($cita));
     }
@@ -171,9 +176,11 @@ class ReprogramarCitaTest extends TestCase
         $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
         DB::table('citas')->where('id', $cita)->update(['duracion_min' => 0]);
 
-        $this->reprogramar($this->admin, $cita, '2026-10-07', '11:00')->assertStatus(302);
+        $this->reprogramar($this->admin, $cita, '2026-10-07', '11:00')
+            ->assertStatus(302)
+            ->assertSessionHas('error', self::SIN_DURACION);
 
-        $this->assertSame(self::DURACION_INVALIDA, $this->errorDe('hora'));
+        $this->assertSame('', $this->errorDe('hora'));
         $this->assertSame(self::MANANA, $this->fechaHoraDe($cita));
         $this->assertCount(0, $this->entradasDeHistorial($cita));
     }
