@@ -342,7 +342,8 @@ class ReprogramarCitaVistasTest extends TestCase
     public function test_los_controles_tienen_foco_visible(): void
     {
         foreach (['.formulario-accesible .field:focus-visible', '.formulario-accesible .btn:focus-visible',
-            '.formulario-accesible a:focus-visible', '.btn-danger:focus-visible'] as $selector) {
+            '.formulario-accesible a:focus-visible', '.btn-danger:focus-visible',
+            '.formulario-accesible .campo-casilla input:focus-visible'] as $selector) {
             $this->assertMatchesRegularExpression('/outline\s*:[^;]*var\(--focus-ring\)/', $this->declaraciones($selector), "{$selector} con --focus-ring.");
         }
     }
@@ -414,6 +415,26 @@ class ReprogramarCitaVistasTest extends TestCase
         $acciones = (string) $this->seccion($html, 'acciones-proxima');
         $this->assertSinEstilosEnLinea($acciones);
         $this->assertMatchesRegularExpression('/<button[^>]*class="[^"]*btn-danger/', $acciones, '«Cancelar» con .btn-danger.');
+
+        // R21 (P9, deuda corregida al tocar el bloque): título como encabezado y la fila del badge
+        // y las acciones sin estilos en línea.
+        $xpath = new DOMXPath($this->dom($html));
+        $this->assertSame(1, $xpath->query("//h2[contains(@class,'section-title')][normalize-space()='Tu próxima cita']")->length,
+            '«Tu próxima cita» es un encabezado.');
+        $fila = $xpath->query("//*[@id='acciones-proxima']/ancestor::div[.//*[contains(@class,'badge')]][1]")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $fila, 'Falta la fila del badge y las acciones.');
+        $this->assertFalse($fila->hasAttribute('style'), 'La fila del badge y las acciones no lleva style=.');
+    }
+
+    public function test_no_reagendar_valida_en_el_servidor(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+
+        $html = $this->actingAs($this->admin)->get("/admin/citas/{$cita}/reprogramar")->assertOk()->getContent();
+
+        // R22: sin la validación nativa del navegador, el error en español de la casilla llega a verse.
+        $this->assertSame(1, (new DOMXPath($this->dom($html)))->query("//*[@id='no-reagendar']//form[@novalidate]")->length,
+            'El formulario de «No reagendar» lleva novalidate.');
     }
 
     public function test_lo_nuevo_solo_usa_el_sistema_en_la_lista_del_paciente(): void
