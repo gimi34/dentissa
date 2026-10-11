@@ -1,6 +1,6 @@
 ---
 spec: 033-movil-paciente
-status: draft
+status: approved
 constitution_version: 1.2.1
 created: 2026-10-11
 ---
