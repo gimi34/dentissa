@@ -313,6 +313,7 @@ Decisiones del usuario del 2026-10-11 en `/review 028 --rerun`: corregir R19, R2
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
   - No hay staging (030): la verificación de Observabilidad se hace en producción en T097.
+  - nota: /release 028 (2026-10-11): versión v0.6.0 (minor), decisión del usuario; la 031 pasa a v0.7.0. Sin staging (030): T095 no aplica y las comprobaciones van en T097. Integración: `main` fusionado en la rama (`54a40a3`, AI-DD 1.11.5; `d5dfed4`, PR #21 con el arreglo de npm adelantado de 031 T004, decisión del usuario para cumplir R8); el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después, tag anotado `v0.6.0` sobre el merge commit, con confirmación. Puerta de seguridad: `composer audit --locked` sin avisos, `npm audit --audit-level=high` 0 vulnerabilidades, `trivy fs --severity HIGH,CRITICAL` sin hallazgos; `trivy image` dentro de EX2 (vence 2026-10-31). Migración: solo `2026_10_07_000000_reprogramacion_en_historial_citas` (T003), *expand*: dos columnas que admiten nulo en `historial_citas`, compatibles con el código de v0.5.0; la vuelta atrás no necesita deshacerla.
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - Reprogramar una cita ficticia como administración y comprobar en su detalle la entrada «Reprogramada del … al …»; devolverla a su hora y comprobar la segunda entrada.
