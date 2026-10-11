@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.3.0
+version: 1.4.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
-widths: [390, 1440]
+widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-10-10
+updated: 2026-10-11
 ---
 
 # Sistema de diseño de Dentissa
@@ -63,6 +63,7 @@ que usa `system.html`.
 | `--green` / `--green-bg` | `#1D9E75` / `#E1F5EE` | `--color-success` | Badge "Completada", flash de éxito, cifra "Completadas" | 2.98:1 sobre --green-bg · 3.39:1 sobre --white (no cumple, DS1) |
 | `--amber` / `--amber-bg` | `#854F0B` / `#FAEEDA` | `--color-warning` | Badge "En curso", avisos | 5.87:1 sobre --amber-bg |
 | `--blue` / `--blue-bg` | `#185FA5` / `#E6F1FB` | `--color-info` | Badge "Confirmada" | 5.70:1 sobre --blue-bg |
+| `--overlay` | `rgba(0, 0, 0, 0.45)` | `--color-overlay` | Velo bajo el menú abierto en el móvil (spec 033) | — (no lleva texto) |
 | (literal) `#C75078` | `#C75078` | `--color-sidebar` | Barra lateral, medida en las 104 capturas con menú; no es token (DS4) | blanco 4.33:1 · menú en blanco al 90% 3.82:1 (no cumple, DS1) · `.nav-label` en blanco al 65% 2.72:1 (no cumple, DS1) |
 
 Contraste calculado con la fórmula de luminancia relativa de WCAG 2.x. Umbrales: ≥ 4.5:1 en texto
@@ -81,7 +82,8 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
 
-Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px). **Son tamaños** y
+Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
+`--text-meta` (13px, migas de pan) y `--text-marca` (16px, marca de texto del menú del móvil). **Son tamaños** y
 solo van en `font-size`. Los colores `--text`, `--text-muted` y `--text-light` comparten el
 prefijo, pero son colores. Los demás tamaños no tienen token (DS4): hay 17 en `public/css` y 20 si
 se cuentan las vistas.
@@ -125,7 +127,19 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   la hora del historial de la cita; lo usa `.formulario-accesible .timeline-time`.
 - **Campo de hora:** `--field-time-width` (110px). Recorta el texto "AM"/"PM" con el formato de
   12 h del navegador (medido, DS13).
-- **Toque mínimo: no definido.** Alturas medidas (DS6):
+- **Spec 033 (móvil):**
+  - `--touch-min` (44px): zona de toque mínima, aplicada por debajo de 900 px;
+  - `--menu-movil-w` (300px): ancho del panel del menú en el móvil, como mucho el 85 % de la pantalla;
+  - `--topbar-h` (60px): alto de la barra superior, el mismo que hoy;
+  - `--border-width-strong` (2px): indicador de la pestaña activa y de la sección actual del menú;
+  - `--logo-max-w` (160px): ancho máximo del logo de la barra lateral;
+  - `--icon-md` (18px): icono de los botones del menú del móvil.
+- **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
+  queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
+  repite: deduce el modo de si se muestra el botón «Menú».
+- **`z-index` del menú del móvil:** 100 (velo) y 110 (panel), por encima de la barra superior (50).
+  No son color, tipografía, espaciado, radio, sombra ni duración, así que quedan fuera de P9.
+- **Toque mínimo en el escritorio: sin aplicar** (D8 de la 033). Alturas medidas (DS6):
   - botón ≈ 31px;
   - `.btn-sm` 22–27px;
   - campo 34–38px;
@@ -218,6 +232,43 @@ Pares de contraste que comprueba el test de la spec 028:
 - el badge de estado;
 - el botón "Ver cita" (`.btn btn-outline btn-sm`).
 
+### Menú del móvil (spec 033)
+Opción A de la spec 033 ([maqueta](../specs/033-movil-paciente/design/opcion-a.html)). Por debajo de
+900 px, la barra lateral se convierte en un panel que se despliega sobre la página:
+- **Botón «Menú»** (`.menu-btn`), en la barra superior antes del título, con icono de `--icon-md` y el
+  texto «Menú». `aria-expanded` y `aria-controls="menu-principal"`. Aspecto de `.btn-outline`, pero con
+  borde `--border-control` (≥ 3:1) en lugar de `--p200` (1,6:1).
+- **Panel** (`<aside id="menu-principal" aria-label="Menú">`): blanco, de `--menu-movil-w` (como mucho
+  85 % del ancho), alto `100dvh` y desplazable. Arriba, la marca de texto «Melissa López N.»
+  (`.sidebar-marca`, `--p600`, `--text-marca`, `--weight-strong`) y el botón «Cerrar menú»
+  (`.menu-cerrar`, solo icono, con `aria-label`, mismo aspecto que «Menú»). Debajo, las mismas
+  secciones del escritorio (`.nav-item` en `--text`; la actual con `aria-current="page"`, fondo
+  `--p100`, texto `--p600` y una barra de `--border-width-strong` a la izquierda, para que no dependa
+  solo del color), el nombre y «Cerrar sesión» (borde `--border-control`). El logo en imagen se
+  oculta, porque con `mix-blend-mode: screen` desaparece sobre blanco.
+- **Velo** (`.menu-velo`, `--overlay`): entre el panel y la página; tocarlo cierra el menú.
+- **Teclado y lector de pantalla:** al abrir, el foco va a la sección actual y `<main>` queda `inert`;
+  Escape, «Cerrar menú» o el velo lo cierran y el foco vuelve a «Menú». Sin `role="dialog"`: el estado
+  lo anuncia `aria-expanded`.
+- **Sin JavaScript:** el menú queda en el flujo, encima del contenido, sin taparlo, y no hay botón.
+- **Movimiento:** transición de `--duration-fast` solo con `prefers-reduced-motion: no-preference`.
+- **Navegadores:** `inert` desde Safari 15.5 y Chrome 102; `100dvh` desde Safari 15.4 y Chrome 108.
+
+En el escritorio (900 px o más) el menú es la barra lateral de siempre.
+
+### Pestañas (spec 033)
+`.pestanas-citas` (mis citas del paciente): fila flexible con `gap` `--space-2`, `margin-bottom`
+`--space-7` y borde inferior `--border-width` `--border`. Cada enlace lleva `padding` `--space-4`
+`--space-1`, `--text-body`, `--weight-strong`, sin subrayado, `--text-muted` y un borde inferior
+transparente de `--border-width-strong`; el primero, `margin-right` `--space-7`. La activa (`.activa`,
+`aria-current="page"`): texto `--p500` (5,06:1 sobre `--bg`) y borde `--p400` (3,67:1). En el móvil,
+cada enlace mide al menos `--touch-min` × `--touch-min`.
+
+### Migas de pan (spec 033)
+`.migas` (detalle de la cita y agendar): fila flexible centrada con `gap` `--space-3`, `margin-bottom`
+`--space-7`, `--text-meta` y `--text-muted`; enlaces en `--text-muted` sin subrayado y la página actual
+en `.migas-actual` (`--text`). En el móvil, cada enlace mide al menos `--touch-min` × `--touch-min`.
+
 ### Lista, tabla y tarjeta
 - **Tarjetas:**
   - `.card`: blanca, borde 1px `--border`, radio 12px; padding medido de 22px en la mayoría.
@@ -270,10 +321,12 @@ emojis (🕐, 👨‍⚕️, 💡) (DS14).
 
 | Token | Valor | Uso |
 |---|---|---|
+| `--duration-fast` | `0.15s` | La duración que ya usan las transiciones de `app.css`; con token, la transición del menú del móvil (spec 033) |
 | (sin token) | `all 0.15s` | Hover de botones, menú y accesos rápidos (`translateY(-1px)` en `.quick-action`) |
 | (sin token) | animaciones `fadeUp` y `modalIn` | Entrada del acceso y del registro, y diálogos |
 
-No respeta `prefers-reduced-motion` (DS10).
+No respeta `prefers-reduced-motion` (DS10), salvo el menú del móvil de la spec 033, que solo se anima
+con `prefers-reduced-motion: no-preference`.
 
 ## Pantallas principales
 
@@ -404,11 +457,11 @@ se corrige cuando una spec toca la pantalla o como objetivo del roadmap. Se conc
 | DS3 | `--text-muted` vale lo mismo que `--text` (#000): no hay jerarquía de texto secundario (medido: todo el texto secundario sale en negro) | `public/css/app.css:13-14` | Definir un secundario que cumpla 4.5:1 | pendiente |
 | DS4 | Valores fijos: 861 `style=""` en las vistas, 20 tamaños de letra, escala de espaciado solo en las reglas de la 027; barra lateral `#C75078` y radios literales fuera de los tokens | `resources/views/**`, `public/css/app.css:63,171` | Tokens de espaciado y tipografía; migrar los estilos en línea al tocar cada pantalla | en curso: escala de espaciado, `--text-body`, `--text-small` y pesos (spec 027); filas y campos de la sección de horario de la ficha sin estilos en línea |
 | DS5 | Componentes duplicados o contradictorios: 11 bloques `<style>` dentro del contenido redefinen `.field` (borde 1.5px, radio 5px, 'DM Sans'), `citas.css` solo en 7 vistas, y `auth.css` redefine tokens (`--text-light: #000`) | `expedientes/create:139`, `pacientes/create:200`, `usuarios/index:208`…, `public/css/auth.css:8-26` | Una sola hoja de componentes cargada por el layout | en curso: `.field-hint` y `.field-hint-error` pasan a `app.css` (spec 027) |
-| DS6 | Objetivo de toque < 44px (medido): botón 31px, `.btn-sm` 22–27px, campo 34–38px, elemento del menú 35px | `public/css/app.css:194-219,353-356`, `citas.css:16-30`; medidas de las 104 vistas con menú | `min-height` con un token `--touch-min` | pendiente |
+| DS6 | Objetivo de toque < 44px (medido): botón 31px, `.btn-sm` 22–27px, campo 34–38px, elemento del menú 35px | `public/css/app.css:194-219,353-356`, `citas.css:16-30`; medidas de las 104 vistas con menú | `min-height` con un token `--touch-min` | en curso: `--touch-min` existe y se aplica por debajo de 900 px en el menú y las pantallas del paciente (spec 033) |
 | DS7 | Estados y semántica que faltan: sin deshabilitado ni carga, sin páginas de error propias (403 y 404 de Laravel en inglés), mensajes flash sin `aria-live`, diálogos sin `role="dialog"` ni manejo del foco, 5 `confirm()` nativos, títulos de sección como `span` | `layouts/app.blade.php:207-253`, `servicios/index:121-193`, `usuarios/index:215-299`; capturas `error-403`, `error-404` | Componentes de aviso y diálogo accesibles, estados de carga y páginas de error con la marca | pendiente |
-| DS8 | La app no se adapta a móvil (medido): a 390 px, 54 de 62 vistas se desbordan en horizontal (472–1157px de ancho; las dos de reprogramar, 498px por la barra lateral), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | pendiente |
+| DS8 | La app no se adapta a móvil (medido): a 390 px, 54 de 62 vistas se desbordan en horizontal (472–1157px de ancho; las dos de reprogramar, 498px por la barra lateral), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | en curso: menú común y pantallas del paciente desde 320 px (spec 033); el contenido del personal, en una spec siguiente |
 | DS9 | Tipografía: Roboto se carga desde Google Fonts sin aprobación en `security.md`; 'DM Sans' y 'DM Mono' se nombran sin cargarse (medido: los campos de usuarios caen a la sans-serif genérica); el peso 300 se carga y no se usa | `layouts/app.blade.php:7`, `usuarios/create:127`, `usuarios/index:210`, `servicios/index:37`, `expedientes/create:110` | Autoalojar Roboto o aprobar el servicio; quitar las familias no cargadas y los pesos sin uso | pendiente |
-| DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:374` | Bloque `prefers-reduced-motion: reduce` | pendiente |
+| DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:374` | Bloque `prefers-reduced-motion: reduce` | en curso: solo el menú del móvil (spec 033) |
 | DS11 | Restos sin uso: Tailwind 4, Vite y `welcome.blade.php` (ninguna ruta los sirve); clases sin uso (`.logo-icon`, `.appt-card`, `.alert-item`…, y en `auth.css` `.brand-logo`, `.features`…); tokens `--space-7` y `--space-8` sin uso | `package.json`, `vite.config.js`, `resources/views/welcome.blade.php`, `public/css/app.css:37-38,80-94,379,409-417`, `auth.css` | Retirarlos o decidir migrar a ellos | pendiente |
 | DS12 | Declarado ≠ cargado en servicios: crear y editar servicio no cargan `citas.css` y su `.field` local no declara familia ni color; los campos se ven en Arial de 13.33px, radio 5px y el desplegable en gris del navegador (medido) | `servicios/create:54-56`, `servicios/edit:60,121-122`; capturas `servicios-create-1440`, `servicios-edit-1440` | Cargar los estilos comunes de campo en el layout (ver DS5) | pendiente |
 | DS13 | El campo de hora del horario (`--field-time-width` 110px) recorta "AM/PM" con el formato de 12 h del navegador ("09:00 A") | `public/css/app.css:48`, `personal/show:257-266`; captura `personal-show-dentista-1440` | Ancho mínimo que quepa en 12 h, o formato de 24 h | pendiente |
@@ -434,3 +487,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-04 | implícita | Una vista que responde 5xx con la depuración activa muestra detalles internos | El guion no guarda capturas de respuestas 5xx | `docs/constitution.md` P5 |
 | 2026-10-08 | diseño | ¿Qué incorpora el sistema para reprogramar citas (spec 028)? | Versión 1.3.0: botón de peligro `.btn-danger`; componente acotado «Formulario accesible» (`.formulario-accesible`) que cumple AA donde se usa sin cambiar el resto de la app, con el badge verde en `--text`, reglas del historial acotadas y clases de maquetación; token `--timeline-time-width`; pantalla «Reprogramar cita» (capturas en T032); sin `confirm()` nuevo | usuario (plan 028, D11, D12; /analyze A1, A31, A37, A48, A49) |
 | 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |
+| 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |

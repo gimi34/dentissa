@@ -125,6 +125,42 @@
   .opt .m-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px;
                   color: var(--color-text); background: var(--color-success-bg); }
 </style>
+<style id="componentes-033">
+  /* Muestras vivas de la spec 033 (opción A del menú del móvil), con los tokens de .opt. */
+  .opt .m-tel { width: 320px; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg);
+                overflow: hidden; position: relative; background: var(--color-bg); min-height: 380px; }
+  .opt .m-topbar { min-height: var(--topbar-h); background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border);
+                   display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-6); }
+  .opt .m-menu-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+                     min-height: var(--touch-min); min-width: var(--touch-min); padding: 0 var(--space-4);
+                     background: var(--color-surface); color: var(--color-accent-text);
+                     border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm);
+                     font: inherit; font-weight: var(--weight-strong); }
+  .opt .m-menu-btn svg { width: var(--icon-md); height: var(--icon-md); }
+  .opt .m-velo { position: absolute; inset: 0; background: var(--color-overlay); }
+  .opt .m-panel { position: absolute; top: 0; bottom: 0; left: 0; width: min(var(--menu-movil-w), 85%);
+                  background: var(--color-surface); border-right: var(--border-width) solid var(--color-border);
+                  display: flex; flex-direction: column; }
+  .opt .m-panel-cab { display: flex; align-items: center; justify-content: space-between; min-height: var(--topbar-h);
+                      padding: var(--space-3) var(--space-5); border-bottom: var(--border-width) solid var(--color-border); }
+  .opt .m-marca { color: var(--color-accent-text); font-size: var(--text-marca); font-weight: var(--weight-strong); }
+  .opt .m-nav { padding: var(--space-4); display: flex; flex-direction: column; }
+  .opt .m-nav a { min-height: var(--touch-min); display: flex; align-items: center; padding: 0 var(--space-5);
+                  border-radius: var(--radius-sm); color: var(--color-text); text-decoration: none; }
+  .opt .m-nav a[aria-current] { background: var(--color-active-bg); color: var(--color-accent-text);
+                                font-weight: var(--weight-strong); box-shadow: inset var(--border-width-strong) 0 0 var(--color-accent-text); }
+  .opt .m-pestanas { display: flex; gap: var(--space-2); border-bottom: var(--border-width) solid var(--color-border); }
+  .opt .m-pestanas a { display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch-min);
+                       min-width: var(--touch-min); padding: var(--space-4) var(--space-1); color: var(--color-text-muted);
+                       font-weight: var(--weight-strong); text-decoration: none;
+                       border-bottom: var(--border-width-strong) solid transparent; }
+  .opt .m-pestanas a:first-child { margin-right: var(--space-7); }
+  .opt .m-pestanas a[aria-current] { color: var(--color-link); border-bottom-color: var(--color-primary); }
+  .opt .m-migas { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--color-text-muted); }
+  .opt .m-migas a { display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch-min);
+                    min-width: var(--touch-min); color: var(--color-text-muted); text-decoration: none; }
+  .opt .m-migas .m-actual { color: var(--color-text); }
+</style>
 <style id="tokens">
   /* Valores reales de public/css/app.css:3-49 con su nombre semántico de AI-DD. */
   .opt {
@@ -164,7 +200,11 @@
     --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
     --border-width: 1px;
     --shadow-1: none;
-    --touch-min: 31px;              /* NO es token: altura medida del botón (DS6) */
+    --touch-min: 44px;              /* --touch-min (spec 033): se aplica por debajo de 900 px */
+    --color-overlay: rgba(0, 0, 0, 0.45); /* --overlay (spec 033) */
+    --color-active-bg: #FBEAF0;     /* --p100: sección actual del menú del móvil */
+    --menu-movil-w: 300px; --topbar-h: 60px; --border-width-strong: 2px;
+    --text-meta: 13px; --text-marca: 16px; --logo-max-w: 160px; --icon-md: 18px; /* spec 033 */
 
     --duration-fast: 150ms; --duration-base: 150ms;
     --ease-out: ease;
@@ -239,6 +279,11 @@
       <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de control del horario</li>
       <li class="v-pair" data-fg="--color-focus" data-bg="--color-bg" data-min="3">Anillo de foco (horario y lista de citas)</li>
       <li class="v-pair" data-fg="--color-focus-legacy" data-bg="--color-surface" data-min="3">Foco del código previo (DS2)</li>
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-surface" data-min="4.5">Sección del menú del móvil sobre blanco (spec 033)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-active-bg" data-min="4.5">Sección actual del menú del móvil (spec 033)</li>
+      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de «Menú», «Cerrar menú» y «Cerrar sesión» en el móvil (spec 033)</li>
+      <li class="v-pair" data-fg="--color-link" data-bg="--color-bg" data-min="4.5">Pestaña activa sobre fondo (spec 033)</li>
+      <li class="v-pair" data-fg="--color-primary" data-bg="--color-bg" data-min="3">Indicador de la pestaña activa (spec 033)</li>
     </ul>
   </section>
 
@@ -259,8 +304,8 @@
   <section class="v-section" id="espaciado">
     <h2>Espaciado y forma</h2>
     <p class="v-note">Escala de la spec 027 (solo la usan sus reglas; el resto son literales, DS4) y radios
-      reales. No hay token de toque mínimo: el cuadro punteado mide la altura real del botón, 31px,
-      por debajo de 44px (DS6).</p>
+      reales. El cuadro punteado mide <code>--touch-min</code> (44px, spec 033), que se aplica por debajo de
+      900 px; en el escritorio el botón sigue en 31px (DS6).</p>
     <div class="v-stage"><div class="opt" id="space-demo" style="padding:24px"></div></div>
   </section>
 
@@ -304,6 +349,33 @@
           <p class="m-error" id="m-hora-error" role="alert">Elige una fecha y hora que aún no hayan pasado.</p>
           <button type="button" class="m-btn m-btn-primary">Guardar nueva fecha</button>
         </form>
+      </div>
+    </div></div>
+    <h3 id="menu-movil-033">Menú del móvil, pestañas y migas de pan (spec 033)</h3>
+    <p class="v-note">Muestras vivas, no capturas: la pantalla aún no existe. Opción A de la spec 033
+      (<a href="../specs/033-movil-paciente/design/opcion-a.html">maqueta</a>), a 320 px, con los tokens
+      de <code>app.css</code>. Solo se aplica por debajo de 900 px.</p>
+    <div class="v-stage"><div class="opt">
+      <div class="m-row">
+        <div class="m-tel" aria-label="Menú cerrado a 320 px">
+          <header class="m-topbar"><button type="button" class="m-menu-btn" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Menú</button><span class="t-h1">Mi salud dental</span></header>
+        </div>
+        <div class="m-tel" aria-label="Menú abierto a 320 px">
+          <header class="m-topbar"><button type="button" class="m-menu-btn" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Menú</button><span class="t-h1">Mi salud dental</span></header>
+          <div class="m-velo"></div>
+          <div class="m-panel">
+            <div class="m-panel-cab"><span class="m-marca">Melissa López N.</span><button type="button" class="m-menu-btn" aria-label="Cerrar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+            <nav class="m-nav" aria-label="Muestra del menú del paciente">
+              <a href="#" aria-current="page">Inicio</a><a href="#">Mis Citas</a><a href="#">Agendar Cita</a><a href="#">Mi Perfil</a>
+            </nav>
+          </div>
+        </div>
+        <div>
+          <p class="t-body">Pestañas de mis citas</p>
+          <nav class="m-pestanas" aria-label="Muestra de pestañas"><a href="#" aria-current="page">Próximas</a><a href="#">Pasadas</a></nav>
+          <p class="t-body">Migas de pan</p>
+          <div class="m-migas"><a href="#">Mis citas</a><span>›</span><span class="m-actual">Detalle</span></div>
+        </div>
       </div>
     </div></div>
   </section>
