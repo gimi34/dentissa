@@ -63,3 +63,4 @@ La cancelación por el cliente no deja actor en `historial_citas`. Ver `docs/obs
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-02 | Comportamiento modificado por 025 en v0.2.0 | /release |
 | 2026-10-02 | Comportamiento modificado por 026 en v0.3.0 | /release |
+| 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 | /release |

@@ -35,13 +35,13 @@ resto de las pantallas del paciente y la ficha creada desde el perfil quedan par
 - Como administración, quiero ver en el historial de cada cita quién cambió su estado, de cuál a cuál y por qué.
 
 ## Criterios de aceptación
-- [x] CA1 · Dada una cita, cuando se cambia su estado, entonces solo se aceptan estas transiciones: agendada → confirmada; confirmada → en curso; en curso → completada; agendada o confirmada → cancelada; agendada o confirmada → no asistió.
+- [x] CA1 · Dada una cita, cuando se cambia su estado, entonces solo se aceptan estas transiciones: agendada → confirmada; confirmada → en curso; en curso → completada; agendada o confirmada → cancelada; agendada o confirmada → no asistió. → reemplazado en parte por 028 CA5 (solo al reprogramar, confirmada vuelve a agendada)
 - [x] CA2 · Dada una cita completada, cancelada o no asistida, cuando alguien intenta cambiar su estado, entonces se rechaza con un mensaje que dice que la cita ya está cerrada, y la cita no cambia. Para volver a atender al paciente se agenda una cita nueva. Al paciente se le dice que la cita ya no se puede cancelar.
 - [x] CA3 · Dada cualquier otra transición fuera de CA1 (por ejemplo, de agendada a completada o de en curso a cancelada), cuando se intenta, entonces se rechaza con un mensaje que indica desde qué estados se permite, y la cita no cambia.
 - [x] CA4 · Dado un dentista con una cita propia, cuando confirma, inicia, completa o marca que el paciente no asistió, entonces el cambio se acepta; cuando intenta cancelarla, se rechaza y la cita no cambia.
 - [x] CA5 · Dado un asistente con una cita de un dentista que tiene asignado, cuando la confirma, la cancela o marca que el paciente no asistió, entonces el cambio se acepta; cuando intenta iniciarla o completarla, se rechaza y la cita no cambia.
 - [x] CA6 · Dada la administración, cuando hace cualquier transición permitida por CA1, entonces se acepta; la acción "eliminar cita" del detalle de la cita es una cancelación y sigue las mismas reglas.
-- [x] CA7 · Dado un paciente con una cita propia agendada o confirmada que todavía no ha empezado, cuando la cancela, entonces pasa a cancelada; si ya empezó o está en otro estado, se rechaza con un mensaje y la cita no cambia. Dado un miembro del personal que usa la cancelación del paciente, cuando la envía, entonces se rechaza por permisos y la cita no cambia.
+- [x] CA7 · Dado un paciente con una cita propia agendada o confirmada que todavía no ha empezado, cuando la cancela, entonces pasa a cancelada; si ya empezó o está en otro estado, se rechaza con un mensaje y la cita no cambia. Dado un miembro del personal que usa la cancelación del paciente, cuando la envía, entonces se rechaza por permisos y la cita no cambia. → reemplazado por 028 CA3 (el paciente solo cancela con 24 horas o más de antelación)
 - [x] CA8 · Dada una cita cuya hora de inicio aún no ha llegado, cuando alguien la marca en curso o no asistida, entonces se rechaza con un mensaje que lo explica.
 - [x] CA9 · Dado cualquier cambio de estado aceptado, por cualquier rol, cuando se guarda, entonces queda exactamente una entrada en el historial de la cita con quién lo hizo, el estado anterior, el nuevo, el motivo si se dio y la fecha; y el historial de la cita lo muestra así.
 - [x] CA10 (abuso) · Dados dos cambios de estado incompatibles enviados a la vez sobre la misma cita (por ejemplo, confirmar y cancelar), cuando se procesan, entonces solo se aplica uno; el otro se evalúa contra el estado ya cambiado y, si no está permitido, recibe el mensaje de CA2 o CA3, nunca un error del servidor.
@@ -170,3 +170,4 @@ resto de las pantallas del paciente y la ficha creada desde el perfil quedan par
 | 2026-10-02 | Vuelve a approved: /review ronda 1 con cambios pedidos (R1, R4, R5, R10, R20, R26) | /review |
 | 2026-10-02 | Implementada de nuevo (T016–T018, T028, T029 de /review) | /implement |
 | 2026-10-02 | Liberada en v0.3.0, sin despliegue (no hay entornos) | /release |
+| 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 | /release |

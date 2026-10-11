@@ -311,14 +311,17 @@ Decisiones del usuario del 2026-10-11 en `/review 028 --rerun`: corregir R19, R2
   - nota: spec 028 → `implemented` de nuevo (2026-10-11) tras T073–T080: CA1–CA10 con sus tests en verde (256), Pint limpio en los 22 archivos PHP tocados; capturas de T077 y T078 confirmadas por el usuario; el diseño para móvil queda para una spec propia (DS8, decisión del usuario).
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación
+- [x] T095 Desplegar a staging y verificar criterios de aceptación
   - No hay staging (030): la verificación de Observabilidad se hace en producción en T097.
   - nota: /release 028 (2026-10-11): versión v0.6.0 (minor), decisión del usuario; la 031 pasa a v0.7.0. Sin staging (030): T095 no aplica y las comprobaciones van en T097. Integración: `main` fusionado en la rama (`54a40a3`, AI-DD 1.11.5; `d5dfed4`, PR #21 con el arreglo de npm adelantado de 031 T004, decisión del usuario para cumplir R8); el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después, tag anotado `v0.6.0` sobre el merge commit, con confirmación. Puerta de seguridad: `composer audit --locked` sin avisos, `npm audit --audit-level=high` 0 vulnerabilidades, `trivy fs --severity HIGH,CRITICAL` sin hallazgos; `trivy image` dentro de EX2 (vence 2026-10-31). Migración: solo `2026_10_07_000000_reprogramacion_en_historial_citas` (T003), *expand*: dos columnas que admiten nulo en `historial_citas`, compatibles con el código de v0.5.0; la vuelta atrás no necesita deshacerla.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-10-11 para v0.6.0 («Desplegar v0.6.0 a producción», tras ver el resumen de la puerta)
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - Reprogramar una cita ficticia como administración y comprobar en su detalle la entrada «Reprogramada del … al …»; devolverla a su hora y comprobar la segunda entrada.
   - Sin errores 500 en `laravel.log` ni en el log de nginx durante 15 minutos.
-- [ ] T098 Marcar spec como `released`
+  - nota: 2026-10-11, en el servidor (usuario): `desplegar.sh v0.6.0` en 18 s desde v0.5.0 (árbol limpio), copia `/var/backups/dentissa/dentissa-20261011-190013.sql.gz`, migración `2026_10_07_000000_reprogramacion_en_historial_citas` aplicada; `verificar.sh --interna` y `verificar.sh` (pública: `/up` 200, `/` a https, `http://…/login` 301) con un único FALLO, el conocido de Tailscale escuchando en `tailscale0` (031 CA8, versión anterior a la 031). Verificación manual OK (usuario): login de las cuatro cuentas por rol, reprogramación de una cita ficticia como admin con «Reprogramada del … al …» en el historial y vuelta a su hora con la segunda entrada. A los 15 minutos, 0 errores en `laravel.log` y 0 respuestas 5xx en el log de nginx.
+- [x] T098 Marcar spec como `released`
+  - nota: 2026-10-11, v0.6.0. Sin correcciones de riesgo «dentro» en la spec: no cambia ningún estado en `security.md`, `observability.md` ni `deployment.md`. Aceptados sin tarea de las tres rondas de /review al roadmap (028/R11, R13–R17, R25, R27–R32, decisión del usuario). Specs extendidas: 003 y 004 con su fila de Historial; en la 026, CA7 reemplazado por 028 CA3 y CA1 reemplazado en parte por 028 CA5.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
