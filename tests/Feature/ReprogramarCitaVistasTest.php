@@ -176,6 +176,37 @@ class ReprogramarCitaVistasTest extends TestCase
         }
     }
 
+    public function test_un_rechazo_desde_no_reagendar_se_ve_en_la_pantalla(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+        $formulario = "/admin/citas/{$cita}/reprogramar";
+        $this->actingAs($this->admin)->get($formulario)->assertOk();
+
+        // Mientras la pantalla está abierta, la cita empieza: la cancelación ya no se acepta (R20).
+        DB::table('citas')->where('id', $cita)->update(['estado' => 'en_curso']);
+        $this->actingAs($this->admin)->from($formulario)
+            ->patch("/admin/citas/{$cita}/estado", ['estado' => 'cancelada', 'formulario' => 'no-reagendar', 'confirmar' => '1'])
+            ->assertRedirect($formulario);
+        $mensaje = (string) session('error');
+        $this->assertNotSame('', $mensaje, 'El rechazo vuelve como aviso.');
+
+        $this->actingAs($this->admin)->get($formulario)->assertOk()->assertSee($mensaje);
+        $this->assertSame('en_curso', $this->estadoDe($cita));
+    }
+
+    public function test_la_casilla_solo_se_pide_al_cancelar(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', self::MANANA);
+        $formulario = "/admin/citas/{$cita}/reprogramar";
+
+        // R23: con otro estado, `formulario=no-reagendar` no exige la casilla ni lleva al detalle.
+        $this->actingAs($this->admin)->from($formulario)
+            ->patch("/admin/citas/{$cita}/estado", ['estado' => 'confirmada', 'formulario' => 'no-reagendar'])
+            ->assertRedirect($formulario);
+        $this->assertSame('', $this->errorDe('confirmar'));
+        $this->assertSame('confirmada', $this->estadoDe($cita));
+    }
+
     public function test_cada_formulario_muestra_sus_valores_y_errores_en_su_seccion(): void
     {
         $this->cita($this->d1, $this->p2, 'agendada', self::FUTURA);
