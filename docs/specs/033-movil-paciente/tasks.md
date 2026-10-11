@@ -1,7 +1,7 @@
 ---
 spec: 033-movil-paciente
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 033 Móvil para el paciente
