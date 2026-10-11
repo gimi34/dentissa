@@ -110,16 +110,18 @@ class EstadosCitaVistasTest extends TestCase
         // 16:30 UTC son las 10:30 en la clínica.
         Carbon::setTestNow(Carbon::parse('2026-10-05 16:30:00', 'UTC'));
         $empezada = $this->cita($this->d1, $this->p1, 'confirmada', '2026-10-05 10:00');
-        $pendiente = $this->cita($this->d1, $this->p1, 'confirmada', '2026-10-05 12:00');
+        // Spec 028 (D6): el paciente cancela con 24 horas o más; esta empieza dentro de 25 h 30 min.
+        $pendiente = $this->cita($this->d1, $this->p1, 'confirmada', '2026-10-06 12:00');
 
         $detalle = fn (string $cita) => $this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}")->assertOk()->getContent();
         $this->assertSame(0, $this->formulariosHacia($detalle($empezada), "/cliente/citas/{$empezada}/cancelar", 'PATCH'));
         $this->assertSame(1, $this->formulariosHacia($detalle($pendiente), "/cliente/citas/{$pendiente}/cancelar", 'PATCH'));
 
-        // El listado compara en UTC (deuda D4): las dos aparecen como pasadas (A8).
-        $listado = $this->actingAs($this->paciente1)->get('/cliente/citas?filtro=pasadas')->assertOk()->getContent();
-        $this->assertSame(0, $this->formulariosHacia($listado, "/cliente/citas/{$empezada}/cancelar", 'PATCH'));
-        $this->assertSame(1, $this->formulariosHacia($listado, "/cliente/citas/{$pendiente}/cancelar", 'PATCH'));
+        // El listado compara en UTC (deuda D4): la empezada sale en «pasadas» (A8) y la pendiente, en las próximas.
+        $pasadas = $this->actingAs($this->paciente1)->get('/cliente/citas?filtro=pasadas')->assertOk()->getContent();
+        $this->assertSame(0, $this->formulariosHacia($pasadas, "/cliente/citas/{$empezada}/cancelar", 'PATCH'));
+        $proximas = $this->actingAs($this->paciente1)->get('/cliente/citas')->assertOk()->getContent();
+        $this->assertSame(1, $this->formulariosHacia($proximas, "/cliente/citas/{$pendiente}/cancelar", 'PATCH'));
     }
 
     public function test_el_paciente_ve_por_que_no_puede_cancelar_una_cita_que_ya_empezo(): void

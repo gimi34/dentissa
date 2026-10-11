@@ -197,9 +197,28 @@ class EstadosCitaTransicionesTest extends TestCase
 
         $this->assertSame('confirmada', $this->estadoDe($cita));
         $this->assertSame(
-            'Una cita no puede volver a «Agendada». Si hay que moverla, cancélala y agenda una nueva.',
+            'Una cita no puede volver a «Agendada». Si hay que moverla, usa «Reprogramar».',
             $this->errorDe('estado'),
         );
+    }
+
+    /** Spec 028 (CA5, A18): el mensaje dice cómo moverla según quién lo intenta. */
+    public function test_el_mensaje_de_volver_a_agendada_depende_del_rol(): void
+    {
+        $casos = [
+            'admin' => [$this->admin, 'Una cita no puede volver a «Agendada». Si hay que moverla, usa «Reprogramar».'],
+            'asistente' => [$this->asistente, 'Una cita no puede volver a «Agendada». Si hay que moverla, usa «Reprogramar».'],
+            'dentista' => [$this->dentista1, 'Una cita no puede volver a «Agendada». Pide a tu asistente o a la administración que la reprogramen.'],
+        ];
+
+        foreach ($casos as $rol => [$usuario, $mensaje]) {
+            $cita = $this->cita($this->d1, $this->p1, 'confirmada', self::INICIO);
+
+            $this->cambiar($usuario, $cita, 'agendada')->assertStatus(302);
+
+            $this->assertSame('confirmada', $this->estadoDe($cita), $rol);
+            $this->assertSame($mensaje, $this->errorDe('estado'), $rol);
+        }
     }
 
     public function test_un_motivo_demasiado_largo_muestra_un_mensaje_en_espanol(): void
