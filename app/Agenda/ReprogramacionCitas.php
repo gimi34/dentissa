@@ -99,20 +99,9 @@ class ReprogramacionCitas
         $this->reservas->bloquearDentista($dentistaId);
         $cita = $this->bloquearCita($citaId);
 
+        // Cerrada, empezada, dentista inactivo, sin duración o (paciente) fuera de plazo; con las
+        // filas ya bloqueadas (/review 028: R7, R10, R19).
         $this->estados->comprobarReprogramable($cita, $actor);
-
-        // Como al agendar: solo con un dentista activo (025 CA10) y una duración válida, que el
-        // solape estricto necesita (/review 028: R7, R10).
-        $dentistaActivo = $this->db->table('personal')
-            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
-            ->where('personal.id', $cita->dentista_id)
-            ->value('usuarios.activo');
-        if ((int) $dentistaActivo !== 1) {
-            throw CitaNoAgendable::noDisponible();
-        }
-        if ((int) $cita->duracion_min < 1) {
-            throw CitaNoAgendable::duracionInvalida();
-        }
 
         // «Ya pasó» se decide con la hora de la clínica (D13); el hueco, con la hora local sin
         // zona, como se guarda `fecha_hora` y como lo comprueba la reserva (A42). La hora elegida

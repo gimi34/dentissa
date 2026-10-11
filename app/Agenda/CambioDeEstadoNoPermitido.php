@@ -81,6 +81,18 @@ class CambioDeEstadoNoPermitido extends RuntimeException
         return new self('yaEmpezoPersonal', 'Esta cita ya empezó y no se puede reprogramar.');
     }
 
+    // Al reprogramar, como al agendar: el dentista debe seguir activo (/review 028 R19).
+    public static function dentistaInactivo(): self
+    {
+        return new self('dentistaInactivo', 'El dentista de esta cita ya no está activo y no se puede reprogramar. Cancélala o agenda una cita nueva con otro dentista.');
+    }
+
+    // Una cita sin duración no se puede colocar en otro hueco (/review 028 R19).
+    public static function sinDuracion(): self
+    {
+        return new self('sinDuracion', 'Esta cita no tiene una duración válida y no se puede reprogramar. Cancélala o agenda una cita nueva.');
+    }
+
     public static function ocupada(): self
     {
         return new self('ocupada', 'Otra persona está cambiando esta cita en este momento. Recarga la página y vuelve a intentarlo.');

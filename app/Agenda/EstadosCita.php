@@ -127,6 +127,19 @@ class EstadosCita
             throw CambioDeEstadoNoPermitido::yaEmpezoPersonal();
         }
 
+        // Como al agendar: dentista activo y duración válida, para que la pantalla no ofrezca
+        // mover una cita que el guardado rechazaría siempre (/review 028 R19).
+        $dentistaActivo = $this->db->table('personal')
+            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+            ->where('personal.id', $cita->dentista_id)
+            ->value('usuarios.activo');
+        if ((int) $dentistaActivo !== 1) {
+            throw CambioDeEstadoNoPermitido::dentistaInactivo();
+        }
+        if ((int) $cita->duracion_min < 1) {
+            throw CambioDeEstadoNoPermitido::sinDuracion();
+        }
+
         if ($actor->rol === 'cliente' && ! $this->dentroDelPlazoDelPaciente($cita)) {
             throw CambioDeEstadoNoPermitido::fueraDePlazo();
         }
