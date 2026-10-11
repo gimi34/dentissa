@@ -507,6 +507,7 @@ tr:hover td { background: var(--p50); }
 .formulario-accesible .acciones-columna .btn { justify-content: center; }
 .formulario-accesible .acciones-fila { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); justify-content: flex-end; }
 .formulario-accesible .acciones-fila .aviso-plazo { margin: 0; }
+.formulario-accesible .proxima-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-5); }
 .formulario-accesible .form-en-linea { display: inline; }
 .formulario-accesible .historial-lista { padding: var(--space-2) var(--space-7); }
 .formulario-accesible .historial-vacio { padding: var(--space-7); }

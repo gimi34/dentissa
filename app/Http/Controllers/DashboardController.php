@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\EstadosCita;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -198,11 +199,12 @@ class DashboardController extends Controller
                 ->whereNotIn('citas.estado', ['cancelada', 'no_asistio'])
                 ->select(
                     'citas.id',
+                    'citas.dentista_id',
                     'citas.fecha_hora',
+                    'citas.duracion_min',
                     'citas.estado',
                     DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista"),
-                    'servicios.nombre AS servicio',
-                    'servicios.duracion_min'
+                    'servicios.nombre AS servicio'
                 )
                 ->orderBy('citas.fecha_hora')
                 ->first();
@@ -211,7 +213,8 @@ class DashboardController extends Controller
             if ($proximaCita) {
                 $abierta = in_array($proximaCita->estado, ['agendada', 'confirmada'], true);
                 $proximaCita->puede_cancelar = $abierta && $estados->dentroDelPlazoDelPaciente($proximaCita);
-                $proximaCita->puede_reprogramar = $proximaCita->puede_cancelar;
+                // Reprogramar pide además dentista activo y duración válida, como el detalle (R19).
+                $proximaCita->puede_reprogramar = $proximaCita->puede_cancelar && $this->sePuedeMover($proximaCita, $estados);
                 $proximaCita->aviso_plazo_corto = $abierta && ! $proximaCita->puede_cancelar && ! $estados->haEmpezado($proximaCita)
                     ? ClienteCitasController::AVISO_PLAZO_CORTO
                     : null;
@@ -240,5 +243,17 @@ class DashboardController extends Controller
             'citasPasadas',
             'paciente'
         ));
+    }
+
+    // Si el paciente puede mover la cita según EstadosCita::comprobarReprogramable (spec 028).
+    private function sePuedeMover(object $cita, EstadosCita $estados): bool
+    {
+        try {
+            $estados->comprobarReprogramable($cita, auth()->user());
+
+            return true;
+        } catch (CambioDeEstadoNoPermitido) {
+            return false;
+        }
     }
 }
