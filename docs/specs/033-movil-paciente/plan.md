@@ -1,6 +1,6 @@
 ---
 spec: 033-movil-paciente
-status: approved
+status: draft
 constitution_version: 1.2.1
 created: 2026-10-11
 ---
@@ -36,14 +36,14 @@ sistema (A1, decisión del usuario).
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas: `menu.js` es código propio y Playwright ya se usa en su contenedor (`capturar.mjs`). Línea base del 2026-10-11: `composer audit` y `npm audit` sin avisos | lint: composer audit, npm audit y trivy fs en T040 |
 | P7 Auditoría | ➖ | No toca datos sensibles, autenticación ni permisos (spec, Auditoría) | — |
 | P8 Correlación y logs limpios | ➖ | Sin logs nuevos | — |
-| P9 La interfaz usa solo el sistema de diseño | ✅ | Valores nuevos primero en `system.md` (T001): los ocho tokens de «Cambios a incorporar al sistema» y el punto de corte documentado. Toda regla nueva de `movil.css` y de `app.css` usa solo tokens, también las duraciones; `z-index` queda fuera de P9 (no es color, tipografía, espaciado, radio, sombra ni duración) y se documenta. Los bloques tocados pierden sus `style=""`. Los pares del menú cumplen AA, la sección actual no se indica solo con color y todos los controles del menú tienen foco visible (A2, A4, A5, A16) | test: `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_los_pares_del_menu_cumplen_aa`, `test_los_controles_del_menu_tienen_foco_visible`, `test_los_bloques_tocados_no_tienen_estilos_en_linea` · manual: pantallas a 320, 390 y 1440 contra `system.html` |
+| P9 La interfaz usa solo el sistema de diseño | ✅ | Valores nuevos primero en `system.md` (T001): los diez tokens de «Cambios a incorporar al sistema» y el punto de corte documentado. Toda regla nueva de `movil.css` y de `app.css` usa solo tokens, también las duraciones; `z-index` queda fuera de P9 (no es color, tipografía, espaciado, radio, sombra ni duración) y se documenta. Los bloques tocados pierden sus `style=""`. Los pares de color nuevos (menú y bloque `/* Spec 033 */`) cumplen AA, los bordes de los controles nuevos usan `--border-control` (≥ 3:1), la sección actual y la pestaña activa llevan una señal que no es color, y todos los controles del menú tienen foco visible (A2, A4, A5, A16, A32, A35) | test: `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_los_pares_del_menu_cumplen_aa`, `test_los_colores_del_bloque_033_cumplen_aa`, `test_la_seleccion_no_depende_solo_del_color`, `test_los_controles_del_menu_tienen_foco_visible`, `test_los_bloques_tocados_no_tienen_estilos_en_linea` · manual: pantallas a 320, 390 y 1440 contra `system.html` |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
 | Sistema de diseño (`docs/design/system.md`, `system.html`) | Versión 1.4.0 con los tokens y el componente de «Cambios a incorporar al sistema»; `widths: [320, 390, 1440]`; estados de deuda: DS6 y DS8 «en curso (033, …)», DS10 «en curso (033, solo el menú del móvil)» (A26) | Bajo |
 | Configuración (`.ai/project.yaml`) | `design.widths: [320, 390, 1440]` (spec, Decisiones: 320 px) | Bajo |
-| Estilos existentes (`public/css/app.css`) | Los ocho tokens nuevos en `:root`. Al final, un bloque marcado `/* Spec 033 */` con las clases nuevas de los bloques tocados (ver «Bloques tocados»), solo con tokens y con los mismos valores que hoy. Ninguna regla existente cambia | Bajo |
+| Estilos existentes (`public/css/app.css`) | Los diez tokens nuevos en `:root`. Al final, un bloque marcado `/* Spec 033 */` con las clases nuevas de los bloques tocados (ver «Bloques tocados»), solo con tokens y con los mismos valores que hoy. Ninguna regla existente cambia | Bajo |
 | Estilos del móvil (`public/css/movil.css`, **nuevo**) | Contenido en «Hoja `movil.css`» | Medio: afecta a todas las pantallas por debajo de 900 px (el personal gana el menú y controles más grandes; su contenido sigue desbordándose, fuera de alcance) |
 | Script del menú (`public/js/menu.js`, **nuevo**) | Contrato en «Script `menu.js`» | Medio: sin JS, el menú no debe quedar inaccesible (D5) |
 | Layout (`resources/views/layouts/app.blade.php`) | Enlaza `movil.css` tras `app.css` y `menu.js` en `<head>`. Añade a la barra superior un `<button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu-principal">`. El `<aside>` gana `id="menu-principal"`, `aria-label="Menú"`, el texto de marca `.sidebar-marca` («Melissa López N.», oculto en el escritorio, A9) y el botón `.menu-cerrar` (`aria-label="Cerrar menú"`) en la cabecera. El enlace de la sección actual gana `aria-current="page"` (A5). El velo `<div class="menu-velo" hidden>` va entre `</aside>` y `<main>`, fuera de `<main>` (A19). El bloque tocado pierde sus `style=""` (logo → `.sidebar-logo img`; tarjeta → `.user-card-texto`) y el `</div>` sobrante tras `.sidebar-logo` | Medio: el layout es común a los cuatro roles |
@@ -70,24 +70,39 @@ Sin endpoints, migraciones ni datos nuevos.
     - `.topbar` con `height: auto`, `min-height: var(--topbar-h)`, `flex-wrap: wrap` y
       `gap: var(--space-3)`;
     - `.grid-auto, .grid-2, .grid-3 { grid-template-columns: 1fr; }`;
-    - `.content { overflow-wrap: break-word; }` (CA6).
+    - `.content { overflow-wrap: break-word; }` (CA6);
+    - `.welcome-banner, .welcome-actions { flex-wrap: wrap; gap: var(--space-3); }`, para que el banner
+      del panel no recorte sus botones con su `overflow: hidden` (A34).
   - **Panel del menú, con o sin JS:**
     - `.sidebar` con fondo `--white` y borde derecho `--border-width` `--border`, y
       `overflow-y: auto` en el propio `.sidebar` (A10);
     - `.nav-item` en `--text`; activo, `--p100` con `--p600` y la marca
       `box-shadow: inset var(--border-width-strong) 0 0 var(--p600)`, que no es solo color (A5);
     - `.nav-label` en `--p600`;
-    - `.sidebar-logo img { display: none; }` y `.sidebar-marca` visible en `--p600`, porque el logo
-      con `mix-blend-mode: screen` desaparece sobre blanco (A9);
+    - `.sidebar-logo img { display: none; }` y `.sidebar-marca` visible, porque el logo con
+      `mix-blend-mode: screen` desaparece sobre blanco (A9): `color: var(--p600)`,
+      `font-size: var(--text-marca)`, `font-weight: var(--weight-strong)`;
+    - `.sidebar-logo` con `justify-content: space-between`, `min-height: var(--topbar-h)` y
+      `padding: var(--space-3) var(--space-5)`: la marca a la izquierda y «Cerrar menú» a la
+      derecha (A35);
     - `.user-name` con `white-space: normal` y `overflow-wrap: anywhere`;
-    - `.btn-logout` con borde `--border-width` `--p200` y, en hover, `--p100` con `--p600` (A16).
+    - `.btn-logout` con borde `--border-width` `--border-control` (≥ 3:1) y, en hover, `--p100`
+      con `--p600` (A16, A35).
+  - **Botones nuevos** (A35): `.menu-btn` y `.menu-cerrar` con `display: inline-flex`,
+    `align-items: center`, `justify-content: center`, `gap: var(--space-2)`,
+    `padding: 0 var(--space-4)`, fondo `--white`, texto `--p600`, borde `--border-width` solid
+    `--border-control`, `border-radius: var(--radius-sm)`, `font: inherit`,
+    `font-size: var(--text-body)` y `font-weight: var(--weight-strong)`; su icono SVG, de
+    `var(--icon-md)` × `var(--icon-md)`.
   - **Sin JS** (`html:not(.menu-js)`, D5, A3): `body { flex-direction: column; }` y
     `.sidebar { position: static; width: auto; min-height: 0; }`. El menú queda en el flujo, encima
     del contenido, sin taparlo, y `.menu-btn` no se muestra.
   - **Con JS** (`html.menu-js`):
-    - `.menu-btn` visible;
-    - `.sidebar` fijo a la izquierda, de ancho `min(var(--menu-movil-w), 85vw)` y alto `100dvh`,
-      con `z-index: 110`;
+    - `.menu-btn` y `.menu-cerrar` visibles (`display: inline-flex`), porque la regla global los
+      oculta (A28);
+    - `.sidebar` fijo a la izquierda, de ancho `min(var(--menu-movil-w), 85vw)`, con
+      `height: 100dvh`, `min-height: 0` (anula el `min-height: 100vh` de `app.css`, más alto que la
+      pantalla visible en el móvil, A29) y `z-index: 110`;
     - cerrado: `transform: translateX(-100%)` y `visibility: hidden`;
     - con `html.menu-abierto`: `transform: none`, `visibility: visible`, `.menu-velo` visible
       (`position: fixed; inset: 0; background: var(--overlay); z-index: 100`) y `body` con
@@ -100,9 +115,11 @@ Sin endpoints, migraciones ni datos nuevos.
       `.menu-cerrar`, `.field`, `select`, `textarea`,
       `input:not([type=checkbox]):not([type=radio]):not([type=hidden])`, `.pestanas-citas a` y
       `.migas a`;
-    - `min-width: var(--touch-min)` en `.menu-cerrar`;
+    - `min-width: var(--touch-min)` en `.menu-cerrar`, `.pestanas-citas a` y `.migas a`, que pasan a
+      `display: inline-flex` con `align-items: center` y `justify-content: center` (A30);
     - la casilla conserva su tamaño, y la zona de 44 px la da su etiqueta:
-      `.campo-casilla { min-height: var(--touch-min); }` (A20).
+      `.campo-casilla label { display: flex; align-items: center; min-height: var(--touch-min); }`
+      (A20, A33).
   - **Foco:** `.menu-btn`, `.menu-cerrar`, `.nav-item` y `.btn-logout` con
     `:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset); }` (A16).
@@ -133,10 +150,11 @@ el estado se anuncia con `aria-expanded` del botón (A5).
 |---|---|---|
 | Logo del menú (layout) | `width:100%; max-width:160px; object-fit:contain; display:block; margin:0 auto; mix-blend-mode:screen` | `.sidebar-logo img`: `max-width: var(--logo-max-w)` y el resto sin cambios (no son valores del sistema) |
 | Texto de la tarjeta de usuario (layout) | `min-width:0` | `.user-card-texto { min-width: 0; }` |
-| Pestañas de mis citas (`cliente-index`) | contenedor: `display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid var(--border)`; enlace: `padding:10px 4px; margin-right:20px` (solo el primero); `font-size:13.5px; font-weight:500`; sin subrayado; color `--p500` (activa) o `--text-muted`; `border-bottom:2px solid` `--p400` (activa) o `transparent` | `.pestanas-citas`: `gap: var(--space-2)`, `margin-bottom: var(--space-7)`, `border-bottom: var(--border-width) solid var(--border)`; `.pestanas-citas a`: `padding: var(--space-4) var(--space-1)`, `font-size: var(--text-body)`, `font-weight: var(--weight-strong)`, `color: var(--text-muted)`, `border-bottom: var(--border-width-strong) solid transparent`; `.pestanas-citas a:first-child { margin-right: var(--space-7); }`; `.pestanas-citas a.activa { color: var(--p500); border-bottom-color: var(--p400); }`, con `aria-current="page"` en la activa |
-| Migas de pan (`cliente-show`, `cliente-agendar`) | contenedor: `display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:13px; color:var(--text-muted)`; enlace: `color:var(--text-muted); text-decoration:none`; actual: `color:var(--text)` | `.migas`: `gap: var(--space-3)`, `margin-bottom: var(--space-7)`, `font-size: var(--text-meta)`, `color: var(--text-muted)`; `.migas a { color: var(--text-muted); text-decoration: none; }`; `.migas-actual { color: var(--text); }` |
+| Pestañas de mis citas (`cliente-index`) | contenedor: `display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid var(--border)`; enlace: `padding:10px 4px; margin-right:20px` (solo el primero); `font-size:13.5px; font-weight:500`; sin subrayado; color `--p500` (activa) o `--text-muted`; `border-bottom:2px solid` `--p400` (activa) o `transparent` | `.pestanas-citas`: `display: flex`, `gap: var(--space-2)`, `margin-bottom: var(--space-7)`, `border-bottom: var(--border-width) solid var(--border)`; `.pestanas-citas a`: `padding: var(--space-4) var(--space-1)`, `font-size: var(--text-body)`, `font-weight: var(--weight-strong)`, `text-decoration: none`, `color: var(--text-muted)`, `border-bottom: var(--border-width-strong) solid transparent`; `.pestanas-citas a:first-child { margin-right: var(--space-7); }`; `.pestanas-citas a.activa { color: var(--p500); border-bottom-color: var(--p400); }`, con `aria-current="page"` en la activa |
+| Migas de pan (`cliente-show`, `cliente-agendar`) | contenedor: `display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:13px; color:var(--text-muted)`; enlace: `color:var(--text-muted); text-decoration:none`; actual: `color:var(--text)` | `.migas`: `display: flex`, `align-items: center`, `gap: var(--space-3)`, `margin-bottom: var(--space-7)`, `font-size: var(--text-meta)`, `color: var(--text-muted)`; `.migas a { color: var(--text-muted); text-decoration: none; }`; `.migas-actual { color: var(--text); }` |
 
-Si `--medir` señala otro bloque (T014), se añade a esta tabla con `/plan --fix` antes de tocarlo.
+Cada clase reproduce **todas** las declaraciones de su `style=""` (A27). Si `--medir` señala otro
+bloque (T014), se añade a esta tabla con `/plan --fix` antes de tocarlo.
 
 **Pantallas y estados** (componentes del sistema; ningún estado nuevo de carga o error):
 | Pantalla | Componentes | A 320–899 px |
@@ -158,11 +176,13 @@ Si `--medir` señala otro bloque (T014), se añade a esta tabla con `/plan --fix
   - `--topbar-h: 60px` (alto de la barra superior);
   - `--border-width-strong: 2px` (indicador de pestaña y de sección actual);
   - `--text-meta: 13px` (migas de pan);
-  - `--logo-max-w: 160px`.
+  - `--logo-max-w: 160px`;
+  - `--icon-md: 18px` (icono de los botones del menú, A35);
+  - `--text-marca: 16px` (marca de texto del panel, A35).
 - Punto de corte: móvil por debajo de 900 px. Es el único literal admitido, en la condición de la
   media query; `menu.js` no lo repite (A22).
 - Componente «Menú del móvil» (opción A, [opcion-a.html](design/opcion-a.html)):
-  - botón «Menú» con icono y texto;
+  - botón «Menú» con icono y texto, con el aspecto de «Botones nuevos» (borde `--border-control`);
   - panel blanco con la marca de texto, las secciones con la actual marcada (`aria-current` y una
     barra de 2 px), el nombre y «Cerrar sesión»;
   - «Cerrar menú» y velo;
@@ -185,9 +205,9 @@ Si `--medir` señala otro bloque (T014), se añade a esta tabla con `/plan --fix
       `aria-label="Cerrar menú"`;
     - `.menu-velo` con `hidden` está entre `</aside>` y `<main>`;
     - `movil.css` está enlazado después de `app.css`, y `menu.js` en `<head>`;
-    - el enlace de la sección actual, y solo ese, lleva `aria-current="page"`, en una página de cada
-      rol;
-    - el `<aside>` no tiene `style=""`.
+    - dentro del `<aside>`, el enlace de la sección actual, y solo ese, lleva `aria-current="page"`,
+      en una página de cada rol (A37);
+    - el `<aside>`, `.menu-btn` y `.menu-velo` no tienen `style=""` (A32).
   - **Caracterización:**
     - `<meta name="viewport">` presente, en un test propio (A24);
     - por rol, la lista exacta de enlaces del menú (A7: la 020 la ampliará).
@@ -197,14 +217,26 @@ Si `--medir` señala otro bloque (T014), se añade a esta tabla con `/plan --fix
     - la transición, solo bajo `prefers-reduced-motion: no-preference`;
     - sin JS, `.sidebar` estático;
     - `overflow-y: auto` en `.sidebar`;
-    - la lista de toque, sin casillas ni radios;
+    - la lista de toque, sin casillas ni radios, con `min-width` e `inline-flex` en los enlaces de
+      pestañas y migas, y la etiqueta de la casilla con `min-height`;
+    - con `html.menu-js`, `.menu-cerrar` visible y `.sidebar` con `min-height: 0` (A28, A29);
+    - el banner del panel con `flex-wrap: wrap` (A34);
+    - el aspecto de `.menu-btn`, `.menu-cerrar` y `.sidebar-marca` con tokens (A35);
+    - `.nav-item.active` con la marca `box-shadow` de `--border-width-strong`, señal que no es
+      color (A32);
     - solo tokens en todas las declaraciones, duraciones incluidas, con control positivo (`px`, `s`,
       `ms`, colores, `font-weight`), salvo `0`, `1fr`, `none`, `auto`, `-100%`, `85vw`, `100dvh`,
       `transparent` y los `z-index` 100 y 110;
     - contraste ≥ 4.5:1 de los pares del menú (`.nav-item`, activo, `.nav-label`, `.sidebar-marca`,
-      `.btn-logout` y su hover) y ≥ 3:1 del foco, con el trait.
-  - **`app.css`:** las reglas del bloque `/* Spec 033 */` solo usan tokens, con control positivo, y
-    los ocho tokens están en `:root` con los valores de `system.md` (A2, A21).
+      `.btn-logout` y su hover, `.menu-btn`, `.menu-cerrar`) y ≥ 3:1 del foco y de los bordes de
+      control, con el trait.
+  - **`app.css`:**
+    - las reglas del bloque `/* Spec 033 */` solo usan tokens, con control positivo, y cada selector
+      de «Bloques tocados» tiene su lista completa de declaraciones (A2, A27);
+    - sus colores cumplen AA (`--text-muted` y `--p500` sobre `--bg`, ≥ 4.5:1; el indicador
+      `--p400` sobre `--bg`, ≥ 3:1), y la pestaña activa se distingue por su borde de
+      `--border-width-strong`, no solo por el color (A32);
+    - los diez tokens están en `:root` con los valores de `system.md` (A21).
   - **`menu.js`:** existe; añade `menu-js`; no usa `innerHTML`, `outerHTML`, `insertAdjacentHTML`,
     `eval(` ni `new Function`; no contiene `max-width` (no repite el punto de corte). Es una
     comprobación de texto que asegura el contrato; el comportamiento lo comprueba `--medir`.
@@ -220,7 +252,10 @@ Si `--medir` señala otro bloque (T014), se añade a esta tabla con `/plan --fix
   - **Anchos:** por cada vista del paciente, a 320, 390, 844 × 390, 900, 1024 y 1440 px,
     `scrollWidth` ≤ ancho y ninguna `.table-wrap` más ancha que su contenedor (CA1, CA6 y CA7, A6).
   - **Toque, a 390:** cajas ≥ 44 × 44 de los controles visibles de `.main` y del menú abierto (sin
-    los enlaces dentro de un `<p>`; la casilla, por su etiqueta) (CA4).
+    los enlaces dentro de un `<p>`; la casilla, por la caja de su `<label>`) (CA4, A33).
+  - **Recortes, a 320 y 390:** cada control y texto visible de `.main` queda entero dentro de la
+    pantalla y de sus antecesores con `overflow` distinto de `visible` (con control positivo: un
+    elemento recortado a propósito se detecta) (CA1, A34).
   - **Formularios, a 320:** en agendar, el perfil y reprogramar, cada etiqueta queda a ≤ 16 px de su
     campo y solapada en horizontal con él, y cada mensaje de error, enviado vacío, cabe en el ancho y
     queda junto a su campo (CA5, A12).
@@ -230,15 +265,18 @@ Si `--medir` señala otro bloque (T014), se añade a esta tabla con `/plan --fix
       visibles todas las secciones, la actual marcada con `aria-current`, el nombre y «Cerrar
       sesión»;
     - Escape lo cierra y el foco vuelve al botón;
+    - «Cerrar menú» se ve, mide ≥ 44 × 44, tiene nombre, cierra el menú y devuelve el foco al botón
+      (A28);
     - tocar el velo también lo cierra (A19).
   - **En horizontal, a 844 × 390:** con el menú abierto se alcanzan, desplazando el panel, el último
     enlace y «Cerrar sesión» (CA7, A10).
   - **Sin JS, a 390:** una pasada con JavaScript desactivado no se desborda, el menú no tapa
     contenido y no hay botón «Menú» (A3).
   - **A 1440:** el botón, el velo y la marca de texto ocultos, y la barra lateral visible (CA8).
-- **Línea base de 1440** (A8): tras T014 y antes de cualquier cambio de estilos, capturas a 1440 de
-  las 7 vistas y del menú de cada rol con los datos de prueba nuevos, en una carpeta temporal fuera
-  del repositorio. T028 compara con ellas.
+- **Línea base del escritorio** (A8, A31): tras T014 y antes de cualquier cambio de estilos, capturas
+  a 1440 de las 7 vistas y del menú de cada rol, y a 1024 y 1440 de las vistas del personal que usan
+  `.grid-auto`, `.grid-2` o `.grid-3` (por la regla global de `min-width: 0`), con los datos de
+  prueba nuevos, en una carpeta temporal fuera del repositorio. T028 compara con ellas.
 - **Capturas** a 320, 390 y 1440 de las vistas tocadas y del menú abierto, contra `system.html`
   (verificación manual) y, a 1440, contra la línea base (CA8).
 - **Lector de pantalla** (verificación manual, CA3): con NVDA en Windows o TalkBack en el móvil del
@@ -255,15 +293,15 @@ datos de la página. Encaja con la CSP de la 031.
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: las 7 pantallas del paciente sin desplazamiento horizontal de 320 a 1440 | `movil.css` (marco, rejillas, `min-width: 0`), bloques tocados | `MovilPacienteTest::test_movil_css_adapta_el_marco_y_las_rejillas`, `test_los_bloques_tocados_no_tienen_estilos_en_linea` · test en navegador: `--medir` (anchos de 320 a 1440) · verificación manual: capturas a 320 y 390 contra `system.html` |
-| CA2: menú sin espacio fijo, todo a ≤ 2 toques, sección actual, mismas secciones, todos los roles | layout, `movil.css`, `menu.js` | `test_cada_rol_tiene_el_boton_menu`, `test_la_seccion_actual_lleva_aria_current`, `test_el_menu_del_movil_tiene_las_mismas_secciones`, `test_el_menu_cerrado_no_ocupa_espacio`, `test_sin_js_el_menu_queda_en_el_flujo` · test en navegador: `--medir` (menú de cada rol a 320 y 390, sin JS) |
-| CA3: teclado y lector de pantalla | layout (`aria-*`), `menu.js`, `movil.css` (foco) | `test_cada_rol_tiene_el_boton_menu`, `test_menu_js_cumple_su_contrato`, `test_los_controles_del_menu_tienen_foco_visible` · test en navegador: `--medir` (foco, Escape, velo, `inert`; rotura comprobada sin Escape) · verificación manual: NVDA o TalkBack |
+| CA1: las 7 pantallas del paciente sin desplazamiento horizontal de 320 a 1440 | `movil.css` (marco, rejillas, banner, `min-width: 0`), layout (viewport), bloques tocados | `MovilPacienteTest::test_la_pagina_tiene_viewport` (caracterización), `test_movil_css_adapta_el_marco_y_las_rejillas`, `test_los_bloques_tocados_no_tienen_estilos_en_linea` · test en navegador: `--medir` (anchos de 320 a 1440 y recortes) · verificación manual: capturas a 320 y 390 contra `system.html` |
+| CA2: menú sin espacio fijo, todo a ≤ 2 toques, sección actual, mismas secciones, todos los roles | layout, `movil.css`, `menu.js` | `test_cada_rol_tiene_el_boton_menu`, `test_la_pagina_carga_la_hoja_y_el_script_del_movil`, `test_el_bloque_del_menu_no_tiene_estilos_en_linea`, `test_la_seleccion_no_depende_solo_del_color`, `test_la_seccion_actual_lleva_aria_current`, `test_el_menu_del_movil_tiene_las_mismas_secciones`, `test_el_menu_cerrado_no_ocupa_espacio`, `test_sin_js_el_menu_queda_en_el_flujo` · test en navegador: `--medir` (menú de cada rol a 320 y 390, sin JS) |
+| CA3: teclado y lector de pantalla | layout (`aria-*`), `menu.js`, `movil.css` (foco, «Cerrar menú» visible) | `test_cada_rol_tiene_el_boton_menu`, `test_el_menu_cerrado_no_ocupa_espacio` («Cerrar menú» visible con JS), `test_menu_js_cumple_su_contrato`, `test_los_controles_del_menu_tienen_foco_visible` · test en navegador: `--medir` (foco, Escape, «Cerrar menú», velo, `inert`; rotura comprobada sin Escape) · verificación manual: NVDA o TalkBack |
 | CA4: toque ≥ 44 × 44 a 390 | `movil.css` (toque), tokens, pestañas y migas | `test_los_controles_tienen_toque_minimo` · test en navegador: `--medir` (cajas a 390) |
 | CA5: formularios de agendar, reprogramar y perfil a 320 | `movil.css`, migas de agendar | `test_movil_css_adapta_el_marco_y_las_rejillas`, `test_los_campos_conservan_su_tipo` (caracterización) · test en navegador: `--medir` (etiqueta junto al campo, errores) · verificación manual: teclado del móvil del usuario |
 | CA6: textos largos | `movil.css` (`overflow-wrap`), datos de prueba de `capturar.mjs` | `test_los_textos_largos_parten_de_linea` · test en navegador: `--medir` con los textos largos a 320 |
-| CA7: horizontal 844 × 390 | `movil.css` (`100dvh`, `overflow-y` del panel) | `test_el_menu_se_recorre_con_poca_altura` · test en navegador: `--medir` a 844 × 390 |
-| CA8: escritorio a 1440 sin cambios | reglas dentro de la media query; fuera, solo ocultar y `min-width: 0`; bloques tocados con los mismos valores | `test_fuera_del_movil_solo_hay_las_reglas_previstas`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens` · test en navegador: `--medir` a 1440 · verificación manual: capturas a 1440 contra la línea base |
-| RNF: WCAG 2.1 AA (1.4.10, 1.3.4, 2.4.7, 4.1.2, 1.4.1) | `movil.css`, layout, `menu.js` | `test_los_pares_del_menu_cumplen_aa`, `test_los_controles_del_menu_tienen_foco_visible`, `test_la_seccion_actual_lleva_aria_current` · test en navegador: `--medir` |
+| CA7: horizontal 844 × 390 | `movil.css` (`100dvh`, `min-height: 0`, `overflow-y` del panel) | `test_el_menu_se_recorre_con_poca_altura` · test en navegador: `--medir` a 844 × 390 · verificación manual: en horizontal en el móvil del usuario, «Cerrar sesión» se alcanza (T097, A29) |
+| CA8: escritorio a 1440 sin cambios | reglas dentro de la media query; fuera, solo ocultar y `min-width: 0`; bloques tocados con los mismos valores | `test_fuera_del_movil_solo_hay_las_reglas_previstas`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens` · test en navegador: `--medir` a 1440 · verificación manual: capturas a 1440 (paciente) y a 1024 y 1440 (personal con rejillas) contra la línea base |
+| RNF: WCAG 2.1 AA (1.4.10, 1.3.4, 2.4.7, 4.1.2, 1.4.1) | `movil.css`, layout, `menu.js` | `test_los_pares_del_menu_cumplen_aa`, `test_los_colores_del_bloque_033_cumplen_aa`, `test_la_seleccion_no_depende_solo_del_color`, `test_los_controles_del_menu_tienen_foco_visible`, `test_la_seccion_actual_lleva_aria_current` · test en navegador: `--medir` |
 | RNF: toque ≥ 44 × 44 | tokens, `movil.css` | `test_los_controles_tienen_toque_minimo` · test en navegador: `--medir` |
 | RNF: medido a 320, 390, 1440 y 844 × 390 | `capturar.mjs`, `.ai/project.yaml` | test en navegador: `--medir`; `test_los_tokens_y_anchos_coinciden_con_el_sistema` |
 | P9: solo tokens | `movil.css`, `app.css` | `test_movil_css_solo_usa_tokens`, `test_las_reglas_nuevas_de_app_css_solo_usan_tokens` |
@@ -285,8 +323,9 @@ desplazamiento lateral.
   - con la 031 y la 032 no comparte código; solo documentación de índices (`architecture.md`,
     `roadmap.md`, `specs/README.md`);
   - **la 033 va antes que la 020** (decisión del usuario, 2026-10-11, A7). La 020, cuando se
-    reconstruya sobre `main`, añade «Auditoría» al menú de admin y actualiza la lista de
-    `test_el_menu_del_movil_tiene_las_mismas_secciones`. Se anota en el roadmap;
+    reconstruya sobre `main`, añade «Auditoría» al menú de admin con el patrón de la 033 (`.active` y
+    `aria-current="page"` en la sección actual) y actualiza la lista de
+    `test_el_menu_del_movil_tiene_las_mismas_secciones`. Se anota en el roadmap (A38);
   - la versión se fija en `/release` (v0.8.0 si la 031 sale antes como v0.7.0).
 - **Métricas a vigilar tras el deploy:** errores 500 en `laravel.log` y 5xx en el log de nginx
   durante 15 minutos; desde un móvil real, la dirección pública con el paciente y con un rol del
@@ -352,6 +391,10 @@ desplazamiento lateral.
 - **D12 · El detalle de la cita no se toca.** Su rejilla de dos columnas en línea cabe a 320 (D2).
   Pasarla a `.grid-2` cambiaría el `gap` de 12 a 16 px a 1440 (A1). Si `--medir` la señala con los
   textos largos, se añade a «Bloques tocados» con `/plan --fix`.
+- **D13 · Aspecto de los elementos nuevos** (A35). «Menú» y «Cerrar menú» siguen a `.btn-outline`,
+  pero con el borde `--border-control` (≥ 3:1, P9) en lugar de `--p200` (1,6:1, deuda de
+  `.btn-outline`). La marca de texto usa `--weight-strong` (500) en lugar del 600 de la maqueta, para
+  no añadir un peso al sistema; el tamaño, 16 px, entra como token (`--text-marca`).
 - Ninguna decisión es → ADR: no hay dependencias nuevas ni cambios de arquitectura. El layout común
   ya existe.
 
