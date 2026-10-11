@@ -333,12 +333,12 @@ class CitasController extends Controller
         Gate::authorize('gestionar-cita', $cita);
 
         // Las notas internas no se aceptan aquí (spec 026, CA11). Desde «No reagendar» (spec 028)
-        // la cancelación exige marcar la casilla de confirmación (/review 028 R6).
+        // la cancelación exige marcar la casilla de confirmación (/review 028 R6, R23).
         $data = $request->validate([
             'estado' => 'required|string|in:'.implode(',', ['agendada', ...array_keys(EstadosCita::TRANSICIONES)]),
             'motivo' => 'nullable|string|max:500',
             'formulario' => 'nullable|string|in:reprogramar,no-reagendar',
-            'confirmar' => 'exclude_unless:formulario,no-reagendar|accepted',
+            'confirmar' => 'exclude_unless:formulario,no-reagendar|exclude_unless:estado,cancelada|accepted',
         ], [
             'estado.required' => 'Elige un estado válido.',
             'estado.string' => 'Elige un estado válido.',
@@ -351,16 +351,22 @@ class CitasController extends Controller
         ]);
 
         Gate::authorize('cambiar-estado-cita', [$cita, $data['estado']]);
+        $desdeNoReagendar = ($data['formulario'] ?? null) === 'no-reagendar' && $data['estado'] === 'cancelada';
 
         try {
             $estados->cambiar($id, $data['estado'], auth()->user(), $data['motivo'] ?? null);
         } catch (CambioDeEstadoNoPermitido $e) {
+            // Desde «No reagendar» la sección puede ya no mostrarse: el rechazo va como aviso (R20).
+            if ($desdeNoReagendar) {
+                return back()->withInput()->with('error', $e->getMessage());
+            }
+
             // Se conserva el motivo escrito para no tener que volver a teclearlo.
             return back()->withInput()->withErrors(['estado' => $e->getMessage()]);
         }
 
         // Tras cancelar desde «No reagendar», la pantalla de reprogramar ya no aplica: al detalle (R1).
-        if (($data['formulario'] ?? null) === 'no-reagendar') {
+        if ($desdeNoReagendar) {
             return redirect()->route(auth()->user()->rol.'.citas.show', $id)->with('success', 'Estado actualizado correctamente.');
         }
 
