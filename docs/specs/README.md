@@ -31,7 +31,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | released (v0.2.0) | — | — (2026-09-29) |
 | 026 | [estados-cita](026-estados-cita/spec.md) | Agenda | released (v0.3.0) | — | — (2026-10-02) |
 | 027 | [horarios-validos](027-horarios-validos/spec.md) | Agenda | released (v0.4.0) | — | — (2026-10-02) |
-| 028 | [reprogramar-citas](028-reprogramar-citas/spec.md) | Agenda | implemented | — | — (2026-10-11) |
+| 028 | [reprogramar-citas](028-reprogramar-citas/spec.md) | Agenda | released (v0.6.0) | — | — (2026-10-11) |
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
 

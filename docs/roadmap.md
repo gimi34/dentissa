@@ -14,7 +14,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
 | 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS11.a, RS13.a, RS13.b, RS14.a | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b y OB4.c → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
-| 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, implemented); 013 (parte 3) | pendiente |
+| 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | — | pendiente |
 
@@ -131,6 +131,36 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     (junto con las cabeceras de la spec 031).
   - Documentar el acceso de administración desde fuera de casa (Tailscale) en `deployment.md` y
     actualizar la fila del SSH en `security.md` (hoy "solo desde la red local") cuando se instale.
+- Deuda de la spec 028 (liberada en v0.6.0; /review, aceptada sin tarea):
+  - 028/R11: al reprogramar no se reinicia `recordatorio_enviado`; reiniciarlo cuando existan los
+    recordatorios.
+  - 028/R13: los PATCH de reprogramar y cancelar no tienen límite de peticiones (viñeta del límite
+    en las rutas de escritura).
+  - 028/R14: en la pantalla de reprogramar, el error de `estado` marca el campo motivo y el foco no
+    va al primer error.
+  - 028/R15: margen de `.aviso-plazo`, nombres accesibles repetidos en la lista del paciente y
+    `role` de los avisos flash (DS7).
+  - 028/R16: completar los tests de la 028 (agenda en CA1, `disponible = 0`, aserción de «Paula»,
+    `literales()` con `rem`/`em`/`ms`, test de logs por HTTP).
+  - 028/R17: duplicación de la reprogramación entre controladores, de las reglas de `motivo` y de
+    `ERRORES_DE_BLOQUEO`; excepción HTTP en el servicio de dominio → spec 013.
+  - 028/R25: el helper `dom()` de los tests está en tres archivos; llevarlo al trait
+    `EscenarioEstadosCita`.
+  - 028/R27: anotar en D10 y D12 del plan de la 028 la casilla obligatoria y que los controladores
+    leen `formulario` (R1 y R6).
+  - 028/R28: en «No reagendar» pueden salir dos `role="alert"` a la vez; resolverlo con el foco en
+    el primer error (R14).
+  - 028/R29: la regla de acciones del paciente en tres sitios, la constante pública entre
+    controladores y `fueraDePlazo()` acoplada a `conPuedeCancelar` → un método en `EstadosCita`
+    (spec 013).
+  - 028/R30: el dentista activo se lee sin bloqueo; llevar las guardas de dentista activo y duración
+    a `ReservaCitas::bloquearDentista` y `comprobarHueco` (spec propia o la 013).
+  - 028/R31: consultas de más en el PATCH del paciente y en el detalle del personal (junto con R17).
+  - 028/R32: «Mis citas» hace una consulta por cita para saber si el dentista sigue activo; leerlo en
+    la consulta de la lista (junto con R31).
+- Orden de versiones: la 028 salió en v0.6.0 antes que la 031, que pasa de la v0.6.0 prevista a
+  v0.7.0 (anotarlo en su plan al retomarla). Su arreglo de `npm audit` (T004) ya está en `main`
+  (PR #21). El diseño para móvil va en una spec propia (DS8).
 - Deuda de la spec 027 (liberada en v0.4.0; /review, aceptada sin tarea):
   - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
     repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
