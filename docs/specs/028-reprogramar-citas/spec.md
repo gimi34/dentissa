@@ -1,7 +1,7 @@
 ---
 id: 028
 slug: reprogramar-citas
-status: implemented
+status: approved
 created: 2026-10-07
 extends: [003, 004, 026]
 ---

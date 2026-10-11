@@ -1,144 +1,129 @@
 ---
 spec: 028-reprogramar-citas
 verdict: changes_requested
-round: 1
-date: 2026-10-10
-base: 961c9e4
-head: 23198da
+round: 2
+date: 2026-10-11
+base: 23198da
+head: 0498553
 human_signoff: no requerido
 ---
 
 # Review · 028 Reprogramar citas
 
 ## Resumen
-`changes_requested`. Ningún hallazgo bloquea, pero el usuario decidió corregir antes de liberar seis
-de los ocho importantes. Son R1–R5 y R7: mensajes contradictorios tras cancelar desde «No reagendar»,
-panel de inicio del paciente sin el plazo de 24 h, dos aserciones vacías, el encabezado del historial y
-reprogramar a un dentista dado de baja. Para R6 eligió la casilla obligatoria. R8 lo aceptó con
-condición. De los menores, corrige ahora R9, R10, R12 y R18; los demás van al roadmap.
-Conteo: bloqueante 0 · importante 8 · menor 10
+`changes_requested`. Las correcciones de la ronda 1 funcionan: R1–R7, R9, R10 y R12 quedan corregidos
+y R18 solo en parte (ver R29). Pero esas correcciones abren tres importantes que el usuario decide
+corregir. R19: T070 rechaza en el servidor al dentista inactivo y la duración inválida, pero la
+pantalla sigue ofreciendo «Reprogramar» y el usuario queda en un bucle sin salida. R20: un rechazo
+del personal desde «No reagendar» se pierde. R21: el bloque del panel que tocó T064 conserva deuda de
+P9. De los menores, se corrigen R22, R23, R24 y R26 y el resto va al roadmap.
+Conteo: bloqueante 0 · importante 3 · menor 10
 
-Insumo: además de los revisores A, C+D, S y accesibilidad (subagentes con contexto limpio), los
-hallazgos de dos `/code-review` lanzadas por el usuario el 2026-10-10, deduplicados y verificados.
+Rango: `23198da..0498553` (correcciones T060–T072). Revisión con un subagente independiente
+(encargos A, C+D y S juntos, diff de 44 KB) más los hallazgos de cuatro `/code-review` lanzadas
+por el usuario, deduplicados y verificados en el código. Las comparaciones de fecha en UTC frente a
+hora local (listas y panel del paciente, hora del historial), que señalan las `/code-review`, ya
+están en `docs/roadmap.md` y no se cuentan como hallazgo nuevo.
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `docker compose exec app php artisan test` | ✅ 242 passed, 0 fallos (línea base de T002: 183 passed, sin fallos) |
-| tests nuevos (`--filter Reprogramar`), segunda ejecución | ✅ 58 passed, sin intermitentes |
-| `docker compose exec app vendor/bin/pint --test <21 archivos PHP tocados>` | ✅ PASS |
+| `docker compose exec app php artisan test` | ✅ 251 passed, 0 fallos (línea base de T002: 183, sin fallos) |
+| tests de reprogramar (`--filter Reprogramar`), segunda ejecución | ✅ 67 passed, sin intermitentes |
+| `docker compose exec app vendor/bin/pint --test <22 archivos PHP tocados desde 961c9e4>` | ✅ PASS |
 | `npm run build` | ✅ salida 0 |
 | `python .ai/bin/aidd.py validate docs/specs/028-reprogramar-citas` | ✅ 0 errores |
 
 ## Criterios de aceptación
 | CA | Test | Estado | Nota |
 |---|---|---|---|
-| CA1 | `ReprogramarCitaTest::test_la_administracion_reprograma_cualquier_cita`, `test_el_asistente_reprograma_citas_de_sus_dentistas`, `test_solo_cambian_fecha_y_hora_y_el_hueco_anterior_queda_libre`; `ReprogramarCitaVistasTest::test_el_detalle_ofrece_reprogramar_solo_si_se_puede` | ✅ | La cita se mueve y el hueco anterior queda libre; que aparezca en la agenda no se comprueba en una vista (R16) |
-| CA2 | `ReprogramarCitaPacienteTest::test_el_paciente_reprograma_con_24_horas_o_mas`, `test_el_hueco_nuevo_puede_empezar_en_menos_de_24_horas`, `test_con_menos_de_24_horas_se_rechaza_con_el_mensaje_de_plazo`, `test_el_detalle_oculta_reprogramar_fuera_de_plazo_y_explica_por_que`, `test_la_lista_muestra_el_aviso_corto_fuera_de_plazo` | ⚠ | Borde y zona horaria bien cubiertos; el panel de inicio del paciente no aplica el plazo (R2) |
-| CA3 | `ReprogramarCitaPacienteTest::test_el_paciente_cancela_con_24_horas_o_mas`, `test_el_paciente_no_cancela_con_menos_de_24_horas`; tests de la 026 actualizados (D6) | ⚠ | El servidor lo cumple; el panel de inicio ofrece «Cancelar» con menos de 24 h (R2) |
-| CA4 | `ReprogramarCitaTest::test_aplica_la_regla_de_agenda_al_nuevo_hueco`, `test_la_propia_cita_no_cuenta_como_conflicto`, `test_una_fecha_pasada_o_igual_se_rechaza`, `test_la_nueva_hora_se_interpreta_en_la_zona_de_la_clinica` | ✅ | Casos latentes: segundos en «misma fecha y hora» (R9) y duración < 1 (R10); dentista inactivo fuera de CA4 (R7) |
-| CA5 | `ReprogramarCitaTest::test_una_confirmada_vuelve_a_agendada`, `test_una_cita_cerrada_o_empezada_no_se_reprograma`; `ReprogramarCitaRolesTest::test_el_formulario_de_una_cita_que_no_se_puede_mover_muestra_el_motivo`; `ReprogramarCitaPacienteTest::test_el_paciente_no_ve_estados_internos`; `EstadosCitaTransicionesTest` | ⚠ | En `test_el_paciente_no_ve_estados_internos`, el GET de los casos 2–4 ve el aviso del PATCH anterior (R4) |
-| CA6 | `ReprogramarCitaVistasTest::test_la_seccion_no_reagendar_cancela_con_motivo`, `test_cada_formulario_muestra_sus_valores_y_errores_en_su_seccion`, `test_el_detalle_del_dentista_no_enlaza_a_reprogramar`; `ReprogramarCitaPacienteTest::test_el_paciente_cancela_con_motivo_desde_la_pantalla` | ⚠ | Cancela bien, pero al volver a la pantalla los mensajes se contradicen y no hay test (R1); la cancelación irreversible va en un clic (R6) |
-| CA7 | `ReprogramarCitaTest::test_la_reprogramacion_deja_una_sola_entrada_de_historial`, `test_un_rechazo_no_deja_historial`; `ReprogramarCitaVistasTest::test_el_historial_muestra_la_reprogramacion` | ✅ | |
-| CA8 | `ReprogramarCitaRolesTest` (dentista, asistente fuera de alcance, paciente ajeno, rutas cruzadas, `test_fuera_de_alcance_tampoco_cancela_definitivamente`) | ✅ | GET y PATCH, con la cita sin cambios |
-| CA9 | `ReprogramarCitaTest::test_los_campos_anadidos_a_mano_no_cambian_la_cita`, `test_una_fecha_u_hora_mal_formada_da_error_de_validacion`, `test_los_mensajes_de_validacion_estan_en_espanol`; `ReprogramarCitaPacienteTest::test_fuera_de_plazo_se_rechaza_aunque_se_envie_a_mano`, `test_las_listas_en_el_formulario_no_dan_error_del_servidor` | ✅ | Una aserción `assertSee('')` es vacía (R3); lo demás prueba el criterio |
-| CA10 | `ReprogramarConcurrenteTest` (bloqueo real con segunda conexión, mismo hueco con agendado, interbloqueo, cita bloqueada) | ✅ | |
+| CA1 | `ReprogramarCitaTest` (admin y asistente), `ReprogramarCitaVistasTest::test_el_detalle_ofrece_reprogramar_solo_si_se_puede` | ✅ | |
+| CA2 | `ReprogramarCitaPacienteTest::test_el_panel_de_inicio_respeta_el_plazo` y los de la ronda 1 | ✅ | Corregido R2 |
+| CA3 | `ReprogramarCitaPacienteTest::test_el_paciente_cancela_con_24_horas_o_mas`, `test_el_paciente_no_cancela_con_menos_de_24_horas`, `test_el_panel_de_inicio_respeta_el_plazo` | ✅ | |
+| CA4 | `ReprogramarCitaTest::test_no_se_reprograma_la_cita_de_un_dentista_inactivo`, `test_la_misma_hora_con_segundos_se_rechaza_como_igual`, `test_una_cita_sin_duracion_no_se_reprograma` y los de la ronda 1 | ⚠ | El servidor rechaza bien, pero la pantalla sigue ofreciendo reprogramar (R19) |
+| CA5 | `ReprogramarCitaPacienteTest::test_el_paciente_no_ve_estados_internos` (sesión limpia por caso) | ✅ | Corregido R4 |
+| CA6 | `ReprogramarCitaVistasTest::test_no_reagendar_pide_confirmar_la_cancelacion`, `test_tras_cancelar_desde_no_reagendar_se_vuelve_al_detalle`; `ReprogramarCitaPacienteTest::test_el_paciente_confirma_la_cancelacion_desde_la_pantalla` | ⚠ | Corregidos R1 y R6; un rechazo del personal desde «No reagendar» se pierde (R20) |
+| CA7 | `ReprogramarCitaVistasTest::test_el_historial_tiene_su_encabezado` y los de la ronda 1 | ✅ | Corregido R5 |
+| CA8 | `ReprogramarCitaRolesTest` | ✅ | |
+| CA9 | `ReprogramarCitaTest::test_una_fecha_u_hora_mal_formada_da_error_de_validacion` (mensaje leído antes del GET) | ✅ | Corregido R3 |
+| CA10 | `ReprogramarConcurrenteTest` | ✅ | |
 
 ## Conformidad con el plan
-- Cambios fuera del plan: ninguno (`scope.md`: 28 archivos de código, todos con tarea; coinciden con «Cambios por módulo»).
-- Partes del plan sin implementar: ninguna. T001, T031, T032 y T041 no tienen diff de código porque solo tocan documentación (`docs.stat`).
+- Cambios fuera del plan: `DashboardController.php` y `dashboard/cliente.blade.php` (R2, tarea T064), y `app.css` en T064 (decisión del usuario: `.acciones-fila` con salto de línea). Todos tienen tarea de /review (`scope.md`: 14 archivos, 0 sin tarea).
+- Partes del plan sin implementar: ninguna. D10 y D12 cambiaron por decisión del usuario en la ronda 1 (R1, R6), sin anotarlo en el plan (R27).
 
 ## Constitution Check (sobre el código)
 | Principio | Resultado | Evidencia |
 |---|---|---|
-| P1 Spec aprobada antes de código | ✅ | Spec, plan y tareas aprobados antes de `impl_base` (`961c9e4`) |
-| P2 Test que falla antes y pasa después | ✅ | 5 archivos de test nuevos y 4 de la 026 ajustados (D6), sin `skip`; dos aserciones no prueban lo que dicen (R3, R4) |
-| P3 Autorización por rol y recurso | ✅ (❌ aceptado en los GET existentes) | Rutas nuevas con `role:` y `Gate::authorize('reprogramar-cita')`; probado en `ReprogramarCitaRolesTest`. Excepción aceptada → specs 014 y 015 (`docs/roadmap.md`) |
-| P4 Entrada validada y SQL con bindings | ✅ | `ReprogramacionCitas::reglasDeEntrada()` con `bail` y `date_format`; Query Builder con bindings; Blade solo con `{{ }}` |
-| P5 Nada sensible en el repo | ✅ | gitleaks sin fugas; datos de prueba ficticios |
-| P6 Sin vulnerabilidades críticas/altas | ✅ | Sin cambios en lockfiles; avisos de `npm audit` preexistentes (R8) |
-| P7 Auditoría de datos sensibles | ❌ aceptado | Solo historial de la cita; evento formal → 022, 403 → 020 |
-| P8 Correlación y logs limpios | ❌ aceptado | Sin `Log::` nuevos; SQL en `QueryException` no prevista → 023 |
-| P9 La interfaz usa solo el sistema de diseño | ⚠ | Todo el CSS nuevo usa tokens y los bloques tocados no tienen `style=`. En el bloque del historial, que la 028 tocó, el título sigue siendo un `<span>` y no un encabezado (R5) |
+| P1 Spec aprobada antes de código | ✅ | Tareas de /review añadidas antes de implementarlas |
+| P2 Test que falla antes y pasa después | ✅ | T060, T063, T067 y T069 fallaron antes de su implementación; T065 y T066 comprobados rompiendo |
+| P3 Autorización por rol y recurso | ✅ (❌ aceptado en los GET existentes) | Sin rutas nuevas; el panel del paciente calcula acciones sin cambiar su control (excepción aceptada → 015) |
+| P4 Entrada validada y SQL con bindings | ✅ | `formulario` y `confirmar` validados en los dos controladores; Query Builder |
+| P5 Nada sensible en el repo | ✅ | gitleaks sin fugas |
+| P6 Sin vulnerabilidades críticas/altas | ✅ | Sin cambios en lockfiles; `composer audit` limpio; `npm audit` según R8 (ronda 1) |
+| P7 Auditoría | ❌ aceptado | Sin cambios respecto a la ronda 1 |
+| P8 Correlación y logs limpios | ❌ aceptado | Sin `Log::` nuevos |
+| P9 La interfaz usa solo el sistema de diseño | ⚠ | Lo nuevo usa tokens y no tiene `style=`, pero el bloque «Tu próxima cita» que tocó T064 conserva el título en `<span>` y un contenedor con `style=` (R21) |
 
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks v8.21.2 `detect --no-banner` | ✅ 0 hallazgos (321 commits) |
-| semgrep 1.99.0 `--config p/php --metrics=off --error` (archivos de `app/` y `database/migrations/` tocados y `routes/web.php`) | ✅ 0 hallazgos |
-| `composer audit --locked` · `npm audit --audit-level=high` | composer: ✅ sin avisos · npm: crít: 2 · alta: 1 · media: — (dependencias de desarrollo, preexistentes, corregidas en la 031; R8) |
-| trivy 0.57.1 `fs --severity HIGH,CRITICAL` | ✅ 0 hallazgos (sin secretos) |
+| gitleaks v8.21.2 `detect --no-banner` | ✅ 0 hallazgos |
+| semgrep 1.99.0 `--config p/php --metrics=off --error` (archivos de `app/` tocados desde `23198da` y `routes/web.php`) | ✅ 0 hallazgos |
+| `composer audit --locked` · `npm audit` | composer: ✅ sin avisos · npm: sin cambios desde la ronda 1 (R8, aceptado con condición) |
+| trivy fs | sin cambios de dependencias ni de imágenes desde la ronda 1 (✅ 0 HIGH/CRITICAL el 2026-10-10) |
 
 | Tema OWASP | Resultado | Evidencia |
 |---|---|---|
-| A01:2025 Control de acceso (TM1, TM2, CA8) | ✅ | `role:` por grupo y en cada ruta del paciente; Gate `reprogramar-cita` antes de validar; `citaDelPaciente` → 404; `ReprogramarCitaRolesTest` |
-| A01:2025 Divulgación en el rechazo (TM8) | ✅ | `CitaNoAgendable::noDisponible()` genérico; `test_el_hueco_ocupado_no_revela_la_otra_cita` |
-| A01:2025 Limitación de tasa | ❌ (menor) | Los PATCH de reprogramar y cancelar no tienen `throttle` (R13) |
-| A02:2025 Configuración incorrecta | ➖ | Sin cambios de configuración |
-| A03:2025 Cadena de suministro | ✅ | Sin cambios en lockfiles |
-| A04:2025 Fallos criptográficos | ➖ | Sin criptografía ni datos sensibles en URLs |
-| A05:2025 Inyección (SQL, XSS, validación; TM5, TM11) | ✅ | Bindings; solo `{{ }}`; `old()` solo si es texto; `test_el_motivo_de_la_reprogramacion_se_muestra_escapado`, `test_una_fecha_u_hora_mal_formada_da_error_de_validacion` |
-| A06:2025 Diseño inseguro (TM3, TM4, TM6, TM10) | ✅ | Solo fecha, hora y motivo; plazo y estado comprobados con la cita bloqueada; `ReprogramarConcurrenteTest` |
-| A07:2025 Autenticación | ➖ | Sin cambios |
-| A08:2025 Integridad / CSRF | ✅ | `@csrf` y `@method('PATCH')` en los formularios nuevos |
-| A09:2025 Registro y auditoría (TM9) | ✅ (P7 aceptado) | Una entrada de historial con autor, fechas y motivo; `test_ni_la_reprogramacion_ni_su_rechazo_escriben_en_los_logs` |
-| A10:2025 Manejo de excepciones (TM7) | ✅ | 1205/1213 y `DeadlockException` → `noDisponible`; `test_un_interbloqueo_se_convierte_en_no_disponible` |
-| Proceso: rutas protegidas e instrucciones a agentes | ✅ | Contra `origin/main` no se tocan rutas protegidas; sin instrucciones sospechosas. Los cambios sin commitear en `aidlc/` no son de esta spec |
+| A01:2025 Control de acceso | ✅ | Sin rutas nuevas; el panel no amplía el alcance del paciente |
+| A04/A06:2025 Diseño inseguro (confirmación de acción irreversible) | ✅ | La casilla es una confirmación de interfaz (R6, decisión del usuario); solo se exige desde «No reagendar» |
+| A05:2025 Inyección y validación | ✅ | `formulario` con `in:`; `confirmar` con `accepted`; salida escapada |
+| A06:2025 Carreras | ❌ (menor) | `usuarios.activo` se lee sin bloqueo frente a una baja simultánea (R30) |
+| A10:2025 Manejo de excepciones | ⚠ | Un rechazo de estado desde «No reagendar» no se muestra al personal (R20) |
+| Proceso | ✅ | Sin rutas protegidas ni dependencias nuevas; los cambios sin commitear de `aidlc/` no son de esta spec y no se incluyen |
 
 ## Observabilidad
-- Eventos de auditoría de la spec emitidos y probados: no hay evento formal (P7 aceptado → 022); la reprogramación deja una entrada de historial probada por `test_la_reprogramacion_deja_una_sola_entrada_de_historial`.
-- Datos sensibles en logs del código tocado: ninguno (`git diff 961c9e4 -- app/` sin `Log::` nuevos; `test_ni_la_reprogramacion_ni_su_rechazo_escriben_en_los_logs`). Residuo P8 aceptado → 023.
+- Eventos de auditoría de la spec emitidos y probados: sin cambios (P7 aceptado → 022).
+- Datos sensibles en logs del código tocado: ninguno (`git diff 23198da -- app/` sin `Log::`).
 - `request_id` presente en los logs nuevos: no aplica (sin logs nuevos).
 
 ## Hallazgos
 | ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
 |---|---|---|---|---|
-| R1 | importante | app/Http/Controllers/ClienteCitasController.php:139; app/Http/Controllers/CitasController.php:356; resources/views/citas/partials/reprogramar.blade.php:40-43 | Tras cancelar con éxito desde «No reagendar», `back()` vuelve a la pantalla de reprogramar. Allí se muestran juntos el éxito y el motivo de que ya no se puede mover: al paciente, «Esta cita ya no se puede reprogramar…»; al personal, el texto de `cerrada()`. Ningún test sigue la redirección | Con `formulario=no-reagendar`, redirigir al detalle de la cita del rol; test que sigue la redirección |
-| R2 | importante | resources/views/dashboard/cliente.blade.php:53; app/Http/Controllers/DashboardController.php:179 | El panel de inicio del paciente ofrece «Cancelar» en la próxima cita `agendada` sin mirar el plazo de 24 h: con menos, el clic siempre falla con el mensaje de plazo. Tampoco ofrece «Reprogramar» | Calcular `puede_cancelar` y `puede_reprogramar` con `EstadosCita::dentroDelPlazoDelPaciente` y mostrar el aviso corto fuera de plazo, con test |
-| R3 | importante | tests/Feature/ReprogramarCitaTest.php:282 | `assertSee($this->errorDe(...))` se evalúa después del GET, cuando el flash `errors` ya caducó: `errorDe()` devuelve `''` y `assertSee('')` siempre pasa | Guardar el mensaje antes del GET y exigir que no esté vacío |
-| R4 | importante | tests/Feature/ReprogramarCitaPacienteTest.php:198-201 | En el bucle, el GET de los casos 2–4 llega con el flash `error` del PATCH anterior, que pinta el layout. `assertSee(NO_REPROGRAMABLE)` pasaría aunque la pantalla mostrara el formulario | Sesión limpia en cada GET y comprobar que no aparece `name="fecha"` |
-| R5 | importante | resources/views/citas/show.blade.php:116 | El bloque `#historial`, reescrito por la 028, sigue titulado con `<span class="section-title">`. Parece un encabezado y no lo es (WCAG 1.3.1). P9 pide corregir la deuda (DS7) al tocar la pantalla | `<h2 class="section-title">Historial de cambios</h2>`, con test |
-| R6 | importante | resources/views/citas/partials/reprogramar.blade.php:89, 108 | «Cancelar la cita definitivamente» es irreversible y se envía en un clic, sin confirmación ni revisión (WCAG 3.3.4). La misma cancelación desde la lista y el detalle del paciente sí pide confirmación | Casilla obligatoria «Entiendo que la cancelación no se puede deshacer», con su etiqueta y validada en el servidor, sin JS (decisión del usuario, 2026-10-10: modifica D12, que seguía «sin `confirm()`») |
-| R7 | importante | app/Agenda/ReprogramacionCitas.php:99 | Reprogramar no comprueba que el dentista siga activo, y agendar sí (025 CA10). Una cita de un dentista dado de baja se puede mover a un hueco futuro nuevo. CA4 solo cita 025 CA2–CA7 | Rechazar con `CitaNoAgendable::noDisponible()` si el usuario del dentista no está activo (decisión del usuario, 2026-10-10) |
-| R8 | importante | package-lock.json (sin cambios en la 028) | `npm audit`: 2 críticas (`shell-quote`) y 1 alta (`source-map-js`) en dependencias de desarrollo, sin excepción en `docs/security.md`. Ya están corregidas en la 031 | Aceptado con condición (decisión del usuario, 2026-10-10, como el 2026-10-07): `/release 028` fusiona `main` con la 031 y repite `npm audit` en verde antes de avanzar |
-| R9 | menor | app/Agenda/ReprogramacionCitas.php:106-108 | «Igual a la actual» compara el minuto elegido con `fecha_hora` y sus segundos. Una cita con segundos (datos importados) se «mueve» al mismo minuto, con historial, y una confirmada pasa a agendada. Hoy no hay ninguna en `dentissa` ni en `dentissa_test` | Comparar con `inicio($cita)->startOfMinute()` |
-| R10 | menor | app/Agenda/ReprogramacionCitas.php:114-115 | Sin la guarda de `ReservaCitas::reservar` para `duracion_min < 1`: con duración 0, el solape estricto nunca salta | Lanzar `CitaNoAgendable::duracionInvalida()` |
-| R11 | menor | app/Agenda/ReprogramacionCitas.php:119 | El `update` no reinicia `recordatorio_enviado`; el detalle del personal muestra «Enviado» para la fecha nueva. Hoy ningún código envía recordatorios | Reiniciarlo al reprogramar cuando existan los recordatorios |
-| R12 | menor | app/Http/Controllers/ClienteCitasController.php:233; resources/views/citas/cliente-show.blade.php; cliente-index.blade.php | Las vistas no leen `puede_reprogramar`: el enlace «Reprogramar» depende de `puede_cancelar` | Usar `puede_reprogramar` en el enlace |
-| R13 | menor | routes/web.php:58-59, 140-141, 158-159 | Los PATCH de reprogramar y cancelar no tienen `throttle`. Con un script se puede hacer crecer el historial y competir por el bloqueo del dentista. Preexistente en el agendado (TM6 de la 025) | Limitador por usuario en una spec posterior (ya hay viñeta «Límite de peticiones en las rutas de escritura») |
-| R14 | menor | resources/views/citas/partials/reprogramar.blade.php:66, 77, 98-104 | El error de `estado` del personal marca como inválido el campo `cancelar-motivo`. Puede haber varias `role="alert"` al cargar y el foco no va al primer error | Error de `estado` como mensaje del formulario; `autofocus` en el primer campo con error |
-| R15 | menor | public/css/app.css:496; resources/views/citas/cliente-index.blade.php:58-64; resources/views/layouts/app.blade.php:207-224 | `.aviso-plazo` sin margen inferior en «No reagendar». En cada fila, «Ver», «Reprogramar» y «Cancelar» tienen el mismo nombre accesible. Los avisos flash no tienen `role` (DS7, previo) | Margen con `--space-5`; texto oculto con la fecha; `role="status"`/`role="alert"` al corregir DS7 |
-| R16 | menor | tests/Feature/ReprogramarCitaTest.php:71-89, 101, 315; tests/Feature/ReprogramarCitaVistasTest.php:437-453; tests/Feature/ReprogramarConcurrenteTest.php:152-164 | Huecos en los tests: CA1 sin vista de agenda; sin caso `disponible = 0`; la aserción sobre «Paula» no puede fallar; `literales()` no ve `rem`, `em` ni `ms`; el test de logs no pasa por HTTP | Completarlos al volver a tocar estos tests |
-| R17 | menor | app/Http/Controllers/CitasController.php:382-415; app/Http/Controllers/ClienteCitasController.php:121-126, 159-215; app/Agenda/ReprogramacionCitas.php:24, 93, 96 | Duplicación: `reprogramar()` y `motivoNoReprogramable()` en los dos controladores; `citaDelPaciente()` frente a `show()`; reglas de `motivo` en tres sitios; cuarta copia de `ERRORES_DE_BLOQUEO`. Además, `NotFoundHttpException` en el servicio de dominio y una consulta extra de `dentista_id` dentro de la sección bloqueada | Extraer al refactorizar el módulo Agenda (spec 013) |
-| R18 | menor | app/Http/Controllers/CitasController.php:359; app/Http/Controllers/ClienteCitasController.php:239 | El encabezado `// ── UPDATE NOTAS` quedó sobre la sección de reprogramar. `fueraDePlazo()` recibe `$estados` sin usarlo y depende de que antes se ejecute `conPuedeCancelar` | Mover el comentario; `fueraDePlazo` calcula con `dentroDelPlazoDelPaciente` |
+| R19 | importante | app/Agenda/EstadosCita.php (`comprobarReprogramable`); app/Agenda/ReprogramacionCitas.php:106-115; app/Http/Controllers/CitasController.php:299; app/Http/Controllers/ClienteCitasController.php:243; app/Http/Controllers/DashboardController.php:214 | T070 rechaza al guardar al dentista inactivo y la duración menor de 1, pero `comprobarReprogramable` no los cubre. El detalle, la lista, el panel y la pantalla siguen ofreciendo «Reprogramar» y el formulario, y cada envío vuelve con «Ese horario ya no está disponible…» o «La duración del servicio no es válida.»: un bucle sin salida | Comprobarlo en `comprobarReprogramable` con tipos propios. El personal ve «El dentista de esta cita ya no está activo y no se puede reprogramar. Cancélala o agenda una cita nueva con otro dentista.» (decisión del usuario, 2026-10-11) y el paciente, el mensaje genérico; `puede_reprogramar` deja de ser una copia de `puede_cancelar` |
+| R20 | importante | app/Http/Controllers/CitasController.php:356-359; resources/views/citas/partials/reprogramar.blade.php:40-48, 98 | Si la cancelación del personal desde «No reagendar» falla con `CambioDeEstadoNoPermitido` (p. ej. la cita pasó a «en curso»), el error va a `errors['estado']`. La pantalla ya no muestra «No reagendar» y el layout no pinta `$errors`, así que el motivo se pierde. Al paciente no le pasa, porque recibe el error como aviso | Con `formulario=no-reagendar`, devolver el rechazo con `with('error', …)`, como el paciente |
+| R21 | importante | resources/views/dashboard/cliente.blade.php:26, 50 | El bloque «Tu próxima cita», tocado por T064, conserva el título en `<span class="section-title">` (WCAG 1.3.1) y un contenedor con `style="margin-top:14px;…"`. P9 pide corregir esa deuda al tocar la pantalla (igual que R5) | `<h2 class="section-title">` y una clase acotada a `.formulario-accesible` con tokens en lugar de `style=` |
+| R22 | menor | resources/views/citas/partials/reprogramar.blade.php:90 | El formulario «No reagendar» no lleva `novalidate` («Nueva fecha y hora» sí). Con `required` en la casilla, el navegador muestra su globo y el error en español, asociado a la casilla, nunca se ve | `novalidate` en ese formulario |
+| R23 | menor | app/Http/Controllers/CitasController.php:341, 363 | La casilla y la redirección al detalle se aplican con `formulario=no-reagendar` aunque `estado` no sea `cancelada` (solo con una petición manipulada) | Exigir la casilla y redirigir solo si además `estado=cancelada` |
+| R24 | menor | app/Http/Controllers/ClienteCitasController.php:234 | `mensajeParaElPaciente` traduce los tipos `transicion` y `vuelta`, que la reprogramación nunca lanza: son ramas muertas | Quitarlas |
+| R25 | menor | tests/Feature/ReprogramarCitaPacienteTest.php:355 | Tercera copia del helper `dom()` (también en `ReprogramarCitaVistasTest` y `HorarioDentistaVistasTest`) | Llevarlo al trait `EscenarioEstadosCita` |
+| R26 | menor | tests/Feature/ReprogramarCitaVistasTest.php:314-319; public/css/app.css:500 | El foco visible de la casilla (`.formulario-accesible .campo-casilla input:focus-visible`) no tiene test | Añadir el selector a `test_los_controles_tienen_foco_visible` |
+| R27 | menor | docs/specs/028-reprogramar-citas/plan.md:330, 336 | D10 («ningún controlador lee `formulario`») y D12 («sin confirmación») ya no describen el código. Las decisiones de R1 y R6 están en `review.md`, `tasks.md` y `system.md`, pero no en el plan | Anotarlo en el plan en la próxima revisión del plan |
+| R28 | menor | resources/views/citas/partials/reprogramar.blade.php:104, 117 | Con el motivo demasiado largo y la casilla sin marcar salen dos `role="alert"` a la vez en «No reagendar», y el foco no va al primer error (amplía R14) | Resolverlo junto con R14 |
+| R29 | menor | app/Http/Controllers/DashboardController.php:211-218; app/Http/Controllers/ClienteCitasController.php:17, 251 | Tercera copia de la regla de acciones del paciente y una constante pública entre controladores; `fueraDePlazo()` sigue dependiendo de `conPuedeCancelar`, lo que queda de R18 (amplía R17) | Un método en `EstadosCita` que dé las acciones del paciente (refactorización de la 013) |
+| R30 | menor | app/Agenda/ReprogramacionCitas.php:106; app/Agenda/ReservaCitas.php (`bloquearDentista`) | `usuarios.activo` se lee sin bloqueo y la baja de un dentista no bloquea su fila: una baja simultánea puede colarse. Las guardas de dentista activo y duración estarían mejor en `bloquearDentista` y `comprobarHueco`, que comparten agendar y reprogramar (cerraría también la carrera del agendado de la 025) | Spec propia o la 013 |
+| R31 | menor | app/Http/Controllers/ClienteCitasController.php:191; app/Http/Controllers/CitasController.php:299 | Consultas de más: el PATCH del paciente lee la cita con tres JOIN solo para autorizar y el servicio la vuelve a leer; el detalle del personal recalcula el alcance en el Gate | Junto con R17 |
 
 ## Preparación para release
-- Rollback factible: sí. La migración solo añade columnas que admiten nulo, su `down()` las quita, y `deploy/volver.sh <tag anterior>` no necesita revertirla ni restaurar la copia (`docs/deployment.md`, Migraciones).
-- Migraciones compatibles con la versión anterior: sí (solo *expand*; el código anterior ignora las columnas).
-- Feature flags: el plan no pide ninguno.
-- Docs actualizadas (architecture, deployment): sí (T090, T091; también `security.md`).
-- SCA: avisos de `npm audit` sin excepción, aceptados con la condición de R8.
-- Cobertura de riesgos: la spec no declara correcciones de riesgos dentro; ningún riesgo cambia de estado.
+- Rollback factible: sí (sin migraciones nuevas desde la ronda 1).
+- Migraciones compatibles con la versión anterior: sí.
+- Docs actualizadas: `architecture.md` al día tras la ronda 1; `deployment.md` y `security.md` sin cambios necesarios.
+- SCA: según R8 (ronda 1).
 
 ## Tareas añadidas
-- T060 ← R1, R6 (test)
-- T061 ← R6
-- T062 ← R1, R6
-- T063 ← R2 (test)
-- T064 ← R2
-- T065 ← R3
-- T066 ← R4
-- T067 ← R5 (test)
-- T068 ← R5
-- T069 ← R7, R9, R10 (test)
-- T070 ← R7, R9, R10
-- T071 ← R12
-- T072 ← R18
+- T073 ← R19 (test)
+- T074 ← R19
+- T075 ← R19, R24
+- T076 ← R21, R22, R26 (test)
+- T077 ← R19, R21
+- T078 ← R22
+- T079 ← R20, R23 (test)
+- T080 ← R20, R23
 
 ## Aceptados sin tarea
-- **R11** → roadmap: al reprogramar no se reinicia `recordatorio_enviado`; reiniciarlo cuando existan los recordatorios.
-- **R13** → roadmap: los PATCH de reprogramar y cancelar no tienen límite de peticiones; entra en la viñeta del límite en las rutas de escritura.
-- **R14** → roadmap: en la pantalla de reprogramar, el error de `estado` marca el campo motivo y no hay foco en el primer error.
-- **R15** → roadmap: margen de `.aviso-plazo`, nombres accesibles repetidos en la lista del paciente y `role` de los avisos flash (DS7).
-- **R16** → roadmap: completar los tests de la 028 (agenda en CA1, `disponible = 0`, aserción de «Paula», `literales()` con `rem`/`em`/`ms`, test de logs por HTTP).
-- **R17** → roadmap: duplicación de la reprogramación entre controladores, de las reglas de `motivo` y de `ERRORES_DE_BLOQUEO`; excepción HTTP en el servicio de dominio → refactorización de la spec 013.
+- **R25** → roadmap: el helper `dom()` de los tests está en tres archivos; llevarlo al trait `EscenarioEstadosCita`.
+- **R27** → roadmap: anotar en D10 y D12 del plan de la 028 los cambios de R1 y R6 (casilla obligatoria y `formulario` leído por los controladores).
+- **R28** → roadmap: en «No reagendar» pueden salir dos `role="alert"` a la vez; resolverlo con el foco en el primer error (R14).
+- **R29** → roadmap: la regla de acciones del paciente en tres sitios (`index`, `show` y panel), la constante pública entre controladores y `fueraDePlazo()` acoplada a `conPuedeCancelar` → un método en `EstadosCita` (spec 013).
+- **R30** → roadmap: el dentista activo se lee sin bloqueo; llevar las guardas de dentista activo y duración a `ReservaCitas::bloquearDentista` y `comprobarHueco` para agendar y reprogramar (spec propia o la 013).
+- **R31** → roadmap: consultas de más en el PATCH del paciente y en el detalle del personal (junto con R17).
