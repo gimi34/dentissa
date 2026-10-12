@@ -341,6 +341,7 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Panel del paciente | `system.html#cliente-dashboard-390` | `system.html#cliente-dashboard-1440` | banner, próxima cita, historial, accesos |
 | Reprogramar cita (personal) | `system.html#citas-reprogramar-admin-390` | `system.html#citas-reprogramar-admin-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
 | Reprogramar cita (paciente) | `system.html#citas-reprogramar-cliente-390` | `system.html#citas-reprogramar-cliente-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
+| Menú del móvil (spec 033) | `capturas/menu-abierto-cliente-390.png` · `capturas/menu-abierto-admin-390.png` | — (en el escritorio es la barra lateral) | botón «Menú», panel blanco, sección actual con `aria-current`, «Cerrar menú», velo |
 
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
 tarjeta con el resumen de la cita (paciente o dentista, servicio, fecha, hora y badge de estado), el
@@ -353,6 +354,11 @@ capturas a 390 y 1440 px son del 2026-10-10 (spec 028, T032), con `capturar.mjs`
 A 390 px, 54 de las 62 vistas se desbordan en horizontal: la página mide de 472 a 1157 px de ancho
 (DS8). Solo el acceso, el registro, los errores, los reportes y la edición del paciente por la
 dentista no se desbordan.
+
+**Móvil (spec 033):** el menú común y las 7 vistas del paciente ya no se desbordan de 320 a 1440 px
+(`capturar.mjs --medir`). Sus capturas a 320, 390 y 1440 px y las del menú abierto de cada rol a 390 son
+del 2026-10-11 (spec 033, T028), con la base de prueba y textos largos inventados; a 1440 son
+iguales a las de antes. Las vistas del personal siguen desbordándose en el móvil (resto de DS8).
 
 ## Inventario de vistas
 
@@ -419,13 +425,17 @@ rehacer el resto de la galería.
 | Nuevo paciente (asistente) | /asistente/pacientes/crear · pacientes/create | asistente | capturas/pacientes-create-asistente-390.png · capturas/pacientes-create-asistente-1440.png | capturada |
 | Ficha del paciente (asistente) | /asistente/pacientes/{id} · pacientes/show | asistente | capturas/pacientes-show-asistente-390.png · capturas/pacientes-show-asistente-1440.png | capturada |
 | Expediente (asistente, solo lectura) | /asistente/expedientes/{id} · expedientes/show | asistente | capturas/expedientes-show-asistente-390.png · capturas/expedientes-show-asistente-1440.png | capturada |
-| Panel del paciente | /cliente · dashboard/cliente | cliente | capturas/cliente-dashboard-390.png · capturas/cliente-dashboard-1440.png | capturada |
-| Mis citas (próximas) | /cliente/citas · citas/cliente-index | cliente | capturas/citas-index-cliente-390.png · capturas/citas-index-cliente-1440.png | capturada |
-| Mis citas (pasadas) | /cliente/citas?filtro=pasadas · citas/cliente-index | cliente | capturas/citas-index-cliente-pasadas-390.png · capturas/citas-index-cliente-pasadas-1440.png | capturada |
-| Detalle de mi cita | /cliente/citas/{id} · citas/cliente-show | cliente | capturas/citas-show-cliente-390.png · capturas/citas-show-cliente-1440.png | capturada |
-| Reprogramar mi cita | /cliente/citas/{id}/reprogramar · citas/cliente-reprogramar | cliente | capturas/citas-reprogramar-cliente-390.png · capturas/citas-reprogramar-cliente-1440.png | capturada |
-| Agendar cita | /cliente/agendar · citas/cliente-agendar | cliente | capturas/cliente-agendar-390.png · capturas/cliente-agendar-1440.png | capturada |
-| Mi perfil | /cliente/perfil · cliente/perfil | cliente | capturas/cliente-perfil-390.png · capturas/cliente-perfil-1440.png | capturada |
+| Panel del paciente | /cliente · dashboard/cliente | cliente | capturas/cliente-dashboard-320.png · capturas/cliente-dashboard-390.png · capturas/cliente-dashboard-1440.png | capturada |
+| Mis citas (próximas) | /cliente/citas · citas/cliente-index | cliente | capturas/citas-index-cliente-320.png · capturas/citas-index-cliente-390.png · capturas/citas-index-cliente-1440.png | capturada |
+| Mis citas (pasadas) | /cliente/citas?filtro=pasadas · citas/cliente-index | cliente | capturas/citas-index-cliente-pasadas-320.png · capturas/citas-index-cliente-pasadas-390.png · capturas/citas-index-cliente-pasadas-1440.png | capturada |
+| Detalle de mi cita | /cliente/citas/{id} · citas/cliente-show | cliente | capturas/citas-show-cliente-320.png · capturas/citas-show-cliente-390.png · capturas/citas-show-cliente-1440.png | capturada |
+| Reprogramar mi cita | /cliente/citas/{id}/reprogramar · citas/cliente-reprogramar | cliente | capturas/citas-reprogramar-cliente-320.png · capturas/citas-reprogramar-cliente-390.png · capturas/citas-reprogramar-cliente-1440.png | capturada |
+| Agendar cita | /cliente/agendar · citas/cliente-agendar | cliente | capturas/cliente-agendar-320.png · capturas/cliente-agendar-390.png · capturas/cliente-agendar-1440.png | capturada |
+| Mi perfil | /cliente/perfil · cliente/perfil | cliente | capturas/cliente-perfil-320.png · capturas/cliente-perfil-390.png · capturas/cliente-perfil-1440.png | capturada |
+| Menú del móvil abierto (administración) | /admin (tras pulsar «Menú») · layouts/app | admin | capturas/menu-abierto-admin-390.png | capturada |
+| Menú del móvil abierto (dentista) | /dentista (tras pulsar «Menú») · layouts/app | dentista | capturas/menu-abierto-dentista-390.png | capturada |
+| Menú del móvil abierto (asistente) | /asistente (tras pulsar «Menú») · layouts/app | asistente | capturas/menu-abierto-asistente-390.png | capturada |
+| Menú del móvil abierto (paciente) | /cliente (tras pulsar «Menú») · layouts/app | cliente | capturas/menu-abierto-cliente-390.png | capturada |
 | Error 403 (por defecto de Laravel) | /admin con rol dentista · vista por defecto del framework | dentista | capturas/error-403-390.png · capturas/error-403-1440.png | capturada |
 | Error 404 (por defecto de Laravel) | /no-existe · vista por defecto del framework | dentista | capturas/error-404-390.png · capturas/error-404-1440.png | capturada |
 | Registro con Google: contacto | /registro/contacto · auth/registro-contacto | invitado | — | no accesible (exige volver del acceso con Google con `session('google_registro')`; no se simula sin la cuenta de Google) |
