@@ -234,7 +234,9 @@ class MovilPacienteTest extends TestCase
 
     public function test_los_textos_largos_parten_de_linea(): void
     {
-        $this->assertDeclara('.content', 'overflow-wrap: break-word');
+        // anywhere y no break-word: una palabra sin espacios también reduce el ancho mínimo de un hijo
+        // de fila o rejilla flexible (/review 033 R1).
+        $this->assertDeclara('.content', 'overflow-wrap: anywhere');
         $this->assertDeclara('.user-name', 'white-space: normal');
         $this->assertDeclara('.user-name', 'overflow-wrap: anywhere');
     }
