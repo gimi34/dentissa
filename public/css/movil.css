@@ -1,7 +1,8 @@
 /*
  * Móvil (spec 033): por debajo de 900 px, la barra lateral se convierte en el menú desplegable
  * (opción A) y el contenido ocupa todo el ancho. Solo tokens de docs/design/system.md 1.4.0; el
- * único literal es el punto de corte, porque las media queries no admiten variables.
+ * único valor en px es el punto de corte, porque las media queries no admiten variables, y las
+ * unidades relativas del panel (85vw, 100dvh y ±100 %) son las que documenta el sistema.
  *
  * Las dos reglas globales van primero: las de la media query ganan por orden con la misma
  * especificidad (/analyze 033 A40). En el escritorio (900 px o más) nada cambia (CA8).
@@ -16,7 +17,8 @@
 @media (max-width: 899px) {
     /* ── Marco de la página ── */
     .main { margin-left: 0; }
-    .content { padding: var(--space-6); overflow-wrap: break-word; }
+    /* anywhere: una palabra sin espacios también parte dentro de una fila o rejilla flexible (R1). */
+    .content { padding: var(--space-6); overflow-wrap: anywhere; }
     .topbar {
         height: auto;
         min-height: var(--topbar-h);
