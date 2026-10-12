@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // El modo móvil lo decide movil.css: el botón solo se muestra por debajo del punto de corte.
     const esMovil = () => getComputedStyle(boton).display !== 'none';
     const abierto = () => html.classList.contains('menu-abierto');
+    let focoAplazado = 0;
 
     const abrir = () => {
         html.classList.add('menu-abierto');
@@ -25,11 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
         principal.inert = true;
         const destino = panel.querySelector('a[aria-current="page"]') || panel.querySelector('nav a');
         // El navegador no acepta el foco hasta que pinta un fotograma con el panel visible (T030):
-        // ni en el mismo instante ni en el fotograma siguiente.
-        if (destino) requestAnimationFrame(() => requestAnimationFrame(() => destino.focus()));
+        // ni en el mismo instante ni en el fotograma siguiente. Se guarda el id para cancelarlo (R4).
+        if (destino) {
+            focoAplazado = requestAnimationFrame(() => {
+                focoAplazado = requestAnimationFrame(() => destino.focus());
+            });
+        }
     };
 
     const cerrar = (devolverFoco = true) => {
+        cancelAnimationFrame(focoAplazado);
         html.classList.remove('menu-abierto');
         boton.setAttribute('aria-expanded', 'false');
         if (velo) velo.hidden = true;
@@ -48,8 +54,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Al pasar al escritorio con el menú abierto, se cierra sin mover el foco.
+    // Al volver con «Atrás», la página puede salir de la caché del historial con el menú abierto (R5).
+    window.addEventListener('pageshow', (evento) => {
+        if (evento.persisted && abierto()) cerrar(false);
+    });
+
+    // Al cruzar el punto de corte (girar la pantalla, cambiar el zoom), el menú se cierra sin mover
+    // el foco y, si este queda en un elemento que deja de verse, pasa a uno visible (R3). El navegador
+    // puede haberlo pasado ya a <body> al ocultarlo: por eso se recuerda el último elemento con foco.
+    let ultimoFoco = null;
+    document.addEventListener('focusin', (evento) => { ultimoFoco = evento.target; });
+    let modoMovil = esMovil();
     window.addEventListener('resize', () => {
-        if (abierto() && !esMovil()) cerrar(false);
+        if (esMovil() === modoMovil) return;
+        modoMovil = !modoMovil;
+        if (abierto()) cerrar(false);
+        const activo = document.activeElement;
+        const perdido = !activo || activo === document.body || !activo.getClientRects().length;
+        if (modoMovil && panel.contains(perdido ? ultimoFoco : activo)) {
+            boton.focus();
+        } else if (!modoMovil && perdido && (ultimoFoco === boton || ultimoFoco === cerrarBoton)) {
+            const actual = panel.querySelector('a[aria-current="page"]') || panel.querySelector('nav a');
+            if (actual) actual.focus();
+        }
     });
 });

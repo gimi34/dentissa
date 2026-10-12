@@ -379,7 +379,7 @@ class MovilPacienteTest extends TestCase
         $this->assertMatchesRegularExpression('/\.focus\(/', $js, 'Mueve el foco al abrir y al cerrar.');
         // Al abrir, el foco se mueve cuando ya se ha pintado un fotograma con el panel visible: ni en
         // el mismo instante ni en el fotograma siguiente surte efecto (T030, medido con Playwright).
-        $this->assertMatchesRegularExpression('/requestAnimationFrame\(\s*\(\)\s*=>\s*requestAnimationFrame\(\s*\(\)\s*=>\s*destino\.focus\(\)\s*\)\s*\)/', $js,
+        $this->assertMatchesRegularExpression('/requestAnimationFrame\(\s*\(\)\s*=>\s*\{\s*focoAplazado\s*=\s*requestAnimationFrame\(\s*\(\)\s*=>\s*destino\.focus\(\)\s*\)/', $js,
             'El foco al abrir va en un doble requestAnimationFrame.');
         // /review 033: el foco aplazado se cancela al cerrar (R4), el menú no vuelve abierto desde la
         // caché del historial (R5) y, al cambiar de modo, el foco no se queda en un elemento oculto (R3).
