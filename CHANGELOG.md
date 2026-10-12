@@ -5,6 +5,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-12
+
+### Added
+- Versión para el móvil: por debajo de 900 px de ancho, la barra lateral se convierte en un menú
+  desplegable con el botón «Menú», para todos los roles. Se abre y se cierra con el dedo, el teclado
+  (Escape) o tocando fuera, marca la sección actual y funciona con lector de pantalla (spec 033).
+- Las siete pantallas del paciente (panel, mis citas próximas y pasadas, detalle, reprogramar,
+  agendar y perfil) se ven sin desplazamiento lateral desde 320 px de ancho, también con el móvil en
+  horizontal; los nombres, correos y servicios largos pasan a la línea siguiente (spec 033).
+- Botones, enlaces, campos y elementos del menú con un área de toque de al menos 44 × 44 px en el
+  móvil (spec 033).
+
+### Changed
+- En el escritorio no cambia nada visible, salvo que las pestañas de «Mis citas» y las migas de pan
+  muestran el anillo de foco de la marca al recorrerlas con el teclado (spec 033).
+- Las pantallas del personal ganan el menú desplegable en el móvil; su contenido todavía no está
+  adaptado y sus tablas se desplazan dentro de su tarjeta (pendiente de una spec propia).
+
 ## [0.6.0] - 2026-10-11
 
 ### Added
