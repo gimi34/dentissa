@@ -370,6 +370,10 @@ class MovilPacienteTest extends TestCase
             $this->assertStringContainsString($pieza, $js, "menu.js usa {$pieza}.");
         }
         $this->assertMatchesRegularExpression('/\.focus\(/', $js, 'Mueve el foco al abrir y al cerrar.');
+        // Al abrir, el foco se mueve cuando ya se ha pintado un fotograma con el panel visible: ni en
+        // el mismo instante ni en el fotograma siguiente surte efecto (T030, medido con Playwright).
+        $this->assertMatchesRegularExpression('/requestAnimationFrame\(\s*\(\)\s*=>\s*requestAnimationFrame\(\s*\(\)\s*=>\s*destino\.focus\(\)\s*\)\s*\)/', $js,
+            'El foco al abrir va en un doble requestAnimationFrame.');
         foreach (['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'eval(', 'new Function', 'max-width'] as $prohibido) {
             $this->assertStringNotContainsString($prohibido, $js, "menu.js no usa {$prohibido}.");
         }

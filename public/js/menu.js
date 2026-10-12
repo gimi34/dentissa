@@ -24,7 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (velo) velo.hidden = false;
         principal.inert = true;
         const destino = panel.querySelector('a[aria-current="page"]') || panel.querySelector('nav a');
-        if (destino) destino.focus();
+        // El navegador no acepta el foco hasta que pinta un fotograma con el panel visible (T030):
+        // ni en el mismo instante ni en el fotograma siguiente.
+        if (destino) requestAnimationFrame(() => requestAnimationFrame(() => destino.focus()));
     };
 
     const cerrar = (devolverFoco = true) => {
