@@ -381,6 +381,15 @@ class MovilPacienteTest extends TestCase
         // el mismo instante ni en el fotograma siguiente surte efecto (T030, medido con Playwright).
         $this->assertMatchesRegularExpression('/requestAnimationFrame\(\s*\(\)\s*=>\s*requestAnimationFrame\(\s*\(\)\s*=>\s*destino\.focus\(\)\s*\)\s*\)/', $js,
             'El foco al abrir va en un doble requestAnimationFrame.');
+        // /review 033: el foco aplazado se cancela al cerrar (R4), el menú no vuelve abierto desde la
+        // caché del historial (R5) y, al cambiar de modo, el foco no se queda en un elemento oculto (R3).
+        $this->assertStringContainsString('cancelAnimationFrame(', $js, 'Cancela el foco aplazado de abrir() al cerrar.');
+        $this->assertMatchesRegularExpression("/addEventListener\\(\\s*'pageshow'.*?persisted/s", $js, 'Cierra el menú al volver desde la caché del historial.');
+        $this->assertMatchesRegularExpression("/addEventListener\\(\\s*'resize',\\s*\\(\\)\\s*=>\\s*\\{(.*?)\\n    \\}\\);/s", $js, 'Tiene un manejador de resize.');
+        preg_match("/addEventListener\\(\\s*'resize',\\s*\\(\\)\\s*=>\\s*\\{(.*?)\\n    \\}\\);/s", $js, $resize);
+        foreach (['esMovil()', 'document.activeElement', 'boton.focus()'] as $pieza) {
+            $this->assertStringContainsString($pieza, $resize[1] ?? '', "El manejador de resize usa {$pieza} al cambiar de modo.");
+        }
         foreach (['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'eval(', 'new Function', 'max-width'] as $prohibido) {
             $this->assertStringNotContainsString($prohibido, $js, "menu.js no usa {$prohibido}.");
         }
