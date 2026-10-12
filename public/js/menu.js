@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const esMovil = () => getComputedStyle(boton).display !== 'none';
     const abierto = () => html.classList.contains('menu-abierto');
     let focoAplazado = 0;
+    // Reintenta en los fotogramas siguientes mientras el foco no quede en el destino (como máximo n).
+    const enfocar = (destino, n) => {
+        focoAplazado = requestAnimationFrame(() => {
+            if (!abierto()) return;
+            destino.focus();
+            if (document.activeElement !== destino && n > 1) enfocar(destino, n - 1);
+        });
+    };
 
     const abrir = () => {
         html.classList.add('menu-abierto');
@@ -25,13 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (velo) velo.hidden = false;
         principal.inert = true;
         const destino = panel.querySelector('a[aria-current="page"]') || panel.querySelector('nav a');
-        // El navegador no acepta el foco hasta que pinta un fotograma con el panel visible (T030):
-        // ni en el mismo instante ni en el fotograma siguiente. Se guarda el id para cancelarlo (R4).
-        if (destino) {
-            focoAplazado = requestAnimationFrame(() => {
-                focoAplazado = requestAnimationFrame(() => destino.focus());
-            });
-        }
+        // El navegador no siempre acepta el foco en los primeros fotogramas con el panel visible
+        // (T030, T071): enfocar() lo reintenta; cerrar() cancela el intento pendiente (R4).
+        if (destino) enfocar(destino, 10);
     };
 
     const cerrar = (devolverFoco = true) => {
