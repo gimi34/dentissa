@@ -24,11 +24,11 @@
 
 @section('content')
 
-{{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route('cliente.citas') }}" style="color:var(--text-muted);text-decoration:none">Mis citas</a>
+{{-- Migas de pan: clases con tokens en lugar de style="" (spec 033, T025). --}}
+<div id="migas" class="migas">
+    <a href="{{ route('cliente.citas') }}">Mis citas</a>
     <span>›</span>
-    <span style="color:var(--text)">Detalle</span>
+    <span class="migas-actual">Detalle</span>
 </div>
 
 <div style="max-width:640px">
