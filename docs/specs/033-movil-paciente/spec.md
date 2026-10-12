@@ -1,7 +1,7 @@
 ---
 id: 033
 slug: movil-paciente
-status: approved
+status: implemented
 created: 2026-10-11
 extends: []
 ---
