@@ -237,6 +237,8 @@ class MovilPacienteTest extends TestCase
         // anywhere y no break-word: una palabra sin espacios también reduce el ancho mínimo de un hijo
         // de fila o rejilla flexible (/review 033 R1).
         $this->assertDeclara('.content', 'overflow-wrap: anywhere');
+        // Las tablas conservan break-word: con anywhere sus celdas se estrechan y parten letra a letra.
+        $this->assertDeclara('.content table', 'overflow-wrap: break-word');
         $this->assertDeclara('.user-name', 'white-space: normal');
         $this->assertDeclara('.user-name', 'overflow-wrap: anywhere');
     }

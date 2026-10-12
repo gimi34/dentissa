@@ -109,7 +109,12 @@ Sobre el desglose (el análisis completo está en `plan.md`):
   - nota: los dos fallan hoy por la razón esperada: «.pestanas-citas a:focus-visible: anillo de foco del sistema» (no hay regla) y «admin: el <nav> se llama «Secciones»» (sin `aria-label`); los SVG de los enlaces (`layouts/app.blade.php:33…`) tampoco tienen `aria-hidden`. La regla de foco se busca solo en las reglas sin condiciones del bloque 033. Los otros 25 siguen en verde. Pint limpio.
 - [ ] T066 Añadir al bloque `/* Spec 033 */` de `app.css` la regla `.pestanas-citas a:focus-visible, .migas a:focus-visible` con los tokens de foco, y en el layout `aria-label="Secciones"` en el `<nav>` del panel y `aria-hidden="true"` y `focusable="false"` en los SVG decorativos de los enlaces del menú y de «Cerrar sesión», como en `design/opcion-a.html` — public/css/app.css, resources/views/layouts/app.blade.php — hecho cuando: los tests de T065 pasan dos veces y `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_los_colores_del_bloque_033_cumplen_aa` y los de T010 siguen en verde · verificación manual: con NVDA, los enlaces del menú se anuncian sin «gráfico» y el menú como región «Secciones»; con teclado, las pestañas de mis citas y las migas muestran el anillo del sistema a 390 y 1440 px contra `docs/design/system.html` — cubre: CA3 — depende: T065
   - nota: añadida por /review: R7, R8
-- [ ] T067 Repetir la verificación final de la ronda: `php artisan test` completo en verde (285 más los nuevos); `pint --test` sobre los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0, montando la base de prueba según la cabecera de `capturar.mjs` y borrándola después (base, servidor, volumen y carpeta temporal); gitleaks sobre `be400bb..HEAD` sin fugas; y `composer audit` y `npm audit` sin avisos nuevos — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T061, T062, T064, T066
+- [x] T068 Añadir a `test_los_textos_largos_parten_de_linea` que, dentro de la media query del móvil, `.content table` declara `overflow-wrap: break-word` (con `anywhere` heredado, las celdas de las tablas del personal se estrechan y parten palabras y números letra a letra) — tests/Feature/MovilPacienteTest.php — hecho cuando: el test falla hoy porque no hay regla para `.content table`, y los demás de `MovilPacienteTest` siguen en verde — cubre: CA6, CA8 — depende: T061
+  - nota: añadida durante /implement (2026-10-12, informe del usuario): regresión de T061; con el zoom alto, las tablas de inicio, pacientes, citas y servicios del admin parten el texto letra a letra («CONT ACTO», «55 50 10 3»). Capturas a 700 px contra el servidor de capturas: con `break-word` forzado, la tabla vuelve a desplazarse dentro de su tarjeta como antes.
+  - nota: falla hoy por la razón esperada («.content table debe declarar «overflow-wrap: break-word» en movil.css»); los otros 26 siguen en verde.
+- [ ] T069 Añadir en `movil.css`, dentro de la media query y tras `.content`, `.content table { overflow-wrap: break-word; }` con un comentario que diga por qué — public/css/movil.css — hecho cuando: T068 pasa dos veces y los de T011 siguen en verde · verificación en navegador: con Playwright contra el servidor de capturas, a 700 px, las tablas de inicio, pacientes, citas y servicios del admin son idénticas píxel a píxel a las de `break-word` forzado, y la prueba de T061 (palabras de 30 letras a 320 en el detalle y el panel del paciente) sigue dando `scrollWidth` 320 — cubre: CA6, CA8 — depende: T068
+  - nota: añadida durante /implement (2026-10-12, informe del usuario): corrige la regresión de T061.
+- [ ] T067 Repetir la verificación final de la ronda: `php artisan test` completo en verde (285 más los nuevos); `pint --test` sobre los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0, montando la base de prueba según la cabecera de `capturar.mjs` y borrándola después (base, servidor, volumen y carpeta temporal); gitleaks sobre `be400bb..HEAD` sin fugas; y `composer audit` y `npm audit` sin avisos nuevos — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T061, T062, T064, T066, T069
   - nota: añadida por /review: R2 (`--medir` obligatorio al tocar el layout, `menu.js` y `movil.css`)
 
 ## Integración y documentación
@@ -141,9 +146,9 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 | CA3 | T010, T012, T014, T029, T030, T063, T065, T067 | T022, T023, T029, T030, T062, T064, T066 |
 | CA4 | T011, T013, T014 | T020, T021, T024, T025, T026 |
 | CA5 | T011, T013, T014 | T021, T025, T026 |
-| CA6 | T011, T014, T060, T067 | T021, T023, T026, T061 |
+| CA6 | T011, T014, T060, T067, T068 | T021, T023, T026, T061, T069 |
 | CA7 | T011, T014, T029 | T021, T023, T029 |
-| CA8 | T011, T013, T014 | T021, T023, T028 |
+| CA8 | T011, T013, T014, T068 | T021, T023, T028, T069 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -154,13 +159,13 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 | Sistema de diseño (`system.md`, `system.html`) | T001, T028 |
 | Configuración (`.ai/project.yaml`) | T002 |
 | Estilos existentes (`public/css/app.css`) | T020, T023, T024, T025, T066 |
-| Estilos del móvil (`public/css/movil.css`) | T021, T029, T061 |
+| Estilos del móvil (`public/css/movil.css`) | T021, T029, T061, T069 |
 | Script del menú (`public/js/menu.js`) | T022, T030, T064 |
 | Layout (`layouts/app.blade.php`) | T023, T066 |
 | Vistas del paciente (bloques conocidos) | T024, T025 |
 | Vistas del paciente (solo si `--medir` las señala) | T026 |
 | `citas/partials/reprogramar`, `citas/cliente-reprogramar` (sin cambios previstos) | T026, T040 |
-| Tests (`MovilPacienteTest`, `ReglasCss`, `ReprogramarCitaVistasTest`) | T003, T010, T011, T012, T013, T029, T030, T060, T062, T063, T065 |
+| Tests (`MovilPacienteTest`, `ReglasCss`, `ReprogramarCitaVistasTest`) | T003, T010, T011, T012, T013, T029, T030, T060, T062, T063, T065, T068 |
 | Capturas y medidas (`capturar.mjs`) | T014, T028 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
