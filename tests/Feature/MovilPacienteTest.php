@@ -360,6 +360,41 @@ class MovilPacienteTest extends TestCase
         $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--focus-ring'], $tokens['--white']));
     }
 
+    public function test_los_enlaces_de_pestanas_y_migas_tienen_el_foco_del_sistema(): void
+    {
+        // Fuera de toda media query, en el bloque de la spec 033 de app.css (/review 033 R7).
+        foreach (['.pestanas-citas a:focus-visible', '.migas a:focus-visible'] as $selector) {
+            $cuerpos = [];
+            foreach ($this->analizarCss($this->bloque033()) as [$selectores, $cuerpo, $condiciones]) {
+                $lista = array_map(fn ($s) => preg_replace('/\s+/', ' ', trim($s)), explode(',', $selectores));
+                if ($condiciones === [] && in_array($selector, $lista, true)) {
+                    $cuerpos[] = $this->normalizar($cuerpo);
+                }
+            }
+            $cuerpo = implode(' ', $cuerpos);
+            $this->assertStringContainsString('outline: var(--focus-ring-width) solid var(--focus-ring);', $cuerpo, "{$selector}: anillo de foco del sistema.");
+            $this->assertStringContainsString('outline-offset: var(--focus-ring-offset);', $cuerpo, "{$selector}: separación del anillo del sistema.");
+        }
+    }
+
+    public function test_el_nav_del_menu_tiene_nombre_y_sus_iconos_son_decorativos(): void
+    {
+        // Como en design/opcion-a.html (/review 033 R8).
+        foreach ($this->usuarios() as $rol => $usuario) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get(self::PANELES[$rol][0])->assertOk()->getContent());
+
+            $navs = $xpath->query("//aside[@id='menu-principal']//nav");
+            $this->assertSame(1, $navs->length, "{$rol}: un <nav> en el menú.");
+            $this->assertSame('Secciones', $navs->item(0)->getAttribute('aria-label'), "{$rol}: el <nav> se llama «Secciones».");
+
+            $iconos = $xpath->query("//aside[@id='menu-principal']//svg");
+            $this->assertGreaterThan(1, $iconos->length, "{$rol}: el menú tiene iconos.");
+            foreach ($iconos as $icono) {
+                $this->assertSame('true', $icono->getAttribute('aria-hidden'), "{$rol}: todo icono del menú es decorativo (aria-hidden).");
+            }
+        }
+    }
+
     /**
      * Solo comprueba el texto del contrato de `menu.js`: una lógica rota con las mismas palabras
      * seguiría pasando. El comportamiento (foco, Escape, `inert`, velo) lo mide
