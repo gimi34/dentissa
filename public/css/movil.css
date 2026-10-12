@@ -19,6 +19,8 @@
     .main { margin-left: 0; }
     /* anywhere: una palabra sin espacios también parte dentro de una fila o rejilla flexible (R1). */
     .content { padding: var(--space-6); overflow-wrap: anywhere; }
+    /* Las tablas no: con anywhere sus celdas se estrechan y parten palabras y números letra a letra (T069). */
+    .content table { overflow-wrap: break-word; }
     .topbar {
         height: auto;
         min-height: var(--topbar-h);
