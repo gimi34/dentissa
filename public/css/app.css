@@ -531,3 +531,8 @@ tr:hover td { background: var(--p50); }
 .formulario-accesible .historial-estado-anterior { color: var(--text); }
 .formulario-accesible .historial-estado-nuevo { color: var(--p600); }
 .formulario-accesible .historial-autor { font-size: var(--text-small); color: var(--text); margin-top: var(--space-1); }
+
+/* Spec 033: clases de los bloques que pierden su style="" (mismos valores que antes, con tokens).
+   Bloque comprobado por MovilPacienteTest; todo lo de aquí abajo es de la spec 033. */
+.sidebar-logo img { width: 100%; max-width: var(--logo-max-w); object-fit: contain; display: block; margin: 0 auto; mix-blend-mode: screen; }
+.user-card-texto { min-width: 0; }

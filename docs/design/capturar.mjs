@@ -474,6 +474,8 @@ async function medir() {
         await page.keyboard.press('Escape'); await page.waitForTimeout(300);
         if (await page.evaluate(EN_PAGINA.expandido)) falla(donde, 'Escape no cierra');
         if (!(await page.evaluate(EN_PAGINA.focoEnBoton))) falla(donde, 'tras Escape el foco no vuelve a «Menú»');
+        // Si Escape no cerró, el velo tapa «Menú»: se recarga para seguir comprobando lo demás.
+        if (await page.evaluate(EN_PAGINA.expandido)) await page.reload({ waitUntil: 'networkidle' });
         await abrirlo();
         const x = await page.evaluate(EN_PAGINA.cerrar);
         if (!x.visible) falla(donde, '«Cerrar menú» no se ve');
@@ -484,6 +486,7 @@ async function medir() {
           if (await page.evaluate(EN_PAGINA.expandido)) falla(donde, '«Cerrar menú» no cierra');
           if (!(await page.evaluate(EN_PAGINA.focoEnBoton))) falla(donde, 'tras «Cerrar menú» el foco no vuelve a «Menú»');
         }
+        if (await page.evaluate(EN_PAGINA.expandido)) await page.reload({ waitUntil: 'networkidle' });
         await abrirlo();
         const { width, height } = ANCHOS[ancho];
         await page.mouse.click(width - 5, Math.round(height / 2)); await page.waitForTimeout(300);
