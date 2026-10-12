@@ -414,10 +414,14 @@ class MovilPacienteTest extends TestCase
             $this->assertStringContainsString($pieza, $js, "menu.js usa {$pieza}.");
         }
         $this->assertMatchesRegularExpression('/\.focus\(/', $js, 'Mueve el foco al abrir y al cerrar.');
-        // Al abrir, el foco se mueve cuando ya se ha pintado un fotograma con el panel visible: ni en
-        // el mismo instante ni en el fotograma siguiente surte efecto (T030, medido con Playwright).
-        $this->assertMatchesRegularExpression('/requestAnimationFrame\(\s*\(\)\s*=>\s*\{\s*focoAplazado\s*=\s*requestAnimationFrame\(\s*\(\)\s*=>\s*destino\.focus\(\)\s*\)/', $js,
-            'El foco al abrir va en un doble requestAnimationFrame.');
+        // Al abrir, el foco se reintenta en los fotogramas siguientes mientras no quede en el enlace
+        // actual: tras dos fotogramas a veces aún no surte efecto (T030, T071; medido con Playwright).
+        $this->assertMatchesRegularExpression('/enfocar\(destino, 10\)/', $js, 'abrir() mueve el foco con enfocar(destino, 10).');
+        $this->assertMatchesRegularExpression(
+            '/const enfocar = \(destino, n\) => \{\s*focoAplazado = requestAnimationFrame\(\(\) => \{\s*if \(!abierto\(\)\) return;\s*destino\.focus\(\);\s*if \(document\.activeElement !== destino && n > 1\) enfocar\(destino, n - 1\);/',
+            $js,
+            'enfocar() reintenta en el fotograma siguiente mientras el foco no quede en el destino.'
+        );
         // /review 033: el foco aplazado se cancela al cerrar (R4), el menú no vuelve abierto desde la
         // caché del historial (R5) y, al cambiar de modo, el foco no se queda en un elemento oculto (R3).
         $this->assertStringContainsString('cancelAnimationFrame(', $js, 'Cancela el foco aplazado de abrir() al cerrar.');

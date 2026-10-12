@@ -117,7 +117,14 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [x] T069 Añadir en `movil.css`, dentro de la media query y tras `.content`, `.content table { overflow-wrap: break-word; }` con un comentario que diga por qué — public/css/movil.css — hecho cuando: T068 pasa dos veces y los de T011 siguen en verde · verificación en navegador: con Playwright contra el servidor de capturas, a 700 px, las tablas de inicio, pacientes, citas y servicios del admin son idénticas píxel a píxel a las de `break-word` forzado, y la prueba de T061 (palabras de 30 letras a 320 en el detalle y el panel del paciente) sigue dando `scrollWidth` 320 — cubre: CA6, CA8 — depende: T068
   - nota: añadida durante /implement (2026-10-12, informe del usuario): corrige la regresión de T061.
   - nota: T068 pasa dos veces (27 de 27, 648 aserciones). A 700 px como admin, frente a `break-word` forzado: citas y servicios idénticas byte a byte; inicio y pacientes difieren en 91 y 60 píxeles de 630 000 con intensidad máxima 1/255 (ruido de renderizado, como en T028); las tablas se ven igual que antes de T061. La prueba de T061 sigue bien: detalle y panel del paciente a 320 con `scrollWidth` 320 (control con `break-word`: 398 y 349). Datos temporales restaurados.
-- [ ] T067 Repetir la verificación final de la ronda: `php artisan test` completo en verde (285 más los nuevos); `pint --test` sobre los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0, montando la base de prueba según la cabecera de `capturar.mjs` y borrándola después (base, servidor, volumen y carpeta temporal); gitleaks sobre `be400bb..HEAD` sin fugas; y `composer audit` y `npm audit` sin avisos nuevos — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T061, T062, T064, T066, T069
+- [x] T071 Cambiar en `test_menu_js_cumple_su_contrato` la comprobación del doble `requestAnimationFrame` (T030) por la del reintento: `abrir()` llama a `enfocar(destino, 10)`, y `enfocar` pide un fotograma, sale si el menú ya no está abierto, llama a `destino.focus()` y, si `document.activeElement !== destino` y quedan intentos, se vuelve a llamar con uno menos; se mantiene `cancelAnimationFrame` (T063) — tests/Feature/MovilPacienteTest.php — hecho cuando: el test falla hoy porque `menu.js` no tiene `enfocar`, y los demás de `MovilPacienteTest` siguen en verde — cubre: CA3 — depende: T069
+  - nota: añadida durante /implement (2026-10-12, decisión del usuario): en 60 aperturas del menú con clic (Playwright, 4 roles, 320 y 390), el foco no entró en el panel 8 veces, con el `menu.js` actual y con el anterior a T064: `focus()` se llama sobre el enlace actual tras dos fotogramas, con el panel visible, y no surte efecto (el foco queda en `<body>`). Defecto de T030.
+  - nota: falla hoy por la razón esperada («abrir() mueve el foco con enfocar(destino, 10)»); los otros 26 siguen en verde. Pint limpio.
+- [ ] T072 Cambiar `menu.js` según T071: `enfocar(destino, n)` con `requestAnimationFrame`, que guarda su id en `focoAplazado` para que `cerrar()` lo cancele — public/js/menu.js — hecho cuando: T071 pasa dos veces, `node --check` no da errores · verificación en navegador: 120 aperturas con clic (4 roles, 320 y 390, Playwright contra el servidor de capturas) sin ningún fallo de foco, y los casos (a)–(d) de T064 siguen bien — cubre: CA3 — depende: T071
+  - nota: añadida durante /implement (2026-10-12, decisión del usuario): el candidato probado sin tocar el repo dio 0 fallos en 120 aperturas.
+- [ ] T070 En `--medir`, tras abrir el menú, esperar por condición a que el foco llegue al enlace actual (`waitForFunction`, como máximo 2 s; si no llega, la comprobación sigue fallando) antes de la espera fija de la transición — docs/design/capturar.mjs — hecho cuando: `--medir` termina con código 0 dos veces seguidas y se comprueba rompiendo que sigue detectando el foco: con `menu.js` sin mover el foco al abrir, da «el foco no va a la sección actual» en los cuatro roles (anotado; `menu.js` restaurado) — cubre: CA3 — depende: T072
+  - nota: añadida durante /implement (2026-10-12, decisión del usuario): en T067, `--medir` falló 1 de 3 veces con «el foco no va a la sección actual» en admin a 320 y 390, y aislado el foco llega en 50 ms; la espera fija de 300 ms tras pulsar «Menú» es una espera por tiempo (contrato: tests inestables).
+- [ ] T067 Repetir la verificación final de la ronda: `php artisan test` completo en verde (285 más los nuevos); `pint --test` sobre los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0, montando la base de prueba según la cabecera de `capturar.mjs` y borrándola después (base, servidor, volumen y carpeta temporal); gitleaks sobre `be400bb..HEAD` sin fugas; y `composer audit` y `npm audit` sin avisos nuevos — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T061, T062, T064, T066, T069, T070, T072
   - nota: añadida por /review: R2 (`--medir` obligatorio al tocar el layout, `menu.js` y `movil.css`)
 
 ## Integración y documentación
@@ -146,7 +153,7 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 |---|---|---|
 | CA1 | T010, T011, T013, T014 | T021, T024, T025, T026, T028 |
 | CA2 | T010, T011, T014 | T021, T022, T023 |
-| CA3 | T010, T012, T014, T029, T030, T063, T065, T067 | T022, T023, T029, T030, T062, T064, T066 |
+| CA3 | T010, T012, T014, T029, T030, T063, T065, T067, T070, T071 | T022, T023, T029, T030, T062, T064, T066, T072 |
 | CA4 | T011, T013, T014 | T020, T021, T024, T025, T026 |
 | CA5 | T011, T013, T014 | T021, T025, T026 |
 | CA6 | T011, T014, T060, T067, T068 | T021, T023, T026, T061, T069 |
@@ -163,13 +170,13 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 | Configuración (`.ai/project.yaml`) | T002 |
 | Estilos existentes (`public/css/app.css`) | T020, T023, T024, T025, T066 |
 | Estilos del móvil (`public/css/movil.css`) | T021, T029, T061, T069 |
-| Script del menú (`public/js/menu.js`) | T022, T030, T064 |
+| Script del menú (`public/js/menu.js`) | T022, T030, T064, T072 |
 | Layout (`layouts/app.blade.php`) | T023, T066 |
 | Vistas del paciente (bloques conocidos) | T024, T025 |
 | Vistas del paciente (solo si `--medir` las señala) | T026 |
 | `citas/partials/reprogramar`, `citas/cliente-reprogramar` (sin cambios previstos) | T026, T040 |
-| Tests (`MovilPacienteTest`, `ReglasCss`, `ReprogramarCitaVistasTest`) | T003, T010, T011, T012, T013, T029, T030, T060, T062, T063, T065, T068 |
-| Capturas y medidas (`capturar.mjs`) | T014, T028 |
+| Tests (`MovilPacienteTest`, `ReglasCss`, `ReprogramarCitaVistasTest`) | T003, T010, T011, T012, T013, T029, T030, T060, T062, T063, T065, T068, T071 |
+| Capturas y medidas (`capturar.mjs`) | T014, T028, T070 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
