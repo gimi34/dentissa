@@ -545,3 +545,5 @@ tr:hover td { background: var(--p50); }
 .migas { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-7); font-size: var(--text-meta); color: var(--text-muted); }
 .migas a { color: var(--text-muted); text-decoration: none; }
 .migas-actual { color: var(--text); }
+/* Foco del sistema en pestañas y migas (/review 033 R7). */
+.pestanas-citas a:focus-visible, .migas a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
