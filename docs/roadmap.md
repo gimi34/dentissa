@@ -132,6 +132,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     (junto con las cabeceras de la spec 031).
   - Documentar el acceso de administración desde fuera de casa (Tailscale) en `deployment.md` y
     actualizar la fila del SSH en `security.md` (hoy "solo desde la red local") cuando se instale.
+- Mensajes de validación en inglés en las pantallas del paciente: al enviar vacíos agendar y el
+  perfil salen «The fecha field is required.», «The hora field is required.» y «The nombre field is
+  required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
+  formularios (detectado en la 033, T014; decisión del usuario, 2026-10-11).
 - Deuda de la spec 028 (liberada en v0.6.0; /review, aceptada sin tarea):
   - 028/R11: al reprogramar no se reinicia `recordatorio_enviado`; reiniciarlo cuando existan los
     recordatorios.
