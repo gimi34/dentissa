@@ -36,6 +36,8 @@
         border-right: var(--border-width) solid var(--border);
         overflow-y: auto;
     }
+    /* El panel se desplaza entero, no solo el <nav> (T029): se alcanzan el último enlace y «Cerrar sesión». */
+    .sidebar-nav { flex: none; }
     .sidebar-logo {
         justify-content: space-between;
         min-height: var(--topbar-h);
@@ -110,6 +112,8 @@
 
     @media (prefers-reduced-motion: no-preference) {
         html.menu-js .sidebar { transition: transform var(--duration-fast), visibility var(--duration-fast); }
+        /* Al abrir solo se anima el desplazamiento: visible desde el primer instante para que el foco entre (T029). */
+        html.menu-abierto .sidebar { transition: transform var(--duration-fast); }
     }
 
     /* ── Toque: 44 × 44 como mínimo (CA4, DS6) ── */

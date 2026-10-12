@@ -245,6 +245,16 @@ class MovilPacienteTest extends TestCase
         $this->assertDeclara('.sidebar', 'overflow-y: auto');
     }
 
+    public function test_el_menu_se_abre_visible_y_se_desplaza_entero(): void
+    {
+        // Al abrir solo se anima el desplazamiento: el panel es visible desde el primer instante y
+        // el foco puede entrar (T029; --medir en T023).
+        $this->assertDeclara('html.menu-abierto .sidebar', 'transition: transform var(--duration-fast)', self::CON_MOVIMIENTO);
+        $this->assertStringNotContainsString('visibility', $this->movil('html.menu-abierto .sidebar', self::CON_MOVIMIENTO));
+        // El panel se desplaza entero, no solo el <nav>, para alcanzar el último enlace y «Cerrar sesión».
+        $this->assertDeclara('.sidebar-nav', 'flex: none');
+    }
+
     public function test_fuera_del_movil_solo_hay_las_reglas_previstas(): void
     {
         $this->assertFileExists(public_path('css/movil.css'));
