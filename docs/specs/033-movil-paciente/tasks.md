@@ -87,6 +87,24 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [x] T028 Rehacer con `capturar.mjs` las capturas de las 7 vistas del paciente a 320, 390 y 1440 y las del menú abierto de cada rol, y poner las filas nuevas en la tabla de pantallas de `system.md` — docs/design/capturas/ (generado por node capturar.mjs), docs/design/system.md — hecho cuando: las capturas existen con fecha de hoy y la tabla las enlaza · verificación manual: las capturas a 1440 del paciente y a 1024 y 1440 de las vistas del personal con rejillas son iguales a las de la línea base de T014 (CA8, A31) — cubre: CA1, CA8 — depende: T026
   - nota: 25 capturas de 2026-10-11 en `docs/design/capturas/`: las 7 vistas del paciente a 320, 390 y 1440 (21) y el menú abierto de cada rol a 390 (4). En `system.md`, el inventario lista las capturas a 320 y las 4 vistas del menú, la tabla de pantallas tiene la fila «Menú del móvil» y hay una nota de DS8. Comparación con la línea base de T014 (CA8, A31): las 7 vistas del paciente a 1440, idénticas píxel a píxel; las 18 vistas del personal con rejillas a 1024 y 1440, idénticas salvo `usuarios-create` a 1440 (7 píxeles de intensidad 1, ruido de renderizado). Verificación manual OK 2026-10-11 (usuario), con las capturas de T023–T026.
 
+## Correcciones de /review (ronda 1)
+- [ ] T060 Cambiar en `test_los_textos_largos_parten_de_linea` la aserción de `.content` para que exija `overflow-wrap: anywhere` dentro de la media query del móvil (con `break-word`, una palabra larga sin espacios no reduce el ancho mínimo de un hijo de fila o rejilla flexible) — tests/Feature/MovilPacienteTest.php — hecho cuando: el test falla hoy porque `.content` declara `overflow-wrap: break-word`, y los demás de `MovilPacienteTest` siguen en verde — cubre: CA6 — depende: T021
+  - nota: añadida por /review: R1
+- [ ] T061 Cambiar en `movil.css` el `overflow-wrap` de `.content` a `anywhere` (solo dentro de la media query) y corregir el comentario de cabecera: el único literal en `px` es el punto de corte, y las unidades relativas `85vw`, `100dvh` y `±100%` son las que documenta `system.md` (menú del móvil) — public/css/movil.css — hecho cuando: T060 pasa dos veces y `test_movil_css_solo_usa_tokens`, `test_fuera_del_movil_solo_hay_las_reglas_previstas` y los de T011 siguen en verde · verificación en navegador: con Playwright contra la app local (http://localhost:8000) a 320 px, el detalle de una cita y el panel del paciente con un dentista y un servicio temporales de una sola palabra de 30 letras dan `document.documentElement.scrollWidth` ≤ 320, y los datos temporales se borran después — cubre: CA6 — depende: T060
+  - nota: añadida por /review: R1, R10
+- [ ] T062 Anotar en `AGENTS.md` (ruta protegida; cambio aprobado por el usuario el 2026-10-12, R2), en «Reglas y estilo», que toda spec que toque `resources/views/layouts/app.blade.php`, `public/js/menu.js` o `public/css/movil.css` ejecuta `node docs/design/capturar.mjs --medir` (procedimiento en su cabecera) en la verificación final de `/implement` y en `/review`, porque la CI no lo ejecuta; y poner a `test_menu_js_cumple_su_contrato` un docblock que diga que solo comprueba el texto del contrato y que el comportamiento lo mide `--medir` — AGENTS.md, tests/Feature/MovilPacienteTest.php — hecho cuando: la línea está en `AGENTS.md`, el docblock está en el test, `test_menu_js_cumple_su_contrato` sigue en verde y `pint --test` pasa — cubre: CA3 — depende: T060
+  - nota: añadida por /review: R2 (el job de CI con Playwright va al roadmap como R19)
+- [ ] T063 Ampliar `test_menu_js_cumple_su_contrato` para que exija: `cancelAnimationFrame` sobre el foco aplazado de `abrir()` al cerrar (R4); un manejador de `'pageshow'` que, con `persisted` y el menú abierto, cierra sin mover el foco (R5); y que el manejador de `resize` detecte el cambio de modo y, si `document.activeElement` deja de verse, mueva el foco al enlace actual del menú al pasar al escritorio y a «Menú» al pasar al móvil (R3) — tests/Feature/MovilPacienteTest.php — hecho cuando: el test falla hoy porque `menu.js` no usa `cancelAnimationFrame` ni `pageshow`, y los demás de `MovilPacienteTest` siguen en verde — cubre: CA3 — depende: T062
+  - nota: añadida por /review: R3, R4, R5
+- [ ] T064 Cambiar `menu.js` según T063: guardar el id del `requestAnimationFrame` de `abrir()` y cancelarlo en `cerrar()`; con `pageshow` y `persisted`, cerrar sin mover el foco si el menú quedó abierto; en `resize`, recordar el modo (`esMovil()`) y, al cambiar, cerrar sin mover el foco si estaba abierto y llevar el foco que quede en un elemento oculto al enlace actual (escritorio) o a «Menú» (móvil); sin `max-width` ni HTML construido desde cadenas — public/js/menu.js — hecho cuando: T063 pasa dos veces, `node --check public/js/menu.js` no da errores · verificación en navegador: con Playwright contra la app local, (a) a 390 con el menú abierto y el foco en «Cerrar menú», al pasar a 1000 px el foco queda en el enlace actual; (b) a 1000 con el foco en un enlace del menú, al pasar a 390 el foco queda en «Menú»; (c) a 390, Intro sobre «Menú» y Escape enseguida dejan el panel cerrado y el foco en «Menú»; (d) a 390, con el menú abierto, ir a otra sección y volver con «Atrás» deja el menú cerrado y `<main>` sin `inert` — cubre: CA3 — depende: T063
+  - nota: añadida por /review: R3, R4, R5
+- [ ] T065 Escribir en `MovilPacienteTest` los tests que fallan hoy: `test_los_enlaces_de_pestanas_y_migas_tienen_el_foco_del_sistema` (`.pestanas-citas a:focus-visible` y `.migas a:focus-visible` en `app.css`, fuera de toda media query, con `outline: var(--focus-ring-width) solid var(--focus-ring)` y `outline-offset: var(--focus-ring-offset)`) y `test_el_nav_del_menu_tiene_nombre_y_sus_iconos_son_decorativos` (en cada rol, el `<nav>` del `<aside id="menu-principal">` tiene `aria-label="Secciones"` y todo `<svg>` dentro del `<aside>` tiene `aria-hidden="true"`) — tests/Feature/MovilPacienteTest.php — hecho cuando: los dos tests fallan hoy por la razón esperada (no hay reglas de foco, el `<nav>` no tiene nombre y los SVG de los enlaces no tienen `aria-hidden`) — cubre: CA3 — depende: T064
+  - nota: añadida por /review: R7, R8
+- [ ] T066 Añadir al bloque `/* Spec 033 */` de `app.css` la regla `.pestanas-citas a:focus-visible, .migas a:focus-visible` con los tokens de foco, y en el layout `aria-label="Secciones"` en el `<nav>` del panel y `aria-hidden="true"` y `focusable="false"` en los SVG decorativos de los enlaces del menú y de «Cerrar sesión», como en `design/opcion-a.html` — public/css/app.css, resources/views/layouts/app.blade.php — hecho cuando: los tests de T065 pasan dos veces y `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, `test_los_colores_del_bloque_033_cumplen_aa` y los de T010 siguen en verde · verificación manual: con NVDA, los enlaces del menú se anuncian sin «gráfico» y el menú como región «Secciones»; con teclado, las pestañas de mis citas y las migas muestran el anillo del sistema a 390 y 1440 px contra `docs/design/system.html` — cubre: CA3 — depende: T065
+  - nota: añadida por /review: R7, R8
+- [ ] T067 Repetir la verificación final de la ronda: `php artisan test` completo en verde (285 más los nuevos); `pint --test` sobre los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0, montando la base de prueba según la cabecera de `capturar.mjs` y borrándola después (base, servidor, volumen y carpeta temporal); gitleaks sobre `be400bb..HEAD` sin fugas; y `composer audit` y `npm audit` sin avisos nuevos — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T061, T062, T064, T066
+  - nota: añadida por /review: R2 (`--medir` obligatorio al tocar el layout, `menu.js` y `movil.css`)
+
 ## Integración y documentación
 - [x] T040 Hacer la verificación final — (sin archivos) — hecho cuando: `php artisan test` completo da la línea base de T002 más los tests nuevos, todos en verde; `pint --test` pasa en `MovilPacienteTest`, `ReglasCss`, `ReglasCssTest` y `ReprogramarCitaVistasTest`; `node capturar.mjs --medir` termina con código 0 (7 vistas, todos los anchos, 4 roles, sin JS); gitleaks sin fugas, y `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; la base `dentissa_capturas`, su servidor, el volumen de Playwright y toda la línea base del escritorio (1024 y 1440) quedan borrados, y la imagen de Playwright se conserva — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T028
   - nota: 2026-10-11: `php artisan test` 285 en verde (2881 aserciones) = 256 de la línea base de T002 + 29 nuevos (25 de `MovilPacienteTest` y 4 de `ReglasCssTest`); `pint --test` pasa en los 4 archivos; `node capturar.mjs --medir` «todo en orden» (código 0: 7 vistas, todos los anchos, 4 roles, sin JS); gitleaks `be400bb..HEAD` sin fugas; `composer audit` sin avisos, `npm audit` 0 vulnerabilidades y `trivy fs --severity HIGH,CRITICAL` sin hallazgos (igual que T002). Limpieza: base `dentissa_capturas` borrada, servidor `dentissa_capturas_app` parado, volumen `dentissa_pw_node` borrado, y la carpeta temporal (línea base del escritorio, contraseña de prueba, correo, `ids.json` y SQL de datos) borrada; la imagen de Playwright se conserva.
@@ -95,7 +113,7 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
   - nota: no aplica (2026-10-11): la spec no añade variables, entornos, migraciones, pasos de despliegue, logs, eventos de auditoría ni métricas; `movil.css` y `menu.js` viajan en la imagen `web` como el resto de `public/`.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: 2026-10-12: `php artisan test` 285 en verde (2881 aserciones), sin cambios de código desde T040; los 8 criterios marcados.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -113,10 +131,10 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 |---|---|---|
 | CA1 | T010, T011, T013, T014 | T021, T024, T025, T026, T028 |
 | CA2 | T010, T011, T014 | T021, T022, T023 |
-| CA3 | T010, T012, T014, T029, T030 | T022, T023, T029, T030 |
+| CA3 | T010, T012, T014, T029, T030, T063, T065, T067 | T022, T023, T029, T030, T062, T064, T066 |
 | CA4 | T011, T013, T014 | T020, T021, T024, T025, T026 |
 | CA5 | T011, T013, T014 | T021, T025, T026 |
-| CA6 | T011, T014 | T021, T023, T026 |
+| CA6 | T011, T014, T060, T067 | T021, T023, T026, T061 |
 | CA7 | T011, T014, T029 | T021, T023, T029 |
 | CA8 | T011, T013, T014 | T021, T023, T028 |
 
@@ -128,18 +146,18 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 |---|---|
 | Sistema de diseño (`system.md`, `system.html`) | T001, T028 |
 | Configuración (`.ai/project.yaml`) | T002 |
-| Estilos existentes (`public/css/app.css`) | T020, T023, T024, T025 |
-| Estilos del móvil (`public/css/movil.css`) | T021, T029 |
-| Script del menú (`public/js/menu.js`) | T022, T030 |
-| Layout (`layouts/app.blade.php`) | T023 |
+| Estilos existentes (`public/css/app.css`) | T020, T023, T024, T025, T066 |
+| Estilos del móvil (`public/css/movil.css`) | T021, T029, T061 |
+| Script del menú (`public/js/menu.js`) | T022, T030, T064 |
+| Layout (`layouts/app.blade.php`) | T023, T066 |
 | Vistas del paciente (bloques conocidos) | T024, T025 |
 | Vistas del paciente (solo si `--medir` las señala) | T026 |
 | `citas/partials/reprogramar`, `citas/cliente-reprogramar` (sin cambios previstos) | T026, T040 |
-| Tests (`MovilPacienteTest`, `ReglasCss`, `ReprogramarCitaVistasTest`) | T003, T010, T011, T012, T013, T029, T030 |
+| Tests (`MovilPacienteTest`, `ReglasCss`, `ReprogramarCitaVistasTest`) | T003, T010, T011, T012, T013, T029, T030, T060, T062, T063, T065 |
 | Capturas y medidas (`capturar.mjs`) | T014, T028 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
-| WCAG 2.1 AA (1.4.10, 1.3.4, 2.4.7, 4.1.2, 1.4.1) | T010, T011, T013, T014, T040 · verificación manual del lector de pantalla en T023 |
+| WCAG 2.1 AA (1.4.10, 1.3.4, 2.4.7, 4.1.2, 1.4.1) | T010, T011, T013, T014, T040, T065, T067 · verificación manual del lector de pantalla en T023 y T066 |
 | Toque ≥ 44 × 44 px | T011, T014, T040 |
 | Medido a 320, 390, 1440 y 844 × 390 | T013, T014, T040 |
