@@ -462,7 +462,13 @@ async function medir() {
         const c = await page.evaluate(EN_PAGINA.menuCerrado);
         if (!c.boton) { falla(donde, 'no hay botón «Menú» visible'); await page.close(); return; }
         if (!c.panelOculto) falla(donde, 'el panel cerrado no está oculto');
-        const abrirlo = async () => { await page.locator('.menu-btn').click(); await page.waitForTimeout(300); };
+        // El foco entra tras dos fotogramas, que con el navegador cargado pueden tardar más de 300 ms:
+        // se espera por condición (T070). Si no llega en 2 s, la comprobación de abajo falla.
+        const abrirlo = async () => {
+          await page.locator('.menu-btn').click();
+          await page.waitForFunction(() => document.activeElement?.matches('#menu-principal a[aria-current="page"]'), null, { timeout: 2000 }).catch(() => {});
+          await page.waitForTimeout(300);
+        };
         await abrirlo();
         const a = await page.evaluate(EN_PAGINA.menuAbierto);
         if (!a.expandido) falla(donde, 'aria-expanded no pasa a true');
