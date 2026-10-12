@@ -54,6 +54,10 @@ Nunca escribas secretos en el código, los logs ni los docs.
   con bindings, `{{ }}`/`@js()` en Blade (principios P3 y P4).
 - Tests: PHPUnit, nombres `test_snake_case_en_español`, `DatabaseTransactions` (nunca
   `RefreshDatabase`) contra `dentissa_test`.
+- Una spec que toque `resources/views/layouts/app.blade.php`, `public/js/menu.js` o
+  `public/css/movil.css` ejecuta `node docs/design/capturar.mjs --medir` (procedimiento en su
+  cabecera) en la verificación final de `/implement` y en `/review`: es el único test del menú del
+  móvil en el navegador y la CI no lo ejecuta (spec 033, /review R2).
 - Commits: Conventional Commits en español (`feat:`, `fix:`, `docs:`…), ramas `feature/NNN-slug` con PR a `main`.
 
 ## Mapa del repositorio

@@ -360,6 +360,11 @@ class MovilPacienteTest extends TestCase
         $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--focus-ring'], $tokens['--white']));
     }
 
+    /**
+     * Solo comprueba el texto del contrato de `menu.js`: una lógica rota con las mismas palabras
+     * seguiría pasando. El comportamiento (foco, Escape, `inert`, velo) lo mide
+     * `capturar.mjs --medir`, obligatorio al tocar el menú (AGENTS.md, /review 033 R2).
+     */
     public function test_menu_js_cumple_su_contrato(): void
     {
         $archivo = public_path('js/menu.js');
