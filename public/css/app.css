@@ -47,6 +47,17 @@
     --weight-strong:     500;
     --field-time-width:  110px;
     --timeline-time-width: 100px; /* hora del historial de la cita (spec 028) */
+    /* Sistema de diseño 1.4.0 (spec 033): móvil del paciente. */
+    --touch-min:          44px;
+    --overlay:            rgba(0, 0, 0, 0.45);
+    --menu-movil-w:       300px;
+    --duration-fast:      0.15s;
+    --topbar-h:           60px;
+    --border-width-strong: 2px;
+    --text-meta:          13px;  /* tamaño, no color */
+    --logo-max-w:         160px;
+    --icon-md:            18px;
+    --text-marca:         16px;  /* tamaño, no color */
 }
 
 body {
