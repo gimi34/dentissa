@@ -1,7 +1,7 @@
 ---
 id: 033
 slug: movil-paciente
-status: approved
+status: implemented
 created: 2026-10-11
 extends: []
 ---
@@ -35,39 +35,39 @@ pantallas.
   rompa lo que ya funciona.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un paciente en cualquiera de sus 7 pantallas, cuando la abre con cualquier ancho
+- [x] CA1 · Dado un paciente en cualquiera de sus 7 pantallas, cuando la abre con cualquier ancho
   entre 320 y 1440 px, entonces la página no se desplaza en horizontal y todo su contenido y sus
   acciones se ven y se pueden usar sin zoom. Las 7 pantallas son: panel, mis citas (próximas y
   pasadas), detalle de la cita, reprogramar, agendar y perfil. Se mide a 320, 390 y 1440 px. Si una
   tabla de datos necesita más ancho, solo se desplaza esa tabla dentro de su propio recuadro, nunca
   la página.
-- [ ] CA2 · Dado cualquier rol en una pantalla estrecha (a 320 y 390 px), cuando navega, entonces el
+- [x] CA2 · Dado cualquier rol en una pantalla estrecha (a 320 y 390 px), cuando navega, entonces el
   menú no ocupa espacio fijo en la pantalla ni tapa contenido o acciones. Todas las secciones de su
   rol, su nombre y «Cerrar sesión» están a dos toques como máximo desde cualquier pantalla, y se
   indica en qué sección está. Las secciones son las mismas que en el escritorio.
-- [ ] CA3 · Dado el menú en una pantalla estrecha, cuando se usa con teclado o con lector de
+- [x] CA3 · Dado el menú en una pantalla estrecha, cuando se usa con teclado o con lector de
   pantalla, entonces cada control tiene un nombre que se anuncia y se anuncia si el menú está
   abierto o cerrado. El foco se ve en todo momento. Si el menú se despliega sobre la página, al
   abrirlo el foco entra en él, Escape lo cierra y, al cerrarlo, el foco vuelve al control que lo
   abrió.
-- [ ] CA4 · Dados los botones, los enlaces de acción, los campos, las casillas y los elementos del
+- [x] CA4 · Dados los botones, los enlaces de acción, los campos, las casillas y los elementos del
   menú de las 7 pantallas del paciente y del menú común, cuando se miden en el navegador a 390 px,
   entonces cada uno tiene una zona de toque de al menos 44 × 44 px. Quedan fuera los enlaces dentro
   de un texto corrido.
-- [ ] CA5 · Dados los formularios de agendar, reprogramar y perfil, cuando se usan a 320 px,
+- [x] CA5 · Dados los formularios de agendar, reprogramar y perfil, cuando se usan a 320 px,
   entonces:
   - cada etiqueta queda junto a su campo;
   - cada mensaje de error se ve junto al campo al que se refiere, sin desplazarse de lado;
   - los botones de enviar se alcanzan y se pueden pulsar;
   - los campos de fecha, hora, teléfono y correo siguen abriendo en el móvil el selector o el
     teclado que les corresponde.
-- [ ] CA6 · Dado un texto largo (un nombre o un apellido largos, el nombre de un servicio o un correo
+- [x] CA6 · Dado un texto largo (un nombre o un apellido largos, el nombre de un servicio o un correo
   sin espacios), cuando aparece en las pantallas del paciente o en el menú a 320 px, entonces pasa a
   la línea siguiente o se acorta con el texto completo disponible, y nunca ensancha la página.
-- [ ] CA7 · Dado un móvil en horizontal (p. ej. 844 × 390 px), cuando el paciente usa sus pantallas
+- [x] CA7 · Dado un móvil en horizontal (p. ej. 844 × 390 px), cuando el paciente usa sus pantallas
   y el menú, entonces funcionan igual que en vertical. Nada obliga a girar el móvil, y el menú
   abierto se puede recorrer entero aunque no quepa en el alto de la pantalla.
-- [ ] CA8 · Dado el escritorio a 1440 px, cuando se abren las 7 pantallas del paciente y el menú de
+- [x] CA8 · Dado el escritorio a 1440 px, cuando se abren las 7 pantallas del paciente y el menú de
   cada rol, entonces muestran el mismo contenido, en el mismo orden y con las mismas acciones que
   antes de esta spec. Solo cambia el tamaño de lo que CA4 obliga a agrandar. Se compara con las
   capturas actuales a 1440 px.
