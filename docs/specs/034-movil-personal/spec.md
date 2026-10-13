@@ -1,7 +1,7 @@
 ---
 id: 034
 slug: movil-personal
-status: draft
+status: approved
 created: 2026-10-12
 extends: [033]
 ---
@@ -189,3 +189,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-13 | CA9 y «Fuera de alcance»: 033/R9 y R21 pasan a estar dentro | Decisión del usuario en /plan 034 |
+| 2026-10-13 | Aprobada de nuevo junto con el plan | Usuario |
