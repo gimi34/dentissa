@@ -69,11 +69,15 @@ Primera ronda.
 | A32 | Inconsistencia | BAJA | spec CA1 («fecha y hora»); `dashboard/cliente:114-116` (solo fecha) | El panel del paciente no muestra la hora | Aclarar CA1 para el panel |
 
 ## Decisiones pendientes del usuario
-- **A3:** alcance de «bloque tocado»: inventario de valores con tokens nuevos, o convertir solo los `style=""` que impiden la tarjeta.
-- **A6:** orden de foco del filtro en el escritorio.
-- **A7:** hora/nombre y estado de la cabecera de la tarjeta, sin etiqueta.
-- **A8:** panel de la dentista dentro o fuera de CA2.
-- **A13:** borde de las tarjetas, decorativo o con 3:1.
+Respondidas por el usuario el 2026-10-13:
+- **A3:** convertir solo los `style=""` imprescindibles (plan D10b).
+- **A6:** se acepta el orden de tabulación del filtro en el escritorio (plan D6b).
+- **A7 y A13:** cabecera y estado sin etiqueta, y borde decorativo, como en la opción A (spec CA1,
+  CA2 y RNF).
+- **A8:** la agenda de la dentista conserva su línea de tiempo y solo cumple CA8, con «Ver detalle»
+  con nombre (spec CA2, T035).
 
 ## Aceptados
-Ninguno todavía.
+Aceptados por el usuario el 2026-10-13:
+- **A5** → plan: con la decisión A3 no se tocan los pares de color de los `style=""` que se quedan (deuda DS1: `--green` en servicios y `--text-light` en el detalle); el plan lo declara en D10b.
+- **A27** → roadmap: el destino del resto de DS8 (pantallas del personal que no entran) lo anota `/release` en el roadmap al cerrar la 034.

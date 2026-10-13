@@ -1,7 +1,7 @@
 ---
 id: 034
 slug: movil-personal
-status: approved
+status: draft
 created: 2026-10-12
 extends: [033]
 ---
@@ -54,14 +54,17 @@ Las «pantallas incluidas» son:
 «Móvil» es cualquier ancho por debajo de 900 px, como en la 033.
 
 - [ ] CA1 · Dado un paciente en «Mis citas» (próximas o pasadas) o en su panel de inicio, cuando lo
-  abre en el móvil (de 320 a 899 px), entonces cada cita aparece como una tarjeta con fecha y hora,
-  servicio, dentista y estado, cada dato con su etiqueta. Sus acciones («Ver», «Reprogramar» y
+  abre en el móvil (de 320 a 899 px), entonces cada cita aparece como una tarjeta con su fecha (y su
+  hora en «Mis citas»), servicio, dentista y estado. Cada dato lleva su etiqueta, salvo la cabecera
+  (la fecha y hora) y el estado, que se entienden solos. Sus acciones («Ver», «Reprogramar» y
   «Cancelar», cuando correspondan) se ven dentro de la tarjeta sin desplazar nada de lado y sin que
   ninguna tape a otra.
-- [ ] CA2 · Dado el personal en la lista de citas o en las citas de hoy de su panel de inicio, cuando
-  lo abre en el móvil, entonces cada cita aparece como una tarjeta con hora y fecha, paciente,
-  dentista, servicio y estado, cada dato con su etiqueta, y con sus acciones a la vista. La cita de
-  hoy se sigue distinguiendo de las demás, y no solo por el color.
+- [ ] CA2 · Dado el personal en la lista de citas, o la administración o una asistente en las citas
+  de hoy de su panel de inicio, cuando lo abre en el móvil, entonces cada cita aparece como una
+  tarjeta con hora y fecha, paciente, dentista, servicio y estado, y con sus acciones a la vista.
+  Cada dato lleva su etiqueta, salvo la cabecera (hora y fecha) y el estado. La cita de hoy se sigue
+  distinguiendo de las demás, y no solo por el color. La agenda de hoy del panel de la dentista
+  conserva su línea de tiempo y cumple CA8, con «Ver detalle» con nombre accesible.
 - [ ] CA3 · Dado el personal en la lista de pacientes, cuando la abre en el móvil, entonces cada
   paciente aparece como una tarjeta con solo su nombre, su teléfono, sus alergias (con el aviso que
   ya tiene cuando las hay) y sus acciones. El correo, el doctor, la ciudad, el tipo de sangre y la
@@ -87,9 +90,9 @@ Las «pantallas incluidas» son:
   44 × 44 px.
 - [ ] CA9 · Dado cualquier rol en el móvil, cuando ve la barra superior, entonces el botón del menú
   muestra solo el icono de tres líneas, sin texto, mide al menos 44 × 44 px y los lectores de
-  pantalla lo siguen anunciando como «Menú, botón, contraído» o «expandido» (cambia el aspecto
-  del botón de 033 CA2 y mantiene 033 CA3). Al abrirse el menú, los lectores anuncian que se ha
-  abierto «Menú» sin que el foco vaya a nada tapado por el panel (033/R9). Al cruzar los 900 px, el
+  pantalla lo siguen anunciando como «Menú, botón, contraído» (cambia el aspecto del botón de
+  033 CA2 y mantiene 033 CA3). Al abrirse el menú, el foco entra en la región «Menú» y los lectores
+  la anuncian, sin que el foco vaya a nada tapado por el panel (033/R9). Al cruzar los 900 px, el
   foco solo cambia de sitio si estaba en el menú o en sus botones (033/R21).
 - [ ] CA10 · Dado el menú del móvil abierto, cuando se ve su cabecera, entonces muestra el logo de la
   clínica en lugar del nombre en texto. El logo se distingue del fondo del panel (contraste de al
@@ -137,8 +140,9 @@ Sistema: [docs/design/system.md](../../design/system.md).
 ## Requisitos no funcionales
 - WCAG 2.1 AA en las pantallas incluidas:
   - 1.4.10, reflujo a 320 px;
-  - 1.3.1, cada dato de la tarjeta con su etiqueta, también para lectores de pantalla;
-  - 1.4.11, el logo y los bordes de las tarjetas;
+  - 1.3.1, cada dato de la tarjeta con su etiqueta (salvo la cabecera y el estado), también para
+    lectores de pantalla;
+  - 1.4.11, el logo (el borde de la tarjeta es decorativo: la separan su fondo y su espacio);
   - 2.4.7, foco visible;
   - 4.1.2, «Filtros» anuncia si está desplegado;
   - 1.4.1, la cita de hoy no se distingue solo por el color.
@@ -164,9 +168,12 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-12 | implícita | Solo tokens del sistema y WCAG 2.1 AA en pantallas modificadas | Se aplica a las tarjetas, el filtro y el logo | docs/constitution.md P9 |
 | 2026-10-12 | supuesto | ¿Qué muestra la tarjeta de servicio? | Nombre, duración, estado y acciones (sin descripción ni categoría en el móvil) | /specify |
 | 2026-10-12 | supuesto | ¿Qué muestra la tarjeta de las citas de hoy del panel del personal? | Lo mismo que la lista de citas (hora, paciente, dentista, servicio y estado), sin acciones si hoy no las tiene | /specify |
-| 2026-10-12 | supuesto | Orden del detalle de cita del personal en una columna | Datos de la cita, cambiar estado, información y acciones, control interno e historial (el orden actual de lectura) | /specify |
+| 2026-10-12 | supuesto | Orden del detalle de cita del personal en una columna | Datos de la cita, cambiar estado, información y acciones, control interno e historial (hoy el HTML va en otro orden: datos, control interno, historial, cambiar estado e información; se reordena) | /specify |
 | 2026-10-13 | cierre | ¿Se aprueba la spec, con sus tres supuestos? | Aprobada | usuario |
 | 2026-10-13 | brecha | ¿Se incluyen 033/R9 y R21 al cambiar el botón del menú? (la spec pedía proponerlo en /plan) | Sí, dentro de CA9 | usuario |
+| 2026-10-13 | brecha | ¿Llevan etiqueta la cabecera (hora o nombre) y el estado de la tarjeta? (/analyze A7) | No: se entienden solos, como en la opción A | usuario |
+| 2026-10-13 | brecha | ¿Entra el panel de la dentista (línea de tiempo, no tabla) en las tarjetas de CA2? (/analyze A8) | No: conserva su línea de tiempo y solo debe cumplir CA8, con «Ver detalle» con nombre | usuario |
+| 2026-10-13 | brecha | ¿Necesita el borde de la tarjeta 3:1? (/analyze A13) | No: es decorativo, como en la opción A | usuario |
 
 ## Notas para /plan
 - Origen técnico de CA7: `overflow-wrap: anywhere` en `.content` (033 T061) parte letra a letra el
@@ -190,3 +197,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 |---|---|---|
 | 2026-10-13 | CA9 y «Fuera de alcance»: 033/R9 y R21 pasan a estar dentro | Decisión del usuario en /plan 034 |
 | 2026-10-13 | Aprobada de nuevo junto con el plan | Usuario |
+| 2026-10-13 | CA1, CA2, CA9, RNF 1.3.1 y 1.4.11, supuesto del orden del detalle | /analyze 034 r1: A7, A8, A13, A14, A24, A32 (decisiones del usuario) |
