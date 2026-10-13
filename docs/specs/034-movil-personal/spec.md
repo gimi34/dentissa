@@ -1,7 +1,7 @@
 ---
 id: 034
 slug: movil-personal
-status: draft
+status: approved
 created: 2026-10-12
 extends: [033]
 ---
@@ -162,6 +162,7 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-12 | supuesto | ¿Qué muestra la tarjeta de servicio? | Nombre, duración, estado y acciones (sin descripción ni categoría en el móvil) | /specify |
 | 2026-10-12 | supuesto | ¿Qué muestra la tarjeta de las citas de hoy del panel del personal? | Lo mismo que la lista de citas (hora, paciente, dentista, servicio y estado), sin acciones si hoy no las tiene | /specify |
 | 2026-10-12 | supuesto | Orden del detalle de cita del personal en una columna | Datos de la cita, cambiar estado, información y acciones, control interno e historial (el orden actual de lectura) | /specify |
+| 2026-10-13 | cierre | ¿Se aprueba la spec, con sus tres supuestos? | Aprobada | usuario |
 
 ## Notas para /plan
 - Origen técnico de CA7: `overflow-wrap: anywhere` en `.content` (033 T061) parte letra a letra el
