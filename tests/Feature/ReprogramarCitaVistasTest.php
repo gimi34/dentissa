@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
+use Tests\Feature\Concerns\ReglasCss;
 use Tests\TestCase;
 
 /**
@@ -21,7 +22,7 @@ use Tests\TestCase;
  */
 class ReprogramarCitaVistasTest extends TestCase
 {
-    use DatabaseTransactions, EscenarioEstadosCita;
+    use DatabaseTransactions, EscenarioEstadosCita, ReglasCss;
 
     private const MANANA = '2026-10-06 10:00';
 
@@ -584,26 +585,6 @@ class ReprogramarCitaVistasTest extends TestCase
         $this->assertSame([], $repetidos, 'Sin id duplicados.');
     }
 
-    /** @return list<string> literales que no son tokens en unas declaraciones CSS. */
-    private function literales(string $cuerpo): array
-    {
-        $hallados = [];
-        if (preg_match_all('/\d(\.\d+)?px/', $cuerpo, $m)) {
-            $hallados = array_merge($hallados, $m[0]);
-        }
-        if (preg_match_all('/#[0-9a-f]{3,8}\b|rgba?\(/i', $cuerpo, $m)) {
-            $hallados = array_merge($hallados, $m[0]);
-        }
-        if (preg_match_all('/font-weight\s*:\s*([^;]+)/', $cuerpo, $m)) {
-            $hallados = array_merge($hallados, array_filter($m[1], fn ($v) => ! str_starts_with(trim($v), 'var(--weight-')));
-        }
-        if (preg_match_all('/font-family\s*:\s*([^;]+)/', $cuerpo, $m)) {
-            $hallados = array_merge($hallados, array_filter($m[1], fn ($v) => trim($v) !== 'inherit'));
-        }
-
-        return $hallados;
-    }
-
     /** La casilla `confirmar` de «No reagendar», con su etiqueta asociada. */
     private function casillaDeConfirmar(string $seccion): DOMElement
     {
@@ -639,63 +620,5 @@ class ReprogramarCitaVistasTest extends TestCase
         libxml_clear_errors();
 
         return $dom;
-    }
-
-    /** @return list<array{0: string, 1: string}> reglas de primer nivel de app.css: [selector, declaraciones] */
-    private function reglasCss(): array
-    {
-        $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents(public_path('css/app.css')));
-        preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $coincidencias, PREG_SET_ORDER);
-
-        return array_map(fn ($m) => [trim($m[1]), $m[2]], $coincidencias);
-    }
-
-    /** Declaraciones de las reglas cuyo selector (o uno de su lista) es exactamente `$selector`. */
-    private function declaraciones(string $selector): string
-    {
-        $cuerpos = [];
-        foreach ($this->reglasCss() as [$selectores, $cuerpo]) {
-            $lista = array_map(fn ($s) => preg_replace('/\s+/', ' ', trim($s)), explode(',', $selectores));
-            if (in_array($selector, $lista, true)) {
-                $cuerpos[] = $cuerpo;
-            }
-        }
-
-        return implode("\n", $cuerpos);
-    }
-
-    /** Tokens de color de `:root` (hex), resolviendo `var()`. */
-    private function tokensDeColor(): array
-    {
-        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
-        preg_match_all('/(--[\w-]+)\s*:\s*([^;]+);/', $root[1] ?? '', $pares, PREG_SET_ORDER);
-        $crudos = [];
-        foreach ($pares as [, $nombre, $valor]) {
-            $crudos[$nombre] = trim($valor);
-        }
-
-        $resolver = function (string $valor, int $profundidad = 0) use (&$resolver, $crudos): ?string {
-            if (preg_match('/^var\((--[\w-]+)\)$/', $valor, $m) && $profundidad < 5) {
-                return isset($crudos[$m[1]]) ? $resolver($crudos[$m[1]], $profundidad + 1) : null;
-            }
-
-            return preg_match('/^#[0-9a-f]{6}$/i', $valor) ? $valor : null;
-        };
-
-        return array_filter(array_map($resolver, $crudos));
-    }
-
-    /** Contraste WCAG 2.x entre dos colores hex. */
-    private function contraste(string $a, string $b): float
-    {
-        $luminancia = function (string $hex): float {
-            $canales = array_map(fn ($c) => hexdec($c) / 255, str_split(ltrim($hex, '#'), 2));
-            $lineal = array_map(fn ($c) => $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4, $canales);
-
-            return 0.2126 * $lineal[0] + 0.7152 * $lineal[1] + 0.0722 * $lineal[2];
-        };
-        [$claro, $oscuro] = [max($luminancia($a), $luminancia($b)), min($luminancia($a), $luminancia($b))];
-
-        return ($claro + 0.05) / ($oscuro + 0.05);
     }
 }

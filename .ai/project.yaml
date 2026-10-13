@@ -58,7 +58,7 @@ design:                        # solo proyectos con interfaz (frontend, fullstac
   system: docs/design/system.md
   html: docs/design/system.html
   canvas: null
-  widths: [390, 1440]          # escritorio; móvil como deuda DS8 (decisión del usuario, 2026-10-02)
+  widths: [320, 390, 1440]     # 320 por WCAG 1.4.10 (spec 033, decisión del usuario, 2026-10-11)
 skills:
   enabled: []                  # `design` (plugin oficial de Anthropic) no está instalado; quitado
                                # en el upgrade a 1.11.0 (decisión del usuario, 2026-10-02)

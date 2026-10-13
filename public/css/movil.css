@@ -1,0 +1,142 @@
+/*
+ * Móvil (spec 033): por debajo de 900 px, la barra lateral se convierte en el menú desplegable
+ * (opción A) y el contenido ocupa todo el ancho. Solo tokens de docs/design/system.md 1.4.0; el
+ * único valor en px es el punto de corte, porque las media queries no admiten variables, y las
+ * unidades relativas del panel (85vw, 100dvh y ±100 %) son las que documenta el sistema.
+ *
+ * Las dos reglas globales van primero: las de la media query ganan por orden con la misma
+ * especificidad (/analyze 033 A40). En el escritorio (900 px o más) nada cambia (CA8).
+ */
+
+/* Elementos nuevos: ocultos en el escritorio. */
+.menu-btn, .menu-cerrar, .menu-velo, .sidebar-marca { display: none; }
+
+/* Ningún hijo flexible o de rejilla ensancha la página (A6); a 1440 no cambia nada visible. */
+.main, .grid-auto > *, .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+@media (max-width: 899px) {
+    /* ── Marco de la página ── */
+    .main { margin-left: 0; }
+    /* anywhere: una palabra sin espacios también parte dentro de una fila o rejilla flexible (R1). */
+    .content { padding: var(--space-6); overflow-wrap: anywhere; }
+    /* Las tablas no: con anywhere sus celdas se estrechan y parten palabras y números letra a letra (T069). */
+    .content table { overflow-wrap: break-word; }
+    .topbar {
+        height: auto;
+        min-height: var(--topbar-h);
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        padding: 0 var(--space-6);
+        justify-content: flex-start;
+    }
+    .topbar-actions { margin-left: auto; }
+    .grid-auto, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    /* El banner del panel recorta con overflow: hidden: sus botones bajan de línea (A34). */
+    .welcome-banner, .welcome-actions { flex-wrap: wrap; gap: var(--space-3); }
+
+    /* ── Panel del menú, con o sin JS ── */
+    .sidebar {
+        background: var(--white);
+        border-right: var(--border-width) solid var(--border);
+        overflow-y: auto;
+    }
+    /* El panel se desplaza entero, no solo el <nav> (T029): se alcanzan el último enlace y «Cerrar sesión». */
+    .sidebar-nav { flex: none; }
+    .sidebar-logo {
+        justify-content: space-between;
+        min-height: var(--topbar-h);
+        padding: var(--space-3) var(--space-5);
+    }
+    /* Con mix-blend-mode: screen el logo desaparece sobre blanco: la marca de texto (A9). */
+    .sidebar-logo img { display: none; }
+    .sidebar-marca {
+        display: block;
+        color: var(--p600);
+        font-size: var(--text-marca);
+        font-weight: var(--weight-strong);
+    }
+    .nav-item { color: var(--text); }
+    /* Sección actual: fondo, color y una barra, para que no dependa solo del color (A5). */
+    .nav-item.active {
+        background: var(--p100);
+        color: var(--p600);
+        box-shadow: inset var(--border-width-strong) 0 0 var(--p600);
+    }
+    .nav-label { color: var(--p600); }
+    .user-name { white-space: normal; overflow-wrap: anywhere; }
+    .btn-logout { border: var(--border-width) solid var(--border-control); }
+    .btn-logout:hover { background: var(--p100); color: var(--p600); }
+
+    /* ── Botones «Menú» y «Cerrar menú» (sin display: solo con JS, más abajo) ── */
+    .menu-btn, .menu-cerrar {
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        padding: 0 var(--space-4);
+        background: var(--white);
+        color: var(--p600);
+        border: var(--border-width) solid var(--border-control);
+        border-radius: var(--radius-sm);
+        font: inherit;
+        font-size: var(--text-body);
+        font-weight: var(--weight-strong);
+        cursor: pointer;
+    }
+    .menu-btn svg, .menu-cerrar svg { width: var(--icon-md); height: var(--icon-md); }
+
+    /* ── Sin JS: el menú queda en el flujo, encima del contenido (D5, A3) ── */
+    html:not(.menu-js) body { flex-direction: column; }
+    html:not(.menu-js) .sidebar { position: static; width: auto; min-height: 0; }
+
+    /* ── Con JS: panel desplegable sobre la página ── */
+    html.menu-js .menu-btn, html.menu-js .menu-cerrar { display: inline-flex; }
+    html.menu-js .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: min(var(--menu-movil-w), 85vw);
+        height: 100dvh;
+        /* Anula el min-height: 100vh de app.css, más alto que la pantalla visible (A29). */
+        min-height: 0;
+        z-index: 110;
+        transform: translateX(-100%);
+        visibility: hidden;
+    }
+    html.menu-abierto .sidebar { transform: none; visibility: visible; }
+    /* El velo queda sobre la barra superior (z-index 50) y bajo el panel (A19). */
+    html.menu-abierto .menu-velo {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: var(--overlay);
+        z-index: 100;
+    }
+    html.menu-abierto body { overflow: hidden; }
+
+    @media (prefers-reduced-motion: no-preference) {
+        html.menu-js .sidebar { transition: transform var(--duration-fast), visibility var(--duration-fast); }
+        /* Al abrir solo se anima el desplazamiento: visible desde el primer instante para que el foco entre (T029). */
+        html.menu-abierto .sidebar { transition: transform var(--duration-fast); }
+    }
+
+    /* ── Toque: 44 × 44 como mínimo (CA4, DS6) ── */
+    .btn, .btn-sm, .nav-item, .btn-logout, .menu-btn, .menu-cerrar, .field, select, textarea,
+    input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .pestanas-citas a, .migas a {
+        min-height: var(--touch-min);
+    }
+    .menu-cerrar, .pestanas-citas a, .migas a { min-width: var(--touch-min); }
+    .pestanas-citas a, .migas a { display: inline-flex; align-items: center; justify-content: center; }
+    /* La casilla conserva su tamaño; la zona de toque la da su etiqueta (A20, A33, A41). */
+    .formulario-accesible .campo-casilla label {
+        display: flex;
+        align-items: center;
+        min-height: var(--touch-min);
+    }
+
+    /* ── Foco visible en el menú (CA3) ── */
+    .menu-btn:focus-visible, .menu-cerrar:focus-visible, .nav-item:focus-visible, .btn-logout:focus-visible {
+        outline: var(--focus-ring-width) solid var(--focus-ring);
+        outline-offset: var(--focus-ring-offset);
+    }
+}

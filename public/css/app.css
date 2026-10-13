@@ -47,6 +47,17 @@
     --weight-strong:     500;
     --field-time-width:  110px;
     --timeline-time-width: 100px; /* hora del historial de la cita (spec 028) */
+    /* Sistema de diseño 1.4.0 (spec 033): móvil del paciente. */
+    --touch-min:          44px;
+    --overlay:            rgba(0, 0, 0, 0.45);
+    --menu-movil-w:       300px;
+    --duration-fast:      0.15s;
+    --topbar-h:           60px;
+    --border-width-strong: 2px;
+    --text-meta:          13px;  /* tamaño, no color */
+    --logo-max-w:         160px;
+    --icon-md:            18px;
+    --text-marca:         16px;  /* tamaño, no color */
 }
 
 body {
@@ -520,3 +531,19 @@ tr:hover td { background: var(--p50); }
 .formulario-accesible .historial-estado-anterior { color: var(--text); }
 .formulario-accesible .historial-estado-nuevo { color: var(--p600); }
 .formulario-accesible .historial-autor { font-size: var(--text-small); color: var(--text); margin-top: var(--space-1); }
+
+/* Spec 033: clases de los bloques que pierden su style="" (mismos valores que antes, con tokens).
+   Bloque comprobado por MovilPacienteTest; todo lo de aquí abajo es de la spec 033. */
+.sidebar-logo img { width: 100%; max-width: var(--logo-max-w); object-fit: contain; display: block; margin: 0 auto; mix-blend-mode: screen; }
+.user-card-texto { min-width: 0; }
+/* Pestañas de mis citas (T024). */
+.pestanas-citas { display: flex; gap: var(--space-2); margin-bottom: var(--space-7); border-bottom: var(--border-width) solid var(--border); }
+.pestanas-citas a { padding: var(--space-4) var(--space-1); font-size: var(--text-body); font-weight: var(--weight-strong); text-decoration: none; color: var(--text-muted); border-bottom: var(--border-width-strong) solid transparent; }
+.pestanas-citas a:first-child { margin-right: var(--space-7); }
+.pestanas-citas a.activa { color: var(--p500); border-bottom-color: var(--p400); }
+/* Migas de pan del detalle de la cita y de agendar (T025). */
+.migas { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-7); font-size: var(--text-meta); color: var(--text-muted); }
+.migas a { color: var(--text-muted); text-decoration: none; }
+.migas-actual { color: var(--text); }
+/* Foco del sistema en pestañas y migas (/review 033 R7). */
+.pestanas-citas a:focus-visible, .migas a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }

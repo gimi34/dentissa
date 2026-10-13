@@ -13,15 +13,10 @@
 @section('content')
 
 {{-- Pestañas ──────────────────────────────────────────────────────────── --}}
-<div style="display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--border)">
-    <a href="{{ route('cliente.citas') }}"
-       style="padding:10px 4px;margin-right:20px;font-size:13.5px;font-weight:500;text-decoration:none;color:{{ !$pasadas ? 'var(--p500)' : 'var(--text-muted)' }};border-bottom:2px solid {{ !$pasadas ? 'var(--p400)' : 'transparent' }}">
-        Próximas
-    </a>
-    <a href="{{ route('cliente.citas', ['filtro' => 'pasadas']) }}"
-       style="padding:10px 4px;font-size:13.5px;font-weight:500;text-decoration:none;color:{{ $pasadas ? 'var(--p500)' : 'var(--text-muted)' }};border-bottom:2px solid {{ $pasadas ? 'var(--p400)' : 'transparent' }}">
-        Pasadas
-    </a>
+{{-- Clases con tokens en lugar de style="" (spec 033, T024); la actual lleva aria-current. --}}
+<div id="pestanas-citas" class="pestanas-citas">
+    <a href="{{ route('cliente.citas') }}" @class(['activa' => ! $pasadas]) @if(! $pasadas) aria-current="page" @endif>Próximas</a>
+    <a href="{{ route('cliente.citas', ['filtro' => 'pasadas']) }}" @class(['activa' => $pasadas]) @if($pasadas) aria-current="page" @endif>Pasadas</a>
 </div>
 
 {{-- Tabla de citas ─────────────────────────────────────────────────────── --}}
