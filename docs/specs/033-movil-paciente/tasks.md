@@ -146,7 +146,8 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
   - No hay staging (030): las comprobaciones en un móvil real se hacen en producción, en T097.
   - nota: /release 033 (2026-10-12): versión v0.7.0 (minor), decisión del usuario; la 031 pasa a v0.8.0. Sin staging (030): T095 no aplica y las comprobaciones van en T097. Integración: la rama ya parte del `main` actual (`db6f48a`); el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después, tag anotado `v0.7.0` sobre el merge commit, con confirmación. Puerta de seguridad (2026-10-12, /review r2): `composer audit --locked` sin avisos, `npm audit --audit-level=high` 0 vulnerabilidades, `trivy fs --severity HIGH,CRITICAL` solo el falso positivo de `vendor/mockery` (fuera de git y de la imagen); `trivy image` dentro de EX2 (vence 2026-10-31). Sin migraciones ni dependencias nuevas: solo vistas, CSS y JS estáticos.
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-10-12 21:31 (hora de México) para v0.7.0 («desplegar v0.7.0 a producción»); tag anotado `v0.7.0` sobre el merge `d345e58` (PR #24), CI en verde confirmada por el usuario.
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - verificación manual (de T026, decisión del usuario): en el móvil del usuario, en agendar y en el perfil, los campos de fecha y hora abren el selector del móvil, el de teléfono el teclado numérico y el de correo el teclado de correo (CA5).
   - verificación manual: desde el móvil del usuario, en la dirección pública, el paciente recorre sus 7 pantallas sin desplazamiento lateral y abre y cierra el menú; un rol del personal abre el menú y llega a todas sus secciones; con el móvil en horizontal, el panel abierto no supera el alto visible y «Cerrar sesión» se alcanza (A29).
