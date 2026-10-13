@@ -1,7 +1,7 @@
 ---
 id: 034
 slug: movil-personal
-status: approved
+status: draft
 created: 2026-10-12
 extends: [033]
 ---
@@ -88,7 +88,9 @@ Las «pantallas incluidas» son:
 - [ ] CA9 · Dado cualquier rol en el móvil, cuando ve la barra superior, entonces el botón del menú
   muestra solo el icono de tres líneas, sin texto, mide al menos 44 × 44 px y los lectores de
   pantalla lo siguen anunciando como «Menú, botón, contraído» o «expandido» (cambia el aspecto
-  del botón de 033 CA2 y mantiene 033 CA3).
+  del botón de 033 CA2 y mantiene 033 CA3). Al abrirse el menú, los lectores anuncian que se ha
+  abierto «Menú» sin que el foco vaya a nada tapado por el panel (033/R9). Al cruzar los 900 px, el
+  foco solo cambia de sitio si estaba en el menú o en sus botones (033/R21).
 - [ ] CA10 · Dado el menú del móvil abierto, cuando se ve su cabecera, entonces muestra el logo de la
   clínica en lugar del nombre en texto. El logo se distingue del fondo del panel (contraste de al
   menos 3:1, WCAG 1.4.11) y los lectores lo anuncian como «Melissa López N.».
@@ -106,7 +108,8 @@ Las «pantallas incluidas» son:
 - Redibujar el logo o crear una identidad visual nueva: se usa el logo actual.
 - Respetar la preferencia de reducir el movimiento fuera del menú (resto de DS10) y el resto de la deuda de
   diseño (DS1–DS5, DS7, DS9 y DS11–DS15).
-- La deuda de la 033 en el roadmap (033/R6, R9–R19, R21 y R22), salvo 033/R20 (dentro: CA1).
+- La deuda de la 033 en el roadmap (033/R6, R10–R19 y R22). Dentro: 033/R20 (CA1), y 033/R9 y R21
+  (CA9, decisión del usuario en /plan, 2026-10-13).
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: los mismos que ya muestran estas pantallas (nombre, teléfono y
@@ -163,6 +166,7 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-12 | supuesto | ¿Qué muestra la tarjeta de las citas de hoy del panel del personal? | Lo mismo que la lista de citas (hora, paciente, dentista, servicio y estado), sin acciones si hoy no las tiene | /specify |
 | 2026-10-12 | supuesto | Orden del detalle de cita del personal en una columna | Datos de la cita, cambiar estado, información y acciones, control interno e historial (el orden actual de lectura) | /specify |
 | 2026-10-13 | cierre | ¿Se aprueba la spec, con sus tres supuestos? | Aprobada | usuario |
+| 2026-10-13 | brecha | ¿Se incluyen 033/R9 y R21 al cambiar el botón del menú? (la spec pedía proponerlo en /plan) | Sí, dentro de CA9 | usuario |
 
 ## Notas para /plan
 - Origen técnico de CA7: `overflow-wrap: anywhere` en `.content` (033 T061) parte letra a letra el
@@ -178,6 +182,10 @@ Sistema: [docs/design/system.md](../../design/system.md).
 - Logo: `public/images/logo-icon.png`, `logo-icon1.png` y `logo-main.png` son blancos sobre
   transparente; en la barra rosa se ven gracias a `mix-blend-mode: screen` (A9 de la 033). Valorar
   un filtro CSS o un recurso nuevo derivado.
-- Deuda relacionada de la 033 en el roadmap: R20 está dentro (CA1). R9 (`aria-expanded` del botón
-  dentro de `<main>` inerte) y R21 (`ultimoFoco` de `menu.js`) quedan fuera; si al cambiar el botón
-  sale barato, proponerlo al usuario en `/plan`.
+- Deuda relacionada de la 033 en el roadmap: R20 (CA1), R9 (`aria-expanded` del botón dentro de
+  `<main>` inerte) y R21 (`ultimoFoco` de `menu.js`) están dentro (CA9).
+
+## Historial
+| Fecha | Cambio | Motivo |
+|---|---|---|
+| 2026-10-13 | CA9 y «Fuera de alcance»: 033/R9 y R21 pasan a estar dentro | Decisión del usuario en /plan 034 |
