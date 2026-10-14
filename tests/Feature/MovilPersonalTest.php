@@ -25,6 +25,8 @@ class MovilPersonalTest extends TestCase
 {
     use DatabaseTransactions, EscenarioEstadosCita, ReglasCss;
 
+    private const MOVIL = ['@media (max-width: 899px)'];
+
     /** Clases de celda de D1 que fija la tabla D2 del plan. */
     private const CLASES_D2 = ['celda-cab', 'celda-estado', 'celda-acciones', 'solo-escritorio'];
 
@@ -395,6 +397,204 @@ class MovilPersonalTest extends TestCase
         }
     }
 
+    /** D1: la tabla se ve como tarjetas por debajo de 900 px (A37, A39, A57, A65). */
+    public function test_movil_css_convierte_las_tablas_en_tarjetas(): void
+    {
+        $this->assertDeclara('.tabla-tarjetas thead', 'display: none');
+        foreach (['display: block', 'background: var(--bg)', 'padding: var(--space-5)'] as $d) {
+            $this->assertDeclara('.tabla-tarjetas tbody', $d);
+        }
+        foreach (['display: grid', 'grid-template-columns: minmax(0, 1fr) auto', 'background: var(--white)',
+            'border: var(--border-width) solid var(--border)', 'border-radius: var(--radius)', 'padding: var(--space-5) var(--space-6)'] as $d) {
+            $this->assertDeclara('.tabla-tarjetas tr', $d);
+        }
+        $this->assertDeclara('.tabla-tarjetas tr + tr', 'margin-top: var(--space-5)');
+
+        foreach (['padding: var(--space-1) 0', 'border-bottom: 0', 'display: grid', 'grid-column: 1 / -1',
+            'grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr)', 'overflow-wrap: break-word'] as $d) {
+            $this->assertDeclara('.tabla-tarjetas td', $d);
+        }
+        foreach (['content: attr(data-label)', 'font-size: var(--text-small)', 'font-weight: var(--weight-strong)',
+            'text-transform: uppercase', 'color: var(--p600)'] as $d) {
+            $this->assertDeclara('.tabla-tarjetas td::before', $d);
+        }
+        $this->assertStringNotContainsString('letter-spacing', $this->movil('.tabla-tarjetas td::before'), 'La etiqueta sin letter-spacing (A1).');
+
+        // Cabecera arriba a la izquierda y estado arriba a la derecha, sea cual sea su columna (A37).
+        $this->assertDeclara('.tabla-tarjetas .celda-cab', 'grid-row: 1');
+        $this->assertDeclara('.tabla-tarjetas .celda-cab', 'grid-column: 1');
+        $this->assertDeclara('.tabla-tarjetas .celda-estado', 'grid-row: 1');
+        $this->assertDeclara('.tabla-tarjetas .celda-estado', 'grid-column: 2');
+        foreach (['.tabla-tarjetas .celda-cab', '.tabla-tarjetas .celda-estado', '.tabla-tarjetas .celda-acciones'] as $sin) {
+            $this->assertDeclara($sin, 'display: block');
+            $this->assertDeclara("{$sin}::before", 'content: none');
+        }
+        // Celdas sin etiqueta: relleno y borde con tokens; el pie de acciones con su separador (A65).
+        foreach (['margin-top: var(--space-3)', 'padding-top: var(--space-3)', 'border-top: var(--border-width) solid var(--border)'] as $d) {
+            $this->assertDeclara('.tabla-tarjetas .celda-acciones', $d);
+        }
+        foreach (['.tabla-tarjetas .celda-acciones > div', '.tabla-tarjetas .celda-acciones .acciones-fila'] as $envoltorio) {
+            $this->assertDeclara($envoltorio, 'display: flex');
+            $this->assertDeclara($envoltorio, 'flex-wrap: wrap');
+            $this->assertDeclara($envoltorio, 'gap: var(--space-3)');
+        }
+        $this->assertDeclara('.tabla-tarjetas .celda-acciones .btn', 'flex: 1 1 auto');
+
+        // La cita de hoy: tarjeta blanca con barra, y sin el fondo del :hover de app.css (A57).
+        $this->assertDeclara('.tabla-tarjetas .fila-hoy', 'background: var(--white)');
+        $this->assertDeclara('.tabla-tarjetas .fila-hoy', 'box-shadow: inset var(--border-width-strong) 0 0 var(--p400)');
+        $this->assertDeclara('.tabla-tarjetas tr:hover td', 'background: transparent');
+
+        $this->assertDeclara('.solo-escritorio', 'display: none');
+        $this->assertDeclara('.solo-movil', 'display: inline');
+        $this->assertDeclara('.stats-grid', 'grid-template-columns: repeat(2, minmax(0, 1fr))');
+    }
+
+    /** D5b, D6, D7 y D8 en el móvil (A33, A34, A55, A56, A69). */
+    public function test_movil_css_adapta_filtro_detalle_y_panel_de_la_dentista(): void
+    {
+        // Panel de la dentista (D5b).
+        $this->assertDeclara('.btn-icono', 'min-width: var(--touch-min)');
+        $this->assertDeclara('.btn-icono', 'justify-content: center');
+        $this->assertDeclara('.timeline-item', 'flex-wrap: wrap');
+        $this->assertDeclara('.timeline-acciones', 'flex-basis: 100%');
+        $this->assertDeclara('.timeline-acciones', 'justify-content: flex-end');
+
+        // Filtro en columna: buscador a lo ancho, atajos y panel (A55); atajos que se reparten el ancho (A69).
+        $this->assertDeclara('.filtro-citas', 'flex-direction: column');
+        $this->assertDeclara('.filtro-citas', 'align-items: stretch');
+        $this->assertDeclara('.filtro-buscar', 'flex: none');
+        $this->assertDeclara('.filtro-buscar', 'min-width: 0');
+        foreach (['order: 0', 'margin-left: 0', 'flex-wrap: wrap', 'gap: var(--space-3)'] as $d) {
+            $this->assertDeclara('.filtro-atajos', $d);
+        }
+        $this->assertDeclara('.filtro-atajos .btn', 'flex: 1');
+        foreach (['.filtro-fecha', '.filtro-dentista', '.filtro-estado'] as $campo) {
+            $this->assertDeclara($campo, 'min-width: 0');
+        }
+        $this->assertDeclara('.filtro-tarjeta', 'padding: var(--space-5)');
+        $this->assertDeclara('.filtro-panel', 'display: grid');
+        $this->assertDeclara('.filtro-panel', 'grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)');
+        $this->assertDeclara('.filtro-panel', 'gap: var(--space-4)');
+        $this->assertDeclara('.filtro-panel .filtro-dentista', 'grid-column: 1 / -1');
+        $this->assertDeclara('.filtro-panel .filtro-estado', 'grid-column: 1 / -1');
+        // Con JS, «Filtros» se muestra y el panel se pliega mientras el formulario no esté abierto.
+        $this->assertDeclara('html.filtros-js .filtro-btn', 'display: inline-flex');
+        $this->assertDeclara('html.filtros-js .filtro-citas:not(.abierto) .filtro-panel', 'display: none');
+
+        // Detalle en una columna (D7, A54).
+        $this->assertDeclara('.detalle-cita', 'display: flex');
+        $this->assertDeclara('.detalle-cita', 'flex-direction: column');
+        $this->assertDeclara('.detalle-cita', 'gap: var(--space-detalle)');
+        $this->assertDeclara('.detalle-control', 'margin-top: 0');
+        $this->assertDeclara('.detalle-historial', 'margin-top: 0');
+        $this->assertDeclara('.detalle-datos-rejilla', 'grid-template-columns: minmax(0, 1fr)');
+
+        // Textos de datos en filas o rejillas flexibles (D8, A34, A56).
+        foreach (['.welcome-title', '.timeline-title', '.timeline-sub', '.resumen-cita dd'] as $texto) {
+            $this->assertDeclara($texto, 'overflow-wrap: anywhere');
+        }
+    }
+
+    /** D9 y D10: botón «Menú» solo con icono y logo con máscara. */
+    public function test_movil_css_cambia_el_boton_menu_y_la_marca(): void
+    {
+        $this->assertDeclara('.menu-btn', 'width: var(--touch-min)');
+        $this->assertDeclara('.menu-btn', 'height: var(--touch-min)');
+        $this->assertDeclara('.menu-btn', 'padding: 0');
+        foreach (['width: var(--logo-max-w)', 'height: var(--logo-movil-h)', 'background: var(--p600)',
+            'mask: url("../images/logo-icon.png") left center / contain no-repeat',
+            '-webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat'] as $d) {
+            $this->assertDeclara('.sidebar-marca', $d);
+        }
+    }
+
+    /** Bloque 034 de app.css: mismas medidas que los style="" de hoy, solo con tokens (D6, D7, D10b). */
+    public function test_el_bloque_034_de_app_css_reproduce_los_estilos_con_tokens(): void
+    {
+        // Control positivo: literales() encuentra lo que debe.
+        $this->assertCount(3, $this->literales('margin-bottom: 20px; color: #fff; font-weight: 600;'));
+        foreach ($this->analizarCss($this->bloque034()) as [$selector, $cuerpo, $condiciones]) {
+            $this->assertSame([], $this->literales($cuerpo), "{$selector}: solo tokens.");
+            $this->assertSame([], $condiciones, "{$selector}: fuera de toda media query.");
+        }
+
+        $esperadas = [
+            '.stats-grid-2' => ['grid-template-columns: repeat(2, 1fr)'],
+            '.stats-grid-3' => ['grid-template-columns: repeat(3, 1fr)'],
+            '.filtro-citas' => ['display: flex', 'flex-wrap: wrap', 'gap: var(--space-4)', 'align-items: flex-end'],
+            '.filtro-tarjeta' => ['margin-bottom: var(--space-7)', 'padding: var(--space-6) var(--space-7)'],
+            '.filtro-buscar' => ['flex: 1', 'min-width: var(--filtro-buscar-min)'],
+            '.filtro-fecha' => ['min-width: var(--filtro-fecha-min)'],
+            '.filtro-dentista' => ['min-width: var(--filtro-dentista-min)'],
+            '.filtro-estado' => ['min-width: var(--filtro-estado-min)'],
+            '.filtro-atajos' => ['margin-left: auto', 'display: flex', 'gap: var(--space-2)', 'order: 1'],
+            '.filtro-citas .field' => ['border-color: var(--border-control)'],
+            '.filtro-btn' => ['border-color: var(--border-control)'],
+            '.filtro-btn[aria-expanded="true"]' => ['background: var(--p100)', 'color: var(--p600)'],
+            '.filtro-contador' => ['background: var(--p500)', 'color: var(--white)', 'border-radius: var(--radius-lg)', 'padding: 0 var(--space-2)', 'font-size: var(--text-small)'],
+            '.fila-hoy' => ['background: var(--p50)'],
+            '.btn-icono' => ['padding: var(--space-1) var(--space-3)'],
+            '.timeline-acciones' => ['display: flex', 'align-items: center', 'gap: var(--space-3)'],
+            '.detalle-datos-rejilla' => ['grid-template-columns: repeat(3, 1fr)'],
+            '.detalle-cita' => ['display: grid', 'grid-template-columns: 1fr var(--detalle-lateral-w)', 'grid-template-rows: auto auto auto 1fr',
+                'column-gap: var(--space-7)', 'align-items: start'],
+            '.detalle-lateral' => ['grid-column: 2', 'grid-row: 1 / -1', 'display: flex', 'flex-direction: column', 'gap: var(--space-detalle)'],
+            '.detalle-control' => ['margin-top: var(--space-detalle)'],
+            '.detalle-historial' => ['margin-top: var(--space-detalle)'],
+        ];
+        foreach ($esperadas as $selector => $declaraciones) {
+            $cuerpo = $this->app034($selector);
+            $this->assertNotSame('', $cuerpo, "Falta {$selector} en el bloque /* Spec 034 */ de app.css.");
+            foreach ($declaraciones as $declaracion) {
+                [$propiedad, $valor] = array_map('trim', explode(':', $declaracion, 2));
+                $this->assertMatchesRegularExpression('/(^|;)\s*'.preg_quote($propiedad, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $cuerpo,
+                    "{$selector} declara «{$declaracion}» en el bloque 034.");
+            }
+        }
+        $this->assertStringNotContainsString('row-gap', $this->app034('.detalle-cita'), 'La rejilla del detalle, sin row-gap (A9).');
+        $this->assertStringNotContainsString(' gap:', ' '.$this->app034('.detalle-cita'), 'La rejilla del detalle, sin gap (A9).');
+
+        // Foco con los tokens del sistema en todo lo que la spec añade o cambia (A60, A68).
+        foreach (['.filtro-citas .field:focus-visible', '.filtro-citas .btn:focus-visible', '.tabla-tarjetas a:focus-visible',
+            '.tabla-tarjetas .btn:focus-visible', '.btn-icono:focus-visible'] as $foco) {
+            $cuerpo = $this->app034($foco);
+            $this->assertStringContainsString('outline: var(--focus-ring-width) solid var(--focus-ring);', $cuerpo, "{$foco}: anillo del sistema.");
+            $this->assertStringContainsString('outline-offset: var(--focus-ring-offset);', $cuerpo, "{$foco}: separación del sistema.");
+        }
+    }
+
+    public function test_los_tokens_034_coinciden_con_el_sistema(): void
+    {
+        $sistema = file_get_contents(base_path('docs/design/system.md'));
+        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
+        $tokens = [
+            '--tarjeta-etiqueta-w' => '88px', '--logo-movil-h' => '40px', '--space-detalle' => '18px', '--detalle-lateral-w' => '360px',
+            '--filtro-buscar-min' => '180px', '--filtro-fecha-min' => '130px', '--filtro-dentista-min' => '150px', '--filtro-estado-min' => '140px',
+        ];
+        foreach ($tokens as $token => $valor) {
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'`[^\n]{0,8}'.preg_quote($valor, '/').'/', $sistema, "system.md documenta {$token} = {$valor}.");
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $root[1] ?? '', "app.css define {$token}: {$valor}.");
+        }
+    }
+
+    public function test_los_pares_nuevos_cumplen_aa(): void
+    {
+        $t = $this->tokensDeColor();
+        foreach ([
+            ['--p600', '--white', 4.5, 'Etiqueta de la tarjeta'],
+            ['--white', '--p500', 4.5, 'Contador de «Filtros»'],
+            ['--p600', '--p100', 4.5, '«Filtros» desplegado'],
+            ['--p600', '--white', 4.5, '«Filtros» plegado (btn-outline)'],
+            ['--border-control', '--white', 3.0, 'Borde de «Filtros» y de los campos, en los dos modos (A36, A58)'],
+            ['--focus-ring', '--white', 3.0, 'Anillo de foco'],
+            ['--p600', '--white', 3.0, 'Logo del menú (máscara en --p600)'],
+        ] as [$color, $fondo, $minimo, $uso]) {
+            $this->assertArrayHasKey($color, $t, "{$uso}: existe {$color}.");
+            $this->assertGreaterThanOrEqual($minimo, $this->contraste($t[$color], $t[$fondo]), "{$uso}: {$color} sobre {$fondo}.");
+        }
+    }
+
     /**
      * Pantallas con tabla incluida: [usuario, url, tipo de D2].
      *
@@ -455,6 +655,53 @@ class MovilPersonalTest extends TestCase
     private function columnasEnLinea(string $estilo): bool
     {
         return (bool) preg_match('/(^|;)\s*grid-template-columns\s*:/', $estilo);
+    }
+
+    /** Cuerpo de las reglas de `movil.css` con ese selector (dentro de una lista) y esas condiciones. */
+    private function movil(string $selector, array $condiciones = self::MOVIL): string
+    {
+        $this->assertFileExists(public_path('css/movil.css'));
+
+        return $this->cuerpos($this->reglasCss('css/movil.css'), $selector, $condiciones);
+    }
+
+    private function assertDeclara(string $selector, string $declaracion, array $condiciones = self::MOVIL): void
+    {
+        [$propiedad, $valor] = array_map('trim', explode(':', $declaracion, 2));
+        $this->assertMatchesRegularExpression(
+            '/(^|;)\s*'.preg_quote($propiedad, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/',
+            $this->movil($selector, $condiciones),
+            "{$selector} debe declarar «{$declaracion}» en movil.css."
+        );
+    }
+
+    /** Cuerpo de las reglas globales del bloque `/* Spec 034 *\/` de app.css con ese selector. */
+    private function app034(string $selector): string
+    {
+        return $this->cuerpos($this->analizarCss($this->bloque034()), $selector, []);
+    }
+
+    private function cuerpos(array $reglas, string $selector, array $condiciones): string
+    {
+        $cuerpos = [];
+        foreach ($reglas as [$selectores, $cuerpo, $suyas]) {
+            $lista = array_map(fn ($s) => preg_replace('/\s+/', ' ', trim($s)), explode(',', $selectores));
+            if ($suyas === $condiciones && in_array($selector, $lista, true)) {
+                $cuerpos[] = trim(preg_replace('/\s+/', ' ', $cuerpo));
+            }
+        }
+
+        return implode(' ', $cuerpos);
+    }
+
+    /** Bloque `/* Spec 034 *\/` de app.css, del comentario al final del archivo. */
+    private function bloque034(): string
+    {
+        $css = file_get_contents(public_path('css/app.css'));
+        $inicio = strpos($css, '/* Spec 034');
+        $this->assertNotFalse($inicio, 'app.css debe tener el bloque /* Spec 034 */.');
+
+        return substr($css, $inicio);
     }
 
     /** Declaraciones de maquetación que D10b saca de los style="" del filtro (A33). */
