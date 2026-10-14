@@ -244,6 +244,157 @@ class MovilPersonalTest extends TestCase
         $this->assertStringContainsString('max-width:600px', (string) $xpath->query("//*[contains(@class,'stats-grid')]")->item(0)?->getAttribute('style'));
     }
 
+    /** D6 (A33): el filtro sin sus style="", en el orden del plan. */
+    public function test_el_filtro_de_citas_tiene_el_orden_y_las_clases_del_plan(): void
+    {
+        foreach (['admin' => $this->admin, 'asistente' => $this->asistente, 'dentista' => $this->dentista1] as $rol => $usuario) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get("/{$rol}/citas")->assertOk()->getContent());
+
+            $form = $xpath->query("//form[.//input[@name='buscar']]");
+            $this->assertSame(1, $form->length, "{$rol}: el formulario del filtro.");
+            $form = $form->item(0);
+            $this->assertContains('filtro-citas', $this->clases($form), "{$rol}: el <form> lleva .filtro-citas.");
+            $this->assertSame('', $form->getAttribute('style'), "{$rol}: el <form> sin style=\"\".");
+
+            // Cada contenedor con su clase y sin los style="" que impiden el móvil (control positivo abajo).
+            $contenedores = [
+                'filtro-tarjeta' => $form->parentNode,
+                'filtro-buscar' => $xpath->query(".//input[@name='buscar']/..", $form)->item(0),
+                'filtro-fecha' => $xpath->query(".//input[@name='fecha_desde']/..", $form)->item(0),
+                'filtro-estado' => $xpath->query(".//select[@name='estado']/..", $form)->item(0),
+                'filtro-atajos' => $xpath->query(".//a[normalize-space()='Hoy']/..", $form)->item(0),
+            ];
+            $hasta = $xpath->query(".//input[@name='fecha_hasta']/..", $form)->item(0);
+            $this->assertContains('filtro-fecha', $this->clases($hasta), "{$rol}: «Hasta» lleva .filtro-fecha.");
+            if ($rol !== 'dentista') {
+                $contenedores['filtro-dentista'] = $xpath->query(".//select[@name='dentista_id']/..", $form)->item(0);
+            }
+            foreach ($contenedores + ['filtro-fecha (hasta)' => $hasta] as $clase => $nodo) {
+                $this->assertInstanceOf(DOMElement::class, $nodo, "{$rol}: existe {$clase}.");
+                $this->assertContains(strtok($clase, ' '), $this->clases($nodo), "{$rol}: lleva .{$clase}.");
+                $this->assertFalse($this->estiloDeMaqueta($nodo->getAttribute('style')), "{$rol}: .{$clase} sin min-width, flex, margin ni padding en style=\"\".");
+            }
+
+            // Orden: buscador, fila de atajos (Esta semana, Hoy, Filtros) y el panel.
+            $hijos = array_values(array_filter(iterator_to_array($xpath->query('./*', $form)), fn ($n) => $n->nodeName !== 'input' || $n->getAttribute('type') !== 'hidden'));
+            $this->assertContains('filtro-buscar', $this->clases($hijos[0]), "{$rol}: primero el buscador.");
+            $this->assertContains('filtro-atajos', $this->clases($hijos[1]), "{$rol}: después la fila de atajos.");
+            $this->assertSame('filtro-panel', $hijos[2]->getAttribute('id'), "{$rol}: y después #filtro-panel.");
+            $this->assertContains('filtro-panel', $this->clases($hijos[2]), "{$rol}: el panel lleva .filtro-panel.");
+
+            $atajos = [];
+            foreach ($xpath->query('./*', $hijos[1]) as $atajo) {
+                $atajos[] = trim(preg_replace('/\s+/', ' ', $atajo->textContent));
+            }
+            $this->assertSame(['Esta semana', 'Hoy', 'Filtros'], $atajos, "{$rol}: «Esta semana · Hoy · Filtros» (A15).");
+
+            $boton = $xpath->query("./button[contains(concat(' ', normalize-space(@class), ' '), ' filtro-btn ')]", $hijos[1]);
+            $this->assertSame(1, $boton->length, "{$rol}: el botón «Filtros».");
+            $boton = $boton->item(0);
+            foreach (['btn', 'btn-outline', 'filtro-btn'] as $clase) {
+                $this->assertContains($clase, $this->clases($boton), "{$rol}: «Filtros» lleva .{$clase} (A45).");
+            }
+            $this->assertSame('button', $boton->getAttribute('type'), "{$rol}: «Filtros» es type=button.");
+            $this->assertSame('false', $boton->getAttribute('aria-expanded'), "{$rol}: «Filtros» empieza contraído.");
+            $this->assertSame('filtro-panel', $boton->getAttribute('aria-controls'), "{$rol}: «Filtros» controla el panel.");
+
+            $panel = [];
+            foreach ($xpath->query('.//input[@name] | .//select[@name] | .//button[@type="submit"] | .//a', $hijos[2]) as $control) {
+                $panel[] = $control->getAttribute('name') ?: trim($control->textContent);
+            }
+            $esperado = $rol === 'dentista'
+                ? ['fecha_desde', 'fecha_hasta', 'estado', 'Filtrar', 'Limpiar']
+                : ['fecha_desde', 'fecha_hasta', 'dentista_id', 'estado', 'Filtrar', 'Limpiar'];
+            $this->assertSame($esperado, $panel, "{$rol}: el panel con desde, hasta, dentista, estado, «Filtrar» y «Limpiar».");
+
+            // Cada etiqueta asociada a su campo (A4).
+            $etiquetas = $xpath->query('.//label', $form);
+            $this->assertSame($rol === 'dentista' ? 4 : 5, $etiquetas->length, "{$rol}: una etiqueta por campo.");
+            foreach ($etiquetas as $etiqueta) {
+                $para = $etiqueta->getAttribute('for');
+                $this->assertNotSame('', $para, "{$rol}: «{$etiqueta->textContent}» con for.");
+                $this->assertSame(1, $xpath->query(".//*[@id='{$para}'][self::input or self::select]", $form)->length, "{$rol}: «{$etiqueta->textContent}» apunta a su campo.");
+            }
+        }
+
+        // Control positivo del detector de estilos de maquetación.
+        $this->assertTrue($this->estiloDeMaqueta('flex:1;min-width:180px'));
+        $this->assertTrue($this->estiloDeMaqueta('margin-left:auto;display:flex;gap:6px'));
+        $this->assertTrue($this->estiloDeMaqueta('margin-bottom:20px;padding:16px 20px'));
+        $this->assertFalse($this->estiloDeMaqueta(''));
+    }
+
+    public function test_el_boton_filtros_indica_los_filtros_aplicados(): void
+    {
+        $casos = [
+            '/admin/citas' => null,
+            '/admin/citas?estado=agendada' => 1,
+            '/admin/citas?fecha_hasta=2026-10-20&estado=agendada' => 2,
+        ];
+        foreach ($casos as $url => $aplicados) {
+            $xpath = $this->xpath($this->actingAs($this->admin)->get($url)->assertOk()->getContent());
+            $boton = $xpath->query("//button[contains(concat(' ', normalize-space(@class), ' '), ' filtro-btn ')]")->item(0);
+            $this->assertInstanceOf(DOMElement::class, $boton, "{$url}: hay botón «Filtros».");
+            $contador = $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' filtro-contador ')]", $boton);
+
+            if ($aplicados === null) {
+                $this->assertSame(0, $contador->length, "{$url}: sin filtros, sin contador.");
+                $this->assertFalse($boton->hasAttribute('aria-label'), "{$url}: sin filtros, sin aria-label.");
+
+                continue;
+            }
+            $this->assertSame(1, $contador->length, "{$url}: con filtros, contador.");
+            $this->assertSame((string) $aplicados, trim($contador->item(0)->textContent), "{$url}: cuenta {$aplicados}.");
+            $nombre = $aplicados === 1 ? 'Filtros, 1 aplicado' : "Filtros, {$aplicados} aplicados";
+            $this->assertSame($nombre, $boton->getAttribute('aria-label'), "{$url}: nombre «{$nombre}» (A49).");
+        }
+    }
+
+    public function test_la_lista_de_citas_carga_filtros_js_en_head(): void
+    {
+        $html = $this->actingAs($this->admin)->get('/admin/citas')->assertOk()->getContent();
+        $cabecera = (string) strstr((string) strstr($html, '<head>'), '</head>', true);
+
+        $this->assertMatchesRegularExpression('#<script src="[^"]*js/filtros\.js\?v=\d+"></script>#', $cabecera,
+            'filtros.js en <head>, con ?v= y sin defer ni async.');
+        $this->assertStringNotContainsString('filtros.js', $this->actingAs($this->admin)->get('/admin')->getContent(), 'Solo en la lista de citas.');
+    }
+
+    /** D7: el detalle de cita del personal en el orden de la spec, con sus id y envoltorios. */
+    public function test_el_detalle_de_cita_sigue_el_orden_de_la_spec(): void
+    {
+        foreach (['admin' => $this->admin, 'asistente' => $this->asistente, 'dentista' => $this->dentista1] as $rol => $usuario) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get("/{$rol}/citas/{$this->citaHoy}")->assertOk()->getContent());
+
+            $detalle = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' detalle-cita ')]");
+            $this->assertSame(1, $detalle->length, "{$rol}: un .detalle-cita.");
+            $this->assertSame('', $detalle->item(0)->getAttribute('style'), "{$rol}: .detalle-cita sin style=\"\".");
+
+            $bloques = [];
+            foreach ($xpath->query('./*', $detalle->item(0)) as $hijo) {
+                $bloques[] = implode(' ', array_values(array_filter($this->clases($hijo), fn ($c) => str_starts_with($c, 'detalle-'))));
+            }
+            $esperados = $rol === 'admin'
+                ? ['detalle-datos', 'detalle-lateral', 'detalle-control', 'detalle-historial']
+                : ['detalle-datos', 'detalle-lateral', 'detalle-historial'];
+            $this->assertSame($esperados, $bloques, "{$rol}: bloques en el orden de la spec.");
+
+            $lateral = "//*[contains(@class,'detalle-lateral')]";
+            $this->assertSame(1, $xpath->query("{$lateral}//*[@id='estado']")->length, "{$rol}: #estado en el lateral.");
+            $this->assertSame(1, $xpath->query("{$lateral}//*[contains(@class,'formulario-accesible')]/*[@id='acciones']")->length, "{$rol}: .formulario-accesible > #acciones en el lateral.");
+            $this->assertSame(1, $xpath->query("//*[contains(@class,'detalle-historial')]/descendant-or-self::*[contains(@class,'formulario-accesible')]/*[@id='historial']")->length, "{$rol}: .formulario-accesible > #historial en su bloque.");
+            $this->assertSame($rol === 'admin' ? 1 : 0, $xpath->query("//*[contains(@class,'detalle-control')]/descendant-or-self::*[@id='control-interno']")->length, "{$rol}: #control-interno solo para el admin.");
+
+            $rejilla = $xpath->query("//*[contains(@class,'detalle-datos')]//*[contains(concat(' ', normalize-space(@class), ' '), ' detalle-datos-rejilla ')]");
+            $this->assertSame(1, $rejilla->length, "{$rol}: la rejilla de datos lleva .detalle-datos-rejilla.");
+            $this->assertFalse($this->columnasEnLinea($rejilla->item(0)->getAttribute('style')), "{$rol}: sin grid-template-columns en línea.");
+
+            // D8 (A34): la cabecera de la tarjeta parte de línea con un servicio o una fecha largos.
+            $this->assertSame(1, $xpath->query("//*[contains(@class,'detalle-datos')]//div[contains(concat(' ', normalize-space(@class), ' '), ' texto-partible ')][contains(., 'Consulta dental')]")->length,
+                "{$rol}: el texto de la cabecera lleva texto-partible.");
+        }
+    }
+
     /**
      * Pantallas con tabla incluida: [usuario, url, tipo de D2].
      *
@@ -304,6 +455,12 @@ class MovilPersonalTest extends TestCase
     private function columnasEnLinea(string $estilo): bool
     {
         return (bool) preg_match('/(^|;)\s*grid-template-columns\s*:/', $estilo);
+    }
+
+    /** Declaraciones de maquetación que D10b saca de los style="" del filtro (A33). */
+    private function estiloDeMaqueta(string $estilo): bool
+    {
+        return (bool) preg_match('/(^|;)\s*(min-width|flex|margin(-[a-z]+)?|padding|display|gap)\s*:/', $estilo);
     }
 
     private function crearServicio(): void
