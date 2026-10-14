@@ -61,10 +61,12 @@ Las «pantallas incluidas» son:
   ninguna tape a otra.
 - [ ] CA2 · Dado el personal en la lista de citas, o la administración o una asistente en las citas
   de hoy de su panel de inicio, cuando lo abre en el móvil, entonces cada cita aparece como una
-  tarjeta con hora y fecha, paciente, dentista, servicio y estado, y con sus acciones a la vista.
-  Cada dato lleva su etiqueta, salvo la cabecera (hora y fecha) y el estado. La cita de hoy se sigue
-  distinguiendo de las demás, y no solo por el color. La agenda de hoy del panel de la dentista
-  conserva su línea de tiempo y cumple CA8, con «Ver detalle» con nombre accesible.
+  tarjeta con su hora y fecha (solo la hora en las citas de hoy del panel, como hoy), paciente,
+  dentista, servicio y estado, y con sus acciones a la vista. Cada dato lleva su etiqueta, salvo la
+  cabecera (la hora, o la hora y fecha) y el estado. La cita de hoy se sigue distinguiendo de las
+  demás, y no solo por el color. La agenda de hoy del panel de la dentista conserva su línea de
+  tiempo (no pasa a tarjetas): en el móvil, el estado y «Ver detalle» van debajo del nombre del
+  paciente, cumple CA7 y CA8, y «Ver detalle» tiene nombre accesible.
 - [ ] CA3 · Dado el personal en la lista de pacientes, cuando la abre en el móvil, entonces cada
   paciente aparece como una tarjeta con solo su nombre, su teléfono, sus alergias (con el aviso que
   ya tiene cuando las hay) y sus acciones. El correo, el doctor, la ciudad, el tipo de sangre y la
@@ -99,7 +101,9 @@ Las «pantallas incluidas» son:
   menos 3:1, WCAG 1.4.11) y los lectores lo anuncian como «Melissa López N.».
 - [ ] CA11 · Dadas las pantallas incluidas en el escritorio (1024 y 1440 px), cuando se abren,
   entonces se ven igual que antes: tablas con todas sus columnas, el filtro de citas completo y la
-  barra lateral con su logo.
+  barra lateral con su logo. La única diferencia es el borde de los campos del filtro de citas, que
+  pasa a distinguirse del fondo con un contraste de al menos 3:1 (WCAG 1.4.11, decisión del
+  usuario).
 
 ## Fuera de alcance
 - El resto de las pantallas del personal: crear y editar cita, paciente o servicio, reprogramar
@@ -113,13 +117,17 @@ Las «pantallas incluidas» son:
   diseño (DS1–DS5, DS7, DS9 y DS11–DS15).
 - La deuda de la 033 en el roadmap (033/R6, R10–R19 y R22). Dentro: 033/R20 (CA1), y 033/R9 y R21
   (CA9, decisión del usuario en /plan, 2026-10-13).
+- 033/R14 entra solo en parte: las comprobaciones de la 033 dejan de leer hasta el final de la hoja de
+  estilos, porque la 034 añade su propio bloque detrás. Que fallen ante reglas repetidas que se
+  pisan sigue en el roadmap.
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: los mismos que ya muestran estas pantallas (nombre, teléfono y
   alergias del paciente, y datos de sus citas). No se añade ninguno: el móvil muestra menos.
-- Quién puede hacer qué: sin cambios. Cada rol ve las mismas listas, con el mismo alcance que hoy
-  (el asistente, solo las citas y pacientes de sus dentistas). Ocultar columnas en el móvil es
-  presentación, no un permiso.
+- Quién puede hacer qué: sin cambios. Cada rol ve las mismas listas, con el mismo alcance que hoy.
+  Hoy la lista de pacientes de la dentista y de la asistente no se limita a sus pacientes (riesgo de
+  alcance abierto en `docs/security.md`, que corrige la spec 014): la 034 no cambia ese alcance ni lo amplía. Ocultar
+  columnas en el móvil es presentación, no un permiso.
 - Casos de abuso: no aplica. La spec solo cambia la presentación de datos que el rol ya puede ver:
   no añade entradas, acciones, permisos ni datos.
 
@@ -142,13 +150,15 @@ Sistema: [docs/design/system.md](../../design/system.md).
   - 1.4.10, reflujo a 320 px;
   - 1.3.1, cada dato de la tarjeta con su etiqueta (salvo la cabecera y el estado), también para
     lectores de pantalla;
-  - 1.4.11, el logo (el borde de la tarjeta es decorativo: la separan su fondo y su espacio);
+  - 1.4.11, el logo y el borde de los campos del filtro de citas, también en el escritorio (el borde
+    de la tarjeta es decorativo: la separan su fondo y su espacio);
   - 2.4.7, foco visible;
   - 4.1.2, «Filtros» anuncia si está desplegado;
   - 1.4.1, la cita de hoy no se distingue solo por el color.
 - Toque de al menos 44 × 44 px en los controles de las pantallas incluidas.
 - Medido a 320, 390, 844 × 390 y 1440 px (los anchos del proyecto y de la 033), también sin JavaScript.
-- Escritorio sin cambios (CA11), comprobado contra capturas de antes a 1024 y 1440 px.
+- Escritorio sin cambios salvo el borde de los campos del filtro (CA11), comprobado contra capturas
+  de antes a 1024 y 1440 px.
 
 ## Preguntas abiertas
 - Ninguna.
@@ -163,7 +173,7 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-12 | brecha | Los tres logos son blancos y no se ven sobre el panel blanco | Versión para fondo claro obtenida del logo actual (sin redibujarlo); se mantiene el panel blanco de la 033 (la barra rosa no llega a 4,5:1, DS1) | usuario |
 | 2026-10-12 | brecha | ¿Dividir la spec (11 criterios)? | Una sola spec: el menú es pequeño y comparte pantallas y pruebas | usuario |
 | 2026-10-12 | cierre | ¿Hotfix o vuelta atrás de v0.7.0 por mis citas y el detalle del personal? | Mantener v0.7.0 y corregirlo en esta spec | usuario |
-| 2026-10-12 | implícita | Punto de corte del móvil | Por debajo de 900 px, como en la 033 | docs/specs/033-movil-paciente/spec.md |
+| 2026-10-12 | implícita | Punto de corte del móvil | Por debajo de 900 px, como en la 033 | docs/specs/033-movil-paciente/plan.md D6 |
 | 2026-10-12 | implícita | Anchos de medida | 320, 390 y 1440 px, más 844 × 390 en horizontal | .ai/project.yaml → design.widths; 033 CA7 |
 | 2026-10-12 | implícita | Solo tokens del sistema y WCAG 2.1 AA en pantallas modificadas | Se aplica a las tarjetas, el filtro y el logo | docs/constitution.md P9 |
 | 2026-10-12 | supuesto | ¿Qué muestra la tarjeta de servicio? | Nombre, duración, estado y acciones (sin descripción ni categoría en el móvil) | /specify |
@@ -174,6 +184,9 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | brecha | ¿Llevan etiqueta la cabecera (hora o nombre) y el estado de la tarjeta? (/analyze A7) | No: se entienden solos, como en la opción A | usuario |
 | 2026-10-13 | brecha | ¿Entra el panel de la dentista (línea de tiempo, no tabla) en las tarjetas de CA2? (/analyze A8) | No: conserva su línea de tiempo y solo debe cumplir CA8, con «Ver detalle» con nombre | usuario |
 | 2026-10-13 | brecha | ¿Necesita el borde de la tarjeta 3:1? (/analyze A13) | No: es decorativo, como en la opción A | usuario |
+| 2026-10-13 | contradicción | El borde de los campos del filtro de citas (1,31:1) no llega al 3:1 de P9 y CA11 pide el escritorio igual (/analyze A36) | Borde de al menos 3:1 también en el escritorio; es la única diferencia admitida en CA11 | usuario |
+| 2026-10-13 | brecha | La línea de tiempo de la dentista deja muy poco ancho al nombre a 320 px (/analyze A35) | Se adapta en el móvil: el estado y «Ver detalle» van debajo del nombre, sin pasar a tarjetas; cumple CA7 y CA8 | usuario |
+| 2026-10-13 | implícita | Hora de las citas de hoy del panel del personal (/analyze A48) | Solo la hora, como hoy en el escritorio | /analyze A48 |
 
 ## Notas para /plan
 - Origen técnico de CA7: `overflow-wrap: anywhere` en `.content` (033 T061) parte letra a letra el
@@ -198,3 +211,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | CA9 y «Fuera de alcance»: 033/R9 y R21 pasan a estar dentro | Decisión del usuario en /plan 034 |
 | 2026-10-13 | Aprobada de nuevo junto con el plan | Usuario |
 | 2026-10-13 | CA1, CA2, CA9, RNF 1.3.1 y 1.4.11, supuesto del orden del detalle | /analyze 034 r1: A7, A8, A13, A14, A24, A32 (decisiones del usuario) |
+| 2026-10-13 | CA2 (hora del panel y línea de tiempo de la dentista), CA11 y RNF (borde del filtro), Seguridad (alcance de pacientes), Fuera de alcance (033/R14 en parte), fuente del punto de corte | /analyze 034 r2: A35, A36 (decisiones del usuario), A43, A47, A48, A53 |
