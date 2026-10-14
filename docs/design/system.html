@@ -161,6 +161,53 @@
                     min-width: var(--touch-min); color: var(--color-text-muted); text-decoration: none; }
   .opt .m-migas .m-actual { color: var(--color-text); }
 </style>
+<style id="componentes-034">
+  /* Muestras vivas de la spec 034 (opción A: tarjetas de lista, filtro plegable, botón de icono y logo), con los tokens de .opt. */
+  .opt .m-lista { background: var(--color-bg); padding: var(--space-5); display: grid; gap: var(--space-5); width: 320px; box-sizing: border-box; }
+  .opt .m-tarjeta { background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+                    padding: var(--space-5) var(--space-6); display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+  .opt .m-tabla, .opt .m-tabla tbody { display: contents; }
+  .opt .m-solo-icono { padding: 0; }
+  .opt .m-tarjeta.m-hoy { box-shadow: inset var(--border-width-strong) 0 0 var(--color-primary); }
+  .opt .m-cab { grid-row: 1; grid-column: 1; font-weight: var(--weight-strong); padding: var(--space-1) 0; }
+  .opt .m-estado { grid-row: 1; grid-column: 2; padding: var(--space-1) 0; }
+  .opt .m-dato { grid-column: 1 / -1; display: grid; grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr); padding: var(--space-1) 0; overflow-wrap: break-word; }
+  .opt .m-dato::before { content: attr(data-label); font-size: var(--text-small); font-weight: var(--weight-strong);
+                         text-transform: uppercase; color: var(--color-accent-text); }
+  .opt .m-acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-3);
+                     padding-top: var(--space-3); border-top: var(--border-width) solid var(--color-border); }
+  .opt .m-acciones .m-btn { flex: 1 1 auto; }
+  .opt .m-badge { display: inline-block; font-size: var(--text-small); font-weight: var(--weight-strong); padding: 0 var(--space-3);
+                  border-radius: var(--radius-lg); color: var(--color-accent-text); background: var(--color-active-bg); }
+  .opt .m-btn-outline { min-height: var(--touch-min); background: var(--color-surface); color: var(--color-accent-text);
+                        border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm);
+                        font: inherit; font-weight: var(--weight-strong); display: inline-flex; align-items: center;
+                        justify-content: center; gap: var(--space-2); padding: 0 var(--space-3); }
+  .opt .m-btn-outline[aria-expanded="true"] { background: var(--color-active-bg); }
+  .opt .m-btn-outline:focus-visible, .opt .m-filtro .m-campo:focus-visible, .opt .m-btn-icono:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
+  .opt .m-contador { background: var(--color-link); color: var(--color-on-primary); border-radius: var(--radius-lg);
+                     padding: 0 var(--space-2); font-size: var(--text-small); }
+  .opt .m-filtro { background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+                   padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); width: 320px; box-sizing: border-box; }
+  .opt .m-filtro-fila { display: flex; gap: var(--space-3); }
+  .opt .m-filtro-fila .m-btn-outline { flex: 1; }
+  .opt .m-filtro-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); }
+  .opt .m-filtro-panel .m-ancho { grid-column: 1 / -1; }
+  .opt .m-campo { min-height: var(--touch-min); width: 100%; box-sizing: border-box; border: var(--border-width) solid var(--color-border-control);
+                  border-radius: var(--radius-sm); padding: 0 var(--space-4); font: inherit; background: var(--color-surface); min-width: 0; }
+  .opt .m-btn-icono { min-width: var(--touch-min); min-height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center;
+                      padding: var(--space-1) var(--space-3); background: transparent; border: 0; border-radius: var(--radius-sm); color: var(--color-text-muted); }
+  .opt .m-btn-icono svg { width: var(--icon-md); height: var(--icon-md); }
+  .opt .m-linea { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-4); width: 288px; padding: var(--space-4) 0;
+                  border-bottom: var(--border-width) solid var(--color-border); }
+  .opt .m-linea-hora { color: var(--color-text-muted); }
+  .opt .m-linea-texto { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .opt .m-linea-acciones { flex-basis: 100%; display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); }
+  .opt .m-logo { display: block; width: var(--logo-max-w); height: var(--logo-movil-h); background: var(--color-accent-text);
+                 -webkit-mask: url("../../public/images/logo-icon.png") left center / contain no-repeat;
+                 mask: url("../../public/images/logo-icon.png") left center / contain no-repeat; }
+</style>
 <style id="tokens">
   /* Valores reales de public/css/app.css:3-49 con su nombre semántico de AI-DD. */
   .opt {
@@ -205,6 +252,9 @@
     --color-active-bg: #FBEAF0;     /* --p100: sección actual del menú del móvil */
     --menu-movil-w: 300px; --topbar-h: 60px; --border-width-strong: 2px;
     --text-meta: 13px; --text-marca: 16px; --logo-max-w: 160px; --icon-md: 18px; /* spec 033 */
+    --tarjeta-etiqueta-w: 88px; --logo-movil-h: 40px; --space-detalle: 18px; --detalle-lateral-w: 360px; /* spec 034 */
+    --filtro-buscar-min: 180px; --filtro-fecha-min: 130px; --filtro-dentista-min: 150px; --filtro-estado-min: 140px; /* spec 034 */
+    --focus-ring-width: 2px; --focus-ring-offset: 2px;
 
     --duration-fast: 150ms; --duration-base: 150ms;
     --ease-out: ease;
@@ -284,6 +334,12 @@
       <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de «Menú», «Cerrar menú» y «Cerrar sesión» en el móvil (spec 033)</li>
       <li class="v-pair" data-fg="--color-link" data-bg="--color-bg" data-min="4.5">Pestaña activa sobre fondo (spec 033)</li>
       <li class="v-pair" data-fg="--color-primary" data-bg="--color-bg" data-min="3">Indicador de la pestaña activa (spec 033)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="4.5">Etiqueta de la tarjeta de lista en el móvil (spec 034)</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Contador de «Filtros» (spec 034)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-active-bg" data-min="4.5">«Filtros» desplegado (spec 034)</li>
+      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de «Filtros» y de los campos del filtro de citas, en los dos modos (spec 034)</li>
+      <li class="v-pair" data-fg="--color-focus" data-bg="--color-surface" data-min="3">Foco del filtro, de las tarjetas y del botón de icono (spec 034)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="3">Logo del menú del móvil (máscara en --p600, spec 034)</li>
     </ul>
   </section>
 
@@ -375,6 +431,61 @@
           <nav class="m-pestanas" aria-label="Muestra de pestañas"><a href="#" aria-current="page">Próximas</a><a href="#">Pasadas</a></nav>
           <p class="t-body">Migas de pan</p>
           <div class="m-migas"><a href="#">Mis citas</a><span>›</span><span class="m-actual">Detalle</span></div>
+        </div>
+      </div>
+    </div></div>
+
+    <h3 id="movil-personal-034">Tarjeta de lista, filtro plegable, botón de icono y logo (spec 034)</h3>
+    <p class="v-note">Muestras vivas, no capturas: opción A de la spec 034
+      (<a href="../specs/034-movil-personal/design/opcion-a.html">maqueta</a>), a 320 px, con los tokens
+      de <code>app.css</code>. Solo se aplica por debajo de 900 px, salvo el borde y el foco de los campos
+      del filtro, que también se ven en el escritorio. El logo usa una máscara: abierto con
+      <code>file://</code> se ve como un rectángulo <code>--p600</code>; servido por http, con la forma del logo.</p>
+    <div class="v-stage"><div class="opt">
+      <div class="m-row">
+        <div class="m-lista" aria-label="Tarjetas de citas a 320 px">
+          <table class="m-tabla"><tbody>
+          <tr class="m-tarjeta m-hoy">
+            <td class="m-cab">09:30 · Hoy</td>
+            <td class="m-estado"><span class="m-badge">Agendada</span></td>
+            <td class="m-dato" data-label="Paciente">Lucía Hernández<br>5550102</td>
+            <td class="m-dato" data-label="Dentista">Dra. Melissa López</td>
+            <td class="m-dato" data-label="Servicio">Limpieza dental</td>
+            <td class="m-acciones"><button type="button" class="m-btn-outline m-btn">Ver detalle</button></td>
+          </tr>
+          <tr class="m-tarjeta">
+            <td class="m-cab">14 oct · 11:00</td>
+            <td class="m-estado"><span class="m-badge">Agendada</span></td>
+            <td class="m-dato" data-label="Servicio">Ortodoncia</td>
+            <td class="m-dato" data-label="Dentista">Dr. Pablo Ruiz</td>
+            <td class="m-acciones"><button type="button" class="m-btn-outline m-btn">Ver</button><button type="button" class="m-btn-outline m-btn">Reprogramar</button><button type="button" class="m-btn-outline m-btn">Cancelar</button></td>
+          </tr>
+          </tbody></table>
+        </div>
+        <div class="m-filtro" aria-label="Filtro de citas desplegado a 320 px">
+          <label class="t-small" for="m-buscar">Buscar paciente / dentista</label>
+          <input id="m-buscar" class="m-campo" type="text" placeholder="Nombre, teléfono...">
+          <div class="m-filtro-fila">
+            <button type="button" class="m-btn-outline">Esta semana</button>
+            <button type="button" class="m-btn-outline">Hoy</button>
+            <button type="button" class="m-btn-outline" aria-expanded="true" aria-label="Filtros, 2 aplicados">Filtros <span class="m-contador">2</span></button>
+          </div>
+          <div class="m-filtro-panel">
+            <div><label class="t-small" for="m-desde">Desde</label><input id="m-desde" class="m-campo" type="date"></div>
+            <div><label class="t-small" for="m-hasta">Hasta</label><input id="m-hasta" class="m-campo" type="date"></div>
+            <div class="m-ancho"><label class="t-small" for="m-estado">Estado</label><select id="m-estado" class="m-campo"><option>Todos</option></select></div>
+          </div>
+        </div>
+        <div>
+          <p class="t-body">Línea de tiempo de la dentista en el móvil</p>
+          <div class="m-linea">
+            <span class="m-linea-hora">10:00</span>
+            <span class="m-linea-texto">Lucía Hernández<br>Limpieza dental · 30 min</span>
+            <span class="m-linea-acciones"><span class="m-badge">Agendada</span><button type="button" class="m-btn-icono" aria-label="Ver detalle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></span>
+          </div>
+          <p class="t-body">Botón «Menú» solo con icono y logo del menú</p>
+          <button type="button" class="m-menu-btn m-solo-icono" aria-label="Menú" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+          <span class="m-logo" role="img" aria-label="Melissa López N."></span>
         </div>
       </div>
     </div></div>
