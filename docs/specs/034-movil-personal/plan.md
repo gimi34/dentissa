@@ -39,13 +39,13 @@ Además:
 |---|---|---|
 | P1 Spec aprobada antes de código | ✅ | La spec 034 se aprueba de nuevo junto con este plan (correcciones de /analyze r1 y r2). Verificación: manual, `aidd.py status` antes de `/implement` |
 | P2 Test que falla antes y pasa después | ✅ | `MovilPersonalTest` (nuevo) y los cambios en `MovilPacienteTest` se escriben antes que el código y fallan hoy. Las comprobaciones nuevas de `--medir` (cambios de modo, palabras largas, solapes) se comprueban rompiendo. Verificación: test: tareas de test de `/tasks` (cada implementación `depende:` de su test) |
-| P3 Autorización en el servidor | ➖ | No cambian rutas, controladores ni consultas: las vistas muestran los mismos datos con el mismo alcance (el asistente, solo sus dentistas). Ocultar columnas en el móvil es presentación |
+| P3 Autorización en el servidor | ➖ | No cambian rutas, controladores ni consultas: las vistas muestran los mismos datos con el mismo alcance que hoy, que no cambia (la lista de pacientes no se limita por rol: riesgo abierto que corrige la 014; spec, Seguridad). Ocultar columnas en el móvil es presentación |
 | P4 Entrada validada y SQL con bindings | ➖ | Sin entradas nuevas: el filtro envía los mismos parámetros. El contador de filtros es un número calculado en la vista a partir de esos parámetros, sin consultas nuevas |
 | P5 Nada sensible en el repo | ✅ | Capturas y medidas sobre la base desechable `dentissa_capturas` (cabecera de `capturar.mjs`), borrada al terminar. Verificación: test: gitleaks en la verificación final |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas. Línea base del 2026-10-13: `npm audit` 0 vulnerabilidades y `composer audit` sin avisos (2026-10-12). Verificación: test: `composer audit`, `npm audit` y `trivy fs` en la verificación final |
 | P7 Auditoría de accesos | ➖ | No toca autenticación, permisos ni datos sensibles nuevos. Sigue la excepción P7 vigente (030/031) |
 | P8 Correlación y logs sin datos sensibles | ➖ | No añade logs |
-| P9 Solo el sistema de diseño · WCAG 2.1 AA | ✅ | Reglas nuevas solo con tokens: ocho tokens nuevos, peso `--weight-strong`, sin `letter-spacing` (A1, A2). Los `style=""` que impiden la tarjeta o el móvil pasan a clases con tokens, incluidos los del filtro y del panel de la dentista (D10b, A3, A33, A35). El filtro tocado queda con etiquetas asociadas, foco ≥ 3:1 (A4) y borde de sus campos ≥ 3:1 en los dos modos (A36, decisión del usuario). Contraste de los pares nuevos calculado desde los tokens. Verificación: test: `MovilPersonalTest` (literales con control positivo, contraste, `for`/`id`, sin los `style=""` imprescindibles); test en navegador: `--medir` (reflujo, toque, solapes, etiquetas, foco); manual: NVDA y capturas contra `opcion-a.html` |
+| P9 Solo el sistema de diseño · WCAG 2.1 AA | ✅ | Reglas nuevas solo con tokens: ocho tokens nuevos, peso `--weight-strong`, sin `letter-spacing` (A1, A2). Los `style=""` que impiden la tarjeta o el móvil pasan a clases con tokens, incluidos los del filtro y del panel de la dentista (D10b, A3, A33, A35). El filtro tocado queda con etiquetas asociadas, foco ≥ 3:1 (A4) y borde de sus campos ≥ 3:1 en los dos modos (A36, decisión del usuario); «Filtros» con borde ≥ 3:1 en sus dos estados (A58). Sus textos previos por debajo de 4,5:1 (etiquetas, «Filtrar» y el atajo activo) siguen como deuda DS1 (decisión del usuario, A59, spec Decisiones). Foco visible con tokens en lo que la spec añade o cambia (filtro, «Filtros», botones de las tarjetas y del panel de la dentista, menú; A60). Contraste de los pares nuevos calculado desde los tokens. Verificación: test: `MovilPersonalTest` (literales con control positivo, contraste, `for`/`id`, sin los `style=""` imprescindibles); test en navegador: `--medir` (reflujo, toque, solapes, etiquetas, foco); manual: NVDA y capturas contra `opcion-a.html` |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
@@ -56,12 +56,12 @@ Además:
 | Script del filtro (`public/js/filtros.js`, **nuevo**) | Contrato en «Script `filtros.js`». Se carga en `<head>` con `@push('styles')` solo en la lista de citas | Bajo |
 | Script del menú (`public/js/menu.js`) | R21: `ultimoFoco` se olvida cuando el foco se pierde sin que el elemento se oculte | Bajo |
 | Layout (`resources/views/layouts/app.blade.php`) | Botón «Menú» sin texto, con `aria-label="Menú"`. `.sidebar-marca` sin texto, con `role="img"` y `aria-label="Melissa López N."` | Bajo |
-| Lista de citas del personal (`resources/views/citas/index.blade.php`) | Rejilla de estadísticas a `stats-grid`. Filtro reordenado y accesible, sin sus `style=""` (D6, A33). Tabla con `tabla-tarjetas`, `data-label`, clases de celda y `fila-hoy`. «Ver detalle» con `aria-label` y texto en el móvil (D5) | Medio |
+| Lista de citas del personal (`resources/views/citas/index.blade.php`) | Rejilla de estadísticas a `stats-grid`. Fondo de la cita de hoy a `.fila-hoy` (D1, A57). Filtro reordenado y accesible, sin sus `style=""` (D6, A33). Tabla con `tabla-tarjetas`, `data-label`, clases de celda y `fila-hoy`. «Ver detalle» con `aria-label` y texto en el móvil (D5) | Medio |
 | Detalle de cita del personal (`resources/views/citas/show.blade.php`) | Orden del HTML: datos, cambiar estado, información y acciones, control interno e historial (D7), conservando sus `id` y envoltorios. Las rejillas pasan a clases y la cabecera de la tarjeta lleva `texto-partible` (D8) | Medio: el escritorio debe quedar igual |
-| Pacientes (`resources/views/pacientes/index.blade.php`) | Estadísticas a `stats-grid stats-grid-3`. Tabla en tarjetas; doctor, ciudad, tipo de sangre y registrado con `solo-escritorio`, y el `div` del correo también. «Ver perfil» y «Editar» con nombre y texto en el móvil (D5) | Bajo |
+| Pacientes (`resources/views/pacientes/index.blade.php`) | Estadísticas a `stats-grid stats-grid-3`. Tabla en tarjetas; doctor, ciudad, tipo de sangre y registrado con `solo-escritorio`, y el `div` del correo también; `texto-partible` en el nombre de la cabecera (D8). «Ver perfil» y «Editar» con nombre y texto en el móvil (D5) | Bajo |
 | Servicios (`resources/views/servicios/index.blade.php`) | Estadísticas a `stats-grid stats-grid-2` (conserva su `max-width`). Tabla en tarjetas; descripción y categoría con `solo-escritorio`. «Editar» y «Eliminar» con nombre y texto en el móvil (D5) | Bajo |
-| Paneles (`resources/views/dashboard/{admin,asistente,dentista,cliente}.blade.php`) | Admin y asistente: estadísticas a `stats-grid stats-grid-2` y tabla de citas de hoy en tarjetas. Dentista: estadísticas a `stats-grid stats-grid-3`, enlace de la agenda con `btn-icono` y `aria-label="Ver detalle"`, y acciones de la línea de tiempo en `timeline-acciones` (D5b, sin tarjetas, spec CA2). Paciente: tabla de citas pasadas en tarjetas y `texto-partible` en la próxima cita (D8) | Bajo |
-| Mis citas y detalle del paciente (`resources/views/citas/cliente-index.blade.php`, `cliente-show.blade.php`) | Tabla en tarjetas (033/R20). En el detalle, `texto-partible` en la rejilla de datos (D8) | Bajo |
+| Paneles (`resources/views/dashboard/{admin,asistente,dentista,cliente}.blade.php`) | Admin y asistente: estadísticas a `stats-grid stats-grid-2` y tabla de citas de hoy en tarjetas. Dentista: estadísticas a `stats-grid stats-grid-3`, enlace de la agenda con `btn-icono` y `aria-label="Ver detalle"`, acciones de la línea de tiempo en `timeline-acciones` (D5b, sin tarjetas, spec CA2) y `texto-partible` en el nombre de «Próximo paciente» (D8). Paciente: tabla de citas pasadas en tarjetas y `texto-partible` en la próxima cita (D8) | Bajo |
+| Mis citas y detalle del paciente (`resources/views/citas/cliente-index.blade.php`, `cliente-show.blade.php`) | Tabla en tarjetas (033/R20). En el detalle, `texto-partible` en la rejilla de datos y en la cabecera de la tarjeta (D8). La pantalla de reprogramar no cambia: su resumen parte desde `movil.css` (D8) | Bajo |
 | Tests (`tests/Feature/MovilPersonalTest.php` **nuevo**, `tests/Feature/MovilPacienteTest.php`) | Ver Estrategia. En `MovilPacienteTest` cambian el nombre del botón (texto → `aria-label`), la marca, el contrato de `menu.js` (R21), los textos largos, las reglas fuera del móvil, su orden y el final de `bloque033()` (033/R14 en parte, A47) | Bajo: tests de la 033 que cambian por la 034 (extends) |
 | Capturas y medidas (`docs/design/capturar.mjs`) | `--medir` añade las pantallas incluidas, solapes, etiquetas y su posición, fondo de las tarjetas, filtro, panel de la dentista, detalle, logo, botón solo con icono, región «Menú», cambios de modo (033 T064 y R21), palabras de 30 letras y la comparación con la línea base (D13) | Medio: es la red de seguridad de la spec |
 
@@ -96,7 +96,10 @@ Sin endpoints, migraciones ni datos nuevos. Las vistas reciben las mismas variab
     ni un único elemento (nombre y teléfono, hora y fecha), va dentro de un único
     `<div class="celda-valor">`, que queda entero en la columna 2. En el escritorio el envoltorio no
     cambia nada;
-  - `.celda-cab`, `.celda-estado` y `.celda-acciones` no son rejilla;
+  - `.celda-cab`, `.celda-estado` y `.celda-acciones` no son rejilla y también anulan el relleno y
+    el borde de `app.css`: `padding: var(--space-1) 0` y `border-bottom: 0`; `.celda-acciones`
+    lleva además `margin-top: var(--space-3)`, `padding-top: var(--space-3)` y su borde superior
+    `--border-width` `--border` (A65);
   - su `::before`: `content: attr(data-label)`, `--text-small`, `--weight-strong`, mayúsculas,
     `--p600`, sin `letter-spacing` (A1);
   - `.celda-cab` y `.celda-estado` sin `::before`; las celdas de valor con
@@ -104,8 +107,17 @@ Sin endpoints, migraciones ni datos nuevos. Las vistas reciben las mismas variab
   - **acciones (A18):** `.celda-acciones` ocupa las dos columnas y va sin etiqueta, como en la opción A
     (D4; sin `::before`). Sus envoltorios (`div`, `form`)
     son `flex` con `flex-wrap` y `gap: var(--space-3)`, y sus `.btn` llevan `flex: 1 1 auto`;
-  - `.fila-hoy`: barra izquierda `--border-width-strong` `--p400` (el fondo `--p50` sigue en el
-    `style=""` de la fila, que no se toca).
+  - `.fila-hoy`: tarjeta `--white` con la barra izquierda `--border-width-strong` `--p400`, como en
+    la opción A. Su fondo `--p50` vale lo mismo que `--bg` y la tarjeta no se distinguiría de su
+    contenedor (A57), así que el `style="background:var(--p50)"` de la fila (`citas/index:127`) pasa a
+    la clase: en el escritorio, `.fila-hoy` lleva `--p50` (bloque 034 de `app.css`, igual que hoy) y,
+    en el móvil, `--white` (D10b);
+  - en el móvil, las celdas no cambian de fondo con `:hover` (`tr:hover td` de `app.css` las pondría
+    en `--p50`, el color del contenedor; A57);
+  - **foco (A60):** los enlaces y botones de las tarjetas (`.tabla-tarjetas a:focus-visible`,
+    `.tabla-tarjetas .btn:focus-visible`) llevan `--focus-ring`, `--focus-ring-width` y
+    `--focus-ring-offset`, en el bloque 034 de `app.css` (solo cambia el foco, no el aspecto en
+    reposo).
 - Las etiquetas de cada tabla son las del texto de su `<th>`, salvo «Contacto» de pacientes, que en
   la tarjeta se llama «Teléfono».
 
@@ -137,7 +149,8 @@ sin texto visible.
   (`.stats-grid` ya da el margen inferior de 22 px). En el móvil, dos columnas, como el resto.
 - **Enlace «Ver detalle»:** su `style="padding:4px 8px"` pasa a `.btn-icono` (`padding:
   var(--space-1) var(--space-3)`, bloque 034 de `app.css`). En el móvil, `.btn-icono` lleva
-  `min-width: var(--touch-min)` y centra el icono; el alto ya lo da la regla de toque de la 033.
+  `min-width: var(--touch-min)` y centra el icono; el alto ya lo da la regla de toque de la 033. Su
+  foco, con los tokens de foco (`.btn-icono:focus-visible`, bloque 034 de `app.css`; A60).
 - **Línea de tiempo:** el `div` del estado y el enlace (`style="display:flex;align-items:center;
   gap:8px"`) pasa a `.timeline-acciones` (`display: flex`, `align-items: center`, `gap:
   var(--space-3)`). En el móvil, `.timeline-item` lleva `flex-wrap: wrap` y `.timeline-acciones`
@@ -174,20 +187,28 @@ sin texto visible.
   En el móvil, esos `min-width` pasan a 0 y `.filtro-tarjeta` usa el relleno `--space-5`.
 - **Escritorio** (se ve igual, CA11):
   - `.filtro-panel` con `display: contents` y «Filtros» oculto;
-  - la fila de atajos al final, con `order` y `margin-left: auto`, como hoy;
+  - la fila de atajos al final, como hoy: `.filtro-atajos` lleva `order: 1` (los demás hijos tienen
+    0) además de su `margin-left: auto`, en el bloque 034 de `app.css` (A55);
   - el orden de tabulación pasa a ser buscador, atajos y campos: aceptado por el usuario (A6).
 - **Botón (A45):** `<button type="button" class="btn btn-outline filtro-btn" aria-expanded="false"
   aria-controls="filtro-panel">Filtros</button>`.
-  - plegado: el `btn-outline` del sistema (`--p600` sobre `--white`);
+  - plegado: el `btn-outline` del sistema (`--p600` sobre `--white`), con el borde `--border-control`
+    en lugar de `--p200` (≥ 3:1, como «Menú» de la 033; A58);
   - desplegado (`.filtro-btn[aria-expanded="true"]`): fondo `--p100`, texto `--p600` y borde
     `--border-control`;
   - foco: `--focus-ring`, `--focus-ring-width` y `--focus-ring-offset`.
 - **Contador:** con filtros aplicados se muestra `<span class="filtro-contador">n</span>` y el botón
   pasa a `aria-label="Filtros, 1 aplicado"` con uno y `aria-label="Filtros, n aplicados"` con más
   (A49). Cuentan desde (si no es hoy), hasta, dentista y estado.
-- **Móvil (A19):** el panel desplegado es una rejilla de dos columnas: desde y hasta lado a lado;
-  dentista y estado a lo ancho; «Filtrar» y «Limpiar» lado a lado. Los campos ocupan el ancho de su
-  celda, sin `min-width` (A33).
+- **Móvil (A19, A55):** el formulario es una columna, como en los marcos 2 y 3 de la opción A
+  (`flex-direction: column` y `align-items: stretch` en `.filtro-citas`):
+  - el buscador, a todo el ancho del formulario (`flex: none`, `min-width: 0`);
+  - debajo, la fila de atajos con «Filtros» (`order: 0`, `margin-left: 0`, `flex-wrap: wrap`);
+  - después, el panel, también desplegado.
+
+  El panel desplegado es una rejilla de dos columnas: desde y hasta lado a lado; dentista y estado a
+  lo ancho; «Filtrar» y «Limpiar» lado a lado. Los campos ocupan el ancho de su celda, sin
+  `min-width` (A33).
 - **Plegado:**
   - sin JavaScript, «Filtros» no se muestra y el panel queda desplegado;
   - con `filtros.js`, `<html>` lleva `filtros-js` desde `<head>`, sin salto de maquetación (A31), y
@@ -239,7 +260,18 @@ sin texto visible.
   - el título del banner de los paneles, con el nombre del usuario (`.welcome-title`, dentro de un
     banner con `overflow: hidden`);
   - la línea de tiempo de la dentista (`.timeline-title`, `.timeline-sub`), además de D5b;
-  - el nombre del usuario del menú (`.user-name`, 033).
+  - el nombre del usuario del menú (`.user-name`, 033);
+  - la cabecera de la tarjeta del detalle de cita del paciente (`cliente-show`, servicio en una fila
+    flexible con el estado): `texto-partible` en su `div` de texto (A56);
+  - el resumen de la cita en la pantalla de reprogramar de la 033 (`.resumen-cita dd`, en una
+    rejilla `max-content 1fr`): `anywhere` en `movil.css`, sin tocar la vista (A56);
+  - «Próximo paciente» del panel de la dentista (avatar y nombre en una fila flexible):
+    `texto-partible` en el `div` del nombre (A56);
+  - la cabecera de la tarjeta de pacientes (avatar y nombre en una fila flexible): `texto-partible`
+    en el `div` del nombre (A56).
+
+  La lista sale de recorrer las filas y rejillas flexibles con datos de las pantallas incluidas y de
+  las 7 del paciente; `--medir` falla si falta alguna.
 - La rejilla de datos del detalle del personal pasa a una columna `minmax(0, 1fr)` (D7), y las
   celdas de las tarjetas parten bien con `break-word` porque su columna es `minmax(0, 1fr)`.
 - **Cuándo «cabe» una palabra (A38):** si su ancho sin partir es menor o igual que el ancho que el
@@ -281,10 +313,14 @@ clases con tokens solo los que impiden la tarjeta o el móvil:
 - **Filtro:** el `<form>`, la tarjeta, el buscador, los campos y los atajos (D6, A33).
 - **Panel de la dentista:** el enlace de la agenda y las acciones de la línea de tiempo (D5b, A35).
 - **Rejillas del detalle de cita** (D7).
+- **Fondo de la cita de hoy** de la lista de citas del personal (`citas/index:127`) → `.fila-hoy` (D1,
+  A57).
 
 El resto de `style=""` de esas vistas se queda como está (DS4). Sus pares de color no se tocan: los
 que no cumplen 4,5:1 (`--green` 3,39:1 en servicios y `--text-light` en etiquetas del detalle)
-siguen como deuda DS1 (A5, decisión A3).
+siguen como deuda DS1 (A5, decisión A3). Tampoco se tocan los textos del filtro que vienen de sus
+clases (`.field-label` con `--text-light`, 3,51:1, y `btn-primary` de «Filtrar» y del atajo activo,
+3,93:1): siguen como deuda DS1 (decisión del usuario, A59; spec Decisiones).
 
 **D11 · Menú: 033/R9 y R21.**
 - **R9:** el `<aside id="menu-principal" aria-label="Menú">` ya es una región con nombre. Al abrir, el
@@ -301,14 +337,20 @@ siguen como deuda DS1 (A5, decisión A3).
 **D13 · Comparación con la línea base (A21, A40).**
 - **Línea base:** se genera justo antes de cada comparación, en la misma sesión y contra la misma
   base de prueba sin cambiar sus datos, con el código anterior a la 034:
-  - `git worktree add <carpeta temporal> <commit base>` (el commit de `main` del que sale la rama),
-    servido con el paso 5 de `capturar.mjs` montando esa carpeta, en otro puerto;
+  - `git worktree add <carpeta temporal fuera del repositorio> v0.7.0`: el tag de producción, que
+    ya incluye la 033 (el `main` local puede estar desfasado y la rama sale de un commit de cierre
+    de la 033 sin código nuevo; A61);
+  - se sirve con `docker run --rm` (no `docker compose run`, cuyo volumen `.:/var/www` taparía la
+    copia) sobre la imagen `app`, con la copia en `/var/www`, el volumen `vendor_data` en
+    `/var/www/vendor` (la 034 no cambia dependencias), la red de Compose, el `.env` copiado a la
+    carpeta temporal y `DB_DATABASE=dentissa_capturas`, en otro puerto;
   - `OUT=<carpeta fuera del repositorio>` para las capturas;
   - después se captura la rama y se comparan.
 
   Así coinciden lo que depende de la fecha y la hora: citas de hoy, filtro desde hoy, plazo de 24 h
   de «Reprogramar» y «Cancelar» y fecha del panel. Si una cita cruza el plazo de 24 h entre las dos
-  capturas, se repiten las dos. El paso queda en la cabecera de `capturar.mjs`.
+  capturas, se repiten las dos. El paso queda en la cabecera de `capturar.mjs`, y al terminar se
+  borran la copia (`git worktree remove`) y su `.env`.
 - **Incluye:**
   - las pantallas incluidas del personal y las del paciente, a 1024 y 1440;
   - el detalle de cita de los tres roles del personal, también con historial largo.
@@ -337,7 +379,10 @@ fallos:
     tokens), incluidas las del filtro, `btn-icono` y `timeline-acciones`;
   - la rejilla de escritorio de `.detalle-cita` (D7);
   - el borde (`--border-control`) y el foco de los campos del filtro (D6, A36);
-  - el estado desplegado y el foco de «Filtros» (D6, A45).
+  - el estado desplegado, el borde y el foco de «Filtros» (D6, A45, A58);
+  - el `order` de `.filtro-atajos` (D6, A55);
+  - el fondo `--p50` de `.fila-hoy` (D1, A57);
+  - el foco de los enlaces y botones de las tarjetas y de `.btn-icono` (D1, D5b, A60).
 
 ### Cambios a incorporar al sistema (system.md 1.4.0 → 1.5.0)
 - **Tokens:**
@@ -353,7 +398,8 @@ fallos:
 - **Componentes nuevos:**
   - «Tarjeta de lista (móvil)»: tabla con `tabla-tarjetas`, clases de celda, etiqueta `--p600`
     sobre `--white` (7,0:1) y borde `--border` decorativo (spec);
-  - «Filtro plegable»: botón `btn-outline` con estado desplegado (`--p600` sobre `--p100`),
+  - «Filtro plegable»: botón `btn-outline` con borde `--border-control` y estado desplegado
+    (`--p600` sobre `--p100`),
     contador `--white` sobre `--p500`, foco, y borde de los campos `--border-control` en los dos
     modos (A36, A45);
   - «Rejilla de estadísticas»: `stats-grid` con `-2` y `-3`;
@@ -392,14 +438,20 @@ fallos:
   - **`movil.css`:**
     - reglas de D1 (con la colocación de cabecera y estado y el fondo del `tbody`, A37 y A39),
       D5b, D6–D10 y de las estadísticas dentro de la media query, con sus tokens;
-    - `min-width: 0` de los campos del filtro en el móvil (A33);
+    - `min-width: 0` de los campos del filtro en el móvil (A33), el formulario en columna con el
+      buscador a lo ancho y los atajos con `order: 0` (A55);
+    - `.fila-hoy` con `--white` y celdas sin cambio de fondo con `:hover` (A57);
+    - `celda-cab`, `celda-estado` y `celda-acciones` con su relleno y su borde (A65);
+    - `anywhere` en `.resumen-cita dd` (A56);
     - `.content` con `break-word`, y `anywhere` solo en los elementos de D8 (A34).
   - **`app.css`:** bloque 034 solo con tokens (literales con control positivo), rejilla de
     escritorio de D7, `.detalle-datos-rejilla` con `repeat(3, 1fr)` en el escritorio y
-    `minmax(0, 1fr)` en el móvil (A54), borde y foco de los campos del filtro, y estado desplegado y
-    foco de «Filtros» (A45).
+    `minmax(0, 1fr)` en el móvil (A54), borde y foco de los campos del filtro, estado desplegado,
+    borde y foco de «Filtros» (A45, A58), `order: 1` de `.filtro-atajos` (A55), `.fila-hoy` con
+    `--p50` (A57) y foco de las tarjetas y de `.btn-icono` (A60).
   - **Contraste:** etiqueta, contador, borde de los campos del filtro en los dos modos (A36),
-    «Filtros» desplegado, foco y logo, calculados desde los tokens.
+    «Filtros» desplegado, borde de «Filtros» en los dos estados (A58), foco y logo, calculados desde
+    los tokens.
   - **Tokens:** los ocho nuevos coinciden con `system.md`.
   - **Contrato de `filtros.js`** (texto, como el de `menu.js`): el comportamiento lo mide `--medir`.
 - **PHPUnit, `tests/Feature/MovilPacienteTest.php` (033, cambia por la 034):**
@@ -428,8 +480,11 @@ fallos:
     del usuario (banner y menú). Sin desplazamiento de la página ni texto cortado, y ninguna palabra
     que cabe (según D8) partida (A11, A34, A38);
   - **filtro:** plegado al cargar, «Filtros» lo despliega y cambia `aria-expanded`; sin JavaScript,
-    desplegado; desplegado a 320, sin solapes ni campos fuera de su tarjeta (A33); foco visible en
-    sus campos y en «Filtros» (A45);
+    desplegado; desplegado a 320, sin solapes ni campos fuera de su tarjeta (A33); en el móvil, el
+    buscador al ancho del formulario y el orden vertical buscador < atajos < panel, también
+    desplegado (A55); foco visible en sus campos y en «Filtros» (A45);
+  - **foco en las tarjetas:** visible en un botón de una tarjeta y en el enlace de la dentista (A60);
+  - **cita de hoy:** su tarjeta tiene un fondo distinto del de su contenedor (A57);
   - **panel de la dentista:** enlace ≥ 44 × 44, y estado y enlace bajo el nombre (A35);
   - **detalle:** una columna en el orden de D7;
   - **logo:** visible, de `--logo-max-w` de ancho y con fondo `--p600`;
@@ -474,7 +529,7 @@ el móvil siguen en el HTML, como hoy: no es un control de acceso.
 | CA9: botón solo con icono; R9 y R21 | D9, D11, `menu.js` | `MovilPacienteTest` (nombre del botón, contrato de `menu.js`) · `--medir` (44 × 44, nombre, foco en la región al abrir, cambios de modo y R21) · verificación manual: NVDA («Menú, botón, contraído», región «Menú») |
 | CA10: logo con contraste ≥ 3:1 y nombre | D10 | `MovilPacienteTest`/`MovilPersonalTest` (marca, máscara, contraste desde tokens) · `--medir` (logo visible) · verificación manual: NVDA y captura del menú abierto |
 | CA11: escritorio igual, salvo el borde de los campos del filtro | Reglas dentro de la media query; fuera, solo las previstas y antes de ella; D5–D7, D5b, D10b sin cambio visual; borde del filtro (D6, A36) | `MovilPacienteTest` (reglas fuera del móvil y su orden) · `MovilPersonalTest` (contraste del borde en los dos modos) · `--medir` a 1024/1440 frente a la línea base (D13, sin los campos del filtro) · verificación manual: capturas a 1440 |
-| RNF: WCAG 2.1 AA (1.4.10, 1.3.1, 1.4.11, 2.4.7, 4.1.2, 1.4.1) | D1, D5, D6, D9, D10, D11 | Contraste, etiquetas y `for`/`id` en `MovilPersonalTest` · `--medir` · WebKit · verificación manual: NVDA |
+| RNF: WCAG 2.1 AA (1.4.10, 1.3.1, 1.4.11, 2.4.7 en lo que la spec añade o cambia, 4.1.2, 1.4.1) | D1, D5, D5b, D6, D9, D10, D11 | Contraste, etiquetas, `for`/`id` y reglas de foco en `MovilPersonalTest` · `--medir` (foco visible en el filtro, «Filtros», las tarjetas, el enlace de la dentista y el menú) · WebKit · verificación manual: NVDA |
 | RNF: toque ≥ 44 × 44 | D1, D5b, D6, D9 | `--medir` a 320, 390 y 844 × 390 |
 | RNF: medido a 320, 390, 844 × 390 y 1440, también sin JS | `capturar.mjs` | `--medir` |
 | RNF: escritorio sin cambios (salvo el borde del filtro) contra capturas de antes | D13 | `--medir` (línea base del mismo día a 1024 y 1440, personal y paciente) |
@@ -523,13 +578,13 @@ métricas. Tras el despliegue se comprueba a mano, desde el móvil del usuario, 
 | D6c | `style=""` del filtro a clases con cuatro tokens de ancho mínimo (decisión del usuario, A33) | Panel en una columna en el móvil; un solo ancho mínimo para todos los campos | Mantiene las dos columnas de la opción A y el escritorio exactamente igual |
 | D6d | Borde de los campos del filtro con `--border-control` también en el escritorio (decisión del usuario, A36) | Escritorio igual, con contradicción registrada (deuda DS2) | Cumple P9 en el bloque tocado; es la única diferencia admitida en CA11 |
 | D7 | Detalle: HTML en el orden de la spec y rejilla de escritorio con la columna derecha extendida, márgenes en lugar de `row-gap` | Reordenar con `order` y `display: contents` | El orden de foco y de lectura coincide con el visual en el móvil (WCAG 2.4.3); el escritorio se mantiene igual con cualquier rol (A9) |
-| D8 | `anywhere` solo en los elementos de datos de filas y rejillas flexibles, con lista cerrada (033/R1, A34) | Mantenerlo en `.content`; volver a `anywhere` en `.content` y `break-word` solo en tablas (033 T069) | En el personal parte el texto letra a letra (visto en producción, v0.7.0); con la lista y `--medir` no queda ningún caso sin cubrir |
+| D8 | `anywhere` solo en los elementos de datos de filas y rejillas flexibles, con lista cerrada (033/R1, A34) | Mantenerlo en `.content`; volver a `anywhere` en `.content` y `break-word` solo en tablas (033 T069) | En el personal parte el texto letra a letra (visto en producción, v0.7.0). La lista sale de recorrer las pantallas incluidas y las 7 del paciente (A34, A56) y `--medir` falla si falta algún caso |
 | D9 | Botón con `aria-label="Menú"` | Texto solo para lectores con una clase de ocultación (no existe y usaría literales en px) | El nombre accesible se mantiene sin reglas nuevas |
 | D10 | Logo actual como máscara pintada con `--p600` | Filtro CSS (no da el color exacto y usaría números sueltos); recurso nuevo coloreado; panel rosa (DS1) | Color exacto del sistema sin redibujar el logo (decisión del usuario: derivarlo del actual). Comprobado en el navegador servido por http el 2026-10-13 (con `file://` la máscara no carga) |
 | D10b | Solo pasan a clases los `style=""` que impiden la tarjeta o el móvil (decisión del usuario, A3) | Inventario completo con tokens nuevos | P9 prohíbe literales nuevos, no obliga a limpiar el código anterior; menos tokens y menos riesgo para el escritorio. La deuda de color (DS1) y de estilos en línea (DS4) sigue |
 | D11 | R9 por la región con nombre «Menú» (sin código) y R21 en `menu.js` (decisión del usuario: R9 y R21 dentro) | `role="dialog"` en el `<aside>` (no permitido, A23); en un envoltorio con `display: contents` (fallos de Safari); botón alcanzable con el panel abierto (tapado) | El foco entra en la región con nombre al abrir y los lectores la anuncian |
 | D12 | Sin ADR | — | Sin dependencias nuevas ni cambio de arquitectura: un script propio más, como `menu.js` |
-| D13 | Comparación con una línea base generada justo antes, con el código anterior a la 034 (`git worktree`), ≤ 0,1 % de píxeles distintos y diferencia ≤ 2/255, sin los campos del filtro | Comparación visual a mano; una línea base única creada en T015 | Repetible: la fecha, la hora y los datos coinciden en las dos capturas (A21, A40) |
+| D13 | Comparación con una línea base generada justo antes, con el código de v0.7.0 (`git worktree` servido con `docker run`, A61), ≤ 0,1 % de píxeles distintos y diferencia ≤ 2/255, sin los campos del filtro | Comparación visual a mano; una línea base única creada en T015 | Repetible: la fecha, la hora y los datos coinciden en las dos capturas (A21, A40) |
 
 ## Impacto en arquitectura
 `docs/architecture.md` (T090), sección Frontend: `public/js/filtros.js` (filtro plegable de la lista
