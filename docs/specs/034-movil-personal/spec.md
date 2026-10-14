@@ -115,6 +115,11 @@ Las «pantallas incluidas» son:
 - Redibujar el logo o crear una identidad visual nueva: se usa el logo actual.
 - Respetar la preferencia de reducir el movimiento fuera del menú (resto de DS10) y el resto de la deuda de
   diseño (DS1–DS5, DS7, DS9 y DS11–DS15).
+- Los textos del filtro de citas que hoy no llegan al contraste AA (las etiquetas de los campos,
+  «Filtrar» y el atajo activo) se quedan como están, igual que los colores de los estilos que no se
+  tocan: siguen como deuda DS1 (decisión del usuario).
+- El foco visible de los campos que hoy no lo muestran y que esta spec no cambia (los buscadores de
+  pacientes y servicios y las notas de la dentista) sigue como deuda DS2 (decisión del usuario).
 - La deuda de la 033 en el roadmap (033/R6, R10–R19 y R22). Dentro: 033/R20 (CA1), y 033/R9 y R21
   (CA9, decisión del usuario en /plan, 2026-10-13).
 - 033/R14 entra solo en parte: las comprobaciones de la 033 dejan de leer hasta el final de la hoja de
@@ -152,7 +157,8 @@ Sistema: [docs/design/system.md](../../design/system.md).
     lectores de pantalla;
   - 1.4.11, el logo y el borde de los campos del filtro de citas, también en el escritorio (el borde
     de la tarjeta es decorativo: la separan su fondo y su espacio);
-  - 2.4.7, foco visible;
+  - 2.4.7, foco visible en lo que esta spec añade o cambia: el filtro de citas y su botón «Filtros»,
+    los botones de las tarjetas y el menú;
   - 4.1.2, «Filtros» anuncia si está desplegado;
   - 1.4.1, la cita de hoy no se distingue solo por el color.
 - Toque de al menos 44 × 44 px en los controles de las pantallas incluidas.
@@ -187,6 +193,8 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | contradicción | El borde de los campos del filtro de citas (1,31:1) no llega al 3:1 de P9 y CA11 pide el escritorio igual (/analyze A36) | Borde de al menos 3:1 también en el escritorio; es la única diferencia admitida en CA11 | usuario |
 | 2026-10-13 | brecha | La línea de tiempo de la dentista deja muy poco ancho al nombre a 320 px (/analyze A35) | Se adapta en el móvil: el estado y «Ver detalle» van debajo del nombre, sin pasar a tarjetas; cumple CA7 y CA8 | usuario |
 | 2026-10-13 | implícita | Hora de las citas de hoy del panel del personal (/analyze A48) | Solo la hora, como hoy en el escritorio | /analyze A48 |
+| 2026-10-13 | contradicción | El filtro de citas se modifica y P9 pide AA en lo modificado, pero sus etiquetas (3,51:1), «Filtrar» y el atajo activo (3,93:1) no llegan a 4,5:1 y CA11 pide el escritorio igual (/analyze A59) | Se quedan como deuda DS1, como los colores de los estilos que no se tocan (/analyze A5); el escritorio solo cambia el borde de los campos | usuario |
+| 2026-10-13 | brecha | ¿Abarca el foco visible a los campos de las pantallas incluidas que esta spec no cambia? (/analyze A60) | No: se exige en lo que la spec añade o cambia; los buscadores de pacientes y servicios y las notas de la dentista siguen como deuda DS2 | usuario |
 
 ## Notas para /plan
 - Origen técnico de CA7: `overflow-wrap: anywhere` en `.content` (033 T061) parte letra a letra el
@@ -212,3 +220,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | Aprobada de nuevo junto con el plan | Usuario |
 | 2026-10-13 | CA1, CA2, CA9, RNF 1.3.1 y 1.4.11, supuesto del orden del detalle | /analyze 034 r1: A7, A8, A13, A14, A24, A32 (decisiones del usuario) |
 | 2026-10-13 | CA2 (hora del panel y línea de tiempo de la dentista), CA11 y RNF (borde del filtro), Seguridad (alcance de pacientes), Fuera de alcance (033/R14 en parte), fuente del punto de corte | /analyze 034 r2: A35, A36 (decisiones del usuario), A43, A47, A48, A53 |
+| 2026-10-13 | RNF 2.4.7 acotado y Fuera de alcance (textos del filtro por debajo de AA y foco de campos que no cambian) | /analyze 034 r3: A59, A60 (decisiones del usuario) |
