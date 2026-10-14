@@ -596,6 +596,29 @@ class MovilPersonalTest extends TestCase
     }
 
     /**
+     * Solo comprueba el texto del contrato de `filtros.js` (plan, «Script filtros.js»): una lógica
+     * rota con las mismas palabras seguiría pasando. El comportamiento (plegado al cargar,
+     * despliegue, `aria-expanded`, sin JavaScript) lo mide `capturar.mjs --medir`.
+     */
+    public function test_filtros_js_cumple_su_contrato(): void
+    {
+        $archivo = public_path('js/filtros.js');
+        $this->assertFileExists($archivo);
+        $js = file_get_contents($archivo);
+
+        $this->assertMatchesRegularExpression('/document\.documentElement\.classList\.add\(\s*[\'"]filtros-js[\'"]\s*\)/', $js, 'Marca html.filtros-js al cargar.');
+        $this->assertMatchesRegularExpression("/addEventListener\\(\\s*'DOMContentLoaded'/", $js, 'Espera a DOMContentLoaded.');
+        $this->assertMatchesRegularExpression("/querySelector\\(\\s*'\\.filtro-citas'\\s*\\)/", $js, 'Busca .filtro-citas.');
+        $this->assertMatchesRegularExpression('/if\s*\(\s*!\s*\w+\s*\)\s*return/', $js, 'Sale si no hay filtro.');
+        foreach (["'.filtro-btn'", "'click'", "'abierto'", "'aria-expanded'", 'classList.toggle('] as $pieza) {
+            $this->assertStringContainsString($pieza, $js, "filtros.js usa {$pieza}.");
+        }
+        foreach (['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'eval(', 'new Function', 'max-width'] as $prohibido) {
+            $this->assertStringNotContainsString($prohibido, $js, "filtros.js no usa {$prohibido}.");
+        }
+    }
+
+    /**
      * Pantallas con tabla incluida: [usuario, url, tipo de D2].
      *
      * @return array<int, array{0: Usuario, 1: string, 2: string}>
