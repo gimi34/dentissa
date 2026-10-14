@@ -1,7 +1,7 @@
 ---
 spec: 034-movil-personal
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 034 Móvil para el personal y listas en tarjetas

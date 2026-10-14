@@ -1,6 +1,6 @@
 ---
 spec: 034-movil-personal
-status: draft
+status: approved
 constitution_version: 1.2.1
 created: 2026-10-13
 ---
