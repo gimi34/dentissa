@@ -23,20 +23,20 @@
 <div class="card card-0">
     @if($citas->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th>Fecha / Hora</th>
+                        <th class="celda-cab">Fecha / Hora</th>
                         <th>Servicio</th>
                         <th>Dentista</th>
-                        <th>Estado</th>
-                        <th style="text-align:right">Acciones</th>
+                        <th class="celda-estado">Estado</th>
+                        <th class="celda-acciones" style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($citas as $cita)
                     <tr>
-                        <td>
+                        <td class="celda-cab" data-label="Fecha / Hora">
                             <div style="font-weight:600;color:var(--p600);font-size:14px">
                                 {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}
                             </div>
@@ -44,10 +44,10 @@
                                 {{ \Carbon\Carbon::parse($cita->fecha_hora)->locale('es')->isoFormat('ddd D MMM YYYY') }}
                             </div>
                         </td>
-                        <td>{{ $cita->servicio ?? 'Consulta dental' }}</td>
-                        <td style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
-                        <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
-                        <td>
+                        <td data-label="Servicio">{{ $cita->servicio ?? 'Consulta dental' }}</td>
+                        <td data-label="Dentista" style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
+                        <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div class="formulario-accesible">
                                 <div id="acciones-{{ $cita->id }}" class="acciones-fila">
                                     <a href="{{ route('cliente.citas.show', $cita->id) }}" class="btn btn-outline btn-sm">Ver</a>

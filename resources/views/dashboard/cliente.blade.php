@@ -99,24 +99,24 @@
             <div class="card card-0">
                 @if(isset($citasPasadas) && $citasPasadas->count() > 0)
                     <div class="table-wrap">
-                        <table>
+                        <table class="tabla-tarjetas">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
+                                    <th class="celda-cab">Fecha</th>
                                     <th>Servicio</th>
                                     <th>Dentista</th>
-                                    <th>Estado</th>
+                                    <th class="celda-estado">Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($citasPasadas as $cita)
                                 <tr>
-                                    <td style="white-space:nowrap;color:var(--text-muted)">
+                                    <td class="celda-cab" data-label="Fecha" style="white-space:nowrap;color:var(--text-muted)">
                                         {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('d/m/Y') }}
                                     </td>
-                                    <td style="font-weight:500">{{ $cita->servicio ?? '—' }}</td>
-                                    <td style="color:var(--text-muted)">{{ $cita->dentista }}</td>
-                                    <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                                    <td data-label="Servicio" style="font-weight:500">{{ $cita->servicio ?? '—' }}</td>
+                                    <td data-label="Dentista" style="color:var(--text-muted)">{{ $cita->dentista }}</td>
+                                    <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
                                 </tr>
                                 @endforeach
                             </tbody>

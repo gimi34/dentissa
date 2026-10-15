@@ -782,7 +782,8 @@ async function medir() {
         for (const f of await page.evaluate(EN_PAGINA.tarjetas)) falla(donde, `tarjeta: ${f}`);
         if (/\/citas\/\{/.test(ruta)) for (const f of await page.evaluate(EN_PAGINA.detalle)) falla(donde, `detalle: ${f}`);
         if (ruta === '/dentista') for (const f of await page.evaluate(EN_PAGINA.panelDentista)) falla(donde, `panel: ${f}`);
-        if (/\/citas$/.test(ruta) && ['320', '390'].includes(ancho)) {
+        // El filtro solo está en la lista de citas del personal (no en «Mis citas» del paciente).
+        if (/^\/(admin|dentista|asistente)\/citas$/.test(ruta) && ['320', '390'].includes(ancho)) {
           let f = await page.evaluate(EN_PAGINA.filtro);
           if (f.falta) { falla(donde, 'no hay .filtro-citas'); await page.close(); return; }
           if (ancho === '390') {
