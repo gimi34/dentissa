@@ -34,7 +34,7 @@
                         <div class="appt-day">{{ \Carbon\Carbon::parse($proximaCita->fecha_hora)->format('d') }}</div>
                         <div class="appt-month">{{ \Carbon\Carbon::parse($proximaCita->fecha_hora)->locale('es')->isoFormat('MMM') }}</div>
                     </div>
-                    <div style="flex:1">
+                    <div class="texto-partible" style="flex:1">
                         <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:6px">
                             {{ $proximaCita->servicio ?? 'Consulta dental' }}
                         </div>
