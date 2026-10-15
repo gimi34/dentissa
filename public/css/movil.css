@@ -4,8 +4,11 @@
  * único valor en px es el punto de corte, porque las media queries no admiten variables, y las
  * unidades relativas del panel (85vw, 100dvh y ±100 %) son las que documenta el sistema.
  *
- * Las dos reglas globales van primero: las de la media query ganan por orden con la misma
- * especificidad (/analyze 033 A40). En el escritorio (900 px o más) nada cambia (CA8).
+ * Las reglas globales van primero: las de la media query ganan por orden con la misma
+ * especificidad (/analyze 033 A40; 034 A46). En el escritorio (900 px o más) nada cambia (CA8).
+ *
+ * Spec 034 (sistema 1.5.0): tablas en tarjetas, filtro plegable, detalle de cita, panel de la
+ * dentista, botón «Menú» solo con icono y logo con máscara, en el bloque «Spec 034» de abajo.
  */
 
 /* Elementos nuevos: ocultos en el escritorio. */
@@ -13,6 +16,11 @@
 
 /* Ningún hijo flexible o de rejilla ensancha la página (A6); a 1440 no cambia nada visible. */
 .main, .grid-auto > *, .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+/* Spec 034: «Filtros» y los textos de los botones de icono solo en el móvil; en el escritorio, el
+   panel del filtro no es una caja y sus campos siguen en la fila de siempre (D5, D6). */
+.filtro-btn, .solo-movil { display: none; }
+.filtro-panel { display: contents; }
 
 @media (max-width: 899px) {
     /* ── Marco de la página ── */
@@ -47,13 +55,16 @@
         min-height: var(--topbar-h);
         padding: var(--space-3) var(--space-5);
     }
-    /* Con mix-blend-mode: screen el logo desaparece sobre blanco: la marca de texto (A9). */
+    /* Con mix-blend-mode: screen el logo desaparece sobre blanco: el mismo logo, pintado con --p600
+       a través de una máscara (A9; spec 034, D10). Sin máscara, queda un rectángulo --p600. */
     .sidebar-logo img { display: none; }
     .sidebar-marca {
         display: block;
-        color: var(--p600);
-        font-size: var(--text-marca);
-        font-weight: var(--weight-strong);
+        width: var(--logo-max-w);
+        height: var(--logo-movil-h);
+        background: var(--p600);
+        -webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat;
+        mask: url("../images/logo-icon.png") left center / contain no-repeat;
     }
     .nav-item { color: var(--text); }
     /* Sección actual: fondo, color y una barra, para que no dependa solo del color (A5). */
@@ -83,6 +94,8 @@
         cursor: pointer;
     }
     .menu-btn svg, .menu-cerrar svg { width: var(--icon-md); height: var(--icon-md); }
+    /* «Menú» solo con el icono (spec 034, D9): cuadrado de --touch-min. */
+    .menu-btn { width: var(--touch-min); height: var(--touch-min); padding: 0; }
 
     /* ── Sin JS: el menú queda en el flujo, encima del contenido (D5, A3) ── */
     html:not(.menu-js) body { flex-direction: column; }
@@ -139,4 +152,52 @@
         outline: var(--focus-ring-width) solid var(--focus-ring);
         outline-offset: var(--focus-ring-offset);
     }
+
+    /* ── Spec 034: tablas en tarjetas (D1, opción A) ── */
+    .tabla-tarjetas thead { display: none; }
+    /* Las tarjetas blancas van sobre --bg aunque la tabla esté dentro de una .card (A39). */
+    .tabla-tarjetas tbody { display: block; background: var(--bg); padding: var(--space-5); }
+    .tabla-tarjetas tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        background: var(--white);
+        border: var(--border-width) solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-5) var(--space-6);
+    }
+    .tabla-tarjetas tr + tr { margin-top: var(--space-5); }
+    /* Cada celda con etiqueta: etiqueta (::before) en la columna 1 y el valor en la 2. */
+    .tabla-tarjetas td {
+        padding: var(--space-1) 0;
+        border-bottom: 0;
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr);
+        overflow-wrap: break-word;
+    }
+    .tabla-tarjetas td::before {
+        content: attr(data-label);
+        font-size: var(--text-small);
+        font-weight: var(--weight-strong);
+        text-transform: uppercase;
+        color: var(--p600);
+    }
+    /* Cabecera arriba a la izquierda y estado arriba a la derecha, sea cual sea su columna (A37). */
+    .tabla-tarjetas .celda-cab { grid-row: 1; grid-column: 1; display: block; }
+    .tabla-tarjetas .celda-estado { grid-row: 1; grid-column: 2; display: block; }
+    .tabla-tarjetas .celda-acciones {
+        display: block;
+        margin-top: var(--space-3);
+        padding-top: var(--space-3);
+        border-top: var(--border-width) solid var(--border);
+    }
+    .tabla-tarjetas .celda-cab::before, .tabla-tarjetas .celda-estado::before, .tabla-tarjetas .celda-acciones::before { content: none; }
+    .tabla-tarjetas .celda-acciones > div, .tabla-tarjetas .celda-acciones .acciones-fila { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+    .tabla-tarjetas .celda-acciones .btn { flex: 1 1 auto; }
+    /* La cita de hoy: tarjeta blanca con barra, no solo por color, y sin el fondo del :hover (A57). */
+    .tabla-tarjetas .fila-hoy { background: var(--white); box-shadow: inset var(--border-width-strong) 0 0 var(--p400); }
+    .tabla-tarjetas tr:hover td { background: transparent; }
+    .solo-escritorio, .tabla-tarjetas .solo-escritorio { display: none; }
+    .solo-movil { display: inline; }
+    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
