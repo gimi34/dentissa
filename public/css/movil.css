@@ -200,4 +200,10 @@
     .solo-escritorio, .tabla-tarjetas .solo-escritorio { display: none; }
     .solo-movil { display: inline; }
     .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* ── Spec 034: panel de la dentista (D5b) ── */
+    .btn-icono { min-width: var(--touch-min); justify-content: center; }
+    /* El estado y «Ver detalle» bajan a su propia línea: el nombre usa el ancho que dejan la hora y el punto. */
+    .timeline-item { flex-wrap: wrap; }
+    .timeline-acciones { flex-basis: 100%; justify-content: flex-end; }
 }
