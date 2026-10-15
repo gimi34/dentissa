@@ -144,7 +144,7 @@ class MovilPersonalTest extends TestCase
 
         // Caso con dos datos: nombre y teléfono del paciente, dentro de un único celda-valor.
         $xpath = $this->xpath($this->actingAs($this->admin)->get('/admin/citas')->assertOk()->getContent());
-        $valor = $xpath->query("//table//td[@data-label='Paciente'][contains(., '".self::TELEFONO."')]/*");
+        $valor = $xpath->query("(//table//td[@data-label='Paciente'][contains(., '".self::TELEFONO."')])[1]/*");
         $this->assertSame(1, $valor->length, 'La celda del paciente con teléfono tiene un solo hijo.');
         $this->assertContains('celda-valor', $this->clases($valor->item(0)), 'Ese hijo es .celda-valor.');
     }
