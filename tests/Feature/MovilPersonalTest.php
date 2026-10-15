@@ -439,6 +439,8 @@ class MovilPersonalTest extends TestCase
             $this->assertDeclara($envoltorio, 'gap: var(--space-3)');
         }
         $this->assertDeclara('.tabla-tarjetas .celda-acciones .btn', 'flex: 1 1 auto');
+        // El texto de los botones, centrado como en la opción A (decisión del usuario, visto en T024).
+        $this->assertDeclara('.tabla-tarjetas .celda-acciones .btn', 'justify-content: center');
 
         // La cita de hoy: tarjeta blanca con barra, y sin el fondo del :hover de app.css (A57).
         $this->assertDeclara('.tabla-tarjetas .fila-hoy', 'background: var(--white)');

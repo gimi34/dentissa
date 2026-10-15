@@ -291,7 +291,7 @@ const COMPROBACIONES = [
   '034 solapes: a 320, 390 y 844x390, en las pantallas incluidas, ningún control visible se cruza con otro ni sale de su tarjeta; con control positivo (CA8)',
   '034 tarjetas: a 320, 390 y 844x390, toda tabla visible es tabla-tarjetas; cada celda de valor muestra su etiqueta a la izquierda, en la línea de su primera línea, también con un valor de dos líneas; el estado, arriba a la derecha junto a la cabecera; y cada tarjeta, con un fondo distinto del de su contenedor, también la de hoy (CA1–CA4, A37, A39, A57)',
   '034 palabras largas: a 320 y 390, con una palabra de 30 letras en los nombres de paciente, dentista, servicio y usuario (banner y menú), ninguna pantalla incluida ni de las 7 del paciente se desplaza de lado ni recorta texto, y ninguna palabra que cabe en el ancho de su diseño (tarjeta o .card, menos la etiqueta) queda partida; con control positivo (CA7, A34, A38)',
-  '034 filtro: a 390, plegado al cargar, «Filtros» lo despliega y cambia aria-expanded; a 320 y 390, desplegado, buscador al ancho del formulario y orden buscador < atajos < panel, atajos en una línea, sin solapes ni campos fuera de su tarjeta; sin JS, desplegado y sin «Filtros»; foco visible en los campos, «Hoy», «Filtros» y «Filtrar» (CA5, A33, A45, A55, A68, A69)',
+  '034 filtro: a 390, plegado al cargar, «Filtros» lo despliega y cambia aria-expanded; a 320 y 390, desplegado, buscador al ancho del formulario y orden buscador < atajos < panel, atajos en una línea, sin solapes ni campos fuera de su tarjeta, y con dos filtros aplicados sin palabras partidas; sin JS, desplegado y sin «Filtros»; foco visible en los campos, «Hoy», «Filtros» y «Filtrar» (CA5, A33, A45, A55, A68, A69)',
   '034 foco: a 390, foco visible en un botón de tarjeta y en el enlace de la dentista (A60)',
   '034 detalle: a 320, 390 y 844x390, los bloques del detalle en una columna, en el orden de D7, a todo el ancho (CA6)',
   '034 panel de la dentista: a 320, 390 y 844x390, el estado y el enlace bajo el nombre en cada elemento de la línea de tiempo (CA2, A35)',
@@ -799,6 +799,11 @@ async function medir() {
           if (!f.anchoBuscador) falla(donde, 'el buscador no ocupa el ancho del formulario');
           if (!f.atajosEnUnaLinea) falla(donde, '«Esta semana», «Hoy» y «Filtros» no van en una línea');
           for (const s of await page.evaluate(EN_PAGINA.solapes)) falla(donde, `filtro desplegado: ${s}`);
+          // Con dos filtros aplicados, «Filtros» lleva contador: ningún texto del filtro se parte.
+          await page.goto(u(`${ruta}?estado=agendada&fecha_hasta=2099-12-31`), { waitUntil: 'networkidle' });
+          await page.locator('.filtro-btn').click(); await page.waitForTimeout(200);
+          for (const p of await page.evaluate(EN_PAGINA.palabrasPartidas, '.filtro-citas')) falla(donde, `filtro con filtros aplicados: ${p}`);
+          for (const s of await page.evaluate(EN_PAGINA.solapes)) falla(donde, `filtro con filtros aplicados: ${s}`);
           for (const r of await page.evaluate(EN_PAGINA.recortes)) falla(donde, `filtro desplegado, recortado: ${r}`);
           if (ancho === '390') {
             await page.keyboard.press('Tab');

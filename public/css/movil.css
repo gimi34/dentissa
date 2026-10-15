@@ -193,7 +193,7 @@
     }
     .tabla-tarjetas .celda-cab::before, .tabla-tarjetas .celda-estado::before, .tabla-tarjetas .celda-acciones::before { content: none; }
     .tabla-tarjetas .celda-acciones > div, .tabla-tarjetas .celda-acciones .acciones-fila { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-    .tabla-tarjetas .celda-acciones .btn { flex: 1 1 auto; }
+    .tabla-tarjetas .celda-acciones .btn { flex: 1 1 auto; justify-content: center; }
     /* La cita de hoy: tarjeta blanca con barra, no solo por color, y sin el fondo del :hover (A57). */
     .tabla-tarjetas .fila-hoy { background: var(--white); box-shadow: inset var(--border-width-strong) 0 0 var(--p400); }
     .tabla-tarjetas tr:hover td { background: transparent; }
@@ -206,4 +206,27 @@
     /* El estado y «Ver detalle» bajan a su propia línea: el nombre usa el ancho que dejan la hora y el punto. */
     .timeline-item { flex-wrap: wrap; }
     .timeline-acciones { flex-basis: 100%; justify-content: flex-end; }
+
+    /* ── Spec 034: filtro de citas (D6) ── */
+    /* Una columna: buscador a lo ancho, atajos con «Filtros» y el panel (A55). */
+    .filtro-tarjeta { padding: var(--space-5); }
+    .filtro-citas { flex-direction: column; align-items: stretch; }
+    .filtro-buscar { flex: none; min-width: 0; }
+    /* Los tres atajos se reparten el ancho, como en la opción A (A69). */
+    .filtro-atajos { order: 0; margin-left: 0; flex-wrap: wrap; gap: var(--space-3); }
+    .filtro-atajos .btn { flex: 1; justify-content: center; }
+    /* «Filtros» con su contador no se parte: si no cabe en un tercio, toma lo que necesita. */
+    .filtro-atajos .filtro-btn { white-space: nowrap; }
+    /* Panel en dos columnas: desde y hasta lado a lado; dentista y estado a lo ancho (A19, A33). */
+    .filtro-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--space-4);
+    }
+    .filtro-fecha, .filtro-dentista, .filtro-estado { min-width: 0; }
+    .filtro-panel .filtro-dentista, .filtro-panel .filtro-estado { grid-column: 1 / -1; }
+    .filtro-panel .btn { justify-content: center; }
+    /* Con JS, «Filtros» se muestra y el panel se pliega mientras el formulario no esté abierto. */
+    html.filtros-js .filtro-btn { display: inline-flex; }
+    html.filtros-js .filtro-citas:not(.abierto) .filtro-panel { display: none; }
 }
