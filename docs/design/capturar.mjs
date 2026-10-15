@@ -909,7 +909,8 @@ async function medir() {
       if (n.doc > n.vista) falla(donde, `la página mide ${n.doc} px de ${n.vista}`);
       if (/\/citas$/.test(ruta)) {
         if (n.panel !== true) falla(donde, 'el panel del filtro no se ve');
-        if (n.boton !== 'none') falla(donde, `«Filtros» visible sin JavaScript (${n.boton})`);
+        if (n.boton === null) falla(donde, 'no existe el botón «Filtros»');
+        else if (n.boton !== 'none') falla(donde, `«Filtros» visible sin JavaScript (${n.boton})`);
       }
       await page.close();
     });
