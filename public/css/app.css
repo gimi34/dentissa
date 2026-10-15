@@ -58,6 +58,15 @@
     --logo-max-w:         160px;
     --icon-md:            18px;
     --text-marca:         16px;  /* tamaño, no color */
+    /* Sistema de diseño 1.5.0 (spec 034): móvil del personal. */
+    --tarjeta-etiqueta-w: 88px;
+    --logo-movil-h:       40px;
+    --space-detalle:      18px;
+    --detalle-lateral-w:  360px;
+    --filtro-buscar-min:  180px;
+    --filtro-fecha-min:   130px;
+    --filtro-dentista-min: 150px;
+    --filtro-estado-min:  140px;
 }
 
 body {
@@ -547,3 +556,6 @@ tr:hover td { background: var(--p50); }
 .migas-actual { color: var(--text); }
 /* Foco del sistema en pestañas y migas (/review 033 R7). */
 .pestanas-citas a:focus-visible, .migas a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+/* Fin spec 033 */
+
+/* Spec 034: clases de los style="" imprescindibles, filtro, detalle de cita y foco (mismos valores que antes, con tokens). */
