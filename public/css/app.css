@@ -559,3 +559,31 @@ tr:hover td { background: var(--p50); }
 /* Fin spec 033 */
 
 /* Spec 034: clases de los style="" imprescindibles, filtro, detalle de cita y foco (mismos valores que antes, con tokens). */
+/* Rejillas de estadísticas (D10b): .stats-grid fija hueco y margen; las variantes, solo las columnas. */
+.stats-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.stats-grid-3 { grid-template-columns: repeat(3, 1fr); }
+/* Filtro de citas (D6, A33): los style="" de antes, con tokens. Los atajos van al final, como antes,
+   aunque en el HTML sigan al buscador (A55). */
+.filtro-tarjeta { margin-bottom: var(--space-7); padding: var(--space-6) var(--space-7); }
+.filtro-citas { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+.filtro-buscar { flex: 1; min-width: var(--filtro-buscar-min); }
+.filtro-fecha { min-width: var(--filtro-fecha-min); }
+.filtro-dentista { min-width: var(--filtro-dentista-min); }
+.filtro-estado { min-width: var(--filtro-estado-min); }
+.filtro-atajos { margin-left: auto; display: flex; gap: var(--space-2); order: 1; }
+/* Borde de los campos ≥ 3:1 también en el escritorio (decisión del usuario, A36); gana a .field de citas.css. */
+.filtro-citas .field { border-color: var(--border-control); }
+.filtro-btn { border-color: var(--border-control); }
+.filtro-btn[aria-expanded="true"] { background: var(--p100); color: var(--p600); }
+.filtro-contador { background: var(--p500); color: var(--white); border-radius: var(--radius-lg); padding: 0 var(--space-2); font-size: var(--text-small); }
+/* La cita de hoy de la lista del personal: el fondo que antes iba en el style="" de la fila (A57). */
+.fila-hoy { background: var(--p50); }
+/* Panel de la dentista (D5b): el enlace de solo icono y la fila del estado con el enlace. */
+.btn-icono { padding: var(--space-1) var(--space-3); }
+.timeline-acciones { display: flex; align-items: center; gap: var(--space-3); }
+/* Foco del sistema en todo lo que la spec añade o cambia (A60, A68). */
+.filtro-citas .field:focus-visible, .filtro-citas .btn:focus-visible,
+.tabla-tarjetas a:focus-visible, .tabla-tarjetas .btn:focus-visible, .btn-icono:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
