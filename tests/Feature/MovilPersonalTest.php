@@ -439,6 +439,8 @@ class MovilPersonalTest extends TestCase
             $this->assertDeclara($envoltorio, 'gap: var(--space-3)');
         }
         $this->assertDeclara('.tabla-tarjetas .celda-acciones .btn', 'flex: 1 1 auto');
+        // Los avisos de una celda quedan de su tamaño (decisión del usuario, visto en T029).
+        $this->assertDeclara('.tabla-tarjetas td > span', 'justify-self: start');
         // El texto de los botones, centrado como en la opción A (decisión del usuario, visto en T024).
         $this->assertDeclara('.tabla-tarjetas .celda-acciones .btn', 'justify-content: center');
 

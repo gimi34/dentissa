@@ -39,7 +39,7 @@
         {{-- Info de la cita --}}
         <div class="card">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
-                <div>
+                <div class="texto-partible">
                     <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                         {{ $cita->servicio ?? 'Consulta dental' }}
                     </div>

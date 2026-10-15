@@ -525,9 +525,34 @@ const EN_PAGINA = {
         const ancho = medidor.getBoundingClientRect().width;
         // El ancho que el diseño da al texto: su tarjeta o bloque con ancho propio (D8, A38).
         const tarjeta = el.closest('.tabla-tarjetas tr') || el.closest('.card, .welcome-banner, .stat-card') || el.closest('#menu-principal') || document.querySelector('.content');
-        let referencia = contenido(tarjeta);
-        const td = el.closest('.tabla-tarjetas td');
-        if (td && getComputedStyle(td).display === 'grid') referencia -= parseFloat(getComputedStyle(td).gridTemplateColumns) || 0;
+        // Si el texto va en una fila flexible dentro de su tarjeta (línea de tiempo, avatar y nombre, título e
+        // insignia), el diseño le da el ancho de esa fila menos lo que no puede estrecharse (hora, punto,
+        // avatar, insignia) y sus huecos. Lo que tiene ancho variable (acciones) cuenta como espacio del
+        // texto: si lo estrecha, falla (A38). En una rejilla, el diseño le da el ancho de su celda.
+        let fila = null; let rejilla = null; let hijo = el;
+        for (let nodo = el; nodo && nodo !== tarjeta; hijo = nodo, nodo = nodo.parentElement) {
+          if (nodo === el) continue;
+          const cs = getComputedStyle(nodo);
+          if (cs.display.includes('flex') && cs.flexDirection.startsWith('row')) { fila = nodo; break; }
+          if (cs.display.includes('grid') && !nodo.matches('.tabla-tarjetas td')) { rejilla = nodo; break; }
+        }
+        let referencia;
+        if (rejilla) referencia = contenido(hijo);
+        else if (fila) {
+          const cs = getComputedStyle(fila); const r = hijo.getBoundingClientRect();
+          referencia = contenido(fila);
+          for (const otro of fila.children) {
+            if (otro === hijo || !otro.getClientRects().length) continue;
+            const h = otro.getBoundingClientRect();
+            const co = getComputedStyle(otro);
+            const fijo = co.flexShrink === '0' || co.whiteSpace === 'nowrap' || /(^|;)\s*width\s*:/.test(otro.getAttribute('style') || '');
+            if (fijo && h.bottom > r.top + 1 && h.top < r.bottom - 1) referencia -= h.width + (parseFloat(cs.columnGap) || 0);
+          }
+        } else {
+          referencia = contenido(tarjeta);
+          const td = el.closest('.tabla-tarjetas td');
+          if (td && getComputedStyle(td).display === 'grid') referencia -= parseFloat(getComputedStyle(td).gridTemplateColumns) || 0;
+        }
         if (ancho <= referencia) fallos.push(`«${m[0].slice(0, 30)}» partida (mide ${Math.round(ancho)} px y su diseño le da ${Math.round(referencia)})`);
       }
     }

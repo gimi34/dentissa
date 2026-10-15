@@ -25,10 +25,10 @@
 @media (max-width: 899px) {
     /* ── Marco de la página ── */
     .main { margin-left: 0; }
-    /* anywhere: una palabra sin espacios también parte dentro de una fila o rejilla flexible (R1). */
-    .content { padding: var(--space-6); overflow-wrap: anywhere; }
-    /* Las tablas no: con anywhere sus celdas se estrechan y parten palabras y números letra a letra (T069). */
-    .content table { overflow-wrap: break-word; }
+    /* break-word: no parte letra a letra las palabras que caben (spec 034, D8). anywhere solo en los
+       elementos de datos de filas y rejillas flexibles, donde break-word no reduce el ancho mínimo (033/R1). */
+    .content { padding: var(--space-6); overflow-wrap: break-word; }
+    .texto-partible, .welcome-title, .timeline-title, .timeline-sub, .resumen-cita dd { overflow-wrap: anywhere; }
     .topbar {
         height: auto;
         min-height: var(--topbar-h);
@@ -192,6 +192,8 @@
         border-top: var(--border-width) solid var(--border);
     }
     .tabla-tarjetas .celda-cab::before, .tabla-tarjetas .celda-estado::before, .tabla-tarjetas .celda-acciones::before { content: none; }
+    /* Los avisos y etiquetas de una celda (el «⚠ Sí» de alergias) quedan de su tamaño, sin estirarse. */
+    .tabla-tarjetas td > span { justify-self: start; }
     .tabla-tarjetas .celda-acciones > div, .tabla-tarjetas .celda-acciones .acciones-fila { display: flex; flex-wrap: wrap; gap: var(--space-3); }
     .tabla-tarjetas .celda-acciones .btn { flex: 1 1 auto; justify-content: center; }
     /* La cita de hoy: tarjeta blanca con barra, no solo por color, y sin el fondo del :hover (A57). */
