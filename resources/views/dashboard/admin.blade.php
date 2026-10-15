@@ -13,7 +13,7 @@
 @section('content')
 
 {{-- ── Stats ───────────────────────────────────────────────── --}}
-<div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+<div class="stats-grid stats-grid-2">
     <div class="stat-card">
         <div class="stat-icon" style="background:var(--p100)">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="1.8">
@@ -53,31 +53,33 @@
         <div class="card card-0">
             @if(isset($citasHoyLista) && $citasHoyLista->count() > 0)
                 <div class="table-wrap">
-                    <table>
+                    <table class="tabla-tarjetas">
                         <thead>
                             <tr>
-                                <th>Hora</th>
+                                <th class="celda-cab">Hora</th>
                                 <th>Paciente</th>
                                 <th>Dentista</th>
                                 <th>Servicio</th>
-                                <th>Estado</th>
+                                <th class="celda-estado">Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($citasHoyLista as $cita)
                             <tr>
-                                <td style="font-weight:500;color:var(--p600);white-space:nowrap">
+                                <td class="celda-cab" data-label="Hora" style="font-weight:500;color:var(--p600);white-space:nowrap">
                                     {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}
                                 </td>
-                                <td>
-                                    <div style="font-weight:500">{{ $cita->paciente }}</div>
-                                    @if($cita->telefono)
-                                        <div style="font-size:11.5px;color:var(--text-muted)">{{ $cita->telefono }}</div>
-                                    @endif
+                                <td data-label="Paciente">
+                                    <div class="celda-valor">
+                                        <div style="font-weight:500">{{ $cita->paciente }}</div>
+                                        @if($cita->telefono)
+                                            <div style="font-size:11.5px;color:var(--text-muted)">{{ $cita->telefono }}</div>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td style="color:var(--text-muted)">{{ $cita->dentista }}</td>
-                                <td style="color:var(--text-muted)">{{ $cita->servicio ?? '—' }}</td>
-                                <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                                <td data-label="Dentista" style="color:var(--text-muted)">{{ $cita->dentista }}</td>
+                                <td data-label="Servicio" style="color:var(--text-muted)">{{ $cita->servicio ?? '—' }}</td>
+                                <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
                             </tr>
                             @endforeach
                         </tbody>
