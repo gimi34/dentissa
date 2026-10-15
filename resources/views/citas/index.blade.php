@@ -21,7 +21,7 @@
 @section('content')
 
 {{-- Resumen del día ──────────────────────────────────────────────────────── --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+<div class="stats-grid">
     @php
         $resumen = $resumenHoy ?? (object)['total'=>0,'completadas'=>0,'agendadas'=>0,'canceladas'=>0];
     @endphp
@@ -106,16 +106,16 @@
 <div class="card card-0">
     @if($citas->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th>Hora / Fecha</th>
+                        <th class="celda-cab">Hora / Fecha</th>
                         <th>Paciente</th>
                         <th>Dentista</th>
                         <th>Servicio</th>
                         <th>Duración</th>
-                        <th>Estado</th>
-                        <th style="text-align:right">Acciones</th>
+                        <th class="celda-estado">Estado</th>
+                        <th class="celda-acciones" style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,8 +124,8 @@
                         $esHoy   = \Carbon\Carbon::parse($cita->fecha_hora)->isToday();
                         $esFutura = \Carbon\Carbon::parse($cita->fecha_hora)->isFuture();
                     @endphp
-                    <tr style="{{ $esHoy ? 'background:var(--p50)' : '' }}">
-                        <td>
+                    <tr @class(['fila-hoy' => $esHoy])>
+                        <td class="celda-cab" data-label="Hora / Fecha">
                             <div style="font-weight:600;color:var(--p600);font-size:14px">
                                 {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}
                             </div>
@@ -137,16 +137,18 @@
                             </div>
                         </td>
 
-                        <td>
-                            <div style="font-weight:500">{{ $cita->paciente }}</div>
-                            @if($cita->tel_paciente)
-                                <div style="font-size:11.5px;color:var(--text-muted)">{{ $cita->tel_paciente }}</div>
-                            @endif
+                        <td data-label="Paciente">
+                            <div class="celda-valor">
+                                <div style="font-weight:500">{{ $cita->paciente }}</div>
+                                @if($cita->tel_paciente)
+                                    <div style="font-size:11.5px;color:var(--text-muted)">{{ $cita->tel_paciente }}</div>
+                                @endif
+                            </div>
                         </td>
 
-                        <td style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
+                        <td data-label="Dentista" style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
 
-                        <td>
+                        <td data-label="Servicio">
                             @if($cita->servicio)
                                 <div style="font-size:13px">{{ $cita->servicio }}</div>
                             @else
@@ -154,20 +156,21 @@
                             @endif
                         </td>
 
-                        <td style="color:var(--text-muted);font-size:13px">
+                        <td data-label="Duración" style="color:var(--text-muted);font-size:13px">
                             {{ $cita->duracion_min ?? $cita->duracion_servicio ?? 30 }} min
                         </td>
 
-                        <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                        <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
 
-                        <td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div style="display:flex;justify-content:flex-end">
                                 <a href="{{ route("$rp.citas.show", $cita->id) }}"
-                                   class="btn btn-ghost btn-sm" title="Ver detalle">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   class="btn btn-ghost btn-sm" title="Ver detalle" aria-label="Ver detalle">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
+                                    <span class="solo-movil">Ver detalle</span>
                                 </a>
                             </div>
                         </td>
