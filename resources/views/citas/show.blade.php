@@ -25,10 +25,10 @@
 @section('content')
 
 {{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route("$rp.citas") }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
+<div id="migas" class="migas">
+    <a href="{{ route("$rp.citas") }}">Citas</a>
     <span>›</span>
-    <span style="color:var(--text)">{{ $cita->paciente }}</span>
+    <span class="migas-actual">{{ $cita->paciente }}</span>
 </div>
 
 {{-- Detalle (spec 034, D7): el HTML va en el orden de la spec, que es también el de la lectura y el foco

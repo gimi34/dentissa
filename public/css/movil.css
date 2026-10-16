@@ -237,4 +237,6 @@
     .detalle-cita { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-detalle); }
     .detalle-control, .detalle-historial { margin-top: 0; }
     .detalle-datos-rejilla { grid-template-columns: minmax(0, 1fr); }
+    /* Las opciones de «Cambiar estado» miden al menos --touch-min de alto (T037). */
+    #estado fieldset label { min-height: var(--touch-min); }
 }

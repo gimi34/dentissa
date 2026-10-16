@@ -391,6 +391,12 @@ class MovilPersonalTest extends TestCase
             $this->assertSame(1, $rejilla->length, "{$rol}: la rejilla de datos lleva .detalle-datos-rejilla.");
             $this->assertFalse($this->columnasEnLinea($rejilla->item(0)->getAttribute('style')), "{$rol}: sin grid-template-columns en línea.");
 
+            // T037: las migas usan el componente de la 033 (toque de 44 × 44 en el móvil), sin style="".
+            $migas = $xpath->query("//*[@id='migas'][contains(concat(' ', normalize-space(@class), ' '), ' migas ')]");
+            $this->assertSame(1, $migas->length, "{$rol}: las migas son #migas.migas.");
+            $this->assertSame(0, $xpath->query("//*[@id='migas']/descendant-or-self::*[@style]")->length, "{$rol}: migas sin style=\"\".");
+            $this->assertSame(1, $xpath->query("//*[@id='migas']//*[contains(@class,'migas-actual')]")->length, "{$rol}: página actual en .migas-actual.");
+
             // D8 (A34): la cabecera de la tarjeta parte de línea con un servicio o una fecha largos.
             $this->assertSame(1, $xpath->query("//*[contains(@class,'detalle-datos')]//div[contains(concat(' ', normalize-space(@class), ' '), ' texto-partible ')][contains(., 'Consulta dental')]")->length,
                 "{$rol}: el texto de la cabecera lleva texto-partible.");
@@ -494,6 +500,8 @@ class MovilPersonalTest extends TestCase
         $this->assertDeclara('.detalle-control', 'margin-top: 0');
         $this->assertDeclara('.detalle-historial', 'margin-top: 0');
         $this->assertDeclara('.detalle-datos-rejilla', 'grid-template-columns: minmax(0, 1fr)');
+        // T037: las opciones de «Cambiar estado» miden al menos --touch-min de alto.
+        $this->assertDeclara('#estado fieldset label', 'min-height: var(--touch-min)');
 
         // Textos de datos en filas o rejillas flexibles (D8, A34, A56).
         foreach (['.welcome-title', '.timeline-title', '.timeline-sub', '.resumen-cita dd'] as $texto) {
