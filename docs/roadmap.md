@@ -17,6 +17,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, approved) | pendiente |
+| 7 | Registro indexable correctamente | `/registro` llega con título, descripción única y canónica absoluta desde `seo.site_url`; `/login`, la 404 y `/up` llevan `noindex`; `sitemap.xml` lista solo `/registro` y `robots.txt` lo declara; Lighthouse SEO ≥ 90 (P10). Riesgos: SE1.a, SE1.b, SE2.a, SE2.b, SE3.a, SE3.b; fuera: SE4.a, SE5.a, SE5.b, SE6.a y SE7.a → Pendientes y deuda (decisión del usuario, 2026-10-16) | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
      cubre y las que deja fuera con su destino. Nunca resume un riesgo citando solo su número. -->
@@ -26,6 +27,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 (objetivo 5) y la constitución aprobada.
 
 ## Pendientes y deuda
+- SEO de baja severidad (`docs/seo.md`, upgrade a AI-DD 1.13.0; decisión del usuario, 2026-10-16), para
+  la spec que toque esas páginas: SE4.a página 404 propia en español con `noindex` (con SE2.b);
+  SE5.a íconos del sitio (`favicon.svg` sin `<text>`, PNG de 32 y `apple-touch-icon`) desde el logo
+  actual y SE5.b `theme-color` con `--bg`; SE6.a Open Graph en `/registro` con imagen general de
+  1200×630 desde una «Tarjeta para compartir» del sistema de diseño; SE7.a JSON-LD `Dentist` solo
+  con datos reales confirmados por el usuario.
 - Dependencias con vulnerabilidades conocidas (riesgo de dependencias en `docs/security.md`,
   detectado en `/plan 014`): spec propia de actualización antes de cualquier release (decisión
   del usuario, 2026-09-28). Se atiende en la spec [024](specs/024-dependencias-seguras/spec.md),

@@ -84,6 +84,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 - [Despliegue](docs/deployment.md) — entornos, deploy y rollback
 - [Seguridad](docs/security.md) — datos sensibles, auth, herramientas y excepciones
 - [Observabilidad](docs/observability.md) — logs, correlación, auditoría, métricas y alertas
+- [SEO técnico](docs/seo.md) — rutas indexables (solo `/registro`), metadatos, sitemap y brechas SE
 - [Sistema de diseño](docs/design/system.md) — tokens, componentes, WCAG 2.1 AA y deuda DS (vista: [system.html](docs/design/system.html))
 - [Roadmap](docs/roadmap.md) — etapa actual y objetivos
 - [Specs](docs/specs/README.md)

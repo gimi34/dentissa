@@ -16,7 +16,7 @@ constitution_version: 1.2.1
 workflow:
   enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
   legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md
-skills_version: 1.11.5         # versión del paquete de skills (upgrade desde 1.11.2 el 2026-10-09)
+skills_version: 1.13.0         # versión del paquete de skills (upgrade desde 1.11.5 el 2026-10-16)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
   platform: servidor propio (Ubuntu Server 24.04) con Docker Compose y Cloudflare Tunnel (ADR 0005, spec 030)
@@ -59,6 +59,11 @@ design:                        # solo proyectos con interfaz (frontend, fullstac
   html: docs/design/system.html
   canvas: null
   widths: [320, 390, 1440]     # 320 por WCAG 1.4.10 (spec 033, decisión del usuario, 2026-10-11)
+seo:                           # solo sitios web públicos (shared/contract.md → "SEO técnico")
+  status: inferred             # auditado en el upgrade a 1.13.0 (docs/seo.md)
+  indexable: true              # solo el acceso y el registro (decisión del usuario, 2026-10-16)
+  site_url: https://dentissa.app   # dominio de producción (docs/deployment.md, spec 030)
+  rendering: ssr               # Blade renderizado en el servidor
 skills:
   enabled: []                  # `design` (plugin oficial de Anthropic) no está instalado; quitado
                                # en el upgrade a 1.11.0 (decisión del usuario, 2026-10-02)
@@ -69,6 +74,7 @@ paths:
   deployment: docs/deployment.md
   security: docs/security.md
   observability: docs/observability.md
+  seo: docs/seo.md
   changelog: CHANGELOG.md
   specs: docs/specs
   adr: docs/adr
@@ -80,7 +86,7 @@ verification:                  # lo llena la Fase 4
   - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso" }
 template_hashes:              # huellas de docs/templates/ al copiarlas (aidd.py templates --yaml)
   adr.md: 479eaebd1fed
-  plan.md: 475640938449
-  review.md: 4e22b9063245
-  spec.md: 0408aa3527d3
+  plan.md: 2a5c45f54da9
+  review.md: b307b807a00f
+  spec.md: 876efac8d9eb
   tasks.md: 77ed236f954b
