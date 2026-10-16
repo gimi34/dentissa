@@ -160,6 +160,7 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
+  - nota: /release 034 (2026-10-16): versión v0.8.0 (minor), decisión del usuario; la 031 pasa a v0.9.0. Sin staging (030): T095 no aplica y las comprobaciones en el móvil real (incluido VoiceOver o TalkBack, R22) van en T097. Integración (decisión del usuario): primero se fusiona `chore/cierre-033` en `main`, luego se trae `main` a esta rama; el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después, tag anotado `v0.8.0` sobre el merge commit, con confirmación. Puerta de seguridad (2026-10-16, sobre 32221e3): `composer audit --locked` sin avisos, `npm audit --audit-level=high` 0 vulnerabilidades, `trivy fs --severity HIGH,CRITICAL` solo el falso positivo de `vendor/mockery` (fuera de git y de la imagen); `trivy image` dentro de EX2 (vence 2026-10-31). Sin migraciones, dependencias ni flags.
   - No hay staging (030): las comprobaciones en un móvil real se hacen en producción, en T097.
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
