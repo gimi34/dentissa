@@ -5,6 +5,32 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-16
+
+### Added
+- Versión para el móvil de las pantallas del personal: los paneles de administración, dentista y
+  asistente, la lista y el detalle de citas y las listas de pacientes y servicios se ven sin
+  desplazamiento lateral desde 320 px de ancho, también con el móvil en horizontal (spec 034).
+- En el móvil, las tablas de citas, pacientes y servicios (y las de los paneles) se leen como
+  tarjetas, una por fila, con la etiqueta de cada dato y las acciones con su nombre visible; las
+  columnas secundarias solo se ven en el escritorio (spec 034).
+- Filtro de citas plegable en el móvil: el buscador, los atajos «Esta semana» y «Hoy», un botón
+  «Buscar» y «Filtros», que despliega las fechas, el dentista y el estado e indica cuántos filtros
+  hay aplicados. Sin JavaScript, el filtro queda desplegado (spec 034).
+
+### Changed
+- «Mis citas» y el panel del paciente muestran sus citas en tarjetas en el móvil, con «Ver»,
+  «Reprogramar» y «Cancelar» siempre visibles (spec 034).
+- El detalle de una cita del personal se lee en una columna en el móvil, en este orden: datos,
+  cambiar estado, información, acciones, control interno e historial (spec 034).
+- El botón del menú del móvil muestra solo su icono y el menú abierto muestra el logo de la clínica
+  (spec 034).
+- Los textos largos pasan a la línea siguiente sin partir letra a letra las palabras que caben
+  (spec 034).
+- En el escritorio no cambia nada visible, salvo que los campos del filtro de citas tienen un borde
+  más marcado y lo que la spec toca muestra el anillo de foco de la marca al recorrerlo con el
+  teclado (spec 034).
+
 ## [0.7.0] - 2026-10-12
 
 ### Added

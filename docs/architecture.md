@@ -117,13 +117,19 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   campos. `public/js/menu.js` (spec 033) es el primer script propio en un archivo: lo carga el
   layout en `<head>` sin `defer`, marca `<html>` con `menu-js` y abre y cierra el menú del móvil
   (`aria-expanded`, `inert` en `<main>`, foco y Escape); sin JS, el menú queda en el flujo.
+  `public/js/filtros.js` (spec 034), el segundo, lo carga solo la lista de citas del personal en
+  `<head>` sin `defer`: marca `<html>` con `filtros-js` y pliega y despliega el panel de filtros
+  con el botón «Filtros» (`aria-expanded`); sin JS, el filtro queda desplegado.
 - Routing: rutas con nombre en `routes/web.php`; hay 50 `href="/..."` escritos a mano en vistas.
 - Design tokens / sistema de diseño: CSS propio en `public/css/app.css`, `auth.css`, `citas.css`
   con variables (`--p50…--p800`, `--text`, `--border`), mucho `style=""` inline. `public/css/movil.css`
   (spec 033), cargada por el layout tras `app.css`, adapta la app por debajo de 900 px: la barra
   lateral pasa a menú desplegable, el contenido ocupa todo el ancho y los controles miden 44 px;
-  en el escritorio no cambia nada. Vite + Tailwind 4
-  están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
+  en el escritorio no cambia nada. Desde la spec 034, en el móvil las tablas con `tabla-tarjetas`
+  (listas de citas, pacientes y servicios, y las de los paneles) se leen como tarjetas, una por fila,
+  con la etiqueta de cada celda en su `data-label` y las columnas `solo-escritorio` ocultas; y el
+  logo de la barra se pinta con una máscara (`mask` con `--p600`), porque la imagen con
+  `mix-blend-mode: screen` desaparece sobre blanco. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
 - Accesibilidad: WCAG 2.1 AA (decisión del usuario, 2026-10-02); principio P9 y deuda DS1–DS11 en [design/system.md](design/system.md).
 
 ## Backend

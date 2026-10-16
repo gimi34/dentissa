@@ -34,7 +34,7 @@
 <div style="max-width:640px">
     <div class="card">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
-            <div>
+            <div class="texto-partible">
                 <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                     {{ $cita->servicio ?? 'Consulta dental' }}
                 </div>
@@ -46,7 +46,7 @@
             @include('partials.badge-estado', ['estado' => $cita->estado])
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+        <div class="texto-partible" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
             <div style="background:var(--p50);border-radius:var(--radius-sm);padding:12px 14px">
                 <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Dentista</div>
                 <div style="font-size:14px;font-weight:500">{{ $cita->dentista }}</div>

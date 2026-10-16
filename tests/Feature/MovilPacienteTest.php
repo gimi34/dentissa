@@ -64,15 +64,18 @@ class MovilPacienteTest extends TestCase
             $this->assertSame(1, $botones->length, "{$rol}: un botón «Menú» en la barra superior.");
             $boton = $botones->item(0);
             $this->assertSame('button', $boton->getAttribute('type'), "{$rol}: type=button.");
-            $this->assertSame('Menú', trim($boton->textContent), "{$rol}: su nombre es «Menú».");
+            // Solo icono (spec 034, D9): sin texto visible y con nombre accesible.
+            $this->assertSame('', trim($boton->textContent), "{$rol}: «Menú» sin texto visible.");
+            $this->assertSame('Menú', $boton->getAttribute('aria-label'), "{$rol}: su nombre es «Menú».");
             $this->assertSame('false', $boton->getAttribute('aria-expanded'), "{$rol}: empieza cerrado.");
             $this->assertSame('menu-principal', $boton->getAttribute('aria-controls'), "{$rol}: controla el menú.");
 
             $aside = $xpath->query("//aside[@id='menu-principal']");
             $this->assertSame(1, $aside->length, "{$rol}: el <aside> es el menú principal.");
             $this->assertSame('Menú', $aside->item(0)->getAttribute('aria-label'), "{$rol}: el <aside> tiene nombre.");
-            $this->assertSame(1, $xpath->query("//aside[@id='menu-principal']//*[contains(@class,'sidebar-marca')][normalize-space()='Melissa López N.']")->length,
-                "{$rol}: marca de texto en el panel.");
+            // La marca es el logo (spec 034, D10): vacía, como imagen con nombre.
+            $this->assertSame(1, $xpath->query("//aside[@id='menu-principal']//*[contains(@class,'sidebar-marca')][normalize-space()=''][@role='img'][@aria-label='Melissa López N.']")->length,
+                "{$rol}: marca del panel como logo con nombre.");
             $this->assertSame(1, $xpath->query("//aside[@id='menu-principal']//button[contains(@class,'menu-cerrar')][@type='button'][@aria-label='Cerrar menú']")->length,
                 "{$rol}: botón «Cerrar menú» en el panel.");
 
@@ -208,9 +211,15 @@ class MovilPacienteTest extends TestCase
             }
         }
 
-        // Las dos reglas globales van antes de la media query, para que las de dentro ganen por orden.
-        $css = file_get_contents(public_path('css/movil.css'));
-        $this->assertLessThan(strpos($css, '@media'), strpos($css, '.sidebar-marca'), 'Las reglas globales, al principio.');
+        // Todas las reglas globales van antes de la media query, para que las de dentro, con la misma
+        // especificidad, ganen por orden (033 A40; spec 034 A46).
+        $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents(public_path('css/movil.css')));
+        $media = strpos($css, '@media');
+        foreach ($this->reglasCss('css/movil.css') as [$selectores, , $condiciones]) {
+            if ($condiciones === []) {
+                $this->assertLessThan($media, strpos($css, explode(',', $selectores)[0]), "{$selectores}: antes de la media query.");
+            }
+        }
     }
 
     public function test_los_controles_tienen_toque_minimo(): void
@@ -234,13 +243,31 @@ class MovilPacienteTest extends TestCase
 
     public function test_los_textos_largos_parten_de_linea(): void
     {
-        // anywhere y no break-word: una palabra sin espacios también reduce el ancho mínimo de un hijo
-        // de fila o rejilla flexible (/review 033 R1).
-        $this->assertDeclara('.content', 'overflow-wrap: anywhere');
-        // Las tablas conservan break-word: con anywhere sus celdas se estrechan y parten letra a letra.
-        $this->assertDeclara('.content table', 'overflow-wrap: break-word');
+        // Spec 034 (D8): break-word en el contenido, que no parte letra a letra las palabras que caben,
+        // y anywhere solo donde un hijo de fila o rejilla flexible muestra datos (/review 033 R1).
+        $this->assertDeclara('.content', 'overflow-wrap: break-word');
+        $this->assertSame('', $this->movil('.content table'), 'Sin regla .content table (033 T069).');
         $this->assertDeclara('.user-name', 'white-space: normal');
-        $this->assertDeclara('.user-name', 'overflow-wrap: anywhere');
+        $permitidos = ['.texto-partible', '.user-name', '.welcome-title', '.timeline-title', '.timeline-sub', '.resumen-cita dd'];
+        foreach ($permitidos as $selector) {
+            $this->assertDeclara($selector, 'overflow-wrap: anywhere');
+        }
+        foreach ($this->reglasCss('css/movil.css') as [$selectores, $cuerpo]) {
+            if (preg_match('/overflow-wrap\s*:\s*anywhere/', $cuerpo)) {
+                foreach (explode(',', $selectores) as $selector) {
+                    $this->assertContains(preg_replace('/\s+/', ' ', trim($selector)), $permitidos, "{$selector}: anywhere solo en los elementos de D8.");
+                }
+            }
+        }
+
+        // Las vistas del paciente marcan con texto-partible sus filas y rejillas de datos (033/R1, 034 A56).
+        $cita = $this->citaFuturaDelPaciente();
+        $partible = "contains(concat(' ', normalize-space(@class), ' '), ' texto-partible ')";
+        $xpath = $this->xpath($this->actingAs($this->paciente1)->get("/cliente/citas/{$cita}")->assertOk()->getContent());
+        $this->assertSame(1, $xpath->query("//div[{$partible}][.//*[normalize-space()='Dentista']]")->length, 'Detalle: la rejilla de datos lleva texto-partible.');
+        $this->assertSame(1, $xpath->query("//div[{$partible}][contains(., 'Consulta dental')][not(.//*[normalize-space()='Dentista'])]")->length, 'Detalle: el texto de la cabecera lleva texto-partible (A56).');
+        $xpath = $this->xpath($this->actingAs($this->paciente1)->get('/cliente')->assertOk()->getContent());
+        $this->assertSame(1, $xpath->query("//div[{$partible}][.//*[contains(@class,'proxima-acciones')]]")->length, 'Panel: la tarjeta de la próxima cita lleva texto-partible.');
     }
 
     public function test_el_menu_se_recorre_con_poca_altura(): void
@@ -276,7 +303,9 @@ class MovilPacienteTest extends TestCase
         $this->assertSame([
             '.menu-btn, .menu-cerrar, .menu-velo, .sidebar-marca' => 'display: none;',
             '.main, .grid-auto > *, .grid-2 > *, .grid-3 > *' => 'min-width: 0;',
-        ], $globales, 'Fuera de la media query, solo ocultar lo nuevo y min-width: 0 (CA8).');
+            '.filtro-btn, .solo-movil' => 'display: none;',
+            '.filtro-panel' => 'display: contents;',
+        ], $globales, 'Fuera de la media query, solo las reglas previstas por la 033 y la 034 (CA8, 034 CA11).');
         $this->assertDeclara('html.menu-js .sidebar', 'transition: transform var(--duration-fast), visibility var(--duration-fast)', self::CON_MOVIMIENTO);
     }
 
@@ -306,7 +335,6 @@ class MovilPacienteTest extends TestCase
             ['.nav-item', '--text', '--white'],
             ['.nav-item.active', '--p600', '--p100'],
             ['.nav-label', '--p600', '--white'],
-            ['.sidebar-marca', '--p600', '--white'],
             ['.btn-logout:hover', '--p600', '--p100'],
             ['.menu-btn', '--p600', '--white'],
             ['.menu-cerrar', '--p600', '--white'],
@@ -316,6 +344,9 @@ class MovilPacienteTest extends TestCase
             $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens[$color], $tokens[$fondo]), "{$selector}: {$color} sobre {$fondo}.");
         }
         $this->assertDeclara('.sidebar', 'background: var(--white)');
+        // La marca es el logo pintado con --p600 (spec 034, D10): gráfico, ≥ 3:1 sobre el panel (A64).
+        $this->assertDeclara('.sidebar-marca', 'background: var(--p600)');
+        $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--p600'], $tokens['--white']), 'Logo sobre el panel.');
         $this->assertDeclara('.nav-item.active', 'background: var(--p100)');
         $this->assertDeclara('.btn-logout:hover', 'background: var(--p100)');
 
@@ -337,13 +368,16 @@ class MovilPacienteTest extends TestCase
             $this->assertDeclara("{$boton} svg", 'width: var(--icon-md)');
             $this->assertDeclara("{$boton} svg", 'height: var(--icon-md)');
         }
-        $this->assertDeclara('.sidebar-marca', 'color: var(--p600)');
-        $this->assertDeclara('.sidebar-marca', 'font-size: var(--text-marca)');
-        $this->assertDeclara('.sidebar-marca', 'font-weight: var(--weight-strong)');
+        // Logo con máscara en lugar de la marca de texto (spec 034, D10).
+        $this->assertDeclara('.sidebar-marca', 'width: var(--logo-max-w)');
+        $this->assertDeclara('.sidebar-marca', 'height: var(--logo-movil-h)');
+        $this->assertDeclara('.sidebar-marca', 'mask: url("../images/logo-icon.png") left center / contain no-repeat');
+        $this->assertDeclara('.sidebar-marca', '-webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat');
+        $this->assertStringNotContainsString('font-size', $this->movil('.sidebar-marca'), 'La marca ya no es texto.');
         $this->assertDeclara('.sidebar-logo', 'justify-content: space-between');
         $this->assertDeclara('.sidebar-logo', 'min-height: var(--topbar-h)');
         $this->assertDeclara('.sidebar-logo', 'padding: var(--space-3) var(--space-5)');
-        // El logo con mix-blend-mode: screen desaparece sobre blanco: en el móvil, la marca de texto (A9).
+        // El logo con mix-blend-mode: screen desaparece sobre blanco: en el móvil, la marca con máscara (A9, 034 D10).
         $this->assertDeclara('.sidebar-logo img', 'display: none');
     }
 
@@ -431,6 +465,13 @@ class MovilPacienteTest extends TestCase
         foreach (['esMovil()', 'document.activeElement', 'boton.focus()'] as $pieza) {
             $this->assertStringContainsString($pieza, $resize[1] ?? '', "El manejador de resize usa {$pieza} al cambiar de modo.");
         }
+        // 033/R21 (spec 034, CA9): el último foco se olvida si se pierde sin destino (clic en una zona
+        // sin foco) y el elemento sigue visible; si se oculta por el cambio de modo, se conserva.
+        $this->assertMatchesRegularExpression(
+            "/addEventListener\\(\\s*'focusout',\\s*\\(evento\\)\\s*=>\\s*\\{[^}]*relatedTarget[^}]*getClientRects\\(\\)\\.length[^}]*ultimoFoco = null/s",
+            $js,
+            'Un focusout olvida ultimoFoco cuando el foco se pierde sin relatedTarget y el elemento sigue visible.'
+        );
         foreach (['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'eval(', 'new Function', 'max-width'] as $prohibido) {
             $this->assertStringNotContainsString($prohibido, $js, "menu.js no usa {$prohibido}.");
         }
@@ -586,14 +627,16 @@ class MovilPacienteTest extends TestCase
         return $m[0];
     }
 
-    /** Bloque `/* Spec 033 *\/` de app.css, del comentario al final del archivo. */
+    /** Bloque `/* Spec 033 *\/` de app.css, del comentario a `/* Fin spec 033 *\/` (spec 034, A26). */
     private function bloque033(): string
     {
         $css = file_get_contents(public_path('css/app.css'));
         $inicio = strpos($css, '/* Spec 033');
         $this->assertNotFalse($inicio, 'app.css debe tener el bloque /* Spec 033 */.');
+        $fin = strpos($css, '/* Fin spec 033 */', $inicio);
+        $this->assertNotFalse($fin, 'app.css debe cerrar el bloque con /* Fin spec 033 */.');
 
-        return substr($css, $inicio);
+        return substr($css, $inicio, $fin - $inicio);
     }
 
     /** Cita agendada de P1 que empieza dentro de más de 24 h, con el reloj fijado. */
