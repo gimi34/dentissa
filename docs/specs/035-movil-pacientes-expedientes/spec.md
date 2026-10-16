@@ -169,8 +169,8 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-16 | diseño | ¿Qué composición para las fichas en el móvil? (`/design-spec 035`, AI-DD 1.13.0) | A · «Hoja de lectura» con el perfil del paciente de C · «Perfil compacto» ([design.md](design.md)) | usuario |
 | 2026-10-16 | implícita | ¿Qué es «móvil»? | Por debajo de 900 px, como la 033 y la 034 | `docs/specs/034-movil-personal/spec.md` |
 | 2026-10-16 | implícita | ¿Se corrige el reparto de palabras largas (034/R8) en estas pantallas? | Sí, en las pantallas incluidas (CA8); en el resto, con sus specs | `docs/roadmap.md` (034/R8) |
-| 2026-10-16 | supuesto | ¿En qué orden van los bloques de la ficha del paciente en el móvil? | Perfil con sus acciones, datos de contacto y médicos, expedientes e historial de citas: el de lectura del escritorio (columna izquierda y luego la derecha) | agente (revisar) |
-| 2026-10-16 | supuesto | ¿En qué orden va la ficha del expediente? | Primero el contenido del expediente y después su columna lateral (próxima visita, información y acciones) | agente (revisar) |
+| 2026-10-16 | supuesto | ¿En qué orden van los bloques de la ficha del paciente en el móvil? | Perfil con sus acciones, datos de contacto y médicos, expedientes e historial de citas: el de lectura del escritorio (columna izquierda y luego la derecha) | agente; confirmado por el usuario al aprobar la spec (2026-10-16, /analyze A14) |
+| 2026-10-16 | supuesto | ¿En qué orden va la ficha del expediente? | Primero el contenido del expediente y después su columna lateral (próxima visita, información y acciones) | agente; confirmado por el usuario al aprobar la spec (2026-10-16, /analyze A14) |
 | 2026-10-16 | supuesto | ¿Los anchos de medida? | 320, 390, 844 × 390 y 1440 px, también sin JavaScript, como en la 034 | `docs/specs/034-movil-personal/spec.md` (RNF) |
 | 2026-10-16 | implícita | ¿Qué rol ve cada pantalla? | El que la ve hoy (rutas por rol del inventario de vistas de `docs/design/system.md`); la spec no cambia permisos | `docs/design/system.md` (Inventario de vistas) |
 

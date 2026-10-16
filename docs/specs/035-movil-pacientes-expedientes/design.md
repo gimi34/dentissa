@@ -96,7 +96,10 @@ con las iniciales y el nombre y, debajo, los datos de contacto en filas etiqueta
 |---|---|---|---|---|
 | `--ficha-lateral-w` | fijo | 320px | — | Ancho de la columna del perfil de la ficha del paciente en el escritorio (el de hoy, D1 del plan) |
 | `--expediente-lateral-w` | fijo | 300px | — | Ancho de la columna lateral de la ficha del expediente en el escritorio (D2 del plan) |
-| `--perfil-avatar-movil` | corte 900 px | 48px | (64 px del escritorio, sin cambios) | Iniciales del perfil compacto en el móvil |
+| `--perfil-avatar-w` / `--perfil-avatar-movil` | corte 900 px | 48px | 64px (el de hoy) | Tamaño de las iniciales del perfil |
+| `--perfil-iniciales-text` / `--perfil-iniciales-movil` | corte 900 px | 17px | 22px (el de hoy) | Letra de las iniciales (`opcion-c.html`) |
+| `--perfil-nombre-text` / `--perfil-nombre-movil` | corte 900 px | 16px | 20px (el de hoy) | Letra del nombre del perfil (`opcion-c.html`) |
+| `--weight-bold` | fijo | 600 | — | Peso de las iniciales (el de hoy, sin token) |
 | Menú del móvil: «Menú» y «Cerrar menú» solo con el icono | corte 900 px | sin borde ni fondo, 44 × 44, foco del sistema | — (barra lateral) | CA11 |
 | Componente «Ficha en una columna» | corte 900 px | una columna en el orden del HTML | la rejilla de hoy | CA1, CA4 |
 | Componente «Perfil compacto del paciente» | corte 900 px | fila de identidad y filas etiqueta / valor | la tarjeta centrada de hoy | Elección del usuario (C) |
@@ -137,6 +140,7 @@ Ninguno: la spec no añade animaciones y el menú conserva las suyas (033), con 
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
 |---|---|---|---|---|
 | 2026-10-16 | diseño | ¿Qué composición para las fichas en el móvil? | A · «Hoja de lectura», con el perfil del paciente de C · «Perfil compacto»; B (índice de anclas) descartada | usuario |
-| 2026-10-16 | supuesto | ¿Qué incluye «el perfil del cliente de la opción C»? | La tarjeta de identidad: fila de iniciales y nombre, edad y tipo de sangre, y los datos de contacto en filas etiqueta / valor, con sus acciones. La información médica y el contacto de emergencia quedan como en A | agente (revisar) |
+| 2026-10-16 | supuesto | ¿Qué incluye «el perfil del cliente de la opción C»? | La tarjeta de identidad: fila de iniciales y nombre, edad y tipo de sangre, y los datos de contacto en filas etiqueta / valor, con sus acciones. La información médica y el contacto de emergencia quedan como en A | agente; confirmado por el usuario al aprobar el diseño (2026-10-16, /analyze A14) |
+| 2026-10-16 | refinado | Las iniciales y el nombre del perfil, sin token y con otro tamaño que la maqueta (/analyze A1, A20) | Tokens para su tamaño y peso; en el móvil, 17 px y 16 px como `opcion-c.html`; el escritorio, como hoy | usuario |
 | 2026-10-16 | implícita | ¿Composición propia para la lista de expedientes y los formularios? | No: tarjetas de lista y una columna de la 034, y botones de formulario a todo el ancho (plan D3, D5) | `docs/specs/035-movil-pacientes-expedientes/plan.md` |
 | 2026-10-16 | implícita | ¿Íconos o tarjeta para compartir? | No aplica: la spec no toca rutas públicas ni la marca en el navegador (`docs/seo.md`: solo `/registro`) | `docs/seo.md` |
