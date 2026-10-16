@@ -587,3 +587,17 @@ tr:hover td { background: var(--p50); }
     outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
 }
+/* Detalle de cita del personal (D7): mismo aspecto que la rejilla de dos columnas de antes, con el HTML
+   en el orden de la spec. La columna lateral ocupa todas las filas; márgenes en lugar de row-gap y una
+   última fila flexible que absorbe la diferencia de alto, con o sin control interno (A9). */
+.detalle-cita {
+    display: grid;
+    grid-template-columns: 1fr var(--detalle-lateral-w);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: var(--space-7);
+    align-items: start;
+}
+.detalle-datos, .detalle-control, .detalle-historial { grid-column: 1; }
+.detalle-lateral { grid-column: 2; grid-row: 1 / -1; display: flex; flex-direction: column; gap: var(--space-detalle); }
+.detalle-control, .detalle-historial { margin-top: var(--space-detalle); }
+.detalle-datos-rejilla { grid-template-columns: repeat(3, 1fr); }

@@ -231,4 +231,10 @@
     /* Con JS, «Filtros» se muestra y el panel se pliega mientras el formulario no esté abierto. */
     html.filtros-js .filtro-btn { display: inline-flex; }
     html.filtros-js .filtro-citas:not(.abierto) .filtro-panel { display: none; }
+
+    /* ── Spec 034: detalle de cita del personal en una columna, en el orden del HTML (D7) ── */
+    /* align-items: stretch anula el start de la rejilla del escritorio: cada bloque a todo el ancho. */
+    .detalle-cita { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-detalle); }
+    .detalle-control, .detalle-historial { margin-top: 0; }
+    .detalle-datos-rejilla { grid-template-columns: minmax(0, 1fr); }
 }

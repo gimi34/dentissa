@@ -489,6 +489,7 @@ class MovilPersonalTest extends TestCase
         // Detalle en una columna (D7, A54).
         $this->assertDeclara('.detalle-cita', 'display: flex');
         $this->assertDeclara('.detalle-cita', 'flex-direction: column');
+        $this->assertDeclara('.detalle-cita', 'align-items: stretch');
         $this->assertDeclara('.detalle-cita', 'gap: var(--space-detalle)');
         $this->assertDeclara('.detalle-control', 'margin-top: 0');
         $this->assertDeclara('.detalle-historial', 'margin-top: 0');
