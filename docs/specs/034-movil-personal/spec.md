@@ -1,7 +1,7 @@
 ---
 id: 034
 slug: movil-personal
-status: approved
+status: implemented
 created: 2026-10-12
 extends: [033]
 ---
