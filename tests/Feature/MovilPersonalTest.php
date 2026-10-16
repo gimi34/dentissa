@@ -486,6 +486,8 @@ class MovilPersonalTest extends TestCase
             'grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr)', 'overflow-wrap: break-word'] as $d) {
             $this->assertDeclara('.tabla-tarjetas td', $d);
         }
+        // /review R1: las tarjetas alinean al inicio aunque la celda se centre en el escritorio.
+        $this->assertDeclara('.tabla-tarjetas td', 'text-align: start');
         foreach (['content: attr(data-label)', 'font-size: var(--text-small)', 'font-weight: var(--weight-strong)',
             'text-transform: uppercase', 'color: var(--p600)'] as $d) {
             $this->assertDeclara('.tabla-tarjetas td::before', $d);
@@ -522,6 +524,9 @@ class MovilPersonalTest extends TestCase
         $this->assertDeclara('.tabla-tarjetas tr:hover td', 'background: transparent');
 
         $this->assertDeclara('.solo-escritorio', 'display: none');
+        // /review R7: dentro de la tarjeta hace falta el selector compuesto, porque `.tabla-tarjetas td`
+        // (display: grid) gana a `.solo-escritorio` y volvería a mostrar las columnas del escritorio.
+        $this->assertDeclara('.tabla-tarjetas .solo-escritorio', 'display: none');
         $this->assertDeclara('.solo-movil', 'display: inline');
         $this->assertDeclara('.stats-grid', 'grid-template-columns: repeat(2, minmax(0, 1fr))');
     }
@@ -609,6 +614,10 @@ class MovilPersonalTest extends TestCase
             '.filtro-estado' => ['min-width: var(--filtro-estado-min)'],
             '.filtro-atajos' => ['margin-left: auto', 'display: flex', 'gap: var(--space-2)', 'order: 1'],
             '.filtro-citas .field' => ['border-color: var(--border-control)'],
+            // /review R6: gana al `.field:focus` de citas.css (--p300, ≈ 2,2:1) con el foco del ratón (A36).
+            '.filtro-citas .field:focus' => ['border-color: var(--border-control)', 'box-shadow: none'],
+            // /review R1: el centrado del escritorio de servicios, fuera del style="" de las celdas.
+            '.celda-centrada' => ['text-align: center'],
             '.filtro-btn' => ['border-color: var(--border-control)'],
             '.filtro-btn[aria-expanded="true"]' => ['background: var(--p100)', 'color: var(--p600)'],
             '.filtro-contador' => ['background: var(--p500)', 'color: var(--white)', 'border-radius: var(--radius-lg)', 'padding: 0 var(--space-2)', 'font-size: var(--text-small)'],
@@ -802,8 +811,11 @@ class MovilPersonalTest extends TestCase
         $css = file_get_contents(public_path('css/app.css'));
         $inicio = strpos($css, '/* Spec 034');
         $this->assertNotFalse($inicio, 'app.css debe tener el bloque /* Spec 034 */.');
+        // /review R10: el bloque termina en su cierre, para que las reglas de specs posteriores no entren.
+        $fin = strpos($css, '/* Fin spec 034 */', $inicio);
+        $this->assertNotFalse($fin, 'app.css debe cerrar el bloque con /* Fin spec 034 */.');
 
-        return substr($css, $inicio);
+        return substr($css, $inicio, $fin - $inicio);
     }
 
     /** Declaraciones de maquetación que D10b saca de los style="" del filtro (A33). */
