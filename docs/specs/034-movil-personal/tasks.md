@@ -128,6 +128,18 @@ Sobre el desglose (el análisis completo está en `plan.md`):
   - nota: 64 capturas rehechas el 2026-10-15 con la base de prueba: las 13 pantallas incluidas del personal a 320, 390 y 1440, las 7 del paciente (logo y textos de la 034) y el menú abierto de los cuatro roles a 390; filas nuevas y párrafo «Móvil del personal (spec 034)» en `system.md`. A 1024 y 1440, iguales a la línea base de v0.7.0 de la misma sesión (`--medir` de T032, D13). A72: CA11 se comprueba en reposo; el foco con tokens de lo que la 034 toca es una diferencia admitida en el escritorio (decisión del usuario, 2026-10-13), y el foco visible cubre también el enlace de la dentista y los enlaces de las tarjetas. `system.html` sigue sin capturas a 320, como tras la 033.
   - nota: verificación manual OK 2026-10-15 (usuario): capturas a 320 y 390 contra `design/opcion-a.html` y sus diferencias aceptadas.
 
+## Correcciones de /review (ronda 1)
+- [ ] T042 Añadir a `MovilPersonalTest` los tests de las vistas que fallan hoy: en servicios, ninguna `<td>` de la tabla lleva `text-align` en su `style=""` y las cinco llevan `celda-centrada` (R1); en la lista de citas, dentro de `.filtro-buscar`, un `<button type="submit">` con el texto «Buscar» y la clase `solo-movil` (R2); el contador cuenta las fechas como un solo filtro, aplicado si `fecha_desde` o `fecha_hasta` vienen rellenos: sin parámetros, ninguno; `fecha_desde` = hoy sin `fecha_hasta`, «1 aplicado»; «Esta semana» un lunes y un miércoles (con `Carbon::setTestNow`), «1 aplicado»; fechas y estado, «2 aplicados» (R3); en el panel de la dentista, el `<svg>` del enlace `btn-icono` lleva `aria-hidden="true"` (R4); y en el detalle de cita, `#estado` va antes que `#acciones` en el documento (R11, con control positivo) — tests/Feature/MovilPersonalTest.php — hecho cuando: los tests de R1–R4 fallan hoy por la razón esperada (anotado), el de R11 pasa hoy y falla con el orden invertido (control positivo, deshecho), y los demás de `MovilPersonalTest` siguen en verde — cubre: CA2, CA4, CA5, CA6 — depende: T040
+  - nota: añadida por /review: R2, R3, R4, R11 (y la parte de marcado de R1)
+- [ ] T043 Añadir a `MovilPersonalTest` los tests de estilos: `.celda-centrada` con `text-align: center` en el bloque 034 de `app.css`, fuera de toda media query, y `.tabla-tarjetas td` con `text-align: start` en `movil.css`, dentro de la media query (R1); `.filtro-citas .field:focus` con `border-color: var(--border-control)` y `box-shadow: none` en el bloque 034 (R6); `assertDeclara('.tabla-tarjetas .solo-escritorio', 'display: none')` (R7, con control positivo); y `bloque034()` cortado en `/* Fin spec 034 */`, que debe existir en `app.css` (R10) — tests/Feature/MovilPersonalTest.php — hecho cuando: los de R1, R6 y R10 fallan hoy por la razón esperada (anotado), el de R7 pasa hoy y falla sin `.tabla-tarjetas .solo-escritorio` (control positivo, deshecho), y los demás siguen en verde — cubre: CA3, CA4, CA5, CA11 — depende: T042
+  - nota: añadida por /review: R6, R7, R10 (y la parte de estilos de R1)
+- [ ] T044 Corregir las vistas según T042: en servicios, el `text-align:center` de las cinco `<td>` pasa a la clase `celda-centrada` (las `<th>`, ocultas en el móvil, se quedan); en la lista de citas, botón `<button type="submit" class="btn btn-primary solo-movil">Buscar</button>` dentro de `.filtro-buscar`, tras el campo; el contador con las fechas como un solo filtro; y `aria-hidden="true"` en el `<svg>` del enlace de la agenda de la dentista — resources/views/servicios/index.blade.php, resources/views/citas/index.blade.php, resources/views/dashboard/dentista.blade.php — hecho cuando: los tests de T042 pasan dos veces y `ReprogramarCitaVistasTest`, `EstadosCitaVistasTest` y `MovilPacienteTest` siguen en verde · verificación manual: servicios a 390 con las tarjetas alineadas a la izquierda como pacientes, contra `design/opcion-a.html`; la lista de citas a 390 con «Buscar» visible junto al buscador y el panel plegado; y a 1440 las dos iguales que antes — cubre: CA2, CA4, CA5, CA11 — depende: T043
+  - nota: añadida por /review: R1, R2, R3, R4
+- [ ] T045 Corregir los estilos según T043: `.celda-centrada { text-align: center; }` y `.filtro-citas .field:focus { border-color: var(--border-control); box-shadow: none; }` en el bloque 034 de `app.css`, seguidos de `/* Fin spec 034 */`; `.tabla-tarjetas td { text-align: start; }` en la media query de `movil.css`; y el comentario de `.sidebar-marca` en el layout («logo con máscara (spec 034, D10)» en lugar de «marca de texto») — public/css/app.css, public/css/movil.css, resources/views/layouts/app.blade.php — hecho cuando: los tests de T043 pasan dos veces y `test_el_bloque_034_de_app_css_reproduce_los_estilos_con_tokens`, `test_los_pares_nuevos_cumplen_aa` y `MovilPacienteTest` siguen en verde · verificación manual: al enfocar con el ratón «Desde» y «Estado» del filtro, el borde sigue siendo el de `--border-control`, a 390 y 1440 — cubre: CA4, CA5, CA10, CA11 — depende: T044
+  - nota: añadida por /review: R1, R5, R6, R10
+- [ ] T046 Repetir la verificación final de la ronda: `php artisan test` completo en verde (306 más los nuevos); `pint --test` en `MovilPersonalTest`; `node docs/design/capturar.mjs --medir` con código 0 y la línea base de v0.7.0 de la misma sesión; rehacer con `capturar.mjs` las capturas de `servicios-index` y `citas-index-{admin,dentista,asistente}` a 320, 390 y 1440; gitleaks sobre `5a802e6..HEAD` sin fugas; `composer audit` y `npm audit` sin avisos nuevos; y borrar la base `dentissa_capturas`, sus dos servidores, el volumen `dentissa_pw_node`, la copia `git worktree` de v0.7.0 con su `.env` y la carpeta temporal — docs/design/capturas/ (generado por node capturar.mjs) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA2, CA3, CA4, CA5, CA6, CA8, CA10, CA11 — depende: T045
+  - nota: añadida por /review: verificación de R1–R7, R10 y R11 (`--medir` obligatorio al tocar `movil.css` y el layout, AGENTS.md)
+
 ## Integración y documentación
 - [x] T040 Hacer la verificación final: `php artisan test` completo con la línea base de T002 más los tests nuevos, todos en verde; `pint --test` en los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0 (todas las pantallas incluidas y las 7 del paciente de la 033, todos los anchos, 4 roles, sin JS); gitleaks sobre el rango de la spec sin fugas; `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; y la base `dentissa_capturas`, su servidor, el volumen de Playwright, la línea base del escritorio, la copia `git worktree` de v0.7.0 y su `.env` borrados — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10, CA11 — depende: T033
   - nota: 2026-10-15/16. `php artisan test`: 306 tests en verde (4988 aserciones; 287 de T002 más los nuevos), sin fallos. `pint --test` en los PHP tocados (`MovilPacienteTest`, `MovilPersonalTest`; el resto son vistas Blade): pasa. `--medir`: código 0, «medir: todo en orden» (T032, línea base de la misma sesión). gitleaks v8.21.2 sobre `5a802e6..HEAD` (29 commits): sin fugas. `composer audit --locked` sin avisos; `npm audit --audit-level=high` 0 vulnerabilidades; `trivy fs --severity HIGH,CRITICAL` solo el falso positivo conocido de `vendor/mockery/mockery/docs/requirements.txt` (fuera de git y de la imagen), igual que en la 033: sin avisos nuevos. Borrados la base `dentissa_capturas`, los contenedores `dentissa_capturas_app` y `dentissa_base_app`, el volumen `dentissa_pw_node`, la línea base y los datos temporales, y la copia `git worktree` de v0.7.0 con su `.env` (`git worktree list` solo muestra el repo). A72: CA11 se comprobó en reposo; el foco con tokens de lo que la 034 toca es una diferencia admitida en el escritorio (decisión del usuario, 2026-10-13); `/release` lo menciona en el CHANGELOG.
@@ -138,7 +150,7 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: no aplica: sin variables, entornos, pasos de deploy, logs, eventos de auditoría ni métricas nuevos.
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: `status: implemented`, CA1–CA11 marcados en la spec y fila 034 del README de specs.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -154,16 +166,16 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T010, T012, T015 | T020, T021, T024, T033 |
-| CA2 | T010, T012, T015 | T026, T028, T033, T034, T035 |
-| CA3 | T010, T015 | T029, T033 |
-| CA4 | T010, T015 | T030, T033 |
-| CA5 | T011, T012, T013, T015 | T027, T033, T034 |
-| CA6 | T011, T012, T015 | T031, T033 |
+| CA2 | T010, T012, T015, T042, T046 | T026, T028, T033, T034, T035, T044 |
+| CA3 | T010, T015, T043, T046 | T029, T033 |
+| CA4 | T010, T015, T042, T043, T046 | T030, T033, T044, T045 |
+| CA5 | T011, T012, T013, T015, T042, T043, T046 | T027, T033, T034, T044, T045 |
+| CA6 | T011, T012, T015, T042, T046 | T031, T033 |
 | CA7 | T010, T011, T012, T014, T015 | T025, T029, T031, T035, T036 |
-| CA8 | T010, T011, T012, T015, T040 | T024, T026, T027, T028, T029, T030, T031, T032, T034, T035, T037 |
+| CA8 | T010, T011, T012, T015, T040, T046 | T024, T026, T027, T028, T029, T030, T031, T032, T034, T035, T037 |
 | CA9 | T012, T014, T015 | T021, T022, T023, T033 |
-| CA10 | T012, T014, T015 | T020, T021, T022, T023, T033 |
-| CA11 | T012, T014, T015 | T021, T024, T026, T027, T028, T029, T030, T031, T033, T034, T035 |
+| CA10 | T012, T014, T015, T046 | T020, T021, T022, T023, T033, T045 |
+| CA11 | T012, T014, T015, T043, T046 | T044, T045, T021, T024, T026, T027, T028, T029, T030, T031, T033, T034, T035 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -172,23 +184,23 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | Sistema de diseño (`system.md`, `system.html`) | T001, T033 |
-| Estilos del móvil (`public/css/movil.css`) | T021, T027, T031, T035, T036 |
-| Estilos existentes (`public/css/app.css`) | T020, T031, T034 |
+| Estilos del móvil (`public/css/movil.css`) | T021, T027, T031, T035, T036, T045 |
+| Estilos existentes (`public/css/app.css`) | T020, T031, T034, T045 |
 | Script del filtro (`public/js/filtros.js`) | T027 |
 | Script del menú (`public/js/menu.js`) | T023 |
-| Layout (`layouts/app.blade.php`) | T022 |
-| Lista de citas del personal (`citas/index`) | T026, T027 |
+| Layout (`layouts/app.blade.php`) | T022, T045 |
+| Lista de citas del personal (`citas/index`) | T026, T027, T044 |
 | Detalle de cita del personal (`citas/show`) | T031, T036, T037 |
 | Pacientes (`pacientes/index`) | T029 |
-| Servicios (`servicios/index`) | T030 |
-| Paneles (`dashboard/admin`, `asistente`, `cliente`, `dentista`) | T024, T025, T028, T035 |
+| Servicios (`servicios/index`) | T030, T044 |
+| Paneles (`dashboard/admin`, `asistente`, `cliente`, `dentista`) | T024, T025, T028, T035, T044 |
 | Mis citas y detalle del paciente (`citas/cliente-index`, `cliente-show`) | T024, T025 |
-| Tests (`MovilPersonalTest`, `MovilPacienteTest`) | T010, T011, T012, T013, T014 |
-| Capturas y medidas (`capturar.mjs`) | T015, T033 |
+| Tests (`MovilPersonalTest`, `MovilPacienteTest`) | T010, T011, T012, T013, T014, T042, T043 |
+| Capturas y medidas (`capturar.mjs`) | T015, T033, T046 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
-| WCAG 2.1 AA (1.4.10, 1.3.1, 1.4.11, 2.4.7, 4.1.2, 1.4.1) | T010, T011, T012, T014, T015, T040 · WebKit en T024 · verificación manual con NVDA en T023, T024 y T027 · VoiceOver o TalkBack en T097 |
+| WCAG 2.1 AA (1.4.10, 1.3.1, 1.4.11, 2.4.7, 4.1.2, 1.4.1) | T010, T011, T012, T014, T015, T040, T042, T043, T046 · WebKit en T024 · verificación manual con NVDA en T023, T024 y T027 · VoiceOver o TalkBack en T097 |
 | Toque ≥ 44 × 44 px | T015, T040 |
 | Medido a 320, 390, 844 × 390 y 1440, también sin JS | T015, T040 |
 | Escritorio sin cambios (salvo el borde del filtro) contra capturas de antes | T015, T024, T026, T027, T028, T031, T033, T035 |
