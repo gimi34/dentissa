@@ -352,6 +352,70 @@ class MovilPersonalTest extends TestCase
         }
     }
 
+    /** /review R3: las fechas cuentan como un solo filtro, aplicado si «Desde» o «Hasta» vienen rellenos. */
+    public function test_el_contador_cuenta_las_fechas_como_un_filtro(): void
+    {
+        // Lunes 12 y miércoles 14 de octubre de 2026: «Esta semana» cuenta igual cualquier día.
+        foreach (['2026-10-12 08:00:00', '2026-10-14 08:00:00'] as $dia) {
+            $this->travelTo(Carbon::parse($dia, 'UTC'));
+            $semana = '/admin/citas?fecha_desde='.now()->startOfWeek()->format('Y-m-d').'&fecha_hasta='.now()->endOfWeek()->format('Y-m-d');
+            $casos = [
+                '/admin/citas' => 0,
+                '/admin/citas?fecha_desde='.now()->format('Y-m-d') => 1,
+                '/admin/citas?fecha_desde='.now()->format('Y-m-d').'&fecha_hasta=' => 1,
+                $semana => 1,
+                $semana.'&estado=agendada' => 2,
+            ];
+            foreach ($casos as $url => $aplicados) {
+                $xpath = $this->xpath($this->actingAs($this->admin)->get($url)->assertOk()->getContent());
+                $boton = $xpath->query("//button[contains(concat(' ', normalize-space(@class), ' '), ' filtro-btn ')]")->item(0);
+                $this->assertInstanceOf(DOMElement::class, $boton, "{$dia} {$url}: hay botón «Filtros».");
+                $contador = $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' filtro-contador ')]", $boton);
+                $this->assertSame($aplicados === 0 ? '' : (string) $aplicados, $contador->length ? trim($contador->item(0)->textContent) : '',
+                    "{$dia} {$url}: cuenta {$aplicados}.");
+            }
+        }
+    }
+
+    /** /review R2: con el panel plegado en el móvil, el buscador tiene su propio botón para enviarse. */
+    public function test_el_buscador_tiene_su_boton_en_el_movil(): void
+    {
+        foreach (['admin' => $this->admin, 'asistente' => $this->asistente, 'dentista' => $this->dentista1] as $rol => $usuario) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get("/{$rol}/citas")->assertOk()->getContent());
+            $botones = $xpath->query("//form[contains(@class,'filtro-citas')]//*[contains(concat(' ', normalize-space(@class), ' '), ' filtro-buscar ')]//button[@type='submit']");
+            $this->assertSame(1, $botones->length, "{$rol}: un botón de enviar dentro de .filtro-buscar.");
+            $boton = $botones->item(0);
+            $this->assertSame('Buscar', trim($boton->textContent), "{$rol}: el botón dice «Buscar».");
+            $this->assertContains('solo-movil', $this->clases($boton), "{$rol}: solo en el móvil (el escritorio no cambia, CA11).");
+            $this->assertSame(1, $xpath->query("//input[@name='buscar']/following-sibling::button[@type='submit']", $boton->parentNode)->length, "{$rol}: va detrás del campo.");
+        }
+    }
+
+    /** /review R1: el centrado del escritorio de servicios va en una clase, no en el style="" de las celdas. */
+    public function test_las_celdas_de_servicios_se_centran_con_clase(): void
+    {
+        $xpath = $this->xpath($this->actingAs($this->admin)->get('/admin/servicios')->assertOk()->getContent());
+        $celdas = $xpath->query('//table/tbody/tr[1]/td');
+        $this->assertGreaterThan(5, $celdas->length, 'La fila del servicio tiene sus celdas.');
+        $centradas = 0;
+        foreach ($celdas as $td) {
+            $this->assertStringNotContainsString('text-align', $td->getAttribute('style'), "«{$td->getAttribute('data-label')}» sin text-align en línea.");
+            $centradas += in_array('celda-centrada', $this->clases($td), true) ? 1 : 0;
+        }
+        $this->assertSame(5, $centradas, 'Las cinco celdas de datos llevan celda-centrada.');
+    }
+
+    /** /review R4: el icono del enlace de la agenda de la dentista es decorativo, como los demás de la spec. */
+    public function test_el_icono_de_la_agenda_de_la_dentista_es_decorativo(): void
+    {
+        $xpath = $this->xpath($this->actingAs($this->dentista1)->get('/dentista')->assertOk()->getContent());
+        $iconos = $xpath->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' btn-icono ')]/*[local-name()='svg']");
+        $this->assertGreaterThan(0, $iconos->length, 'El enlace «Ver detalle» tiene su icono.');
+        foreach ($iconos as $svg) {
+            $this->assertSame('true', $svg->getAttribute('aria-hidden'), 'El svg lleva aria-hidden="true".');
+        }
+    }
+
     public function test_la_lista_de_citas_carga_filtros_js_en_head(): void
     {
         $html = $this->actingAs($this->admin)->get('/admin/citas')->assertOk()->getContent();
@@ -386,6 +450,8 @@ class MovilPersonalTest extends TestCase
             $this->assertSame(1, $xpath->query("{$lateral}//*[contains(@class,'formulario-accesible')]/*[@id='acciones']")->length, "{$rol}: .formulario-accesible > #acciones en el lateral.");
             $this->assertSame(1, $xpath->query("//*[contains(@class,'detalle-historial')]/descendant-or-self::*[contains(@class,'formulario-accesible')]/*[@id='historial']")->length, "{$rol}: .formulario-accesible > #historial en su bloque.");
             $this->assertSame($rol === 'admin' ? 1 : 0, $xpath->query("//*[contains(@class,'detalle-control')]/descendant-or-self::*[@id='control-interno']")->length, "{$rol}: #control-interno solo para el admin.");
+            // CA6 (/review R11): «Cambiar estado» va antes de las acciones en el documento.
+            $this->assertSame(1, $xpath->query("//*[@id='estado']/following::*[@id='acciones']")->length, "{$rol}: #estado antes que #acciones.");
 
             $rejilla = $xpath->query("//*[contains(@class,'detalle-datos')]//*[contains(concat(' ', normalize-space(@class), ' '), ' detalle-datos-rejilla ')]");
             $this->assertSame(1, $rejilla->length, "{$rol}: la rejilla de datos lleva .detalle-datos-rejilla.");
