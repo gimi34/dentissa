@@ -1,7 +1,8 @@
 ---
 id: 034
 slug: movil-personal
-status: implemented
+status: released
+released: v0.8.0 (2026-10-16)
 created: 2026-10-12
 extends: [033]
 ---
@@ -221,3 +222,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | CA1, CA2, CA9, RNF 1.3.1 y 1.4.11, supuesto del orden del detalle | /analyze 034 r1: A7, A8, A13, A14, A24, A32 (decisiones del usuario) |
 | 2026-10-13 | CA2 (hora del panel y línea de tiempo de la dentista), CA11 y RNF (borde del filtro), Seguridad (alcance de pacientes), Fuera de alcance (033/R14 en parte), fuente del punto de corte | /analyze 034 r2: A35, A36 (decisiones del usuario), A43, A47, A48, A53 |
 | 2026-10-13 | RNF 2.4.7 acotado y Fuera de alcance (textos del filtro por debajo de AA y foco de campos que no cambian) | /analyze 034 r3: A59, A60 (decisiones del usuario) |
+| 2026-10-16 | Liberada en v0.8.0 | /release |
