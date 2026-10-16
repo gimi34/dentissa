@@ -162,7 +162,8 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: /release 034 (2026-10-16): versión v0.8.0 (minor), decisión del usuario; la 031 pasa a v0.9.0. Sin staging (030): T095 no aplica y las comprobaciones en el móvil real (incluido VoiceOver o TalkBack, R22) van en T097. Integración (decisión del usuario): primero se fusiona `chore/cierre-033` en `main`, luego se trae `main` a esta rama; el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después, tag anotado `v0.8.0` sobre el merge commit, con confirmación. Puerta de seguridad (2026-10-16, sobre 32221e3): `composer audit --locked` sin avisos, `npm audit --audit-level=high` 0 vulnerabilidades, `trivy fs --severity HIGH,CRITICAL` solo el falso positivo de `vendor/mockery` (fuera de git y de la imagen); `trivy image` dentro de EX2 (vence 2026-10-31). Sin migraciones, dependencias ni flags.
   - No hay staging (030): las comprobaciones en un móvil real se hacen en producción, en T097.
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-10-15 22:51 (hora de México) para v0.8.0 («desplegar v0.8.0 a producción»); tag anotado `v0.8.0` sobre el merge `ea28c77` (PR #26), CI en verde confirmada por el usuario; antes se fusionó el cierre de la 033 (PR #25).
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - verificación manual: desde el móvil del usuario, en la dirección pública, «Mis citas» y el panel del paciente con sus botones a la vista; como personal, el panel, la lista de citas con el filtro plegado y desplegado, el detalle de una cita en una columna, pacientes y servicios, sin desplazamiento lateral ni elementos encimados; el botón «Menú» solo con icono y el logo en el menú.
   - Sin errores 500 en `laravel.log` ni respuestas 5xx en el log de nginx durante 15 minutos.
