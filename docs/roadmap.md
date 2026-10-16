@@ -83,10 +83,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     033); y revisar los elementos que a veces se salen de su sitio en el móvil (visto por el
     usuario en producción, sin pantalla concreta). Liberada en v0.8.0 (2026-10-16; atiende DS8
     **parcialmente**: paneles, citas, detalle de cita, pacientes y servicios del personal).
-    → Spec siguiente (decisión del usuario, 2026-10-16, tras verlo en producción): el resto de
-    pantallas del personal en el móvil, empezando por la ficha del paciente (`/admin/pacientes/{id}`:
-    hay que alejar la vista para verla entera y tiene botones descentrados), y las demás fichas,
-    formularios y expedientes; incluye 034/R8.
+    → Resto de pantallas del personal en el móvil (decisión del usuario, 2026-10-16, tras verlo en
+    producción), en tres specs por este orden: [035](specs/035-movil-pacientes-expedientes/spec.md)
+    pacientes y expedientes, empezando por la ficha del paciente (`/admin/pacientes/{id}`: hay que
+    alejar la vista para verla entera y tiene botones descentrados), con 034/R8 en esas pantallas;
+    036 formularios de agenda y servicios; y 037 administración (personal, usuarios, reportes y
+    doctores de la asistente).
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
   - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
