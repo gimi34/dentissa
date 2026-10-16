@@ -5,6 +5,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.13.0
+- Validador 1.12.0 y plantillas de plan, review y spec nuevas (sección «Descubribilidad», revisor de
+  SEO y brechas `SE`).
+- SEO técnico: `docs/seo.md` (solo `/registro` indexable) con sus brechas SE1–SE7, objetivo 7 en el
+  roadmap y principio P10 en la constitución (1.3.0).
+
 ## [0.8.0] - 2026-10-16
 
 ### Added

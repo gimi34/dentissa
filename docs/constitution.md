@@ -1,7 +1,7 @@
 ---
-version: 1.2.1
+version: 1.3.0
 ratified: 2026-09-28
-last_amended: 2026-10-03
+last_amended: 2026-10-16
 status: approved   # aprobada por el usuario el 2026-09-28
 ---
 
@@ -118,6 +118,22 @@ de valores literales queda pendiente (DS4).
 **Por qué:** mantiene la coherencia entre specs sin revisar cada pantalla a mano, y la app guarda
 datos de salud de pacientes que deben poder usarla (decisión del usuario, 2026-10-02).
 
+### P10. Las rutas indexables son descubribles
+**Regla:** cada ruta que [docs/seo.md](seo.md) declara indexable (hoy solo `/registro`) llega en el
+HTML del servidor con su contenido principal, sin depender de JavaScript; tiene `<title>` y
+`<meta name="description">` únicos entre rutas y una sola `<link rel="canonical">` absoluta
+construida desde `seo.site_url`; y obtiene **Lighthouse SEO ≥ 90** con como mucho **100 kB de
+JavaScript transferido** por ruta (valor propuesto en el upgrade a AI-DD 1.13.0; se ajusta con una
+enmienda PATCH). `noindex` solo en las rutas no indexables (inicio de sesión, 404, salud y todo lo
+que exige sesión) y nunca en una indexable de producción. El código anterior que no lo cumple no
+bloquea (sección "Código previo"): son las brechas `SE` de `docs/seo.md`.
+**Cómo se verifica:** test sobre el HTML que devuelve la ruta (título, descripción, canónica,
+`noindex`, sin depender de JS) en las specs que crean o cambian rutas públicas, con su sección
+«Descubribilidad» en el plan; Lighthouse sobre la build servida en local en `/review` de esas specs;
+`/release` comprueba en producción `robots.txt`, `sitemap.xml` y la ausencia de `noindex`.
+**Por qué:** el registro es la única puerta pública para los pacientes y debe encontrarse en los
+buscadores sin indexar lo privado (decisión del usuario, 2026-10-16).
+
 ## Restricciones
 - Proyecto académico en etapa MVP; todos los datos son ficticios y el repositorio es privado
   (confirmado por el usuario, 2026-09-28).
@@ -147,3 +163,4 @@ datos de salud de pacientes que deben poder usarla (decisión del usuario, 2026-
 | 1.1.0 | 2026-10-02 | Añade P9: la interfaz usa solo el sistema de diseño y cumple WCAG 2.1 AA en pantallas nuevas o modificadas | Upgrade a AI-DD 1.11.0, sistema de diseño extraído (decisión del usuario, 2026-10-02) |
 | 1.2.0 | 2026-10-02 | P2 distingue los cambios de comportamiento (test que falla antes) de los criterios que ya se cumplen (test de caracterización comprobado rompiendo el código) | Tercera excepción a P2 (specs 024, 025 y 027); pendiente del roadmap (decisión del usuario, 2026-10-02) |
 | 1.2.1 | 2026-10-03 | P2 aclara que los criterios que no describen comportamiento de la aplicación (no regresión, contenido de un diff, datos externos o comprobación manual) se verifican con el comando o la comprobación que declara el plan | Excepción repetida a P2 en las specs de dependencias (024 y 029) (decisión del usuario, 2026-10-03) |
+| 1.3.0 | 2026-10-16 | Añade P10: las rutas indexables son descubribles (HTML del servidor, título y descripción únicos, canónica absoluta, `noindex` solo en lo no indexable, Lighthouse SEO ≥ 90 y ≤ 100 kB de JS por ruta) | Upgrade a AI-DD 1.13.0 con SEO técnico: el usuario decide indexar `/registro` (decisión del usuario, 2026-10-16) |

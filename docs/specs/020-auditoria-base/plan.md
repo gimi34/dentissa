@@ -227,6 +227,9 @@ Casos de abuso de la spec → amenazas: CA2 → TM1, TM2; CA7 → TM4; CA9 → T
 | TM12 | solo valores con formato de identificador o fecha | `test_un_filtro_con_texto_libre_se_rechaza_y_no_se_registra`, `test_una_fecha_con_hora_o_zona_se_rechaza_sin_registrar`, `test_un_id_de_ruta_con_formato_invalido_no_se_guarda`, `test_el_detalle_rechaza_texto_libre` |
 | TM13 | fallos del almacén saneados | `test_un_fallo_del_almacen_no_deja_sql_ni_valores_en_el_log`, `test_el_log_de_fallo_solo_lleva_las_claves_previstas` |
 
+## Descubribilidad
+No aplica: la spec solo cambia rutas tras inicio de sesión; ninguna ruta indexable de `docs/seo.md` cambia (upgrade a AI-DD 1.13.0, decisión del usuario, 2026-10-16).
+
 ## Observabilidad
 - Logs nuevos (sin datos personales; `request_id` y `actor_id` llegan por el `Context`):
   - `auditoria.fallo` → `error` → exactamente `accion`, `critico` y `error` (clase corta y SQLSTATE), cuando no se puede escribir un evento → `RegistroAuditoriaTest::test_el_log_de_fallo_solo_lleva_las_claves_previstas`.
