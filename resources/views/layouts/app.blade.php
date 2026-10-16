@@ -17,7 +17,7 @@
 <aside class="sidebar" id="menu-principal" aria-label="Menú">
     <div class="sidebar-logo">
         <img src="{{ asset('images/logo-icon.png') }}" alt="Melissa López N.">
-        {{-- En el móvil el logo desaparece sobre el panel blanco: marca de texto (spec 033, A9). --}}
+        {{-- En el móvil la imagen desaparece sobre el panel blanco: el logo se pinta con una máscara (spec 033, A9; spec 034, D10). --}}
         <span class="sidebar-marca" role="img" aria-label="Melissa López N."></span>
         <button type="button" class="menu-cerrar" aria-label="Cerrar menú">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

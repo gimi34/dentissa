@@ -546,6 +546,8 @@ class MovilPersonalTest extends TestCase
         $this->assertDeclara('.filtro-citas', 'align-items: stretch');
         $this->assertDeclara('.filtro-buscar', 'flex: none');
         $this->assertDeclara('.filtro-buscar', 'min-width: 0');
+        // /review R2 (verificación manual): «Buscar» separado del campo con el hueco del filtro.
+        $this->assertDeclara('.filtro-buscar .btn', 'margin-top: var(--space-4)');
         foreach (['order: 0', 'margin-left: 0', 'flex-wrap: wrap', 'gap: var(--space-3)'] as $d) {
             $this->assertDeclara('.filtro-atajos', $d);
         }
