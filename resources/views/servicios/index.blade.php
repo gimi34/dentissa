@@ -49,30 +49,30 @@
             <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th class="celda-cab" style="width: 25%; text-align:center;">Nombre</th>
-                        <th class="solo-escritorio" style="width: 35%; text-align:center;">Descripción</th>
-                        <th class="solo-escritorio" style="width: 15%; text-align:center;">Categoría</th>
-                        <th style="width: 10%; text-align:center;">Duración</th>
-                        <th style="width: 5%; text-align:center;">Estado</th>
+                        <th class="celda-cab celda-centrada" style="width: 25%; text-align:center;">Nombre</th>
+                        <th class="solo-escritorio celda-centrada" style="width: 35%; text-align:center;">Descripción</th>
+                        <th class="solo-escritorio celda-centrada" style="width: 15%; text-align:center;">Categoría</th>
+                        <th class="celda-centrada" style="width: 10%; text-align:center;">Duración</th>
+                        <th class="celda-centrada" style="width: 5%; text-align:center;">Estado</th>
                         <th class="celda-acciones" style="width: 10%; text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($servicios as $servicio)
                     <tr>
-                        <td class="celda-cab" data-label="Nombre" style="text-align:center;">
+                        <td class="celda-cab celda-centrada" data-label="Nombre">
                             <div style="font-weight:500">{{ $servicio->nombre }}</div>
                         </td>
-                        <td class="solo-escritorio" data-label="Descripción" style="color:var(--text-muted); font-size:13px; text-align:center;">
+                        <td class="solo-escritorio celda-centrada" data-label="Descripción" style="color:var(--text-muted); font-size:13px;">
                             {{ $servicio->descripcion }}
                         </td>
-                        <td class="solo-escritorio" data-label="Categoría" style="text-align:center; font-weight:500;">
+                        <td class="solo-escritorio celda-centrada" data-label="Categoría" style="font-weight:500;">
                             {{ $servicio->categoria }}
                         </td>
-                        <td data-label="Duración" style="text-align:center; color:var(--text-muted); font-size:13px;">
+                        <td class="celda-centrada" data-label="Duración" style="color:var(--text-muted); font-size:13px;">
                             {{ $servicio->duracion_min }} min
                         </td>
-                        <td data-label="Estado" style="text-align:center;">
+                        <td class="celda-centrada" data-label="Estado">
                             @if($servicio->activo)
                                 <span style="color:var(--green); font-size:12px; font-weight:bold;">Activo</span>
                             @else

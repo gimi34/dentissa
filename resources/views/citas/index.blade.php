@@ -47,8 +47,7 @@
      En el escritorio se ven como antes: el panel no es una caja y los atajos van al final. --}}
 @php
     $aplicados = collect([
-        request()->filled('fecha_desde') && request('fecha_desde') !== now()->format('Y-m-d'),
-        request()->filled('fecha_hasta'),
+        request()->filled('fecha_desde') || request()->filled('fecha_hasta'),
         request()->filled('dentista_id'),
         request()->filled('estado'),
     ])->filter()->count();
@@ -60,6 +59,8 @@
             <label class="field-label" for="filtro-buscar">Buscar paciente / dentista</label>
             <input type="text" id="filtro-buscar" name="buscar" value="{{ request('buscar') }}"
                 placeholder="Nombre, teléfono..." class="field">
+            {{-- Con el panel plegado en el móvil, «Filtrar» no se ve: el buscador se envía con su botón (/review R2). --}}
+            <button type="submit" class="btn btn-primary solo-movil">Buscar</button>
         </div>
 
         {{-- Acceso rápido a semanas y botón del panel --}}
