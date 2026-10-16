@@ -145,6 +145,11 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Spec 020 tras la 033 (decisión del usuario, 2026-10-11): al reconstruirla sobre `main`, su
   enlace «Auditoría» del menú de admin sigue el patrón de la 033 (`.active` y `aria-current="page"`
   en la sección actual) y actualiza la lista de `MovilPacienteTest::test_el_menu_del_movil_tiene_las_mismas_secciones`.
+  Si se fusiona después de la 034 (plan de la 034, Rollout; A42, A63): el foco de los campos del
+  filtro de citas es el de la 034 (`.filtro-citas .field:focus-visible`, con tokens); el foco global
+  de `.field` que la 020 añade en `citas.css` queda para los demás campos, y `MovilPersonalTest`
+  sigue en verde. La sección Frontend de `architecture.md` y «Auditoría» en el menú se resuelven al
+  fusionar.
 - Mensajes de validación en inglés en las pantallas del paciente: al enviar vacíos agendar y el
   perfil salen «The fecha field is required.», «The hora field is required.» y «The nombre field is
   required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
@@ -303,6 +308,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Excepción P3 de la spec 026: el detalle de cita del personal recibe su Gate en la 014, y "Mis
   citas" y el detalle del paciente, `role:cliente` en la 015 (spec 026, D11; decisión del
   usuario, 2026-10-02).
+- La 014 tras la 034 (plan de la 034, Rollout; A42, A63): su cambio del filtro y del estado vacío de
+  `pacientes/index` se aplica sobre el marcado de tarjetas de la 034. Toda columna o celda nueva
+  lleva `data-label` igual al texto de su `<th>` y su clase de columna (`celda-cab`, `celda-acciones`,
+  `solo-escritorio`…); `MovilPersonalTest` falla si no.
 - Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
   una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
   usuario, 2026-10-02).
