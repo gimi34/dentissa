@@ -137,3 +137,8 @@ Ninguna.
 - DS6 propone un token `--touch-min`.
 - Tras liberar, crear la spec siguiente para el contenido de las pantallas del personal (resto de
   DS8).
+
+## Historial
+| Fecha | Cambio | Motivo |
+|---|---|---|
+| 2026-10-16 | Comportamiento modificado por 034 en v0.8.0 (tarjetas en «Mis citas» y el panel, 033/R20; botón «Menú» con icono y logo en el menú, 033/R9 y R21) | /release |

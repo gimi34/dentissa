@@ -162,11 +162,15 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
   - nota: /release 034 (2026-10-16): versión v0.8.0 (minor), decisión del usuario; la 031 pasa a v0.9.0. Sin staging (030): T095 no aplica y las comprobaciones en el móvil real (incluido VoiceOver o TalkBack, R22) van en T097. Integración (decisión del usuario): primero se fusiona `chore/cierre-033` en `main`, luego se trae `main` a esta rama; el usuario sube la rama y fusiona su PR con el CI en verde (merge commit); después, tag anotado `v0.8.0` sobre el merge commit, con confirmación. Puerta de seguridad (2026-10-16, sobre 32221e3): `composer audit --locked` sin avisos, `npm audit --audit-level=high` 0 vulnerabilidades, `trivy fs --severity HIGH,CRITICAL` solo el falso positivo de `vendor/mockery` (fuera de git y de la imagen); `trivy image` dentro de EX2 (vence 2026-10-31). Sin migraciones, dependencias ni flags.
   - No hay staging (030): las comprobaciones en un móvil real se hacen en producción, en T097.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-10-15 22:51 (hora de México) para v0.8.0 («desplegar v0.8.0 a producción»); tag anotado `v0.8.0` sobre el merge `ea28c77` (PR #26), CI en verde confirmada por el usuario; antes se fusionó el cierre de la 033 (PR #25).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+  - nota: 2026-10-16 (04:53 UTC en el servidor), en el servidor (usuario): `desplegar.sh v0.8.0` en 78 s desde v0.7.0 (descarga del tag y reconstrucción de `app` y `web`), copia `/var/backups/dentissa/dentissa-20261016-045335.sql.gz`, «Nothing to migrate»; `verificar.sh --interna` y `verificar.sh` (pública: `/up` 200, `/` a https, `http://…/login` 301) con un único FALLO, el conocido de Tailscale en `tailscale0` (031 CA8). Sin errores nuevos en `laravel.log` ni respuestas 5xx en nginx desde el despliegue: los dos únicos son `InvalidStateException` del callback de Google, el del 2026-10-05 y otro del 2026-10-16 01:05 UTC, anterior al despliegue (con v0.7.0; al roadmap).
+  - nota: verificación manual OK 2026-10-16 (usuario), desde su móvil en https://dentissa.app: las pantallas de la 034 (citas con el filtro y «Buscar», detalle, pacientes, servicios, paneles, menú con el logo y «Mis citas» del paciente) se ven bien. VoiceOver o TalkBack (R22) sin comprobar: queda en el roadmap con 034/R22.
+  - nota: visto por el usuario en producción, fuera del alcance de la 034 y mantenida v0.8.0 (sin hotfix ni vuelta atrás): la ficha del paciente del personal (`/admin/pacientes/{id}`) no está adaptada al móvil (hay que alejar la vista para verla entera) y tiene botones descentrados → spec siguiente del resto de pantallas del personal (DS8); y pide esqueletos de carga mientras la página carga → spec propia. Ambos en el roadmap.
   - verificación manual: desde el móvil del usuario, en la dirección pública, «Mis citas» y el panel del paciente con sus botones a la vista; como personal, el panel, la lista de citas con el filtro plegado y desplegado, el detalle de una cita en una columna, pacientes y servicios, sin desplazamiento lateral ni elementos encimados; el botón «Menú» solo con icono y el logo en el menú.
   - Sin errores 500 en `laravel.log` ni respuestas 5xx en el log de nginx durante 15 minutos.
-- [ ] T098 Marcar spec como `released`
+- [x] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

@@ -81,7 +81,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     accesible «Menú») y el logo en lugar de la marca de texto «Melissa López N.» (hace falta una
     versión que se vea sobre el panel blanco: el actual usa `mix-blend-mode: screen`, A9 de la
     033); y revisar los elementos que a veces se salen de su sitio en el móvil (visto por el
-    usuario en producción, sin pantalla concreta).
+    usuario en producción, sin pantalla concreta). Liberada en v0.8.0 (2026-10-16; atiende DS8
+    **parcialmente**: paneles, citas, detalle de cita, pacientes y servicios del personal).
+    → Spec siguiente (decisión del usuario, 2026-10-16, tras verlo en producción): el resto de
+    pantallas del personal en el móvil, empezando por la ficha del paciente (`/admin/pacientes/{id}`:
+    hay que alejar la vista para verla entera y tiene botones descentrados), y las demás fichas,
+    formularios y expedientes; incluye 034/R8.
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
   - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
@@ -132,7 +137,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - El callback de Google responde 500 cuando llega sin un inicio previo
     (`Laravel\Socialite\Two\InvalidStateException` sin capturar en `GoogleAuthController::callback`;
     ocurrió una vez desde una IP de Google). Capturar los fallos de Socialite y volver al login con
-    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05).
+    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05). Se repitió
+    el 2026-10-16 01:05 UTC desde una IP externa (Android, llegando desde google.com), con v0.7.0:
+    cualquiera que abra esa dirección provoca un 500 (visto en el T097 de la 034).
   - Documentar en `deployment.md` que, tras cambiar un archivo de `/opt/dentissa/entorno`, hay que
     recrear el servicio con `up -d --force-recreate <servicio>` (y en `app`, `config:cache`): un
     `up -d` no relee el archivo (el token del túnel y las credenciales de Google tardaron por eso).
@@ -184,13 +191,16 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Orden de versiones: la 028 salió en v0.6.0 antes que la 031, que pasa de la v0.6.0 prevista a
   v0.7.0 (anotarlo en su plan al retomarla). Su arreglo de `npm audit` (T004) ya está en `main`
   (PR #21). El diseño para móvil va en una spec propia (DS8).
-- Orden de versiones: la 033 salió en v0.7.0 (2026-10-12) antes que la 031, que pasa a v0.8.0
-  (anotarlo en su plan y fusionar `main` en su rama al retomarla).
+- Orden de versiones: la 033 salió en v0.7.0 (2026-10-12) y la 034 en v0.8.0 (2026-10-16) antes
+  que la 031, que pasa a v0.9.0 (anotarlo en su plan y fusionar `main` en su rama al retomarla).
+- Esqueletos de carga (decisión del usuario, 2026-10-16): mostrar un esqueleto mientras la página
+  carga en lugar de solo cambiar de pantalla → spec propia (la app se dibuja en el servidor y cada
+  clic carga una página nueva: la spec decide dónde y cómo).
 - Deuda de la spec 033 (liberada en v0.7.0; /review r1 y r2, aceptada sin tarea, decisión del usuario):
   - 033/R6: migas de pan sin `<nav>` con nombre ni `aria-current`, con el enlace indistinguible del
     texto actual (`--text-muted` = `--text`); cambia `system.md` («Migas de pan»).
   - 033/R9: «Menú» lleva `aria-expanded` dentro de `<main>`, que queda inerte al abrir: el estado
-    abierto no se percibe en el botón.
+    abierto no se percibe en el botón. Resuelto por la 034 (v0.8.0, CA9).
   - 033/R10: ampliar `literales()` de `ReglasCss` a colores con nombre, `hsl()` y unidades
     relativas (con DS4).
   - 033/R11: la condición de `request()->is()` se repite en los 19 enlaces del menú; `aria-current`
@@ -207,9 +217,32 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 033/R19: ejecutar `capturar.mjs --medir` en la CI con Playwright (hoy es obligatorio a mano,
     `AGENTS.md`).
   - 033/R20: las tablas del paciente se desplazan dentro de `.table-wrap` en el móvil (palabras
-    largas y columna «Acciones» oculta a la derecha) → spec 034.
+    largas y columna «Acciones» oculta a la derecha) → spec 034. Resuelto por la 034 (v0.8.0, CA1).
   - 033/R21: `ultimoFoco` de `menu.js` no se borra al perder el foco; al cruzar los 900 px el foco
-    puede saltar a «Menú» o al enlace actual.
+    puede saltar a «Menú» o al enlace actual. Resuelto por la 034 (v0.8.0, T023), salvo al cambiar de
+    app o pestaña (034/R9).
+- Deuda de la spec 034 (liberada en v0.8.0; /review r1, aceptada sin tarea, decisión del usuario,
+  2026-10-16):
+  - 034/R8: `.content` pasa a `break-word` (D8): las pantallas del personal fuera de la 034 pierden
+    `anywhere` en sus filas flexibles; la spec del resto del móvil del personal lo resuelve.
+  - 034/R9: el `focusout` de `menu.js` olvida `ultimoFoco` al cambiar de app o pestaña; ignorarlo
+    cuando `document.hasFocus()` es falso.
+  - 034/R12: el test de orden de reglas globales de `MovilPacienteTest` usa `strpos` del primer
+    selector (falso positivo con selectores repetidos o `false`).
+  - 034/R13: «Cancelar» no se estira como «Ver» y «Reprogramar» en las tarjetas de «Mis citas».
+  - 034/R14: los nombres accesibles «Ver detalle», «Ver perfil», «Editar» y «Eliminar» se repiten
+    en cada tarjeta sin decir de qué elemento son (2.4.4/2.4.9).
+  - 034/R15: con colores forzados (alto contraste de Windows), el logo con máscara desaparece.
+  - 034/R16: en el detalle de cita, «Cambiar estado», «Información» y «Control interno» no son
+    encabezados, la `label` de las notas internas no tiene `for` y el `svg` del control interno no
+    tiene `aria-hidden`.
+  - 034/R17: `style=""` de `.detalle-datos-rejilla` a la clase con un token.
+  - 034/R18: ayudantes y aserciones duplicados entre `MovilPersonalTest` y `MovilPacienteTest`.
+  - 034/R19: sangría de `citas/show.blade.php`.
+  - 034/R20: los `id` de los campos del filtro repiten las clases de sus contenedores.
+  - 034/R21: `onclick` con `addslashes` en servicios: a `data-*` y script propio en la spec de la CSP.
+  - 034/R22: semántica de tabla de las tarjetas en VoiceOver (WebKit) sin comprobar en un móvil
+    real; si se pierde, roles explícitos en una spec siguiente.
   - 033/R22: comentario de `capturar.mjs` sobre «dos fotogramas» desactualizado (desde T072 se
     reintenta).
 - Deuda de la spec 027 (liberada en v0.4.0; /review, aceptada sin tarea):
