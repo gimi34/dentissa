@@ -1,6 +1,6 @@
 ---
 spec: 035-movil-pacientes-expedientes
-status: draft
+status: approved
 constitution_version: 1.3.0
 created: 2026-10-16
 ---
