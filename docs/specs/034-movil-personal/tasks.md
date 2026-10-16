@@ -138,7 +138,8 @@ Sobre el desglose (el análisis completo está en `plan.md`):
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: no aplica: sin variables, entornos, pasos de deploy, logs, eventos de auditoría ni métricas nuevos.
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: `status: implemented`, CA1–CA11 marcados en la spec y fila 034 del README de specs.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación

@@ -35,7 +35,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
-| 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | approved | — | — (2026-10-12) |
+| 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | implemented | — | — (2026-10-12) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·

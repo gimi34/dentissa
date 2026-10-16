@@ -1,7 +1,7 @@
 ---
 id: 034
 slug: movil-personal
-status: approved
+status: implemented
 created: 2026-10-12
 extends: [033]
 ---
@@ -53,13 +53,13 @@ Las «pantallas incluidas» son:
 
 «Móvil» es cualquier ancho por debajo de 900 px, como en la 033.
 
-- [ ] CA1 · Dado un paciente en «Mis citas» (próximas o pasadas) o en su panel de inicio, cuando lo
+- [x] CA1 · Dado un paciente en «Mis citas» (próximas o pasadas) o en su panel de inicio, cuando lo
   abre en el móvil (de 320 a 899 px), entonces cada cita aparece como una tarjeta con su fecha (y su
   hora en «Mis citas»), servicio, dentista y estado. Cada dato lleva su etiqueta, salvo la cabecera
   (la fecha y hora) y el estado, que se entienden solos. Sus acciones («Ver», «Reprogramar» y
   «Cancelar», cuando correspondan) se ven dentro de la tarjeta sin desplazar nada de lado y sin que
   ninguna tape a otra.
-- [ ] CA2 · Dado el personal en la lista de citas, o la administración o una asistente en las citas
+- [x] CA2 · Dado el personal en la lista de citas, o la administración o una asistente en las citas
   de hoy de su panel de inicio, cuando lo abre en el móvil, entonces cada cita aparece como una
   tarjeta con su hora y fecha (solo la hora en las citas de hoy del panel, como hoy), paciente,
   dentista, servicio y estado, y con sus acciones a la vista. Cada dato lleva su etiqueta, salvo la
@@ -67,39 +67,39 @@ Las «pantallas incluidas» son:
   demás, y no solo por el color. La agenda de hoy del panel de la dentista conserva su línea de
   tiempo (no pasa a tarjetas): en el móvil, el estado y «Ver detalle» van debajo del nombre del
   paciente, cumple CA7 y CA8, y «Ver detalle» tiene nombre accesible.
-- [ ] CA3 · Dado el personal en la lista de pacientes, cuando la abre en el móvil, entonces cada
+- [x] CA3 · Dado el personal en la lista de pacientes, cuando la abre en el móvil, entonces cada
   paciente aparece como una tarjeta con solo su nombre, su teléfono, sus alergias (con el aviso que
   ya tiene cuando las hay) y sus acciones. El correo, el doctor, la ciudad, el tipo de sangre y la
   fecha de registro no se muestran en el móvil, pero siguen en el escritorio y en la ficha del
   paciente.
-- [ ] CA4 · Dada la administración en la lista de servicios, cuando la abre en el móvil, entonces
+- [x] CA4 · Dada la administración en la lista de servicios, cuando la abre en el móvil, entonces
   cada servicio aparece como una tarjeta con su nombre, su duración, su estado y sus acciones.
-- [ ] CA5 · Dado el personal en la lista de citas en el móvil, cuando la abre, entonces ve el
+- [x] CA5 · Dado el personal en la lista de citas en el móvil, cuando la abre, entonces ve el
   buscador y los atajos «Hoy» y «Esta semana», y un botón «Filtros» que despliega y repliega las
   fechas, el dentista y el estado. Si hay filtros aplicados, el botón lo indica y, al desplegarlo,
   se ven con sus valores. Sin JavaScript, todos los filtros se ven desplegados.
-- [ ] CA6 · Dado el personal en el detalle de una cita, cuando lo abre en el móvil, entonces la
+- [x] CA6 · Dado el personal en el detalle de una cita, cuando lo abre en el móvil, entonces la
   página va en una sola columna: los datos de la cita, cambiar estado, información y acciones,
   control interno e historial. No se desplaza de lado y ningún bloque se monta sobre otro.
-- [ ] CA7 · Dado un texto en cualquiera de las pantallas incluidas o en las 7 del paciente de la 033
+- [x] CA7 · Dado un texto en cualquiera de las pantallas incluidas o en las 7 del paciente de la 033
   (nombres, correos, servicios, cabeceras, números de teléfono), cuando se ve en el móvil, entonces
   ninguna palabra que cabe en su línea se parte letra a letra. Una palabra más larga que el ancho
   disponible pasa a la línea siguiente o se acorta con el texto completo disponible, y nunca
   ensancha la página (mantiene 033 CA6).
-- [ ] CA8 · Dadas las pantallas incluidas, cuando se abren a 320, 390 y 844 × 390 px, entonces
+- [x] CA8 · Dadas las pantallas incluidas, cuando se abren a 320, 390 y 844 × 390 px, entonces
   ninguna se desplaza en horizontal, ningún control queda tapado por otro ni se sale de su tarjeta,
   y los botones, enlaces de acción, campos y elementos que se pueden pulsar miden al menos
   44 × 44 px.
-- [ ] CA9 · Dado cualquier rol en el móvil, cuando ve la barra superior, entonces el botón del menú
+- [x] CA9 · Dado cualquier rol en el móvil, cuando ve la barra superior, entonces el botón del menú
   muestra solo el icono de tres líneas, sin texto, mide al menos 44 × 44 px y los lectores de
   pantalla lo siguen anunciando como «Menú, botón, contraído» (cambia el aspecto del botón de
   033 CA2 y mantiene 033 CA3). Al abrirse el menú, el foco entra en la región «Menú» y los lectores
   la anuncian, sin que el foco vaya a nada tapado por el panel (033/R9). Al cruzar los 900 px, el
   foco solo cambia de sitio si estaba en el menú o en sus botones (033/R21).
-- [ ] CA10 · Dado el menú del móvil abierto, cuando se ve su cabecera, entonces muestra el logo de la
+- [x] CA10 · Dado el menú del móvil abierto, cuando se ve su cabecera, entonces muestra el logo de la
   clínica en lugar del nombre en texto. El logo se distingue del fondo del panel (contraste de al
   menos 3:1, WCAG 1.4.11) y los lectores lo anuncian como «Melissa López N.».
-- [ ] CA11 · Dadas las pantallas incluidas en el escritorio (1024 y 1440 px), cuando se abren,
+- [x] CA11 · Dadas las pantallas incluidas en el escritorio (1024 y 1440 px), cuando se abren,
   entonces se ven igual que antes: tablas con todas sus columnas, el filtro de citas completo y la
   barra lateral con su logo. La única diferencia es el borde de los campos del filtro de citas, que
   pasa a distinguirse del fondo con un contraste de al menos 3:1 (WCAG 1.4.11, decisión del
