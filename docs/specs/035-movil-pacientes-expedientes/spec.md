@@ -136,9 +136,10 @@ todo el ancho cuando haga falta) y el mismo aspecto que el resto del sistema.
 **Pantallas que toca:** las incluidas (ver Criterios), y los botones de abrir y cerrar el menú del
 móvil en todas.
 
-**Componentes:** reutiliza la tarjeta de lista y la columna única de la 034. `/plan` decide si hace
-falta alguna opción nueva en HTML (p. ej. para el perfil del paciente o los formularios) y la
-genera con el sistema.
+**Componentes:** reutiliza la tarjeta de lista y la columna única de la 034. Diseño elegido con
+`/design-spec 035` en [design.md](design.md): composición A · «Hoja de lectura» con el perfil
+compacto del paciente de C ([opcion-a.html](design/opcion-a.html),
+[opcion-c.html](design/opcion-c.html)).
 
 Sistema: [docs/design/system.md](../../design/system.md).
 
@@ -165,6 +166,7 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-16 | brecha | ¿Qué botones están «descentrados»? | Los de la ficha del paciente, vistos por el usuario en producción (T097 de la 034); CA7 pide texto e icono centrados y grupos alineados en todas las pantallas incluidas | usuario |
 | 2026-10-16 | diseño | Botones de abrir y cerrar el menú del móvil | Solo el icono, sin el recuadro que los rodea, en todas las pantallas (CA11; cambia el aspecto de 034 CA9 y del botón de cerrar de la 033) | usuario |
 | 2026-10-16 | implícita | Sin recuadro, ¿cómo se ve el foco y dónde se pulsa? | El área de toque sigue en 44 × 44 px y el foco sigue visible con el anillo del sistema; el icono, con contraste ≥ 3:1 | `docs/constitution.md` P9 (WCAG 2.1 AA) |
+| 2026-10-16 | diseño | ¿Qué composición para las fichas en el móvil? (`/design-spec 035`, AI-DD 1.13.0) | A · «Hoja de lectura» con el perfil del paciente de C · «Perfil compacto» ([design.md](design.md)) | usuario |
 | 2026-10-16 | implícita | ¿Qué es «móvil»? | Por debajo de 900 px, como la 033 y la 034 | `docs/specs/034-movil-personal/spec.md` |
 | 2026-10-16 | implícita | ¿Se corrige el reparto de palabras largas (034/R8) en estas pantallas? | Sí, en las pantallas incluidas (CA8); en el resto, con sus specs | `docs/roadmap.md` (034/R8) |
 | 2026-10-16 | supuesto | ¿En qué orden van los bloques de la ficha del paciente en el móvil? | Perfil con sus acciones, datos de contacto y médicos, expedientes e historial de citas: el de lectura del escritorio (columna izquierda y luego la derecha) | agente (revisar) |

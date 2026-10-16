@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — 035 · Opción A · Hoja de lectura</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  /* ── Opción A: hoja de lectura. Los bloques del escritorio, uno debajo de otro, en el orden del HTML. ── */
+  .identidad { text-align:center; display:flex; flex-direction:column; align-items:center; gap:var(--space-2); }
+  .avatar { width:64px; height:64px; border-radius:50%; background:var(--p200); color:var(--p800); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; }
+  .identidad h2 { font-size:18px; font-weight:var(--weight-strong); }
+  .contacto { align-self:stretch; text-align:left; display:flex; flex-direction:column; gap:var(--space-2); margin-top:var(--space-4); padding-top:var(--space-4); border-top:var(--border-width) solid var(--border); font-size:var(--text-meta); }
+  .contacto div { display:flex; gap:var(--space-3); align-items:flex-start; }
+  .perfil-acciones { align-self:stretch; display:flex; gap:var(--space-3); margin-top:var(--space-4); }
+  .perfil-acciones .btn { flex:1; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); }
+  .stats .card strong { display:block; font-size:22px; }
+  .proxima { border-left:var(--border-width-strong) solid var(--p400); }
+  .exp-cab { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-3); }
+  .exp-trat { background:var(--p50); border-radius:var(--radius-sm); padding:var(--space-4) var(--space-5); margin-top:var(--space-4); }
+  .cab-expediente { display:flex; flex-direction:column; gap:var(--space-3); }
+  .cab-expediente h2 { font-size:18px; font-weight:var(--weight-strong); }
+</style>
+</head>
+<body>
+<div class="visor">
+  <h1>035 · Opción A · «Hoja de lectura»</h1>
+  <p class="intro">La ficha del paciente se lee como la hoja de un expediente en papel: de arriba abajo, sin saltos, con cada bloque del escritorio en el mismo orden (el del HTML: primero la columna del perfil y después la de expedientes y citas). Es el cambio mínimo sobre lo que ya hay, con las tarjetas de la 034 en el historial. Datos de la base de prueba (cliente1 con su nombre largo de la 033).</p>
+
+  <div class="marcos">
+    <section class="marco" id="ficha-m">
+      <h2>Ficha del paciente · admin · 390 px</h2>
+      <div class="tel">
+        <header class="topbar">
+          <button class="menu-btn" aria-label="Menú" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+          <h1>Maximiliana Guadalupe de los Ángeles Fernández-Villaseñor de la Concepción</h1>
+          <div class="acciones-ficha">
+            <a class="btn" href="#">Nuevo expediente</a>
+            <a class="btn btn-primary" href="#">+ Nueva cita</a>
+          </div>
+        </header>
+        <div class="content">
+          <nav class="migas" aria-label="Migas"><a href="#">Pacientes</a><span aria-hidden="true">›</span><span class="partible">Maximiliana Guadalupe de los Ángeles Fernández-Villaseñor de la Concepción</span></nav>
+
+          <div class="card identidad">
+            <div class="avatar" aria-hidden="true">MF</div>
+            <h2 class="partible">Maximiliana Guadalupe de los Ángeles Fernández-Villaseñor de la Concepción</h2>
+            <div>20 años · 15 nov. 2005</div>
+            <span class="badge badge-pink">A+</span>
+            <div class="contacto">
+              <div class="partible">cliente1.maximiliana.guadalupe.fernandezvillasenor@dentissa.test</div>
+              <div>5550102</div>
+              <div>de prueba · de prueba</div>
+              <div>Sin doctor asignado</div>
+            </div>
+            <div class="perfil-acciones"><a class="btn" href="#">Editar</a><button class="btn btn-danger">Desactivar</button></div>
+          </div>
+
+          <div class="card"><div class="section-title">Información médica</div>
+            <p class="etq" style="color:var(--red);margin-top:var(--space-4)">⚠ Alergias</p><p>de prueba</p>
+            <p class="etq" style="margin-top:var(--space-3)">Medicamentos</p><p>de prueba</p></div>
+          <div class="card"><p class="etq">Contacto de emergencia</p><p><strong>de prueba</strong></p><p>5550199</p></div>
+          <div class="stats"><div class="card"><strong>6</strong>Total citas</div><div class="card"><strong style="color:var(--green)">1</strong>Completadas</div></div>
+          <div class="card proxima"><p class="etq">Próxima cita</p><p class="partible"><strong>Limpieza dental profunda con aplicación de flúor y sellado de fisuras</strong></p><p>vie. 16 oct. · 23:00</p></div>
+
+          <section>
+            <div class="section-head"><span class="section-title">Expedientes clínicos</span><a class="btn btn-ghost" href="#">+ Nuevo</a></div>
+            <div class="card"><div class="exp-cab"><div class="partible"><p class="etq">16 oct. 2026 · Limpieza dental profunda con aplicación de flúor y sellado de fisuras</p><p><strong>de prueba</strong></p><p>Dr. Diana Dentista 1</p></div><a class="btn btn-ghost" href="#">Ver →</a></div>
+              <div class="exp-trat"><strong>Tratamiento:</strong> de prueba</div></div>
+          </section>
+
+          <section>
+            <div class="section-head"><span class="section-title">Historial de citas</span><a class="btn btn-ghost" href="#">+ Nueva</a></div>
+            <div class="lista">
+              <article class="tarjeta"><div class="tarjeta-cab"><strong>20/10/2026 09:00</strong><span class="badge badge-pink">Agendada</span></div>
+                <dl class="dato"><dt>Servicio</dt><dd>Consulta general</dd></dl><dl class="dato"><dt>Dentista</dt><dd>Diana Dentista 1</dd></dl>
+                <div class="tarjeta-acciones"><a class="btn" href="#" aria-label="Ver detalle">Ver detalle</a></div></article>
+              <article class="tarjeta"><div class="tarjeta-cab"><strong>19/10/2026 10:00</strong><span class="badge badge-pink">Agendada</span></div>
+                <dl class="dato"><dt>Servicio</dt><dd>Limpieza dental profunda con aplicación de flúor y sellado de fisuras</dd></dl><dl class="dato"><dt>Dentista</dt><dd>Diana Dentista 1</dd></dl>
+                <div class="tarjeta-acciones"><a class="btn" href="#" aria-label="Ver detalle">Ver detalle</a></div></article>
+              <article class="tarjeta"><div class="tarjeta-cab"><strong>09/10/2026 11:00</strong><span class="badge badge-green">Completada</span></div>
+                <dl class="dato"><dt>Servicio</dt><dd>Limpieza dental profunda con aplicación de flúor y sellado de fisuras</dd></dl><dl class="dato"><dt>Dentista</dt><dd>Diana Dentista 1</dd></dl>
+                <div class="tarjeta-acciones"><a class="btn" href="#" aria-label="Ver detalle">Ver detalle</a></div></article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="marco" id="expediente-m">
+      <h2>Ficha del expediente · dentista · 390 px</h2>
+      <div class="tel">
+        <header class="topbar">
+          <button class="menu-btn" aria-label="Menú" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+          <h1>Expediente clínico</h1>
+        </header>
+        <div class="content">
+          <div class="card cab-expediente">
+            <p class="etq partible">Viernes 16 de octubre de 2026 · Limpieza dental profunda con aplicación de flúor y sellado de fisuras</p>
+            <h2 class="partible">Expediente de Maximiliana Guadalupe de los Ángeles Fernández-Villaseñor de la Concepción</h2>
+            <p>Dr. Diana Dentista 1 · Cita: 09/10/2026 11:00</p>
+            <a class="btn btn-ghost" href="#">← Volver al paciente</a>
+            <div class="aviso-rojo"><strong>Alergias del paciente:</strong> de prueba</div>
+          </div>
+          <div class="card"><label class="field-label" for="a-dx">Diagnóstico</label><textarea id="a-dx" class="field">de prueba</textarea></div>
+          <div class="card"><label class="field-label" for="a-tx">Tratamiento realizado</label><textarea id="a-tx" class="field">de prueba</textarea></div>
+          <div class="acciones-formulario"><button class="btn btn-primary">✓ Guardar cambios</button></div>
+          <section><div class="section-head"><span class="section-title">Próxima visita</span></div>
+            <div class="card"><label class="field-label" for="a-pv">Fecha sugerida</label><input id="a-pv" class="field" type="date"><div class="acciones-formulario" style="margin-top:var(--space-4)"><button class="btn">Guardar fecha</button></div></div></section>
+          <section><div class="section-head"><span class="section-title">Información</span></div>
+            <div class="card"><div class="fila-info"><span>Creado</span><span>16/10/2026 06:56</span></div><div class="fila-info"><span>Dentista</span><span>Diana Dentista 1</span></div><div class="fila-info"><span>Servicio</span><span>Limpieza dental profunda con aplicación de flúor y sellado de fisuras</span></div></div></section>
+          <a class="btn" href="#">+ Nuevo expediente para este paciente</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="notas">
+    <table>
+      <tr><th>Metáfora</th><td>La hoja de un expediente en papel: todo seguido, en el orden en que se escribió.</td></tr>
+      <tr><th>Vecino más parecido</th><td>Detalle de cita del personal (034, una columna) → se diferencia en que el perfil va arriba con sus acciones y el historial usa las tarjetas de lista.</td></tr>
+      <tr><th>Jerarquía</th><td>Bloques de igual peso, uno por fila; las estadísticas en 2 columnas iguales (son dos y simétricas).</td></tr>
+      <tr><th>Riesgo</th><td>Página larga: los expedientes y las citas quedan tras ~5 pantallas de perfil en un móvil → se compensa con que el orden ya es el que el personal conoce del escritorio.</td></tr>
+      <tr><th>Cambios al sistema</th><td>Ninguno nuevo de composición (los del plan: dos anchos de columna lateral, botones del menú sin recuadro, `.acciones-ficha`, `.acciones-formulario`).</td></tr>
+    </table>
+  </div>
+</div>
+</body>
+</html>
