@@ -396,13 +396,18 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Pantalla | Móvil | Escritorio | Componentes |
 |---|---|---|---|
 | Inicio de sesión | `system.html#auth-login-390` | `system.html#auth-login-1440` | campos y botón del acceso, botón de Google |
-| Panel del administrador | `system.html#admin-dashboard-390` | `system.html#admin-dashboard-1440` | barra lateral, tarjetas de resumen, tabla, badges, accesos rápidos |
-| Citas (agenda del personal) | `system.html#citas-index-admin-390` | `system.html#citas-index-admin-1440` | filtros, tabla, badges |
+| Panel del administrador | `system.html#admin-dashboard-390` · `capturas/admin-dashboard-320.png` | `system.html#admin-dashboard-1440` | barra lateral, tarjetas de resumen, tabla (tarjetas en el móvil), badges, accesos rápidos |
+| Panel de la dentista (spec 034) | `system.html#dentista-dashboard-390` · `capturas/dentista-dashboard-320.png` | `system.html#dentista-dashboard-1440` | banner, línea de tiempo con acciones, tarjetas de resumen |
+| Panel de la asistente (spec 034) | `system.html#asistente-dashboard-390` · `capturas/asistente-dashboard-320.png` | `system.html#asistente-dashboard-1440` | banner, tarjetas de resumen, tabla (tarjetas en el móvil) |
+| Citas (agenda del personal) | `system.html#citas-index-admin-390` · `capturas/citas-index-admin-320.png` | `system.html#citas-index-admin-1440` | buscador, atajos, filtro plegable «Filtros», tabla (tarjetas en el móvil), badges |
+| Detalle de cita (personal, spec 034) | `system.html#citas-show-admin-390` · `capturas/citas-show-admin-320.png` | `system.html#citas-show-admin-1440` | migas, datos, cambiar estado, información, acciones, control interno, historial (una columna en el móvil) |
+| Pacientes (spec 034) | `system.html#pacientes-index-admin-390` · `capturas/pacientes-index-admin-320.png` | `system.html#pacientes-index-admin-1440` | tarjetas de resumen, tabla (tarjetas en el móvil), «⚠ Sí» de alergias |
+| Servicios (spec 034) | `system.html#servicios-index-390` · `capturas/servicios-index-320.png` | `system.html#servicios-index-1440` | tarjetas de resumen, tabla (tarjetas en el móvil), badges |
 | Ficha de la dentista con horario | `system.html#personal-show-dentista-390` | `system.html#personal-show-dentista-1440` | día del horario, lista de citas, tabla |
 | Panel del paciente | `system.html#cliente-dashboard-390` | `system.html#cliente-dashboard-1440` | banner, próxima cita, historial, accesos |
 | Reprogramar cita (personal) | `system.html#citas-reprogramar-admin-390` | `system.html#citas-reprogramar-admin-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
 | Reprogramar cita (paciente) | `system.html#citas-reprogramar-cliente-390` | `system.html#citas-reprogramar-cliente-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
-| Menú del móvil (spec 033) | `capturas/menu-abierto-cliente-390.png` · `capturas/menu-abierto-admin-390.png` | — (en el escritorio es la barra lateral) | botón «Menú», panel blanco, sección actual con `aria-current`, «Cerrar menú», velo |
+| Menú del móvil (spec 033) | `capturas/menu-abierto-cliente-390.png` · `capturas/menu-abierto-admin-390.png` · `capturas/menu-abierto-dentista-390.png` · `capturas/menu-abierto-asistente-390.png` | — (en el escritorio es la barra lateral) | botón «Menú», panel blanco, sección actual con `aria-current`, «Cerrar menú», velo |
 
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
 tarjeta con el resumen de la cita (paciente o dentista, servicio, fecha, hora y badge de estado), el
@@ -420,6 +425,16 @@ dentista no se desbordan.
 (`capturar.mjs --medir`). Sus capturas a 320, 390 y 1440 px y las del menú abierto de cada rol a 390 son
 del 2026-10-11 (spec 033, T028), con la base de prueba y textos largos inventados; a 1440 son
 iguales a las de antes. Las vistas del personal siguen desbordándose en el móvil (resto de DS8).
+
+**Móvil del personal (spec 034):** los paneles de admin, dentista y asistente, la lista y el detalle
+de citas y las listas de pacientes y servicios de los tres roles ya no se desbordan de 320 a 1440 px
+(`capturar.mjs --medir`): las tablas se leen como tarjetas, el filtro de citas se pliega tras
+«Filtros» y el detalle va en una columna. Sus capturas a 320, 390 y 1440 px, las de las 7 vistas del
+paciente y las del menú abierto de los cuatro roles a 390 son del 2026-10-15 (spec 034, T033), con la
+base de prueba y textos largos inventados. A 1024 y 1440, esas pantallas son iguales a una línea
+base de v0.7.0 generada en la misma sesión (D13), comparadas en reposo: el foco con tokens de lo que
+la 034 toca es una diferencia admitida en el escritorio (A72). El resto de las vistas del personal
+(formularios, fichas, expedientes) sigue desbordándose en el móvil (resto de DS8).
 
 ## Inventario de vistas
 
