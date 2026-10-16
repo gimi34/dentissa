@@ -130,6 +130,11 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   con la etiqueta de cada celda en su `data-label` y las columnas `solo-escritorio` ocultas; y el
   logo de la barra se pinta con una máscara (`mask` con `--p600`), porque la imagen con
   `mix-blend-mode: screen` desaparece sobre blanco. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
+- SEO (upgrade a AI-DD 1.13.0): todo el HTML se renderiza en el servidor con Blade, sin depender de
+  JavaScript. Las vistas de acceso (`resources/views/auth/*.blade.php`) tienen su propio `<head>`,
+  donde van los metadatos de la única ruta indexable, `/registro`; el resto usa el `<head>` de
+  `layouts/app.blade.php`. `public/robots.txt` es estático y no hay `sitemap.xml`. Reglas y brechas
+  en [seo.md](seo.md).
 - Accesibilidad: WCAG 2.1 AA (decisión del usuario, 2026-10-02); principio P9 y deuda DS1–DS11 en [design/system.md](design/system.md).
 
 ## Backend
