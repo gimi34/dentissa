@@ -192,6 +192,7 @@ La 035 va también antes que la 020 (decisión del usuario, /analyze A8): la 020
   - `.perfil-dato { display: grid; grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr); }` y `.perfil-dato svg { display: none; }`;
   - `.perfil-etiqueta` con el estilo de la etiqueta de las tarjetas de la 034 (`--text-small`, `--weight-strong`, mayúsculas, `--p600`).
 - La información médica y el contacto de emergencia quedan como en la opción A (design.md, confirmado por el usuario al aprobarlo).
+- Lo comprueba `MovilPacientesExpedientesTest` (marcado con `.perfil-cab` de dos hijos y reglas) y `--medir` (iniciales de 48 px con el texto a su derecha y etiquetas visibles a 390, ninguna a 1440). Verificación manual contra `design/opcion-c.html#ficha-m`.
 
 ### D13 · Foco del sistema en los campos de los formularios incluidos (P9; decisión del usuario, /analyze A6)
 - Los `<style>` propios de `pacientes/create`, `expedientes/create` y `expedientes/show` dan a `.field:focus` un borde `--p300` (2,2:1) y un halo del 7 %, que no cumplen 2.4.7 ni 1.4.11.
@@ -202,7 +203,7 @@ La 035 va también antes que la 020 (decisión del usuario, /analyze A8): la 020
 - Las migas de la ficha del paciente, el formulario del paciente, la ficha y el alta de expediente son hoy un `<div style="display:flex…">` con enlaces de 15–18 px de alto.
 - Pasan a `<nav class="migas" aria-label="Migas de pan">` con sus enlaces y la página actual en `.migas-actual`, sin `style=""`, como en la 033 y en el detalle de cita de la 034.
 - El toque de 44 px de sus enlaces ya está en `movil.css` (033). En el escritorio, `.migas` reproduce el aspecto de hoy (mismos tokens que la 033): lo compara `--medir` con la línea base.
-- Lo comprueba `MovilPacientesExpedientesTest` (marcado con `.perfil-cab` de dos hijos y reglas) y `--medir` (iniciales de 48 px con el texto a su derecha y etiquetas visibles a 390, ninguna a 1440). Verificación manual contra `design/opcion-c.html#ficha-m`.
+- Lo comprueban `MovilPacientesExpedientesTest` (marcado sin `style=""`, T010) y `--medir` (toque de 44 × 44 de sus enlaces).
 
 ### Cambios a incorporar al sistema (system.md 1.5.0 → 1.6.0)
 - **Tokens (nueve):**
@@ -292,7 +293,7 @@ No aplica: la spec no añade logs, eventos ni métricas, y no toca autenticació
 - Métricas a vigilar tras el deploy: errores 500 en `laravel.log` y 5xx en nginx durante 15 minutos; desde el móvil real, la ficha del paciente de un rol del personal, la lista y la ficha del expediente de la dentista, un formulario y el menú abierto y cerrado.
 - Orden respecto a otras specs:
   - la 014 va después (D11);
-  - la 020 (rama `feature/020-auditoria-base`) toca el layout y `citas.css`, pero no estas vistas;
+  - la 020 (rama `feature/020-auditoria-base`) toca el layout y `citas.css`: la 035 sale antes y la 020 se reconstruye después sobre `main` (D11, decisión del usuario, /analyze A8);
   - la 031 no toca vistas ni estilos;
   - la versión se fija en `/release` (v0.9.0 si sale antes que la 031; si no, v0.10.0).
 
