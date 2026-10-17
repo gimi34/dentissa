@@ -3,6 +3,7 @@
 
 @section('topbar-actions')
     @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
+    <div class="acciones-ficha">
     @if($base !== 'asistente')
         <a href="{{ route("{$base}.expedientes.create", ['paciente_id' => $paciente->id]) }}"
            class="btn btn-outline">
@@ -21,29 +22,34 @@
         </svg>
         Nueva cita
     </a>
+    </div>
 @endsection
 
 @section('content')
 
-{{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
-    <a href="{{ route("{$base}.pacientes") }}" style="color:var(--text-muted);text-decoration:none">Pacientes</a>
+{{-- Migas (spec 035, D14): el componente de la 033. --}}
+@php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
+<div id="migas" class="migas">
+    <a href="{{ route("{$base}.pacientes") }}">Pacientes</a>
     <span>›</span>
-    <span style="color:var(--text)">{{ $paciente->nombre_completo }}</span>
+    <span class="migas-actual">{{ $paciente->nombre_completo }}</span>
 </div>
 
-<div style="display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start">
+{{-- Ficha (spec 035, D1): dos columnas en el escritorio y una en el móvil, en el orden del HTML. --}}
+<div class="ficha-paciente">
 
     {{-- ── Columna izquierda: perfil ────────────────────────────────── --}}
     <div style="display:flex;flex-direction:column;gap:16px">
 
         {{-- Tarjeta de identidad --}}
-        <div class="card" style="text-align:center;padding:28px 22px">
-            <div style="width:64px;height:64px;border-radius:50%;background:var(--p200);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:var(--p800);margin:0 auto 14px">
+        {{-- Perfil (spec 035, D12): centrado en el escritorio; en el móvil, iniciales y texto en una fila. --}}
+        <div class="card perfil-identidad" style="padding:28px 22px">
+            <div class="perfil-cab">
+            <div class="perfil-avatar" aria-hidden="true">
                 {{ strtoupper(substr($paciente->nombre,0,1)) }}{{ strtoupper(substr($paciente->apellido,0,1)) }}
             </div>
-            <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
+            <div class="perfil-texto">
+            <div class="perfil-nombre texto-partible">
                 {{ $paciente->nombre_completo }}
             </div>
             @if($paciente->fecha_nacimiento)
@@ -55,41 +61,47 @@
             @if($paciente->tipo_sangre)
                 <span class="badge badge-pink" style="margin-top:10px">{{ $paciente->tipo_sangre }}</span>
             @endif
+            </div>
+            </div>
 
             <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;text-align:left">
                 @if($paciente->email)
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2">
+                    <div class="perfil-dato texto-partible">
+                        <span class="solo-movil perfil-etiqueta">Correo</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2" aria-hidden="true">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                             <polyline points="22,6 12,13 2,6"/>
                         </svg>
-                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $paciente->email }}</span>
+                        <span class="dato-recortado texto-partible">{{ $paciente->email }}</span>
                     </div>
                 @endif
                 @if($paciente->telefono)
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2">
+                    <div class="perfil-dato texto-partible">
+                        <span class="solo-movil perfil-etiqueta">Teléfono</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2" aria-hidden="true">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 5.59 5.59l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
                         </svg>
-                        {{ $paciente->telefono }}
+                        <span>{{ $paciente->telefono }}</span>
                     </div>
                 @endif
                 @if($paciente->ciudad)
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2">
+                    <div class="perfil-dato texto-partible">
+                        <span class="solo-movil perfil-etiqueta">Ciudad</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2" aria-hidden="true">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                             <circle cx="12" cy="10" r="3"/>
                         </svg>
-                        {{ $paciente->ciudad }}{{ $paciente->direccion ? ' · '.$paciente->direccion : '' }}
+                        <span>{{ $paciente->ciudad }}{{ $paciente->direccion ? ' · '.$paciente->direccion : '' }}</span>
                     </div>
                 @endif
-                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2">
+                <div class="perfil-dato texto-partible">
+                    <span class="solo-movil perfil-etiqueta">Doctor</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2" aria-hidden="true">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
                     </svg>
                     @if($paciente->dentista_id)
-                        Dr. {{ trim($paciente->dentista_nombre) }}
+                        <span>Dr. {{ trim($paciente->dentista_nombre) }}</span>
                     @else
                         <span style="color:var(--text-light)">Sin doctor asignado</span>
                     @endif
@@ -156,7 +168,7 @@
             <div class="card" style="padding:16px 18px">
                 <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px">Contacto de emergencia</div>
                 @if($paciente->contacto_emergencia)
-                    <div style="font-size:13.5px;font-weight:500;color:var(--text)">{{ $paciente->contacto_emergencia }}</div>
+                    <div class="texto-partible" style="font-size:13.5px;font-weight:500;color:var(--text)">{{ $paciente->contacto_emergencia }}</div>
                 @endif
                 @if($paciente->telefono_emergencia)
                     <div style="font-size:13px;color:var(--text-muted);margin-top:3px">{{ $paciente->telefono_emergencia }}</div>
@@ -179,7 +191,7 @@
         @if($proximaCita)
             <div class="card" style="border-left:3px solid var(--p400);padding:14px 16px">
                 <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--p400);margin-bottom:6px">Próxima cita</div>
-                <div style="font-size:14px;font-weight:500">{{ $proximaCita->servicio ?? 'Consulta' }}</div>
+                <div class="texto-partible" style="font-size:14px;font-weight:500">{{ $proximaCita->servicio ?? 'Consulta' }}</div>
                 <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">
                     {{ \Carbon\Carbon::parse($proximaCita->fecha_hora)->locale('es')->isoFormat('ddd D MMM · H:mm') }}
                 </div>
@@ -206,7 +218,7 @@
                     @foreach($expedientes as $exp)
                         <div class="card" style="padding:18px 20px">
                             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
-                                <div>
+                                <div class="texto-partible">
                                     <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light)">
                                         {{ \Carbon\Carbon::parse($exp->creado_en)->locale('es')->isoFormat('D MMM YYYY') }}
                                         @if($exp->servicio) · {{ $exp->servicio }} @endif
@@ -261,33 +273,34 @@
             <div class="card card-0">
                 @if($citas->count() > 0)
                     <div class="table-wrap">
-                        <table>
+                        <table class="tabla-tarjetas">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
+                                    <th class="celda-cab">Fecha</th>
                                     <th>Servicio</th>
                                     <th>Dentista</th>
-                                    <th>Estado</th>
-                                    <th style="text-align:right">Acciones</th>
+                                    <th class="celda-estado">Estado</th>
+                                    <th class="celda-acciones" style="text-align:right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($citas as $c)
                                 <tr>
-                                    <td style="white-space:nowrap;font-size:12.5px;color:var(--text-muted)">
+                                    <td class="celda-cab" data-label="Fecha" style="white-space:nowrap;font-size:12.5px;color:var(--text-muted)">
                                         {{ \Carbon\Carbon::parse($c->fecha_hora)->format('d/m/Y H:i') }}
                                     </td>
-                                    <td style="font-weight:500;font-size:13px">{{ $c->servicio ?? '—' }}</td>
-                                    <td style="font-size:12.5px;color:var(--text-muted)">{{ $c->dentista }}</td>
-                                    <td>@include('partials.badge-estado', ['estado' => $c->estado])</td>
-                                    <td>
+                                    <td data-label="Servicio" style="font-weight:500;font-size:13px">{{ $c->servicio ?? '—' }}</td>
+                                    <td data-label="Dentista" style="font-size:12.5px;color:var(--text-muted)">{{ $c->dentista }}</td>
+                                    <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $c->estado])</td>
+                                    <td class="celda-acciones" data-label="Acciones">
                                         <div style="display:flex;justify-content:flex-end">
                                             <a href="{{ route("{$base}.citas.show", $c->id) }}"
-                                               class="btn btn-ghost btn-sm" title="Ver detalle">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                                               class="btn btn-ghost btn-sm" title="Ver detalle" aria-label="Ver detalle">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px" aria-hidden="true">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                                     <circle cx="12" cy="12" r="3"/>
                                                 </svg>
+                                                <span class="solo-movil">Ver detalle</span>
                                             </a>
                                         </div>
                                     </td>
