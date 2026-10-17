@@ -5,7 +5,7 @@
 //   node capturar.mjs <vista> [<vista>…]   solo esas vistas (por su id en VISTAS), sin recortes
 //   node capturar.mjs --seco [<vista>…]    imprime lo que capturaría y termina (sin navegador ni base)
 //   node capturar.mjs --anchos=1024,1440 <vista>…   esos anchos en lugar de los de cada vista
-//   node capturar.mjs --medir               test en el navegador de las specs 033 y 034 (anchos, toque,
+//   node capturar.mjs --medir               test en el navegador de las specs 033, 034 y 035 (anchos, toque,
 //                                           menú, recortes, solapes, tarjetas, filtro, palabras largas,
 //                                           sin JS y escritorio frente a la línea base); sale con 1 si algo falla
 //   node capturar.mjs --seco --medir       lista las comprobaciones de --medir y termina
@@ -48,7 +48,9 @@
 //    Spec 033: un servicio «Limpieza dental profunda con aplicación de flúor y sellado de fisuras»
 //    en las citas de cliente1 (la próxima, una pasada y la de reprogramar).
 //    Spec 034: cita_historial_largo, una cita agendada futura de cliente1 con 10 entradas en
-//    historial_citas (el detalle con historial largo de D7). Las palabras de 30 letras de --medir no
+//    historial_citas (el detalle con historial largo de D7). Spec 035: cliente1 con alergias y
+//    medicamentos (los avisos de su ficha y de su expediente) y más de 20 expedientes de dentista1 (la
+//    paginación de la lista de expedientes). Las palabras de 30 letras de --medir no
 //    tocan la base: se escriben en la página abierta, sobre los nombres de paciente, dentista,
 //    servicio y usuario, y desaparecen al cerrarla.
 //
@@ -80,9 +82,10 @@
 //    Con vistas elegidas, `git status docs/design/capturas/` solo debe mostrar esas capturas.
 //
 // 7b. Línea base del escritorio (spec 034, D13; A40, A61, A66), justo antes de cada --medir, en la misma
-//    sesión y con la misma base. Se captura con el código de producción, el tag v0.7.0 (el `main` local
-//    puede estar desfasado), servido aparte:
-//      git worktree add <carpeta temporal fuera del repo>/v070 v0.7.0
+//    sesión y con la misma base. Se captura con el código de producción, el tag de la versión en
+//    producción (v0.8.0 desde la spec 035; el `main` local puede estar desfasado), servido aparte (la
+//    carpeta conserva el nombre `v070` de la 034):
+//      git worktree add <carpeta temporal fuera del repo>/v070 v0.8.0
 //      cp .env <carpeta temporal>/v070/.env
 //      docker run -d --rm --name dentissa_base_app --network dentissa_dentissa_network \
 //        -v <carpeta temporal>/v070:/var/www -v dentissa_vendor_data:/var/www/vendor -w /var/www \
@@ -299,6 +302,11 @@ const COMPROBACIONES = [
   '034 cambios de modo (033 T064 y R21): (a) foco en «Cerrar menú» y paso a 1000 px → enlace actual; (b) foco en un enlace del menú y paso a 390 → «Menú»; (c) Intro y Escape → cerrado y foco en «Menú»; (d) «Atrás» → cerrado y sin inert; (R21) a 1000, foco en un enlace de la barra, clic en una zona sin foco y paso a 390 → el foco no se mueve (CA9, A10)',
   '034 sin JS: a 390, las pantallas del personal sin desplazamiento horizontal (CA8)',
   '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro) (CA11, D13)',
+  '035 pantallas: ficha, alta y edición del paciente, lista, ficha y alta de expediente de cada rol que las ve, a 320, 390, 844x390 y 1440 sin desplazamiento horizontal; a 320, 390 y 844x390, sin recortes, toque ≥ 44 × 44 (también las migas), sin solapes y tarjetas con su etiqueta; y en las palabras de 30 letras (también el título de la barra y las migas) (CA1–CA4, CA8, CA9)',
+  '035 fichas: a 320, 390 y 844x390, las dos fichas en una columna; en la del paciente, iniciales de 48 px con el nombre, la edad y el tipo de sangre a su derecha y las etiquetas de contacto visibles, que a 1440 no se ven; las acciones de la barra bajo el título y a partes iguales; los botones de las acciones con el texto centrado (±2 px) y alineados en su fila (CA1, CA4, CA7, D12)',
+  '035 formularios: a 320, el alta del paciente y del expediente enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13)',
+  '035 menú: a 390, «Menú» y «Cerrar menú» sin borde ni fondo, de 44 × 44 y con foco visible (CA11)',
+  '035 sin JS: a 390, las pantallas de la 035 sin desplazamiento horizontal (CA9)',
 ];
 
 const PANELES = { admin: '/admin', dentista: '/dentista', asistente: '/asistente', cliente: '/cliente' };
@@ -308,9 +316,20 @@ const PANTALLAS_PERSONAL = ['admin', 'dentista', 'asistente'].flatMap((rol) => [
   [`${rol}-panel`, rol, `/${rol}`], [`${rol}-citas`, rol, `/${rol}/citas`], [`${rol}-detalle`, rol, `/${rol}/citas/{cita}`],
   [`${rol}-pacientes`, rol, `/${rol}/pacientes`],
 ]).concat([['admin-servicios', 'admin', '/admin/servicios']]);
+// Spec 035: pantallas de pacientes y expedientes, por cada rol que las ve, [id, rol, ruta].
+const PANTALLAS_035 = [
+  ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-ficha-paciente`, rol, `/${rol}/pacientes/{paciente}`]),
+  ['admin-alta-paciente', 'admin', '/admin/pacientes/crear'], ['asistente-alta-paciente', 'asistente', '/asistente/pacientes/crear'],
+  ['admin-edicion-paciente', 'admin', '/admin/pacientes/{paciente}/edit'], ['dentista-edicion-paciente', 'dentista', '/dentista/pacientes/{paciente}/edit'],
+  ['dentista-expedientes', 'dentista', '/dentista/expedientes'],
+  ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-ficha-expediente`, rol, `/${rol}/expedientes/{expediente}`]),
+  ['admin-alta-expediente', 'admin', '/admin/expedientes/crear?paciente_id={paciente}'],
+  ['dentista-alta-expediente', 'dentista', '/dentista/expedientes/crear?paciente_id={paciente}'],
+];
 // Las que --medir compara con la línea base a 1024 y 1440 (D13).
 const COMPARADAS = [
   ...PANTALLAS_PERSONAL,
+  ...PANTALLAS_035,
   ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-detalle-historial`, rol, `/${rol}/citas/{cita_historial_largo}`]),
   ...Object.entries(RUTAS_PACIENTE).map(([id, ruta]) => [id, 'cliente', ruta]),
 ];
@@ -387,7 +406,7 @@ const EN_PAGINA = {
   errores: () => {
     const W = window.innerWidth; const fallos = [];
     const campos = [...document.querySelectorAll('.main input:not([type=hidden]), .main select, .main textarea')].filter((c) => c.getClientRects().length);
-    const errores = [...document.querySelectorAll('.main .field-hint-error, .main [role=alert]')].filter((e) => e.getClientRects().length && e.textContent.trim());
+    const errores = [...document.querySelectorAll('.main .field-hint-error, .main [role=alert], .main .error-msg')].filter((e) => e.getClientRects().length && e.textContent.trim());
     if (!errores.length) fallos.push('el envío vacío no mostró ningún error');
     for (const e of errores) {
       const r = e.getBoundingClientRect();
@@ -612,6 +631,48 @@ const EN_PAGINA = {
       boton: boton ? getComputedStyle(boton).display : null,
     };
   },
+  // ── Spec 035 ──
+  fichas035: () => {
+    const fallos = []; const r = (e) => e.getBoundingClientRect(); const visible = (e) => e.getClientRects().length > 0;
+    for (const sel of ['.ficha-paciente', '.ficha-expediente']) {
+      const f = document.querySelector(sel); if (!f) continue;
+      const hijos = [...f.children].filter(visible);
+      for (let i = 1; i < hijos.length; i++) if (r(hijos[i]).top < r(hijos[i - 1]).bottom - 1) fallos.push(`${sel}: la columna ${i + 1} no va debajo de la ${i}`);
+    }
+    const cab = document.querySelector('.perfil-cab');
+    if (cab) {
+      const av = cab.querySelector('.perfil-avatar'); const tx = cab.querySelector('.perfil-texto');
+      if (!av || !tx) fallos.push('el perfil no tiene iniciales o bloque de texto');
+      else {
+        if (Math.abs(r(av).width - 48) > 1) fallos.push(`las iniciales miden ${Math.round(r(av).width)} px de ancho (48 en el móvil)`);
+        if (r(tx).left < r(av).right - 1 || r(tx).top >= r(av).bottom) fallos.push('el nombre, la edad y el tipo de sangre no van a la derecha de las iniciales');
+      }
+      for (const e of document.querySelectorAll('.perfil-etiqueta')) if (!visible(e)) fallos.push(`la etiqueta «${e.textContent.trim()}» no se ve`);
+    }
+    const acciones = document.querySelector('.acciones-ficha');
+    if (acciones) {
+      const titulo = document.querySelector('.topbar-title');
+      if (titulo && r(acciones).top < r(titulo).bottom - 1) fallos.push('las acciones de la barra no van bajo el título');
+      const anchos = [...acciones.querySelectorAll('.btn')].filter(visible).map((b) => r(b).width);
+      if (anchos.length > 1 && Math.max(...anchos) - Math.min(...anchos) > 2) fallos.push('las acciones de la barra no se reparten a partes iguales');
+    }
+    // Texto e icono centrados en su botón y botones alineados en su fila (±2 px, /analyze A16).
+    for (const grupo of document.querySelectorAll('.acciones-ficha, .acciones-formulario')) {
+      const botones = [...grupo.querySelectorAll('.btn')].filter(visible);
+      if (botones.length > 1 && Math.max(...botones.map((b) => r(b).top)) - Math.min(...botones.map((b) => r(b).top)) > 2) fallos.push(`los botones de .${grupo.className.split(' ')[0]} no quedan alineados`);
+      for (const b of botones) {
+        const rango = document.createRange(); rango.selectNodeContents(b); const c = rango.getBoundingClientRect(); const rb = r(b);
+        if (Math.abs((c.left + c.right) / 2 - (rb.left + rb.right) / 2) > 2) fallos.push(`«${b.textContent.trim().slice(0, 20)}» con el texto descentrado`);
+      }
+    }
+    return [...new Set(fallos)];
+  },
+  etiquetasEscritorio: () => [...document.querySelectorAll('.perfil-etiqueta')].filter((e) => e.getClientRects().length).map((e) => e.textContent.trim()),
+  sinRecuadro: (selector) => {
+    const b = document.querySelector(selector); if (!b) return { falta: true };
+    const cs = getComputedStyle(b); const r = b.getBoundingClientRect();
+    return { borde: cs.borderTopWidth, fondo: cs.backgroundColor, ancho: r.width, alto: r.height };
+  },
   excluidos: () => [...document.querySelectorAll('.filtro-citas .field')].map((e) => {
     const r = e.getBoundingClientRect();
     return [Math.floor(r.left + scrollX - 4), Math.floor(r.top + scrollY - 4), Math.ceil(r.width + 8), Math.ceil(r.height + 8)];
@@ -663,6 +724,18 @@ async function enviarVacio(page, id) {
     for (const nombre of ['fecha', 'hora', 'nombre']) { const c = formulario.querySelector(`[name=${nombre}]`); if (c) c.value = ''; }
     setTimeout(() => formulario.submit(), 0);
   }, id);
+  await navegacion;
+}
+
+// Spec 035: envía el formulario de la página sin validación del navegador y con los campos obligatorios vacíos.
+async function enviarConErrores(page) {
+  const navegacion = page.waitForNavigation({ waitUntil: 'networkidle' });
+  await page.evaluate(() => {
+    const formulario = document.querySelector('.main form.form-paciente, .main form.form-expediente') || document.querySelector('.main form');
+    formulario.noValidate = true;
+    for (const campo of formulario.querySelectorAll('[required]')) campo.value = '';
+    setTimeout(() => formulario.submit(), 0);
+  });
   await navegacion;
 }
 
@@ -784,7 +857,9 @@ async function medir() {
   const pantallas = [
     ...PANTALLAS_PERSONAL,
     ...INCLUIDAS_PACIENTE.map((id) => [id, 'cliente', RUTAS_PACIENTE[id]]),
+    ...PANTALLAS_035,
   ];
+  const DE_035 = new Set(PANTALLAS_035.map(([id]) => id));
   let controlSolapes = false;
   for (const [id, rol, ruta] of pantallas) {
     for (const ancho of ['320', '390', '844x390', '1440']) {
@@ -793,8 +868,20 @@ async function medir() {
         const page = await abrir(rol, ruta, ancho);
         const a = await page.evaluate(EN_PAGINA.anchos);
         if (a.doc > a.vista) falla(donde, `la página mide ${a.doc} px de ${a.vista}`);
-        if (ancho === '1440') { await page.close(); return; }
+        if (ancho === '1440') {
+          if (DE_035.has(id)) for (const e of await page.evaluate(EN_PAGINA.etiquetasEscritorio)) falla(donde, `la etiqueta «${e}» del perfil se ve en el escritorio`);
+          await page.close(); return;
+        }
         if (['320', '390'].includes(ancho) && rol !== 'cliente') for (const r of await page.evaluate(EN_PAGINA.recortes)) falla(donde, `recortado: ${r}`);
+        if (DE_035.has(id)) for (const f of await page.evaluate(EN_PAGINA.fichas035)) falla(donde, `035: ${f}`);
+        if (DE_035.has(id) && ancho === '390' && /crear|edit|expedientes\/\{/.test(ruta) && id !== 'asistente-ficha-expediente') {
+          const foco = await focoVisible(page, '.form-paciente .field, .form-expediente .field');
+          if (foco) falla(donde, `campo del formulario: ${foco}`);
+        }
+        if (DE_035.has(id) && ancho === '320' && /alta-(paciente|expediente)$/.test(id)) {
+          await enviarConErrores(page);
+          for (const e of await page.evaluate(EN_PAGINA.errores)) falla(donde, e);
+        }
         for (const t of await page.evaluate(EN_PAGINA.toque, TOQUE_MAIN)) falla(donde, `toque < 44: ${t}`);
         if (!controlSolapes) {
           await page.evaluate(() => document.querySelector('.content').insertAdjacentHTML('afterbegin',
@@ -885,10 +972,20 @@ async function medir() {
     await intenta(donde, async () => {
       const page = await abrir(rol, PANELES[rol], '390');
       const b = await page.evaluate(EN_PAGINA.botonMenu);
+      // Spec 035 (CA11): «Menú» y «Cerrar menú» solo con el icono, sin borde ni fondo, y con foco visible.
+      const sin = await page.evaluate(EN_PAGINA.sinRecuadro, '.menu-btn');
+      if (sin.borde !== '0px') falla(donde, `«Menú» con borde de ${sin.borde}`);
+      if (sin.fondo !== 'rgba(0, 0, 0, 0)') falla(donde, `«Menú» con fondo ${sin.fondo}`);
+      const focoMenu = await focoVisible(page, '.menu-btn');
+      if (focoMenu) falla(donde, `«Menú»: ${focoMenu}`);
       if (b.texto) falla(donde, `«Menú» muestra el texto «${b.texto}»`);
       if (b.nombre !== 'Menú') falla(donde, `«Menú» se llama «${b.nombre}»`);
       if (b.ancho < 43.5 || b.alto < 43.5) falla(donde, `«Menú» mide ${Math.round(b.ancho)}×${Math.round(b.alto)}`);
       await page.locator('.menu-btn').click(); await page.waitForTimeout(300);
+      const cerrar = await page.evaluate(EN_PAGINA.sinRecuadro, '.menu-cerrar');
+      if (cerrar.borde !== '0px') falla(donde, `«Cerrar menú» con borde de ${cerrar.borde}`);
+      if (cerrar.fondo !== 'rgba(0, 0, 0, 0)') falla(donde, `«Cerrar menú» con fondo ${cerrar.fondo}`);
+      if (cerrar.ancho < 43.5 || cerrar.alto < 43.5) falla(donde, `«Cerrar menú» mide ${Math.round(cerrar.ancho)}×${Math.round(cerrar.alto)}`);
       const m = await page.evaluate(EN_PAGINA.marca);
       if (m.falta) falla(donde, 'no hay marca en el panel');
       else {
@@ -943,6 +1040,17 @@ async function medir() {
         if (n.boton === null) falla(donde, 'no existe el botón «Filtros»');
         else if (n.boton !== 'none') falla(donde, `«Filtros» visible sin JavaScript (${n.boton})`);
       }
+      await page.close();
+    });
+  }
+
+  // Sin JavaScript: las de la 035 (CA9).
+  for (const [id, rol, ruta] of PANTALLAS_035) {
+    const donde = `sin JS ${id}@390`;
+    await intenta(donde, async () => {
+      const page = await abrir(rol, ruta, '390', { js: false });
+      const a = await page.evaluate(EN_PAGINA.anchos);
+      if (a.doc > a.vista) falla(donde, `la página mide ${a.doc} px de ${a.vista}`);
       await page.close();
     });
   }
