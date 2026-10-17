@@ -84,9 +84,10 @@
         justify-content: center;
         gap: var(--space-2);
         padding: 0 var(--space-4);
-        background: var(--white);
+        /* Solo el icono, sin recuadro ni fondo (spec 035, CA11): el área y el foco se mantienen. */
+        background: transparent;
         color: var(--p600);
-        border: var(--border-width) solid var(--border-control);
+        border: 0;
         border-radius: var(--radius-sm);
         font: inherit;
         font-size: var(--text-body);
@@ -242,4 +243,26 @@
     .detalle-datos-rejilla { grid-template-columns: minmax(0, 1fr); }
     /* Las opciones de «Cambiar estado» miden al menos --touch-min de alto (T037). */
     #estado fieldset label { min-height: var(--touch-min); }
+
+    /* ── Spec 035: fichas del paciente y del expediente, perfil compacto y acciones ── */
+    .ficha-paciente, .ficha-expediente { grid-template-columns: minmax(0, 1fr); }
+    /* «Volver al paciente» baja bajo el título (D2). */
+    .expediente-cabecera { flex-direction: column; gap: var(--space-3); }
+    /* Acciones de la ficha en una fila bajo el título, a partes iguales (D4). Sin :has(), a la derecha. */
+    .topbar-actions:has(.acciones-ficha) { flex-basis: 100%; margin-left: 0; }
+    .acciones-ficha { width: 100%; gap: var(--space-3); }
+    .acciones-ficha .btn, .acciones-formulario .btn { flex: 1; justify-content: center; }
+    .paginacion { flex-wrap: wrap; gap: var(--space-3); }
+    /* Textos largos (D6): el correo entero, y el título de la barra y las migas parten (034/R8, /analyze 035 A12, A21). */
+    .dato-recortado { white-space: normal; overflow: visible; }
+    .topbar-title, .migas-actual, .migas a { overflow-wrap: anywhere; min-width: 0; }
+    .migas { flex-wrap: wrap; }
+    /* Perfil compacto del paciente (D12; design.md: opción A con el perfil de C). */
+    .perfil-identidad { text-align: start; }
+    .perfil-cab { display: grid; grid-template-columns: var(--perfil-avatar-movil) minmax(0, 1fr); gap: var(--space-4); align-items: center; }
+    .perfil-avatar { width: var(--perfil-avatar-movil); height: var(--perfil-avatar-movil); margin: 0; font-size: var(--perfil-iniciales-movil); }
+    .perfil-nombre { font-size: var(--perfil-nombre-movil); }
+    .perfil-dato { display: grid; grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr); }
+    .perfil-dato svg { display: none; }
+    .perfil-etiqueta { font-size: var(--text-small); font-weight: var(--weight-strong); text-transform: uppercase; color: var(--p600); }
 }
