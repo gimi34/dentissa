@@ -77,6 +77,7 @@
     --perfil-nombre-text:     20px;  /* tamaño, no color */
     --perfil-nombre-movil:    16px;  /* tamaño, no color */
     --weight-bold:            600;
+    --expediente-dato-max:    140px;
 }
 
 body {
@@ -644,4 +645,6 @@ tr:hover td { background: var(--p50); }
     outline-offset: var(--focus-ring-offset);
 }
 .form-paciente .field:focus, .form-expediente .field:focus { border-color: var(--border-control); box-shadow: none; }
+/* Valores de «Información» de la ficha del expediente: el máximo de hoy en el escritorio (T031). */
+.info-valor { text-align: right; max-width: var(--expediente-dato-max); }
 /* Fin spec 035 */

@@ -151,6 +151,8 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
     el escritorio (hoy) y en el móvil;
   - `--perfil-iniciales-text` (22px) y `--perfil-iniciales-movil` (17px): letra de las iniciales;
   - `--perfil-nombre-text` (20px) y `--perfil-nombre-movil` (16px): letra del nombre del perfil;
+  - `--expediente-dato-max` (140px): ancho máximo de hoy de los valores de «Información» de la ficha del
+    expediente en el escritorio (`.info-valor`); en el móvil, sin máximo;
   - `--weight-bold` (600, en la tabla de tipografía).
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
