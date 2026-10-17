@@ -105,6 +105,7 @@ con las iniciales y el nombre y, debajo, los datos de contacto en filas etiqueta
 | Componente «Perfil compacto del paciente» | corte 900 px | fila de identidad y filas etiqueta / valor | la tarjeta centrada de hoy | Elección del usuario (C) |
 | Componente «Acciones de la barra en el móvil» | corte 900 px | fila bajo el título a partes iguales | a la derecha del título | D4 del plan |
 | Componente «Acciones de formulario» | corte 900 px | botones a todo el ancho, texto centrado | a la derecha | D5 del plan |
+| Campo de formulario: foco del sistema en los formularios del paciente y del expediente | fijo | anillo `--focus-ring`, borde `--border-control`, sin halo | — | D13 del plan (/analyze A6, A24) |
 
 ## Movimiento
 

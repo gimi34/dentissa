@@ -1,6 +1,7 @@
 ---
 spec: 035-movil-pacientes-expedientes
 plan: plan.md
+impl_base: 883af40
 status: approved
 ---
 
@@ -35,7 +36,9 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | P10 Las rutas indexables son descubribles | ➖ | Ninguna tarea toca `/registro` ni otra ruta indexable (`docs/seo.md`) |
 
 ## Preparación
-- [ ] T001 Incorporar al sistema de diseño los «Cambios a incorporar al sistema» del plan (1.5.0 → 1.6.0): los nueve tokens (`--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`) en sus tablas; en «Menú del móvil», «Menú» y «Cerrar menú» solo con el icono, sin recuadro ni fondo (sustituye la línea del aspecto de `.btn-outline` con borde `--border-control`); los componentes «Ficha en una columna», «Perfil compacto del paciente» (exclusivo de la ficha, `design.md`), «Acciones de la barra en el móvil», «Acciones de formulario» y el foco del sistema en los campos de los formularios con estilo propio (D13); y la fila de «Decisiones» del 2026-10-16 (spec 035) — docs/design/system.md, docs/design/system.html — hecho cuando: `system.md` está en 1.6.0 con todo lo anterior, `system.html` muestra los nueve tokens y los componentes nuevos, y `aidd.py validate` no da errores — cubre: CA1, CA4, CA7, CA11
+- [x] T001 Incorporar al sistema de diseño los «Cambios a incorporar al sistema» del plan (1.5.0 → 1.6.0): los nueve tokens (`--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`) en sus tablas; en «Menú del móvil», «Menú» y «Cerrar menú» solo con el icono, sin recuadro ni fondo (sustituye la línea del aspecto de `.btn-outline` con borde `--border-control`); los componentes «Ficha en una columna», «Perfil compacto del paciente» (exclusivo de la ficha, `design.md`), «Acciones de la barra en el móvil», «Acciones de formulario» y el foco del sistema en los campos de los formularios con estilo propio (D13); y la fila de «Decisiones» del 2026-10-16 (spec 035) — docs/design/system.md, docs/design/system.html — hecho cuando: `system.md` está en 1.6.0 con todo lo anterior, `system.html` muestra los nueve tokens y los componentes nuevos, y `aidd.py validate` no da errores — cubre: CA1, CA4, CA7, CA11
+  - nota: `system.md` 1.6.0 con los nueve tokens (lista «Spec 035» y `--weight-bold` en la tabla de tipografía), el foco del sistema en «Campo de formulario», «Menú» y «Cerrar menú» sin recuadro, los componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario», y la fila de Decisiones del 2026-10-16. `system.html`: tokens de la 035, muestra del botón del menú sin borde y sección «Perfil compacto, acciones y campo con foco (spec 035)»; los «no cumple» que muestra la página son los pares previos de la deuda DS1, sin pares nuevos. `aidd.py validate` sin errores; `MovilPersonalTest` y `MovilPacienteTest` en verde.
+  - nota: A24 — `design.md` gana en «Cambios a incorporar» la fila del foco del sistema en los formularios (D13).
 - [ ] T002 Registrar la línea base antes de cualquier test nuevo: `php artisan test` completo, `composer audit --locked`, `npm audit --audit-level=high` y `trivy fs --severity HIGH,CRITICAL` — (sin archivos) — hecho cuando: la nota de la tarea anota el número de tests en verde, los fallos (si hay) y el resultado de las tres auditorías — depende: T001
 
 ## Tests (antes de implementar)

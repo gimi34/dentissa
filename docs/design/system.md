@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.5.0
+version: 1.6.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-10-13
+updated: 2026-10-16
 ---
 
 # Sistema de diseño de Dentissa
@@ -79,6 +79,7 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 |---|---|---|---|
 | (sin token) | Roboto, sans-serif | 300–700 cargados (layout) · 300–600 (acceso); se usan 400, 500 y 600 | Toda la app (medido en 114 de 120 capturas) |
 | `--weight-regular` / `--weight-strong` | — | 400 / 500 | Pesos de las reglas de la spec 027 |
+| `--weight-bold` | — | 600 | Iniciales del perfil del paciente (spec 035; el valor de hoy) |
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
 
@@ -143,6 +144,14 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - `--filtro-buscar-min` (180px), `--filtro-fecha-min` (130px), `--filtro-dentista-min` (150px) y
     `--filtro-estado-min` (140px): anchos mínimos de hoy de los campos del filtro de citas en el
     escritorio; en el móvil pasan a 0.
+- **Spec 035 (pacientes y expedientes del personal):**
+  - `--ficha-lateral-w` (320px) y `--expediente-lateral-w` (300px): columna lateral de la ficha del
+    paciente y de la del expediente en el escritorio (los valores de hoy);
+  - `--perfil-avatar-w` (64px) y `--perfil-avatar-movil` (48px): iniciales del perfil del paciente en
+    el escritorio (hoy) y en el móvil;
+  - `--perfil-iniciales-text` (22px) y `--perfil-iniciales-movil` (17px): letra de las iniciales;
+  - `--perfil-nombre-text` (20px) y `--perfil-nombre-movil` (16px): letra del nombre del perfil;
+  - `--weight-bold` (600, en la tabla de tipografía).
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -187,7 +196,10 @@ Recortes reales de las capturas en `capturas/componentes/` (vista en `system.htm
   - etiqueta de 11px/600 en mayúsculas, color `--text-light`;
   - campo de 13.5px y 34–38px de alto, borde 1px `--border`, radio 8px;
   - en servicios, 13.33px Arial y radio 5px, con el desplegable en gris (DS12).
-- Foco: `outline: none`, borde `--p300` y halo al 7%.
+- Foco: `outline: none`, borde `--p300` y halo al 7%. Desde la spec 035, los formularios del paciente
+  y del expediente (`.form-paciente`, `.form-expediente`) usan el foco del sistema: anillo
+  `--focus-ring` de `--focus-ring-width` con `--focus-ring-offset`, borde `--border-control` y sin
+  halo; los demás formularios siguen como deuda DS2.
 - Error: borde `--red` y texto de ayuda en `--red` junto al campo.
 - `.field-hint` y `.field-hint-error` (spec 027) están en `app.css`, con `aria-describedby` y
   `aria-invalid` solo en el horario.
@@ -251,14 +263,16 @@ Opción A de la spec 033 ([maqueta](../specs/033-movil-paciente/design/opcion-a.
 900 px, la barra lateral se convierte en un panel que se despliega sobre la página:
 - **Botón «Menú»** (`.menu-btn`), en la barra superior antes del título, **solo con el icono** de
   `--icon-md` (spec 034): `aria-label="Menú"`, `--touch-min` × `--touch-min` y relleno 0.
-  `aria-expanded` y `aria-controls="menu-principal"`. Aspecto de `.btn-outline`, pero con borde
-  `--border-control` (≥ 3:1) en lugar de `--p200` (1,6:1).
+  `aria-expanded` y `aria-controls="menu-principal"`. Desde la spec 035, **solo el icono, sin
+  recuadro ni fondo**: icono `--p600` sobre la barra blanca (7,00:1), `border: 0`, fondo transparente,
+  el área de `--touch-min` y el anillo de foco del sistema (`--radius-sm` le da forma).
 - **Panel** (`<aside id="menu-principal" aria-label="Menú">`): blanco, de `--menu-movil-w` (como mucho
   85 % del ancho), alto `100dvh` y desplazable. Arriba, la marca (`.sidebar-marca`): desde la spec 034,
   el logo actual pintado con `--p600` (7,00:1 sobre `--white`) a través de `mask` y `-webkit-mask`, de
   `--logo-max-w` × `--logo-movil-h`, con `role="img"` y `aria-label="Melissa López N."`; si el
   navegador no admite la máscara, queda un rectángulo `--p600`. Al lado, el botón «Cerrar menú»
-  (`.menu-cerrar`, solo icono, con `aria-label`, mismo aspecto que «Menú»). Debajo, las mismas
+  (`.menu-cerrar`, solo icono, con `aria-label`, mismo aspecto que «Menú»: sin recuadro desde la
+  spec 035). Debajo, las mismas
   secciones del escritorio (`.nav-item` en `--text`; la actual con `aria-current="page"`, fondo
   `--p100`, texto `--p600` y una barra de `--border-width-strong` a la izquierda, para que no dependa
   solo del color), el nombre y «Cerrar sesión» (borde `--border-control`). El logo en imagen se
@@ -342,6 +356,33 @@ Filtro de la lista de citas del personal (`.filtro-citas`):
 ### Rejilla de estadísticas (spec 034)
 `.stats-grid` (ya existía) con las variantes `.stats-grid-2` y `.stats-grid-3`, que solo fijan
 `grid-template-columns`. En el móvil, dos columnas.
+
+### Ficha en una columna (spec 035)
+Ficha del paciente (`.ficha-paciente`: `var(--ficha-lateral-w) 1fr`) y del expediente
+(`.ficha-expediente`: `1fr var(--expediente-lateral-w)`), con hueco `--space-7`. Por debajo de 900 px,
+una columna en el orden del HTML (`minmax(0, 1fr)`): primero la columna del perfil o del contenido y
+después la otra ([diseño](../specs/035-movil-pacientes-expedientes/design.md), opción A).
+
+### Perfil compacto del paciente (spec 035, exclusivo de la ficha del paciente)
+Opción C de la spec 035 ([maqueta](../specs/035-movil-pacientes-expedientes/design/opcion-c.html)). En
+el escritorio, la tarjeta de identidad de siempre, centrada (`.perfil-identidad`, iniciales de
+`--perfil-avatar-w` con `--perfil-iniciales-text` y `--weight-bold`, nombre de `--perfil-nombre-text`).
+Por debajo de 900 px:
+- `.perfil-cab`: rejilla `var(--perfil-avatar-movil) minmax(0, 1fr)` con las iniciales (48 px,
+  `--perfil-iniciales-movil`, `aria-hidden`) y un único bloque con el nombre (`--perfil-nombre-movil`),
+  la edad y el tipo de sangre;
+- los datos de contacto en filas etiqueta / valor (`.perfil-dato`: `var(--tarjeta-etiqueta-w)
+  minmax(0, 1fr)`), con la etiqueta visible («Correo», «Teléfono», «Ciudad», «Doctor») en
+  `--text-small`, `--weight-strong`, mayúsculas y `--p600`, y sin los iconos del escritorio.
+
+### Acciones de la barra en el móvil (spec 035)
+`.acciones-ficha` en la barra superior de la ficha del paciente: en el escritorio, a la derecha del
+título con hueco `--space-4`; por debajo de 900 px, una fila bajo el título (`.topbar-actions:has(...)`)
+con los botones a partes iguales y el texto centrado. Sin `:has()`, queda a la derecha, sin desbordar.
+
+### Acciones de formulario (spec 035)
+`.acciones-formulario` («Cancelar», «Guardar…»): a la derecha en el escritorio, con hueco
+`--space-4`; por debajo de 900 px, botones del mismo ancho con el texto y el icono centrados.
 
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
@@ -575,3 +616,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |
 | 2026-10-13 | diseño | ¿Qué incorpora el sistema para el móvil del personal (spec 034)? | Versión 1.5.0: opción A (tarjeta con etiquetas y filtro en la página); tokens `--tarjeta-etiqueta-w`, `--logo-movil-h`, `--space-detalle`, `--detalle-lateral-w` y los cuatro anchos mínimos del filtro; componentes «Tarjeta de lista en el móvil», «Filtro plegable», «Rejilla de estadísticas» y «Botón de icono»; cambian «Botón Menú» (solo icono), «Marca del menú del móvil» (logo con máscara) y la línea de tiempo de la dentista; `--text-marca` sin uso | usuario (spec 034 y plan 034, D1, D4, D5b, D6, D6b, D10; /analyze A33, A35, A36, A59, A60, A68, A69) |
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
+| 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |
