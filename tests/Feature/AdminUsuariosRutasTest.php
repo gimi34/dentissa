@@ -37,7 +37,7 @@ class AdminUsuariosRutasTest extends TestCase
     public function test_el_alta_de_usuarios_resuelve_al_metodo_create(): void
     {
         $this->assertSame(
-            UsuarioController::class . '@create',
+            UsuarioController::class.'@create',
             $this->accionDe('/admin/usuarios/crear'),
             'El segmento literal "crear" volvió a quedar capturado por la ruta /admin/usuarios/{id}.'
         );
@@ -60,7 +60,7 @@ class AdminUsuariosRutasTest extends TestCase
     public function test_el_listado_de_usuarios_resuelve_al_controlador(): void
     {
         $this->assertSame(
-            UsuarioController::class . '@index',
+            UsuarioController::class.'@index',
             $this->accionDe('/admin/usuarios'),
             '/admin/usuarios debe atenderla UsuarioController@index, no el closure del marcador de posición.'
         );
@@ -98,8 +98,8 @@ class AdminUsuariosRutasTest extends TestCase
         );
 
         $this->assertSame(
-            UsuarioController::class . '@toggleActivo',
-            $this->accionDe('/admin/usuarios/' . self::UUID_DE_EJEMPLO . '/toggle', 'PATCH'),
+            UsuarioController::class.'@toggleActivo',
+            $this->accionDe('/admin/usuarios/'.self::UUID_DE_EJEMPLO.'/toggle', 'PATCH'),
             'La ruta de alternancia debe apuntar a UsuarioController@toggleActivo.'
         );
     }

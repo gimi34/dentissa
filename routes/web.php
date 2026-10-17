@@ -34,10 +34,11 @@ Route::get('/', function () {
             'dentista' => redirect()->route('dentista.dashboard'),
             'asistente' => redirect()->route('asistente.dashboard'),
             default => redirect()->route('cliente.dashboard'),
+
         };
     }
 
-    return redirect('/login');
+    return view('landing.index');
 });
 
 // ── Admin ───────────────────────────────────────────────────────────────

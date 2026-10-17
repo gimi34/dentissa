@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+<<<<<<< Updated upstream
 use App\Agenda\HorarioDentista;
 use App\Agenda\HorarioNoGuardado;
 use App\Rules\HoraFinPosterior;
+=======
+>>>>>>> Stashed changes
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -358,10 +361,26 @@ class PersonalController extends Controller
 
         $validados = $request->validate(self::reglasDeHorario(), self::mensajesDeHorario());
 
+<<<<<<< Updated upstream
         $franjas = [];
         foreach ($validados['dias'] ?? [] as $dia => $info) {
             if (isset($info['activo'])) {
                 $franjas[(int) $dia] = ['inicio' => $info['hora_inicio'], 'fin' => $info['hora_fin']];
+=======
+            foreach ($dias as $dia => $info) {
+                if (! isset($info['activo'])) {
+                    continue;
+                }
+
+                DB::table('horarios_dentista')->insert([
+                    'id' => (string) Str::uuid(),
+                    'personal_id' => $id,
+                    'dia_semana' => (int) $dia,
+                    'hora_inicio' => $info['hora_inicio'] ?? '09:00',
+                    'hora_fin' => $info['hora_fin'] ?? '18:00',
+                    'disponible' => 1,
+                ]);
+>>>>>>> Stashed changes
             }
         }
 

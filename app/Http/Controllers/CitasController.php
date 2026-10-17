@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+<<<<<<< Updated upstream
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
@@ -12,6 +13,12 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+=======
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+>>>>>>> Stashed changes
 
 class CitasController extends Controller
 {
@@ -55,7 +62,19 @@ class CitasController extends Controller
     // Solo se usa con el rol asistente: sus dentistas asignados.
     private function dentistaIdsAsistente(): array
     {
+<<<<<<< Updated upstream
         return app(AlcanceClinico::class)->dentistasDelAlcance(auth()->user()) ?? [];
+=======
+        $personalId = $this->personalIdPropio();
+        if (! $personalId) {
+            return [];
+        }
+
+        return DB::table('asistente_dentista')
+            ->where('asistente_id', $personalId)
+            ->pluck('dentista_id')
+            ->all();
+>>>>>>> Stashed changes
     }
 
     // Aplica la restricción de citas visibles según el rol autenticado
@@ -226,6 +245,7 @@ class CitasController extends Controller
     // ── STORE ──────────────────────────────────────────────────────────
     public function store(Request $request, ReservaCitas $reservas)
     {
+<<<<<<< Updated upstream
         $data = $request->validate(ReservaCitas::reglasDeEntrada() + [
             'paciente_id' => 'bail|required|string|exists:pacientes,id',
             'servicio_id' => 'bail|nullable|string|exists:servicios,id',
@@ -235,12 +255,24 @@ class CitasController extends Controller
         ], ReservaCitas::mensajesDeEntrada() + [
             'paciente_id.string' => 'Elige un paciente válido.',
             'servicio_id.string' => 'Elige un servicio válido.',
+=======
+        $data = $request->validate([
+            'paciente_id' => 'required|exists:pacientes,id',
+            'dentista_id' => 'required|exists:personal,id',
+            'servicio_id' => 'nullable|exists:servicios,id',
+            'fecha' => 'required|date',
+            'hora' => 'required',
+            'duracion_min' => 'required|integer|min:10|max:300',
+            'notas_paciente' => 'nullable|string|max:1000',
+            'notas_internas' => 'nullable|string|max:1000',
+>>>>>>> Stashed changes
         ]);
 
         if (! $this->autorizadoParaCita($data['dentista_id'])) {
             abort(403);
         }
 
+<<<<<<< Updated upstream
         // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
         try {
             $reservas->reservar([
@@ -253,11 +285,73 @@ class CitasController extends Controller
                 'notas_paciente' => $data['notas_paciente'] ?? null,
                 'notas_internas' => $data['notas_internas'] ?? null,
                 'creado_por' => auth()->id(),
+=======
+        $fechaHora = Carbon::parse($data['fecha'].' '.$data['hora']);
+
+        $duracion = (int) $data['duracion_min'];
+        $horaFinCita = (clone $fechaHora)->addMinutes($duracion);
+
+        // Disponibilidad del dentista según su horario semanal
+        $diaSemana = $fechaHora->isoWeekday(); // 1=Lunes ... 7=Domingo
+
+        $horario = DB::table('horarios_dentista')
+            ->where('personal_id', $data['dentista_id'])
+            ->where('dia_semana', $diaSemana)
+            ->first();
+
+        if (! $horario || ! $horario->disponible) {
+            return back()->withInput()->withErrors([
+                'hora' => 'El dentista no tiene horario disponible ese día de la semana.',
+            ]);
+        }
+
+        $horaInicio = Carbon::parse($data['fecha'].' '.$horario->hora_inicio);
+        $horaFinDisponible = Carbon::parse($data['fecha'].' '.$horario->hora_fin);
+
+        if ($fechaHora->lt($horaInicio) || $horaFinCita->gt($horaFinDisponible)) {
+            return back()->withInput()->withErrors([
+                'hora' => 'El horario elegido está fuera del horario de atención del dentista ('
+                    .$horaInicio->format('H:i').' - '.$horaFinDisponible->format('H:i').').',
+            ]);
+        }
+
+        $conflicto = DB::table('citas')
+            ->where('dentista_id', $data['dentista_id'])
+            ->whereNotIn('estado', ['cancelada', 'no_asistio'])
+            ->where(function ($q) use ($fechaHora, $horaFinCita) {
+                $q->whereBetween('fecha_hora', [$fechaHora, $horaFinCita])
+                    ->orWhereRaw('DATE_ADD(fecha_hora, INTERVAL duracion_min MINUTE) > ? AND fecha_hora < ?',
+                        [$fechaHora, $horaFinCita]);
+            })
+            ->exists();
+
+        if ($conflicto) {
+            return back()->withInput()->withErrors([
+                'hora' => 'El dentista ya tiene una cita en ese horario. Por favor elige otro horario.',
+>>>>>>> Stashed changes
             ]);
         } catch (CitaNoAgendable $rechazo) {
             return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
         }
 
+<<<<<<< Updated upstream
+=======
+        DB::table('citas')->insert([
+            'id' => (string) Str::uuid(),
+            'paciente_id' => $data['paciente_id'],
+            'dentista_id' => $data['dentista_id'],
+            'servicio_id' => $data['servicio_id'] ?: null,
+            'fecha_hora' => $fechaHora,
+            'duracion_min' => (int) $data['duracion_min'],
+            'estado' => 'agendada',
+            'notas_paciente' => $data['notas_paciente'] ?? null,
+            'notas_internas' => $data['notas_internas'] ?? null,
+            'creado_por' => auth()->id(),
+            'creado_en' => now(),
+            'actualizado_en' => now(),
+        ]);
+
+>>>>>>> Stashed changes
         $base = match (auth()->user()->rol) {
             'dentista' => 'dentista',
             'asistente' => 'asistente',
@@ -265,8 +359,13 @@ class CitasController extends Controller
         };
 
         return redirect()->route("$base.citas", [
+<<<<<<< Updated upstream
             'fecha_desde' => $data['fecha'],
             'fecha_hasta' => $data['fecha'],
+=======
+            'fecha_desde' => $fechaHora->format('Y-m-d'),
+            'fecha_hasta' => $fechaHora->format('Y-m-d'),
+>>>>>>> Stashed changes
         ])->with('success', 'Cita agendada correctamente.');
     }
 
@@ -292,12 +391,16 @@ class CitasController extends Controller
             ->orderByDesc('fecha')
             ->get();
 
+<<<<<<< Updated upstream
         // Solo las transiciones que este usuario puede hacer ahora (spec 026).
         $disponibles = $estados->disponibles(auth()->user(), $cita);
         $aviso = $this->avisoDeEstado($cita, $disponibles, $estados->haEmpezado($cita), $estados->inicio($cita));
         // «Reprogramar» solo si el rol puede y la cita aún se puede mover (spec 028).
         $cita->puede_reprogramar = Gate::allows('reprogramar-cita', $cita)
             && $this->motivoNoReprogramable($cita, $estados) === null;
+=======
+        $estados = ['agendada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio'];
+>>>>>>> Stashed changes
 
         return view('citas.show', compact('cita', 'historial', 'disponibles', 'aviso'));
     }
@@ -325,16 +428,27 @@ class CitasController extends Controller
     // ── UPDATE ESTADO ──────────────────────────────────────────────────
     public function updateEstado(Request $request, string $id, EstadosCita $estados)
     {
+<<<<<<< Updated upstream
         $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id', 'estado', 'fecha_hora']);
         if (! $cita) {
             abort(404);
         }
         // El alcance va antes de validar: fuera de alcance es 403 con cualquier entrada.
         Gate::authorize('gestionar-cita', $cita);
+=======
+        $dentistaId = DB::table('citas')->where('id', $id)->value('dentista_id');
+        if (! $dentistaId) {
+            abort(404);
+        }
+        if (! $this->autorizadoParaCita($dentistaId)) {
+            abort(403);
+        }
+>>>>>>> Stashed changes
 
         // Las notas internas no se aceptan aquí (spec 026, CA11). Desde «No reagendar» (spec 028)
         // la cancelación exige marcar la casilla de confirmación (/review 028 R6, R23).
         $data = $request->validate([
+<<<<<<< Updated upstream
             'estado' => 'required|string|in:'.implode(',', ['agendada', ...array_keys(EstadosCita::TRANSICIONES)]),
             'motivo' => 'nullable|string|max:500',
             'formulario' => 'nullable|string|in:reprogramar,no-reagendar',
@@ -368,6 +482,36 @@ class CitasController extends Controller
         // Tras cancelar desde «No reagendar», la pantalla de reprogramar ya no aplica: al detalle (R1).
         if ($desdeNoReagendar) {
             return redirect()->route(auth()->user()->rol.'.citas.show', $id)->with('success', 'Estado actualizado correctamente.');
+=======
+            'estado' => 'required|in:agendada,confirmada,en_curso,completada,cancelada,no_asistio',
+            'motivo' => 'nullable|string|max:500',
+            'notas_internas' => 'nullable|string|max:1000',
+        ]);
+
+        $updates = [
+            'estado' => $data['estado'],
+            'actualizado_en' => now(),
+        ];
+
+        // Guardar nota interna si se envía
+        if (! empty($data['notas_internas'])) {
+            $updates['notas_internas'] = $data['notas_internas'];
+        }
+
+        DB::table('citas')->where('id', $id)->update($updates);
+
+        // El trigger trg_historial_cita en MySQL registra el cambio automáticamente,
+        // pero si quieres guardar el motivo manualmente también:
+        if (! empty($data['motivo'])) {
+            DB::table('historial_citas')->insert([
+                'id' => (string) Str::uuid(),
+                'cita_id' => $id,
+                'cambiado_por' => auth()->id(),
+                'estado_nuevo' => $data['estado'],
+                'motivo' => $data['motivo'],
+                'fecha' => now(),
+            ]);
+>>>>>>> Stashed changes
         }
 
         return back()->with('success', 'Estado actualizado correctamente.');
@@ -449,6 +593,7 @@ class CitasController extends Controller
     // "Eliminar" es cancelar, con las mismas reglas que el cambio de estado (spec 026, CA6).
     public function destroy(string $id, EstadosCita $estados)
     {
+<<<<<<< Updated upstream
         $cita = DB::table('citas')->where('id', $id)->first(['id', 'dentista_id', 'paciente_id', 'estado', 'fecha_hora']);
         if (! $cita) {
             abort(404);
@@ -461,6 +606,12 @@ class CitasController extends Controller
         } catch (CambioDeEstadoNoPermitido $e) {
             return back()->withErrors(['estado' => $e->getMessage()]);
         }
+=======
+        DB::table('citas')->where('id', $id)->update([
+            'estado' => 'cancelada',
+            'actualizado_en' => now(),
+        ]);
+>>>>>>> Stashed changes
 
         return redirect()->route('admin.citas')
             ->with('success', 'Cita cancelada.');

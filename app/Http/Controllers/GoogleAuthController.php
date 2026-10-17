@@ -35,10 +35,10 @@ class GoogleAuthController extends Controller
 
             request()->session()->put('google_registro', [
                 'google_id' => $googleUser->getId(),
-                'nombre'    => $nombre,
-                'apellido'  => $apellido,
-                'email'     => $googleUser->getEmail(),
-                'foto_url'  => $googleUser->getAvatar(),
+                'nombre' => $nombre,
+                'apellido' => $apellido,
+                'email' => $googleUser->getEmail(),
+                'foto_url' => $googleUser->getAvatar(),
             ]);
 
             return redirect()->route('register.contacto');
