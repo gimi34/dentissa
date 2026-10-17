@@ -224,6 +224,93 @@ class MovilPacientesExpedientesTest extends TestCase
         }
     }
 
+    /** RNF 1.3.1 (D7): cada etiqueta apunta a un campo de su formulario. */
+    public function test_las_etiquetas_apuntan_a_su_campo(): void
+    {
+        $formularios = [
+            [$this->admin, '/admin/pacientes/crear'],
+            [$this->asistente, '/asistente/pacientes/crear'],
+            [$this->admin, "/admin/pacientes/{$this->p1}/edit"],
+            [$this->dentista1, "/dentista/pacientes/{$this->p1}/edit"],
+            [$this->admin, "/admin/expedientes/crear?paciente_id={$this->p1}"],
+            [$this->admin, "/admin/expedientes/{$this->expediente}"],
+            [$this->dentista1, "/dentista/expedientes/{$this->expediente}"],
+            [$this->dentista1, '/dentista/expedientes'],
+        ];
+        foreach ($formularios as [$usuario, $url]) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get($url)->assertOk()->getContent());
+            $etiquetas = $xpath->query("//main//form//label[contains(concat(' ', normalize-space(@class), ' '), ' field-label ') or contains(concat(' ', normalize-space(@class), ' '), ' etiqueta-campo ')]");
+            $this->assertGreaterThan(0, $etiquetas->length, "{$url}: hay etiquetas.");
+            foreach ($etiquetas as $etiqueta) {
+                $para = $etiqueta->getAttribute('for');
+                $texto = trim(preg_replace('/\s+/', ' ', $etiqueta->textContent));
+                $this->assertNotSame('', $para, "{$url}: «{$texto}» con for.");
+                $form = $xpath->query('ancestor::form', $etiqueta)->item(0);
+                $this->assertSame(1, $xpath->query(".//*[@id='{$para}'][self::input or self::select or self::textarea]", $form)->length, "{$url}: «{$texto}» apunta a un campo de su formulario.");
+            }
+        }
+
+        // Ficha del expediente: los cuatro títulos son <label for class="etiqueta-campo"> (D7, /analyze A3).
+        foreach (['admin' => $this->admin, 'dentista' => $this->dentista1] as $rol => $usuario) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get("/{$rol}/expedientes/{$this->expediente}")->assertOk()->getContent());
+            foreach (['diagnostico', 'tratamiento', 'receta', 'observaciones'] as $campo) {
+                $this->assertSame(1, $xpath->query("//label[contains(concat(' ', normalize-space(@class), ' '), ' etiqueta-campo ')][@for=//textarea[@name='{$campo}']/@id]")->length, "{$rol}: «{$campo}» con su etiqueta.");
+            }
+        }
+        $xpath = $this->xpath($this->actingAs($this->asistente)->get("/asistente/expedientes/{$this->expediente}")->assertOk()->getContent());
+        $this->assertSame(0, $xpath->query('//main//form')->length, 'La asistente lee el expediente sin formulario.');
+    }
+
+    /** CA6 (D7, /analyze A11 y A22): cada campo validado muestra su error junto a él, enlazado y con sus datos. */
+    public function test_cada_campo_validado_muestra_su_error_junto_a_el(): void
+    {
+        $largo = fn (int $n) => str_repeat('x', $n);
+        $casos = [
+            'alta del paciente' => ['/admin/pacientes/crear', 'post', '/admin/pacientes', [
+                'nombre' => '', 'apellido' => '', 'email' => 'no-es-correo', 'telefono' => $largo(21), 'password' => '123',
+                'fecha_nacimiento' => '2030-01-01', 'genero' => $largo(21), 'direccion' => $largo(501), 'ciudad' => $largo(101),
+                'tipo_sangre' => 'ABCDEF', 'alergias' => $largo(1001), 'enfermedades_cronicas' => $largo(1001),
+                'medicamentos_actuales' => $largo(501), 'notas_medicas' => $largo(2001), 'contacto_emergencia' => $largo(201),
+                'telefono_emergencia' => $largo(21), 'dentista_id' => 'no-existe',
+            ]],
+            'alta de expediente' => ["/admin/expedientes/crear?paciente_id={$this->p1}", 'post', '/admin/expedientes', [
+                'paciente_id' => $this->p1, 'dentista_id' => 'no-existe', 'cita_id' => 'no-existe', 'diagnostico' => '',
+                'tratamiento' => $largo(2001), 'receta' => $largo(2001), 'observaciones' => $largo(2001), 'proxima_visita' => '2026-10-01',
+            ]],
+            'edición del expediente' => ["/admin/expedientes/{$this->expediente}", 'put', "/admin/expedientes/{$this->expediente}", [
+                'diagnostico' => '', 'tratamiento' => $largo(2001), 'receta' => $largo(2001), 'observaciones' => $largo(2001),
+                'proxima_visita' => 'no-es-fecha',
+            ]],
+        ];
+        foreach ($casos as $caso => [$desde, $metodo, $destino, $datos]) {
+            // Sin errores: ni mensaje ni aria-describedby.
+            $xpath = $this->xpath($this->actingAs($this->admin)->get($desde)->assertOk()->getContent());
+            $this->assertSame(0, $xpath->query("//main//*[contains(concat(' ', normalize-space(@class), ' '), ' error-msg ')]")->length, "{$caso}: sin errores, sin mensajes.");
+            $this->assertSame(0, $xpath->query('//main//form//*[@aria-describedby]')->length, "{$caso}: sin errores, sin aria-describedby.");
+
+            $html = $this->actingAs($this->admin)->followingRedirects()->from($desde)->{$metodo}($destino, $datos)->assertOk()->getContent();
+            $xpath = $this->xpath($html);
+            foreach ($datos as $campo => $valor) {
+                if ($campo === 'paciente_id') {
+                    continue; // Campo oculto: sin mensaje junto a él (/analyze A22).
+                }
+                $nodo = $xpath->query("//main//form//*[@name='{$campo}'][not(@type='hidden')]")->item(0);
+                $this->assertInstanceOf(DOMElement::class, $nodo, "{$caso}: existe «{$campo}».");
+                $this->assertSame('true', $nodo->getAttribute('aria-invalid'), "{$caso}: «{$campo}» con aria-invalid.");
+                $mensaje = $nodo->getAttribute('aria-describedby');
+                $this->assertSame("error-{$campo}", $mensaje, "{$caso}: «{$campo}» enlazado a su mensaje.");
+                $error = $xpath->query("//*[@id='{$mensaje}'][contains(concat(' ', normalize-space(@class), ' '), ' error-msg ')]");
+                $this->assertSame(1, $error->length, "{$caso}: el mensaje de «{$campo}» existe.");
+                $this->assertNotSame('', trim($error->item(0)->textContent), "{$caso}: el mensaje de «{$campo}» tiene texto.");
+                $this->assertSame($nodo->parentNode, $error->item(0)->parentNode, "{$caso}: el mensaje de «{$campo}» va junto al campo.");
+                $this->assertContains('field-error', $this->clases($nodo), "{$caso}: «{$campo}» con .field-error.");
+            }
+            $conservado = $caso === 'alta del paciente' ? ['ciudad', $datos['ciudad']] : ['proxima_visita', $datos['proxima_visita']];
+            $campo = $xpath->query("//main//form//input[@name='{$conservado[0]}'][not(@type='hidden')]")->item(0);
+            $this->assertSame($conservado[1], $campo?->getAttribute('value'), "{$caso}: se conserva lo escrito en «{$conservado[0]}».");
+        }
+    }
+
     /** @return array<string, Usuario> */
     private function usuarios(): array
     {
