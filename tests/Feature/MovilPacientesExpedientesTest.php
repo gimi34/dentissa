@@ -311,6 +311,128 @@ class MovilPacientesExpedientesTest extends TestCase
         }
     }
 
+    /** P9 y CA10: el bloque 035 de app.css solo usa tokens y reproduce los estilos de hoy (D1–D7, D12, D13). */
+    public function test_el_bloque_035_de_app_css_solo_usa_tokens_y_reproduce_los_estilos(): void
+    {
+        $this->assertCount(3, $this->literales('margin: 14px; color: #fff; font-weight: 600;'), 'Control positivo de literales().');
+        $bloque = $this->bloque035();
+        foreach ($this->analizarCss($bloque) as [$selector, $cuerpo, $condiciones]) {
+            $this->assertSame([], $this->literales($cuerpo), "{$selector}: solo tokens.");
+            $this->assertSame([], $condiciones, "{$selector}: fuera de toda media query.");
+        }
+
+        $foco = ['outline: var(--focus-ring-width) solid var(--focus-ring)', 'outline-offset: var(--focus-ring-offset)'];
+        $sinHalo = ['border-color: var(--border-control)', 'box-shadow: none'];
+        $esperadas = [
+            '.ficha-paciente' => ['display: grid', 'grid-template-columns: var(--ficha-lateral-w) 1fr', 'gap: var(--space-7)', 'align-items: start'],
+            '.ficha-expediente' => ['display: grid', 'grid-template-columns: 1fr var(--expediente-lateral-w)', 'gap: var(--space-7)'],
+            '.expediente-cabecera' => ['display: flex', 'align-items: flex-start', 'justify-content: space-between', 'margin-bottom: var(--space-6)'],
+            '.acciones-ficha' => ['display: flex', 'align-items: center', 'gap: var(--space-4)'],
+            '.acciones-formulario' => ['display: flex', 'gap: var(--space-4)', 'justify-content: flex-end'],
+            '.dato-recortado' => ['overflow: hidden', 'text-overflow: ellipsis', 'white-space: nowrap'],
+            '.paginacion' => ['padding: var(--space-5) var(--space-7)', 'border-top: var(--border-width) solid var(--border)', 'display: flex',
+                'align-items: center', 'justify-content: space-between'],
+            '.perfil-identidad' => ['text-align: center'],
+            '.perfil-avatar' => ['width: var(--perfil-avatar-w)', 'height: var(--perfil-avatar-w)', 'border-radius: 50%', 'background: var(--p200)',
+                'display: flex', 'align-items: center', 'justify-content: center', 'font-size: var(--perfil-iniciales-text)',
+                'font-weight: var(--weight-bold)', 'color: var(--p800)', 'margin: 0 auto var(--space-5)'],
+            '.perfil-nombre' => ['font-size: var(--perfil-nombre-text)', 'font-weight: var(--weight-strong)', 'color: var(--text)'],
+            '.perfil-dato' => ['display: flex', 'align-items: center', 'gap: var(--space-3)', 'font-size: var(--text-meta)', 'color: var(--text-muted)'],
+            '.etiqueta-campo' => ['display: block'],
+            '.form-paciente .field:focus-visible' => $foco,
+            '.form-expediente .field:focus-visible' => $foco,
+            '.form-paciente .field:focus' => $sinHalo,
+            '.form-expediente .field:focus' => $sinHalo,
+        ];
+        foreach ($esperadas as $selector => $declaraciones) {
+            $cuerpo = $this->cuerpos($this->analizarCss($bloque), $selector, []);
+            $this->assertNotSame('', $cuerpo, "Falta {$selector} en el bloque /* Spec 035 */ de app.css.");
+            foreach ($declaraciones as $declaracion) {
+                [$propiedad, $valor] = array_map('trim', explode(':', $declaracion, 2));
+                $this->assertMatchesRegularExpression('/(^|;)\s*'.preg_quote($propiedad, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $cuerpo,
+                    "{$selector} declara «{$declaracion}» en el bloque 035.");
+            }
+        }
+    }
+
+    /** CA1, CA4, CA7, CA8, CA11: las reglas del móvil (D1–D6, D8, D12; /analyze A21). */
+    public function test_movil_css_adapta_las_fichas_el_perfil_y_el_menu(): void
+    {
+        $esperadas = [
+            '.ficha-paciente' => ['grid-template-columns: minmax(0, 1fr)'],
+            '.ficha-expediente' => ['grid-template-columns: minmax(0, 1fr)'],
+            '.expediente-cabecera' => ['flex-direction: column', 'gap: var(--space-3)'],
+            '.topbar-actions:has(.acciones-ficha)' => ['flex-basis: 100%', 'margin-left: 0'],
+            '.acciones-ficha' => ['width: 100%', 'gap: var(--space-3)'],
+            '.acciones-ficha .btn' => ['flex: 1', 'justify-content: center'],
+            '.acciones-formulario .btn' => ['flex: 1', 'justify-content: center'],
+            '.dato-recortado' => ['white-space: normal', 'overflow: visible'],
+            '.paginacion' => ['flex-wrap: wrap', 'gap: var(--space-3)'],
+            '.topbar-title' => ['overflow-wrap: anywhere', 'min-width: 0'],
+            '.migas-actual' => ['overflow-wrap: anywhere', 'min-width: 0'],
+            '.migas' => ['flex-wrap: wrap'],
+            '.migas a' => ['overflow-wrap: anywhere', 'min-width: 0'],
+            '.perfil-identidad' => ['text-align: start'],
+            '.perfil-cab' => ['display: grid', 'grid-template-columns: var(--perfil-avatar-movil) minmax(0, 1fr)', 'gap: var(--space-4)', 'align-items: center'],
+            '.perfil-avatar' => ['width: var(--perfil-avatar-movil)', 'height: var(--perfil-avatar-movil)', 'margin: 0', 'font-size: var(--perfil-iniciales-movil)'],
+            '.perfil-nombre' => ['font-size: var(--perfil-nombre-movil)'],
+            '.perfil-dato' => ['display: grid', 'grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr)'],
+            '.perfil-dato svg' => ['display: none'],
+            '.perfil-etiqueta' => ['font-size: var(--text-small)', 'font-weight: var(--weight-strong)', 'text-transform: uppercase', 'color: var(--p600)'],
+            '.menu-btn' => ['border: 0', 'background: transparent'],
+            '.menu-cerrar' => ['border: 0', 'background: transparent'],
+        ];
+        foreach ($esperadas as $selector => $declaraciones) {
+            $cuerpo = $this->cuerpos($this->reglasCss('css/movil.css'), $selector, ['@media (max-width: 899px)']);
+            foreach ($declaraciones as $declaracion) {
+                [$propiedad, $valor] = array_map('trim', explode(':', $declaracion, 2));
+                $this->assertMatchesRegularExpression('/(^|;)\s*'.preg_quote($propiedad, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $cuerpo,
+                    "{$selector} debe declarar «{$declaracion}» en la media query de movil.css.");
+            }
+        }
+    }
+
+    /** P9: los nueve tokens de la 035 son los de system.md (T001). */
+    public function test_los_tokens_035_coinciden_con_el_sistema(): void
+    {
+        $sistema = file_get_contents(base_path('docs/design/system.md'));
+        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
+        $tokens = [
+            '--ficha-lateral-w' => '320px', '--expediente-lateral-w' => '300px', '--perfil-avatar-w' => '64px', '--perfil-avatar-movil' => '48px',
+            '--perfil-iniciales-text' => '22px', '--perfil-iniciales-movil' => '17px', '--perfil-nombre-text' => '20px', '--perfil-nombre-movil' => '16px',
+            '--weight-bold' => '600',
+        ];
+        foreach ($tokens as $token => $valor) {
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'`[^\n]{0,8}'.preg_quote($valor, '/').'/', $sistema, "system.md documenta {$token} = {$valor}.");
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $root[1] ?? '', "app.css define {$token}: {$valor}.");
+        }
+    }
+
+    /** Bloque `/* Spec 035 *\/` de app.css, hasta su cierre. */
+    private function bloque035(): string
+    {
+        $css = file_get_contents(public_path('css/app.css'));
+        $inicio = strpos($css, '/* Spec 035');
+        $this->assertNotFalse($inicio, 'app.css debe tener el bloque /* Spec 035 */.');
+        $fin = strpos($css, '/* Fin spec 035 */', $inicio);
+        $this->assertNotFalse($fin, 'app.css debe cerrar el bloque con /* Fin spec 035 */.');
+
+        return substr($css, $inicio, $fin - $inicio);
+    }
+
+    private function cuerpos(array $reglas, string $selector, array $condiciones): string
+    {
+        $cuerpos = [];
+        foreach ($reglas as [$selectores, $cuerpo, $suyas]) {
+            $lista = array_map(fn ($s) => preg_replace('/\s+/', ' ', trim($s)), explode(',', $selectores));
+            if ($suyas === $condiciones && in_array($selector, $lista, true)) {
+                $cuerpos[] = trim(preg_replace('/\s+/', ' ', $cuerpo));
+            }
+        }
+
+        return implode(' ', $cuerpos);
+    }
+
     /** @return array<string, Usuario> */
     private function usuarios(): array
     {
