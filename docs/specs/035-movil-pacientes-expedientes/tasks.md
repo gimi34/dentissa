@@ -72,6 +72,9 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [ ] T027 Comprobar con `--medir` que no queda ningún bloque señalado en las pantallas incluidas tras T022–T026; si aparece alguno, detenerse y proponer una tarea nueva con su test (Desvíos de `/implement`), sin corregirlo aquí — (sin archivos) — hecho cuando: `--medir` no da fallos en ninguna pantalla incluida ni en las de la 033 y la 034, a ningún ancho, con y sin JavaScript, y la nota dice «sin bloques extra» o enlaza las tareas nuevas — cubre: CA8, CA9 — depende: T022, T023, T024, T025, T026
 - [ ] T028 Rehacer con `capturar.mjs` las capturas de las pantallas incluidas a 320, 390 y 1440 y las del menú abierto de cada rol, y poner sus filas en las tablas de pantallas e inventario de `system.md` (DS8 «parcial (033, 034, 035)») — docs/design/capturas/ (generado por node capturar.mjs), docs/design/system.md — hecho cuando: las capturas existen, a 1024 y 1440 las pantallas incluidas son iguales a la línea base de la misma sesión (anotado) y `system.md` las lista · verificación manual: el usuario revisa las capturas a 320 y 390 contra `design/opcion-a.html` y `opcion-c.html` — cubre: CA1, CA2, CA3, CA4, CA10, CA11 — depende: T027
 
+- [x] T029 Ampliar en `MovilPacienteTest` la lista de selectores que pueden declarar `overflow-wrap: anywhere` en `movil.css` (D8 de la 034) con `.topbar-title`, `.migas-actual` y `.migas a` (D6 de la 035, /analyze A12 y A21) — tests/Feature/MovilPacienteTest.php — hecho cuando: `test_los_textos_largos_parten_de_linea` pasa dos veces con las reglas de T021 y sigue fallando si `anywhere` aparece en otro selector (control positivo, deshecho) — cubre: CA8 — depende: T020
+  - nota: añadida durante /implement 2026-10-17 (decisión del usuario): la regla de todo el móvil de D6 no estaba en la lista cerrada del test de la 033 (efecto anunciado en /analyze A27); T021 se cierra cuando pase esta tarea.
+  - nota: `test_los_textos_largos_parten_de_linea` pasa dos veces con las reglas de T021; comprobado rompiendo: con `anywhere` en `.nav-item`, falla («anywhere solo en los elementos de D8»); restaurado. Pint pasa.
 ## Integración y documentación
 - [ ] T040 Hacer la verificación final: `php artisan test` completo, con la línea base de T002 más los tests nuevos, todo en verde; `pint --test` en los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0; gitleaks sobre el rango de la spec, sin fugas; `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; borrados la base `dentissa_capturas`, sus servidores, el volumen de Playwright, la línea base, la copia `git worktree` de v0.8.0 y su `.env`, y la carpeta temporal — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10, CA11 — depende: T028
 - [ ] T041 Anotar en `docs/roadmap.md`, junto a la 014, que sus cambios de la ficha del expediente (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`, los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas (`MovilPacientesExpedientesTest` falla si no; plan D11, /analyze A7); y junto a la 020, que se reconstruye después de la 035 (/analyze A8) — docs/roadmap.md — hecho cuando: el roadmap lo dice junto a la 014 y la 020 — cubre: CA4, CA5 — depende: T040
@@ -99,7 +102,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | CA5 | T010, T011 | T023, T024, T025, T026 |
 | CA6 | T011 | T024, T025, T026 |
 | CA7 | T010, T012, T014 | T001, T020, T021, T022, T024, T025, T026 |
-| CA8 | T010, T012, T014, T027 | T021, T022, T024 |
+| CA8 | T010, T012, T014, T027, T029 | T021, T022, T024 |
 | CA9 | T010, T014, T027 | T022, T023, T024, T025, T026 |
 | CA10 | T012, T014 | T020, T022, T023, T024, T025, T026, T028 |
 | CA11 | T012, T013, T014 | T001, T021, T028 |
@@ -118,7 +121,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | Lista de expedientes (`expedientes/index`) | T023 |
 | Ficha del expediente (`expedientes/show`) | T024 |
 | Alta de expediente (`expedientes/create`) | T026 |
-| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013 |
+| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029 |
 | Capturas y medidas (`capturar.mjs`) | T014, T028 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
