@@ -45,6 +45,15 @@
         opacity: 1;
         transform: translateY(0);
     }
+
+    /* Ocultar barra de desplazamiento para el carrusel */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
   </style>
 </head>
 <body class="antialiased bg-gray-50 font-sans text-gray-900">
@@ -74,7 +83,8 @@
         <div class="hidden peer-checked:block md:block w-full md:w-auto transition-all" id="menu">
           <nav class="w-full bg-white md:bg-transparent rounded shadow-lg px-6 py-4 mt-4 text-center md:p-0 md:mt-0 md:shadow-none">
             <ul class="md:flex items-center justify-center space-x-0 md:space-x-8">
-              <li class="my-2 md:my-0"><a class="text-white hover:bg-[#A03255] font-medium transition-colors" href="#servicios">Servicios</a></li>
+              <li class="my-2 md:my-0"><a class="text-white hover:text-dentissa-pink font-medium transition-colors" href="#servicios">Servicios</a></li>
+              <li class="my-2 md:my-0"><a class="text-white hover:text-dentissa-pink font-medium transition-colors" href="#galeria">Galería</a></li>
               <li class="my-2 md:my-0"><a class="text-white hover:text-dentissa-pink font-medium transition-colors" href="#ubicacion">Ubicación</a></li>
               <li class="my-2 md:my-0"><a class="text-white hover:text-dentissa-pink font-medium transition-colors" href="#contacto">Contacto</a></li>
               
@@ -198,7 +208,59 @@
       </div>
     </section>
 
-    <!-- ── Ubicación (Adaptada de la plantilla) ──────────────── -->
+<!-- ── Galería (Carrusel de Marcadores) ──────────────────── -->
+    <section id="galeria" class="relative px-4 py-20 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 bg-white">
+      <div class="text-center fade-in-section mb-12">
+        <h2 class="text-4xl leading-tight font-bold text-dentissa-dark">Nuestra Clínica</h2>
+        <p class="text-lg mt-4 text-gray-500 max-w-2xl mx-auto">Conoce nuestros espacios de tratamiento diseñados para tu máximo confort.</p>
+      </div>
+
+      <!-- Contenedor Principal del Carrusel -->
+      <div class="relative w-full fade-in-section" style="transition-delay: 0.2s;">
+        
+        <!-- Pista deslizable (Track) -->
+        <div id="carrusel-galeria" class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 hide-scrollbar">
+          
+          <!-- Placeholder 1 -->
+          <div class="snap-center shrink-0 w-[85%] md:w-1/2 lg:w-1/3 bg-gray-200 rounded-2xl h-72 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
+            <svg class="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-gray-400 font-medium text-sm">Foto</span>
+          </div>
+
+          <!-- Placeholder 2 -->
+          <div class="snap-center shrink-0 w-[85%] md:w-1/2 lg:w-1/3 bg-gray-200 rounded-2xl h-72 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
+            <svg class="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-gray-400 font-medium text-sm">Foto</span>
+          </div>
+
+          <!-- Placeholder 3 -->
+          <div class="snap-center shrink-0 w-[85%] md:w-1/2 lg:w-1/3 bg-gray-200 rounded-2xl h-72 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
+            <svg class="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-gray-400 font-medium text-sm">Foto</span>
+          </div>
+
+          <!-- Placeholder 4 -->
+          <div class="snap-center shrink-0 w-[85%] md:w-1/2 lg:w-1/3 bg-gray-200 rounded-2xl h-72 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
+            <svg class="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-gray-400 font-medium text-sm">Foto</span>
+          </div>
+          
+        </div>
+
+        <!-- Controles / Botones -->
+        <div class="flex justify-center gap-6 mt-8">
+          <button onclick="document.getElementById('carrusel-galeria').scrollBy({left: -350, behavior: 'smooth'})" class="p-3 rounded-full bg-white text-dentissa-pink border-2 border-dentissa-pink hover:bg-dentissa-pink hover:text-white transition-all shadow-sm">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <button onclick="document.getElementById('carrusel-galeria').scrollBy({left: 350, behavior: 'smooth'})" class="p-3 rounded-full bg-white text-dentissa-pink border-2 border-dentissa-pink hover:bg-dentissa-pink hover:text-white transition-all shadow-sm">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Ubicación ──────────────── -->
     <section id="ubicacion" class="relative bg-white px-4 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 py-20 border-t border-gray-100">
       <div class="flex flex-col lg:flex-row lg:-mx-8 items-center fade-in-section">
         <div class="w-full lg:w-1/2 lg:px-8">
