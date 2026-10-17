@@ -16,7 +16,8 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a; fuera: OB4.b y OB4.c → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
-| 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, approved) | pendiente |
+| 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, approved) | pendiente |
+| 7 | Registro indexable correctamente | `/registro` llega con título, descripción única y canónica absoluta desde `seo.site_url`; `/login`, la 404 y `/up` llevan `noindex`; `sitemap.xml` lista solo `/registro` y `robots.txt` lo declara; Lighthouse SEO ≥ 90 (P10). Riesgos: SE1.a, SE1.b, SE2.a, SE2.b, SE3.a, SE3.b; fuera: SE4.a, SE5.a, SE5.b, SE6.a y SE7.a → Pendientes y deuda (decisión del usuario, 2026-10-16) | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
      cubre y las que deja fuera con su destino. Nunca resume un riesgo citando solo su número. -->
@@ -26,6 +27,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 (objetivo 5) y la constitución aprobada.
 
 ## Pendientes y deuda
+- SEO de baja severidad (`docs/seo.md`, upgrade a AI-DD 1.13.0; decisión del usuario, 2026-10-16), para
+  la spec que toque esas páginas: SE4.a página 404 propia en español con `noindex` (con SE2.b);
+  SE5.a íconos del sitio (`favicon.svg` sin `<text>`, PNG de 32 y `apple-touch-icon`) desde el logo
+  actual y SE5.b `theme-color` con `--bg`; SE6.a Open Graph en `/registro` con imagen general de
+  1200×630 desde una «Tarjeta para compartir» del sistema de diseño; SE7.a JSON-LD `Dentist` solo
+  con datos reales confirmados por el usuario.
 - Dependencias con vulnerabilidades conocidas (riesgo de dependencias en `docs/security.md`,
   detectado en `/plan 014`): spec propia de actualización antes de cualquier release (decisión
   del usuario, 2026-09-28). Se atiende en la spec [024](specs/024-dependencias-seguras/spec.md),
@@ -71,7 +78,22 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     Va en una spec propia de diseño para móvil (UI/UX), no al tocar cada pantalla: tampoco la 028 lo
     corrige (en sus capturas a 390 px la barra lateral fija deja el documento en 892 px; decisión del
     usuario, 2026-10-11). → [033](specs/033-movil-paciente/spec.md): menú común y pantallas del
-    paciente (con DS6 en ellas); el contenido del personal, en una spec siguiente.
+    paciente (con DS6 en ellas), liberada en v0.7.0 (atiende DS8 **parcialmente**).
+    → [034](specs/034-movil-personal/spec.md) (decisión del usuario, 2026-10-12, tras verlo en producción), por este orden: las
+    tablas del paciente (mis citas, panel) y del personal como tarjetas en el móvil, con los botones
+    de acción visibles (033/R20); el detalle de cita del personal en una columna (a 390 px mide
+    583 px) y `overflow-wrap: anywhere` acotado a lo que lo necesita (hoy parte ese texto letra a
+    letra); el filtro de citas reducido; la tabla de pacientes solo con nombre, teléfono, alergias
+    y acciones; en el menú del móvil, el botón «Menú» solo con el icono de hamburguesa (con nombre
+    accesible «Menú») y el logo en lugar de la marca de texto «Melissa López N.» (hace falta una
+    versión que se vea sobre el panel blanco: el actual usa `mix-blend-mode: screen`, A9 de la
+    033); y revisar los elementos que a veces se salen de su sitio en el móvil (visto por el
+    usuario en producción, sin pantalla concreta). Liberada en v0.8.0 (2026-10-16; atiende DS8
+    **parcialmente**: paneles, citas, detalle de cita, pacientes y servicios del personal).
+    → Spec siguiente (decisión del usuario, 2026-10-16, tras verlo en producción): el resto de
+    pantallas del personal en el móvil, empezando por la ficha del paciente (`/admin/pacientes/{id}`:
+    hay que alejar la vista para verla entera y tiene botones descentrados), y las demás fichas,
+    formularios y expedientes; incluye 034/R8.
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
   - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
@@ -122,7 +144,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - El callback de Google responde 500 cuando llega sin un inicio previo
     (`Laravel\Socialite\Two\InvalidStateException` sin capturar en `GoogleAuthController::callback`;
     ocurrió una vez desde una IP de Google). Capturar los fallos de Socialite y volver al login con
-    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05).
+    un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05). Se repitió
+    el 2026-10-16 01:05 UTC desde una IP externa (Android, llegando desde google.com), con v0.7.0:
+    cualquiera que abra esa dirección provoca un 500 (visto en el T097 de la 034).
   - Documentar en `deployment.md` que, tras cambiar un archivo de `/opt/dentissa/entorno`, hay que
     recrear el servicio con `up -d --force-recreate <servicio>` (y en `app`, `config:cache`): un
     `up -d` no relee el archivo (el token del túnel y las credenciales de Google tardaron por eso).
@@ -135,6 +159,11 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Spec 020 tras la 033 (decisión del usuario, 2026-10-11): al reconstruirla sobre `main`, su
   enlace «Auditoría» del menú de admin sigue el patrón de la 033 (`.active` y `aria-current="page"`
   en la sección actual) y actualiza la lista de `MovilPacienteTest::test_el_menu_del_movil_tiene_las_mismas_secciones`.
+  Si se fusiona después de la 034 (plan de la 034, Rollout; A42, A63): el foco de los campos del
+  filtro de citas es el de la 034 (`.filtro-citas .field:focus-visible`, con tokens); el foco global
+  de `.field` que la 020 añade en `citas.css` queda para los demás campos, y `MovilPersonalTest`
+  sigue en verde. La sección Frontend de `architecture.md` y «Auditoría» en el menú se resuelven al
+  fusionar.
 - Mensajes de validación en inglés en las pantallas del paciente: al enviar vacíos agendar y el
   perfil salen «The fecha field is required.», «The hora field is required.» y «The nombre field is
   required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
@@ -169,6 +198,60 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Orden de versiones: la 028 salió en v0.6.0 antes que la 031, que pasa de la v0.6.0 prevista a
   v0.7.0 (anotarlo en su plan al retomarla). Su arreglo de `npm audit` (T004) ya está en `main`
   (PR #21). El diseño para móvil va en una spec propia (DS8).
+- Orden de versiones: la 033 salió en v0.7.0 (2026-10-12) y la 034 en v0.8.0 (2026-10-16) antes
+  que la 031, que pasa a v0.9.0 (anotarlo en su plan y fusionar `main` en su rama al retomarla).
+- Esqueletos de carga (decisión del usuario, 2026-10-16): mostrar un esqueleto mientras la página
+  carga en lugar de solo cambiar de pantalla → spec propia (la app se dibuja en el servidor y cada
+  clic carga una página nueva: la spec decide dónde y cómo).
+- Deuda de la spec 033 (liberada en v0.7.0; /review r1 y r2, aceptada sin tarea, decisión del usuario):
+  - 033/R6: migas de pan sin `<nav>` con nombre ni `aria-current`, con el enlace indistinguible del
+    texto actual (`--text-muted` = `--text`); cambia `system.md` («Migas de pan»).
+  - 033/R9: «Menú» lleva `aria-expanded` dentro de `<main>`, que queda inerte al abrir: el estado
+    abierto no se percibe en el botón. Resuelto por la 034 (v0.8.0, CA9).
+  - 033/R10: ampliar `literales()` de `ReglasCss` a colores con nombre, `hsl()` y unidades
+    relativas (con DS4).
+  - 033/R11: la condición de `request()->is()` se repite en los 19 enlaces del menú; `aria-current`
+    solo se prueba en el panel de cada rol.
+  - 033/R12: límites del analizador de CSS de `ReglasCss` (sentencias `@` sin bloque, llaves en
+    cadenas, CSS anidado, comas en `:is()`/`:not()`).
+  - 033/R13: `movil()` de `MovilPacienteTest` duplica `declaraciones()`; docblock de esta.
+  - 033/R14: `bloque033()` llega hasta el final de `app.css`; los selectores repetidos se pisan.
+  - 033/R15: el orden de `movil.css` se comprueba con `strpos` sobre el CSS crudo.
+  - 033/R16: la comprobación de la casilla solo mira la media query del móvil.
+  - 033/R17: el trait `ReglasCss` de `Tests\Feature\Concerns` se usa desde un test unitario.
+  - 033/R18: `<script>` en línea y `onclick` con la contraseña generada en el layout; bloquean
+    quitar `'unsafe-inline'` de `script-src` (RS8.d).
+  - 033/R19: ejecutar `capturar.mjs --medir` en la CI con Playwright (hoy es obligatorio a mano,
+    `AGENTS.md`).
+  - 033/R20: las tablas del paciente se desplazan dentro de `.table-wrap` en el móvil (palabras
+    largas y columna «Acciones» oculta a la derecha) → spec 034. Resuelto por la 034 (v0.8.0, CA1).
+  - 033/R21: `ultimoFoco` de `menu.js` no se borra al perder el foco; al cruzar los 900 px el foco
+    puede saltar a «Menú» o al enlace actual. Resuelto por la 034 (v0.8.0, T023), salvo al cambiar de
+    app o pestaña (034/R9).
+- Deuda de la spec 034 (liberada en v0.8.0; /review r1, aceptada sin tarea, decisión del usuario,
+  2026-10-16):
+  - 034/R8: `.content` pasa a `break-word` (D8): las pantallas del personal fuera de la 034 pierden
+    `anywhere` en sus filas flexibles; la spec del resto del móvil del personal lo resuelve.
+  - 034/R9: el `focusout` de `menu.js` olvida `ultimoFoco` al cambiar de app o pestaña; ignorarlo
+    cuando `document.hasFocus()` es falso.
+  - 034/R12: el test de orden de reglas globales de `MovilPacienteTest` usa `strpos` del primer
+    selector (falso positivo con selectores repetidos o `false`).
+  - 034/R13: «Cancelar» no se estira como «Ver» y «Reprogramar» en las tarjetas de «Mis citas».
+  - 034/R14: los nombres accesibles «Ver detalle», «Ver perfil», «Editar» y «Eliminar» se repiten
+    en cada tarjeta sin decir de qué elemento son (2.4.4/2.4.9).
+  - 034/R15: con colores forzados (alto contraste de Windows), el logo con máscara desaparece.
+  - 034/R16: en el detalle de cita, «Cambiar estado», «Información» y «Control interno» no son
+    encabezados, la `label` de las notas internas no tiene `for` y el `svg` del control interno no
+    tiene `aria-hidden`.
+  - 034/R17: `style=""` de `.detalle-datos-rejilla` a la clase con un token.
+  - 034/R18: ayudantes y aserciones duplicados entre `MovilPersonalTest` y `MovilPacienteTest`.
+  - 034/R19: sangría de `citas/show.blade.php`.
+  - 034/R20: los `id` de los campos del filtro repiten las clases de sus contenedores.
+  - 034/R21: `onclick` con `addslashes` en servicios: a `data-*` y script propio en la spec de la CSP.
+  - 034/R22: semántica de tabla de las tarjetas en VoiceOver (WebKit) sin comprobar en un móvil
+    real; si se pierde, roles explícitos en una spec siguiente.
+  - 033/R22: comentario de `capturar.mjs` sobre «dos fotogramas» desactualizado (desde T072 se
+    reintenta).
 - Deuda de la spec 027 (liberada en v0.4.0; /review, aceptada sin tarea):
   - Extraer la regla de franja común a `ReservaCitas` y `HorarioDentista::citasFuera` (hoy
     repetida; los bordes los vigilan `ReglaAgendaTest` y `CitasFueraDelHorarioTest`) → spec 013.
@@ -265,6 +348,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Excepción P3 de la spec 026: el detalle de cita del personal recibe su Gate en la 014, y "Mis
   citas" y el detalle del paciente, `role:cliente` en la 015 (spec 026, D11; decisión del
   usuario, 2026-10-02).
+- La 014 tras la 034 (plan de la 034, Rollout; A42, A63): su cambio del filtro y del estado vacío de
+  `pacientes/index` se aplica sobre el marcado de tarjetas de la 034. Toda columna o celda nueva
+  lleva `data-label` igual al texto de su `<th>` y su clase de columna (`celda-cab`, `celda-acciones`,
+  `solo-escritorio`…); `MovilPersonalTest` falla si no.
 - Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
   una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
   usuario, 2026-10-02).

@@ -17,8 +17,8 @@
 <aside class="sidebar" id="menu-principal" aria-label="Menú">
     <div class="sidebar-logo">
         <img src="{{ asset('images/logo-icon.png') }}" alt="Melissa López N.">
-        {{-- En el móvil el logo desaparece sobre el panel blanco: marca de texto (spec 033, A9). --}}
-        <span class="sidebar-marca">Melissa López N.</span>
+        {{-- En el móvil la imagen desaparece sobre el panel blanco: el logo se pinta con una máscara (spec 033, A9; spec 034, D10). --}}
+        <span class="sidebar-marca" role="img" aria-label="Melissa López N."></span>
         <button type="button" class="menu-cerrar" aria-label="Cerrar menú">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18"/>
@@ -207,11 +207,10 @@
 <!-- ══ MAIN ═══════════════════════════════════════════════════ -->
 <main class="main">
     <header class="topbar">
-        <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu-principal">
+        <button type="button" class="menu-btn" aria-label="Menú" aria-expanded="false" aria-controls="menu-principal">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M3 6h18M3 12h18M3 18h18"/>
             </svg>
-            Menú
         </button>
         <h1 class="topbar-title">@yield('title', 'Dashboard')</h1>
         <div class="topbar-actions">

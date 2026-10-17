@@ -68,6 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // puede haberlo pasado ya a <body> al ocultarlo: por eso se recuerda el último elemento con foco.
     let ultimoFoco = null;
     document.addEventListener('focusin', (evento) => { ultimoFoco = evento.target; });
+    // Si el foco se pierde sin destino (clic en una zona sin foco) y el elemento sigue visible, se
+    // olvida: el cambio de modo no debe devolverlo. Si se oculta por el cambio de modo, se conserva
+    // (033/R21, spec 034).
+    document.addEventListener('focusout', (evento) => {
+        if (!evento.relatedTarget && evento.target.getClientRects().length) ultimoFoco = null;
+    });
     let modoMovil = esMovil();
     window.addEventListener('resize', () => {
         if (esMovil() === modoMovil) return;

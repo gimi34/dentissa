@@ -58,6 +58,15 @@
     --logo-max-w:         160px;
     --icon-md:            18px;
     --text-marca:         16px;  /* tamaño, no color */
+    /* Sistema de diseño 1.5.0 (spec 034): móvil del personal. */
+    --tarjeta-etiqueta-w: 88px;
+    --logo-movil-h:       40px;
+    --space-detalle:      18px;
+    --detalle-lateral-w:  360px;
+    --filtro-buscar-min:  180px;
+    --filtro-fecha-min:   130px;
+    --filtro-dentista-min: 150px;
+    --filtro-estado-min:  140px;
 }
 
 body {
@@ -547,3 +556,54 @@ tr:hover td { background: var(--p50); }
 .migas-actual { color: var(--text); }
 /* Foco del sistema en pestañas y migas (/review 033 R7). */
 .pestanas-citas a:focus-visible, .migas a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+/* Fin spec 033 */
+
+/* Spec 034: clases de los style="" imprescindibles, filtro, detalle de cita y foco (mismos valores que antes, con tokens). */
+/* Rejillas de estadísticas (D10b): .stats-grid fija hueco y margen; las variantes, solo las columnas. */
+.stats-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.stats-grid-3 { grid-template-columns: repeat(3, 1fr); }
+/* Filtro de citas (D6, A33): los style="" de antes, con tokens. Los atajos van al final, como antes,
+   aunque en el HTML sigan al buscador (A55). */
+.filtro-tarjeta { margin-bottom: var(--space-7); padding: var(--space-6) var(--space-7); }
+.filtro-citas { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+.filtro-buscar { flex: 1; min-width: var(--filtro-buscar-min); }
+.filtro-fecha { min-width: var(--filtro-fecha-min); }
+.filtro-dentista { min-width: var(--filtro-dentista-min); }
+.filtro-estado { min-width: var(--filtro-estado-min); }
+.filtro-atajos { margin-left: auto; display: flex; gap: var(--space-2); order: 1; }
+/* Borde de los campos ≥ 3:1 también en el escritorio (decisión del usuario, A36); gana a .field de citas.css. */
+.filtro-citas .field { border-color: var(--border-control); }
+.filtro-btn { border-color: var(--border-control); }
+.filtro-btn[aria-expanded="true"] { background: var(--p100); color: var(--p600); }
+.filtro-contador { background: var(--p500); color: var(--white); border-radius: var(--radius-lg); padding: 0 var(--space-2); font-size: var(--text-small); }
+/* La cita de hoy de la lista del personal: el fondo que antes iba en el style="" de la fila (A57). */
+.fila-hoy { background: var(--p50); }
+/* Panel de la dentista (D5b): el enlace de solo icono y la fila del estado con el enlace. */
+.btn-icono { padding: var(--space-1) var(--space-3); }
+.timeline-acciones { display: flex; align-items: center; gap: var(--space-3); }
+/* Foco del sistema en todo lo que la spec añade o cambia (A60, A68). */
+.filtro-citas .field:focus-visible, .filtro-citas .btn:focus-visible,
+.tabla-tarjetas a:focus-visible, .tabla-tarjetas .btn:focus-visible, .btn-icono:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+/* Detalle de cita del personal (D7): mismo aspecto que la rejilla de dos columnas de antes, con el HTML
+   en el orden de la spec. La columna lateral ocupa todas las filas; márgenes en lugar de row-gap y una
+   última fila flexible que absorbe la diferencia de alto, con o sin control interno (A9). */
+.detalle-cita {
+    display: grid;
+    grid-template-columns: 1fr var(--detalle-lateral-w);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: var(--space-7);
+    align-items: start;
+}
+.detalle-datos, .detalle-control, .detalle-historial { grid-column: 1; }
+.detalle-lateral { grid-column: 2; grid-row: 1 / -1; display: flex; flex-direction: column; gap: var(--space-detalle); }
+.detalle-control, .detalle-historial { margin-top: var(--space-detalle); }
+.detalle-datos-rejilla { grid-template-columns: repeat(3, 1fr); }
+/* Con el foco del ratón (sin :focus-visible), el borde de los campos del filtro sigue en 3:1 (A36): gana
+   al `.field:focus` de citas.css, que carga después en la lista de citas (/review R6). */
+.filtro-citas .field:focus { border-color: var(--border-control); box-shadow: none; }
+/* Celdas centradas en el escritorio (servicios); en las tarjetas del móvil van al inicio (/review R1). */
+.celda-centrada { text-align: center; }
+/* Fin spec 034 */
