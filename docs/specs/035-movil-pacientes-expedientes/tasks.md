@@ -1,7 +1,7 @@
 ---
 spec: 035-movil-pacientes-expedientes
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 035 Móvil para pacientes y expedientes del personal
