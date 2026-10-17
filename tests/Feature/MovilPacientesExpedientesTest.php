@@ -224,6 +224,15 @@ class MovilPacientesExpedientesTest extends TestCase
         }
     }
 
+    /** T030 (CA8): los valores de «Información» del expediente usan .info-valor, sin máximo en línea. */
+    public function test_los_valores_de_informacion_del_expediente_usan_su_clase(): void
+    {
+        $xpath = $this->xpath($this->actingAs($this->admin)->get("/admin/expedientes/{$this->expediente}")->assertOk()->getContent());
+        $valores = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' info-valor ')]");
+        $this->assertGreaterThan(0, $valores->length, 'Los valores de «Información» llevan .info-valor.');
+        $this->assertSame(0, $xpath->query("//span[contains(@style,'max-width')]")->length, 'Ningún valor con max-width en línea.');
+    }
+
     /** RNF 1.3.1 (D7): cada etiqueta apunta a un campo de su formulario. */
     public function test_las_etiquetas_apuntan_a_su_campo(): void
     {
@@ -339,6 +348,8 @@ class MovilPacientesExpedientesTest extends TestCase
             '.perfil-nombre' => ['font-size: var(--perfil-nombre-text)', 'font-weight: var(--weight-strong)', 'color: var(--text)'],
             '.perfil-dato' => ['display: flex', 'align-items: center', 'gap: var(--space-3)', 'font-size: var(--text-meta)', 'color: var(--text-muted)'],
             '.etiqueta-campo' => ['display: block'],
+            // T030: el valor de «Información» del expediente, con el máximo de hoy en el escritorio.
+            '.info-valor' => ['text-align: right', 'max-width: var(--expediente-dato-max)'],
             '.form-paciente .field:focus-visible' => $foco,
             '.form-expediente .field:focus-visible' => $foco,
             '.form-paciente .field:focus' => $sinHalo,
@@ -365,20 +376,22 @@ class MovilPacientesExpedientesTest extends TestCase
             '.topbar-actions:has(.acciones-ficha)' => ['flex-basis: 100%', 'margin-left: 0'],
             '.acciones-ficha' => ['width: 100%', 'gap: var(--space-3)'],
             '.acciones-ficha .btn' => ['flex: 1', 'justify-content: center', 'text-align: center', 'padding: 0 var(--space-3)'],
-            '.acciones-formulario .btn' => ['flex: 1', 'justify-content: center', 'text-align: center'],
+            '.acciones-formulario .btn' => ['flex: 1 1 auto', 'justify-content: center', 'text-align: center'],
             '.dato-recortado' => ['white-space: normal', 'overflow: visible'],
             '.paginacion' => ['flex-wrap: wrap', 'gap: var(--space-3)'],
             '.topbar-title' => ['overflow-wrap: anywhere', 'min-width: 0'],
             '.migas-actual' => ['overflow-wrap: anywhere', 'min-width: 0'],
             '.migas' => ['flex-wrap: wrap'],
             // Sin min-width: 0, que quitaría el mínimo de toque de la 033 a los enlaces.
-            '.migas a' => ['overflow-wrap: anywhere'],
+            '.migas a' => ['overflow-wrap: break-word'],
             '.perfil-identidad' => ['text-align: start'],
             '.perfil-cab' => ['display: grid', 'grid-template-columns: var(--perfil-avatar-movil) minmax(0, 1fr)', 'gap: var(--space-4)', 'align-items: center'],
             '.perfil-avatar' => ['width: var(--perfil-avatar-movil)', 'height: var(--perfil-avatar-movil)', 'margin: 0', 'font-size: var(--perfil-iniciales-movil)'],
             '.perfil-nombre' => ['font-size: var(--perfil-nombre-movil)'],
             '.perfil-dato' => ['display: grid', 'grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr)'],
             '.perfil-dato svg' => ['display: none'],
+            // T030: en el móvil, el valor de «Información» sin máximo (la palabra larga no parte si cabe).
+            '.info-valor' => ['max-width: none'],
             '.perfil-etiqueta' => ['font-size: var(--text-small)', 'font-weight: var(--weight-strong)', 'text-transform: uppercase', 'color: var(--p600)'],
             '.menu-btn' => ['border: 0', 'background: transparent'],
             '.menu-cerrar' => ['border: 0', 'background: transparent'],
@@ -401,7 +414,7 @@ class MovilPacientesExpedientesTest extends TestCase
         $tokens = [
             '--ficha-lateral-w' => '320px', '--expediente-lateral-w' => '300px', '--perfil-avatar-w' => '64px', '--perfil-avatar-movil' => '48px',
             '--perfil-iniciales-text' => '22px', '--perfil-iniciales-movil' => '17px', '--perfil-nombre-text' => '20px', '--perfil-nombre-movil' => '16px',
-            '--weight-bold' => '600',
+            '--weight-bold' => '600', '--expediente-dato-max' => '140px',
         ];
         foreach ($tokens as $token => $valor) {
             $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'`[^\n]{0,8}'.preg_quote($valor, '/').'/', $sistema, "system.md documenta {$token} = {$valor}.");

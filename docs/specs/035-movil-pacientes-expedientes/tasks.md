@@ -81,6 +81,12 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T029 Ampliar en `MovilPacienteTest` la lista de selectores que pueden declarar `overflow-wrap: anywhere` en `movil.css` (D8 de la 034) con `.topbar-title`, `.migas-actual` y `.migas a` (D6 de la 035, /analyze A12 y A21) — tests/Feature/MovilPacienteTest.php — hecho cuando: `test_los_textos_largos_parten_de_linea` pasa dos veces con las reglas de T021 y sigue fallando si `anywhere` aparece en otro selector (control positivo, deshecho) — cubre: CA8 — depende: T020
   - nota: añadida durante /implement 2026-10-17 (decisión del usuario): la regla de todo el móvil de D6 no estaba en la lista cerrada del test de la 033 (efecto anunciado en /analyze A27); T021 se cierra cuando pase esta tarea.
   - nota: `test_los_textos_largos_parten_de_linea` pasa dos veces con las reglas de T021; comprobado rompiendo: con `anywhere` en `.nav-item`, falla («anywhere solo en los elementos de D8»); restaurado. Pint pasa.
+- [x] T030 Añadir a `MovilPacientesExpedientesTest` los tests del valor de «Información» de la ficha del expediente: los valores de Dentista y Servicio llevan `.info-valor` sin `max-width` en su `style=""`; `.info-valor` con `text-align: right` y `max-width: var(--expediente-dato-max)` en el bloque 035; `max-width: none` en la media query de `movil.css`; y `--expediente-dato-max: 140px` igual en `system.md` y `app.css` — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: fallan hoy por la razón esperada (anotado) y los demás siguen en verde — cubre: CA8, CA10 — depende: T024
+  - nota: añadida durante /implement 2026-10-17 (decisión del usuario): `--medir` en T024 señaló que el servicio largo parte la palabra en el móvil por el `max-width:140px` en línea de su valor; T024 se cierra cuando pasen T030–T032.
+  - nota: fallan hoy por la razón esperada los 4 tests: no hay `.info-valor` en la vista, ni en el bloque 035, ni en `movil.css`, ni `--expediente-dato-max` en `system.md`. Los demás de `MovilPacientesExpedientesTest` siguen en verde; pint pasa.
+- [ ] T031 Añadir el token `--expediente-dato-max: 140px` (el valor de hoy) a `system.md` (lista «Spec 035») y a `:root` de `app.css`, y `.info-valor { text-align: right; max-width: var(--expediente-dato-max); }` al bloque 035 — docs/design/system.md, public/css/app.css — hecho cuando: pasan dos veces las partes de `app.css` y de tokens de T030 — cubre: CA10 — depende: T030
+- [ ] T032 Quitar el máximo del valor en el móvil (`.info-valor { max-width: none; }` en `movil.css`) y pasar los valores de Dentista y Servicio de la ficha del expediente a `.info-valor`, sin su `style=""` de `text-align` y `max-width` — public/css/movil.css, resources/views/expedientes/show.blade.php — hecho cuando: pasan dos veces T030 completo; `--medir` no da fallos en la ficha del expediente a 320 y 390 con la palabra de 30 letras, y a 1024 y 1440 es igual a la línea base — cubre: CA8, CA10 — depende: T031
+
 ## Integración y documentación
 - [ ] T040 Hacer la verificación final: `php artisan test` completo, con la línea base de T002 más los tests nuevos, todo en verde; `pint --test` en los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0; gitleaks sobre el rango de la spec, sin fugas; `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; borrados la base `dentissa_capturas`, sus servidores, el volumen de Playwright, la línea base, la copia `git worktree` de v0.8.0 y su `.env`, y la carpeta temporal — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10, CA11 — depende: T028
 - [ ] T041 Anotar en `docs/roadmap.md`, junto a la 014, que sus cambios de la ficha del expediente (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`, los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas (`MovilPacientesExpedientesTest` falla si no; plan D11, /analyze A7); y junto a la 020, que se reconstruye después de la 035 (/analyze A8) — docs/roadmap.md — hecho cuando: el roadmap lo dice junto a la 014 y la 020 — cubre: CA4, CA5 — depende: T040
@@ -108,9 +114,9 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | CA5 | T010, T011 | T023, T024, T025, T026 |
 | CA6 | T011 | T024, T025, T026 |
 | CA7 | T010, T012, T014 | T001, T020, T021, T022, T024, T025, T026 |
-| CA8 | T010, T012, T014, T027, T029 | T021, T022, T024 |
+| CA8 | T010, T012, T014, T027, T029, T030 | T021, T022, T024, T032 |
 | CA9 | T010, T014, T027 | T022, T023, T024, T025, T026 |
-| CA10 | T012, T014 | T020, T022, T023, T024, T025, T026, T028 |
+| CA10 | T012, T014, T030 | T020, T022, T023, T024, T025, T026, T028, T031, T032 |
 | CA11 | T012, T013, T014 | T001, T021, T028 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
@@ -119,15 +125,15 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
-| Sistema de diseño (`system.md`, `system.html`) | T001, T028 |
-| Estilos existentes (`public/css/app.css`) | T020 |
-| Estilos del móvil (`public/css/movil.css`) | T021 |
+| Sistema de diseño (`system.md`, `system.html`) | T001, T028, T031 |
+| Estilos existentes (`public/css/app.css`) | T020, T031 |
+| Estilos del móvil (`public/css/movil.css`) | T021, T032 |
 | Ficha del paciente (`pacientes/show`) | T022 |
 | Formulario del paciente (`pacientes/create`) | T025 |
 | Lista de expedientes (`expedientes/index`) | T023 |
-| Ficha del expediente (`expedientes/show`) | T024 |
+| Ficha del expediente (`expedientes/show`) | T024, T032 |
 | Alta de expediente (`expedientes/create`) | T026 |
-| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029 |
+| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030 |
 | Capturas y medidas (`capturar.mjs`) | T014, T028 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
