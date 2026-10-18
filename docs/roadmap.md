@@ -165,7 +165,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   filtro de citas es el de la 034 (`.filtro-citas .field:focus-visible`, con tokens); el foco global
   de `.field` que la 020 añade en `citas.css` queda para los demás campos, y `MovilPersonalTest`
   sigue en verde. La sección Frontend de `architecture.md` y «Auditoría» en el menú se resuelven al
-  fusionar.
+  fusionar. Se reconstruye también después de la 035 (/analyze 035 A8): los iconos «Menú» y «Cerrar
+  menú» van sin recuadro y `MovilPacientesExpedientesTest` sigue en verde.
+- `capturar.mjs --medir` (comparación del escritorio con la línea base, spec 034 D13): diferencia
+  intermitente en las pantallas de la asistente a 1024 y 1440 (0,04–0,11 % de píxeles, diferencia
+  máxima 48–72/255), que desaparece al repetir (2026-10-17 y 2026-10-18, spec 035 T024 y T040).
+  Buscar la causa (esperar por condición antes de capturar) en la spec que toque el guion.
 - Mensajes de validación en inglés en las pantallas del paciente: al enviar vacíos agendar y el
   perfil salen «The fecha field is required.», «The hora field is required.» y «The nombre field is
   required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
@@ -354,6 +359,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   `pacientes/index` se aplica sobre el marcado de tarjetas de la 034. Toda columna o celda nueva
   lleva `data-label` igual al texto de su `<th>` y su clase de columna (`celda-cab`, `celda-acciones`,
   `solo-escritorio`…); `MovilPersonalTest` falla si no.
+- La 014 tras la 035 (plan de la 035, D11; /analyze A7): sus cambios de la ficha del expediente
+  (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio
+  para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el
+  marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`,
+  los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas;
+  `MovilPacientesExpedientesTest` falla si no.
 - Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
   una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
   usuario, 2026-10-02).
