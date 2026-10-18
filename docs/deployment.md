@@ -140,6 +140,15 @@ fuera del repositorio y del chat).
   migrate:rollback --step=N`; después, `volver.sh <tag anterior>`. La imagen anterior ya no trae los
   archivos de esas migraciones y no puede revertirlas.
 
+## Hotfix
+Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 2026-10-18):
+- Rama: `hotfix/<slug>` desde el tag que está en producción (`vX.Y.Z`), sin arrastrar lo que haya
+  en `main` sin liberar.
+- Staging: no existe; directo a producción con el smoke de `deploy/verificar.sh` y la misma
+  aprobación humana explícita que un `/release`. Se libera con un tag de parche (`vX.Y.Z+1`) y
+  `deploy/desplegar.sh` en el servidor.
+- Vuelta a la rama principal: PR de la rama `hotfix/<slug>` a `main` después de producción.
+
 ## Variables de entorno
 | Nombre | dev | staging | prod | Dónde se configura |
 |---|---|---|---|---|
