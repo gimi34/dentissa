@@ -451,6 +451,11 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Reprogramar cita (personal) | `system.html#citas-reprogramar-admin-390` | `system.html#citas-reprogramar-admin-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
 | Reprogramar cita (paciente) | `system.html#citas-reprogramar-cliente-390` | `system.html#citas-reprogramar-cliente-1440` | formulario accesible, resumen de la cita, badge, botón principal, `.btn-danger` |
 | Menú del móvil (spec 033) | `capturas/menu-abierto-cliente-390.png` · `capturas/menu-abierto-admin-390.png` · `capturas/menu-abierto-dentista-390.png` · `capturas/menu-abierto-asistente-390.png` | — (en el escritorio es la barra lateral) | botón «Menú», panel blanco, sección actual con `aria-current`, «Cerrar menú», velo |
+| Ficha del paciente (spec 035) | `system.html#pacientes-show-admin-390` · `capturas/pacientes-show-admin-320.png` | `system.html#pacientes-show-admin-1440` | migas, acciones de la barra en una fila, perfil compacto, ficha en una columna, historial de citas (tarjetas en el móvil) |
+| Nuevo y editar paciente (spec 035) | `system.html#pacientes-create-admin-390` · `capturas/pacientes-create-admin-320.png` | `system.html#pacientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, foco del sistema, acciones de formulario |
+| Expedientes (spec 035) | `system.html#expedientes-index-dentista-390` · `capturas/expedientes-index-dentista-320.png` | `system.html#expedientes-index-dentista-1440` | buscador con etiqueta, tabla (tarjetas en el móvil), paginación |
+| Expediente (spec 035) | `system.html#expedientes-show-admin-390` · `capturas/expedientes-show-admin-320.png` | `system.html#expedientes-show-admin-1440` | migas, cabecera, avisos de alergias y medicamentos, formulario con etiquetas, próxima visita, información (ficha en una columna) |
+| Nuevo expediente (spec 035) | `system.html#expedientes-create-admin-390` · `capturas/expedientes-create-admin-320.png` | `system.html#expedientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, acciones de formulario |
 
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
 tarjeta con el resumen de la cita (paciente o dentista, servicio, fecha, hora y badge de estado), el
@@ -478,6 +483,16 @@ base de prueba y textos largos inventados. A 1024 y 1440, esas pantallas son igu
 base de v0.7.0 generada en la misma sesión (D13), comparadas en reposo: el foco con tokens de lo que
 la 034 toca es una diferencia admitida en el escritorio (A72). El resto de las vistas del personal
 (formularios, fichas, expedientes) sigue desbordándose en el móvil (resto de DS8).
+
+**Móvil de pacientes y expedientes (spec 035):** la ficha y el formulario del paciente (alta y
+edición) y la lista, la ficha y el alta de expedientes ya no se desbordan de 320 a 1440 px
+(`capturar.mjs --medir`): las fichas van en una columna en el orden del HTML, el historial de citas y
+la lista de expedientes se leen como tarjetas, las acciones de la barra bajan a una fila bajo el
+título, el perfil del paciente es compacto y los textos largos parten sin salirse. Los iconos «Menú» y
+«Cerrar menú» quedan sin recuadro. Sus capturas a 320, 390 y 1440 px y las del menú abierto de los
+cuatro roles a 390 son del 2026-10-18 (spec 035, T028), con la base de prueba y textos largos
+inventados. A 1024 y 1440, esas pantallas son iguales a una línea base de v0.8.0 generada en la misma
+sesión (D13). Quedan la agenda y los servicios (spec 036) y la administración (spec 037).
 
 ## Inventario de vistas
 
@@ -507,11 +522,11 @@ rehacer el resto de la galería.
 | Detalle de cita | /admin/citas/{id} · citas/show | admin | capturas/citas-show-admin-390.png · capturas/citas-show-admin-1440.png | capturada |
 | Reprogramar cita (personal) | /admin/citas/{id}/reprogramar · citas/reprogramar | admin | capturas/citas-reprogramar-admin-390.png · capturas/citas-reprogramar-admin-1440.png | capturada |
 | Pacientes | /admin/pacientes · pacientes/index | admin | capturas/pacientes-index-admin-390.png · capturas/pacientes-index-admin-1440.png | capturada |
-| Nuevo paciente | /admin/pacientes/crear · pacientes/create | admin | capturas/pacientes-create-admin-390.png · capturas/pacientes-create-admin-1440.png | capturada |
-| Ficha del paciente | /admin/pacientes/{id} · pacientes/show | admin | capturas/pacientes-show-admin-390.png · capturas/pacientes-show-admin-1440.png | capturada |
-| Editar paciente | /admin/pacientes/{id}/edit · pacientes/edit → create | admin | capturas/pacientes-edit-admin-390.png · capturas/pacientes-edit-admin-1440.png | capturada |
-| Nuevo expediente | /admin/expedientes/crear?paciente_id={id} · expedientes/create | admin | capturas/expedientes-create-admin-390.png · capturas/expedientes-create-admin-1440.png | capturada |
-| Expediente | /admin/expedientes/{id} · expedientes/show | admin | capturas/expedientes-show-admin-390.png · capturas/expedientes-show-admin-1440.png | capturada |
+| Nuevo paciente | /admin/pacientes/crear · pacientes/create | admin | capturas/pacientes-create-admin-320.png · capturas/pacientes-create-admin-390.png · capturas/pacientes-create-admin-1440.png | capturada |
+| Ficha del paciente | /admin/pacientes/{id} · pacientes/show | admin | capturas/pacientes-show-admin-320.png · capturas/pacientes-show-admin-390.png · capturas/pacientes-show-admin-1440.png | capturada |
+| Editar paciente | /admin/pacientes/{id}/edit · pacientes/edit → create | admin | capturas/pacientes-edit-admin-320.png · capturas/pacientes-edit-admin-390.png · capturas/pacientes-edit-admin-1440.png | capturada |
+| Nuevo expediente | /admin/expedientes/crear?paciente_id={id} · expedientes/create | admin | capturas/expedientes-create-admin-320.png · capturas/expedientes-create-admin-390.png · capturas/expedientes-create-admin-1440.png | capturada |
+| Expediente | /admin/expedientes/{id} · expedientes/show | admin | capturas/expedientes-show-admin-320.png · capturas/expedientes-show-admin-390.png · capturas/expedientes-show-admin-1440.png | capturada |
 | Personal | /admin/personal · personal/index | admin | capturas/personal-index-390.png · capturas/personal-index-1440.png | capturada |
 | Nuevo miembro del personal | /admin/personal/crear · personal/create | admin | capturas/personal-create-390.png · capturas/personal-create-1440.png | capturada |
 | Nuevo personal: asistente | /admin/personal/crear (tipo "Asistente", `selectTipo`) · personal/create | admin | capturas/personal-create-asistente-390.png · capturas/personal-create-asistente-1440.png | capturada |
@@ -530,20 +545,20 @@ rehacer el resto de la galería.
 | Nueva cita (dentista) | /dentista/citas/crear · citas/create | dentista | capturas/citas-create-dentista-390.png · capturas/citas-create-dentista-1440.png | capturada |
 | Detalle de cita (dentista) | /dentista/citas/{id} · citas/show | dentista | capturas/citas-show-dentista-390.png · capturas/citas-show-dentista-1440.png | capturada |
 | Pacientes (dentista) | /dentista/pacientes · pacientes/index | dentista | capturas/pacientes-index-dentista-390.png · capturas/pacientes-index-dentista-1440.png | capturada |
-| Ficha del paciente (dentista) | /dentista/pacientes/{id} · pacientes/show | dentista | capturas/pacientes-show-dentista-390.png · capturas/pacientes-show-dentista-1440.png | capturada |
-| Editar paciente (dentista) | /dentista/pacientes/{id}/edit · pacientes/edit | dentista | capturas/pacientes-edit-dentista-390.png · capturas/pacientes-edit-dentista-1440.png | capturada |
-| Expedientes | /dentista/expedientes · expedientes/index | dentista | capturas/expedientes-index-dentista-390.png · capturas/expedientes-index-dentista-1440.png | capturada |
-| Nuevo expediente (dentista) | /dentista/expedientes/crear?paciente_id={id} · expedientes/create | dentista | capturas/expedientes-create-dentista-390.png · capturas/expedientes-create-dentista-1440.png | capturada |
-| Expediente (dentista) | /dentista/expedientes/{id} · expedientes/show | dentista | capturas/expedientes-show-dentista-390.png · capturas/expedientes-show-dentista-1440.png | capturada |
+| Ficha del paciente (dentista) | /dentista/pacientes/{id} · pacientes/show | dentista | capturas/pacientes-show-dentista-320.png · capturas/pacientes-show-dentista-390.png · capturas/pacientes-show-dentista-1440.png | capturada |
+| Editar paciente (dentista) | /dentista/pacientes/{id}/edit · pacientes/edit | dentista | capturas/pacientes-edit-dentista-320.png · capturas/pacientes-edit-dentista-390.png · capturas/pacientes-edit-dentista-1440.png | capturada |
+| Expedientes | /dentista/expedientes · expedientes/index | dentista | capturas/expedientes-index-dentista-320.png · capturas/expedientes-index-dentista-390.png · capturas/expedientes-index-dentista-1440.png | capturada |
+| Nuevo expediente (dentista) | /dentista/expedientes/crear?paciente_id={id} · expedientes/create | dentista | capturas/expedientes-create-dentista-320.png · capturas/expedientes-create-dentista-390.png · capturas/expedientes-create-dentista-1440.png | capturada |
+| Expediente (dentista) | /dentista/expedientes/{id} · expedientes/show | dentista | capturas/expedientes-show-dentista-320.png · capturas/expedientes-show-dentista-390.png · capturas/expedientes-show-dentista-1440.png | capturada |
 | Panel de la asistente | /asistente · dashboard/asistente | asistente | capturas/asistente-dashboard-390.png · capturas/asistente-dashboard-1440.png | capturada |
 | Mis doctores | /asistente/doctores · personal/mis-doctores | asistente | capturas/asistente-doctores-390.png · capturas/asistente-doctores-1440.png | capturada |
 | Citas (asistente) | /asistente/citas · citas/index | asistente | capturas/citas-index-asistente-390.png · capturas/citas-index-asistente-1440.png | capturada |
 | Nueva cita (asistente) | /asistente/citas/crear · citas/create | asistente | capturas/citas-create-asistente-390.png · capturas/citas-create-asistente-1440.png | capturada |
 | Detalle de cita (asistente) | /asistente/citas/{id} · citas/show | asistente | capturas/citas-show-asistente-390.png · capturas/citas-show-asistente-1440.png | capturada |
 | Pacientes (asistente) | /asistente/pacientes · pacientes/index | asistente | capturas/pacientes-index-asistente-390.png · capturas/pacientes-index-asistente-1440.png | capturada |
-| Nuevo paciente (asistente) | /asistente/pacientes/crear · pacientes/create | asistente | capturas/pacientes-create-asistente-390.png · capturas/pacientes-create-asistente-1440.png | capturada |
-| Ficha del paciente (asistente) | /asistente/pacientes/{id} · pacientes/show | asistente | capturas/pacientes-show-asistente-390.png · capturas/pacientes-show-asistente-1440.png | capturada |
-| Expediente (asistente, solo lectura) | /asistente/expedientes/{id} · expedientes/show | asistente | capturas/expedientes-show-asistente-390.png · capturas/expedientes-show-asistente-1440.png | capturada |
+| Nuevo paciente (asistente) | /asistente/pacientes/crear · pacientes/create | asistente | capturas/pacientes-create-asistente-320.png · capturas/pacientes-create-asistente-390.png · capturas/pacientes-create-asistente-1440.png | capturada |
+| Ficha del paciente (asistente) | /asistente/pacientes/{id} · pacientes/show | asistente | capturas/pacientes-show-asistente-320.png · capturas/pacientes-show-asistente-390.png · capturas/pacientes-show-asistente-1440.png | capturada |
+| Expediente (asistente, solo lectura) | /asistente/expedientes/{id} · expedientes/show | asistente | capturas/expedientes-show-asistente-320.png · capturas/expedientes-show-asistente-390.png · capturas/expedientes-show-asistente-1440.png | capturada |
 | Panel del paciente | /cliente · dashboard/cliente | cliente | capturas/cliente-dashboard-320.png · capturas/cliente-dashboard-390.png · capturas/cliente-dashboard-1440.png | capturada |
 | Mis citas (próximas) | /cliente/citas · citas/cliente-index | cliente | capturas/citas-index-cliente-320.png · capturas/citas-index-cliente-390.png · capturas/citas-index-cliente-1440.png | capturada |
 | Mis citas (pasadas) | /cliente/citas?filtro=pasadas · citas/cliente-index | cliente | capturas/citas-index-cliente-pasadas-320.png · capturas/citas-index-cliente-pasadas-390.png · capturas/citas-index-cliente-pasadas-1440.png | capturada |
@@ -588,7 +603,7 @@ se corrige cuando una spec toca la pantalla o como objetivo del roadmap. Se conc
 | DS5 | Componentes duplicados o contradictorios: 11 bloques `<style>` dentro del contenido redefinen `.field` (borde 1.5px, radio 5px, 'DM Sans'), `citas.css` solo en 7 vistas, y `auth.css` redefine tokens (`--text-light: #000`) | `expedientes/create:139`, `pacientes/create:200`, `usuarios/index:208`…, `public/css/auth.css:8-26` | Una sola hoja de componentes cargada por el layout | en curso: `.field-hint` y `.field-hint-error` pasan a `app.css` (spec 027) |
 | DS6 | Objetivo de toque < 44px (medido): botón 31px, `.btn-sm` 22–27px, campo 34–38px, elemento del menú 35px | `public/css/app.css:194-219,353-356`, `citas.css:16-30`; medidas de las 104 vistas con menú | `min-height` con un token `--touch-min` | parcial (033, 034): `--touch-min` existe y se aplica por debajo de 900 px en el menú y las pantallas del paciente (spec 033) y en las pantallas más usadas del personal (spec 034) |
 | DS7 | Estados y semántica que faltan: sin deshabilitado ni carga, sin páginas de error propias (403 y 404 de Laravel en inglés), mensajes flash sin `aria-live`, diálogos sin `role="dialog"` ni manejo del foco, 5 `confirm()` nativos, títulos de sección como `span` | `layouts/app.blade.php:207-253`, `servicios/index:121-193`, `usuarios/index:215-299`; capturas `error-403`, `error-404` | Componentes de aviso y diálogo accesibles, estados de carga y páginas de error con la marca | pendiente |
-| DS8 | La app no se adapta a móvil (medido): a 390 px, 54 de 62 vistas se desbordan en horizontal (472–1157px de ancho; las dos de reprogramar, 498px por la barra lateral), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | parcial (033, 034): menú común y pantallas del paciente desde 320 px (spec 033); paneles, citas con su filtro, detalle de cita, pacientes y servicios del personal, con las tablas como tarjetas (spec 034); el resto de pantallas del personal, en una spec siguiente |
+| DS8 | La app no se adapta a móvil (medido): a 390 px, 54 de 62 vistas se desbordan en horizontal (472–1157px de ancho; las dos de reprogramar, 498px por la barra lateral), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | parcial (033, 034, 035): menú común y pantallas del paciente desde 320 px (spec 033); paneles, citas con su filtro, detalle de cita, pacientes y servicios del personal, con las tablas como tarjetas (spec 034); ficha y formulario del paciente y lista, ficha y alta de expedientes (spec 035); agenda y servicios (spec 036) y administración (spec 037), pendientes |
 | DS9 | Tipografía: Roboto se carga desde Google Fonts sin aprobación en `security.md`; 'DM Sans' y 'DM Mono' se nombran sin cargarse (medido: los campos de usuarios caen a la sans-serif genérica); el peso 300 se carga y no se usa | `layouts/app.blade.php:7`, `usuarios/create:127`, `usuarios/index:210`, `servicios/index:37`, `expedientes/create:110` | Autoalojar Roboto o aprobar el servicio; quitar las familias no cargadas y los pesos sin uso | pendiente |
 | DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:374` | Bloque `prefers-reduced-motion: reduce` | parcial (033, v0.7.0): solo el menú del móvil (spec 033) |
 | DS11 | Restos sin uso: Tailwind 4, Vite y `welcome.blade.php` (ninguna ruta los sirve); clases sin uso (`.logo-icon`, `.appt-card`, `.alert-item`…, y en `auth.css` `.brand-logo`, `.features`…); tokens `--space-7` y `--space-8` sin uso | `package.json`, `vite.config.js`, `resources/views/welcome.blade.php`, `public/css/app.css:37-38,80-94,379,409-417`, `auth.css` | Retirarlos o decidir migrar a ellos | pendiente |
