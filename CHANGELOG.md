@@ -5,6 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.15.0
+- Validador 1.15.0. Carriles ligeros `/fix`, `/refactor` y `/chore` con fichas en `docs/changes/`
+  (plantilla `change.md`), `/sync` para la deriva, sección «Hotfix» en `docs/deployment.md` y el
+  párrafo de carriles en `AGENTS.md`.
+- Modelo por subagente: bloque `models` en `.ai/project.yaml` con los perfiles por defecto
+  (`critical` opus, `standard` sonnet, `mechanical` haiku, `implementation` el de la sesión).
+
 ### Changed — flujo AI-DD actualizado a 1.13.0
 - Validador 1.12.0 y plantillas de plan, review y spec nuevas (sección «Descubribilidad», revisor de
   SEO y brechas `SE`).
