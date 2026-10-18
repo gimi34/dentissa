@@ -255,6 +255,9 @@
     .acciones-ficha .btn { padding: 0 var(--space-3); }
     /* text-align: el texto queda centrado también si parte en dos líneas (CA7). */
     .acciones-ficha .btn, .acciones-formulario .btn { flex: 1; justify-content: center; text-align: center; }
+    /* En los formularios, cada botón parte del ancho de su texto («Registrar paciente» lleva icono) y se
+       reparten lo que sobra: así caben en una línea a 320 px, centrados. */
+    .acciones-formulario .btn { flex: 1 1 auto; }
     .paginacion { flex-wrap: wrap; gap: var(--space-3); }
     /* Textos largos (D6): el correo entero, y el título de la barra y las migas parten (034/R8, /analyze 035 A12, A21). */
     .dato-recortado { white-space: normal; overflow: visible; }
