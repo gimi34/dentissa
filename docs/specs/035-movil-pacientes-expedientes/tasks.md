@@ -115,8 +115,10 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: borrados la base `dentissa_capturas`, los servidores `dentissa_capturas_app` y `dentissa_base_app`, el volumen `dentissa_pw_node`, la línea base, el worktree de v0.8.0 con su `.env` y la carpeta temporal `%TEMP%\dentissa-plan035` (2026-10-18). Se conserva la imagen de Playwright.
 - [x] T041 Anotar en `docs/roadmap.md`, junto a la 014, que sus cambios de la ficha del expediente (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`, los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas (`MovilPacientesExpedientesTest` falla si no; plan D11, /analyze A7); y junto a la 020, que se reconstruye después de la 035 (/analyze A8) — docs/roadmap.md — hecho cuando: el roadmap lo dice junto a la 014 y la 020 — cubre: CA4, CA5 — depende: T040
   - nota: notas junto a «La 014 tras la 034» y a «Spec 020 tras la 033» en Pendientes y deuda. Además, la deuda de la comparación intermitente de `--medir` en las pantallas de la asistente (T040), sin arreglarla (Desvíos de `/implement`).
-- [ ] T090 Actualizar `docs/architecture.md`: en Frontend, las fichas en una columna, el perfil compacto y `.acciones-ficha` con `:has()` en `movil.css`
-- [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
+- [x] T090 Actualizar `docs/architecture.md`: en Frontend, las fichas en una columna, el perfil compacto y `.acciones-ficha` con `:has()` en `movil.css`
+  - nota: Frontend de `architecture.md` con las fichas en una columna, el perfil compacto, `.acciones-ficha` con `:has()` y su degradación, los formularios accesibles y el menú sin recuadro; editado tras fusionar `main` (re-sincronización, PR #29).
+- [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
+  - nota: no aplica: la 035 no cambia variables, entornos, pasos de despliegue, logs, eventos de auditoría ni métricas (plan, «Impacto en arquitectura»).
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
 - [ ] T092 Marcar spec como `implemented`
 
