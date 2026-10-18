@@ -7,8 +7,8 @@
 <div class="card" style="margin-bottom:20px;padding:16px 20px">
     <form method="GET" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
         <div style="flex:1;min-width:220px">
-            <label class="field-label">Buscar</label>
-            <input type="text" name="buscar" value="{{ request('buscar') }}"
+            <label class="field-label" for="campo-buscar">Buscar</label>
+            <input type="text" name="buscar" id="campo-buscar" value="{{ request('buscar') }}"
                 placeholder="Paciente, diagnóstico..." class="field">
         </div>
         <button type="submit" class="btn btn-primary" style="margin-top:0">Buscar</button>
@@ -22,30 +22,30 @@
 <div class="card card-0">
     @if($expedientes->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
+                        <th class="celda-cab">Fecha</th>
                         <th>Paciente</th>
                         <th>Diagnóstico</th>
                         <th>Próxima visita</th>
-                        <th style="text-align:right">Acciones</th>
+                        <th class="celda-acciones" style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($expedientes as $exp)
                     <tr>
-                        <td style="white-space:nowrap;color:var(--text-muted);font-size:13px">
+                        <td class="celda-cab" data-label="Fecha" style="white-space:nowrap;color:var(--text-muted);font-size:13px">
                             {{ \Carbon\Carbon::parse($exp->creado_en)->format('d/m/Y') }}
                         </td>
-                        <td style="font-weight:500">{{ $exp->paciente }}</td>
-                        <td style="font-size:13px;color:var(--text-muted);max-width:360px">
+                        <td data-label="Paciente" style="font-weight:500">{{ $exp->paciente }}</td>
+                        <td data-label="Diagnóstico" style="font-size:13px;color:var(--text-muted);max-width:360px">
                             {{ \Illuminate\Support\Str::limit($exp->diagnostico, 80) }}
                         </td>
-                        <td style="font-size:13px;color:var(--text-muted)">
+                        <td data-label="Próxima visita" style="font-size:13px;color:var(--text-muted)">
                             {{ $exp->proxima_visita ? \Carbon\Carbon::parse($exp->proxima_visita)->format('d/m/Y') : '—' }}
                         </td>
-                        <td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div style="display:flex;gap:4px;justify-content:flex-end">
                                 <a href="{{ route("$base.expedientes.show", $exp->id) }}" class="btn btn-outline btn-sm">Ver</a>
                             </div>
@@ -57,7 +57,7 @@
         </div>
 
         @if($expedientes->hasPages())
-            <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div class="paginacion">
                 <div style="font-size:12.5px;color:var(--text-muted)">
                     {{ $expedientes->firstItem() }}–{{ $expedientes->lastItem() }} de {{ $expedientes->total() }} expedientes
                 </div>
