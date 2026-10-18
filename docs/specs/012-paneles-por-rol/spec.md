@@ -44,13 +44,15 @@ Cada rol necesita, al entrar, un resumen de lo más urgente de su día.
 ## Notas para /plan
 
 ## Evidencia (solo si status=inferred)
-- Archivos: `routes/web.php:46,105,128,148`, `app/Http/Controllers/DashboardController.php`, `resources/views/dashboard/*.blade.php`
+- Archivos: `routes/web.php:46,107,130,153`, `app/Http/Controllers/DashboardController.php`, `resources/views/dashboard/*.blade.php`
 - Tests: sin tests
 
 ## Observaciones (solo si status=inferred)
 - La vista SQL `v_citas_hoy` existe pero el panel no la usa (consulta propia).
+- Desde 028 (v0.6.0), el panel del paciente ofrece «Reprogramar» y «Cancelar» de la próxima cita solo con 24 h o más, con un aviso si falta menos.
 
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 (acciones de la próxima cita en el panel del paciente) | /init (re-sincronizar, 2026-10-18) |

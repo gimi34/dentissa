@@ -81,9 +81,9 @@ paths:
   templates: docs/templates
 verification:                  # lo llena la Fase 4
   - { command: "python .ai/bin/aidd.py validate", result: pass, note: "13 specs, 0 errores (2026-09-28)" }
-  - { command: "php artisan test", result: fail, note: "PHP 8.2 local: composer.lock exige >= 8.4.1 (RD7); Docker no estaba en marcha para correrlo en el contenedor" }
-  - { command: "vendor/bin/pint --test", result: fail, note: "no ejecutado: mismo motivo; /init no tocó archivos PHP" }
-  - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso" }
+  - { command: "php artisan test", result: pass, note: "en el contenedor y en la CI de cada PR; CI en verde en el PR de la 034 (confirmado por el usuario, 2026-10-16; re-sincronización 2026-10-18)" }
+  - { command: "vendor/bin/pint --test", result: pass, note: "sobre los archivos cambiados, en local y en la CI (re-sincronización 2026-10-18)" }
+  - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso; ni la CI ni la imagen de producción lo construyen" }
 template_hashes:              # huellas de docs/templates/ al copiarlas (aidd.py templates --yaml)
   adr.md: 479eaebd1fed
   plan.md: 2a5c45f54da9
