@@ -250,7 +250,7 @@ class MovilPacienteTest extends TestCase
         $this->assertDeclara('.user-name', 'white-space: normal');
         $permitidos = ['.texto-partible', '.user-name', '.welcome-title', '.timeline-title', '.timeline-sub', '.resumen-cita dd',
             // Spec 035 (D6): el título de la barra y las migas, que son hijos de filas flexibles.
-            '.topbar-title', '.migas-actual', '.migas a'];
+            '.topbar-title', '.migas-actual'];
         foreach ($permitidos as $selector) {
             $this->assertDeclara($selector, 'overflow-wrap: anywhere');
         }

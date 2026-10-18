@@ -4,24 +4,25 @@
 @section('content')
 @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
 
-{{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route("{$base}.pacientes") }}" style="color:var(--text-muted);text-decoration:none">Pacientes</a>
+{{-- Migas (spec 035, D14): el componente de la 033. --}}
+<div id="migas" class="migas">
+    <a href="{{ route("{$base}.pacientes") }}">Pacientes</a>
     <span>›</span>
-    <a href="{{ route("{$base}.pacientes.show", $expediente->paciente_id) }}" style="color:var(--text-muted);text-decoration:none">{{ $expediente->paciente }}</a>
+    <a href="{{ route("{$base}.pacientes.show", $expediente->paciente_id) }}">{{ $expediente->paciente }}</a>
     <span>›</span>
-    <span style="color:var(--text)">Expediente</span>
+    <span class="migas-actual">Expediente</span>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 300px;gap:20px">
+{{-- Ficha (spec 035, D2): contenido y columna lateral; en el móvil, una columna en este orden. --}}
+<div class="ficha-expediente">
 
     {{-- ── Columna principal ─────────────────────────────────────────── --}}
     <div style="display:flex;flex-direction:column;gap:18px">
 
         {{-- Cabecera --}}
         <div class="card">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
-                <div>
+            <div class="expediente-cabecera">
+                <div class="texto-partible">
                     <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">
                         {{ \Carbon\Carbon::parse($expediente->creado_en)->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}
                         @if($expediente->servicio) · {{ $expediente->servicio }} @endif
@@ -62,36 +63,39 @@
 
         {{-- Formulario de edición (solo doctor/admin; el asistente solo puede ver) --}}
         @if($base !== 'asistente')
-        <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST">
+        <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST" class="form-expediente">
             @csrf @method('PUT')
 
             <div style="display:flex;flex-direction:column;gap:16px">
 
                 <div class="card">
-                    <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Diagnóstico</div>
-                    <textarea name="diagnostico" class="field" rows="4" style="resize:vertical" required>{{ old('diagnostico', $expediente->diagnostico) }}</textarea>
-                    @error('diagnostico')<div class="error-msg">{{ $message }}</div>@enderror
+                    <label for="campo-diagnostico" class="etiqueta-campo" style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Diagnóstico</label>
+                    <textarea name="diagnostico" id="campo-diagnostico" @error('diagnostico') aria-invalid="true" aria-describedby="error-diagnostico" @enderror class="field {{ $errors->has('diagnostico') ? 'field-error' : '' }}" rows="4" style="resize:vertical" required>{{ old('diagnostico', $expediente->diagnostico) }}</textarea>
+                    @error('diagnostico')<div class="error-msg" id="error-diagnostico">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="card">
-                    <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Tratamiento realizado</div>
-                    <textarea name="tratamiento" class="field" rows="4" style="resize:vertical"
+                    <label for="campo-tratamiento" class="etiqueta-campo" style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Tratamiento realizado</label>
+                    <textarea name="tratamiento" id="campo-tratamiento" @error('tratamiento') aria-invalid="true" aria-describedby="error-tratamiento" @enderror class="field {{ $errors->has('tratamiento') ? 'field-error' : '' }}" rows="4" style="resize:vertical"
                         placeholder="Procedimientos, materiales utilizados...">{{ old('tratamiento', $expediente->tratamiento) }}</textarea>
+                    @error('tratamiento')<div class="error-msg" id="error-tratamiento">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="card">
-                    <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Receta médica</div>
-                    <textarea name="receta" class="field" rows="5" style="resize:vertical;font-size:13px"
+                    <label for="campo-receta" class="etiqueta-campo" style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Receta médica</label>
+                    <textarea name="receta" id="campo-receta" @error('receta') aria-invalid="true" aria-describedby="error-receta" @enderror class="field {{ $errors->has('receta') ? 'field-error' : '' }}" rows="5" style="resize:vertical;font-size:13px"
                         placeholder="Medicamentos, dosis e indicaciones...">{{ old('receta', $expediente->receta) }}</textarea>
+                    @error('receta')<div class="error-msg" id="error-receta">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="card">
-                    <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Observaciones</div>
-                    <textarea name="observaciones" class="field" rows="3" style="resize:vertical"
+                    <label for="campo-observaciones" class="etiqueta-campo" style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Observaciones</label>
+                    <textarea name="observaciones" id="campo-observaciones" @error('observaciones') aria-invalid="true" aria-describedby="error-observaciones" @enderror class="field {{ $errors->has('observaciones') ? 'field-error' : '' }}" rows="3" style="resize:vertical"
                         placeholder="Notas adicionales, evolución esperada...">{{ old('observaciones', $expediente->observaciones) }}</textarea>
+                    @error('observaciones')<div class="error-msg" id="error-observaciones">{{ $message }}</div>@enderror
                 </div>
 
-                <div style="display:flex;gap:10px;justify-content:flex-end">
+                <div class="acciones-formulario">
                     <button type="submit" class="btn btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
                             <polyline points="20 6 9 17 4 12"/>
@@ -138,7 +142,7 @@
             <div class="section-head"><span class="section-title">Próxima visita</span></div>
             <div class="card" style="padding:16px 18px">
                 @if($base !== 'asistente')
-                <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST">
+                <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST" class="form-expediente">
                     @csrf @method('PUT')
                     {{-- Reenviar los campos existentes para no borrarlos --}}
                     <input type="hidden" name="diagnostico"   value="{{ $expediente->diagnostico }}">
@@ -146,10 +150,11 @@
                     <input type="hidden" name="receta"        value="{{ $expediente->receta }}">
                     <input type="hidden" name="observaciones" value="{{ $expediente->observaciones }}">
 
-                    <label class="field-label">Fecha sugerida</label>
-                    <input type="date" name="proxima_visita" class="field" style="margin-bottom:10px"
-                        value="{{ $expediente->proxima_visita ? \Carbon\Carbon::parse($expediente->proxima_visita)->format('Y-m-d') : '' }}"
+                    <label class="field-label" for="campo-proxima_visita">Fecha sugerida</label>
+                    <input type="date" name="proxima_visita" id="campo-proxima_visita" @error('proxima_visita') aria-invalid="true" aria-describedby="error-proxima_visita" @enderror class="field {{ $errors->has('proxima_visita') ? 'field-error' : '' }}" style="margin-bottom:10px"
+                        value="{{ old('proxima_visita', $expediente->proxima_visita ? \Carbon\Carbon::parse($expediente->proxima_visita)->format('Y-m-d') : '') }}"
                         min="{{ now()->format('Y-m-d') }}">
+                    @error('proxima_visita')<div class="error-msg" id="error-proxima_visita">{{ $message }}</div>@enderror
                     <button type="submit" class="btn btn-outline btn-sm" style="width:100%;justify-content:center">
                         Guardar fecha
                     </button>
