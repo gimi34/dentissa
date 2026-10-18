@@ -1,7 +1,7 @@
 ---
 id: 035
 slug: movil-pacientes-expedientes
-status: approved
+status: implemented
 created: 2026-10-16
 extends: [033, 034]
 ---
@@ -52,49 +52,49 @@ Las «pantallas incluidas» son, para cada rol que hoy las ve:
 
 «Móvil» es cualquier ancho por debajo de 900 px, como en la 033 y la 034.
 
-- [ ] CA1 · Dado el personal en la ficha de un paciente, cuando la abre en el móvil (de 320 a
+- [x] CA1 · Dado el personal en la ficha de un paciente, cuando la abre en el móvil (de 320 a
   899 px), entonces la página va en una sola columna, en este orden: el perfil del paciente con sus
   acciones, sus datos de contacto y médicos, sus expedientes y su historial de citas. No hace falta
   alejar la vista para ver nada, no se desplaza de lado y ningún bloque se monta sobre otro.
-- [ ] CA2 · Dado el personal en la ficha de un paciente en el móvil, cuando ve su historial de
+- [x] CA2 · Dado el personal en la ficha de un paciente en el móvil, cuando ve su historial de
   citas, entonces cada cita aparece como una tarjeta con su fecha, servicio, dentista, estado y su
   acción «Ver detalle» a la vista, como las listas de la 034. Cada dato lleva su etiqueta, salvo la
   cabecera (la fecha) y el estado. Sin citas, se ve el mismo aviso que hoy.
-- [ ] CA3 · Dada la dentista en la lista de expedientes, cuando la abre en el móvil, entonces cada
+- [x] CA3 · Dada la dentista en la lista de expedientes, cuando la abre en el móvil, entonces cada
   expediente aparece como una tarjeta con su fecha, paciente, diagnóstico, próxima visita y la
   acción «Ver». El buscador y los botones para pasar de página se ven y se pueden usar sin
   desplazar nada de lado.
-- [ ] CA4 · Dado el personal en la ficha de un expediente, cuando la abre en el móvil, entonces la
+- [x] CA4 · Dado el personal en la ficha de un expediente, cuando la abre en el móvil, entonces la
   página va en una sola columna: primero el contenido del expediente (con su formulario de edición
   cuando el rol puede editar) y después la próxima visita, la información y sus acciones. No se
   desplaza de lado y ningún bloque se monta sobre otro.
-- [ ] CA5 · Dado el personal en el alta o la edición de un paciente, o en el alta de un expediente,
+- [x] CA5 · Dado el personal en el alta o la edición de un paciente, o en el alta de un expediente,
   cuando abre el formulario en el móvil, entonces los campos van en una sola columna y ocupan el
   ancho disponible, cada uno con su etiqueta visible, y «Guardar» y «Cancelar» se ven y se pueden
   pulsar sin desplazar nada de lado. Los campos de teléfono, correo y fecha abren el teclado o el
   selector del móvil que les corresponde (como en 033 CA5).
-- [ ] CA6 · Dado un formulario de las pantallas incluidas enviado con errores en el móvil, cuando la
+- [x] CA6 · Dado un formulario de las pantallas incluidas enviado con errores en el móvil, cuando la
   página vuelve, entonces cada mensaje de error se ve junto a su campo, dentro del ancho de la
   pantalla, y los datos escritos se conservan como hoy.
-- [ ] CA7 · Dados los botones y enlaces de acción de las pantallas incluidas en el móvil (las
+- [x] CA7 · Dados los botones y enlaces de acción de las pantallas incluidas en el móvil (las
   acciones de la cabecera, como «Nuevo expediente» y «Nueva cita», «Editar» y activar o desactivar
   del perfil, «+ Nuevo», «Ver», «Guardar», «Cancelar», «Volver al paciente»), cuando se ven,
   entonces cada uno tiene su texto y su icono centrados dentro del botón y los botones de un mismo
   grupo quedan alineados entre sí, sin que ninguno se salga de su tarjeta ni tape a otro.
-- [ ] CA8 · Dado un texto en las pantallas incluidas (nombres, correos, direcciones, alergias,
+- [x] CA8 · Dado un texto en las pantallas incluidas (nombres, correos, direcciones, alergias,
   diagnósticos, tratamientos, notas), cuando se ve en el móvil, entonces ninguna palabra que cabe en
   su línea se parte letra a letra. Una palabra más larga que el ancho disponible pasa a la línea
   siguiente y nunca ensancha la página (mantiene 033 CA6 y 034 CA7; atiende 034/R8 en estas
   pantallas).
-- [ ] CA9 · Dadas las pantallas incluidas, cuando se abren a 320, 390 y 844 × 390 px, también sin
+- [x] CA9 · Dadas las pantallas incluidas, cuando se abren a 320, 390 y 844 × 390 px, también sin
   JavaScript, entonces ninguna se desplaza en horizontal, ningún control queda tapado por otro ni se
   sale de su tarjeta, y los botones, enlaces de acción, campos y elementos que se pueden pulsar
   miden al menos 44 × 44 px.
-- [ ] CA10 · Dadas las pantallas incluidas en el escritorio (1024 y 1440 px), cuando se abren,
+- [x] CA10 · Dadas las pantallas incluidas en el escritorio (1024 y 1440 px), cuando se abren,
   entonces se ven igual que antes, comprobado contra capturas de la versión anterior. La única
   diferencia admitida es el foco visible con los colores del sistema en lo que esta spec toque
   (como en la 034, decisión del usuario).
-- [ ] CA11 · Dado cualquier rol en el móvil, en cualquier pantalla, cuando ve el botón que abre el
+- [x] CA11 · Dado cualquier rol en el móvil, en cualquier pantalla, cuando ve el botón que abre el
   menú y, con el menú abierto, el que lo cierra, entonces cada uno muestra solo su icono (las tres
   líneas y la cruz), sin recuadro ni borde alrededor. El icono se distingue del fondo con un
   contraste de al menos 3:1 (WCAG 1.4.11), el área que se puede pulsar sigue midiendo al menos

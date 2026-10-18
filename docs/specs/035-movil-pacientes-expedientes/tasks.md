@@ -120,7 +120,8 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: no aplica: la 035 no cambia variables, entornos, pasos de despliegue, logs, eventos de auditoría ni métricas (plan, «Impacto en arquitectura»).
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: los 11 criterios marcados: sus tests pasan (324 en verde en T040) y `--medir` sin fallos (T027 y T040). Spec `implemented` el 2026-10-18.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
