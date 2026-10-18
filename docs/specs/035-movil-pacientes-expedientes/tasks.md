@@ -108,6 +108,28 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: a 390, sin máximo, la etiqueta «Servicio» quedaba pegada a su valor: `margin-left: var(--space-3)` en `.info-valor` (test ampliado antes: falló y ahora pasa).
   - nota: verificación manual OK 2026-10-18 (usuario): «Información» de la ficha a 320 y 390, con etiqueta y valor separados y la palabra entera.
 
+### Correcciones de /review (ronda 1)
+- [ ] T042 Ampliar `--medir` en `capturar.mjs`: a 320, una palabra de 45 letras en el enlace de las migas (nombre del paciente) de la ficha y del alta de expediente no desplaza la página ni se sale del enlace, con control positivo; y los mensajes de error dentro del ancho también en la edición del paciente y en la ficha del expediente — docs/design/capturar.mjs — hecho cuando: `--seco --medir` lista las dos comprobaciones y `--medir` falla hoy en las migas por la razón esperada (la palabra se sale), con la nota del fallo — cubre: CA6, CA8, CA9
+  - nota: añadida por /review: R1, R12
+- [ ] T043 Reforzar `MovilPacientesExpedientesTest`: el caso de errores del expediente en dos envíos reales (formulario principal con error: la fecha cae a su valor guardado y sin `aria-invalid`; ocultos más una fecha no válida: solo la fecha con `aria-invalid` y su mensaje dentro del formulario de «Guardar fecha»), el PUT de la edición del paciente con errores, los valores de «Información» contados y todos con `.info-valor` (sin `max-width` en ningún `style` de `main`), las búsquedas de textos que parten ancladas a su sección y los tipos de campo sin los ocultos — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: pasan dos veces y cada caso nuevo se comprueba rompiendo lo que protege (anotado) — cubre: CA5, CA6, CA8
+  - nota: añadida por /review: R2, R8, R9, R10
+- [ ] T044 Añadir a `MovilPacienteTest` que el panel del menú del móvil declara `background: var(--white)` en la media query, el fondo de «Cerrar menú» sin recuadro (CA11) — tests/Feature/MovilPacienteTest.php — hecho cuando: pasa dos veces y falla con otro fondo (comprobado rompiendo) — cubre: CA11
+  - nota: añadida por /review: R11
+- [ ] T045 Añadir a `MovilPacientesExpedientesTest` los tests que fallan hoy: `.field-error` de los formularios del expediente con `border-color` de token en el bloque 035 de `app.css`; `.acciones-formulario .btn` sin `flex: 1` en ninguna regla; `aria-hidden="true"` en los `<svg>` decorativos de la ficha del paciente y de la lista de expedientes; relleno vertical con tokens en la barra que contiene `.acciones-ficha` en el móvil; y la fecha del alta de expediente con su clase (máximo con token en el escritorio, sin máximo en el móvil) y sin `max-width` en su `style` — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: los tests nuevos fallan hoy por la razón esperada (anotado) — cubre: CA5, CA6, CA7, CA10
+  - nota: añadida por /review: R4, R5, R6, R13, R14
+- [ ] T046 Añadir el token del máximo de la fecha (220 px, el valor de hoy) a `system.md` y a `:root` de `app.css`, con su clase en el bloque 035, y pasar la fecha del alta de expediente a esa clase sin el `max-width` de su `style` — docs/design/system.md, public/css/app.css, resources/views/expedientes/create.blade.php — hecho cuando: pasan las partes de la fecha de T045 salvo la del móvil y los tests de tokens de la 035 — cubre: CA5, CA10 — depende: T045
+  - nota: añadida por /review: R14
+- [ ] T047 En `app.css` (bloque 035), `.field-error` de los formularios del expediente con `border-color` de token; en `movil.css` (bloque 035), separar las reglas de `.acciones-ficha .btn` y `.acciones-formulario .btn`, relleno vertical con tokens en la barra que contiene `.acciones-ficha` y la fecha del alta de expediente sin máximo — public/css/app.css, public/css/movil.css — hecho cuando: pasan dos veces las partes de T045 de esos tres hallazgos y de la fecha, y los tests de tokens de la 035 y de `movil.css` — cubre: CA5, CA6, CA7, CA10 — depende: T045, T046
+  - nota: añadida por /review: R4, R5, R13, R14
+- [ ] T048 Añadir `aria-hidden="true"` a los `<svg>` decorativos de la ficha del paciente (información médica y estado vacío) y de la lista de expedientes (estado vacío) — resources/views/pacientes/show.blade.php, resources/views/expedientes/index.blade.php — hecho cuando: pasa dos veces la parte de los iconos de T045 — cubre: CA7 — depende: T045
+  - nota: añadida por /review: R6
+- [ ] T049 Hacer que, en el móvil, la palabra larga del enlace de las migas parta dentro del ancho sin perder el mínimo de toque de la 033 (≥ 44 × 44) ni partir letra a letra un nombre que cabe entero en la línea siguiente, y ajustar la aserción de `.migas a` en `MovilPacientesExpedientesTest` — public/css/movil.css, tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: pasa la comprobación de las migas de T042 y `--medir` no da fallos en las migas de la 033, la 034 y la 035 (toque incluido) — cubre: CA8, CA9 — depende: T042
+  - nota: añadida por /review: R1
+- [ ] T050 Corregir en el Constitution Check del plan (fila P9) el número de tokens nuevos para que coincida con la lista «Spec 035» de `system.md` (diez con `--expediente-dato-max` de T031, once con el de T046) — docs/specs/035-movil-pacientes-expedientes/plan.md — hecho cuando: el número del plan es el de la lista de `system.md` — depende: T046
+  - nota: añadida por /review: R7
+- [ ] T051 Verificación final de las correcciones: `php artisan test` completo en verde, `pint --test` en los PHP tocados, `--medir` con código 0 sobre una línea base v0.8.0 de la misma sesión, gitleaks sobre el rango, capturas a 320, 390 y 1440 de la ficha del paciente y del alta de expediente rehechas, y borrado del entorno de capturas (base, servidores, volumen, worktree de v0.8.0 con su `.env` y carpeta temporal) — docs/design/capturas/ (generado por node capturar.mjs) — hecho cuando: todo pasa y queda anotado · verificación manual: el usuario revisa las capturas a 320 y 390 (barra con las acciones, fecha del alta) — cubre: CA1, CA5, CA6, CA7, CA8, CA9, CA10 — depende: T043, T044, T047, T048, T049, T050
+  - nota: añadida por /review: R1, R4, R13, R14
+
 ## Integración y documentación
 - [x] T040 Hacer la verificación final: `php artisan test` completo, con la línea base de T002 más los tests nuevos, todo en verde; `pint --test` en los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0; gitleaks sobre el rango de la spec, sin fugas; `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; borrados la base `dentissa_capturas`, sus servidores, el volumen de Playwright, la línea base, la copia `git worktree` de v0.8.0 y su `.env`, y la carpeta temporal — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10, CA11 — depende: T028
   - nota: verificación final del 2026-10-18 (rama en 07a7e68): `php artisan test` 324 tests en verde (6300 aserciones): los 310 de la línea base de T002 más los 14 de `MovilPacientesExpedientesTest`; `pint --test` limpio en los 2 PHP tocados; `composer audit --locked` sin avisos; `npm audit --audit-level=high` 0 vulnerabilidades; gitleaks sobre `883af40..HEAD` (20 commits) sin fugas; `trivy fs --severity HIGH,CRITICAL` solo el falso positivo de `vendor/mockery/mockery/docs/requirements.txt` (9), igual que en T002.
@@ -120,7 +142,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: no aplica: la 035 no cambia variables, entornos, pasos de despliegue, logs, eventos de auditoría ni métricas (plan, «Impacto en arquitectura»).
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: los 11 criterios marcados: sus tests pasan (324 en verde en T040) y `--medir` sin fallos (T027 y T040). Spec `implemented` el 2026-10-18.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -135,17 +157,17 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010, T012, T014 | T001, T020, T021, T022, T028 |
+| CA1 | T010, T012, T014 | T001, T020, T021, T022, T028, T051 |
 | CA2 | T010, T014 | T022, T028 |
 | CA3 | T010, T014 | T023, T028 |
 | CA4 | T010, T012, T014 | T001, T020, T021, T024, T028 |
-| CA5 | T010, T011 | T023, T024, T025, T026 |
-| CA6 | T011 | T024, T025, T026 |
-| CA7 | T010, T012, T014 | T001, T020, T021, T022, T024, T025, T026 |
-| CA8 | T010, T012, T014, T027, T029, T030 | T021, T022, T024, T032 |
-| CA9 | T010, T014, T027 | T022, T023, T024, T025, T026 |
-| CA10 | T012, T014, T030 | T020, T022, T023, T024, T025, T026, T028, T031, T032 |
-| CA11 | T012, T013, T014 | T001, T021, T028 |
+| CA5 | T010, T011, T043, T045 | T023, T024, T025, T026, T046, T047, T051 |
+| CA6 | T011, T042, T043, T045 | T024, T025, T026, T047, T051 |
+| CA7 | T010, T012, T014, T045 | T001, T020, T021, T022, T024, T025, T026, T047, T048, T051 |
+| CA8 | T010, T012, T014, T027, T029, T030, T042, T043 | T021, T022, T024, T032, T049, T051 |
+| CA9 | T010, T014, T027, T042 | T022, T023, T024, T025, T026, T049, T051 |
+| CA10 | T012, T014, T030, T045 | T020, T022, T023, T024, T025, T026, T028, T031, T032, T046, T047, T051 |
+| CA11 | T012, T013, T014, T044 | T001, T021, T028 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -153,16 +175,16 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
-| Sistema de diseño (`system.md`, `system.html`) | T001, T028, T031 |
-| Estilos existentes (`public/css/app.css`) | T020, T031 |
-| Estilos del móvil (`public/css/movil.css`) | T021, T032 |
-| Ficha del paciente (`pacientes/show`) | T022 |
+| Sistema de diseño (`system.md`, `system.html`) | T001, T028, T031, T046 |
+| Estilos existentes (`public/css/app.css`) | T020, T031, T046, T047 |
+| Estilos del móvil (`public/css/movil.css`) | T021, T032, T047, T049 |
+| Ficha del paciente (`pacientes/show`) | T022, T048 |
 | Formulario del paciente (`pacientes/create`) | T025 |
-| Lista de expedientes (`expedientes/index`) | T023 |
+| Lista de expedientes (`expedientes/index`) | T023, T048 |
 | Ficha del expediente (`expedientes/show`) | T024, T032 |
-| Alta de expediente (`expedientes/create`) | T026 |
-| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030 |
-| Capturas y medidas (`capturar.mjs`) | T014, T028 |
+| Alta de expediente (`expedientes/create`) | T026, T046 |
+| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030, T043, T044, T045, T049 |
+| Capturas y medidas (`capturar.mjs`) | T014, T028, T042, T051 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
