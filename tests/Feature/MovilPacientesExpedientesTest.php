@@ -391,7 +391,7 @@ class MovilPacientesExpedientesTest extends TestCase
             '.perfil-dato' => ['display: grid', 'grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr)'],
             '.perfil-dato svg' => ['display: none'],
             // T030: en el móvil, el valor de «Información» sin máximo (la palabra larga no parte si cabe).
-            '.info-valor' => ['max-width: none'],
+            '.info-valor' => ['max-width: none', 'margin-left: var(--space-3)'],
             '.perfil-etiqueta' => ['font-size: var(--text-small)', 'font-weight: var(--weight-strong)', 'text-transform: uppercase', 'color: var(--p600)'],
             '.menu-btn' => ['border: 0', 'background: transparent'],
             '.menu-cerrar' => ['border: 0', 'background: transparent'],

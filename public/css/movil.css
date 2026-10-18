@@ -273,5 +273,7 @@
     .perfil-nombre { font-size: var(--perfil-nombre-movil); }
     .perfil-dato { display: grid; grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr); }
     .perfil-dato svg { display: none; }
+    /* Valores de «Información» del expediente sin máximo: una palabra larga no parte si cabe (T032). */
+    .info-valor { max-width: none; margin-left: var(--space-3); }
     .perfil-etiqueta { font-size: var(--text-small); font-weight: var(--weight-strong); text-transform: uppercase; color: var(--p600); }
 }

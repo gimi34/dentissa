@@ -191,12 +191,12 @@
                     </div>
                     <div style="display:flex;justify-content:space-between">
                         <span style="color:var(--text-muted)">Dentista</span>
-                        <span style="text-align:right;max-width:140px">{{ $expediente->dentista }}</span>
+                        <span class="info-valor">{{ $expediente->dentista }}</span>
                     </div>
                     @if($expediente->servicio)
                         <div style="display:flex;justify-content:space-between">
                             <span style="color:var(--text-muted)">Servicio</span>
-                            <span style="text-align:right;max-width:140px">{{ $expediente->servicio }}</span>
+                            <span class="info-valor">{{ $expediente->servicio }}</span>
                         </div>
                     @endif
                     <div style="display:flex;justify-content:space-between">
