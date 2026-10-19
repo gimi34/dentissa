@@ -226,6 +226,39 @@ class MovilPacientesExpedientesTest extends TestCase
         }
     }
 
+    /** /review R5: los botones de los formularios no reciben el flex: 1 de las acciones de la ficha. */
+    public function test_los_botones_del_formulario_no_heredan_el_reparto_de_la_ficha(): void
+    {
+        $reglas = $this->reglasCss('css/movil.css');
+        $this->assertDoesNotMatchRegularExpression('/(^|;)\s*flex\s*:\s*1\s*;/', $this->cuerpos($reglas, '.acciones-formulario .btn', ['@media (max-width: 899px)']),
+            'Ninguna regla da flex: 1 a .acciones-formulario .btn.');
+        $this->assertMatchesRegularExpression('/(^|;)\s*flex\s*:\s*1\s*;/', $this->cuerpos($reglas, '.acciones-ficha .btn', ['@media (max-width: 899px)']),
+            '.acciones-ficha .btn conserva flex: 1.');
+    }
+
+    /** /review R6: los iconos de las barras de acciones y del contenido son decorativos (aria-hidden). */
+    public function test_los_iconos_decorativos_llevan_aria_hidden(): void
+    {
+        foreach ([[$this->admin, "/admin/pacientes/{$this->p1}"], [$this->admin, "/admin/pacientes/{$this->p2}"], [$this->dentista1, '/dentista/expedientes?buscar=no-existe']] as [$usuario, $url]) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get($url)->assertOk()->getContent());
+            $iconos = $xpath->query("//*[contains(@class,'topbar-actions') or contains(concat(' ', normalize-space(@class), ' '), ' content ')]//*[local-name()='svg']");
+            $this->assertGreaterThan(0, $iconos->length, "{$url}: hay iconos.");
+            foreach ($iconos as $icono) {
+                $this->assertSame('true', $icono->getAttribute('aria-hidden'), "{$url}: un icono sin aria-hidden en «".trim(preg_replace('/\s+/', ' ', $icono->parentNode->textContent))."».");
+            }
+        }
+    }
+
+    /** /review R14: la fecha del alta de expediente lleva .campo-fecha, sin max-width en línea. */
+    public function test_la_fecha_del_alta_de_expediente_usa_su_clase(): void
+    {
+        $xpath = $this->xpath($this->actingAs($this->admin)->get("/admin/expedientes/crear?paciente_id={$this->p1}")->assertOk()->getContent());
+        $fecha = $xpath->query("//main//input[@name='proxima_visita'][not(@type='hidden')]")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $fecha, 'Existe la fecha sugerida.');
+        $this->assertContains('campo-fecha', $this->clases($fecha), 'La fecha lleva .campo-fecha.');
+        $this->assertStringNotContainsString('max-width', $fecha->getAttribute('style'), 'Sin max-width en línea.');
+    }
+
     /** T030 (CA8): los valores de «Información» del expediente usan .info-valor, sin máximo en línea. */
     public function test_los_valores_de_informacion_del_expediente_usan_su_clase(): void
     {
@@ -396,6 +429,10 @@ class MovilPacientesExpedientesTest extends TestCase
             '.form-expediente .field:focus-visible' => $foco,
             '.form-paciente .field:focus' => $sinHalo,
             '.form-expediente .field:focus' => $sinHalo,
+            // /review R4: el campo con error de los formularios del expediente se marca, como en los demás.
+            '.form-expediente .field-error' => ['border-color: var(--red)'],
+            // /review R14: la fecha del alta de expediente, con el máximo de hoy en el escritorio.
+            '.campo-fecha' => ['max-width: var(--campo-fecha-max)'],
         ];
         foreach ($esperadas as $selector => $declaraciones) {
             $cuerpo = $this->cuerpos($this->analizarCss($bloque), $selector, []);
@@ -437,6 +474,10 @@ class MovilPacientesExpedientesTest extends TestCase
             '.perfil-etiqueta' => ['font-size: var(--text-small)', 'font-weight: var(--weight-strong)', 'text-transform: uppercase', 'color: var(--p600)'],
             '.menu-btn' => ['border: 0', 'background: transparent'],
             '.menu-cerrar' => ['border: 0', 'background: transparent'],
+            // /review R13: aire vertical en la barra cuando las acciones bajan a la segunda fila.
+            '.topbar:has(.acciones-ficha)' => ['padding-block: var(--space-3)'],
+            // /review R14: en el móvil, la fecha del alta ocupa el ancho disponible.
+            '.campo-fecha' => ['max-width: none'],
         ];
         foreach ($esperadas as $selector => $declaraciones) {
             $cuerpo = $this->cuerpos($this->reglasCss('css/movil.css'), $selector, ['@media (max-width: 899px)']);
