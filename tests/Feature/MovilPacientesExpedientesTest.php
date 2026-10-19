@@ -141,12 +141,12 @@ class MovilPacientesExpedientesTest extends TestCase
     {
         $this->cita($this->d1, $this->p1, 'agendada', '2026-10-22 11:00');
         $xpath = $this->xpath($this->actingAs($this->admin)->get("/admin/pacientes/{$this->p1}")->assertOk()->getContent());
-        $partible = fn (string $texto) => $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' texto-partible ')][contains(., '{$texto}')]")->length;
-
-        $this->assertGreaterThan(0, $partible($this->paciente1->nombre.' '.$this->paciente1->apellido), 'El nombre del perfil parte.');
-        $this->assertGreaterThan(0, $partible('Contacto de prueba'), 'El contacto de emergencia parte.');
-        $this->assertGreaterThan(0, $partible('Consulta'), 'El servicio de la próxima cita parte (sin servicio, «Consulta»).');
-        $this->assertGreaterThan(0, $partible('Diagnóstico de prueba'), 'La cabecera del expediente parte.');
+        $partible = "[contains(concat(' ', normalize-space(@class), ' '), ' texto-partible ')]";
+        // Cada búsqueda, anclada a su sección (/review R9): no vale un texto igual en otra parte de la ficha.
+        $this->assertSame(1, $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' perfil-nombre ')]{$partible}[contains(., '{$this->paciente1->nombre} {$this->paciente1->apellido}')]")->length, 'El nombre del perfil parte.');
+        $this->assertSame(1, $xpath->query("//*{$partible}[normalize-space()='Contacto de prueba']")->length, 'El contacto de emergencia parte.');
+        $this->assertSame(1, $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' card ')][*[normalize-space()='Próxima cita']]/*{$partible}[normalize-space()='Consulta']")->length, 'El servicio de la próxima cita parte (sin servicio, «Consulta»).');
+        $this->assertSame(1, $xpath->query("//div[div[contains(@class,'section-head')][span[normalize-space()='Expedientes clínicos']]]//*{$partible}[contains(., 'Diagnóstico de prueba')]")->length, 'La cabecera del expediente parte.');
         foreach ($xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' perfil-dato ')]") as $dato) {
             $this->assertContains('texto-partible', $this->clases($dato), 'Cada dato de contacto parte.');
         }
@@ -219,7 +219,9 @@ class MovilPacientesExpedientesTest extends TestCase
         foreach ($tipos as [$usuario, $url, $campos]) {
             $xpath = $this->xpath($this->actingAs($usuario)->get($url)->assertOk()->getContent());
             foreach ($campos as $nombre => $tipo) {
-                $this->assertSame($tipo, $xpath->query("//input[@name='{$nombre}']")->item(0)?->getAttribute('type'), "{$url}: «{$nombre}» de tipo {$tipo}.");
+                $visibles = $xpath->query("//main//input[@name='{$nombre}'][not(@type='hidden')]");
+                $this->assertSame(1, $visibles->length, "{$url}: un solo «{$nombre}» visible (/review R10).");
+                $this->assertSame($tipo, $visibles->item(0)->getAttribute('type'), "{$url}: «{$nombre}» de tipo {$tipo}.");
             }
         }
     }
@@ -227,10 +229,21 @@ class MovilPacientesExpedientesTest extends TestCase
     /** T030 (CA8): los valores de «Información» del expediente usan .info-valor, sin máximo en línea. */
     public function test_los_valores_de_informacion_del_expediente_usan_su_clase(): void
     {
+        // Con servicio, para que «Información» tenga sus dos valores de texto (/review R8).
+        $cita = $this->cita($this->d1, $this->p1, 'completada', '2026-10-02 10:00');
+        DB::table('citas')->where('id', $cita)->update(['servicio_id' => DB::table('servicios')->value('id')]);
+        DB::table('expedientes')->where('id', $this->expediente)->update(['cita_id' => $cita]);
+
         $xpath = $this->xpath($this->actingAs($this->admin)->get("/admin/expedientes/{$this->expediente}")->assertOk()->getContent());
-        $valores = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' info-valor ')]");
-        $this->assertGreaterThan(0, $valores->length, 'Los valores de «Información» llevan .info-valor.');
-        $this->assertSame(0, $xpath->query("//span[contains(@style,'max-width')]")->length, 'Ningún valor con max-width en línea.');
+        $info = $xpath->query("//div[div[contains(@class,'section-head')][span[normalize-space()='Información']]]")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $info, 'Existe la sección «Información».');
+        foreach (['Dentista', 'Servicio'] as $etiqueta) {
+            $valor = $xpath->query(".//div[span[1][normalize-space()='{$etiqueta}']]/span[2]", $info);
+            $this->assertSame(1, $valor->length, "«{$etiqueta}» tiene su valor.");
+            $this->assertContains('info-valor', $this->clases($valor->item(0)), "El valor de «{$etiqueta}» lleva .info-valor.");
+        }
+        $this->assertSame(2, $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' info-valor ')]", $info)->length, 'Solo los dos valores de texto llevan .info-valor.');
+        $this->assertSame(0, $xpath->query("//main//*[contains(@style,'max-width')]")->length, 'Ningún elemento de la ficha con max-width en línea.');
     }
 
     /** RNF 1.3.1 (D7): cada etiqueta apunta a un campo de su formulario. */
@@ -286,12 +299,28 @@ class MovilPacientesExpedientesTest extends TestCase
                 'paciente_id' => $this->p1, 'dentista_id' => 'no-existe', 'cita_id' => 'no-existe', 'diagnostico' => '',
                 'tratamiento' => $largo(2001), 'receta' => $largo(2001), 'observaciones' => $largo(2001), 'proxima_visita' => '2026-10-01',
             ]],
-            'edición del expediente' => ["/admin/expedientes/{$this->expediente}", 'put', "/admin/expedientes/{$this->expediente}", [
+            // Los dos envíos que hace la ficha del expediente, por separado (/review R2).
+            'ficha del expediente: contenido' => ["/admin/expedientes/{$this->expediente}", 'put', "/admin/expedientes/{$this->expediente}", [
                 'diagnostico' => '', 'tratamiento' => $largo(2001), 'receta' => $largo(2001), 'observaciones' => $largo(2001),
+            ]],
+            'ficha del expediente: fecha sugerida' => ["/admin/expedientes/{$this->expediente}", 'put', "/admin/expedientes/{$this->expediente}", [
+                'diagnostico' => 'Diagnóstico de prueba', 'tratamiento' => 'Tratamiento de prueba', 'receta' => '', 'observaciones' => '',
                 'proxima_visita' => 'no-es-fecha',
             ]],
+            'edición del paciente' => ["/admin/pacientes/{$this->p1}/edit", 'put', "/admin/pacientes/{$this->p1}", [
+                'nombre' => '', 'apellido' => '', 'email' => 'no-es-correo', 'telefono' => $largo(21),
+                'fecha_nacimiento' => '2030-01-01', 'genero' => $largo(21), 'direccion' => $largo(501), 'ciudad' => $largo(101),
+                'tipo_sangre' => 'ABCDEF', 'alergias' => $largo(1001), 'enfermedades_cronicas' => $largo(1001),
+                'medicamentos_actuales' => $largo(501), 'notas_medicas' => $largo(2001), 'contacto_emergencia' => $largo(201),
+                'telefono_emergencia' => $largo(21), 'dentista_id' => 'no-existe',
+            ]],
         ];
+        // Fecha guardada, para que «cae a su valor guardado» no pase con un campo vacío.
+        DB::table('expedientes')->where('id', $this->expediente)->update(['proxima_visita' => '2026-11-20']);
+        // Campos válidos de cada envío: sin error (los ocultos y los copiados del formulario de la fecha).
+        $validos = ['paciente_id', 'diagnostico', 'tratamiento', 'receta', 'observaciones'];
         foreach ($casos as $caso => [$desde, $metodo, $destino, $datos]) {
+            $fecha = $caso === 'ficha del expediente: fecha sugerida';
             // Sin errores: ni mensaje ni aria-describedby.
             $xpath = $this->xpath($this->actingAs($this->admin)->get($desde)->assertOk()->getContent());
             $this->assertSame(0, $xpath->query("//main//*[contains(concat(' ', normalize-space(@class), ' '), ' error-msg ')]")->length, "{$caso}: sin errores, sin mensajes.");
@@ -300,8 +329,8 @@ class MovilPacientesExpedientesTest extends TestCase
             $html = $this->actingAs($this->admin)->followingRedirects()->from($desde)->{$metodo}($destino, $datos)->assertOk()->getContent();
             $xpath = $this->xpath($html);
             foreach ($datos as $campo => $valor) {
-                if ($campo === 'paciente_id') {
-                    continue; // Campo oculto: sin mensaje junto a él (/analyze A22).
+                if ($campo === 'paciente_id' || ($fecha && in_array($campo, $validos, true))) {
+                    continue; // Campo oculto o válido: sin mensaje junto a él (/analyze A22, /review R2).
                 }
                 $nodo = $xpath->query("//main//form//*[@name='{$campo}'][not(@type='hidden')]")->item(0);
                 $this->assertInstanceOf(DOMElement::class, $nodo, "{$caso}: existe «{$campo}».");
@@ -314,9 +343,22 @@ class MovilPacientesExpedientesTest extends TestCase
                 $this->assertSame($nodo->parentNode, $error->item(0)->parentNode, "{$caso}: el mensaje de «{$campo}» va junto al campo.");
                 $this->assertContains('field-error', $this->clases($nodo), "{$caso}: «{$campo}» con .field-error.");
             }
-            $conservado = $caso === 'alta del paciente' ? ['ciudad', $datos['ciudad']] : ['proxima_visita', $datos['proxima_visita']];
+            $conservado = match ($caso) {
+                'alta del paciente', 'edición del paciente' => ['ciudad', $datos['ciudad']],
+                // Tras un error del contenido, la fecha sugerida cae a su valor guardado (old('proxima_visita', …)).
+                'ficha del expediente: contenido' => ['proxima_visita', (string) DB::table('expedientes')->where('id', $this->expediente)->value('proxima_visita')],
+                default => ['proxima_visita', $datos['proxima_visita']],
+            };
             $campo = $xpath->query("//main//form//input[@name='{$conservado[0]}'][not(@type='hidden')]")->item(0);
             $this->assertSame($conservado[1], $campo?->getAttribute('value'), "{$caso}: se conserva lo escrito en «{$conservado[0]}».");
+            if ($caso === 'ficha del expediente: contenido') {
+                $this->assertFalse($campo->hasAttribute('aria-invalid'), "{$caso}: la fecha sugerida, sin aria-invalid.");
+            }
+            if ($fecha) {
+                // Solo la fecha tiene error, y su mensaje va en el formulario de «Guardar fecha».
+                $this->assertSame(0, $xpath->query('//main//textarea[@aria-invalid]')->length, "{$caso}: el contenido, sin aria-invalid.");
+                $this->assertSame(1, $xpath->query("//main//form[.//input[@name='proxima_visita'][not(@type='hidden')]]//*[@id='error-proxima_visita']")->length, "{$caso}: el error de la fecha, en su formulario.");
+            }
         }
     }
 
