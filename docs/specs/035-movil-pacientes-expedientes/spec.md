@@ -1,7 +1,7 @@
 ---
 id: 035
 slug: movil-pacientes-expedientes
-status: implemented
+status: approved
 created: 2026-10-16
 extends: [033, 034]
 ---

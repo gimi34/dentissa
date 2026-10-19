@@ -150,6 +150,12 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: verificación manual OK 2026-10-19 (usuario): la barra de la ficha con aire arriba y abajo cuando las acciones bajan a la segunda fila, y la fecha del alta a todo el ancho en el móvil.
   - nota: borrados la base `dentissa_capturas`, los servidores `dentissa_capturas_app` y `dentissa_base_app`, el volumen `dentissa_pw_node`, el worktree de v0.8.0 con su `.env` y la carpeta temporal (2026-10-19).
 
+### Correcciones de /review (ronda 2)
+- [ ] T054 Añadir a `MovilPacientesExpedientesTest` que el borde rojo del campo con error de los formularios del expediente gana también con foco: en el bloque 035 de `app.css`, la regla con `border-color: var(--red)` tiene selector `.form-expediente .field.field-error` (especificidad (0,3,0), igual que `.form-expediente .field:focus`) y va después de la regla de foco — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: falla hoy por la razón esperada (anotado) — cubre: CA6
+  - nota: añadida por /review: R21
+- [ ] T055 Cambiar en el bloque 035 de `app.css` el selector del campo con error de los formularios del expediente a `.form-expediente .field.field-error`, después de la regla de foco — public/css/app.css — hecho cuando: pasa dos veces T054 y los demás tests de móvil — cubre: CA6 — depende: T054
+  - nota: añadida por /review: R21
+
 ## Integración y documentación
 - [x] T040 Hacer la verificación final: `php artisan test` completo, con la línea base de T002 más los tests nuevos, todo en verde; `pint --test` en los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0; gitleaks sobre el rango de la spec, sin fugas; `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; borrados la base `dentissa_capturas`, sus servidores, el volumen de Playwright, la línea base, la copia `git worktree` de v0.8.0 y su `.env`, y la carpeta temporal — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10, CA11 — depende: T028
   - nota: verificación final del 2026-10-18 (rama en 07a7e68): `php artisan test` 324 tests en verde (6300 aserciones): los 310 de la línea base de T002 más los 14 de `MovilPacientesExpedientesTest`; `pint --test` limpio en los 2 PHP tocados; `composer audit --locked` sin avisos; `npm audit --audit-level=high` 0 vulnerabilidades; gitleaks sobre `883af40..HEAD` (20 commits) sin fugas; `trivy fs --severity HIGH,CRITICAL` solo el falso positivo de `vendor/mockery/mockery/docs/requirements.txt` (9), igual que en T002.
@@ -162,7 +168,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: no aplica: la 035 no cambia variables, entornos, pasos de despliegue, logs, eventos de auditoría ni métricas (plan, «Impacto en arquitectura»).
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: los 11 criterios marcados: sus tests pasan (324 en verde en T040) y `--medir` sin fallos (T027 y T040). Spec `implemented` el 2026-10-18.
   - nota: de nuevo `implemented` el 2026-10-19 tras las tareas de /review r1 (T042–T053); los 11 criterios siguen con sus tests en verde.
 
@@ -183,7 +189,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | CA3 | T010, T014 | T023, T028 |
 | CA4 | T010, T012, T014 | T001, T020, T021, T024, T028 |
 | CA5 | T010, T011, T043, T045 | T023, T024, T025, T026, T046, T047, T051 |
-| CA6 | T011, T042, T043, T045 | T024, T025, T026, T047, T051 |
+| CA6 | T011, T042, T043, T045, T054 | T024, T025, T026, T047, T051, T055 |
 | CA7 | T010, T012, T014, T045, T052 | T001, T020, T021, T022, T024, T025, T026, T047, T048, T051, T053 |
 | CA8 | T010, T012, T014, T027, T029, T030, T042, T043 | T021, T022, T024, T032, T049, T051 |
 | CA9 | T010, T014, T027, T042 | T022, T023, T024, T025, T026, T049, T051 |
@@ -197,14 +203,14 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | Sistema de diseño (`system.md`, `system.html`) | T001, T028, T031, T046 |
-| Estilos existentes (`public/css/app.css`) | T020, T031, T046, T047 |
+| Estilos existentes (`public/css/app.css`) | T020, T031, T046, T047, T055 |
 | Estilos del móvil (`public/css/movil.css`) | T021, T032, T047, T049 |
 | Ficha del paciente (`pacientes/show`) | T022, T048 |
 | Formulario del paciente (`pacientes/create`) | T025, T053 |
 | Lista de expedientes (`expedientes/index`) | T023, T048 |
 | Ficha del expediente (`expedientes/show`) | T024, T032, T053 |
 | Alta de expediente (`expedientes/create`) | T026, T046, T053 |
-| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030, T043, T044, T045, T049, T052 |
+| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030, T043, T044, T045, T049, T052, T054 |
 | Capturas y medidas (`capturar.mjs`) | T014, T028, T042, T051 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
