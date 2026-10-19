@@ -154,8 +154,9 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T054 Añadir a `MovilPacientesExpedientesTest` que el borde rojo del campo con error de los formularios del expediente gana también con foco: en el bloque 035 de `app.css`, la regla con `border-color: var(--red)` tiene selector `.form-expediente .field.field-error` (especificidad (0,3,0), igual que `.form-expediente .field:focus`) y va después de la regla de foco — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: falla hoy por la razón esperada (anotado) — cubre: CA6
   - nota: añadida por /review: R21
   - nota: fallan hoy por la razón esperada: «El bloque 035 tiene .form-expediente .field.field-error» (test nuevo, que además exige que vaya después de la regla de foco) y «Falta .form-expediente .field.field-error» en el test del bloque 035, cuya entrada de R4 pasa a ese selector.
-- [ ] T055 Cambiar en el bloque 035 de `app.css` el selector del campo con error de los formularios del expediente a `.form-expediente .field.field-error`, después de la regla de foco — public/css/app.css — hecho cuando: pasa dos veces T054 y los demás tests de móvil — cubre: CA6 — depende: T054
+- [x] T055 Cambiar en el bloque 035 de `app.css` el selector del campo con error de los formularios del expediente a `.form-expediente .field.field-error`, después de la regla de foco — public/css/app.css — hecho cuando: pasa dos veces T054 y los demás tests de móvil — cubre: CA6 — depende: T054
   - nota: añadida por /review: R21
+  - nota: `.form-expediente .field.field-error { border-color: var(--red) }` (0,3,0), después de `.form-paciente .field:focus, .form-expediente .field:focus`; con foco, el campo con error sigue rojo, como en los otros dos formularios. Pasan dos veces T054 y los 68 tests de móvil; la suite completa, en verde. Solo cambia el aspecto de un campo con error y foco, así que no toca `movil.css` ni lo que compara `--medir`.
 
 ## Integración y documentación
 - [x] T040 Hacer la verificación final: `php artisan test` completo, con la línea base de T002 más los tests nuevos, todo en verde; `pint --test` en los PHP tocados; `node docs/design/capturar.mjs --medir` con código 0; gitleaks sobre el rango de la spec, sin fugas; `composer audit`, `npm audit` y `trivy fs --severity HIGH,CRITICAL` sin avisos nuevos respecto a T002; borrados la base `dentissa_capturas`, sus servidores, el volumen de Playwright, la línea base, la copia `git worktree` de v0.8.0 y su `.env`, y la carpeta temporal — (sin archivos) — hecho cuando: todo lo anterior pasa y queda anotado — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8, CA9, CA10, CA11 — depende: T028
@@ -169,9 +170,10 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas
   - nota: no aplica: la 035 no cambia variables, entornos, pasos de despliegue, logs, eventos de auditoría ni métricas (plan, «Impacto en arquitectura»).
   - nota: el plan no prevé cambios (sin variables, migraciones, logs ni métricas); se anota «no aplica» al cerrar.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
   - nota: los 11 criterios marcados: sus tests pasan (324 en verde en T040) y `--medir` sin fallos (T027 y T040). Spec `implemented` el 2026-10-18.
   - nota: de nuevo `implemented` el 2026-10-19 tras las tareas de /review r1 (T042–T053); los 11 criterios siguen con sus tests en verde.
+  - nota: de nuevo `implemented` el 2026-10-19 tras las tareas de /review r2 (T054–T055).
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
