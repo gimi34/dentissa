@@ -178,11 +178,15 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación
   - No hay staging (030): las comprobaciones en un móvil real se hacen en producción, en T097.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+  - nota: /release 035 (2026-10-19): versión v0.9.0 (minor), decisión del usuario; la 031 pasa a v0.10.0. Sin staging: T095 no aplica.
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-10-19 para v0.9.0: tras ver el resumen de la puerta de aprobación, el usuario ejecutó él mismo `desplegar.sh v0.9.0` en su servidor (no escribió la frase «desplegar v0.9.0 a producción»; queda registrado tal cual). Tag anotado `v0.9.0` sobre el merge `3adcd13` (PR #32, «chore(release): v0.9.0»), con la 035 fusionada antes en el PR #31; CI en verde confirmada por el usuario en los dos.
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - verificación manual: desde el móvil del usuario en https://dentissa.app, la ficha del paciente de un rol del personal, la lista y la ficha del expediente de la dentista, un formulario y el menú abierto y cerrado.
   - Sin errores 500 en `laravel.log` ni respuestas 5xx en nginx durante 15 minutos.
-- [ ] T098 Marcar spec como `released`
+  - nota: 2026-10-19 (03:08 en el servidor), en el servidor (usuario): `desplegar.sh v0.9.0` en 128 s desde v0.8.0, copia `/var/backups/dentissa/dentissa-20261019-030812.sql.gz`, «Nothing to migrate»; `verificar.sh --interna` y `verificar.sh` con un solo FALLO, el conocido de Tailscale en `tailscale0` (hasta la 031); por la dirección pública, `/up` 200 y las redirecciones a https. Vigilancia: 0 respuestas 5xx en `dentissa-access.log` desde el despliegue y ningún `production.ERROR` nuevo en `laravel.log` (los 3 que hay son la `InvalidStateException` de Google del 5 y el 16-10, que corrige la 031).
+  - nota: verificación manual OK 2026-10-19 (usuario), desde su móvil en https://dentissa.app como admin: la ficha de un paciente y la de un expediente se ven en una columna y sin desplazamiento lateral. La lista de la dentista, los formularios y el menú no se comprobaron en el móvil real; los cubren `--medir` (T027, T040, T051) y las verificaciones manuales con capturas de T023–T028 y T051.
+- [x] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

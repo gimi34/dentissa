@@ -1,7 +1,8 @@
 ---
 id: 035
 slug: movil-pacientes-expedientes
-status: implemented
+status: released
+released: v0.9.0 (2026-10-19)
 created: 2026-10-16
 extends: [033, 034]
 ---
@@ -189,3 +190,8 @@ Sistema: [docs/design/system.md](../../design/system.md).
   menú) se actualizan con él.
 - Medir antes en el navegador cuáles de estas pantallas se desbordan hoy a 390 px con la v0.8.0
   (en la medida de DS8, del 2026-10-04, la edición del paciente por la dentista no se desbordaba).
+
+## Historial
+| Fecha | Cambio | Motivo |
+|---|---|---|
+| 2026-10-19 | Liberada en v0.9.0 | /release |

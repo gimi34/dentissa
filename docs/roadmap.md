@@ -16,7 +16,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
-| 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, approved) | pendiente |
+| 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, released v0.8.0) · [035](specs/035-movil-pacientes-expedientes/spec.md) (DS6 en pacientes y expedientes del personal, released v0.9.0) | pendiente |
 | 7 | Registro indexable correctamente | `/registro` llega con título, descripción única y canónica absoluta desde `seo.site_url`; `/login`, la 404 y `/up` llevan `noindex`; `sitemap.xml` lista solo `/registro` y `robots.txt` lo declara; Lighthouse SEO ≥ 90 (P10). Riesgos: SE1.a, SE1.b, SE2.a, SE2.b, SE3.a, SE3.b; fuera: SE4.a, SE5.a, SE5.b, SE6.a y SE7.a → Pendientes y deuda (decisión del usuario, 2026-10-16) | — | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
@@ -100,7 +100,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     pacientes y expedientes, empezando por la ficha del paciente (`/admin/pacientes/{id}`: hay que
     alejar la vista para verla entera y tiene botones descentrados), con 034/R8 en esas pantallas;
     036 formularios de agenda y servicios; y 037 administración (personal, usuarios, reportes y
-    doctores de la asistente).
+    doctores de la asistente). La 035 se liberó en v0.9.0 (2026-10-19): ficha y formulario del
+    paciente y lista, ficha y alta de expedientes; quedan la 036 y la 037.
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
   - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
@@ -210,8 +211,24 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Orden de versiones: la 028 salió en v0.6.0 antes que la 031, que pasa de la v0.6.0 prevista a
   v0.7.0 (anotarlo en su plan al retomarla). Su arreglo de `npm audit` (T004) ya está en `main`
   (PR #21). El diseño para móvil va en una spec propia (DS8).
-- Orden de versiones: la 033 salió en v0.7.0 (2026-10-12) y la 034 en v0.8.0 (2026-10-16) antes
-  que la 031, que pasa a v0.9.0 (anotarlo en su plan y fusionar `main` en su rama al retomarla).
+- Orden de versiones: la 033 salió en v0.7.0 (2026-10-12), la 034 en v0.8.0 (2026-10-16) y la 035
+  en v0.9.0 (2026-10-19) antes que la 031, que pasa a v0.10.0 (anotarlo en su plan y fusionar
+  `main` en su rama al retomarla).
+- Deuda de la spec 035 (liberada en v0.9.0; /review, aceptada sin tarea):
+  - 035/R3: el borde de los campos de los formularios de paciente y expediente (`--border` sobre
+    blanco, ≈ 1,3:1) no llega a 3:1 (WCAG 1.4.11); código previo, en la spec que rehaga los formularios (DS).
+  - 035/R15: la fórmula `$base` del rol se repite en cada vista; helper o view composer (`/refactor`).
+  - 035/R16: el marcado del campo con etiqueta y error accesible se repite a mano (~29 campos);
+    componente Blade de campo.
+  - 035/R17: `literales()` de `ReglasCss` no detecta `%`, `rem` ni `em` (`border-radius: 50%` del
+    perfil pasa sin token); token `--radius-full` o excepción documentada (DS4).
+  - 035/R18: `.field-label` de los formularios con 3,5:1, por debajo de 4,5:1 (DS1).
+  - 035/R19: `.error-msg` con `12px` y `4px` literales en los `<style>` de las vistas; pasarlo a
+    `app.css` con tokens.
+  - 035/R20: la «Contraseña temporal» del alta del paciente va en `type="text"`; `type="password"`
+    con `autocomplete="new-password"` o generarla siempre (relacionada con RS10).
+  - 035/R22: `--medir` no envía con errores el formulario «Guardar fecha» de la ficha del
+    expediente a 320; añadir ese envío cuando se toque `capturar.mjs`.
 - Esqueletos de carga (decisión del usuario, 2026-10-16): mostrar un esqueleto mientras la página
   carga en lugar de solo cambiar de pantalla → spec propia (la app se dibuja en el servidor y cada
   clic carga una página nueva: la spec decide dónde y cómo).
