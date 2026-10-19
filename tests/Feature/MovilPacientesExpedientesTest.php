@@ -244,7 +244,7 @@ class MovilPacientesExpedientesTest extends TestCase
             $iconos = $xpath->query("//*[contains(@class,'topbar-actions') or contains(concat(' ', normalize-space(@class), ' '), ' content ')]//*[local-name()='svg']");
             $this->assertGreaterThan(0, $iconos->length, "{$url}: hay iconos.");
             foreach ($iconos as $icono) {
-                $this->assertSame('true', $icono->getAttribute('aria-hidden'), "{$url}: un icono sin aria-hidden en «".trim(preg_replace('/\s+/', ' ', $icono->parentNode->textContent))."».");
+                $this->assertSame('true', $icono->getAttribute('aria-hidden'), "{$url}: un icono sin aria-hidden en «".trim(preg_replace('/\s+/', ' ', $icono->parentNode->textContent)).'».');
             }
         }
     }
