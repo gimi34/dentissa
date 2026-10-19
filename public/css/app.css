@@ -650,4 +650,6 @@ tr:hover td { background: var(--p50); }
 .info-valor { text-align: right; max-width: var(--expediente-dato-max); }
 /* Fecha sugerida del alta de expediente, con el máximo de hoy en el escritorio (/review R14). */
 .campo-fecha { max-width: var(--campo-fecha-max); }
+/* El campo con error de los formularios del expediente se marca, como en los demás formularios (/review R4). */
+.form-expediente .field-error { border-color: var(--red); }
 /* Fin spec 035 */

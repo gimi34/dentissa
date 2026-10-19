@@ -253,11 +253,15 @@
     .acciones-ficha { width: 100%; gap: var(--space-3); }
     /* Relleno lateral menor: «Nuevo expediente» y su icono caben en una línea a 320 px (CA7). */
     .acciones-ficha .btn { padding: 0 var(--space-3); }
-    /* text-align: el texto queda centrado también si parte en dos líneas (CA7). */
-    .acciones-ficha .btn, .acciones-formulario .btn { flex: 1; justify-content: center; text-align: center; }
+    /* Aire arriba y abajo cuando las acciones bajan a la segunda fila de la barra (/review R13). */
+    .topbar:has(.acciones-ficha) { padding-block: var(--space-3); }
+    /* text-align: el texto queda centrado también si parte en dos líneas (CA7). En la ficha, a partes iguales. */
+    .acciones-ficha .btn { flex: 1; justify-content: center; text-align: center; }
     /* En los formularios, cada botón parte del ancho de su texto («Registrar paciente» lleva icono) y se
-       reparten lo que sobra: así caben en una línea a 320 px, centrados. */
-    .acciones-formulario .btn { flex: 1 1 auto; }
+       reparten lo que sobra: así caben en una línea a 320 px, centrados (/review R5: sin el flex: 1 de la ficha). */
+    .acciones-formulario .btn { flex: 1 1 auto; justify-content: center; text-align: center; }
+    /* La fecha sugerida del alta ocupa el ancho disponible (/review R14). */
+    .campo-fecha { max-width: none; }
     .paginacion { flex-wrap: wrap; gap: var(--space-3); }
     /* Textos largos (D6): el correo entero, y el título de la barra y las migas parten (034/R8, /analyze 035 A12, A21). */
     .dato-recortado { white-space: normal; overflow: visible; }
