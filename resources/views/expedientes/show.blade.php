@@ -44,7 +44,7 @@
             {{-- Alertas médicas del paciente --}}
             @if($expediente->alergias)
                 <div style="background:var(--red-bg);border:1px solid #F7C1C1;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--red);display:flex;gap:8px;align-items:flex-start">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px" aria-hidden="true">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                         <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
@@ -53,7 +53,7 @@
             @endif
             @if($expediente->medicamentos_actuales)
                 <div style="background:var(--amber-bg);border:1px solid #FAC775;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--amber);display:flex;gap:8px;align-items:flex-start;margin-top:8px">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     <div><strong>Medicamentos actuales:</strong> {{ $expediente->medicamentos_actuales }}</div>
@@ -97,7 +97,7 @@
 
                 <div class="acciones-formulario">
                     <button type="submit" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
                         Guardar cambios

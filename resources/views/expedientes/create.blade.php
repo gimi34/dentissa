@@ -128,7 +128,7 @@
             <div class="acciones-formulario">
                 <a href="{{ route("{$base}.pacientes.show", $paciente->id) }}" class="btn btn-ghost">Cancelar</a>
                 <button type="submit" class="btn btn-primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
                     Guardar expediente
