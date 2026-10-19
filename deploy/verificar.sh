@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9): verificación posterior a cada
-# despliegue en producción.
+# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9) y spec 031 (CA1, CA3, CA4, CA6–CA9;
+# TM1–TM5, TM8, TM9): verificación posterior a cada despliegue en producción.
 #
 #     bash deploy/verificar.sh --interna   # por la red de Docker (túnel parado o abierto)
 #     bash deploy/verificar.sh             # además, por la dirección pública (túnel abierto)
@@ -18,6 +18,31 @@ fallo() {
     echo "FALLO $*"
     FALLOS=$((FALLOS + 1))
 }
+# Spec 031 (CA1, CA3, CA4): cabeceras de seguridad de una respuesta. Recibe el
+# nombre de la comprobación, las cabeceras (salida de curl -D -) y "hsts" si
+# además debe llevar la conexión segura obligatoria de al menos 180 días.
+revisar_cabeceras() {
+    local nombre="$1" cabeceras="$2" hsts="${3:-}" faltan=()
+    grep -iqE "^content-security-policy:.*frame-ancestors 'none'" <<< "${cabeceras}" || faltan+=("CSP")
+    grep -iqE '^x-frame-options: *DENY' <<< "${cabeceras}" || faltan+=("X-Frame-Options")
+    grep -iqE '^x-content-type-options: *nosniff' <<< "${cabeceras}" || faltan+=("X-Content-Type-Options")
+    grep -iqE '^referrer-policy: *strict-origin-when-cross-origin' <<< "${cabeceras}" || faltan+=("Referrer-Policy")
+    grep -iqE '^x-powered-by:' <<< "${cabeceras}" && faltan+=("sin X-Powered-By")
+    grep -iqE '^server:.*[0-9]' <<< "${cabeceras}" && faltan+=("Server sin versión")
+    if [[ "${hsts}" == "hsts" ]]; then
+        local edad
+        edad="$(grep -ioE '^strict-transport-security:.*max-age=[0-9]+' <<< "${cabeceras}" | grep -oE '[0-9]+$' || true)"
+        if [[ -z "${edad}" || "${edad}" -lt 15552000 ]] || ! grep -iqE '^strict-transport-security:.*includeSubDomains' <<< "${cabeceras}"; then
+            faltan+=("HSTS de 180 días con subdominios")
+        fi
+    fi
+    if [[ "${#faltan[@]}" -eq 0 ]]; then
+        ok "cabeceras de ${nombre}"
+    else
+        fallo "cabeceras de ${nombre}: ${faltan[*]}"
+    fi
+}
+
 # Código PHP que arranca la aplicación dentro del contenedor app.
 ARRANQUE='require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c = function ($ok, $txt) { echo ($ok ? "OK    " : "FALLO ").$txt.PHP_EOL; };'
 
@@ -44,7 +69,7 @@ main() {
     fi
 
     echo "== Configuración de producción (sin mostrar valores secretos)"
-    # Diez comprobaciones; si php termina con error o faltan líneas, las que no
+    # Doce comprobaciones; si php termina con error o faltan líneas, las que no
     # llegaron a ejecutarse cuentan como fallo (/review R9).
     local config codigo lineas
     config="$("${php[@]}" -r "${ARRANQUE}"'
@@ -60,13 +85,31 @@ main() {
         $c(str_starts_with((string) config("services.google.redirect"), "https://"), "GOOGLE_REDIRECT_URI en https");
         $c(config("database.connections.".config("database.default").".username") !== "root", "usuario de la base distinto de root");
         $c(! str_starts_with((string) Illuminate\Support\Facades\DB::selectOne("SELECT CURRENT_USER() AS u")->u, "root@"), "la app no se conecta como root");
+        $c((bool) preg_match("/^[0-9]+-[0-9a-z]+\\.apps\\.googleusercontent\\.com\$/", (string) config("services.google.client_id")), "GOOGLE_CLIENT_ID con formato de id de Google (no el de ejemplo de la guía)");
+        $secreto = (string) config("services.google.client_secret");
+        $c($secreto !== "" && ! preg_match("/[<>\\s]/", $secreto), "GOOGLE_CLIENT_SECRET definido y sin el texto de ejemplo de la guía");
     ')"
     codigo=$?
     [[ -n "${config}" ]] && echo "${config}"
     FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${config}" || true)))
     lineas="$(grep -cE '^(OK|FALLO) ' <<< "${config}" || true)"
-    if [[ "${codigo}" -ne 0 || "${lineas}" -ne 10 ]]; then
-        fallo "configuración de app: php terminó con código ${codigo} y dio ${lineas} de 10 comprobaciones"
+    if [[ "${codigo}" -ne 0 || "${lineas}" -ne 12 ]]; then
+        fallo "configuración de app: php terminó con código ${codigo} y dio ${lineas} de 12 comprobaciones"
+    fi
+
+    echo "== Cabeceras por la red interna (spec 031)"
+    # curl dentro de web y sin -L: la 301 se juzga por sus propias cabeceras, sin
+    # seguir la redirección (/analyze A29).
+    local cabeceras
+    for ruta in /login /css/app.css /no-existe-verificacion; do
+        cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1${ruta}" 2>/dev/null | tr -d '\r')"
+        revisar_cabeceras "${ruta} (interna)" "${cabeceras}"
+    done
+    cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - -H "X-Forwarded-Proto: http" "http://127.0.0.1/login" 2>/dev/null | tr -d '\r')"
+    if grep -qE '^HTTP/[0-9.]+ 301' <<< "${cabeceras}" && grep -iqE '^location: https://' <<< "${cabeceras}"; then
+        revisar_cabeceras "la 301 de nginx (interna)" "${cabeceras}"
+    else
+        fallo "la petición interna con X-Forwarded-Proto: http responde 301 a https"
     fi
 
     echo "== Contraseñas publicadas en el README (CA5)"
@@ -98,8 +141,13 @@ main() {
     if command -v ss > /dev/null; then
         local abiertos
         # Locales: 127.x y ::1, también con sufijo de interfaz (127.0.0.53%lo:53,
-        # el DNS de systemd-resolved).
-        abiertos="$(ss -Htln | awk '{print $4}' | grep -vE '^(127\.[0-9.]+|\[::1\]|::1)(%[^:]+)?:' | grep -vE ':22$' || true)"
+        # el DNS de systemd-resolved). Spec 031 (D11): también las direcciones de la
+        # red privada (100.64.0.0/10 y fd7a:115c:a1e0::/48), donde escucha la API
+        # entre nodos de tailscaled; desde fuera de la red privada no se alcanzan.
+        abiertos="$(ss -Htln | awk '{print $4}' \
+            | grep -vE '^(127\.[0-9.]+|\[::1\]|::1)(%[^:]+)?:' \
+            | grep -vE '^(100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9.]+|\[fd7a:115c:a1e0:[0-9a-f:]*\])(%[^:]+)?:' \
+            | grep -vE ':22$' || true)"
         if [[ -z "${abiertos}" ]]; then
             ok "nada escucha fuera de localhost salvo SSH"
         else
@@ -107,6 +155,89 @@ main() {
         fi
     else
         fallo "nada escucha fuera de localhost salvo SSH (falta el comando ss)"
+    fi
+
+    echo "== Entorno aplicado (spec 031, CA7)"
+    # Cada servicio del Compose en marcha, sin lista fija (/analyze A10): su entorno
+    # resuelto por "compose config" contra el del contenedor. Los valores no salen
+    # del proceso de python3 ni pasan por argumentos (/analyze A15, T002).
+    local entorno
+    entorno="$(python3 - "${compose[@]}" 2>&1 <<'PY'
+import json, subprocess, sys
+
+compose = sys.argv[1:]
+
+
+def salida(*args):
+    return subprocess.run(list(args), capture_output=True, text=True, check=True).stdout
+
+
+def entorno(lista):
+    return dict(e.split('=', 1) for e in (lista or []))
+
+
+try:
+    config = json.loads(salida(*compose, 'config', '--format', 'json'))
+    en_marcha = set(salida(*compose, 'ps', '--status', 'running', '--services').split())
+except Exception as error:
+    print(f'FALLO entorno aplicado: no se pudo leer el Compose ({type(error).__name__})')
+    sys.exit(0)
+
+for nombre, servicio in sorted(config['services'].items()):
+    if nombre not in en_marcha:
+        print(f'OK    {nombre} parado: no se compara')
+        continue
+    # compose config escapa el $ literal como $$ (T002).
+    esperado = {k: ('' if v is None else str(v).replace('$$', '$')) for k, v in (servicio.get('environment') or {}).items()}
+    contenedor = salida(*compose, 'ps', '-q', nombre).split()[0]
+    info = json.loads(salida('docker', 'inspect', contenedor))[0]
+    actual = entorno(info['Config']['Env'])
+    de_imagen = entorno(json.loads(salida('docker', 'image', 'inspect', info['Image']))[0]['Config'].get('Env'))
+    distintas = [k for k in esperado if actual.get(k) != esperado[k]]
+    sobrantes = [k for k in actual if k not in esperado and actual[k] != de_imagen.get(k)]
+    n = len(distintas) + len(sobrantes)
+    if n == 0:
+        print(f'OK    {nombre} usa la configuración guardada')
+    elif nombre == 'db':
+        print(f'FALLO db usa una configuración distinta de la guardada ({n} variables): db.env solo se aplica al crear la base (ver deploy/README.md)')
+    else:
+        print(f'FALLO {nombre} usa una configuración distinta de la guardada ({n} variables): bash deploy/aplicar-entorno.sh {nombre}')
+PY
+)"
+    if grep -qE '^(OK|FALLO) ' <<< "${entorno}"; then
+        grep -E '^(OK|FALLO) ' <<< "${entorno}"
+        FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${entorno}" || true)))
+    else
+        fallo "entorno aplicado: no se pudo comparar (¿falta python3?)"
+    fi
+
+    echo "== Administración remota (spec 031, CA8, CA9)"
+    # Desde la 031 la red privada es parte de la configuración esperada: sin
+    # tailscaled en marcha, FALLO a propósito (/analyze A1).
+    local estado_red
+    if command -v tailscale > /dev/null; then
+        estado_red="$(tailscale status --json 2>/dev/null | python3 -c 'import json, sys; print(json.load(sys.stdin).get("BackendState", ""))' 2>/dev/null || true)"
+        if [[ "${estado_red}" == "Running" ]]; then
+            ok "red privada (tailscaled) conectada"
+        else
+            fallo "red privada (tailscaled) conectada (estado: ${estado_red:-desconocido})"
+        fi
+    else
+        fallo "red privada: Tailscale no está instalado (deploy/preparar-acceso-remoto.sh)"
+    fi
+    # SSH no ofrece contraseña: se pide la lista de métodos sin intentar ninguno y
+    # sin guardar la clave de host. Sin lista, FALLO (/analyze A5).
+    local metodos
+    metodos="$(ssh -o BatchMode=yes -o PubkeyAuthentication=no -o PasswordAuthentication=no \
+        -o KbdInteractiveAuthentication=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+        -o ConnectTimeout=5 -o LogLevel=ERROR localhost true 2>&1 \
+        | grep -oE 'Permission denied \([^)]*\)' | head -n 1 || true)"
+    if [[ -z "${metodos}" ]]; then
+        fallo "SSH sin contraseña: no se obtuvo la lista de métodos de autenticación"
+    elif grep -qE 'password|keyboard-interactive' <<< "${metodos}"; then
+        fallo "SSH sin contraseña: el servidor ofrece ${metodos#Permission denied }"
+    else
+        ok "SSH sin contraseña: solo ofrece ${metodos#Permission denied }"
     fi
 
     echo "== PHP con local.ini (CA10)"
@@ -139,12 +270,17 @@ main() {
             else
                 fallo "/ redirige a https"
             fi
+            # La 301 pública la genera el borde de Cloudflare ("Always Use HTTPS"): no
+            # es una respuesta de la aplicación y solo se comprueba su destino
+            # (spec 031, /analyze A3).
             cabeceras="$(curl -sI "http://${host}/login")"
             if grep -qE '^HTTP/[0-9.]+ 301' <<< "${cabeceras}" && grep -iqE '^location: https://' <<< "${cabeceras}"; then
                 ok "http://${host}/login responde 301 a https"
             else
                 fallo "http://${host}/login responde 301 a https"
             fi
+            cabeceras="$(curl -sS -o /dev/null -D - "${url}/login" 2>/dev/null | tr -d '\r')"
+            revisar_cabeceras "${url}/login (pública)" "${cabeceras}" hsts
         fi
     fi
 

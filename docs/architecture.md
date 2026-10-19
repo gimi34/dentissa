@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-10
+updated: 2026-10-18
 ---
 
 # Arquitectura de Dentissa
@@ -8,27 +8,32 @@ updated: 2026-10-10
 ## Resumen
 Monolito Laravel 12 con MVC clásico que renderiza HTML en el servidor con Blade (aplicación
 multipágina, sin API ni SPA). Casi toda la lógica de negocio y el acceso a datos viven dentro de
-13 controladores. Las piezas de servicio están en `app/Agenda/`: `ReservaCitas.php` (spec 025), con la
+12 controladores (más el `Controller` base). Las piezas de servicio están en `app/Agenda/`: `ReservaCitas.php` (spec 025), con la
 regla de agenda, `EstadosCita.php` (spec 026), con los estados de la cita, `HorarioDentista.php`
 (spec 027), con el horario del dentista, y `ReprogramacionCitas.php` (spec 028), con la reprogramación. Los Gates de citas y de personal viven en
 `app/Autorizacion/` (specs 026, 027 y 028), y la regla de validación `HoraFinPosterior`, en `app/Rules/`; no hay repositorios, Policies, Form Requests, eventos ni jobs.
 El acceso a datos es casi siempre Query Builder (`DB::table` con joins manuales); solo `usuarios`
 y `servicios` tienen modelo Eloquent. La autorización combina un middleware propio `role:` con
 comprobaciones en cada controlador y, para los cambios de estado y la reprogramación de las citas,
-los Gates `gestionar-cita`, `cambiar-estado-cita` y `reprogramar-cita`. El esquema del dominio no está en migraciones: vive
+los Gates `gestionar-cita`, `cambiar-estado-cita` y `reprogramar-cita`, y el horario del dentista, el Gate
+`definir-horario`. El esquema del dominio no está en migraciones: vive
 en el volcado `database/dentissa.sql`, que Docker carga al inicializar la base.
 
 ## Diagrama de componentes
 ```mermaid
 flowchart LR
-  B[Navegador<br/>HTML + JS inline] -->|HTTP 127.0.0.1:8000 formularios @csrf| NX[nginx 1.30.5-alpine]
+  B[Navegador<br/>HTML + JS inline<br/>menu.js, filtros.js] -->|HTTP 127.0.0.1:8000 formularios @csrf| NX[nginx 1.30.5-alpine]
   B -->|fuente Roboto| GF[Google Fonts]
-  NX -->|estáticos| PUB[public/css, images]
+  NX -->|estáticos| PUB[public/css, public/js, images]
   NX -->|FastCGI :9000| APP[php-fpm 8.4.25 · Laravel 12]
   subgraph APP_INT[Monolito Laravel]
     R[routes/web.php] --> MW[web + PreventBackHistory<br/>auth + role:]
     MW --> C[Controladores<br/>Auth · Register · Google · Dashboard<br/>Citas · ClienteCitas · Pacientes<br/>Expedientes · Personal · Servicios<br/>Usuario · Perfil]
     C --> V[Vistas Blade por módulo]
+    C --> AG[app/Agenda<br/>reserva · estados · reprogramación · horario]
+    C --> AU[app/Autorizacion<br/>alcance y Gates]
+    AG --> QB
+    AU --> QB
     C --> QB[DB::table Query Builder]
     C --> M[Eloquent: Usuario, Servicio]
   end
@@ -48,7 +53,7 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 |---|---|---|---|
 | Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google. Límite de intentos (spec 030): el login cuenta fallos por correo e IP (5 por minuto, `RateLimiter` en el controlador) y la vuelta de Google pasa por el limitador `google`; los dos rechazos emiten `Lockout` | `usuarios`, Socialite, caché (limitadores) |
 | Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista; `POST /registro` y `/registro/contacto` pasan por el limitador `registro` (5 por minuto por IP, spec 030) | `usuarios`, `pacientes`, `personal`, caché (limitadores) |
-| Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol; el del paciente ofrece «Reprogramar» y «Cancelar» de la próxima cita solo con 24 horas o más, con `app/Agenda/EstadosCita.php` (spec 028) | `citas`, `pacientes`, `asistente_dentista` |
+| Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol; el del paciente ofrece «Reprogramar» y «Cancelar» de la próxima cita solo con 24 horas o más, con `app/Agenda/EstadosCita.php` (spec 028) | `citas`, `pacientes`, `personal`, `usuarios`, `servicios`, `asistente_dentista`, el aviso de plazo de `ClienteCitasController` |
 | Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas, reprogramación y cancelación de citas con alcance por rol (vía `app/Autorizacion/AlcanceClinico.php`); el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php`, el cambio de estado y "eliminar" en `app/Agenda/EstadosCita.php`, y la reprogramación en `app/Agenda/ReprogramacionCitas.php` (spec 028) | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
 | Agenda (cliente) | `app/Http/Controllers/ClienteCitasController.php` | Mis citas, agendar, reprogramar y cancelar con 24 horas o más de antelación; agendar delega la regla de agenda en `app/Agenda/ReservaCitas.php`, cancelar en `app/Agenda/EstadosCita.php` y reprogramar en `app/Agenda/ReprogramacionCitas.php` (spec 028) | `citas`, `horarios_dentista`, `servicios`, `historial_citas` |
 | Agenda (regla) | `app/Agenda/ReservaCitas.php`, `app/Agenda/CitaNoAgendable.php` | Regla de agenda única (horario del día, encaje en la franja, solape estricto) y guardado de la cita en una transacción que bloquea primero la fila del dentista (spec 025); `bloquearDentista` y `comprobarHueco` (con la cita que se excluye al reprogramar) son públicos para la reprogramación (spec 028) | `personal` (bloqueo), `horarios_dentista`, `citas` |
@@ -68,9 +73,13 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Proxy | `bootstrap/app.php` (`trustProxies`) | Detrás de nginx y el túnel, Laravel solo confía en `X-Forwarded-Proto` (URL y redirecciones en https); la IP real la pone nginx en `REMOTE_ADDR` (spec 030, D3) | — |
 | Comandos | `app/Console/Commands/RotarCredencialesVolcado.php` | `dentissa:rotar-credenciales --confirmar`: contraseña aleatoria para cada cuenta del volcado con contraseña, mostrada una sola vez (spec 030, CA5) | `usuarios` |
 
-Los controladores no se llaman entre sí; se acoplan a través del esquema compartido. Los mismos
+Los controladores no se llaman entre sí, salvo dos excepciones: `DashboardController` usa el aviso de
+plazo de `ClienteCitasController` y `AppServiceProvider` usa `AuthController::origenLimite` y su
+mensaje de demasiados intentos. El resto se acopla a través del esquema compartido. Los mismos
 controladores sirven a varios roles bajo prefijos `/admin`, `/dentista`, `/asistente`; `/cliente`
-tiene su propio grupo.
+tiene su propio grupo, que solo exige `auth` (`role:cliente` va ruta a ruta en cancelar y
+reprogramar; RS2.a). Otras rutas: `/` redirige según el rol, `/admin/reportes` sirve
+`placeholder.blade.php` y `/up` es la ruta de salud que comprueba `deploy/verificar.sh`.
 
 ## Flujo principal
 Ejemplo: el personal agenda una cita.
@@ -90,11 +99,13 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 ## Datos
 - Motor: MariaDB 10.11 en Docker (el volcado se generó con 10.4.32). PKs UUID `char(36)`.
   Columnas `creado_en`/`actualizado_en` escritas a mano (sin timestamps de Laravel).
-- Acceso: PDO con Query Builder (≈157 usos de `DB::` en controladores) y Eloquent solo para
+- Acceso: PDO con Query Builder (148 usos de `DB::` en controladores y 4 más en `app/Autorizacion`
+  y el comando; `app/Agenda` recibe la conexión inyectada) y Eloquent solo para
   `Usuario` (modelo de autenticación, tabla `usuarios`) y `Servicio`.
 - Entidades: `usuarios` (rol enum cliente/asistente/dentista/admin), `pacientes`, `personal`
   (tipo dentista/asistente/administrador), `asistente_dentista`, `horarios_dentista`, `servicios`,
-  `citas` (estado enum de 6 valores), `historial_citas`, `expedientes`. Vistas SQL `v_citas_hoy` y
+  `citas` (estado enum de 6 valores), `historial_citas` (`cambiado_por`, `estado_anterior`,
+  `estado_nuevo`, `motivo`, `fecha_hora_anterior`, `fecha_hora_nueva`), `expedientes`. Vistas SQL `v_citas_hoy` y
   `v_historial_paciente` (no las usa el código PHP).
 - Esquema: las tablas de dominio, las vistas y el trigger `trg_historial_cita` solo existen en
   `database/dentissa.sql`. Las migraciones crean tablas de infraestructura (`users`, `sessions`,
@@ -111,8 +122,10 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 
 ## Frontend
 - Componentes y organización: vistas Blade por módulo en `resources/views/<modulo>/`, archivos en
-  kebab-case, un único layout `layouts/app.blade.php`, parciales en `partials/`. Sin componentes
-  `<x-…>`. `edit` reutiliza `create` con `@include`.
+  kebab-case, un único layout `layouts/app.blade.php` (las vistas de acceso tienen su propio HTML
+  con `auth.css`), parciales en `partials/` y en `<modulo>/partials/`. Sin componentes `<x-…>`. En
+  pacientes, personal y usuarios, `edit` reutiliza `create` con `@include`; servicios tiene su
+  propio formulario de edición.
 - Estado: sin estado de cliente; JS inline mínimo (`@push('scripts')`) para modales y rellenar
   campos. `public/js/menu.js` (spec 033) es el primer script propio en un archivo: lo carga el
   layout en `<head>` sin `defer`, marca `<html>` con `menu-js` y abre y cierra el menú del móvil
@@ -120,7 +133,7 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   `public/js/filtros.js` (spec 034), el segundo, lo carga solo la lista de citas del personal en
   `<head>` sin `defer`: marca `<html>` con `filtros-js` y pliega y despliega el panel de filtros
   con el botón «Filtros» (`aria-expanded`); sin JS, el filtro queda desplegado.
-- Routing: rutas con nombre en `routes/web.php`; hay 50 `href="/..."` escritos a mano en vistas.
+- Routing: rutas con nombre en `routes/web.php`; hay 49 `href="/..."` escritos a mano en vistas.
 - Design tokens / sistema de diseño: CSS propio en `public/css/app.css`, `auth.css`, `citas.css`
   con variables (`--p50…--p800`, `--text`, `--border`), mucho `style=""` inline. `public/css/movil.css`
   (spec 033), cargada por el layout tras `app.css`, adapta la app por debajo de 900 px: la barra
@@ -129,7 +142,14 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   (listas de citas, pacientes y servicios, y las de los paneles) se leen como tarjetas, una por fila,
   con la etiqueta de cada celda en su `data-label` y las columnas `solo-escritorio` ocultas; y el
   logo de la barra se pinta con una máscara (`mask` con `--p600`), porque la imagen con
-  `mix-blend-mode: screen` desaparece sobre blanco. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
+  `mix-blend-mode: screen` desaparece sobre blanco. Desde la spec 035, en el móvil la ficha del
+  paciente (`.ficha-paciente`) y la del expediente (`.ficha-expediente`) van en una columna en el
+  orden del HTML; el perfil del paciente es compacto (iniciales y datos en una fila, cada dato con su
+  etiqueta); las acciones de la barra de la ficha (`.acciones-ficha`) bajan a una fila bajo el título
+  con `.topbar-actions:has(.acciones-ficha)` (sin `:has()`, quedan a la derecha como antes, sin
+  desbordar), y los formularios de paciente y expediente llevan etiquetas con `for`/`id`, errores
+  con `aria-describedby` y la fila `.acciones-formulario`. Los iconos «Menú» y «Cerrar menú» van sin
+  recuadro. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
 - SEO (upgrade a AI-DD 1.13.0): todo el HTML se renderiza en el servidor con Blade, sin depender de
   JavaScript. Las vistas de acceso (`resources/views/auth/*.blade.php`) tienen su propio `<head>`,
   donde van los metadatos de la única ruta indexable, `/registro`; el resto usa el `<head>` de
@@ -140,9 +160,10 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 ## Backend
 - Contratos de API: no hay API; el contrato es formulario HTML ↔ `$request->validate()`.
 - Autenticación y autorización: sesión de Laravel (guard `web`) sobre `App\Models\Usuario`;
-  middleware `role:` por grupo de rutas; comprobaciones de fila en controladores
-  (`aplicarAlcanceRol`, `autorizadoParaCita`, que delegan en `AlcanceClinico`), y Gates para los
-  cambios de estado (spec 026) y la reprogramación (spec 028) de las citas. Detalle en [security.md](security.md).
+  middleware `role:` por grupo de rutas (el de `/cliente`, solo `auth`); comprobaciones de fila en
+  controladores (`aplicarAlcanceRol`, `autorizadoParaCita`, que delegan en `AlcanceClinico`), y
+  Gates para los cambios de estado (spec 026) y la reprogramación (spec 028) de las citas y para el
+  horario del dentista (spec 027). Detalle en [security.md](security.md).
 - Observabilidad: sin logs propios, sin correlación, sin auditoría; ver [observability.md](observability.md).
 - Seguridad: CSRF por defecto, consultas con bindings, sin `{!! !!}`; riesgos en [security.md](security.md).
 
@@ -168,7 +189,8 @@ flowchart LR
     WEB -->|FastCGI :9000| APPP[app · php-fpm<br/>código en la imagen]
     APPP --> DBP[(db · MariaDB<br/>usuario dentissa_app)]
   end
-  ADM[Responsable por SSH<br/>solo red local, solo clave] -->|deploy/*.sh| SRV
+  APPP -->|Socialite| GO[Google OAuth]
+  ADM[Responsable por SSH<br/>solo red local, solo clave] -->|deploy/*.sh: copia, migrate --force| SRV
 ```
 
 - `docker/prod/Dockerfile`: imágenes multietapa `app` (sin dependencias de desarrollo, secretos ni
@@ -177,7 +199,9 @@ flowchart LR
 - `deploy/`: scripts que el responsable ejecuta por SSH (preparar el servidor, desplegar, copia,
   restauración, vuelta atrás y verificación) y la guía `deploy/README.md`.
 - Secretos en `app.env`, `db.env` y `tunnel.env` fuera del clon; volúmenes `db_data`, `storage` y
-  `nginx_logs`.
+  `nginx_logs`. El volcado se carga una sola vez en `db`; `desplegar.sh` aplica las migraciones.
+- CI: `.github/workflows/ai-dd.yml` valida los artefactos del flujo y corre tests (contra un MariaDB
+  efímero con el volcado y las migraciones), Pint y los escáneres en cada PR; no despliega.
 
 Detalle en [deployment.md](deployment.md).
 
@@ -194,10 +218,13 @@ Detalle en [deployment.md](deployment.md).
 
 ## Deuda técnica y riesgos observados
 - Esquema del dominio no reproducible desde migraciones; el volcado está desfasado respecto a las
-  3 migraciones de julio (→ roadmap objetivo 1, spec 013).
+  5 migraciones del dominio (3 de julio y las de las specs 026 y 028: aún crea `trg_historial_cita`)
+  (→ roadmap objetivo 1, spec 013).
 - Ayudante de dentistas disponibles copiado en 2 sitios y consulta base de citas en 4.
 - Restos del esqueleto: `App\Models\User`, tabla `users`, `DatabaseSeeder`, `welcome.blade.php`,
-  nombre `laravel/laravel` en `composer.json`, README genérico.
+  nombre `laravel/laravel` en `composer.json`, README genérico, scripts `setup` y `dev` de
+  `composer.json` (lanzan `queue:listen` y Vite sin uso), `axios` y `concurrently` en `package.json`
+  y el comando `inspire`.
 - `Route::resource('servicios')` registra `show`, que el controlador no implementa.
 - Convenciones inconsistentes de rutas (`/crear` vs `/create`, `/edit` vs `/editar`, nombres con y
   sin `.index`).

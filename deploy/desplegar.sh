@@ -81,7 +81,9 @@ main() {
     git -c advice.detachedHead=false checkout "${ref}"
 
     paso "Construyendo las imágenes"
-    "${compose[@]}" build app web
+    # Sin caché y bajando las imágenes base: la capa de apt-get/apk upgrade se renueva en cada
+    # despliegue y las correcciones del sistema llegan a producción (spec 031, T055; RS18.a).
+    "${compose[@]}" build --no-cache --pull app web
 
     paso "Base de datos"
     "${compose[@]}" up -d db

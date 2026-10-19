@@ -133,9 +133,10 @@
                    display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-6); }
   .opt .m-menu-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
                      min-height: var(--touch-min); min-width: var(--touch-min); padding: 0 var(--space-4);
-                     background: var(--color-surface); color: var(--color-accent-text);
-                     border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm);
+                     background: transparent; color: var(--color-accent-text);
+                     border: 0; border-radius: var(--radius-sm); /* spec 035: solo el icono, sin recuadro */
                      font: inherit; font-weight: var(--weight-strong); }
+  .opt .m-menu-btn:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
   .opt .m-menu-btn svg { width: var(--icon-md); height: var(--icon-md); }
   .opt .m-velo { position: absolute; inset: 0; background: var(--color-overlay); }
   .opt .m-panel { position: absolute; top: 0; bottom: 0; left: 0; width: min(var(--menu-movil-w), 85%);
@@ -160,6 +161,23 @@
   .opt .m-migas a { display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch-min);
                     min-width: var(--touch-min); color: var(--color-text-muted); text-decoration: none; }
   .opt .m-migas .m-actual { color: var(--color-text); }
+</style>
+<style id="componentes-035">
+  /* Muestras vivas de la spec 035 (perfil compacto, acciones de la barra y de formulario, campo con foco del sistema), con los tokens de .opt. */
+  .opt .m-perfil { background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+                   padding: var(--space-6); width: 320px; box-sizing: border-box; display: grid; gap: var(--space-3); }
+  .opt .m-perfil-cab { display: grid; grid-template-columns: var(--perfil-avatar-movil) minmax(0, 1fr); gap: var(--space-4); align-items: center; }
+  .opt .m-avatar { width: var(--perfil-avatar-movil); height: var(--perfil-avatar-movil); border-radius: 50%; background: var(--color-active-bg);
+                   color: var(--color-accent-text); display: flex; align-items: center; justify-content: center;
+                   font-size: var(--perfil-iniciales-movil); font-weight: var(--weight-bold); }
+  .opt .m-nombre { font-size: var(--perfil-nombre-movil); font-weight: var(--weight-strong); overflow-wrap: anywhere; }
+  .opt .m-perfil-dato { display: grid; grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr); gap: var(--space-3); overflow-wrap: anywhere; }
+  .opt .m-perfil-dato span:first-child { font-size: var(--text-small); font-weight: var(--weight-strong); text-transform: uppercase; color: var(--color-accent-text); }
+  .opt .m-fila-acciones { display: flex; gap: var(--space-3); width: 320px; }
+  .opt .m-fila-acciones .m-btn-outline { flex: 1; }
+  .opt .m-campo-035 { min-height: var(--touch-min); width: 320px; box-sizing: border-box; border: var(--border-width) solid var(--color-border-control);
+                      border-radius: var(--radius-sm); padding: 0 var(--space-4); font: inherit; background: var(--color-surface); }
+  .opt .m-campo-035:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
 </style>
 <style id="componentes-034">
   /* Muestras vivas de la spec 034 (opción A: tarjetas de lista, filtro plegable, botón de icono y logo), con los tokens de .opt. */
@@ -254,6 +272,8 @@
     --text-meta: 13px; --text-marca: 16px; --logo-max-w: 160px; --icon-md: 18px; /* spec 033 */
     --tarjeta-etiqueta-w: 88px; --logo-movil-h: 40px; --space-detalle: 18px; --detalle-lateral-w: 360px; /* spec 034 */
     --filtro-buscar-min: 180px; --filtro-fecha-min: 130px; --filtro-dentista-min: 150px; --filtro-estado-min: 140px; /* spec 034 */
+    --ficha-lateral-w: 320px; --expediente-lateral-w: 300px; --perfil-avatar-w: 64px; --perfil-avatar-movil: 48px; /* spec 035 */
+    --perfil-iniciales-text: 22px; --perfil-iniciales-movil: 17px; --perfil-nombre-text: 20px; --perfil-nombre-movil: 16px; --weight-bold: 600; /* spec 035 */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
 
     --duration-fast: 150ms; --duration-base: 150ms;
@@ -486,6 +506,33 @@
           <p class="t-body">Botón «Menú» solo con icono y logo del menú</p>
           <button type="button" class="m-menu-btn m-solo-icono" aria-label="Menú" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
           <span class="m-logo" role="img" aria-label="Melissa López N."></span>
+        </div>
+      </div>
+    </div></div>
+
+    <h3 id="pacientes-expedientes-035">Perfil compacto, acciones y campo con foco (spec 035)</h3>
+    <p class="v-note">Muestras vivas, no capturas: la composición elegida de la spec 035
+      (<a href="../specs/035-movil-pacientes-expedientes/design.md">diseño</a>: opción A con el perfil de
+      <a href="../specs/035-movil-pacientes-expedientes/design/opcion-c.html">C</a>), a 320 px, con los
+      tokens de <code>app.css</code>. Solo se aplica por debajo de 900 px, salvo el foco de los campos,
+      que también se ve en el escritorio. Los botones del menú de arriba ya van sin recuadro.</p>
+    <div class="v-stage"><div class="opt">
+      <div class="m-row">
+        <div class="m-perfil" aria-label="Perfil compacto del paciente a 320 px">
+          <div class="m-perfil-cab"><span class="m-avatar" aria-hidden="true">MF</span>
+            <div><div class="m-nombre">Maximiliana Guadalupe de los Ángeles Fernández-Villaseñor</div><div class="t-small">20 años · 15 nov. 2005 · A+</div></div></div>
+          <div class="m-perfil-dato"><span>Correo</span><span>cliente1.maximiliana@dentissa.test</span></div>
+          <div class="m-perfil-dato"><span>Teléfono</span><span>5550102</span></div>
+          <div class="m-perfil-dato"><span>Doctor</span><span>Sin doctor asignado</span></div>
+        </div>
+        <div>
+          <p class="t-body">Acciones de la barra de la ficha (fila bajo el título)</p>
+          <div class="m-fila-acciones"><button type="button" class="m-btn-outline">Nuevo expediente</button><button type="button" class="m-btn-outline">+ Nueva cita</button></div>
+          <p class="t-body">Acciones de formulario</p>
+          <div class="m-fila-acciones"><button type="button" class="m-btn-outline">Cancelar</button><button type="button" class="m-btn-outline">Guardar cambios</button></div>
+          <p class="t-body">Campo con el foco del sistema (Tab para verlo)</p>
+          <label class="t-small" for="m-035-campo">Teléfono</label><br>
+          <input id="m-035-campo" class="m-campo-035" type="tel" value="5550102">
         </div>
       </div>
     </div></div>

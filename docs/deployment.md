@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-10
+updated: 2026-10-18
 ---
 
 # Despliegue de Dentissa
@@ -61,7 +61,8 @@ flowchart LR
   seguridad en modo baseline (solo hallazgos nuevos del PR); job semanal informativo del repo
   completo. No despliega.
 - Rama única `main`; trabajo en ramas `feature/NNN-slug` con PR (Conventional Commits, decisión
-  del usuario, 2026-09-28).
+  del usuario, 2026-09-28) y en ramas `chore/<tema>` para cierres, actualizaciones del flujo y
+  mantenimiento, también con PR (decisión del usuario, 2026-10-18).
 - El despliegue es manual: lo ejecuta el responsable por SSH en el servidor (spec 030, D6).
 
 ## Cómo desplegar
@@ -78,11 +79,14 @@ bash deploy/verificar.sh                         # con el túnel abierto: tambi�
 ```
 `desplegar.sh`, en orden: árbol limpio; copia de la base con `respaldar.sh` si la base tiene datos
 (el primer despliegue lo anuncia y sigue sin copia); `git fetch --tags` y `checkout`; construcción
-de `app` y `web`; `db` sana; `migrate --force` con la imagen nueva; `up -d app web`; cachés;
+de `app` y `web` sin caché y bajando las imágenes base (`--no-cache --pull`, spec 031: así la capa de
+`apt-get upgrade` / `apk upgrade` se renueva y las correcciones del sistema llegan a producción); `db` sana; `migrate --force` con la imagen nueva; `up -d app web`; cachés;
 `verificar.sh --interna`. Nunca arranca ni para `cloudflared`: el túnel se abre a mano la primera
 vez (`docker compose -f docker-compose.prod.yml up -d cloudflared`) y desde entonces vuelve solo
 tras un reinicio. Tiempo ensayado: 86 s el primer despliegue y 10 s uno posterior, sin la
-verificación (spec 030, T040 y T044).
+verificación (spec 030, T040 y T044). Sin caché, cada despliegue tarda lo que el primero, que reconstruye todo
+(unos 90 s; se mide en el ensayo de la spec 031, T040). `volver.sh` sigue construyendo con caché:
+en una vuelta atrás importa la rapidez y la versión anterior ya se construyó antes.
 
 Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
@@ -132,7 +136,21 @@ fuera del repositorio y del chat).
    con la copia que dejó `desplegar.sh`. `volver.sh` para `app` y `web`, restaura la copia y
    levanta la versión anterior.
 - Tiempo ensayado: 27 s con restauración de la base (spec 030, T044); objetivo, 15 minutos o menos.
-- Si hubo migración no compatible y no hay copia: `php artisan migrate:rollback --step=N`.
+- Con `<copia>`, se pierde todo lo escrito en la base desde el despliegue, y `volver.sh` no avisa
+  (RD8.a).
+- Si hubo migración no compatible y no hay copia: **antes** de `volver.sh`, con la versión que se
+  abandona todavía en marcha, `docker compose -f docker-compose.prod.yml exec app php artisan
+  migrate:rollback --step=N`; después, `volver.sh <tag anterior>`. La imagen anterior ya no trae los
+  archivos de esas migraciones y no puede revertirlas.
+
+## Hotfix
+Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 2026-10-18):
+- Rama: `hotfix/<slug>` desde el tag que está en producción (`vX.Y.Z`), sin arrastrar lo que haya
+  en `main` sin liberar.
+- Staging: no existe; directo a producción con el smoke de `deploy/verificar.sh` y la misma
+  aprobación humana explícita que un `/release`. Se libera con un tag de parche (`vX.Y.Z+1`) y
+  `deploy/desplegar.sh` en el servidor.
+- Vuelta a la rama principal: PR de la rama `hotfix/<slug>` a `main` después de producción.
 
 ## Variables de entorno
 | Nombre | dev | staging | prod | Dónde se configura |
@@ -149,6 +167,9 @@ fuera del repositorio y del chat).
 | MARIADB_PASSWORD, MARIADB_ROOT_PASSWORD | — | — | ✓ | `db.env` en el servidor (solo el servicio `db`) |
 | TUNNEL_TOKEN | — | — | ✓ | `tunnel.env` en el servidor (solo `cloudflared`) |
 | DENTISSA_ENV_DIR (carpeta de los archivos de entorno; por defecto `/opt/dentissa/entorno`) | — | — | opcional | entorno del shell que ejecuta Compose |
+| DENTISSA_BACKUP_DIR (destino de las copias; por defecto `/var/backups/dentissa`) | — | — | opcional | entorno del shell que ejecuta `deploy/respaldar.sh` |
+| MARIADB_DATABASE, MARIADB_USER (no son secretos) | — | — | ✓ | fijadas en `docker-compose.prod.yml` |
+| TEST_DB_SERVICE, TEST_DB_NAME, TEST_DB_USER, TEST_DB_PASSWORD | ✓ (opcionales) | — | — | arnés `database/testing/bootstrap-test-db.sh` |
 
 (Solo nombres. Nunca valores. En el servidor, cada archivo de entorno con permisos 600 y fuera del clon.)
 
@@ -157,7 +178,8 @@ fuera del repositorio y del chat).
   abierto, `bash deploy/verificar.sh`. Comprueba, sin mostrar secretos: servicios en marcha;
   `GET /up` 200; `APP_ENV=production`, `APP_DEBUG=false`, `LOG_LEVEL=info`, `APP_KEY` definida,
   `CACHE_STORE` distinto de `array`, `SESSION_SECURE_COOKIE=true`, `APP_URL` y
-  `GOOGLE_REDIRECT_URI` en https; que ninguna contraseña del README autentica; ningún puerto
+  `GOOGLE_REDIRECT_URI` en https; usuario de la base distinto de root y que la app no se conecta como
+  root; que ninguna contraseña del README autentica; ningún puerto
   publicado ni nada escuchando fuera de localhost salvo SSH; `local.ini` aplicado; y en modo
   público, `/up` 200, redirección de `/` a https y `http://<host>/login` → 301 a `https://`.
 - Smoke tests: login de una cuenta de prueba por rol, agendar y cancelar una cita ficticia. Sin
@@ -229,9 +251,29 @@ PHP ≥ 8.4.1 (y PHPUnit 12 ≥ 8.3). Con PHP 8.2 fuera de Docker la app no arra
 Correcciones:
 - RD7.a Alinear la versión: declarar `"php": "^8.4"` (y `config.platform.php`) o regenerar el lock para 8.2, y documentarlo — estado: pendiente
 
-### RD6 · Media — Sin integración continua
-No había CI; `/init` crea `.github/workflows/ai-dd.yml`, con acciones aún sin fijar a SHA. →
-roadmap objetivo 5.
+### RD6 · Media — CI sin fijar a versiones exactas
+`/init` creó `.github/workflows/ai-dd.yml` (2026-09-28) y corre en cada PR, pero sus acciones van por
+etiqueta (`@v4`, `@v2`) aunque su cabecera diga que están fijadas a SHA, quedan los `TODO` de
+verificar las imágenes de los escáneres. → roadmap objetivo 5.
 
 Correcciones:
-- RD6.a Fijar las acciones del workflow a SHA y confirmar que el job de tests pasa en GitHub Actions — estado: en curso (creado por /init)
+- RD6.a Fijar las acciones del workflow a SHA y confirmar que el job de tests pasa en GitHub Actions — estado: en curso (el job de tests pasa: CI en verde en el PR de la 034, confirmado por el usuario, 2026-10-16; faltan los SHA)
+
+### RD8 · Media — La vuelta atrás con copia pierde datos sin avisar
+Detectado en la re-sincronización del 2026-10-18. `volver.sh <tag> <copia>` restaura la copia que dejó
+`desplegar.sh` sin avisar de que se pierde lo escrito desde el despliegue y sin copia previa del
+estado actual; tampoco comprueba que el árbol esté limpio, como sí hace `desplegar.sh`. Las copias
+solo se hacen al desplegar o a mano (sin copia diaria, decisión del usuario en la spec 032).
+Evidencia: `deploy/volver.sh`, `deploy/desplegar.sh`.
+
+Correcciones:
+- RD8.a `volver.sh` con copia avisa de la pérdida, pide confirmación escrita y hace antes una copia del estado actual — estado: pendiente (→ objetivo 5)
+- RD8.b `volver.sh` comprueba que el árbol del clon esté limpio, como `desplegar.sh` — estado: pendiente (→ objetivo 5)
+
+### RD9 · Baja — El CI prueba con otra versión de MariaDB
+Detectado en la re-sincronización del 2026-10-18. El servicio de tests del CI usa `mariadb:10.11`
+sin fijar el parche, mientras local y producción usan `10.11.18`, y `ConfiguracionProduccionTest`
+solo vigila los Compose. Evidencia: `.github/workflows/ai-dd.yml`.
+
+Correcciones:
+- RD9.a Fijar la imagen de MariaDB del CI a la misma versión que local y producción — estado: pendiente (→ objetivo 5)

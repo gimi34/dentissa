@@ -142,3 +142,4 @@ Ninguna.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-16 | Comportamiento modificado por 034 en v0.8.0 (tarjetas en «Mis citas» y el panel, 033/R20; botón «Menú» con icono y logo en el menú, 033/R9 y R21) | /release |
+| 2026-10-19 | Comportamiento modificado por 035 en v0.9.0 (los iconos «Menú» y «Cerrar menú» sin recuadro, CA11; la regla de textos largos del título de la barra y las migas en todo el móvil) | /release |

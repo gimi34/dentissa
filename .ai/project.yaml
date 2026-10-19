@@ -16,7 +16,17 @@ constitution_version: 1.2.1
 workflow:
   enforcement: warn            # off | warn (pide aprobación) | block — lo aplica el hook del plugin
   legacy_workflow: aidlc-paused   # AI-DLC pausado el 2026-09-28 (decisión del usuario); ver AIDLC.md
-skills_version: 1.13.0         # versión del paquete de skills (upgrade desde 1.11.5 el 2026-10-16)
+  lanes:                       # carriles /fix, /refactor, /chore (shared/contract.md → "Carriles"; upgrade a 1.15.0)
+    max_files: 5               # más archivos de código (sin tests ni docs) → flujo completo
+    contract_paths: []         # rutas que son contrato público además de openapi/proto/graphql
+models:                        # modelo de cada perfil de subagente (shared/contract.md → "Modelo de cada subagente"; upgrade a 1.15.0)
+  critical: opus               # /analyze completo; /review A (spec) y S (seguridad)
+  standard: sonnet             # /analyze delta; /review C+D, accesibilidad, SEO; carriles; exploración
+  mechanical: haiku            # exploración de /plan; comprobar que un hallazgo existe
+  implementation: inherit      # /implement --parallel (inherit = el modelo de la sesión)
+sync:
+  last: null                   # commit hasta el que /sync concilió la deriva
+skills_version: 1.15.0         # versión del paquete de skills (upgrade desde 1.13.0 el 2026-10-18)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
   platform: servidor propio (Ubuntu Server 24.04) con Docker Compose y Cloudflare Tunnel (ADR 0005, spec 030)
@@ -77,15 +87,17 @@ paths:
   seo: docs/seo.md
   changelog: CHANGELOG.md
   specs: docs/specs
+  changes: docs/changes        # fichas de los carriles
   adr: docs/adr
   templates: docs/templates
 verification:                  # lo llena la Fase 4
   - { command: "python .ai/bin/aidd.py validate", result: pass, note: "13 specs, 0 errores (2026-09-28)" }
-  - { command: "php artisan test", result: fail, note: "PHP 8.2 local: composer.lock exige >= 8.4.1 (RD7); Docker no estaba en marcha para correrlo en el contenedor" }
-  - { command: "vendor/bin/pint --test", result: fail, note: "no ejecutado: mismo motivo; /init no tocó archivos PHP" }
-  - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso" }
+  - { command: "php artisan test", result: pass, note: "en el contenedor y en la CI de cada PR; CI en verde en el PR de la 034 (confirmado por el usuario, 2026-10-16; re-sincronización 2026-10-18)" }
+  - { command: "vendor/bin/pint --test", result: pass, note: "sobre los archivos cambiados, en local y en la CI (re-sincronización 2026-10-18)" }
+  - { command: "npm run build", result: fail, note: "no ejecutado: solo afecta a welcome.blade.php, sin uso; ni la CI ni la imagen de producción lo construyen" }
 template_hashes:              # huellas de docs/templates/ al copiarlas (aidd.py templates --yaml)
   adr.md: 479eaebd1fed
+  change.md: 776fe7c0b58d
   plan.md: 2a5c45f54da9
   review.md: b307b807a00f
   spec.md: 876efac8d9eb

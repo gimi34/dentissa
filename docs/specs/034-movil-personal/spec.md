@@ -223,3 +223,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | CA2 (hora del panel y línea de tiempo de la dentista), CA11 y RNF (borde del filtro), Seguridad (alcance de pacientes), Fuera de alcance (033/R14 en parte), fuente del punto de corte | /analyze 034 r2: A35, A36 (decisiones del usuario), A43, A47, A48, A53 |
 | 2026-10-13 | RNF 2.4.7 acotado y Fuera de alcance (textos del filtro por debajo de AA y foco de campos que no cambian) | /analyze 034 r3: A59, A60 (decisiones del usuario) |
 | 2026-10-16 | Liberada en v0.8.0 | /release |
+| 2026-10-19 | Comportamiento modificado por 035 en v0.9.0 (migas que parten en todo el móvil y menú sin recuadro; las tarjetas de la 034 se aplican también al historial de la ficha y a la lista de expedientes) | /release |

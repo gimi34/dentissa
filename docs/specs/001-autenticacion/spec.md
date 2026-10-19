@@ -29,7 +29,7 @@ de Google para no recordar otra contraseña.
 - [ ] CA6 · Dado un usuario con `google_id` vinculado, cuando completa el callback de Google, entonces inicia sesión y va a su panel.
 - [ ] CA7 · Dado un correo de Google sin cuenta, cuando completa el callback, entonces sus datos se guardan en sesión y se le envía a `/registro/contacto` (spec 002).
 - [ ] CA8 · Dado un usuario autenticado, cuando envía `POST /logout`, entonces la sesión se invalida y el token CSRF se regenera.
-- [ ] CA9 (abuso) · Como atacante, pruebo muchas contraseñas contra una cuenta → los intentos se limitan por IP y cuenta y se registran. **HOY NO SE CUMPLE: no hay throttle ni registro de intentos.** Atendido en parte por 030 (v0.5.0): los intentos fallidos se limitan por cuenta e IP (5 por minuto); falta registrarlos (→ spec 020).
+- [ ] CA9 (abuso) · Como atacante, pruebo muchas contraseñas contra una cuenta → los intentos se limitan por IP y cuenta y se registran. **HOY NO SE CUMPLE: no se registran los intentos.** Atendido en parte por 030 (v0.5.0): los intentos fallidos se limitan por cuenta e IP (5 por minuto, `LimiteIntentosTest`); falta registrarlos (→ spec 020).
 - [ ] CA10 (abuso) · Como atacante con una cuenta de Google cuyo email coincide con la de un admin, intento entrar → no se vincula sin email verificado ni confirmación. **HOY NO SE CUMPLE: se vincula por coincidencia de email.**
 - [ ] CA11 (abuso) · Como usuario desactivado con sesión abierta, sigo navegando → la sesión se cierra. **HOY NO SE CUMPLE: `activo` solo se comprueba al hacer login.**
 

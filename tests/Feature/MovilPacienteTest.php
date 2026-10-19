@@ -248,7 +248,9 @@ class MovilPacienteTest extends TestCase
         $this->assertDeclara('.content', 'overflow-wrap: break-word');
         $this->assertSame('', $this->movil('.content table'), 'Sin regla .content table (033 T069).');
         $this->assertDeclara('.user-name', 'white-space: normal');
-        $permitidos = ['.texto-partible', '.user-name', '.welcome-title', '.timeline-title', '.timeline-sub', '.resumen-cita dd'];
+        $permitidos = ['.texto-partible', '.user-name', '.welcome-title', '.timeline-title', '.timeline-sub', '.resumen-cita dd',
+            // Spec 035 (D6): el título de la barra y las migas, que son hijos de filas flexibles.
+            '.topbar-title', '.migas-actual', '.migas a'];
         foreach ($permitidos as $selector) {
             $this->assertDeclara($selector, 'overflow-wrap: anywhere');
         }
@@ -351,9 +353,15 @@ class MovilPacienteTest extends TestCase
         $this->assertDeclara('.btn-logout:hover', 'background: var(--p100)');
 
         // Bordes de los controles del panel: --border-control, ≥ 3:1 sobre blanco (D13).
-        foreach (['.menu-btn', '.menu-cerrar', '.btn-logout'] as $control) {
-            $this->assertDeclara($control, 'border: var(--border-width) solid var(--border-control)');
+        $this->assertDeclara('.btn-logout', 'border: var(--border-width) solid var(--border-control)');
+        // Spec 035 (CA11): «Menú» y «Cerrar menú» solo con el icono, sin recuadro ni fondo.
+        foreach (['.menu-btn', '.menu-cerrar'] as $control) {
+            $this->assertDeclara($control, 'border: 0');
         }
+        // El contraste del icono (--p600 sobre --white) se mide sobre la barra, que sigue blanca (/analyze 035 A15).
+        $this->assertMatchesRegularExpression('/(^|;)\s*background\s*:\s*var\(--white\)\s*;/', $this->declaraciones('.topbar'), '.topbar sigue con fondo --white.');
+        // «Cerrar menú» está en el panel: su fondo en el móvil también es --white (/review 035 R11).
+        $this->assertDeclara('.sidebar', 'background: var(--white)');
         $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--border-control'], $tokens['--white']));
     }
 
@@ -361,7 +369,7 @@ class MovilPacienteTest extends TestCase
     {
         foreach (['.menu-btn', '.menu-cerrar'] as $boton) {
             foreach (['align-items: center', 'justify-content: center', 'gap: var(--space-2)', 'padding: 0 var(--space-4)',
-                'background: var(--white)', 'border-radius: var(--radius-sm)', 'font: inherit', 'font-size: var(--text-body)',
+                'background: transparent', 'border-radius: var(--radius-sm)', 'font: inherit', 'font-size: var(--text-body)',
                 'font-weight: var(--weight-strong)'] as $declaracion) {
                 $this->assertDeclara($boton, $declaracion);
             }
