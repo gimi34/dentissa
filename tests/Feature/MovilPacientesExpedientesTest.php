@@ -464,7 +464,7 @@ class MovilPacientesExpedientesTest extends TestCase
             '.migas-actual' => ['overflow-wrap: anywhere', 'min-width: 0'],
             '.migas' => ['flex-wrap: wrap'],
             // Sin min-width: 0, que quitaría el mínimo de toque de la 033 a los enlaces.
-            '.migas a' => ['overflow-wrap: break-word'],
+            '.migas a' => ['overflow-wrap: anywhere'],
             '.perfil-identidad' => ['text-align: start'],
             '.perfil-cab' => ['display: grid', 'grid-template-columns: var(--perfil-avatar-movil) minmax(0, 1fr)', 'gap: var(--space-4)', 'align-items: center'],
             '.perfil-avatar' => ['width: var(--perfil-avatar-movil)', 'height: var(--perfil-avatar-movil)', 'margin: 0', 'font-size: var(--perfil-iniciales-movil)'],
