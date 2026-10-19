@@ -41,11 +41,11 @@ se puede agendar con él.
 ## Notas para /plan
 
 ## Evidencia (solo si status=inferred)
-- Archivos: `routes/web.php:84`, `app/Http/Controllers/PersonalController.php` (`saveHorarios`), `resources/views/personal/show.blade.php`, `database/dentissa.sql` (`horarios_dentista`)
+- Archivos: `routes/web.php:86`, `app/Http/Controllers/PersonalController.php` (`saveHorarios`), `resources/views/personal/show.blade.php`, `database/dentissa.sql` (`horarios_dentista`)
 - Tests: sin tests
 
 ## Observaciones (solo si status=inferred)
-- El guardado borra e inserta sin comprobar citas ya agendadas fuera del nuevo horario.
+- ~~El guardado borra e inserta sin comprobar citas ya agendadas fuera del nuevo horario.~~ Desde 027 (CA7) calcula las citas que quedan fuera y las lista en la ficha, sin bloquear el guardado.
 
 ## Historial
 | Fecha | Cambio | Motivo |
@@ -53,3 +53,4 @@ se puede agendar con él.
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-02 | Comportamiento modificado por 025 en v0.2.0 | /release |
 | 2026-10-03 | Comportamiento modificado por 027 en v0.4.0 | /release |
+| 2026-10-18 | Observación resuelta por 027 | /init (re-sincronizar) |

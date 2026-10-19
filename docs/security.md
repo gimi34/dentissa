@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-10
+updated: 2026-10-18
 ---
 
 # Seguridad de Dentissa
@@ -20,7 +20,7 @@ updated: 2026-10-10
 | Nombre, email, teléfono, fecha de nacimiento, dirección, contacto de emergencia | confidencial (personal) | `usuarios`, `pacientes` | acceso por rol |
 | Hash de contraseña | restringida (credencial) | `usuarios.password_hash` | bcrypt (`Hash::make`) |
 | `google_id` | confidencial | `usuarios.google_id` | acceso por rol |
-| Sesiones (IP, user agent, payload) | confidencial | `storage/framework/sessions` (driver `file` en local, confirmado por el usuario, 2026-09-28) | sin cifrar (`SESSION_ENCRYPT=false`) |
+| Sesiones (IP, user agent, payload) | confidencial | `storage/framework/sessions` (driver `file` en local, confirmado por el usuario, 2026-09-28; también en producción, plantilla de `app.env` en `deploy/README.md`) | sin cifrar (`SESSION_ENCRYPT=false`; en producción, RS10.c) |
 | Credenciales OAuth y de BD | restringida (secreto) | `.env` (no versionado) | fuera del repo |
 
 ## Autenticación y autorización
@@ -52,7 +52,7 @@ updated: 2026-10-10
 | Punto de entrada | Tipo | Autenticado | Notas |
 |---|---|---|---|
 | `GET/POST /login` | HTTP público | no | 5 fallos por minuto por correo e IP (spec 030) |
-| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | 5 peticiones por minuto por IP en las dos rutas (spec 030); sin captcha |
+| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | los `POST` de las dos rutas, 5 por minuto por IP (spec 030); los `GET`, sin límite; sin captcha |
 | `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
@@ -83,10 +83,13 @@ Adoptadas en la entrevista (decisión del usuario, 2026-09-28). Desde la spec 02
 
 | Tipo | Herramienta | Comando | Estado | Cuándo corre |
 |---|---|---|---|---|
-| Secretos | gitleaks | `gitleaks detect --no-banner` | en-ci | /implement, /review, CI |
-| SAST | semgrep | `semgrep scan --config p/php --metrics=off --error` | en-ci | /implement (archivos tocados), /review, CI |
-| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | en-ci | /review, /release, CI |
-| Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | en-ci | /review, /release, CI |
+| Secretos | gitleaks | `gitleaks detect --no-banner` | en-ci | /implement, /review; CI: en cada PR sobre sus commits (bloquea) y en el job semanal sobre todo el repo (no bloquea) |
+| SAST | semgrep | `semgrep scan --config p/php --metrics=off --error` | en-ci | /implement (archivos tocados), /review; CI: en cada PR solo los hallazgos nuevos (`--baseline-commit`, bloquea) y en el job semanal (no bloquea) |
+| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | en-ci | /review, /release; CI: en un PR solo si cambia un lockfile (bloquea) y en el job semanal (no bloquea) |
+| Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | en-ci | /review, /release; CI: solo en el job semanal o manual, sin bloquear (`continue-on-error`) |
+
+Cuándo bloquea cada una en la CI: descrito tal como está en `.github/workflows/ai-dd.yml` (decisión del usuario, 2026-10-18).
+Cambiar el workflow para que trivy o SCA bloqueen en cada PR sería una tarea aparte (`/chore`).
 | DAST | ninguna | — | no-aplica: no hay staging (`docs/deployment.md`, objetivo 5); se decide al crearlo | — |
 
 `--metrics=off`: semgrep descarga `p/php` de semgrep.dev, y sin esa opción enviaría métricas de uso
@@ -219,7 +222,8 @@ Evidencia: `PacientesController.php`, `PersonalController.php`, `layouts/app.bla
 
 Correcciones:
 - RS10.a No persistir la contraseña en sesión: sustituir por enlace de establecimiento de contraseña o mostrarla solo en la respuesta inmediata — estado: pendiente
-- RS10.b Usar `@js()` para cualquier valor que se pase a JavaScript — estado: pendiente
+- RS10.b Usar `@js()` para cualquier valor que se pase a JavaScript (también el nombre del servicio en `servicios/index.blade.php`, hoy con `addslashes`) — estado: pendiente
+- RS10.c En producción, sesiones cifradas (`SESSION_ENCRYPT=true` en la plantilla de `app.env` y comprobado por `deploy/verificar.sh`) — estado: pendiente (→ objetivo 2; re-sincronización 2026-10-18)
 
 ### RS11 · Baja — Política de contraseñas inconsistente (A07 Authentication Failures)
 Mínimo 6 caracteres en altas hechas por el personal frente a `Password::min(8)` en registro y
@@ -307,8 +311,24 @@ construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-10
 Correcciones:
 - RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes del 2026-10-31; renovar o retirar EX2 según el resultado — estado: pendiente (→ roadmap)
 
+### RS19 · Media — Un admin puede dejar la aplicación sin administradores (A01 Broken Access Control)
+Detectado en la re-sincronización del 2026-10-18. `UsuarioController@update` toma `rol` y `activo` del
+formulario sin excepción para la propia cuenta: un admin que guarda su ficha sin marcar «Activo», o
+con otro rol, se desactiva o se degrada a sí mismo, y nada impide desactivar o degradar al último
+admin activo. Además, el cambio de rol no crea ni retira la ficha de `personal` o `pacientes` que
+el nuevo rol necesita. Evidencia: `app/Http/Controllers/UsuarioController.php` (`update`,
+`toggleActivo`); spec 010.
+
+Correcciones:
+- RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: pendiente (→ objetivo 2)
+- RS19.b No se puede desactivar ni quitar el rol al último admin activo — estado: pendiente (→ objetivo 2)
+- RS19.c Al cambiar el rol, crear o retirar la ficha de `personal` o `pacientes` que corresponde (o impedir el cambio si no se puede) — estado: pendiente (→ objetivo 2)
+
 ## No determinado
-- Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en
-  staging y producción: esos entornos aún no existen. En local coinciden con `.env.example`
-  (`APP_DEBUG=true`), confirmado por el usuario, 2026-09-28.
+- Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI`: en
+  local coinciden con `.env.example` (`APP_DEBUG=true`), confirmado por el usuario, 2026-09-28.
+  Staging no existe. Producción (desde v0.5.0): la plantilla de `app.env` (`deploy/README.md`) fija
+  `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true` y `GOOGLE_REDIRECT_URI` en https, y
+  `deploy/verificar.sh` los comprueba en cada despliegue; `SESSION_ENCRYPT` no se fija (vale
+  `false`, RS10.c). Lo declarado en la plantilla no garantiza el valor real de `app.env`.
 - Restricción de dominios de la app de Google OAuth.

@@ -47,6 +47,38 @@
     --weight-strong:     500;
     --field-time-width:  110px;
     --timeline-time-width: 100px; /* hora del historial de la cita (spec 028) */
+    /* Sistema de diseño 1.4.0 (spec 033): móvil del paciente. */
+    --touch-min:          44px;
+    --overlay:            rgba(0, 0, 0, 0.45);
+    --menu-movil-w:       300px;
+    --duration-fast:      0.15s;
+    --topbar-h:           60px;
+    --border-width-strong: 2px;
+    --text-meta:          13px;  /* tamaño, no color */
+    --logo-max-w:         160px;
+    --icon-md:            18px;
+    --text-marca:         16px;  /* tamaño, no color */
+    /* Sistema de diseño 1.5.0 (spec 034): móvil del personal. */
+    --tarjeta-etiqueta-w: 88px;
+    --logo-movil-h:       40px;
+    --space-detalle:      18px;
+    --detalle-lateral-w:  360px;
+    --filtro-buscar-min:  180px;
+    --filtro-fecha-min:   130px;
+    --filtro-dentista-min: 150px;
+    --filtro-estado-min:  140px;
+    /* Fichas del paciente y del expediente (spec 035; system.md 1.6.0). */
+    --ficha-lateral-w:        320px;
+    --expediente-lateral-w:   300px;
+    --perfil-avatar-w:        64px;
+    --perfil-avatar-movil:    48px;
+    --perfil-iniciales-text:  22px;  /* tamaño, no color */
+    --perfil-iniciales-movil: 17px;  /* tamaño, no color */
+    --perfil-nombre-text:     20px;  /* tamaño, no color */
+    --perfil-nombre-movil:    16px;  /* tamaño, no color */
+    --weight-bold:            600;
+    --expediente-dato-max:    140px;
+    --campo-fecha-max:        220px;
 }
 
 body {
@@ -520,3 +552,105 @@ tr:hover td { background: var(--p50); }
 .formulario-accesible .historial-estado-anterior { color: var(--text); }
 .formulario-accesible .historial-estado-nuevo { color: var(--p600); }
 .formulario-accesible .historial-autor { font-size: var(--text-small); color: var(--text); margin-top: var(--space-1); }
+
+/* Spec 033: clases de los bloques que pierden su style="" (mismos valores que antes, con tokens).
+   Bloque comprobado por MovilPacienteTest; todo lo de aquí abajo es de la spec 033. */
+.sidebar-logo img { width: 100%; max-width: var(--logo-max-w); object-fit: contain; display: block; margin: 0 auto; mix-blend-mode: screen; }
+.user-card-texto { min-width: 0; }
+/* Pestañas de mis citas (T024). */
+.pestanas-citas { display: flex; gap: var(--space-2); margin-bottom: var(--space-7); border-bottom: var(--border-width) solid var(--border); }
+.pestanas-citas a { padding: var(--space-4) var(--space-1); font-size: var(--text-body); font-weight: var(--weight-strong); text-decoration: none; color: var(--text-muted); border-bottom: var(--border-width-strong) solid transparent; }
+.pestanas-citas a:first-child { margin-right: var(--space-7); }
+.pestanas-citas a.activa { color: var(--p500); border-bottom-color: var(--p400); }
+/* Migas de pan del detalle de la cita y de agendar (T025). */
+.migas { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-7); font-size: var(--text-meta); color: var(--text-muted); }
+.migas a { color: var(--text-muted); text-decoration: none; }
+.migas-actual { color: var(--text); }
+/* Foco del sistema en pestañas y migas (/review 033 R7). */
+.pestanas-citas a:focus-visible, .migas a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+/* Fin spec 033 */
+
+/* Spec 034: clases de los style="" imprescindibles, filtro, detalle de cita y foco (mismos valores que antes, con tokens). */
+/* Rejillas de estadísticas (D10b): .stats-grid fija hueco y margen; las variantes, solo las columnas. */
+.stats-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.stats-grid-3 { grid-template-columns: repeat(3, 1fr); }
+/* Filtro de citas (D6, A33): los style="" de antes, con tokens. Los atajos van al final, como antes,
+   aunque en el HTML sigan al buscador (A55). */
+.filtro-tarjeta { margin-bottom: var(--space-7); padding: var(--space-6) var(--space-7); }
+.filtro-citas { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+.filtro-buscar { flex: 1; min-width: var(--filtro-buscar-min); }
+.filtro-fecha { min-width: var(--filtro-fecha-min); }
+.filtro-dentista { min-width: var(--filtro-dentista-min); }
+.filtro-estado { min-width: var(--filtro-estado-min); }
+.filtro-atajos { margin-left: auto; display: flex; gap: var(--space-2); order: 1; }
+/* Borde de los campos ≥ 3:1 también en el escritorio (decisión del usuario, A36); gana a .field de citas.css. */
+.filtro-citas .field { border-color: var(--border-control); }
+.filtro-btn { border-color: var(--border-control); }
+.filtro-btn[aria-expanded="true"] { background: var(--p100); color: var(--p600); }
+.filtro-contador { background: var(--p500); color: var(--white); border-radius: var(--radius-lg); padding: 0 var(--space-2); font-size: var(--text-small); }
+/* La cita de hoy de la lista del personal: el fondo que antes iba en el style="" de la fila (A57). */
+.fila-hoy { background: var(--p50); }
+/* Panel de la dentista (D5b): el enlace de solo icono y la fila del estado con el enlace. */
+.btn-icono { padding: var(--space-1) var(--space-3); }
+.timeline-acciones { display: flex; align-items: center; gap: var(--space-3); }
+/* Foco del sistema en todo lo que la spec añade o cambia (A60, A68). */
+.filtro-citas .field:focus-visible, .filtro-citas .btn:focus-visible,
+.tabla-tarjetas a:focus-visible, .tabla-tarjetas .btn:focus-visible, .btn-icono:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+/* Detalle de cita del personal (D7): mismo aspecto que la rejilla de dos columnas de antes, con el HTML
+   en el orden de la spec. La columna lateral ocupa todas las filas; márgenes en lugar de row-gap y una
+   última fila flexible que absorbe la diferencia de alto, con o sin control interno (A9). */
+.detalle-cita {
+    display: grid;
+    grid-template-columns: 1fr var(--detalle-lateral-w);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: var(--space-7);
+    align-items: start;
+}
+.detalle-datos, .detalle-control, .detalle-historial { grid-column: 1; }
+.detalle-lateral { grid-column: 2; grid-row: 1 / -1; display: flex; flex-direction: column; gap: var(--space-detalle); }
+.detalle-control, .detalle-historial { margin-top: var(--space-detalle); }
+.detalle-datos-rejilla { grid-template-columns: repeat(3, 1fr); }
+/* Con el foco del ratón (sin :focus-visible), el borde de los campos del filtro sigue en 3:1 (A36): gana
+   al `.field:focus` de citas.css, que carga después en la lista de citas (/review R6). */
+.filtro-citas .field:focus { border-color: var(--border-control); box-shadow: none; }
+/* Celdas centradas en el escritorio (servicios); en las tarjetas del móvil van al inicio (/review R1). */
+.celda-centrada { text-align: center; }
+/* Fin spec 034 */
+
+/* Spec 035: pacientes y expedientes del personal. Mismos valores que los style="" de hoy, que impedían
+   el móvil (plan D9); las variantes del móvil van en movil.css. */
+.ficha-paciente { display: grid; grid-template-columns: var(--ficha-lateral-w) 1fr; gap: var(--space-7); align-items: start; }
+.ficha-expediente { display: grid; grid-template-columns: 1fr var(--expediente-lateral-w); gap: var(--space-7); }
+.expediente-cabecera { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-6); }
+.acciones-ficha { display: flex; align-items: center; gap: var(--space-4); }
+.acciones-formulario { display: flex; gap: var(--space-4); justify-content: flex-end; }
+.dato-recortado { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.paginacion { padding: var(--space-5) var(--space-7); border-top: var(--border-width) solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+/* Perfil del paciente (D12): la tarjeta centrada de siempre; el perfil compacto del móvil, en movil.css. */
+.perfil-identidad { text-align: center; }
+.perfil-avatar {
+    width: var(--perfil-avatar-w); height: var(--perfil-avatar-w); border-radius: 50%; background: var(--p200);
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--perfil-iniciales-text); font-weight: var(--weight-bold); color: var(--p800); margin: 0 auto var(--space-5);
+}
+.perfil-nombre { font-size: var(--perfil-nombre-text); font-weight: var(--weight-strong); color: var(--text); }
+.perfil-dato { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--text-muted); }
+/* Los títulos del expediente pasan de <div> a <label>, que es inline: en bloque, como antes (D7). */
+.etiqueta-campo { display: block; }
+/* Foco del sistema en los campos de estos formularios, más específico que su <style> propio (D13). */
+.form-paciente .field:focus-visible, .form-expediente .field:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+.form-paciente .field:focus, .form-expediente .field:focus { border-color: var(--border-control); box-shadow: none; }
+/* Valores de «Información» de la ficha del expediente: el máximo de hoy en el escritorio (T031). */
+.info-valor { text-align: right; max-width: var(--expediente-dato-max); }
+/* Fecha sugerida del alta de expediente, con el máximo de hoy en el escritorio (/review R14). */
+.campo-fecha { max-width: var(--campo-fecha-max); }
+/* El campo con error de los formularios del expediente se marca, como en los demás formularios (/review R4):
+   misma especificidad que la regla de foco y después de ella, para que siga rojo con foco (/review R21). */
+.form-expediente .field.field-error { border-color: var(--red); }
+/* Fin spec 035 */

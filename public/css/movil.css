@@ -1,0 +1,283 @@
+/*
+ * Móvil (spec 033): por debajo de 900 px, la barra lateral se convierte en el menú desplegable
+ * (opción A) y el contenido ocupa todo el ancho. Solo tokens de docs/design/system.md 1.4.0; el
+ * único valor en px es el punto de corte, porque las media queries no admiten variables, y las
+ * unidades relativas del panel (85vw, 100dvh y ±100 %) son las que documenta el sistema.
+ *
+ * Las reglas globales van primero: las de la media query ganan por orden con la misma
+ * especificidad (/analyze 033 A40; 034 A46). En el escritorio (900 px o más) nada cambia (CA8).
+ *
+ * Spec 034 (sistema 1.5.0): tablas en tarjetas, filtro plegable, detalle de cita, panel de la
+ * dentista, botón «Menú» solo con icono y logo con máscara, en el bloque «Spec 034» de abajo.
+ */
+
+/* Elementos nuevos: ocultos en el escritorio. */
+.menu-btn, .menu-cerrar, .menu-velo, .sidebar-marca { display: none; }
+
+/* Ningún hijo flexible o de rejilla ensancha la página (A6); a 1440 no cambia nada visible. */
+.main, .grid-auto > *, .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+/* Spec 034: «Filtros» y los textos de los botones de icono solo en el móvil; en el escritorio, el
+   panel del filtro no es una caja y sus campos siguen en la fila de siempre (D5, D6). */
+.filtro-btn, .solo-movil { display: none; }
+.filtro-panel { display: contents; }
+
+@media (max-width: 899px) {
+    /* ── Marco de la página ── */
+    .main { margin-left: 0; }
+    /* break-word: no parte letra a letra las palabras que caben (spec 034, D8). anywhere solo en los
+       elementos de datos de filas y rejillas flexibles, donde break-word no reduce el ancho mínimo (033/R1). */
+    .content { padding: var(--space-6); overflow-wrap: break-word; }
+    .texto-partible, .welcome-title, .timeline-title, .timeline-sub, .resumen-cita dd { overflow-wrap: anywhere; }
+    .topbar {
+        height: auto;
+        min-height: var(--topbar-h);
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        padding: 0 var(--space-6);
+        justify-content: flex-start;
+    }
+    .topbar-actions { margin-left: auto; }
+    .grid-auto, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    /* El banner del panel recorta con overflow: hidden: sus botones bajan de línea (A34). */
+    .welcome-banner, .welcome-actions { flex-wrap: wrap; gap: var(--space-3); }
+
+    /* ── Panel del menú, con o sin JS ── */
+    .sidebar {
+        background: var(--white);
+        border-right: var(--border-width) solid var(--border);
+        overflow-y: auto;
+    }
+    /* El panel se desplaza entero, no solo el <nav> (T029): se alcanzan el último enlace y «Cerrar sesión». */
+    .sidebar-nav { flex: none; }
+    .sidebar-logo {
+        justify-content: space-between;
+        min-height: var(--topbar-h);
+        padding: var(--space-3) var(--space-5);
+    }
+    /* Con mix-blend-mode: screen el logo desaparece sobre blanco: el mismo logo, pintado con --p600
+       a través de una máscara (A9; spec 034, D10). Sin máscara, queda un rectángulo --p600. */
+    .sidebar-logo img { display: none; }
+    .sidebar-marca {
+        display: block;
+        width: var(--logo-max-w);
+        height: var(--logo-movil-h);
+        background: var(--p600);
+        -webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat;
+        mask: url("../images/logo-icon.png") left center / contain no-repeat;
+    }
+    .nav-item { color: var(--text); }
+    /* Sección actual: fondo, color y una barra, para que no dependa solo del color (A5). */
+    .nav-item.active {
+        background: var(--p100);
+        color: var(--p600);
+        box-shadow: inset var(--border-width-strong) 0 0 var(--p600);
+    }
+    .nav-label { color: var(--p600); }
+    .user-name { white-space: normal; overflow-wrap: anywhere; }
+    .btn-logout { border: var(--border-width) solid var(--border-control); }
+    .btn-logout:hover { background: var(--p100); color: var(--p600); }
+
+    /* ── Botones «Menú» y «Cerrar menú» (sin display: solo con JS, más abajo) ── */
+    .menu-btn, .menu-cerrar {
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        padding: 0 var(--space-4);
+        /* Solo el icono, sin recuadro ni fondo (spec 035, CA11): el área y el foco se mantienen. */
+        background: transparent;
+        color: var(--p600);
+        border: 0;
+        border-radius: var(--radius-sm);
+        font: inherit;
+        font-size: var(--text-body);
+        font-weight: var(--weight-strong);
+        cursor: pointer;
+    }
+    .menu-btn svg, .menu-cerrar svg { width: var(--icon-md); height: var(--icon-md); }
+    /* «Menú» solo con el icono (spec 034, D9): cuadrado de --touch-min. */
+    .menu-btn { width: var(--touch-min); height: var(--touch-min); padding: 0; }
+
+    /* ── Sin JS: el menú queda en el flujo, encima del contenido (D5, A3) ── */
+    html:not(.menu-js) body { flex-direction: column; }
+    html:not(.menu-js) .sidebar { position: static; width: auto; min-height: 0; }
+
+    /* ── Con JS: panel desplegable sobre la página ── */
+    html.menu-js .menu-btn, html.menu-js .menu-cerrar { display: inline-flex; }
+    html.menu-js .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: min(var(--menu-movil-w), 85vw);
+        height: 100dvh;
+        /* Anula el min-height: 100vh de app.css, más alto que la pantalla visible (A29). */
+        min-height: 0;
+        z-index: 110;
+        transform: translateX(-100%);
+        visibility: hidden;
+    }
+    html.menu-abierto .sidebar { transform: none; visibility: visible; }
+    /* El velo queda sobre la barra superior (z-index 50) y bajo el panel (A19). */
+    html.menu-abierto .menu-velo {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: var(--overlay);
+        z-index: 100;
+    }
+    html.menu-abierto body { overflow: hidden; }
+
+    @media (prefers-reduced-motion: no-preference) {
+        html.menu-js .sidebar { transition: transform var(--duration-fast), visibility var(--duration-fast); }
+        /* Al abrir solo se anima el desplazamiento: visible desde el primer instante para que el foco entre (T029). */
+        html.menu-abierto .sidebar { transition: transform var(--duration-fast); }
+    }
+
+    /* ── Toque: 44 × 44 como mínimo (CA4, DS6) ── */
+    .btn, .btn-sm, .nav-item, .btn-logout, .menu-btn, .menu-cerrar, .field, select, textarea,
+    input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .pestanas-citas a, .migas a {
+        min-height: var(--touch-min);
+    }
+    .menu-cerrar, .pestanas-citas a, .migas a { min-width: var(--touch-min); }
+    .pestanas-citas a, .migas a { display: inline-flex; align-items: center; justify-content: center; }
+    /* La casilla conserva su tamaño; la zona de toque la da su etiqueta (A20, A33, A41). */
+    .formulario-accesible .campo-casilla label {
+        display: flex;
+        align-items: center;
+        min-height: var(--touch-min);
+    }
+
+    /* ── Foco visible en el menú (CA3) ── */
+    .menu-btn:focus-visible, .menu-cerrar:focus-visible, .nav-item:focus-visible, .btn-logout:focus-visible {
+        outline: var(--focus-ring-width) solid var(--focus-ring);
+        outline-offset: var(--focus-ring-offset);
+    }
+
+    /* ── Spec 034: tablas en tarjetas (D1, opción A) ── */
+    .tabla-tarjetas thead { display: none; }
+    /* Las tarjetas blancas van sobre --bg aunque la tabla esté dentro de una .card (A39). */
+    .tabla-tarjetas tbody { display: block; background: var(--bg); padding: var(--space-5); }
+    .tabla-tarjetas tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        background: var(--white);
+        border: var(--border-width) solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-5) var(--space-6);
+    }
+    .tabla-tarjetas tr + tr { margin-top: var(--space-5); }
+    /* Cada celda con etiqueta: etiqueta (::before) en la columna 1 y el valor en la 2. */
+    .tabla-tarjetas td {
+        padding: var(--space-1) 0;
+        border-bottom: 0;
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr);
+        overflow-wrap: break-word;
+        text-align: start;
+    }
+    .tabla-tarjetas td::before {
+        content: attr(data-label);
+        font-size: var(--text-small);
+        font-weight: var(--weight-strong);
+        text-transform: uppercase;
+        color: var(--p600);
+    }
+    /* Cabecera arriba a la izquierda y estado arriba a la derecha, sea cual sea su columna (A37). */
+    .tabla-tarjetas .celda-cab { grid-row: 1; grid-column: 1; display: block; }
+    .tabla-tarjetas .celda-estado { grid-row: 1; grid-column: 2; display: block; }
+    .tabla-tarjetas .celda-acciones {
+        display: block;
+        margin-top: var(--space-3);
+        padding-top: var(--space-3);
+        border-top: var(--border-width) solid var(--border);
+    }
+    .tabla-tarjetas .celda-cab::before, .tabla-tarjetas .celda-estado::before, .tabla-tarjetas .celda-acciones::before { content: none; }
+    /* Los avisos y etiquetas de una celda (el «⚠ Sí» de alergias) quedan de su tamaño, sin estirarse. */
+    .tabla-tarjetas td > span { justify-self: start; }
+    .tabla-tarjetas .celda-acciones > div, .tabla-tarjetas .celda-acciones .acciones-fila { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+    .tabla-tarjetas .celda-acciones .btn { flex: 1 1 auto; justify-content: center; }
+    /* La cita de hoy: tarjeta blanca con barra, no solo por color, y sin el fondo del :hover (A57). */
+    .tabla-tarjetas .fila-hoy { background: var(--white); box-shadow: inset var(--border-width-strong) 0 0 var(--p400); }
+    .tabla-tarjetas tr:hover td { background: transparent; }
+    .solo-escritorio, .tabla-tarjetas .solo-escritorio { display: none; }
+    .solo-movil { display: inline; }
+    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* ── Spec 034: panel de la dentista (D5b) ── */
+    .btn-icono { min-width: var(--touch-min); justify-content: center; }
+    /* El estado y «Ver detalle» bajan a su propia línea: el nombre usa el ancho que dejan la hora y el punto. */
+    .timeline-item { flex-wrap: wrap; }
+    .timeline-acciones { flex-basis: 100%; justify-content: flex-end; }
+
+    /* ── Spec 034: filtro de citas (D6) ── */
+    /* Una columna: buscador a lo ancho, atajos con «Filtros» y el panel (A55). */
+    .filtro-tarjeta { padding: var(--space-5); }
+    .filtro-citas { flex-direction: column; align-items: stretch; }
+    .filtro-buscar { flex: none; min-width: 0; }
+    /* «Buscar» (solo en el móvil) bajo el campo, con el hueco del filtro (/review R2). */
+    .filtro-buscar .btn { margin-top: var(--space-4); }
+    /* Los tres atajos se reparten el ancho, como en la opción A (A69). */
+    .filtro-atajos { order: 0; margin-left: 0; flex-wrap: wrap; gap: var(--space-3); }
+    .filtro-atajos .btn { flex: 1; justify-content: center; }
+    /* «Filtros» con su contador no se parte: si no cabe en un tercio, toma lo que necesita. */
+    .filtro-atajos .filtro-btn { white-space: nowrap; }
+    /* Panel en dos columnas: desde y hasta lado a lado; dentista y estado a lo ancho (A19, A33). */
+    .filtro-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--space-4);
+    }
+    .filtro-fecha, .filtro-dentista, .filtro-estado { min-width: 0; }
+    .filtro-panel .filtro-dentista, .filtro-panel .filtro-estado { grid-column: 1 / -1; }
+    .filtro-panel .btn { justify-content: center; }
+    /* Con JS, «Filtros» se muestra y el panel se pliega mientras el formulario no esté abierto. */
+    html.filtros-js .filtro-btn { display: inline-flex; }
+    html.filtros-js .filtro-citas:not(.abierto) .filtro-panel { display: none; }
+
+    /* ── Spec 034: detalle de cita del personal en una columna, en el orden del HTML (D7) ── */
+    /* align-items: stretch anula el start de la rejilla del escritorio: cada bloque a todo el ancho. */
+    .detalle-cita { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-detalle); }
+    .detalle-control, .detalle-historial { margin-top: 0; }
+    .detalle-datos-rejilla { grid-template-columns: minmax(0, 1fr); }
+    /* Las opciones de «Cambiar estado» miden al menos --touch-min de alto (T037). */
+    #estado fieldset label { min-height: var(--touch-min); }
+
+    /* ── Spec 035: fichas del paciente y del expediente, perfil compacto y acciones ── */
+    .ficha-paciente, .ficha-expediente { grid-template-columns: minmax(0, 1fr); }
+    /* «Volver al paciente» baja bajo el título (D2). */
+    .expediente-cabecera { flex-direction: column; gap: var(--space-3); }
+    /* Acciones de la ficha en una fila bajo el título, a partes iguales (D4). Sin :has(), a la derecha. */
+    .topbar-actions:has(.acciones-ficha) { flex-basis: 100%; margin-left: 0; }
+    .acciones-ficha { width: 100%; gap: var(--space-3); }
+    /* Relleno lateral menor: «Nuevo expediente» y su icono caben en una línea a 320 px (CA7). */
+    .acciones-ficha .btn { padding: 0 var(--space-3); }
+    /* Aire arriba y abajo cuando las acciones bajan a la segunda fila de la barra (/review R13). */
+    .topbar:has(.acciones-ficha) { padding-block: var(--space-3); }
+    /* text-align: el texto queda centrado también si parte en dos líneas (CA7). En la ficha, a partes iguales. */
+    .acciones-ficha .btn { flex: 1; justify-content: center; text-align: center; }
+    /* En los formularios, cada botón parte del ancho de su texto («Registrar paciente» lleva icono) y se
+       reparten lo que sobra: así caben en una línea a 320 px, centrados (/review R5: sin el flex: 1 de la ficha). */
+    .acciones-formulario .btn { flex: 1 1 auto; justify-content: center; text-align: center; }
+    /* La fecha sugerida del alta ocupa el ancho disponible (/review R14). */
+    .campo-fecha { max-width: none; }
+    .paginacion { flex-wrap: wrap; gap: var(--space-3); }
+    /* Textos largos (D6): el correo entero, y el título de la barra y las migas parten (034/R8, /analyze 035 A12, A21). */
+    .dato-recortado { white-space: normal; overflow: visible; }
+    .topbar-title, .migas-actual { overflow-wrap: anywhere; min-width: 0; }
+    /* El enlace conserva el mínimo de toque de la 033 (--touch-min). anywhere (/review R1): con flex-wrap, un
+       nombre que cabe baja entero a la línea siguiente y solo parte si no cabe ni solo (medido a 320 px). */
+    .migas a { overflow-wrap: anywhere; }
+    .migas { flex-wrap: wrap; }
+    /* Perfil compacto del paciente (D12; design.md: opción A con el perfil de C). */
+    .perfil-identidad { text-align: start; }
+    .perfil-cab { display: grid; grid-template-columns: var(--perfil-avatar-movil) minmax(0, 1fr); gap: var(--space-4); align-items: center; }
+    .perfil-avatar { width: var(--perfil-avatar-movil); height: var(--perfil-avatar-movil); margin: 0; font-size: var(--perfil-iniciales-movil); }
+    .perfil-nombre { font-size: var(--perfil-nombre-movil); }
+    .perfil-dato { display: grid; grid-template-columns: var(--tarjeta-etiqueta-w) minmax(0, 1fr); }
+    .perfil-dato svg { display: none; }
+    /* Valores de «Información» del expediente sin máximo: una palabra larga no parte si cabe (T032). */
+    .info-valor { max-width: none; margin-left: var(--space-3); }
+    .perfil-etiqueta { font-size: var(--text-small); font-weight: var(--weight-strong); text-transform: uppercase; color: var(--p600); }
+}

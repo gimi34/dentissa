@@ -13,10 +13,10 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | # | Spec | Dominio | Estado | Confianza | Tests |
 |---|---|---|---|---|---|
 | 001 | [autenticacion](001-autenticacion/spec.md) | Identidad | inferred | alta | 2 de 11 criterios |
-| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | inferred | alta | sin tests |
-| 003 | [agenda-citas-personal](003-agenda-citas-personal/spec.md) | Agenda | inferred | alta | sin tests |
-| 004 | [citas-cliente](004-citas-cliente/spec.md) | Agenda | inferred | alta | sin tests |
-| 005 | [horarios-dentista](005-horarios-dentista/spec.md) | Agenda | inferred | alta | sin tests |
+| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | inferred | alta | 1 de 8 criterios |
+| 003 | [agenda-citas-personal](003-agenda-citas-personal/spec.md) | Agenda | inferred | alta | 4 de 11 criterios |
+| 004 | [citas-cliente](004-citas-cliente/spec.md) | Agenda | inferred | alta | 2 de 7 criterios |
+| 005 | [horarios-dentista](005-horarios-dentista/spec.md) | Agenda | inferred | alta | 1 de 4 criterios |
 | 006 | [pacientes](006-pacientes/spec.md) | Pacientes | inferred | alta | sin tests |
 | 007 | [expedientes-clinicos](007-expedientes-clinicos/spec.md) | Clínica | inferred | alta | sin tests |
 | 008 | [personal](008-personal/spec.md) | Identidad | inferred | alta | sin tests |
@@ -35,14 +35,21 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
 | 031 | [endurecer-produccion](031-endurecer-produccion/spec.md) | Transversal | approved | — | — (2026-10-05) |
+| 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
+| 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
+| 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | released (v0.9.0) | — | — (2026-10-19) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
   018 vinculacion-google-segura · 019 credenciales-generadas.
 - Objetivo 3: 021 auditoria-accesos-cuentas · 022 auditoria-datos-clinicos · 023 logs-y-errores.
 - Objetivo 5: 032 alertas-cifrado-copias (tras la 031; decisión del usuario, 2026-10-05).
-- Objetivo 4 (agenda): 027 horarios-reprogramar (tras la 025; decisión del
-  usuario, 2026-09-29).
+- Objetivo 4 (agenda): la 027 reservada como horarios-reprogramar se dividió en 027
+  horarios-validos y 028 reprogramar-citas, las dos liberadas.
+- En ramas, sin fusionar en `main`: 031 endurecer-produccion (`feature/031-endurecer-produccion`,
+  approved, `/implement` en curso), 032 alertas-cifrado-copias (`feature/032-alertas-cifrado-copias`,
+  approved, `/plan` en pausa).
+- Objetivo 6 (móvil): 036 agenda y servicios y 037 administración, sin crear.
 
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida

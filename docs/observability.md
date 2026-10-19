@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-09-28
+updated: 2026-10-18
 ---
 
 # Observabilidad y auditoría de Dentissa
@@ -15,7 +15,8 @@ cubierta.
 | Logs de aplicación | Monolog (Laravel), canal `stack` → `single` | presente (config de fábrica); el código no escribe ni un log: 0 llamadas a `Log::`/`logger()`/`report()` | `config/logging.php`, grep en `app/` |
 | Agregación de logs | ninguna | — | local: `laravel.log` en el directorio del proyecto montado. Producción (spec 030): `laravel.log` en el volumen `storage` y `dentissa-access.log`/`dentissa-error.log` de nginx en el volumen `nginx_logs`, que sobreviven a reinicios y a recrear los contenedores |
 | Correlación por petición | ninguna | — | `bootstrap/app.php` sin middleware ni `Context::add` |
-| Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados de cita) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026) |
+| Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados y reprogramaciones de cita, con autor, sin IP ni request_id) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026), `app/Agenda/ReprogramacionCitas.php` (fecha anterior y nueva, spec 028) |
+| Eventos de autenticación | `Login`, `Failed`, `Logout` y `Lockout` de Laravel | presente, sin uso: se disparan, pero ningún listener los registra | `app/Http/Controllers/AuthController.php`, `app/Providers/AppServiceProvider.php` (limitadores) |
 | Métricas | ninguna | — | `composer.json` sin Pulse/Telescope/Prometheus |
 | Trazas distribuidas | ninguna | — | — |
 | Alertas | ninguna (canal `slack` definido sin webhook) | presente | `config/logging.php` |
@@ -68,7 +69,8 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
   registro también se audita.
 
 ## Métricas y alertas
-Sin staging ni producción todavía; umbrales propuestos para cuando existan:
+Producción existe desde v0.5.0 (spec 030) sin métricas ni alertas (OB6.b); staging no existe.
+Umbrales propuestos:
 
 | Métrica / alerta | Umbral | Canal |
 |---|---|---|
@@ -149,6 +151,31 @@ el servidor); staging no existe (/analyze 030 A1: OB7.a se divide).
 Correcciones:
 - OB7.a Enviar los logs de nginx a stdout/stderr o a un volumen en producción — estado: mitigada (v0.5.0)
 - OB7.b Lo mismo en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
+
+### OB8 · Media — Las búsquedas con datos personales y de salud quedan en el log de acceso de nginx
+Detectado en la re-sincronización del 2026-10-18. Las búsquedas de pacientes (nombre, email, teléfono,
+ciudad) y de expedientes (nombre, diagnóstico) son formularios `GET` con `?buscar=`. En producción,
+nginx usa el formato `combined`, que guarda la línea de petición con su query string, en
+`dentissa-access.log` (volumen `nginx_logs`) sin rotación: choca con la regla «Qué nunca se
+registra». Evidencia: `docker/nginx/dentissa.prod.conf` (`access_log` sin `log_format` propio),
+`PacientesController.php` y `ExpedientesController.php` (`index`).
+
+Correcciones:
+- OB8.a El log de acceso de producción no guarda el query string (o lo enmascara) — estado: pendiente (→ objetivo 3)
+- OB8.b Rotación con retención definida de `dentissa-access.log`, `dentissa-error.log` y `laravel.log` en producción — estado: pendiente (→ objetivo 3)
+- OB8.c Revisar en el servidor los registros ya guardados y purgar los que contengan búsquedas — estado: pendiente (la ejecuta el responsable en el servidor)
+
+### OB9 · Baja — PHP de producción con la configuración por defecto y logs de php-fpm volátiles
+Detectado en la re-sincronización del 2026-10-18. La imagen de producción no instala `php.ini-production`
+(solo monta `local.ini`): con los valores por defecto, `zend.exception_ignore_args` está desactivado
+y las trazas que guarda `laravel.log` pueden incluir valores de argumentos, otra vía de datos
+sensibles además de OB4. Los logs de php-fpm van al stderr del contenedor `app`, sin volumen ni
+límite de tamaño, y se pierden al recrearlo. Evidencia: `docker/prod/Dockerfile`,
+`docker-compose.prod.yml`, `docker/nginx/php/local.ini`.
+
+Correcciones:
+- OB9.a La imagen de producción usa `php.ini-production` (`display_errors=Off`, `zend.exception_ignore_args=On`) — estado: pendiente (→ objetivo 5)
+- OB9.b Los logs de php-fpm de producción se conservan al recrear el contenedor, con límite de tamaño — estado: pendiente (→ objetivo 5)
 
 ## Brechas por confirmar
 - `laravel.log` y los logs de nginx crecerán sin rotación en producción (volúmenes `storage` y

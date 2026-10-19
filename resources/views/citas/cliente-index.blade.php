@@ -13,35 +13,30 @@
 @section('content')
 
 {{-- Pestañas ──────────────────────────────────────────────────────────── --}}
-<div style="display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--border)">
-    <a href="{{ route('cliente.citas') }}"
-       style="padding:10px 4px;margin-right:20px;font-size:13.5px;font-weight:500;text-decoration:none;color:{{ !$pasadas ? 'var(--p500)' : 'var(--text-muted)' }};border-bottom:2px solid {{ !$pasadas ? 'var(--p400)' : 'transparent' }}">
-        Próximas
-    </a>
-    <a href="{{ route('cliente.citas', ['filtro' => 'pasadas']) }}"
-       style="padding:10px 4px;font-size:13.5px;font-weight:500;text-decoration:none;color:{{ $pasadas ? 'var(--p500)' : 'var(--text-muted)' }};border-bottom:2px solid {{ $pasadas ? 'var(--p400)' : 'transparent' }}">
-        Pasadas
-    </a>
+{{-- Clases con tokens en lugar de style="" (spec 033, T024); la actual lleva aria-current. --}}
+<div id="pestanas-citas" class="pestanas-citas">
+    <a href="{{ route('cliente.citas') }}" @class(['activa' => ! $pasadas]) @if(! $pasadas) aria-current="page" @endif>Próximas</a>
+    <a href="{{ route('cliente.citas', ['filtro' => 'pasadas']) }}" @class(['activa' => $pasadas]) @if($pasadas) aria-current="page" @endif>Pasadas</a>
 </div>
 
 {{-- Tabla de citas ─────────────────────────────────────────────────────── --}}
 <div class="card card-0">
     @if($citas->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th>Fecha / Hora</th>
+                        <th class="celda-cab">Fecha / Hora</th>
                         <th>Servicio</th>
                         <th>Dentista</th>
-                        <th>Estado</th>
-                        <th style="text-align:right">Acciones</th>
+                        <th class="celda-estado">Estado</th>
+                        <th class="celda-acciones" style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($citas as $cita)
                     <tr>
-                        <td>
+                        <td class="celda-cab" data-label="Fecha / Hora">
                             <div style="font-weight:600;color:var(--p600);font-size:14px">
                                 {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}
                             </div>
@@ -49,10 +44,10 @@
                                 {{ \Carbon\Carbon::parse($cita->fecha_hora)->locale('es')->isoFormat('ddd D MMM YYYY') }}
                             </div>
                         </td>
-                        <td>{{ $cita->servicio ?? 'Consulta dental' }}</td>
-                        <td style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
-                        <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
-                        <td>
+                        <td data-label="Servicio">{{ $cita->servicio ?? 'Consulta dental' }}</td>
+                        <td data-label="Dentista" style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
+                        <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div class="formulario-accesible">
                                 <div id="acciones-{{ $cita->id }}" class="acciones-fila">
                                     <a href="{{ route('cliente.citas.show', $cita->id) }}" class="btn btn-outline btn-sm">Ver</a>

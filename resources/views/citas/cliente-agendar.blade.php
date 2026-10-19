@@ -5,11 +5,11 @@
 
 <div style="max-width:640px">
 
-    {{-- Breadcrumb --}}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-        <a href="{{ route('cliente.dashboard') }}" style="color:var(--text-muted);text-decoration:none">Inicio</a>
+    {{-- Migas de pan: clases con tokens en lugar de style="" (spec 033, T025). --}}
+    <div id="migas" class="migas">
+        <a href="{{ route('cliente.dashboard') }}">Inicio</a>
         <span>›</span>
-        <span style="color:var(--text)">Agendar cita</span>
+        <span class="migas-actual">Agendar cita</span>
     </div>
 
     <form method="POST" action="{{ route('cliente.agendar.store') }}">

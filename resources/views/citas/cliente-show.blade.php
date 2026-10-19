@@ -24,17 +24,17 @@
 
 @section('content')
 
-{{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route('cliente.citas') }}" style="color:var(--text-muted);text-decoration:none">Mis citas</a>
+{{-- Migas de pan: clases con tokens en lugar de style="" (spec 033, T025). --}}
+<div id="migas" class="migas">
+    <a href="{{ route('cliente.citas') }}">Mis citas</a>
     <span>›</span>
-    <span style="color:var(--text)">Detalle</span>
+    <span class="migas-actual">Detalle</span>
 </div>
 
 <div style="max-width:640px">
     <div class="card">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
-            <div>
+            <div class="texto-partible">
                 <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                     {{ $cita->servicio ?? 'Consulta dental' }}
                 </div>
@@ -46,7 +46,7 @@
             @include('partials.badge-estado', ['estado' => $cita->estado])
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+        <div class="texto-partible" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
             <div style="background:var(--p50);border-radius:var(--radius-sm);padding:12px 14px">
                 <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Dentista</div>
                 <div style="font-size:14px;font-weight:500">{{ $cita->dentista }}</div>

@@ -151,6 +151,9 @@ Casos de abuso de la spec → amenazas: CA3 → TM1, TM2, TM12; CA5 → TM1, TM1
 | TM13 | alcance por petición | `test_tras_reasignar_el_dentista_anterior_pierde_el_acceso` |
 | TM14 | `Gate::after` | `test_un_acceso_denegado_queda_registrado` |
 
+## Descubribilidad
+No aplica: la spec solo cambia rutas tras inicio de sesión; ninguna ruta indexable de `docs/seo.md` cambia (upgrade a AI-DD 1.13.0, decisión del usuario, 2026-10-16).
+
 ## Observabilidad
 - Logs nuevos: ninguno. No se registran datos de pacientes ni de expedientes.
 - Eventos de auditoría:
