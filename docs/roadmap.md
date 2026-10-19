@@ -15,7 +15,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
-| 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); 031 prevista (cabeceras y HSTS, alertas, cifrado) | pendiente |
+| 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS15.b, OB4.b, OB4.c, OB6.b, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); [031](specs/031-endurecer-produccion/spec.md) (cabeceras, conexión segura obligatoria, incidencias de la 030 y administración desde fuera); 032 prevista (alertas y cifrado de las copias) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, released v0.8.0) · [035](specs/035-movil-pacientes-expedientes/spec.md) (DS6 en pacientes y expedientes del personal, released v0.9.0) | pendiente |
 | 7 | Registro indexable correctamente | `/registro` llega con título, descripción única y canónica absoluta desde `seo.site_url`; `/login`, la 404 y `/up` llevan `noindex`; `sitemap.xml` lista solo `/registro` y `robots.txt` lo declara; Lighthouse SEO ≥ 90 (P10). Riesgos: SE1.a, SE1.b, SE2.a, SE2.b, SE3.a, SE3.b; fuera: SE4.a, SE5.a, SE5.b, SE6.a y SE7.a → Pendientes y deuda (decisión del usuario, 2026-10-16) | — | pendiente |
 
@@ -148,22 +148,28 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     apariciones de `DENTISSA_ENV_DIR`, redirección a nivel de `server`).
   - 030/R20: mover el mensaje común de límite y `origenLimite` fuera del controlador.
   - 030/R21: test del caso `password_hash = ''` del comando de credenciales.
-- Incidencias de la liberación de la spec 030 (T097, 2026-10-04/05):
+- Incidencias de la liberación de la spec 030 (T097, 2026-10-04/05). Atendidas por la spec
+  [031](specs/031-endurecer-produccion/spec.md) (CA4–CA8), en curso:
   - El callback de Google responde 500 cuando llega sin un inicio previo
     (`Laravel\Socialite\Two\InvalidStateException` sin capturar en `GoogleAuthController::callback`;
     ocurrió una vez desde una IP de Google). Capturar los fallos de Socialite y volver al login con
     un mensaje, con su test (código previo a la 030; decisión del usuario, 2026-10-05). Se repitió
     el 2026-10-16 01:05 UTC desde una IP externa (Android, llegando desde google.com), con v0.7.0:
-    cualquiera que abra esa dirección provoca un 500 (visto en el T097 de la 034).
+    cualquiera que abra esa dirección provoca un 500 (visto en el T097 de la 034). → 031 CA5.
   - Documentar en `deployment.md` que, tras cambiar un archivo de `/opt/dentissa/entorno`, hay que
     recrear el servicio con `up -d --force-recreate <servicio>` (y en `app`, `config:cache`): un
     `up -d` no relee el archivo (el token del túnel y las credenciales de Google tardaron por eso).
+    → 031 CA7 (`deploy/aplicar-entorno.sh` y la sección «Entorno aplicado» de `verificar.sh`).
   - `verificar.sh` debe fallar si `GOOGLE_CLIENT_ID` no tiene formato de id (sigue el marcador de la
-    guía), y la guía de entorno debe advertirlo.
+    guía), y la guía de entorno debe advertirlo. → 031 CA6.
   - Las respuestas llevan `x-powered-by: PHP/8.4.25`: `expose_php = Off` en la imagen de producción
-    (junto con las cabeceras de la spec 031).
+    (junto con las cabeceras de la spec 031). → 031 CA4.
   - Documentar el acceso de administración desde fuera de casa (Tailscale) en `deployment.md` y
     actualizar la fila del SSH en `security.md` (hoy "solo desde la red local") cuando se instale.
+    → 031 CA8–CA10 (ADR 0006).
+- RS8.d (de la spec 031): política de contenido estricta, sin `'unsafe-inline'`. Requiere sacar de
+  las vistas los scripts incrustados (unas 8), los manejadores `on…` (11) y los `style=""` (32);
+  se hace por pantallas, al tocar cada una (decisión del usuario, 2026-10-05).
 - Spec 020 tras la 033 (decisión del usuario, 2026-10-11): al reconstruirla sobre `main`, su
   enlace «Auditoría» del menú de admin sigue el patrón de la 033 (`.active` y `aria-current="page"`
   en la sección actual) y actualiza la lista de `MovilPacienteTest::test_el_menu_del_movil_tiene_las_mismas_secciones`.
@@ -209,7 +215,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 028/R32: «Mis citas» hace una consulta por cita para saber si el dentista sigue activo; leerlo en
     la consulta de la lista (junto con R31).
 - Orden de versiones: la 028 salió en v0.6.0 antes que la 031, que pasa de la v0.6.0 prevista a
-  v0.7.0 (anotarlo en su plan al retomarla). Su arreglo de `npm audit` (T004) ya está en `main`
+  v0.7.0 (anotado en su plan). Su arreglo de `npm audit` (T004) ya está en `main`
   (PR #21). El diseño para móvil va en una spec propia (DS8).
 - Orden de versiones: la 033 salió en v0.7.0 (2026-10-12), la 034 en v0.8.0 (2026-10-16) y la 035
   en v0.9.0 (2026-10-19) antes que la 031, que pasa a v0.10.0 (anotarlo en su plan y fusionar
@@ -404,9 +410,11 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   Hecho el 2026-10-04: `system.md` 1.2.0 con 60 vistas capturadas a 390 y 1440 px, deuda conciliada
   (DS1–DS11 vigentes, DS12–DS15 nuevas) y la versión anterior en `docs/design/history/`.
 - Excepción P7 de la spec 030: los logins fallidos y los rechazos por límite de intentos no se
-  registran como eventos de auditoría hasta la spec 020; el login y la vuelta de Google ya emiten
-  `Illuminate\Auth\Events\Lockout` en cada rechazo para que la 020 los audite sin tocar el login
-  (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+  registran como eventos de auditoría hasta la spec 021, que registra los eventos de acceso sobre
+  el registro que crea la 020 (plazo corregido en la spec 031, /analyze A9; decisión del usuario,
+  2026-10-06). El login y la vuelta de Google ya emiten `Illuminate\Auth\Events\Lockout` en cada
+  rechazo, y la vuelta de Google fallida emite `Illuminate\Auth\Events\Failed` (spec 031), para
+  que la 021 los audite sin tocar el login (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
 - Residuo de OB4.a aceptado al abrir producción con la spec 030: los errores de base de datos pueden
   dejar SQL con sus valores en `laravel.log` del servidor. Se acepta con datos ficticios; la spec 023
   (OB4.a) debe liberarse antes de tener datos reales (spec 030, /analyze A26; decisión del usuario,
@@ -416,7 +424,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   (spec 030, /analyze A26).
 - Staging (objetivo 5): RD1.d (restauración probada en staging), RD3.d (TLS en staging), RS7.e
   (configuración de staging separada), OB4.c (checklist de staging) y OB7.b (logs de nginx en
-  staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1).
+  staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1);
+  y RS8.c (conexión segura obligatoria en staging), creada al dividir RS8.b en la spec 031.
 - RS13.b (objetivo 2): mensaje genérico en el alta que no revele si el correo ya tiene cuenta; la
   spec 030 solo añade el límite de intentos (RS13.a) (/analyze A34).
 - RS18.a: refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más

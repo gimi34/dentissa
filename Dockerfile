@@ -1,4 +1,4 @@
-FROM php:8.4.25-fpm
+FROM php:8.4.26-fpm
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
@@ -24,7 +24,7 @@ RUN docker-php-ext-install \
     zip
 
 # Instalar Composer
-COPY --from=composer:2.10.2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.10.3 /usr/bin/composer /usr/bin/composer
 
 # Directorio de trabajo
 WORKDIR /var/www

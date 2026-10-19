@@ -79,11 +79,14 @@ bash deploy/verificar.sh                         # con el túnel abierto: tambi�
 ```
 `desplegar.sh`, en orden: árbol limpio; copia de la base con `respaldar.sh` si la base tiene datos
 (el primer despliegue lo anuncia y sigue sin copia); `git fetch --tags` y `checkout`; construcción
-de `app` y `web`; `db` sana; `migrate --force` con la imagen nueva; `up -d app web`; cachés;
+de `app` y `web` sin caché y bajando las imágenes base (`--no-cache --pull`, spec 031: así la capa de
+`apt-get upgrade` / `apk upgrade` se renueva y las correcciones del sistema llegan a producción); `db` sana; `migrate --force` con la imagen nueva; `up -d app web`; cachés;
 `verificar.sh --interna`. Nunca arranca ni para `cloudflared`: el túnel se abre a mano la primera
 vez (`docker compose -f docker-compose.prod.yml up -d cloudflared`) y desde entonces vuelve solo
 tras un reinicio. Tiempo ensayado: 86 s el primer despliegue y 10 s uno posterior, sin la
-verificación (spec 030, T040 y T044).
+verificación (spec 030, T040 y T044). Sin caché, cada despliegue tarda lo que el primero, que reconstruye todo
+(unos 90 s; se mide en el ensayo de la spec 031, T040). `volver.sh` sigue construyendo con caché:
+en una vuelta atrás importa la rapidez y la versión anterior ya se construyó antes.
 
 Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan

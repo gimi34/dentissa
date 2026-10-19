@@ -239,4 +239,41 @@ class ConfiguracionProduccionTest extends TestCase
             );
         }
     }
+
+    /**
+     * RS18.a (spec 031, T054): cada despliegue construye app y web sin caché y bajando las
+     * imágenes base, para que la capa de apt-get/apk upgrade se renueve (con caché, el web de
+     * producción conservaba avisos ya corregidos).
+     */
+    public function test_el_despliegue_construye_sin_cache(): void
+    {
+        $script = $this->leer('deploy/desplegar.sh');
+        $construcciones = preg_grep('/^[^#\n]*\bbuild\b/', explode("\n", $script));
+        $this->assertNotEmpty($construcciones, 'desplegar.sh construye las imágenes.');
+        foreach ($construcciones as $linea) {
+            $this->assertStringContainsString('--no-cache', $linea, 'La construcción no usa la caché.');
+            $this->assertStringContainsString('--pull', $linea, 'La construcción baja las imágenes base.');
+            $this->assertMatchesRegularExpression('/\bapp web\b/', $linea, 'Se construyen app y web.');
+        }
+    }
+
+    /**
+     * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
+     * instala desde el repositorio oficial firmado, sin ejecutar scripts
+     * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
+     * OpenSSH con clave) y con su origen en las actualizaciones automáticas.
+     */
+    public function test_el_acceso_remoto_usa_el_repositorio_firmado_y_openssh(): void
+    {
+        $script = $this->leer('deploy/preparar-acceso-remoto.sh');
+
+        $this->assertMatchesRegularExpression('#^[^\#\n]*signed-by=\S+[^\n]*https://pkgs\.tailscale\.com/stable/ubuntu#m', $script, 'El repositorio de Tailscale debe declararse con signed-by.');
+        $this->assertDoesNotMatchRegularExpression('/\|\s*(sudo\s+)?(ba)?sh\b/', $script, 'No se ejecuta ningún script descargado.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*\btailscale up\b[^\n]*--ssh=false/m', $script, 'tailscale up debe desactivar el SSH de Tailscale.');
+        // El repositorio de Tailscale no publica "a=" (archive), solo "o=" y "n=":
+        // Allowed-Origins ("origen:archivo") no lo cubre, Origins-Pattern sí (T041).
+        $this->assertMatchesRegularExpression('/^[^#\n]*Unattended-Upgrade::Origins-Pattern/m', $script, 'El origen de Tailscale debe entrar en las actualizaciones automáticas.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*"origin=\$\{\w+\},codename=\$\{\w+\}"/m', $script, 'El patrón debe usar el origen y el nombre de la versión del repositorio.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*ufw allow in on tailscale0 to any port 22 proto tcp/m', $script);
+    }
 }

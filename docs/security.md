@@ -109,7 +109,7 @@ Vigente: EX2. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, apr
 
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
-| EX2 | Avisos sin corrección publicada en las imágenes de producción (`trivy image`, 2026-10-04, spec 030 T033/T035, RS18). `app` (`php:8.4.25-fpm`, Debian 13, ya con `apt-get upgrade`): 114 altas y 3 críticas "affected" y 4 altas "fix_deferred" (`linux-libc-dev`, libxml2 con CVE-2026-6653, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.18`: 23 altas y 1 crítica (openssl de Ubuntu y Go de `gosu`), corregidas en imágenes más nuevas que aún no cumplen 7 días. `cloudflare/cloudflared:2026.9.3`: 2 altas de libssl, pendientes de imagen nueva. `web` queda sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; el 64 % es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescar las imágenes fijadas con ≥ 7 días (RS18.a). Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04 | 2026-10-31 |
+| EX2 | Avisos sin corrección aplicable en las imágenes de producción (`trivy image`; 2026-10-04, spec 030 T033/T035; repetido el 2026-10-19, spec 031 T031, RS18). `app` (`php:8.4.26-fpm`, Debian 13, construida con `apt-get upgrade`): 114 altas y 4 críticas «affected» y 4 altas «fix_deferred», ninguna con corrección publicada (`linux-libc-dev` 56, libxml2, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.19`: 25 altas (Go de `gosu`) y 1 crítica (libssl3), corregidas en la reconstrucción de la misma etiqueta del 2026-10-17, que cumple 7 días el 2026-10-24. `cloudflare/cloudflared:2026.10.0`: 5 altas (Go `stdlib`, `golang.org/x/net`, libssl3), corregidas en la 2026.10.1, que cumple 7 días el 2026-10-22. `web` (nginx 1.30.5) construida sin caché: sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; casi la mitad es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescarlas cuando cumplan 7 días (RS18.a) y volver a escanear antes del vencimiento. Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04; renovada por el usuario el 2026-10-19 | 2026-11-30 |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -306,10 +306,13 @@ Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 0
 Debian 13 de `php:8.4.25-fpm` arrastra avisos altos y críticos sin corrección publicada, y
 `mariadb:10.11.18` y `cloudflare/cloudflared:2026.9.3` tienen avisos ya corregidos en imágenes más
 nuevas. Las correcciones publicadas de los paquetes del sistema de `app` y `web` se aplican al
-construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-10-31.
+construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-11-30 (renovada el
+2026-10-19, spec 031 T031). El 2026-10-19 se vio además que `desplegar.sh` construye con la caché
+de Docker y la capa de `apt-get upgrade` / `apk upgrade` no se renueva: el `web` sin caché sale sin
+avisos y con caché, con 3 (→ spec 031, T054–T055, dentro de RS18.a).
 
 Correcciones:
-- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes del 2026-10-31; renovar o retirar EX2 según el resultado — estado: pendiente (→ roadmap)
+- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: en curso (spec 031: refrescadas y escaneadas el 2026-10-19, EX2 renovada hasta el 2026-11-30; quedan `mariadb` y `cloudflared` cuando cumplan 7 días)
 
 ### RS19 · Media — Un admin puede dejar la aplicación sin administradores (A01 Broken Access Control)
 Detectado en la re-sincronización del 2026-10-18. `UsuarioController@update` toma `rol` y `activo` del

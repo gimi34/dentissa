@@ -25,13 +25,15 @@ services:
     volumes:
       - .:/var/www
       - ./docker/nginx/dentissa.conf:/etc/nginx/conf.d/default.conf
+      # Cabeceras de seguridad (spec 031), las mismas que en producción salvo HSTS.
+      - ./docker/nginx/seguridad:/etc/nginx/snippets/dentissa:ro
     networks:
       - dentissa_network
     depends_on:
       - app
 
   db:
-    image: mariadb:10.11.18
+    image: mariadb:10.11.19
     container_name: dentissa_db
     # La base nace con la colación del volcado (spec 030, T034): una tabla sin
     # colación propia (horarios_dentista) la hereda, y con otra su clave foránea
@@ -51,7 +53,7 @@ services:
       - dentissa_network
 
   phpmyadmin:
-    image: phpmyadmin:5.2.2
+    image: phpmyadmin:5.2.3
     container_name: dentissa_phpmyadmin
     restart: unless-stopped
     ports:
