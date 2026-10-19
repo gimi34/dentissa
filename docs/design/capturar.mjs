@@ -118,6 +118,9 @@ const BASE_MODO = ARGS.includes('--linea-base');
 const LINEA_BASE = process.env.LINEA_BASE;
 // Spec 034: palabra de 30 letras que --medir escribe en la página sobre los nombres (D8, A11).
 const LARGA = 'Esternocleidomastoideosuperior';
+// Spec 035 (/review R1): palabra de 60 letras, más ancha que el hueco de las migas a 320 px (288 px;
+// medido el 2026-10-18: 45 letras ocupan 279 px y caben, 60 ocupan 370 px).
+const MUY_LARGA = 'Esternocleidomastoideosuperiorhipopotomonstrosesquipedaliofo';
 const ANCHOS_ARG = ARGS.find((a) => a.startsWith('--anchos='))?.slice('--anchos='.length).split(',');
 const ELEGIDAS = ARGS.filter((a) => !a.startsWith('--'));
 
@@ -304,7 +307,8 @@ const COMPROBACIONES = [
   '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro) (CA11, D13)',
   '035 pantallas: ficha, alta y edición del paciente, lista, ficha y alta de expediente de cada rol que las ve, a 320, 390, 844x390 y 1440 sin desplazamiento horizontal; a 320, 390 y 844x390, sin recortes, toque ≥ 44 × 44 (también las migas), sin solapes y tarjetas con su etiqueta; y en las palabras de 30 letras (también el título de la barra y las migas) (CA1–CA4, CA8, CA9)',
   '035 fichas: a 320, 390 y 844x390, las dos fichas en una columna; en la del paciente, iniciales de 48 px con el nombre, la edad y el tipo de sangre a su derecha y las etiquetas de contacto visibles, que a 1440 no se ven; las acciones de la barra bajo el título y a partes iguales; los botones de las acciones con el texto centrado (±2 px) y alineados en su fila (CA1, CA4, CA7, D12)',
-  '035 formularios: a 320, el alta del paciente y del expediente enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13)',
+  '035 formularios: a 320, el alta y la edición del paciente, el alta del expediente y la ficha del expediente (admin y dentista) enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13, /review R12)',
+  '035 migas: a 320, una palabra de 60 letras (más ancha que el hueco) en el enlace del nombre del paciente de la ficha y del alta de expediente no se sale del enlace ni ensancha la página, con control positivo (CA8, CA9, /review R1)',
   '035 menú: a 390, «Menú» y «Cerrar menú» sin borde ni fondo, de 44 × 44 y con foco visible (CA11)',
   '035 sin JS: a 390, las pantallas de la 035 sin desplazamiento horizontal (CA9)',
 ];
@@ -520,6 +524,20 @@ const EN_PAGINA = {
     for (let n = recorrido.nextNode(); n; n = recorrido.nextNode()) if (n.textContent.search(nombres) !== -1) nodos.push(n);
     for (const n of nodos) n.textContent = n.textContent.replace(nombres, larga);
     return nodos.length;
+  },
+  // Spec 035 (/review R1): escribe la palabra en el enlace del nombre del paciente de las migas y mide si
+  // su texto se sale del enlace o de la ventana. Con nowrap=true es el control positivo (se sale a propósito).
+  migasLargas: ({ larga, nowrap }) => {
+    const enlace = [...document.querySelectorAll('#migas a')].find((a) => !/^Pacientes$/.test(a.textContent.trim()));
+    if (!enlace) return ['no hay enlace con el nombre del paciente en las migas'];
+    enlace.textContent = larga;
+    if (nowrap) enlace.style.whiteSpace = 'nowrap';
+    const rango = document.createRange(); rango.selectNodeContents(enlace);
+    const t = rango.getBoundingClientRect(); const a = enlace.getBoundingClientRect(); const W = window.innerWidth;
+    const fallos = [];
+    if (t.right > a.right + 1 || t.left < a.left - 1) fallos.push(`el texto mide ${Math.round(t.width)} px y se sale del enlace (${Math.round(a.width)} px)`);
+    if (t.right > W + 1 || document.documentElement.scrollWidth > W) fallos.push(`la página mide ${document.documentElement.scrollWidth} px de ${W}`);
+    return fallos;
   },
   palabrasPartidas: (ambito = '.main, #menu-principal') => {
     const fallos = [];
@@ -878,7 +896,7 @@ async function medir() {
           const foco = await focoVisible(page, '.form-paciente .field, .form-expediente .field');
           if (foco) falla(donde, `campo del formulario: ${foco}`);
         }
-        if (DE_035.has(id) && ancho === '320' && /alta-(paciente|expediente)$/.test(id)) {
+        if (DE_035.has(id) && ancho === '320' && /(alta|edicion)-paciente$|alta-expediente$|^(admin|dentista)-ficha-expediente$/.test(id)) {
           await enviarConErrores(page);
           for (const e of await page.evaluate(EN_PAGINA.errores)) falla(donde, e);
         }
@@ -935,6 +953,23 @@ async function medir() {
         await page.close();
       });
     }
+  }
+
+  // Spec 035 (/review R1): palabra de 60 letras en el nombre del paciente de las migas, a 320.
+  let controlMigas = false;
+  for (const [id, rol, ruta] of PANTALLAS_035.filter(([id]) => /ficha-expediente$|alta-expediente$/.test(id))) {
+    const donde = `035 migas ${id}@320`;
+    await intenta(donde, async () => {
+      if (!controlMigas) {
+        const control = await abrir(rol, ruta, '320');
+        if (!(await control.evaluate(EN_PAGINA.migasLargas, { larga: MUY_LARGA, nowrap: true })).length) falla('control positivo', 'el detector de las migas no ve un nombre que se sale a propósito');
+        await control.close();
+        controlMigas = true;
+      }
+      const page = await abrir(rol, ruta, '320');
+      for (const f of await page.evaluate(EN_PAGINA.migasLargas, { larga: MUY_LARGA, nowrap: false })) falla(donde, f);
+      await page.close();
+    });
   }
 
   // Palabras de 30 letras (D8): en todas las pantallas incluidas y en las 7 del paciente.
