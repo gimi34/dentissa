@@ -178,6 +178,26 @@ Formato:
   - nota: aprobado por el usuario el 2026-10-19 («apruebo el ensayo T042»): el móvil como dispositivo de prueba (Tailscale y Termius con una clave propia, comentario `movil-prueba`) y el PC como dispositivo principal; pasos de la guía §11.
   - nota: ensayo del 2026-10-19, ejecutado por el usuario, que informa que todo funcionó: (1) el móvil, autorizado en el tailnet y con su clave `movil-prueba` en `authorized_keys`, entra por `ssh` con datos móviles; (2) tras **Machines → Remove** en la consola de Tailscale, el móvil deja de llegar al servidor; (3) tras borrar su clave, `grep -c movil-prueba ~/.ssh/authorized_keys` da 0; (4) el PC sigue entrando. CA10 cumplido con el procedimiento de la guía §11.
 
+### Correcciones de /review (ronda 1)
+- [ ] T060 Añadir a `ConfiguracionProduccionTest` que «Entorno aplicado» de `deploy/verificar.sh` no puede dar OK sin comprobar todos los servicios: el bloque de `python3` captura los errores de cada servicio y escribe `FALLO <servicio>: no se pudo comparar`, y el shell da FALLO si el número de líneas OK/FALLO no coincide con el de servicios que `python3` declara (`SERVICIOS <n>`) o si `python3` termina con código distinto de 0 — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: falla hoy por la razón esperada (anotado) — cubre: CA7
+  - nota: añadida por /review: R1
+- [ ] T061 Aplicar en `deploy/verificar.sh` lo de T060: `try/except` por servicio con su FALLO, la línea `SERVICIOS <n>` y la comprobación del recuento y del código de salida en el shell — deploy/verificar.sh — hecho cuando: pasa dos veces T060, `bash -n` limpio y, en local con el Compose de producción y un servicio que no existe, el bloque da FALLO en lugar de OK (anotado) — cubre: CA7 — depende: T060
+  - nota: añadida por /review: R1
+- [ ] T062 Añadir a `ConfiguracionProduccionTest` el test de `deploy/aplicar-entorno.sh`, anclado a las órdenes reales (sin comentarios ni `echo`): rechaza `db`, comprueba el servicio contra `config --services` con `grep -qxF --`, recrea con `up -d --force-recreate --no-deps`, regenera `config:cache` y `route:cache` como `www-data` y termina con `verificar.sh --interna` — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: falla hoy solo por `grep -qxF` (R5) y cada una de las demás partes se comprueba rompiendo (anotado) — cubre: CA7
+  - nota: añadida por /review: R2, R5
+- [ ] T063 Cambiar en `deploy/aplicar-entorno.sh` la comprobación del servicio a `grep -qxF -- "${servicio}"` — deploy/aplicar-entorno.sh — hecho cuando: pasa dos veces T062 y `bash -n` limpio — cubre: CA7 — depende: T062
+  - nota: añadida por /review: R5
+- [ ] T064 Rehacer en `GoogleVueltaFallidaTest` los casos de la vuelta fallida: separar «el error del proveedor se reporta» y «el estado inválido no se reporta» en dos tests, cada uno con su propio simulacro; añadir la vuelta con `code` y `state` sin `state` en la sesión y con un `state` distinto del guardado, sin simular Socialite (el comprobador real lanza la excepción antes de llamar a Google), y un error de red (`ConnectException`) que vuelve al login y se reporta — tests/Feature/GoogleVueltaFallidaTest.php — hecho cuando: pasan dos veces y cada caso se comprueba rompiendo (`report()` en la rama del estado inválido; `stateless()` en el controlador) (anotado) — cubre: CA5
+  - nota: añadida por /review: R3
+- [ ] T065 Añadir a los tests: `zend.exception_ignore_args = On` en `docker/nginx/php/local.ini`; en `verificar.sh`, los mensajes de `revisar_cabeceras` «X-Powered-By presente» y «Server con versión» y `ruta` declarada `local`; y anclar a la orden real los regex sobre `preparar-acceso-remoto.sh` (`tailscale up`, `ufw allow`, `curl`, `Origins-Pattern` dentro del archivo de actualizaciones) y sobre la construcción de `desplegar.sh` (`{compose[@]}" build`) — tests/Feature/ConfiguracionProduccionTest.php, tests/Feature/CabecerasSeguridadTest.php — hecho cuando: los de `local.ini` y `verificar.sh` fallan hoy por la razón esperada y los anclados pasan, comprobado rompiendo con un `echo` que imita la orden (anotado) — cubre: CA4, CA7, CA9, CA11
+  - nota: añadida por /review: R6, R7, R8
+- [ ] T066 Añadir `zend.exception_ignore_args = On` a `docker/nginx/php/local.ini` y, en `deploy/verificar.sh`, los mensajes de T065 y `local ruta` — docker/nginx/php/local.ini, deploy/verificar.sh — hecho cuando: pasan dos veces los tests de T065 y `bash -n` limpio — cubre: CA4, CA7 — depende: T061, T065
+  - nota: añadida por /review: R6, R7
+- [ ] T067 Partir en `docker/prod/Dockerfile` el `echo` de `REFRESCO_SISTEMA` y el `&& apt-get update` en líneas separadas, como el resto del archivo (ruta protegida: aprobada por el usuario al elegir corregir R9); añadir `: RedirectResponse` a `volverAlLoginPorFallo()` en `GoogleAuthController`; y la sección «Descubribilidad» del plan con «No aplica» — docker/prod/Dockerfile, app/Http/Controllers/GoogleAuthController.php, docs/specs/031-endurecer-produccion/plan.md — hecho cuando: pasan T056, T064 y `GoogleVueltaFallidaTest`, Pint limpio y el validador no avisa de «Descubribilidad» — cubre: CA5, CA11
+  - nota: añadida por /review: R9, R10, R11
+- [ ] T068 Verificación final de las correcciones: `php artisan test` completo en verde, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks y semgrep `p/php` sin hallazgos — docs/specs/031-endurecer-produccion/tasks.md — hecho cuando: todo pasa y queda anotado — cubre: CA4, CA5, CA7, CA9, CA11 — depende: T061, T063, T064, T066, T067
+  - nota: añadida por /review: R1, R2, R3, R5–R11
+
 ## Integración y documentación
 - [x] T050 Ejecutar la puerta de calidad sobre el diff de la spec: suite completa, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks, semgrep `p/php`, `composer audit --locked` y `npm audit` — docs/specs/031-endurecer-produccion/tasks.md — hecho cuando: todo pasa sin hallazgos críticos ni altos, anotado con los recuentos — depende: T023, T026, T027, T031
   - nota: 2026-10-19, sobre el diff propio de la 031 (`origin/main..HEAD`, con `main` v0.9.0 ya fusionado en la rama): `php artisan test` 344 en verde (6616 aserciones); `pint --test` limpio en los 4 PHP tocados; `bash -n` limpio en `aplicar-entorno.sh`, `desplegar.sh`, `preparar-acceso-remoto.sh` y `verificar.sh`; gitleaks sin fugas; semgrep `p/php --metrics=off` sin hallazgos; `composer audit --locked` y `npm audit --audit-level=high` sin avisos. Sin hallazgos críticos ni altos.
@@ -191,7 +211,7 @@ Formato:
 - [x] T091 Actualizar `docs/deployment.md`, `docs/security.md` y `docs/observability.md`: acceso remoto, `aplicar-entorno.sh` y la regla de recrear; fila del SSH en la superficie de ataque; RS8.a y RS8.b divididas con RS8.c y RS8.d nuevas (estado por corrección, «en curso (spec 031)» las de dentro); nada que cambie en observabilidad salvo, si aplica, `verificar.sh`
   - nota: `deployment.md`: tiempo medido en T040 (418 s; vuelta atrás 22 s), cambiar un archivo de entorno con `aplicar-entorno.sh` y la regla de recrear, administración desde fuera, y las comprobaciones nuevas de `verificar.sh` (con el FALLO conocido de las versiones anteriores). `security.md`: fila del SSH (red local y Tailscale) y RS8 por corrección: RS8.a y RS8.b «en curso (spec 031)», RS8.c (staging) y RS8.d (CSP estricta) nuevas y pendientes; RS18.a y EX2 ya en T031. `observability.md`: solo la fila del health check (lo que comprueba `verificar.sh`); sin logs ni eventos nuevos.
   - nota: A17 — `deployment.md` (copias sin cifrar) y las Consecuencias del ADR 0005 apuntan ya a la 032 para el cifrado de copias (RS15.b) y las alertas (OB6.b). Para que las specs que citan RS8 declaren RS8.c y RS8.d, se añaden a la cobertura de riesgos de la 030 (fuera, con su Historial) y al objetivo 5 del roadmap (RS8.c dentro; RS8.d fuera → Pendientes).
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: `implemented` el 2026-10-19: los 11 criterios con sus tests en verde (`CabecerasSeguridadTest`, `GoogleVueltaFallidaTest`, `ConfiguracionProduccionTest`) o sus ensayos hechos en el servidor (T040: CA6–CA8; T041: CA8, CA9; T042: CA10; T031, T054–T057: CA11). Quedan para `/release` (T097) la consola del navegador sin bloqueos de la CSP por la dirección pública (CA1) y ver que la capa de `apk upgrade` de `web` no sale «CACHED» (CA11).
 
 ## Despliegue (lo ejecuta `/release`)
@@ -202,6 +222,8 @@ Formato:
   - verificación manual (CA1, RNF): recorrido de las pantallas de cada rol por `https://dentissa.app` con la consola del navegador sin bloqueos de la CSP.
   - verificación manual (CA3, CA4): `curl -sI https://dentissa.app/login` con HSTS y sin `X-Powered-By`.
   - verificación manual (CA5): login con Google correcto y cancelado en Google (vuelve al login con el mensaje).
+  - condición de /review r1 (R4, CA11): si ya cumplen 7 días, refrescar `cloudflare/cloudflared` (2026.10.1 desde el 2026-10-22) y `mariadb:10.11.19` (reconstrucción del 2026-10-17, desde el 2026-10-24), con aprobación de las rutas protegidas; en el despliegue, la capa `apk upgrade` de `web` no sale «CACHED»; `trivy image` del `web` y del `app` construidos en el servidor; ajustar EX2 a lo que quede.
+  - condición de /review r1 (R19): `curl -sIL http://dentissa.app/registro` da un solo salto (301 a https) y 200 al final.
 - [ ] T098 Marcar spec como `released`. Correcciones → mitigada (vX.Y.Z): RS8.a, RS8.b y RS18.a (refrescada, escaneada y EX2 decidida en T031; /analyze A4). RS8 sigue abierto (RS8.c y RS8.d pendientes); RS18 mitigado, con el residuo que siga en EX2 hasta su vencimiento. Specs extendidas: en la 001, fila de Historial; en la 030, CA3 con `→ reemplazado en parte por 031 CA8` y fila de Historial
 
 ## Cobertura
@@ -210,14 +232,14 @@ Formato:
 | CA1 | T010, T022 (manual), T097 | T020, T021, T022, T024 |
 | CA2 | T010, T022 (manual) | T020, T021, T022 |
 | CA3 | T010 | T020, T021, T024 |
-| CA4 | T010, T022 (manual) | T021, T022, T024 |
-| CA5 | T011 | T023 |
+| CA4 | T010, T022 (manual), T065 | T021, T022, T024, T066 |
+| CA5 | T011, T064 | T023, T067 |
 | CA6 | T040 | T024, T028 |
-| CA7 | T002, T040 | T025, T026, T028 |
+| CA7 | T002, T040, T060, T062, T065 | T025, T026, T028, T061, T063, T066 |
 | CA8 | T040, T041 | T025, T027, T028 |
-| CA9 | T012, T041 | T025, T027 |
+| CA9 | T012, T041, T065 | T025, T027 |
 | CA10 | T042 | T028 |
-| CA11 | T031, T054, T056 | T003, T029, T030, T055, T057 |
+| CA11 | T031, T054, T056, T065 | T003, T029, T030, T055, T057, T067 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -226,9 +248,9 @@ Formato:
 | TM3 | T020, T021 | T010 |
 | TM4 | T020, T021 | T010, T097 |
 | TM5 | T021, T022 | T010 |
-| TM6 | T023 | T011 |
+| TM6 | T023 | T011, T064 |
 | TM7 | T023 | T011 |
-| TM8 | T024, T025, T026 | T040 |
+| TM8 | T024, T025, T026, T061, T063 | T040, T060, T062 |
 | TM9 | T025, T027, T028 | T012, T041 |
 | TM10 | T028 | T042 |
 | TM11 | T027 | T012, T041 |
@@ -239,17 +261,17 @@ Formato:
 |---|---|
 | docker/nginx/seguridad/comunes.conf, produccion.conf | T020 |
 | docker/nginx/dentissa.conf, dentissa.prod.conf | T021 |
-| docker/nginx/php/local.ini | T022 |
-| docker/prod/Dockerfile | T022, T029 |
+| docker/nginx/php/local.ini | T022, T066 |
+| docker/prod/Dockerfile | T022, T029, T057, T067 |
 | docker-compose.yml | T022, T030 |
 | Dockerfile (local), docker-compose.prod.yml | T029, T030 |
-| app/Http/Controllers/GoogleAuthController.php | T023 |
-| deploy/verificar.sh | T024, T025 |
-| deploy/aplicar-entorno.sh | T026 |
+| app/Http/Controllers/GoogleAuthController.php | T023, T067 |
+| deploy/verificar.sh | T024, T025, T061, T066 |
+| deploy/aplicar-entorno.sh | T026, T063 |
 | deploy/preparar-acceso-remoto.sh | T027 |
 | deploy/README.md | T028 |
 | package-lock.json | T004 |
-| tests/Feature/CabecerasSeguridadTest.php, GoogleVueltaFallidaTest.php, ConfiguracionProduccionTest.php | T010, T011, T012 |
+| tests/Feature/CabecerasSeguridadTest.php, GoogleVueltaFallidaTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T054, T056, T060, T062, T064, T065 |
 | docs/deployment.md, docs/security.md, docs/architecture.md, docs/roadmap.md, docs/adr/0006 | T031, T051, T090, T091 (el ADR se creó y aceptó en `/plan`) |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
