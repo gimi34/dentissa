@@ -47,7 +47,7 @@ Specs previstas (números reservados; se crean con `/specify` una por una):
 - En ramas, sin fusionar en `main`: 031 endurecer-produccion (`feature/031-endurecer-produccion`,
   approved, `/implement` en curso), 032 alertas-cifrado-copias (`feature/032-alertas-cifrado-copias`,
   approved, `/plan` en pausa) y 035 movil-pacientes-expedientes
-  (`feature/035-movil-pacientes-expedientes`, correcciones de `/review` r2 hechas; falta `/review --rerun`).
+  (`feature/035-movil-pacientes-expedientes`, `/review` r3: approved; falta `/release`).
 - Objetivo 6 (móvil): 036 agenda y servicios y 037 administración, sin crear.
 
 ## Funcionalidades no documentadas como spec
