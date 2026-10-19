@@ -10,7 +10,10 @@ FROM php:8.4.26-fpm AS app
 # Paquetes del sistema al día: aplica las correcciones de seguridad ya
 # publicadas sobre la imagen base fijada (plan D14, P6). Lo que no tiene
 # corrección está en la excepción EX2 de docs/security.md.
-RUN apt-get update && apt-get upgrade -y \
+# REFRESCO_SISTEMA cambia en cada despliegue (deploy/desplegar.sh): obliga a rehacer
+# esta capa aunque el constructor la tenga en caché (spec 031, T057; RS18.a).
+ARG REFRESCO_SISTEMA=sin-fecha
+RUN echo "Refresco del sistema: ${REFRESCO_SISTEMA}"     && apt-get update && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
     libpng-dev \
     libonig-dev \
@@ -62,8 +65,9 @@ CMD ["php-fpm"]
 # ── web: nginx con los archivos públicos ────────────────────────────────────
 FROM nginx:1.30.5-alpine AS web
 
-# Paquetes del sistema al día (plan D14, P6).
-RUN apk upgrade --no-cache
+# Paquetes del sistema al día (plan D14, P6). REFRESCO_SISTEMA, como en app.
+ARG REFRESCO_SISTEMA=sin-fecha
+RUN echo "Refresco del sistema: ${REFRESCO_SISTEMA}" && apk upgrade --no-cache
 
 COPY docker/nginx/dentissa.prod.conf /etc/nginx/conf.d/default.conf
 # Cabeceras de seguridad que incluye la configuración (spec 031, D1).
