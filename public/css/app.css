@@ -67,6 +67,18 @@
     --filtro-fecha-min:   130px;
     --filtro-dentista-min: 150px;
     --filtro-estado-min:  140px;
+    /* Fichas del paciente y del expediente (spec 035; system.md 1.6.0). */
+    --ficha-lateral-w:        320px;
+    --expediente-lateral-w:   300px;
+    --perfil-avatar-w:        64px;
+    --perfil-avatar-movil:    48px;
+    --perfil-iniciales-text:  22px;  /* tamaño, no color */
+    --perfil-iniciales-movil: 17px;  /* tamaño, no color */
+    --perfil-nombre-text:     20px;  /* tamaño, no color */
+    --perfil-nombre-movil:    16px;  /* tamaño, no color */
+    --weight-bold:            600;
+    --expediente-dato-max:    140px;
+    --campo-fecha-max:        220px;
 }
 
 body {
@@ -607,3 +619,38 @@ tr:hover td { background: var(--p50); }
 /* Celdas centradas en el escritorio (servicios); en las tarjetas del móvil van al inicio (/review R1). */
 .celda-centrada { text-align: center; }
 /* Fin spec 034 */
+
+/* Spec 035: pacientes y expedientes del personal. Mismos valores que los style="" de hoy, que impedían
+   el móvil (plan D9); las variantes del móvil van en movil.css. */
+.ficha-paciente { display: grid; grid-template-columns: var(--ficha-lateral-w) 1fr; gap: var(--space-7); align-items: start; }
+.ficha-expediente { display: grid; grid-template-columns: 1fr var(--expediente-lateral-w); gap: var(--space-7); }
+.expediente-cabecera { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-6); }
+.acciones-ficha { display: flex; align-items: center; gap: var(--space-4); }
+.acciones-formulario { display: flex; gap: var(--space-4); justify-content: flex-end; }
+.dato-recortado { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.paginacion { padding: var(--space-5) var(--space-7); border-top: var(--border-width) solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+/* Perfil del paciente (D12): la tarjeta centrada de siempre; el perfil compacto del móvil, en movil.css. */
+.perfil-identidad { text-align: center; }
+.perfil-avatar {
+    width: var(--perfil-avatar-w); height: var(--perfil-avatar-w); border-radius: 50%; background: var(--p200);
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--perfil-iniciales-text); font-weight: var(--weight-bold); color: var(--p800); margin: 0 auto var(--space-5);
+}
+.perfil-nombre { font-size: var(--perfil-nombre-text); font-weight: var(--weight-strong); color: var(--text); }
+.perfil-dato { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--text-muted); }
+/* Los títulos del expediente pasan de <div> a <label>, que es inline: en bloque, como antes (D7). */
+.etiqueta-campo { display: block; }
+/* Foco del sistema en los campos de estos formularios, más específico que su <style> propio (D13). */
+.form-paciente .field:focus-visible, .form-expediente .field:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+.form-paciente .field:focus, .form-expediente .field:focus { border-color: var(--border-control); box-shadow: none; }
+/* Valores de «Información» de la ficha del expediente: el máximo de hoy en el escritorio (T031). */
+.info-valor { text-align: right; max-width: var(--expediente-dato-max); }
+/* Fecha sugerida del alta de expediente, con el máximo de hoy en el escritorio (/review R14). */
+.campo-fecha { max-width: var(--campo-fecha-max); }
+/* El campo con error de los formularios del expediente se marca, como en los demás formularios (/review R4):
+   misma especificidad que la regla de foco y después de ella, para que siga rojo con foco (/review R21). */
+.form-expediente .field.field-error { border-color: var(--red); }
+/* Fin spec 035 */

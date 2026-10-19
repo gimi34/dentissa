@@ -1,0 +1,70 @@
+/* Común a las composiciones de la 035 (solo tokens del sistema: docs/design/system.md 1.5.0 = public/css/app.css). */
+:root {
+  --p50:#FDF5F8; --p100:#FBEAF0; --p200:#F4C0D1; --p300:#ED93B1; --p400:#D4537E; --p500:#B83C65; --p600:#993556; --p800:#72243E;
+  --text:#000000; --text-muted:#000000; --border:#F0DCE4; --bg:#FDF5F8; --white:#FFFFFF;
+  --blue:#185FA5; --blue-bg:#E6F1FB; --green:#1D9E75; --green-bg:#E1F5EE; --red:#A32D2D; --red-bg:#FCEBEB; --amber:#854F0B; --amber-bg:#FAEEDA;
+  --radius:12px; --radius-sm:8px;
+  --space-1:4px; --space-2:6px; --space-3:8px; --space-4:10px; --space-5:14px; --space-6:16px; --space-7:20px;
+  --border-width:1px; --border-width-strong:2px; --border-control:var(--p400);
+  --text-body:13.5px; --text-small:11.5px; --text-meta:13px; --weight-strong:500;
+  --touch-min:44px; --icon-md:18px; --topbar-h:60px; --tarjeta-etiqueta-w:88px;
+  --focus-ring:var(--p600); --focus-ring-width:2px; --focus-ring-offset:2px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+/* Marco del visor (neutro, fuera del sistema). */
+body { font-family:Roboto, system-ui, sans-serif; background:#eef0f2; color:#1d2125; padding:24px 16px; }
+.visor { max-width:1700px; margin:0 auto; }
+.visor > h1 { font-size:20px; margin-bottom:6px; }
+.intro { font-size:14px; color:#3f474d; max-width:85ch; margin-bottom:18px; line-height:1.5; }
+.marcos { display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; }
+.marco > h2 { font-size:13px; font-weight:600; color:#3f474d; margin-bottom:8px; }
+.tel { width:390px; height:820px; border:1px solid #c9ced3; border-radius:18px; overflow:hidden auto; position:relative; background:var(--bg); color:var(--text); font-size:var(--text-body); }
+.tel.t320 { width:320px; }
+.notas { font-size:13.5px; line-height:1.55; color:#262c31; max-width:90ch; margin-top:22px; }
+.notas li { margin:0 0 8px 18px; }
+.notas table { border-collapse:collapse; margin:8px 0 14px; }
+.notas td, .notas th { border:1px solid #c9ced3; padding:4px 8px; text-align:left; vertical-align:top; }
+
+/* Pantalla: componentes de la app. */
+.topbar { min-height:var(--topbar-h); background:var(--white); border-bottom:var(--border-width) solid var(--border); display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-6); position:sticky; top:0; z-index:3; }
+.topbar h1 { font-size:17px; font-weight:var(--weight-strong); overflow-wrap:anywhere; flex:1; min-width:0; }
+/* CA11: el botón del menú solo con el icono, sin recuadro ni fondo. */
+.menu-btn { width:var(--touch-min); height:var(--touch-min); display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:var(--radius-sm); background:transparent; color:var(--p600); }
+.menu-btn:focus-visible, a:focus-visible, button:focus-visible { outline:var(--focus-ring-width) solid var(--focus-ring); outline-offset:var(--focus-ring-offset); }
+/* D4: acciones de la ficha en una fila bajo el título, a partes iguales. */
+.acciones-ficha { flex-basis:100%; display:flex; gap:var(--space-3); }
+.acciones-ficha .btn { flex:1; }
+.ico { width:var(--icon-md); height:var(--icon-md); flex-shrink:0; }
+.content { padding:var(--space-6); display:flex; flex-direction:column; gap:var(--space-6); }
+.migas { display:flex; flex-wrap:wrap; gap:var(--space-3); font-size:var(--text-meta); }
+.migas a { color:var(--p600); min-height:var(--touch-min); display:inline-flex; align-items:center; }
+.card { background:var(--white); border:var(--border-width) solid var(--border); border-radius:var(--radius); padding:var(--space-6); }
+.btn { min-height:var(--touch-min); display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2); padding:0 var(--space-6); border-radius:var(--radius-sm); font:inherit; font-weight:var(--weight-strong); border:var(--border-width) solid var(--border-control); background:var(--white); color:var(--p600); text-decoration:none; text-align:center; }
+.btn-primary { background:var(--p500); border-color:var(--p500); color:var(--white); }
+.btn-ghost { border-color:transparent; background:transparent; }
+.btn-danger { background:var(--red-bg); color:var(--red); border-color:var(--red-bg); }
+.badge { display:inline-block; border-radius:20px; padding:2px var(--space-4); font-size:var(--text-small); font-weight:var(--weight-strong); }
+.badge-pink { background:var(--p100); color:var(--p600); } .badge-blue { background:var(--blue-bg); color:var(--blue); }
+.badge-green { background:var(--green-bg); color:var(--green); } .badge-red { background:var(--red-bg); color:var(--red); }
+.section-head { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); margin-bottom:var(--space-3); }
+.section-title { font-weight:var(--weight-strong); font-size:15px; }
+.etq { font-size:var(--text-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--p600); }
+.aviso-rojo { background:var(--red-bg); color:var(--red); border-radius:var(--radius-sm); padding:var(--space-4) var(--space-5); }
+.partible { overflow-wrap:anywhere; }
+/* Tarjetas de lista de la 034 (D3). */
+.tarjeta { background:var(--white); border:var(--border-width) solid var(--border); border-radius:var(--radius); padding:var(--space-5) var(--space-6); display:flex; flex-direction:column; gap:var(--space-3); }
+.tarjeta-cab { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); }
+.tarjeta-cab strong { color:var(--p600); }
+.dato { display:grid; grid-template-columns:var(--tarjeta-etiqueta-w) minmax(0,1fr); gap:var(--space-3); align-items:baseline; }
+.dato dt { font-size:var(--text-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--p600); }
+.dato dd { overflow-wrap:break-word; min-width:0; }
+.tarjeta-acciones { display:flex; gap:var(--space-3); padding-top:var(--space-3); border-top:var(--border-width) solid var(--border); }
+.tarjeta-acciones .btn { flex:1; }
+.lista { display:flex; flex-direction:column; gap:var(--space-5); }
+.field-label { display:block; font-size:var(--text-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--p600); margin-bottom:var(--space-1); }
+.field { width:100%; min-height:var(--touch-min); border:var(--border-width) solid var(--border-control); border-radius:var(--radius-sm); padding:var(--space-3) var(--space-5); font:inherit; background:var(--white); }
+textarea.field { min-height:96px; resize:vertical; }
+.acciones-formulario { display:flex; gap:var(--space-3); }
+.acciones-formulario .btn { flex:1; }
+.fila-info { display:flex; justify-content:space-between; gap:var(--space-3); padding:var(--space-2) 0; }
+.fila-info span:last-child { text-align:right; overflow-wrap:anywhere; }

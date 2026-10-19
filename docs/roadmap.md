@@ -95,10 +95,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     033); y revisar los elementos que a veces se salen de su sitio en el móvil (visto por el
     usuario en producción, sin pantalla concreta). Liberada en v0.8.0 (2026-10-16; atiende DS8
     **parcialmente**: paneles, citas, detalle de cita, pacientes y servicios del personal).
-    → Spec siguiente (decisión del usuario, 2026-10-16, tras verlo en producción): el resto de
-    pantallas del personal en el móvil, empezando por la ficha del paciente (`/admin/pacientes/{id}`:
-    hay que alejar la vista para verla entera y tiene botones descentrados), y las demás fichas,
-    formularios y expedientes; incluye 034/R8.
+    → Resto de pantallas del personal en el móvil (decisión del usuario, 2026-10-16, tras verlo en
+    producción), en tres specs por este orden: [035](specs/035-movil-pacientes-expedientes/spec.md)
+    pacientes y expedientes, empezando por la ficha del paciente (`/admin/pacientes/{id}`: hay que
+    alejar la vista para verla entera y tiene botones descentrados), con 034/R8 en esas pantallas;
+    036 formularios de agenda y servicios; y 037 administración (personal, usuarios, reportes y
+    doctores de la asistente).
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
   - DS11: Tailwind 4, Vite y `welcome.blade.php` sin uso; clases CSS sin uso.
@@ -168,7 +170,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   filtro de citas es el de la 034 (`.filtro-citas .field:focus-visible`, con tokens); el foco global
   de `.field` que la 020 añade en `citas.css` queda para los demás campos, y `MovilPersonalTest`
   sigue en verde. La sección Frontend de `architecture.md` y «Auditoría» en el menú se resuelven al
-  fusionar.
+  fusionar. Se reconstruye también después de la 035 (/analyze 035 A8): los iconos «Menú» y «Cerrar
+  menú» van sin recuadro y `MovilPacientesExpedientesTest` sigue en verde.
+- `capturar.mjs --medir` (comparación del escritorio con la línea base, spec 034 D13): diferencia
+  intermitente en las pantallas de la asistente a 1024 y 1440 (0,04–0,11 % de píxeles, diferencia
+  máxima 48–72/255), que desaparece al repetir (2026-10-17 y 2026-10-18, spec 035 T024 y T040).
+  Buscar la causa (esperar por condición antes de capturar) en la spec que toque el guion.
 - Mensajes de validación en inglés en las pantallas del paciente: al enviar vacíos agendar y el
   perfil salen «The fecha field is required.», «The hora field is required.» y «The nombre field is
   required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
@@ -357,6 +364,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   `pacientes/index` se aplica sobre el marcado de tarjetas de la 034. Toda columna o celda nueva
   lleva `data-label` igual al texto de su `<th>` y su clase de columna (`celda-cab`, `celda-acciones`,
   `solo-escritorio`…); `MovilPersonalTest` falla si no.
+- La 014 tras la 035 (plan de la 035, D11; /analyze A7): sus cambios de la ficha del expediente
+  (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio
+  para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el
+  marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`,
+  los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas;
+  `MovilPacientesExpedientesTest` falla si no.
 - Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
   una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
   usuario, 2026-10-02).

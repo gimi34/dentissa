@@ -142,7 +142,14 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   (listas de citas, pacientes y servicios, y las de los paneles) se leen como tarjetas, una por fila,
   con la etiqueta de cada celda en su `data-label` y las columnas `solo-escritorio` ocultas; y el
   logo de la barra se pinta con una máscara (`mask` con `--p600`), porque la imagen con
-  `mix-blend-mode: screen` desaparece sobre blanco. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
+  `mix-blend-mode: screen` desaparece sobre blanco. Desde la spec 035, en el móvil la ficha del
+  paciente (`.ficha-paciente`) y la del expediente (`.ficha-expediente`) van en una columna en el
+  orden del HTML; el perfil del paciente es compacto (iniciales y datos en una fila, cada dato con su
+  etiqueta); las acciones de la barra de la ficha (`.acciones-ficha`) bajan a una fila bajo el título
+  con `.topbar-actions:has(.acciones-ficha)` (sin `:has()`, quedan a la derecha como antes, sin
+  desbordar), y los formularios de paciente y expediente llevan etiquetas con `for`/`id`, errores
+  con `aria-describedby` y la fila `.acciones-formulario`. Los iconos «Menú» y «Cerrar menú» van sin
+  recuadro. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
 - SEO (upgrade a AI-DD 1.13.0): todo el HTML se renderiza en el servidor con Blade, sin depender de
   JavaScript. Las vistas de acceso (`resources/views/auth/*.blade.php`) tienen su propio `<head>`,
   donde van los metadatos de la única ruta indexable, `/registro`; el resto usa el `<head>` de
