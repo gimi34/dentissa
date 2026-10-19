@@ -258,6 +258,32 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
+     * RS18.a (spec 031, T056): un argumento que cambia en cada despliegue obliga a rehacer la capa
+     * de apt-get/apk upgrade de cada etapa aunque el constructor la tenga en caché (en el servidor,
+     * --no-cache no lo garantizó para web).
+     */
+    public function test_cada_despliegue_rehace_la_actualizacion_del_sistema(): void
+    {
+        $dockerfile = $this->leer('docker/prod/Dockerfile');
+        $etapas = preg_split('/^FROM\s/m', $dockerfile);
+        $actualizaciones = ['app' => 'apt-get upgrade', 'web' => 'apk upgrade'];
+        foreach ($actualizaciones as $etapa => $orden) {
+            $cuerpo = current(array_filter($etapas, fn ($e) => preg_match('/^\S+\s+AS\s+'.$etapa.'\s*$/m', $e)));
+            $this->assertIsString($cuerpo, "docker/prod/Dockerfile tiene la etapa {$etapa}.");
+            $arg = strpos($cuerpo, "\nARG REFRESCO_SISTEMA");
+            $run = strpos($cuerpo, $orden);
+            $this->assertNotFalse($arg, "La etapa {$etapa} declara ARG REFRESCO_SISTEMA.");
+            $this->assertNotFalse($run, "La etapa {$etapa} actualiza el sistema con {$orden}.");
+            $this->assertLessThan($run, $arg, "En {$etapa}, el ARG va antes de {$orden}.");
+            $inicio = strrpos(substr($cuerpo, 0, $run), "\nRUN ");
+            $this->assertStringContainsString('REFRESCO_SISTEMA', substr($cuerpo, $inicio, $run - $inicio), "En {$etapa}, el RUN de {$orden} usa el argumento.");
+        }
+
+        $script = $this->leer('deploy/desplegar.sh');
+        $this->assertMatchesRegularExpression('/^[^#\n]*\bbuild\b[^\n]*--build-arg REFRESCO_SISTEMA=[^\n]*\bapp web\b/m', $script, 'desplegar.sh pasa REFRESCO_SISTEMA al construir app y web.');
+    }
+
+    /**
      * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
      * instala desde el repositorio oficial firmado, sin ejecutar scripts
      * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
