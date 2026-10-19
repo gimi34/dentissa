@@ -7,6 +7,8 @@ impl_base: d981c85
 
 # Tareas · 031 Endurecer producción tras la apertura
 
+> Decisión del usuario, 2026-10-19: se sigue con `/implement` sin repetir `/analyze`, aunque `aidd.py status` lo marca desactualizado (tareas añadidas durante `/implement` y merge de `main` con la v0.9.0 y AI-DD 1.15.0, solo documentación ajena a la 031); `/review` lo revisará.
+
 Formato:
 `- [ ] T### [P] <verbo + qué> — <archivos> — hecho cuando: <criterio> — cubre: CA# — depende: T###`
 - T001–T089: trabajo. T090–T099: reservadas.
@@ -132,10 +134,11 @@ Formato:
   - nota: elección repetida el 2026-10-11 21:30 UTC en `hub.docker.com/v2/repositories/<imagen>/tags/` (corte: primera publicación antes del 2026-10-04 21:30 UTC, regla de A8): `php:8.4.26-fpm` (2026-09-27 21:58, 030 T002; hoy figura 2026-10-07 por reconstrucción; 8.4.27 solo en RC), `composer:2.10.3` (2026-09-30 06:13), `nginx:1.30.5-alpine` (2026-09-26 19:50, sin cambio), `mariadb:10.11.19` (2026-10-02 05:35), `phpmyadmin:5.2.3` (2026-09-29 según T003; hoy figura 2026-10-06), `cloudflare/cloudflared:2026.10.0` (2026-10-05 18:02, llega el 2026-10-12 18:02 UTC). Versiones aprobadas por el usuario el 2026-10-11 (rutas protegidas), con cloudflared a la espera de sus 7 días.
   - nota: A11 — `Dockerfile` y `docker/prod/Dockerfile` son rutas protegidas: el usuario aprobó editarlas el 2026-10-11 con estas versiones exactas («Aprobar y esperar a cloudflared»).
   - nota: 2026-10-11: `php:8.4.26-fpm` y `composer:2.10.3` en `Dockerfile` y `docker/prod/Dockerfile` (nginx sigue en 1.30.5-alpine). Entorno local reconstruido: PHP 8.4.26, Composer 2.10.3; `test_las_imagenes_de_local_tienen_version_exacta` y `ConfiguracionProduccionTest` en verde (12), suite completa 270 en verde, `composer audit` sin avisos.
-- [ ] T030 [P] Fijar en los dos Compose las versiones de T003 (`nginx`, `mariadb`, `phpmyadmin`, `cloudflared`) (control de TM13) — docker-compose.yml, docker-compose.prod.yml — hecho cuando: `ConfiguracionProduccionTest` pasa completo (versiones exactas e iguales en local y producción) — cubre: CA11 — depende: T003, T022
+- [x] T030 [P] Fijar en los dos Compose las versiones de T003 (`nginx`, `mariadb`, `phpmyadmin`, `cloudflared`) (control de TM13) — docker-compose.yml, docker-compose.prod.yml — hecho cuando: `ConfiguracionProduccionTest` pasa completo (versiones exactas e iguales en local y producción) — cubre: CA11 — depende: T003, T022
   - nota: A11 — `docker-compose.yml` y `docker-compose.prod.yml` son rutas protegidas: el usuario aprobó editarlas el 2026-10-11 con estas versiones exactas («Aprobar y esperar a cloudflared»).
   - nota: 2026-10-11, parcial: `mariadb:10.11.19` en los dos Compose y `phpmyadmin:5.2.3` en el local; local reconstruido (MariaDB 10.11.19, phpMyAdmin 5.2.3) y `ConfiguracionProduccionTest` en verde. Falta `cloudflare/cloudflared:2026.10.0` en `docker-compose.prod.yml`, que cumple los 7 días el 2026-10-12 18:02 UTC (decisión del usuario: esperar).
-  - bloqueo: 2026-10-11 — cloudflared 2026.10.0 cumple los 7 días el 2026-10-12 18:02 UTC — /implement 031
+  - nota: desbloqueada 2026-10-19 — `cloudflare/cloudflared:2026.10.0` (publicada el 2026-10-05 18:02 UTC, más de 7 días) fijada en `docker-compose.prod.yml`, la versión que aprobó el usuario; existe la 2026.10.1 (2026-10-15, 7 días el 22-10) y el usuario decidió no esperarla.
+  - nota: `ConfiguracionProduccionTest` pasa completo (12 tests): versiones exactas e iguales en local y producción.
 - [ ] T031 Escanear con `trivy image --severity HIGH,CRITICAL` las imágenes base de T003 y las construidas (`app` y `web`); renovar EX2 solo para los avisos sin corrección publicada (motivo, aprobador y nuevo vencimiento, con aprobación del usuario) o retirarla, y actualizar RS18: RS18.a queda «en curso (spec 031)» hasta la liberación, en la que pasa a mitigada al haberse refrescado, escaneado y decidido sobre EX2; el residuo, si lo hay, queda en EX2 con su vencimiento (/analyze A4) — docs/security.md — hecho cuando: la nota recoge el resultado por imagen y `docs/security.md` refleja el estado de EX2 y RS18 — cubre: CA11 — depende: T029, T030
 
 ## Ensayos en el servidor
