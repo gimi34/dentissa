@@ -241,6 +241,23 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
+     * RS18.a (spec 031, T054): cada despliegue construye app y web sin caché y bajando las
+     * imágenes base, para que la capa de apt-get/apk upgrade se renueve (con caché, el web de
+     * producción conservaba avisos ya corregidos).
+     */
+    public function test_el_despliegue_construye_sin_cache(): void
+    {
+        $script = $this->leer('deploy/desplegar.sh');
+        $construcciones = preg_grep('/^[^#\n]*\bbuild\b/', explode("\n", $script));
+        $this->assertNotEmpty($construcciones, 'desplegar.sh construye las imágenes.');
+        foreach ($construcciones as $linea) {
+            $this->assertStringContainsString('--no-cache', $linea, 'La construcción no usa la caché.');
+            $this->assertStringContainsString('--pull', $linea, 'La construcción baja las imágenes base.');
+            $this->assertMatchesRegularExpression('/\bapp web\b/', $linea, 'Se construyen app y web.');
+        }
+    }
+
+    /**
      * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
      * instala desde el repositorio oficial firmado, sin ejecutar scripts
      * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
