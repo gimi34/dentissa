@@ -135,7 +135,12 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: añadida por /review: R1
 - [ ] T050 Corregir en el Constitution Check del plan (fila P9) el número de tokens nuevos para que coincida con la lista «Spec 035» de `system.md` (diez con `--expediente-dato-max` de T031, once con el de T046) — docs/specs/035-movil-pacientes-expedientes/plan.md — hecho cuando: el número del plan es el de la lista de `system.md` — depende: T046
   - nota: añadida por /review: R7
-- [ ] T051 Verificación final de las correcciones: `php artisan test` completo en verde, `pint --test` en los PHP tocados, `--medir` con código 0 sobre una línea base v0.8.0 de la misma sesión, gitleaks sobre el rango, capturas a 320, 390 y 1440 de la ficha del paciente y del alta de expediente rehechas, y borrado del entorno de capturas (base, servidores, volumen, worktree de v0.8.0 con su `.env` y carpeta temporal) — docs/design/capturas/ (generado por node capturar.mjs) — hecho cuando: todo pasa y queda anotado · verificación manual: el usuario revisa las capturas a 320 y 390 (barra con las acciones, fecha del alta) — cubre: CA1, CA5, CA6, CA7, CA8, CA9, CA10 — depende: T043, T044, T047, T048, T049, T050
+- [x] T052 Ampliar `test_los_iconos_decorativos_llevan_aria_hidden` a la ficha del expediente (admin), el alta de expediente y el alta del paciente — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: falla hoy por los iconos sin `aria-hidden` de esas vistas (anotado) — cubre: CA7
+  - nota: añadida durante /implement: el defecto de R6 también está en la ficha y el alta de expediente y en el alta del paciente (5 iconos); decisión del usuario, 2026-10-19.
+  - nota: falla hoy por la razón esperada: «un icono sin aria-hidden en «Alergias del paciente…»» de la ficha del expediente (el primero que encuentra).
+- [ ] T053 Añadir `aria-hidden="true"` a los iconos decorativos de la ficha del expediente, del alta de expediente y del alta del paciente — resources/views/expedientes/show.blade.php, resources/views/expedientes/create.blade.php, resources/views/pacientes/create.blade.php — hecho cuando: pasa dos veces T052 — cubre: CA7 — depende: T052
+  - nota: añadida durante /implement: ver T052.
+- [ ] T051 Verificación final de las correcciones: `php artisan test` completo en verde, `pint --test` en los PHP tocados, `--medir` con código 0 sobre una línea base v0.8.0 de la misma sesión, gitleaks sobre el rango, capturas a 320, 390 y 1440 de la ficha del paciente y del alta de expediente rehechas, y borrado del entorno de capturas (base, servidores, volumen, worktree de v0.8.0 con su `.env` y carpeta temporal) — docs/design/capturas/ (generado por node capturar.mjs) — hecho cuando: todo pasa y queda anotado · verificación manual: el usuario revisa las capturas a 320 y 390 (barra con las acciones, fecha del alta) — cubre: CA1, CA5, CA6, CA7, CA8, CA9, CA10 — depende: T043, T044, T047, T048, T049, T050, T053
   - nota: añadida por /review: R1, R4, R13, R14
 
 ## Integración y documentación
@@ -171,7 +176,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | CA4 | T010, T012, T014 | T001, T020, T021, T024, T028 |
 | CA5 | T010, T011, T043, T045 | T023, T024, T025, T026, T046, T047, T051 |
 | CA6 | T011, T042, T043, T045 | T024, T025, T026, T047, T051 |
-| CA7 | T010, T012, T014, T045 | T001, T020, T021, T022, T024, T025, T026, T047, T048, T051 |
+| CA7 | T010, T012, T014, T045, T052 | T001, T020, T021, T022, T024, T025, T026, T047, T048, T051, T053 |
 | CA8 | T010, T012, T014, T027, T029, T030, T042, T043 | T021, T022, T024, T032, T049, T051 |
 | CA9 | T010, T014, T027, T042 | T022, T023, T024, T025, T026, T049, T051 |
 | CA10 | T012, T014, T030, T045 | T020, T022, T023, T024, T025, T026, T028, T031, T032, T046, T047, T051 |
@@ -187,11 +192,11 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | Estilos existentes (`public/css/app.css`) | T020, T031, T046, T047 |
 | Estilos del móvil (`public/css/movil.css`) | T021, T032, T047, T049 |
 | Ficha del paciente (`pacientes/show`) | T022, T048 |
-| Formulario del paciente (`pacientes/create`) | T025 |
+| Formulario del paciente (`pacientes/create`) | T025, T053 |
 | Lista de expedientes (`expedientes/index`) | T023, T048 |
-| Ficha del expediente (`expedientes/show`) | T024, T032 |
-| Alta de expediente (`expedientes/create`) | T026, T046 |
-| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030, T043, T044, T045, T049 |
+| Ficha del expediente (`expedientes/show`) | T024, T032, T053 |
+| Alta de expediente (`expedientes/create`) | T026, T046, T053 |
+| Tests (`MovilPacientesExpedientesTest`, `MovilPacienteTest`; `MovilPersonalTest` no cambia) | T010, T011, T012, T013, T029, T030, T043, T044, T045, T049, T052 |
 | Capturas y medidas (`capturar.mjs`) | T014, T028, T042, T051 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |

@@ -239,7 +239,9 @@ class MovilPacientesExpedientesTest extends TestCase
     /** /review R6: los iconos de las barras de acciones y del contenido son decorativos (aria-hidden). */
     public function test_los_iconos_decorativos_llevan_aria_hidden(): void
     {
-        foreach ([[$this->admin, "/admin/pacientes/{$this->p1}"], [$this->admin, "/admin/pacientes/{$this->p2}"], [$this->dentista1, '/dentista/expedientes?buscar=no-existe']] as [$usuario, $url]) {
+        foreach ([[$this->admin, "/admin/pacientes/{$this->p1}"], [$this->admin, "/admin/pacientes/{$this->p2}"], [$this->dentista1, '/dentista/expedientes?buscar=no-existe'],
+            // T052: también los otros formularios de la 035.
+            [$this->admin, "/admin/expedientes/{$this->expediente}"], [$this->admin, "/admin/expedientes/crear?paciente_id={$this->p1}"], [$this->admin, '/admin/pacientes/crear']] as [$usuario, $url]) {
             $xpath = $this->xpath($this->actingAs($usuario)->get($url)->assertOk()->getContent());
             $iconos = $xpath->query("//*[contains(@class,'topbar-actions') or contains(concat(' ', normalize-space(@class), ' '), ' content ')]//*[local-name()='svg']");
             $this->assertGreaterThan(0, $iconos->length, "{$url}: hay iconos.");
