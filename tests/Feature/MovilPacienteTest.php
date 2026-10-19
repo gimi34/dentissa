@@ -360,6 +360,8 @@ class MovilPacienteTest extends TestCase
         }
         // El contraste del icono (--p600 sobre --white) se mide sobre la barra, que sigue blanca (/analyze 035 A15).
         $this->assertMatchesRegularExpression('/(^|;)\s*background\s*:\s*var\(--white\)\s*;/', $this->declaraciones('.topbar'), '.topbar sigue con fondo --white.');
+        // «Cerrar menú» está en el panel: su fondo en el móvil también es --white (/review 035 R11).
+        $this->assertDeclara('.sidebar', 'background: var(--white)');
         $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--border-control'], $tokens['--white']));
     }
 
