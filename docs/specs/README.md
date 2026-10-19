@@ -36,7 +36,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
 | 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
-| 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | approved | — | — (2026-10-18) |
+| 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | implemented | — | — (2026-10-19) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
@@ -47,7 +47,7 @@ Specs previstas (números reservados; se crean con `/specify` una por una):
 - En ramas, sin fusionar en `main`: 031 endurecer-produccion (`feature/031-endurecer-produccion`,
   approved, `/implement` en curso), 032 alertas-cifrado-copias (`feature/032-alertas-cifrado-copias`,
   approved, `/plan` en pausa) y 035 movil-pacientes-expedientes
-  (`feature/035-movil-pacientes-expedientes`, `/review` r1: changes_requested, correcciones T042–T051).
+  (`feature/035-movil-pacientes-expedientes`, correcciones de `/review` r1 hechas; falta `/review --rerun`).
 - Objetivo 6 (móvil): 036 agenda y servicios y 037 administración, sin crear.
 
 ## Funcionalidades no documentadas como spec
