@@ -185,17 +185,29 @@ flowchart LR
   U[Navegador] -->|HTTPS| CF[Cloudflare]
   CF -->|túnel saliente| CFD[cloudflared]
   subgraph SRV[Servidor propio · red produccion 172.28.0.0/24 · sin puertos publicados]
-    CFD -->|HTTP| WEB[web · nginx<br/>real_ip de CF-Connecting-IP<br/>http → 301 https]
+    CFD -->|HTTP| WEB[web · nginx<br/>real_ip de CF-Connecting-IP<br/>http → 301 https<br/>cabeceras de seguridad y HSTS]
     WEB -->|FastCGI :9000| APPP[app · php-fpm<br/>código en la imagen]
     APPP --> DBP[(db · MariaDB<br/>usuario dentissa_app)]
   end
   APPP -->|Socialite| GO[Google OAuth]
-  ADM[Responsable por SSH<br/>solo red local, solo clave] -->|deploy/*.sh: copia, migrate --force| SRV
+  ADM[Responsable por SSH<br/>red local o red privada Tailscale, solo clave] -->|deploy/*.sh: copia, migrate --force| SRV
 ```
 
 - `docker/prod/Dockerfile`: imágenes multietapa `app` (sin dependencias de desarrollo, secretos ni
   volcado; paquetes del sistema actualizados al construir) y `web` (nginx con `public/` y
-  `docker/nginx/dentissa.prod.conf`).
+  `docker/nginx/dentissa.prod.conf`). `desplegar.sh` las construye sin caché, bajando las imágenes
+  base y con `REFRESCO_SISTEMA` nuevo, para que `apt-get upgrade` / `apk upgrade` se rehagan en cada
+  despliegue (spec 031).
+- Cabeceras de seguridad (spec 031): nginx las añade a toda respuesta con los fragmentos
+  `docker/nginx/seguridad/comunes.conf` (CSP básica, `frame-ancestors`/X-Frame-Options,
+  `nosniff`, Referrer-Policy) y `produccion.conf` (HSTS, solo en producción), sin versiones
+  (`server_tokens off`, `expose_php = Off`).
+- Administración desde fuera (spec 031, [ADR 0006](adr/0006-administracion-remota-tailscale.md)):
+  el responsable entra por SSH con clave desde la red local o por la red privada de Tailscale
+  (`deploy/preparar-acceso-remoto.sh`); ningún puerto del router se abre.
+- Configuración: los archivos de entorno se aplican con `deploy/aplicar-entorno.sh <servicio>`, que
+  recrea el contenedor; `verificar.sh` avisa si un servicio usa una configuración distinta de la
+  guardada (spec 031).
 - `deploy/`: scripts que el responsable ejecuta por SSH (preparar el servidor, desplegar, copia,
   restauración, vuelta atrás y verificación) y la guía `deploy/README.md`.
 - Secretos en `app.env`, `db.env` y `tunnel.env` fuera del clon; volúmenes `db_data`, `storage` y

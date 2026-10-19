@@ -96,6 +96,8 @@ aplicación quedará abierta a todo internet.
 | RS7.d — fijar las versiones de los componentes de infraestructura | dentro | CA10 |
 | RS8.a — cabeceras de seguridad | fuera | → spec 031 |
 | RS8.b — HSTS detrás de la conexión cifrada | fuera | → spec 031 |
+| RS8.c — HSTS en staging (creada por la 031 al dividir RS8.b) | fuera | → objetivo 5, cuando exista staging |
+| RS8.d — política de contenido estricta (creada por la 031 al dividir RS8.a) | fuera | → roadmap, por pantallas |
 | RS15.a — cifrar los campos clínicos en la base | fuera | → objetivo 4 (spec 013) |
 | RS15.b — cifrado del disco y de las copias de seguridad | fuera | → spec 031 |
 | OB4.a — redactar los datos de las consultas en los errores registrados | fuera | → objetivo 3 |
@@ -173,3 +175,4 @@ inicio de sesión.
 | 2026-10-04 | Implementada (T092): CA1–CA10 por sus tests y por los ensayos en el servidor (T040–T046); la verificación pública queda para la liberación | /implement |
 | 2026-10-04 | Implementada de nuevo tras /review r1 (T060–T071: R1–R6, R8–R11, R19) | /implement |
 | 2026-10-04 | Liberada en v0.5.0 (PR #18, merge commit `63a611e`, tag `v0.5.0`) y desplegada en producción en https://dentissa.app | /release |
+| 2026-10-19 | Cobertura de riesgos: RS8.c y RS8.d, creadas por la 031 al dividir RS8, declaradas fuera | /implement 031 (T091) |

@@ -62,7 +62,7 @@ updated: 2026-10-18
 | `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente`, salvo en cancelar (spec 026) y reprogramar (spec 028) |
 | phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
-| SSH del servidor de producción | red local | clave | solo desde la red local (`ufw`), sin contraseña ni root (spec 030) |
+| SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
 
 No hay rutas API, webhooks, colas ni tareas programadas.
 
@@ -204,8 +204,10 @@ Ni la app ni nginx envían CSP, X-Frame-Options/frame-ancestors, X-Content-Type-
 Referrer-Policy ni HSTS. Evidencia: `PreventBackHistory.php`, `docker/nginx/dentissa.conf`.
 
 Correcciones:
-- RS8.a Middleware o `add_header` en nginx con CSP, X-Frame-Options, X-Content-Type-Options y Referrer-Policy — estado: pendiente
-- RS8.b HSTS en staging/prod detrás de TLS — estado: pendiente
+- RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: en curso (spec 031)
+- RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: en curso (spec 031)
+- RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
+- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05)
 
 ### RS9 · Media — Sesión y email no protegidos al cambiar credenciales (A07 Authentication Failures)
 Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar el email del

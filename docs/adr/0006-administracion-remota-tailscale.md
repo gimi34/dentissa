@@ -49,3 +49,5 @@ dispositivo perdido. No hay presupuesto.
 - Volver a una versión anterior a la 031 con Tailscale activo da un FALLO conocido en su
   `verificar.sh` (spec 031 CA8).
 - Cambia la vía administrativa de la spec 030 (CA3): se suma la red privada a la red local.
+- Refinado antes de liberar la 031 (/analyze 031 A6 y A7: ACL del tailnet solo con el 22 y el origen de
+  Tailscale en las actualizaciones automáticas), como se hizo con el ADR 0005 en la 030 (/analyze 031 A28).

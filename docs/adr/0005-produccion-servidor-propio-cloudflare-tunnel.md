@@ -47,4 +47,4 @@ tiene un equipo con Ubuntu Server 24.04 en su red local y un dominio gestionado 
   producción tras su aprobación. Staging queda en el roadmap (RD1.c).
 - El usuario mantiene el sistema operativo (actualizaciones automáticas de seguridad) y las
   versiones fijadas de las imágenes, que deben actualizarse de forma periódica.
-- Cabeceras de seguridad, alertas y cifrado de copias quedan para la spec 031.
+- Cabeceras de seguridad quedan para la spec 031; alertas (OB6.b) y cifrado de copias (RS15.b), para la 032 (la 031 se dividió en dos; /analyze 031 A17).
