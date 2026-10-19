@@ -78,6 +78,7 @@
     --perfil-nombre-movil:    16px;  /* tamaño, no color */
     --weight-bold:            600;
     --expediente-dato-max:    140px;
+    --campo-fecha-max:        220px;
 }
 
 body {
@@ -647,4 +648,6 @@ tr:hover td { background: var(--p50); }
 .form-paciente .field:focus, .form-expediente .field:focus { border-color: var(--border-control); box-shadow: none; }
 /* Valores de «Información» de la ficha del expediente: el máximo de hoy en el escritorio (T031). */
 .info-valor { text-align: right; max-width: var(--expediente-dato-max); }
+/* Fecha sugerida del alta de expediente, con el máximo de hoy en el escritorio (/review R14). */
+.campo-fecha { max-width: var(--campo-fecha-max); }
 /* Fin spec 035 */
