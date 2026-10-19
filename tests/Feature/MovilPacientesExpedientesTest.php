@@ -226,6 +226,17 @@ class MovilPacientesExpedientesTest extends TestCase
         }
     }
 
+    /** /review R21: el borde rojo del campo con error del expediente gana también con foco (misma especificidad, después). */
+    public function test_el_campo_con_error_del_expediente_sigue_rojo_con_foco(): void
+    {
+        $orden = array_column($this->analizarCss($this->bloque035()), 0);
+        $error = array_search('.form-expediente .field.field-error', $orden, true);
+        $foco = array_search('.form-paciente .field:focus, .form-expediente .field:focus', $orden, true);
+        $this->assertNotFalse($error, 'El bloque 035 tiene .form-expediente .field.field-error (0,3,0, como el foco).');
+        $this->assertNotFalse($foco, 'El bloque 035 tiene la regla de foco de los campos.');
+        $this->assertGreaterThan($foco, $error, 'La regla del campo con error va después de la de foco.');
+    }
+
     /** /review R5: los botones de los formularios no reciben el flex: 1 de las acciones de la ficha. */
     public function test_los_botones_del_formulario_no_heredan_el_reparto_de_la_ficha(): void
     {
@@ -432,7 +443,7 @@ class MovilPacientesExpedientesTest extends TestCase
             '.form-paciente .field:focus' => $sinHalo,
             '.form-expediente .field:focus' => $sinHalo,
             // /review R4: el campo con error de los formularios del expediente se marca, como en los demás.
-            '.form-expediente .field-error' => ['border-color: var(--red)'],
+            '.form-expediente .field.field-error' => ['border-color: var(--red)'],
             // /review R14: la fecha del alta de expediente, con el máximo de hoy en el escritorio.
             '.campo-fecha' => ['max-width: var(--campo-fecha-max)'],
         ];

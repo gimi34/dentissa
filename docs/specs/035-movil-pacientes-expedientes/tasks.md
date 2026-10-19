@@ -151,8 +151,9 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: borrados la base `dentissa_capturas`, los servidores `dentissa_capturas_app` y `dentissa_base_app`, el volumen `dentissa_pw_node`, el worktree de v0.8.0 con su `.env` y la carpeta temporal (2026-10-19).
 
 ### Correcciones de /review (ronda 2)
-- [ ] T054 Añadir a `MovilPacientesExpedientesTest` que el borde rojo del campo con error de los formularios del expediente gana también con foco: en el bloque 035 de `app.css`, la regla con `border-color: var(--red)` tiene selector `.form-expediente .field.field-error` (especificidad (0,3,0), igual que `.form-expediente .field:focus`) y va después de la regla de foco — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: falla hoy por la razón esperada (anotado) — cubre: CA6
+- [x] T054 Añadir a `MovilPacientesExpedientesTest` que el borde rojo del campo con error de los formularios del expediente gana también con foco: en el bloque 035 de `app.css`, la regla con `border-color: var(--red)` tiene selector `.form-expediente .field.field-error` (especificidad (0,3,0), igual que `.form-expediente .field:focus`) y va después de la regla de foco — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: falla hoy por la razón esperada (anotado) — cubre: CA6
   - nota: añadida por /review: R21
+  - nota: fallan hoy por la razón esperada: «El bloque 035 tiene .form-expediente .field.field-error» (test nuevo, que además exige que vaya después de la regla de foco) y «Falta .form-expediente .field.field-error» en el test del bloque 035, cuya entrada de R4 pasa a ese selector.
 - [ ] T055 Cambiar en el bloque 035 de `app.css` el selector del campo con error de los formularios del expediente a `.form-expediente .field.field-error`, después de la regla de foco — public/css/app.css — hecho cuando: pasa dos veces T054 y los demás tests de móvil — cubre: CA6 — depende: T054
   - nota: añadida por /review: R21
 
