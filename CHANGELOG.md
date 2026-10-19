@@ -5,6 +5,28 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-19
+
+### Added
+- Versión para el móvil de la ficha del paciente, su formulario de alta y edición, y la lista, la
+  ficha y el alta de expedientes: se ven sin desplazamiento lateral desde 320 px de ancho, también con
+  el móvil en horizontal (spec 035).
+
+### Changed
+- En el móvil, la ficha del paciente y la del expediente se leen en una columna; el perfil del
+  paciente es compacto (iniciales, nombre y cada dato de contacto con su etiqueta) y «Nuevo
+  expediente» y «Nueva cita» bajan a una fila bajo el título (spec 035).
+- El historial de citas de la ficha y la lista de expedientes se leen como tarjetas en el móvil, con
+  «Ver detalle» y «Ver» con su nombre visible (spec 035).
+- Los formularios de paciente y de expediente muestran cada error junto a su campo y lo enlazan para
+  los lectores de pantalla; cada etiqueta está asociada a su campo y el campo enfocado lleva el anillo
+  de foco del sistema (spec 035).
+- Los nombres y textos largos (también los de las migas) pasan a la línea siguiente sin ensanchar la
+  página (spec 035).
+- Los iconos «Menú» y «Cerrar menú» del móvil se muestran sin recuadro (spec 035).
+- En el escritorio no cambia nada visible, salvo el foco de los campos de esos formularios y el borde
+  rojo del campo con error en la ficha del expediente (spec 035).
+
 ### Changed — flujo AI-DD actualizado a 1.15.0
 - Validador 1.15.0. Carriles ligeros `/fix`, `/refactor` y `/chore` con fichas en `docs/changes/`
   (plantilla `change.md`), `/sync` para la deriva, sección «Hotfix» en `docs/deployment.md` y el
