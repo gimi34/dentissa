@@ -295,7 +295,7 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertSame(1, preg_match("/<<'PY'\n(.*?)\nPY\n(.*)/s", $bloque[1], $partes), 'El bloque compara con python3.');
         [, $python, $shell] = $partes;
 
-        $this->assertSame(1, preg_match('/^for nombre, servicio in [^\n]*:\n((?:    [^\n]*\n|\n)+)/m', $python, $bucle), 'python3 recorre los servicios del Compose.');
+        $this->assertSame(1, preg_match('/^for nombre, servicio in [^\n]*:\n((?:    [^\n]*(?:\n|\z)|\n)+)/m', $python, $bucle), 'python3 recorre los servicios del Compose.');
         $this->assertMatchesRegularExpression('/^    try:\n/m', $bucle[1], 'Cada servicio se compara dentro de su propio try.');
         $this->assertMatchesRegularExpression('/^    except Exception\b[^\n]*:\n        print\(f[\'"]FALLO \{nombre\}: no se pudo comparar/m', $bucle[1], 'Un error al comparar un servicio es su FALLO.');
         $this->assertMatchesRegularExpression('/^print\(f[\'"]SERVICIOS \{len\(config\[[\'"]services[\'"]\]\)\}[\'"]\)/m', $python, 'python3 declara cuántos servicios compara.');
