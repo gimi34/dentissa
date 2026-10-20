@@ -1,7 +1,7 @@
 ---
 id: 031
 slug: endurecer-produccion
-status: approved
+status: implemented
 created: 2026-10-05
 extends: [001, 030]
 ---

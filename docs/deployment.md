@@ -93,7 +93,8 @@ anterior ya se construyó antes.
 Cambiar un archivo de entorno (`app.env`, `db.env`, `tunnel.env`): editarlo y después
 `bash deploy/aplicar-entorno.sh <servicio>`, que recrea ese contenedor (un `restart` no relee el
 archivo) y verifica; `verificar.sh` da FALLO en «Entorno aplicado» si un servicio usa una
-configuración distinta de la guardada (spec 031, CA7; guía `deploy/README.md` §10).
+configuración distinta de la guardada o si no puede comparar alguno (spec 031, CA7, /review R1;
+guía `deploy/README.md` §10).
 
 Administrar desde fuera de casa: SSH con clave por la red privada de Tailscale, instalada con
 `sudo bash deploy/preparar-acceso-remoto.sh` (spec 031, CA8; ADR 0006; guía §11, que también dice

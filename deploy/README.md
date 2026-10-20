@@ -257,7 +257,8 @@ bash deploy/aplicar-entorno.sh app        # o cloudflared, o el servicio que lea
 `aplicar-entorno.sh` recrea el servicio, en `app` vuelve a generar las cachés de
 configuración y rutas, y termina con `verificar.sh --interna`. Su sección
 «Entorno aplicado» da FALLO si algún servicio en marcha usa una configuración
-distinta de la guardada, y dice cuál (sin mostrar valores).
+distinta de la guardada, y dice cuál (sin mostrar valores). También da FALLO si no
+puede comparar algún servicio: nunca da OK sin haberlos revisado todos.
 
 **`db.env` es distinto:** MariaDB solo lo lee al crear la base. Cambiar
 `MARIADB_PASSWORD` ahí no cambia la contraseña real. Para cambiarla, entra en la
