@@ -1,7 +1,7 @@
 ---
 id: 040
 slug: promociones
-status: draft
+status: approved
 created: 2026-10-20
 extends: [038]
 ---
@@ -111,4 +111,5 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-10-20 | Spec aprobada (`approved`) con los supuestos de Decisiones | Aprobación del usuario |
 | 2026-10-20 | Spec creada en `draft` | El usuario pidió promociones en la página de inicio durante `/design-spec 038` |

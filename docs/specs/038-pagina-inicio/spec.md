@@ -1,7 +1,7 @@
 ---
 id: 038
 slug: pagina-inicio
-status: draft
+status: approved
 created: 2026-10-20
 extends: [001, 031]
 ---
@@ -183,6 +183,7 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-10-20 | Spec aprobada (`approved`) con los supuestos de Decisiones | Aprobación del usuario |
 | 2026-10-20 | Dividida: la galería pasa a la 039 y las promociones a la 040. Quedan 10 criterios: página de inicio con «Sobre nosotros» y avance de servicios, `/servicios`, portada con placa y logo | Petición del usuario al revisar las opciones de `/design-spec 038`, ronda 1, y al añadir promociones |
 | 2026-10-20 | Vuelve a `draft`. Fotos de trabajos, carrusel, `/galeria`, `/servicios`, avance por categorías, «Sobre nosotros» | Petición del usuario al revisar las opciones de `/design-spec 038`, ronda 1 |
 | 2026-10-20 | Spec aprobada (`approved`) con los supuestos de Decisiones | Aprobación del usuario |
