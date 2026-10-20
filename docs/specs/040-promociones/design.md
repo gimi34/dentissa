@@ -1,6 +1,6 @@
 ---
 spec: 040-promociones
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: none
 system_version: 1.6.0
 created: 2026-10-20
@@ -42,3 +42,4 @@ ahora») y los componentes «Aviso de promoción» y «Estado de promoción», a
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
 |---|---|---|---|---|
 | 2026-10-20 | diseño | ¿Composiciones propias? | No: diseñada en `/design-spec 038` (opción B, ronda 2) | usuario |
+| 2026-10-20 | diseño | ¿Se aprueba este documento? | Aprobado | usuario |

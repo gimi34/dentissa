@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: options
 system_version: 1.6.0
 created: 2026-10-20
@@ -287,3 +287,4 @@ La primera tarea de la 038 los aplica a `system.md` (versión **1.7.0**) y `syst
 | 2026-10-20 | supuesto | `public/images/cover-bg.jpg` (foto de banco, uniforme azul) | No se usa; se retira en la 038 si nada más la usa | `brief.md` · `anti-cliches.md` |
 | 2026-10-20 | supuesto | Índice de `/servicios` en el escritorio | Fijo al desplazarse (`position: sticky`); en el visor va estático para que el marco se lea bien | razonable |
 | 2026-10-20 | supuesto | Casilla de consentimiento sin JavaScript | Siempre visible, con la ayuda «Solo si respondiste «Sí»»; el servidor la exige solo si la respuesta es «Sí» | 039 CA9, CA11 (P10, sin JS) |
+| 2026-10-20 | diseño | ¿Se aprueba este documento? | Aprobado | usuario |

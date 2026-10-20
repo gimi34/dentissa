@@ -1,6 +1,6 @@
 ---
 spec: 039-galeria-trabajos
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: none
 system_version: 1.6.0
 created: 2026-10-20
@@ -46,3 +46,4 @@ Los de la 038 que esta spec necesita y aún no estén aplicados: `--foto-ratio`,
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
 |---|---|---|---|---|
 | 2026-10-20 | diseño | ¿Composiciones propias? | No: diseñada en `/design-spec 038` (opción B, ronda 2) | usuario |
+| 2026-10-20 | diseño | ¿Se aprueba este documento? | Aprobado | usuario |
