@@ -58,12 +58,12 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | `docker/nginx/seguridad/comunes.conf` | La política añade `frame-src $dentissa_frame_src;`. El resto queda igual | Medio: conflicto con la 031 (D13) |
 | `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | `include /etc/nginx/snippets/dentissa/marcos.conf;` antes del `server` (contexto `http`) | Bajo: el `Dockerfile` de producción ya copia `seguridad/` entera |
 | `deploy/verificar.sh` | La comprobación pública «/ redirige a https» pasa a `/admin` (redirige al login en https). Se añaden «`/` responde 200» y «`/` admite el mapa y `/servicios` no» (`frame-src` en las cabeceras) | Medio: conflicto con la 031, que también cambia `verificar.sh` (D13) |
-| `tests/Feature/ProxyHttpsTest.php` | Las dos pruebas de redirección usan `/admin` en lugar de `/` (misma intención: la redirección sale en https y sin el puerto ajeno). Son los 2 fallos que quedan en `main` | Bajo |
+| `tests/Feature/ProxyHttpsTest.php` | Las dos pruebas de redirección usan `/admin` en lugar de `/` (misma intención: la redirección sale en https y sin el puerto ajeno). Tras el `/fix` de `main` (D13) pasan con `/`; con la 038, `/` deja de redirigir y pasan a ser caracterización de 030 CA2 (`/analyze` A8, A20) | Bajo |
 | `tests/Feature/ExampleTest.php` | Espera la vista `publico.inicio` | Bajo |
 | `tests/Feature/CabecerasSeguridadTest.php` | Comprueba `frame-src $dentissa_frame_src` en `comunes.conf`, el `map` de `marcos.conf` y su `include` en las dos configuraciones | Medio: conflicto con la 031 (D13) |
 | `tests/Feature/PaginaInicioTest.php`, `ServiciosPublicosTest.php`, `PaginasPublicasTest.php`, `PaginasPublicasCssTest.php` (nuevos) | Ver Estrategia de pruebas | — |
 | `docs/design/capturar.mjs` | Vistas públicas `publico-inicio` y `publico-servicios` (sin sesión) a 320, 390, 900 y 1440, y comprobaciones de `--medir` para ellas: sin desbordamiento horizontal y toque ≥ 44 px | Bajo |
-| Documentación | `docs/design/system.md` y `system.html` (1.7.0), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `CHANGELOG.md` en `/release` | Bajo |
+| Documentación | `docs/design/system.md` y `system.html` (1.7.0), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `docs/specs/030-despliegue-servidor-propio/spec.md` y `docs/specs/031-endurecer-produccion/spec.md` (Historial, D10), `docs/security.md` (entradas públicas, TM6 aceptado y visita a Google por el mapa; `/analyze` A10, A20), `CHANGELOG.md` en `/release` | Bajo |
 
 ## Contratos y datos
 
