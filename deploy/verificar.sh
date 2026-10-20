@@ -27,8 +27,8 @@ revisar_cabeceras() {
     grep -iqE '^x-frame-options: *DENY' <<< "${cabeceras}" || faltan+=("X-Frame-Options")
     grep -iqE '^x-content-type-options: *nosniff' <<< "${cabeceras}" || faltan+=("X-Content-Type-Options")
     grep -iqE '^referrer-policy: *strict-origin-when-cross-origin' <<< "${cabeceras}" || faltan+=("Referrer-Policy")
-    grep -iqE '^x-powered-by:' <<< "${cabeceras}" && faltan+=("sin X-Powered-By")
-    grep -iqE '^server:.*[0-9]' <<< "${cabeceras}" && faltan+=("Server sin versión")
+    grep -iqE '^x-powered-by:' <<< "${cabeceras}" && faltan+=("X-Powered-By presente")
+    grep -iqE '^server:.*[0-9]' <<< "${cabeceras}" && faltan+=("Server con versión")
     if [[ "${hsts}" == "hsts" ]]; then
         local edad
         edad="$(grep -ioE '^strict-transport-security:.*max-age=[0-9]+' <<< "${cabeceras}" | grep -oE '[0-9]+$' || true)"
@@ -100,7 +100,7 @@ main() {
     echo "== Cabeceras por la red interna (spec 031)"
     # curl dentro de web y sin -L: la 301 se juzga por sus propias cabeceras, sin
     # seguir la redirección (/analyze A29).
-    local cabeceras
+    local cabeceras ruta
     for ruta in /login /css/app.css /no-existe-verificacion; do
         cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1${ruta}" 2>/dev/null | tr -d '\r')"
         revisar_cabeceras "${ruta} (interna)" "${cabeceras}"
