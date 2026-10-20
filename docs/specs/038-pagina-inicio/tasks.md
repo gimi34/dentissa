@@ -1,7 +1,7 @@
 ---
 spec: 038-pagina-inicio
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 038 Página de inicio pública

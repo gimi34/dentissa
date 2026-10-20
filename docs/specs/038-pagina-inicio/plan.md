@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: draft   # draft | approved | blocked
+status: approved   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-10-20
 ---
