@@ -1,6 +1,6 @@
 ---
 lane: fix
-status: open                 # open → done → released · escalated (→ escalated_to)
+status: done                 # open → done → released · escalated (→ escalated_to)
 base: f096e17                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: []                  # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir
@@ -61,6 +61,16 @@ stash). El resto del merge (landing, imágenes, ruta `/`, formato de Pint) no se
   `landing.index` (Decisiones).
 - `php -l` sin errores en los 5 controladores y el test; `pint --test` sobre lo tocado: PASS.
 - Suite ejecutada en un contenedor de la imagen `dentissa-app` montando el worktree de la rama.
+- semgrep `p/php` sobre lo tocado: 0 hallazgos. gitleaks (modo carpeta sobre lo tocado): sin fugas.
+- `lane-check` al cerrar: el mismo «seguridad?» de `AuthController`, sin motivos nuevos.
+- **Review ligera** (subagente `standard`, solo diff + ficha): sin bloqueantes.
+  - Con el código revertido el test falla (`1 failed`) y con el arreglo pasa (`1 passed`).
+  - `git diff 3eb64a6 a7bfdd4` está vacío en los 5 controladores, sin otros marcadores en el código y
+    sin código del stash fuera de ellos (el resto del merge es Pint y la landing).
+  - Menores aceptados (Decisiones): el test no mira `yml`/`json`/`md` ni `lang/`; `File::allFiles`
+    falla si una carpeta de la lista desaparece; los 2 fallos de `ProxyHttpsTest` dejan la CI de
+    `main` en rojo hasta que la landing entre por su spec o `/sync` (el merge sí adaptó
+    `ExampleTest`, no `ProxyHttpsTest`).
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
@@ -69,3 +79,4 @@ stash). El resto del merge (landing, imágenes, ruta `/`, formato de Pint) no se
 | 2026-10-20 | usuario | ¿Reparar `main` antes de traer la landing? | Sí: «repara main» | usuario |
 | 2026-10-20 | supuesto | `lane-check` marca «seguridad?» por `AuthController`: ¿escalar? | Seguir en `/fix`: solo se quita lo que añadió el merge y el archivo vuelve a la versión revisada | usuario |
 | 2026-10-20 | usuario | Los 2 fallos de `ProxyHttpsTest` vienen de la landing (`/` ya no redirige al login) | Fuera de esta ficha: se resuelven cuando la landing entre por su spec o `/sync`; `main` queda con esos 2 fallos | usuario |
+| 2026-10-20 | supuesto | Review: ampliar el test a `yml`/`json`/`md`/`lang` y proteger carpetas inexistentes | No: el defecto fue en PHP; `docs/` cita marcadores a propósito y todas las carpetas existen. Arreglo mínimo | review ligera |
