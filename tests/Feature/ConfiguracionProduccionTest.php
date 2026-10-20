@@ -28,6 +28,17 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
+     * Órdenes de un script de shell, una por línea y sin sangría: sin comentarios, líneas en
+     * blanco ni `echo`, para que un texto que imita la orden no cuente como la orden.
+     */
+    private function ordenes(string $ruta): string
+    {
+        $lineas = array_map('trim', explode("\n", $this->leer($ruta)));
+
+        return implode("\n", array_filter($lineas, fn (string $l) => $l !== '' && ! str_starts_with($l, '#') && ! str_starts_with($l, 'echo ')));
+    }
+
+    /**
      * Bloques de `services:` de un Compose: nombre → texto del bloque.
      *
      * @return array<string, string>
@@ -303,6 +314,30 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^\)"\n    codigo=\$\?\n/', $shell, 'El shell guarda el código de salida de python3.');
         $this->assertMatchesRegularExpression('/^[^#\n]*\bgrep\b[^\n]*\^SERVICIOS /m', $shell, 'El shell lee el número de servicios.');
         $this->assertMatchesRegularExpression('/^[^#\n]*"\$\{codigo\}" -ne 0 \|\|[^\n]*-ne "\$\{servicios\}"/m', $shell, 'El shell falla si python3 termina mal o faltan líneas.');
+    }
+
+    /**
+     * Spec 031 (CA7, D8; /review R2, R5): `aplicar-entorno.sh` aplica el archivo de entorno de
+     * un servicio recreándolo. Rechaza `db`, acepta solo un servicio que exista tal cual en el
+     * Compose (sin expresiones regulares ni opciones), recrea sin tocar los demás, rehace las
+     * cachés de `app` como `www-data` y termina con la verificación interna.
+     */
+    public function test_aplicar_entorno_recrea_el_servicio_y_termina_verificando(): void
+    {
+        $ordenes = $this->ordenes('deploy/aplicar-entorno.sh');
+        $compose = preg_quote('"${compose[@]}"', '/');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes, 'El script se detiene ante cualquier error.');
+        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{servicio\}" == "db" \]\]; then\nerror /m', $ordenes, 'Rechaza db: db.env solo se aplica al crear la base.');
+        $this->assertMatchesRegularExpression('/^servicios="\$\('.$compose.' config --services\)"/m', $ordenes, 'Lee los servicios del Compose de producción.');
+        $this->assertMatchesRegularExpression('/^grep -qxF -- "\$\{servicio\}" <<< "\$\{servicios\}" \|\| error /m', $ordenes, 'El servicio se compara como texto fijo y nunca como opción (R5).');
+        $this->assertMatchesRegularExpression('/^'.$compose.' up -d --force-recreate --no-deps "\$\{servicio\}"$/m', $ordenes, 'Recrea solo ese servicio para que relea su archivo de entorno.');
+        $this->assertMatchesRegularExpression(
+            '/^if \[\[ "\$\{servicio\}" == "app" \]\]; then\n(?:paso "[^"\n]*"\n)?'.$compose.' exec -T -u www-data app php artisan config:cache\n'.$compose.' exec -T -u www-data app php artisan route:cache\nfi$/m',
+            $ordenes,
+            'En app rehace las cachés de configuración y rutas como www-data.',
+        );
+        $this->assertMatchesRegularExpression('/^bash deploy\/verificar\.sh --interna\n\}\nmain "\$@"$/', substr($ordenes, strrpos($ordenes, 'bash deploy/') ?: 0), 'Termina con la verificación interna.');
     }
 
     /**
