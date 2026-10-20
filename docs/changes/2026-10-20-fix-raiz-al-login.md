@@ -1,6 +1,6 @@
 ---
 lane: fix
-status: open                 # open → done → released · escalated (→ escalated_to)
+status: done                 # open → done → released · escalated (→ escalated_to)
 base: 9033a68                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [001]               # specs cuyo comportamiento toca ([] si ninguna)
 covers: [CA4]                # fix: criterios de esas specs que el arreglo vuelve a cumplir
@@ -55,6 +55,12 @@ aún sin implementar.
   `2026-10-20-fix-marcadores-conflicto-main.md`).
 - Tras el arreglo: **344 pasan** (6604 aserciones). `pint --test` sobre lo tocado: PASS.
 - Suite ejecutada en un contenedor de la imagen `dentissa-app` montando el worktree de la rama.
+- semgrep `p/php` sobre lo tocado: 0 hallazgos. gitleaks (modo carpeta): sin fugas.
+- `lane-check` al cerrar: sin motivos de escalado (1 archivo de código).
+- **Review ligera** (subagente `standard`, solo diff + ficha): aprobado, sin bloqueantes.
+  - Con `routes/web.php` revertido: `Tests: 3 failed, 5 passed`; con el arreglo: `Tests: 8 passed`.
+  - `git diff 3eb64a6 084ddca` está vacío en los dos archivos.
+  - El resto del merge `f096e17` es formato o la landing sin uso; nada más referencia `landing.index`.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
