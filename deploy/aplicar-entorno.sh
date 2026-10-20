@@ -34,7 +34,7 @@ main() {
     local servicios
     servicios="$("${compose[@]}" config --services)" \
         || error "no se pudo leer docker-compose.prod.yml (¿faltan archivos en /opt/dentissa/entorno?)"
-    grep -qx "${servicio}" <<< "${servicios}" || error "no existe el servicio ${servicio} en docker-compose.prod.yml"
+    grep -qxF -- "${servicio}" <<< "${servicios}" || error "no existe el servicio ${servicio} en docker-compose.prod.yml"
 
     paso "Recreando ${servicio} con su archivo de entorno"
     "${compose[@]}" up -d --force-recreate --no-deps "${servicio}"
