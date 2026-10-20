@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Usuario;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request as PeticionPsr;
 use GuzzleHttp\Psr7\Response as RespuestaPsr;
 use Illuminate\Auth\Events\Failed;
@@ -146,16 +147,68 @@ class GoogleVueltaFallidaTest extends TestCase
         $this->assertMatchesRegularExpression(self::MENSAJE_LIMITE, (string) $this->errorEmail());
     }
 
-    public function test_el_error_del_proveedor_se_reporta_y_el_estado_invalido_no(): void
+    public function test_el_error_del_proveedor_se_reporta(): void
     {
         Exceptions::fake();
-
         $this->proveedorQueFalla($this->errorDelProveedor());
-        $this->volverDeGoogle('', '10.0.31.2')->assertRedirect(route('login'));
-        Exceptions::assertReported(ClientException::class);
 
+        $this->assertVuelveAlLoginSinSesion($this->volverDeGoogle('?code=manipulado&state=cualquiera', '10.0.31.2'));
+        Exceptions::assertReported(ClientException::class);
+    }
+
+    public function test_el_estado_invalido_no_se_reporta(): void
+    {
+        Exceptions::fake();
         $this->proveedorQueFalla(new InvalidStateException);
-        $this->volverDeGoogle('', '10.0.31.3')->assertRedirect(route('login'));
-        Exceptions::assertNotReported(InvalidStateException::class);
+
+        $this->assertVuelveAlLoginSinSesion($this->volverDeGoogle('?code=manipulado&state=cualquiera', '10.0.31.3'));
+        Exceptions::assertNothingReported();
+    }
+
+    public function test_un_error_de_red_vuelve_al_login_y_se_reporta(): void
+    {
+        Exceptions::fake();
+        $this->proveedorQueFalla(new ConnectException(
+            'cURL error 6: Could not resolve host: oauth2.googleapis.com',
+            new PeticionPsr('POST', 'https://oauth2.googleapis.com/token'),
+        ));
+
+        $this->assertVuelveAlLoginSinSesion($this->volverDeGoogle('?code=valido&state=cualquiera', '10.0.31.4'));
+        Exceptions::assertReported(ConnectException::class);
+    }
+
+    /**
+     * Credenciales de prueba para que Socialite construya el proveedor real de Google: el
+     * comprobador del `state` lanza la excepción antes de cualquier llamada a Google (TM6).
+     */
+    private function proveedorRealDePrueba(): void
+    {
+        config(['services.google' => [
+            'client_id' => 'cliente-de-pruebas',
+            'client_secret' => 'secreto-de-pruebas',
+            'redirect' => 'http://localhost/auth/google/callback',
+        ]]);
+    }
+
+    public function test_sin_state_en_la_sesion_el_comprobador_real_vuelve_al_login(): void
+    {
+        Exceptions::fake();
+        $this->proveedorRealDePrueba();
+
+        $this->assertVuelveAlLoginSinSesion($this->volverDeGoogle('?code=robado&state=inventado', '10.0.31.5'));
+        Exceptions::assertNothingReported();
+    }
+
+    public function test_un_state_distinto_del_guardado_vuelve_al_login(): void
+    {
+        Exceptions::fake();
+        $this->proveedorRealDePrueba();
+
+        $respuesta = $this->withSession(['state' => 'el-que-guardo-la-app'])
+            ->withServerVariables(['REMOTE_ADDR' => '10.0.31.6'])
+            ->get('/auth/google/callback?code=robado&state=otro-distinto');
+
+        $this->assertVuelveAlLoginSinSesion($respuesta);
+        Exceptions::assertNothingReported();
     }
 }
