@@ -26,6 +26,6 @@ usuario el 2026-10-20 en `/design-spec 038`).
 | Azul o blanco clínico y verde menta | El rosa propio como color de uniforme y señalética, sobre `--bg` y blanco, con `--p600` de acento oscuro |
 | Iconos de muela y de brackets genéricos | Sin icono: el servicio se nombra con texto en su placa; si hace falta un trazo, sale del odontograma o del instrumental |
 | Cuadrícula de tarjetas icono + título + texto para los servicios | Directorio de puertas: placas con nombre y una línea de descripción, en lista o columnas de texto, una columna en el móvil |
-| Promociones, descuentos y precios en cintillo | Sin precios (spec 038); una línea honesta por servicio |
+| Promociones, descuentos y precios en cintillo, contadores de tiempo o colores de oferta | Sin precios en el catálogo (spec 038); las promociones van en una sección sobria con título, condiciones y vigencia visibles (spec 040, decisión del usuario del 2026-10-20) |
 | Carrusel de reseñas y logos de aseguradoras o patrocinadores | Nada inventado: sin reseñas mientras no existan; la confianza la dan las fotos reales, la dirección y el horario |
 | Lenguaje de cadena («+60 clínicas», mapa del país) | Una sola dirección, un mapa, «Cómo llegar» y el horario como el aviso de la puerta |
