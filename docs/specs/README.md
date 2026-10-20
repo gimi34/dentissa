@@ -38,7 +38,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
 | 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
 | 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | released (v0.9.0) | — | — (2026-10-19) |
-| 038 | [pagina-inicio](038-pagina-inicio/spec.md) | Transversal | approved | — | — (2026-10-20) |
+| 038 | [pagina-inicio](038-pagina-inicio/spec.md) | Transversal | draft | — | — (2026-10-20) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
