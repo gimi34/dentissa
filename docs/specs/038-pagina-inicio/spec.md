@@ -3,7 +3,7 @@ id: 038
 slug: pagina-inicio
 status: draft
 created: 2026-10-20
-extends: [001]
+extends: [001, 031]
 ---
 
 # 038 · Página de inicio pública con galería
@@ -42,13 +42,16 @@ sus instalaciones sin tocar código.
 - [ ] CA4 · Dado un visitante, cuando mira la sección de contacto, entonces ve exactamente la
   dirección «Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950», el teléfono
   «753 000 0000» (que en un móvil se marca con un toque) y el horario «Lunes a viernes 9:00–20:00 ·
-  Sábados 9:00–14:00», y un enlace «Cómo llegar» que abre esa dirección en un mapa aparte; la
-  página no incrusta ningún mapa.
-- [ ] CA5 · Dado un visitante, cuando abre la página, entonces el navegador no pide recursos a
-  sitios distintos de los que ya usa el resto de la aplicación y no aparece ningún recurso
-  bloqueado por la política de seguridad.
+  Sábados 9:00–14:00», un mapa de Google incrustado en la sección de ubicación que marca esa misma
+  dirección, una nota visible junto al mapa que dice que lo sirve Google, y un enlace «Cómo
+  llegar» que abre esa dirección en un mapa aparte.
+- [ ] CA5 · Dado un visitante, cuando abre la página, entonces el navegador solo pide recursos a
+  los sitios que ya usa el resto de la aplicación y, para el mapa, a Google Maps, y no aparece
+  ningún recurso bloqueado por la política de seguridad. El resto de las pantallas siguen sin poder
+  mostrar contenido de otros sitios (amplía 031 CA1 solo en la página de inicio).
 - [ ] CA6 · Dado un visitante con JavaScript desactivado, cuando abre la página, entonces todo el
-  contenido (textos, servicios, galería y contacto) es visible y todos los enlaces funcionan.
+  contenido (textos, servicios, galería, dirección, teléfono, horario y enlace «Cómo llegar») es
+  visible y todos los enlaces funcionan; solo el mapa incrustado puede no mostrarse.
 - [ ] CA7 · Dado un visitante en una pantalla de 320 a 1440 px de ancho, cuando recorre la página
   con el dedo, el ratón o solo el teclado, entonces no hay desplazamiento horizontal, cada destino
   de toque mide al menos 44 px, el foco se ve en todo elemento interactivo, el menú se abre y se
@@ -91,7 +94,7 @@ sus instalaciones sin tocar código.
   estructurados de la clínica, página 404 propia y `noindex` de las rutas no indexables): siguen
   donde están.
 - Precios en la página de inicio, agendar sin cuenta y cualquier formulario en la página de inicio.
-- Mapa incrustado.
+- Aviso o consentimiento de cookies para el mapa de Google: basta con la nota de CA4.
 - Editar desde la administración los textos de la página de inicio (presentación, contacto y
   horario se cambian en el código).
 - Álbumes, vídeos, recortar o editar fotos en el navegador y textos largos por foto.
@@ -100,7 +103,9 @@ sus instalaciones sin tocar código.
 ## Seguridad y privacidad
 - Datos sensibles involucrados: ninguno de los de `docs/security.md`. Los servicios activos ya son
   información pública de la clínica. Las fotos de la galería son de las instalaciones y se
-  publican para todo internet.
+  publican para todo internet. El mapa incrustado hace que Google reciba la visita (dirección IP
+  y navegador) de quien llega a esa sección. Por eso se avisa junto al mapa (CA4) y la excepción
+  a la política de contenido se limita a Google Maps y a la página de inicio (CA5).
 - Quién puede hacer qué: cualquiera ve la página de inicio; solo el administrador sube, ordena y
   quita fotos; los demás roles y los visitantes no pueden gestionar la galería.
 - Casos de abuso:
@@ -147,6 +152,8 @@ Rediseño de la página de inicio sobre el sistema de diseño de Dentissa
   galería, como mucho 1 MB transferido en la primera visita.
 - Rendimiento de la galería: cada foto publicada pesa como mucho 500 kB y las que quedan fuera de
   la pantalla no se descargan hasta acercarse a ellas.
+- Rendimiento del mapa: no se descarga hasta que el visitante se acerca a la sección de ubicación,
+  así que no cuenta en la primera carga (ni en el presupuesto de JavaScript de P10).
 
 ## Preguntas abiertas
 Ninguna.
@@ -156,7 +163,8 @@ Ninguna.
 |---|---|---|---|---|
 | 2026-10-20 | contradicción | `docs/seo.md` y el objetivo 7 indexan solo `/registro`; la página de inicio es la cara pública | `/` es indexable; se actualiza `docs/seo.md` y el objetivo 7 deberá incluirla | usuario |
 | 2026-10-20 | contradicción | La página del colaborador usa su propia paleta y estilos cargados de otro sitio; P9 exige el sistema de diseño | Rehacerla con el sistema de diseño, conservando secciones y textos; sin estilos de otros sitios | usuario · `docs/constitution.md` P9 |
-| 2026-10-20 | brecha | Dirección y mapa no coinciden y el teléfono parece real; la constitución exige datos ficticios | Datos ficticios de CA4 con enlace «Cómo llegar», sin mapa incrustado | usuario · `docs/constitution.md` Restricciones |
+| 2026-10-20 | brecha | Dirección y mapa no coinciden y el teléfono parece real; la constitución exige datos ficticios | Datos ficticios de CA4 con enlace «Cómo llegar» | usuario · `docs/constitution.md` Restricciones |
+| 2026-10-20 | contradicción | Mapa incrustado frente a la política de contenido de la 031 (solo recursos propios y de fuentes) | Mapa de Google incrustado: excepción solo para Google Maps y solo en la página de inicio, con nota de que lo sirve Google; amplía 031 CA1 (reemplaza la decisión anterior de no incrustarlo) | usuario · `docs/specs/031-endurecer-produccion/spec.md` CA1 |
 | 2026-10-20 | brecha | Servicios escritos a mano y galería vacía | Servicios activos del catálogo; galería que gestiona el administrador | usuario |
 | 2026-10-20 | brecha | ¿Dividir en página de inicio y galería (16 criterios, dos capacidades)? | Una sola spec (asumido el coste de más rondas de `/plan` y `/analyze`) | usuario |
 | 2026-10-20 | implícita | Con sesión, `/` lleva al panel del rol | Se mantiene | `routes/web.php` (comportamiento actual) |
@@ -174,8 +182,13 @@ Ninguna.
   el JavaScript (rompe CA6). Las imágenes son `public/images/cover-bg.jpg` (1,2 MB),
   `logo-icon.png`, `logo-icon1.png`, `logo-main.png` y `logo-rosa.png` (424 kB). Hay que revisar
   cuáles se usan.
-- La CSP de `docker/nginx/seguridad/comunes.conf` (spec 031, ya en `main`) no debe ampliarse
-  (CA5).
+- CSP de `docker/nginx/seguridad/comunes.conf` (spec 031, ya en `main`): hoy `default-src 'self'`
+  bloquea el `iframe`. Hay que añadir `frame-src https://www.google.com` (o el origen exacto del
+  embed) **solo** en la respuesta de `/` (CA5); el resto de rutas no cambia. El `iframe` va con
+  `loading="lazy"`, un `title` accesible y `referrerpolicy` coherente con la cabecera de la 031.
+  Su URL debe apuntar a la dirección ficticia de CA4 (la del colaborador apunta a otra). Si la
+  031 se libera antes, la 038 parte de su CSP. Si se libera después, hay que conciliar las dos
+  ramas.
 - `tests/Feature/ProxyHttpsTest.php` comprueba la redirección a https con `/`: hay que pasarla a
   otra ruta que redirija al login. Hoy son los 2 fallos que quedan en `main` (ficha
   `docs/changes/2026-10-20-fix-marcadores-conflicto-main.md`). El merge ya adaptó `ExampleTest`.
@@ -191,4 +204,5 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-10-20 | Mapa de Google incrustado en la ubicación: CA4, CA5 y CA6, seguridad, rendimiento; `extends` 031 | Petición del usuario antes de aprobar |
 | 2026-10-20 | Spec creada en `draft` | La página de inicio llegó a `main` fuera del flujo (merge `f096e17`); el usuario pidió regularizarla y añadir la galería |
