@@ -112,7 +112,7 @@ Rediseño de la página de inicio sobre el sistema de diseño de Dentissa
 ([docs/design/system.md](../../design/system.md)). `/design-spec 038` genera las opciones antes de
 `/plan` y diseña a la vez lo que añaden la 039 y la 040, para que la página se piense entera. La
 ronda 1 eligió como base la opción B («La puerta de la consulta») y la ronda 2 la adapta a las
-tres specs.
+tres specs. Documento de diseño: [design.md](design.md).
 
 - **Qué debe transmitir:** una presentación breve, cercana y fiable de una clínica real, con la
   misma identidad de marca que la aplicación. No debe parecerse al panel interno.
@@ -152,6 +152,7 @@ Ninguna.
 | 2026-10-20 | brecha | Portada sin la foto de la entrada | Placa con el logo, el título, «Agendar mi primera cita» y el aviso de la puerta | usuario |
 | 2026-10-20 | brecha | Texto de «Sobre nosotros» | El de CA3, propuesto sin datos inventados (sin cédulas, años ni premios) | usuario (lo propone Claude, se aprueba con la spec) |
 | 2026-10-20 | brecha | Tamaño: con galería de trabajos y promociones la spec rondaba 26 criterios y tres capacidades | Dividir en 038 (esta), 039 galería de trabajos y 040 promociones; el diseño de las tres se hace junto en `/design-spec 038` | usuario |
+| 2026-10-20 | diseño | Diseño de la página | Opción B «La puerta de la consulta», ronda 2: [design.md](design.md) | usuario (`/design-spec 038`) |
 | 2026-10-20 | implícita | Con sesión, `/` lleva al panel del rol | Se mantiene; `/servicios` se ve igual con o sin sesión | `routes/web.php` (comportamiento actual) |
 | 2026-10-20 | supuesto | Qué datos de cada servicio se publican en `/servicios` | Nombre y descripción, agrupados por categoría, sin precio ni duración | razonable: los precios cambian y se confirman en la cita |
 | 2026-10-20 | supuesto | Títulos y descripciones de las dos rutas | Los de CA10 | razonable; se confirman al aprobar |

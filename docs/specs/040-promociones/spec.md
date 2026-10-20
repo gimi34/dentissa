@@ -79,7 +79,7 @@ al paciente.
 ## Diseño
 Se diseña junto con la página de inicio en `/design-spec 038`: la sección «Promociones» de `/`, sobria
 y sin estética de oferta, y la gestión del administrador (lista con su estado, crear y editar,
-retirar con confirmación y errores). Sistema: [docs/design/system.md](../../design/system.md).
+retirar con confirmación y errores). Sistema: [docs/design/system.md](../../design/system.md). Documento de diseño: [design.md](design.md).
 
 ## Requisitos no funcionales
 - Accesibilidad: WCAG 2.1 AA (P9). El estado de cada promoción en la gestión se dice con texto, no
@@ -99,6 +99,7 @@ Ninguna.
 | 2026-10-20 | supuesto | Condiciones y vigencia obligatorias | Toda promoción publicada dice sus condiciones y su vigencia | Ley Federal de Protección al Consumidor (promociones); a confirmar con la redacción vigente |
 | 2026-10-20 | supuesto | Cuántas se muestran y en qué orden | Como mucho 3 vigentes, primero las que vencen antes | razonable: página de presentación sin saturar |
 | 2026-10-20 | supuesto | Largo de los textos | Título 80, descripción 300, condiciones 300 caracteres | razonable para una tarjeta legible en el móvil |
+| 2026-10-20 | diseño | Diseño de la página | Diseñada en la 038 (opción B, ronda 2): [design.md](design.md) | usuario (`/design-spec 038`) |
 | 2026-10-20 | implícita | Registro formal del acceso denegado | Spec 021, excepción P7 como en 026/028/030 | `docs/specs/028-reprogramar-citas/spec.md` → Auditoría |
 
 ## Notas para /plan

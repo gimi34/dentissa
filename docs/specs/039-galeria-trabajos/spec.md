@@ -117,7 +117,7 @@ de forma que se reconozca al paciente lo expondría.
 Se diseña junto con la página de inicio en `/design-spec 038`: el carrusel dentro de `/`, la página
 `/galeria`, el estado sin fotos y la gestión del administrador (subir con descripción, la pregunta
 del paciente y la casilla de consentimiento, ordenar, quitar con confirmación y mensajes de error).
-Sistema: [docs/design/system.md](../../design/system.md).
+Sistema: [docs/design/system.md](../../design/system.md). Documento de diseño: [design.md](design.md).
 
 ## Requisitos no funcionales
 - Accesibilidad: WCAG 2.1 AA (P9). El carrusel no se mueve solo (WCAG 2.2.2) y anuncia qué foto se
@@ -137,6 +137,7 @@ Ninguna.
 | 2026-10-20 | brecha | Las fotos de trabajos pueden mostrar la boca de pacientes (datos de salud) | Se admiten las dos clases: sin pacientes, sin más; con paciente, solo con la declaración de consentimiento escrito y sin que se le pueda reconocer, guardando quién la declaró y cuándo | usuario |
 | 2026-10-20 | brecha | ¿Carrusel o galería completa en la página de inicio? | Carrusel en `/` y todas las fotos en `/galeria` | usuario (`/design-spec 038`, ronda 1) |
 | 2026-10-20 | brecha | Galería dentro de la 038 o aparte | Spec propia, separada de la 038 | usuario |
+| 2026-10-20 | diseño | Diseño de la página | Diseñada en la 038 (opción B, ronda 2): [design.md](design.md) | usuario (`/design-spec 038`) |
 | 2026-10-20 | implícita | Registro formal del acceso denegado y de la escritura de salud | Specs 021 y 022, excepción P7 como en 026/028/030 | `docs/specs/028-reprogramar-citas/spec.md` → Auditoría |
 | 2026-10-20 | supuesto | Límites de la galería | JPG, PNG o WebP, ≤ 5 MB por archivo subido, máximo 12 fotos | razonable para una clínica y el disco del servidor |
 | 2026-10-20 | supuesto | Comportamiento del carrusel | Una foto principal a la vez con «Anterior», «Siguiente» y «Foto n de N», sin avance automático; sin JavaScript se desplaza a mano | WCAG 2.2.2 (P9) |
