@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers;
 
-<<<<<<< Updated upstream
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\EstadosCita;
-=======
->>>>>>> Stashed changes
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -247,7 +244,6 @@ class DashboardController extends Controller
             'paciente'
         ));
     }
-<<<<<<< Updated upstream
 
     // Si el paciente puede mover la cita según EstadosCita::comprobarReprogramable (spec 028).
     private function sePuedeMover(object $cita, EstadosCita $estados): bool
@@ -260,6 +256,4 @@ class DashboardController extends Controller
             return false;
         }
     }
-=======
->>>>>>> Stashed changes
 }

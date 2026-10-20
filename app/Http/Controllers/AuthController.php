@@ -76,7 +76,6 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-<<<<<<< Updated upstream
         // Con 5 fallos en la ventana, el siguiente intento se rechaza sin
         // intentar autenticar. Lockout deja el rechazo a la vista de la
         // auditoría de la spec 020 (excepción P7).
@@ -100,17 +99,6 @@ class AuthController extends Controller
 
             $user = auth()->user();
 
-=======
-        if (Auth::attempt([
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
-            'activo' => 1,
-        ])) {
-            $request->session()->regenerate();
-
-            $user = auth()->user();
-
->>>>>>> Stashed changes
             return match ($user->rol) {
                 'admin' => redirect('/admin'),
                 'dentista' => redirect('/dentista'),
@@ -118,11 +106,8 @@ class AuthController extends Controller
                 default => redirect('/cliente'),
             };
         }
-<<<<<<< Updated upstream
 
         RateLimiter::hit($clave, self::VENTANA_SEGUNDOS);
-=======
->>>>>>> Stashed changes
 
         return back()->withErrors([
             'email' => 'Credenciales incorrectas',

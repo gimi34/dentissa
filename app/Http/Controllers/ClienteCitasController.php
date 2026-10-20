@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-<<<<<<< Updated upstream
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
@@ -11,12 +10,6 @@ use App\Agenda\ReservaCitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-=======
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
->>>>>>> Stashed changes
 
 class ClienteCitasController extends Controller
 {
@@ -104,7 +97,6 @@ class ClienteCitasController extends Controller
         if (! $cita) {
             abort(404);
         }
-<<<<<<< Updated upstream
 
         $cita = $this->conPuedeCancelar($cita, $estados);
         // Fuera de plazo se explica por qué no hay botones en lugar de quitarlos sin más (A40).
@@ -113,8 +105,6 @@ class ClienteCitasController extends Controller
             $estados->haEmpezado($cita) => CambioDeEstadoNoPermitido::yaEmpezo()->getMessage(),
             default => CambioDeEstadoNoPermitido::fueraDePlazo()->getMessage(),
         };
-=======
->>>>>>> Stashed changes
 
         return view('citas.cliente-show', compact('cita'));
     }
@@ -205,7 +195,6 @@ class ClienteCitasController extends Controller
         $paciente = $this->pacienteActual();
         abort_unless($paciente, 404);
 
-<<<<<<< Updated upstream
         $cita = DB::table('citas')
             ->join('personal', 'citas.dentista_id', '=', 'personal.id')
             ->join('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
@@ -223,12 +212,6 @@ class ClienteCitasController extends Controller
                 'servicios.nombre AS servicio'
             )
             ->first();
-=======
-        $cita = DB::table('citas')->where('id', $id)->where('paciente_id', $paciente->id)->first();
-        if (! $cita) {
-            abort(404);
-        }
->>>>>>> Stashed changes
 
         abort_unless($cita, 404);
 
@@ -247,7 +230,6 @@ class ClienteCitasController extends Controller
         }
     }
 
-<<<<<<< Updated upstream
     // Una cita cerrada, en curso o ya empezada, o con el dentista inactivo o sin duración, se explica
     // sin estados internos (A7, A41; /review 028 R19).
     private function mensajeParaElPaciente(CambioDeEstadoNoPermitido $e): string
@@ -256,12 +238,6 @@ class ClienteCitasController extends Controller
             ? 'Esta cita ya no se puede reprogramar. Si necesitas ayuda, llama a la clínica.'
             : $e->getMessage();
     }
-=======
-        DB::table('citas')->where('id', $id)->update([
-            'estado' => 'cancelada',
-            'actualizado_en' => now(),
-        ]);
->>>>>>> Stashed changes
 
     // El paciente cancela o reprograma una cita agendada o confirmada con 24 horas o más (spec 028, CA2 y CA3).
     private function conPuedeCancelar(object $cita, EstadosCita $estados): object
@@ -308,19 +284,11 @@ class ClienteCitasController extends Controller
         $paciente = $this->pacienteActual();
         abort_unless($paciente, 404);
 
-<<<<<<< Updated upstream
         $reglas = ReservaCitas::reglasDeEntrada();
         $reglas['fecha'][] = 'after_or_equal:today';
 
         $data = $request->validate($reglas + [
             'servicio_id' => 'bail|required|string|exists:servicios,id',
-=======
-        $data = $request->validate([
-            'dentista_id' => 'required|exists:personal,id',
-            'servicio_id' => 'required|exists:servicios,id',
-            'fecha' => 'required|date|after_or_equal:today',
-            'hora' => 'required',
->>>>>>> Stashed changes
             'notas_paciente' => 'nullable|string|max:1000',
         ], ReservaCitas::mensajesDeEntrada() + [
             'dentista_id.required' => 'Elige un dentista.',
@@ -330,7 +298,6 @@ class ClienteCitasController extends Controller
 
         $servicio = DB::table('servicios')->where('id', $data['servicio_id'])->first();
 
-<<<<<<< Updated upstream
         // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
         try {
             $reservas->reservar([
@@ -343,68 +310,11 @@ class ClienteCitasController extends Controller
                 'notas_paciente' => $data['notas_paciente'] ?? null,
                 'notas_internas' => null,
                 'creado_por' => auth()->id(),
-=======
-        $fechaHora = Carbon::parse($data['fecha'].' '.$data['hora']);
-        $horaFinCita = (clone $fechaHora)->addMinutes($duracion);
-
-        $diaSemana = $fechaHora->isoWeekday();
-        $horario = DB::table('horarios_dentista')
-            ->where('personal_id', $data['dentista_id'])
-            ->where('dia_semana', $diaSemana)
-            ->first();
-
-        if (! $horario || ! $horario->disponible) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El dentista no tiene horario disponible ese día de la semana.',
->>>>>>> Stashed changes
             ]);
         } catch (CitaNoAgendable $rechazo) {
             return back()->withInput()->withErrors(['hora' => $rechazo->getMessage()]);
         }
 
-<<<<<<< Updated upstream
-=======
-        $horaInicio = Carbon::parse($data['fecha'].' '.$horario->hora_inicio);
-        $horaFinDisponible = Carbon::parse($data['fecha'].' '.$horario->hora_fin);
-
-        if ($fechaHora->lt($horaInicio) || $horaFinCita->gt($horaFinDisponible)) {
-            return back()->withInput()->withErrors([
-                'hora' => 'El horario elegido está fuera del horario de atención del dentista ('
-                    .$horaInicio->format('H:i').' - '.$horaFinDisponible->format('H:i').').',
-            ]);
-        }
-
-        $conflicto = DB::table('citas')
-            ->where('dentista_id', $data['dentista_id'])
-            ->whereNotIn('estado', ['cancelada', 'no_asistio'])
-            ->where(function ($q) use ($fechaHora, $horaFinCita) {
-                $q->whereBetween('fecha_hora', [$fechaHora, $horaFinCita])
-                    ->orWhereRaw('DATE_ADD(fecha_hora, INTERVAL duracion_min MINUTE) > ? AND fecha_hora < ?',
-                        [$fechaHora, $horaFinCita]);
-            })
-            ->exists();
-
-        if ($conflicto) {
-            return back()->withInput()->withErrors([
-                'hora' => 'Ese horario ya no está disponible. Por favor elige otro.',
-            ]);
-        }
-
-        DB::table('citas')->insert([
-            'id' => (string) Str::uuid(),
-            'paciente_id' => $paciente->id,
-            'dentista_id' => $data['dentista_id'],
-            'servicio_id' => $data['servicio_id'],
-            'fecha_hora' => $fechaHora,
-            'duracion_min' => $duracion,
-            'estado' => 'agendada',
-            'notas_paciente' => $data['notas_paciente'] ?? null,
-            'creado_por' => auth()->id(),
-            'creado_en' => now(),
-            'actualizado_en' => now(),
-        ]);
-
->>>>>>> Stashed changes
         return redirect()->route('cliente.dashboard')
             ->with('success', 'Tu cita fue agendada correctamente.');
     }
