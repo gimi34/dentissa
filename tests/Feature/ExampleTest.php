@@ -19,11 +19,10 @@ class ExampleTest extends TestCase
      * verificado, y falla si la aplicación deja de redirigir al visitante
      * anónimo hacia el inicio de sesión.
      */
-    public function test_anonymous_visitor_is_redirected_to_landing_index(): void
+    public function test_anonymous_visitor_is_redirected_to_login(): void
     {
         $response = $this->get('/');
-        $response->assertStatus(200);
 
-        $response->assertViewIs('landing.index');
+        $response->assertRedirect('/login');
     }
 }
