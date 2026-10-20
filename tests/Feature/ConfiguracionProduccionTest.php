@@ -284,6 +284,28 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
+     * Spec 031 (CA7; /review R1): «Entorno aplicado» de verificar.sh no puede dar OK sin
+     * comparar todos los servicios. Un error al comparar uno es su FALLO, python3 declara
+     * cuántos servicios hay y el shell falla si faltan líneas o python3 no termina bien.
+     */
+    public function test_el_entorno_aplicado_no_da_ok_sin_comparar_todos_los_servicios(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+        $this->assertSame(1, preg_match('/^    echo "== Entorno aplicado.*?\n(.*?)^    echo "== /ms', $script, $bloque), 'verificar.sh tiene el bloque «Entorno aplicado».');
+        $this->assertSame(1, preg_match("/<<'PY'\n(.*?)\nPY\n(.*)/s", $bloque[1], $partes), 'El bloque compara con python3.');
+        [, $python, $shell] = $partes;
+
+        $this->assertSame(1, preg_match('/^for nombre, servicio in [^\n]*:\n((?:    [^\n]*\n|\n)+)/m', $python, $bucle), 'python3 recorre los servicios del Compose.');
+        $this->assertMatchesRegularExpression('/^    try:\n/m', $bucle[1], 'Cada servicio se compara dentro de su propio try.');
+        $this->assertMatchesRegularExpression('/^    except Exception\b[^\n]*:\n        print\(f[\'"]FALLO \{nombre\}: no se pudo comparar/m', $bucle[1], 'Un error al comparar un servicio es su FALLO.');
+        $this->assertMatchesRegularExpression('/^print\(f[\'"]SERVICIOS \{len\(config\[[\'"]services[\'"]\]\)\}[\'"]\)/m', $python, 'python3 declara cuántos servicios compara.');
+
+        $this->assertMatchesRegularExpression('/^\)"\n    codigo=\$\?\n/', $shell, 'El shell guarda el código de salida de python3.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*\bgrep\b[^\n]*\^SERVICIOS /m', $shell, 'El shell lee el número de servicios.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*"\$\{codigo\}" -ne 0 \|\|[^\n]*-ne "\$\{servicios\}"/m', $shell, 'El shell falla si python3 termina mal o faltan líneas.');
+    }
+
+    /**
      * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
      * instala desde el repositorio oficial firmado, sin ejecutar scripts
      * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
