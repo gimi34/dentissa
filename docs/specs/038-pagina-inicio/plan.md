@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: approved   # draft | approved | blocked
+status: draft   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-10-20
 ---
@@ -37,7 +37,7 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | P7 Auditoría de datos sensibles | ➖ | No toca datos sensibles, autenticación ni permisos: solo publica el catálogo activo y textos fijos | — |
 | P8 Correlación y logs sin datos sensibles | ➖ | No añade logs ni procesa datos personales. Las respuestas siguen pasando por la correlación existente | — |
 | P9 Solo sistema de diseño, WCAG 2.1 AA | ✅ | La primera tarea incorpora a `system.md` 1.7.0 los «Cambios a incorporar al sistema» de `design.md`. `publico.css` usa solo tokens y la vista no lleva `style=""`. Contraste calculado en `design.md` | test: `PaginasPublicasCssTest` (tokens = sistema, sin literales, contraste de los pares nuevos, sin `style=""`) · manual: capturas contra `design/opcion-b.html` a 320, 390, 900 y 1440 px, y teclado y NVDA en el menú |
-| P10 Rutas indexables descubribles | ✅ | `/` y `/servicios` pasan a indexables (decisión del usuario en la spec): título y descripción únicos, una canónica absoluta desde `APP_URL`, sin `noindex`, contenido en el HTML del servidor y 0 kB de JavaScript. Se actualiza `docs/seo.md` | test: `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_ninguna_pagina_publica_carga_scripts` · manual: Lighthouse SEO ≥ 90 en `/review` |
+| P10 Rutas indexables descubribles | ❌ aceptado: el JavaScript de terceros del `iframe` del mapa de Google no cuenta para el límite de 100 kB por ruta (y el peso del mapa no cuenta para el 1 MB de `/`), porque el navegador puede cargarlo en la primera visita aunque sea perezoso; el JavaScript propio sigue en 0 kB y lo transferido se mide y anota (`/analyze` A4) — aprobado por el usuario el 2026-10-20 | `/` y `/servicios` pasan a indexables (decisión del usuario en la spec): título y descripción únicos, una canónica absoluta desde `APP_URL`, sin `noindex`, contenido en el HTML del servidor y 0 kB de JavaScript propio. Se actualiza `docs/seo.md` | test: `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_ninguna_pagina_publica_carga_scripts` · manual: Lighthouse SEO ≥ 90 y medición de JS y total transferido de `/` con nginx local, caché vacía, a 390 y 1440 px (T042) |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
@@ -89,6 +89,32 @@ Ninguna recibe parámetros: los que lleguen en la URL se ignoran. No hay escritu
 | Página de inicio | normal · sin servicios activos (sin la sección de servicios) · con sesión (redirige) | `opcion-b.html#inicio-solo038-m`, `#inicio-vacio-m`, `#inicio-d` |
 | `/servicios` | normal · sin servicios activos («Pronto publicaremos nuestros servicios.») · con sesión («Ir a mi panel») | `#servicios-m`, `#servicios-d`, `#servicios-vacio-m` |
 | Menú del móvil | cerrado · abierto (`<details open>`) | `#inicio-m` |
+
+### Navegación de la 038 (`/analyze` A3)
+- Cabecera y menú del móvil: «Servicios» → `/servicios`, «Ubicación» → `#ubicacion`,
+  «Iniciar sesión» (o «Ir a mi panel» con sesión) y, solo en el menú y el pie, «Crear cuenta» →
+  `/registro`. «Promociones» y «Trabajos» llegan con la 040 y la 039, que los añaden.
+- Pie: «Servicios», «Crear cuenta» e «Iniciar sesión».
+- Ningún enlace apunta a una sección que puede no existir: «Servicios» va siempre a `/servicios`
+  (que tiene su estado vacío), no a `#servicios`.
+- Test: `PaginasPublicasTest::test_todos_los_enlaces_internos_resuelven`. En `/` y `/servicios`,
+  con y sin servicios activos, cada `href="#id"` tiene su `id` en la página y cada ruta interna
+  responde 200 o 302.
+
+### Clases de los componentes (`/analyze` A6)
+Las de `design/opcion-b.html`, que T014 usa para comprobar el toque y el foco:
+- cabecera: `.pub-bar`, `.pub-nav-d` (enlaces y `.c-btn`), `.pub-menu` y `.pub-menu summary`;
+- placa: `.lb-placa`, `.lb-placa-texto`, `.lb-aviso`, `.lb-llamar`;
+- «Sobre nosotros»: `.lb-nosotros`;
+- puertas: `.lb-puertas a`; índice de `/servicios`: `.lb-indice a`;
+- listas de `/servicios`: `.lb-servicios`, `.lb-lista`;
+- mapa con placa: `.lb-calle`, `.mapa`, `.lb-placa-dir`, `.nota-mapa`;
+- pie: `.lb-pie`;
+- comunes: `.c-btn`, `.c-btn--primary`, `.c-btn--secondary`, `.c-link`, `.lb-wrap`, `.lb-seccion`, `.lb-cabeza`.
+
+Llevan `--touch-min` como alto mínimo los enlaces y botones de `.pub-nav-d`, `.pub-menu summary`,
+los enlaces de `.pub-menu`, `.lb-puertas a`, `.lb-indice a`, `.c-btn` y `.c-link`. Todos usan el
+foco del sistema (`--focus-ring`).
 
 ### Accesibilidad medible
 - Un solo `h1` por página: el título de la placa o «Nuestros servicios». En el inicio, el aviso de
@@ -184,9 +210,9 @@ publica el catálogo y del cambio en la política de contenido.
 | CA9: 320–1440 sin desbordamiento, toque ≥ 44, foco visible, menú con teclado, sin animaciones con movimiento reducido | `publico.css`, layout (`<details>`) | `PaginasPublicasCssTest` (toque, cortes, foco con tokens, transiciones solo con `prefers-reduced-motion: no-preference`) · `capturar.mjs --medir` (publico-inicio, publico-servicios) · verificación manual: menú con teclado y NVDA |
 | CA10: título, descripción, canónica, sin `noindex`, distintos entre sí y de `/registro` | layout (`@yield`), vistas | `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_un_solo_h1` |
 | RNF: WCAG 2.1 AA (contraste, títulos en orden, decorativos ocultos) | `publico.css`, vistas | `PaginasPublicasCssTest::test_contraste_de_los_pares_nuevos` · `PaginasPublicasTest::test_un_solo_h1` · verificación manual: NVDA |
-| RNF: indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS | vistas | `PaginasPublicasTest::test_ninguna_pagina_publica_carga_scripts` · verificación manual: Lighthouse sobre `/` y `/servicios` servidos en local, en `/review` |
+| RNF: indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS (sin contar el JS de terceros del mapa: excepción aceptada, P10) | vistas | `PaginasPublicasTest::test_ninguna_pagina_publica_carga_scripts` · verificación manual: Lighthouse y medición de JS propio, de terceros y total de `/` con nginx local (T042), y en `/review` |
 | RNF: `/` ≤ 1 MB en la primera visita | vistas, fuentes, `publico.css` | `PaginasPublicasTest::test_los_recursos_propios_de_la_raiz_pesan_menos_de_un_mega` |
-| RNF: el mapa no se descarga hasta acercarse | `iframe` | `PaginaInicioTest::test_el_mapa_es_perezoso_y_avisa_de_google` |
+| RNF: el mapa no se descarga hasta acercarse | `iframe` | `PaginaInicioTest::test_el_mapa_es_perezoso_y_avisa_de_google` · verificación manual: T042 anota si el `iframe` entra en la primera carga a 390 y 1440 px (el navegador carga los perezosos a 1250–2500 px del viewport; si entra, se aplica la excepción de P10) |
 | TM1: XSS almacenado desde el catálogo | `publico/inicio`, `publico/servicios` | `ServiciosPublicosTest::test_el_texto_del_catalogo_sale_escapado` · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` |
 | TM2: precios, duraciones o inactivos en público | `Servicio::porCategoria` | `ServiciosPublicosTest::test_solo_activos_sin_precio_ni_duracion` · `PaginaInicioTest::test_solo_categorias_activas_sin_servicios_sueltos` |
 | TM3: la excepción de marcos se abre de más | `marcos.conf`, `comunes.conf` | `CabecerasSeguridadTest::test_solo_la_raiz_admite_el_mapa` |
@@ -294,6 +320,10 @@ auditoría.
 - **D10 · `ProxyHttpsTest` y `verificar.sh` comprueban la redirección con `/admin`.** Mantienen la
   intención de la 030 (la redirección sale en https, con el host y el puerto propios). `/` ya no
   redirige sin sesión (CA1).
+  - 030 CA2 no cambia de comportamiento; solo cambia la ruta con la que se prueba, y por eso la
+    030 no va en `extends` (`/analyze` A9).
+  - T041 anota en el Historial de la 030 el cambio de ruta de prueba, y en el de la 031 que su
+    CA1 queda ampliado por 038 CA7 (`frame-src` del mapa en `/`).
 - **D11 · Retirada.** Se retiran:
   - `resources/views/landing/index.blade.php`;
   - `public/images/cover-bg.jpg` (foto de banco con licencia desconocida, `brief.md`);
@@ -306,14 +336,14 @@ auditoría.
 - **D13 · Orden con la 031** (decisión del usuario, 2026-10-20). La 031 sale antes. La 038 trae
   `main` antes de sus tareas de nginx, de `CabecerasSeguridadTest` y de `verificar.sh`, y
   concilia esos archivos.
-  - **Prerrequisito de la 031:** el `main` de hoy ya sirve la landing del colaborador en `/`, por
-    el merge `f096e17`. Si la 031 se libera así, esa landing llega a producción:
-    - la CSP bloquea su Tailwind por CDN y se vería sin estilos;
-    - `verificar.sh` falla en «/ redirige a https»;
-    - `ProxyHttpsTest` sigue en rojo.
-
-    Antes de `/release 031`, el usuario elige entre devolver `/` al login en `main` con un `/fix`
-    o adelantar D10 (ver Riesgos).
+  - **Prerrequisito de la 031** (`/analyze` A1, decisión del usuario, 2026-10-20): un `/fix` en
+    `main` devuelve `/` al login y `ExampleTest` vuelve a esperar esa redirección. Con eso
+    `ProxyHttpsTest` y `verificar.sh` pasan sin cambios, y la v0.10.0 no sirve la landing del
+    colaborador. La vista `landing/index.blade.php` y sus imágenes quedan en `main` sin uso hasta
+    que la 038 las retira (T027).
+  - Al traer `main` (T004), `routes/web.php` y `ExampleTest` llegan con el `/fix`. Los conflictos
+    se resuelven a favor de la 038 (T016, T022). Las pruebas de `ProxyHttpsTest` con `/admin`
+    pasan a ser de caracterización (`/analyze` A8).
 - **D14 · Tokens nuevos de esta spec** (de `design.md`, «Cambios a incorporar al sistema»):
   `--font-publica`, `--text-publico-h1` y `--text-publico-h2` (fluidos, con `clamp()` y `vw` entre
   320 y 1440), `--text-publico-h3`, `--text-publico`, `--text-publico-small`, `--space-seccion`
@@ -332,10 +362,8 @@ Lo actualiza T090 al implementar:
 - **SEO** (en `architecture.md` → Frontend): `/`, `/servicios` y `/registro` indexables.
 
 ## Riesgos y mitigaciones
-- **La 031 se libera desde un `main` con la landing del colaborador** (D13). Mitigación,
-  recomendada antes de `/release 031`: un `/fix` en `main` que devuelva `/` al login y adelante
-  D10 en `ProxyHttpsTest` (CI en verde), dejando la página nueva para la 038. Sin eso, la v0.10.0
-  sirve en `/` una página sin estilos y falla `verificar.sh`.
+- **La 031 se libera desde un `main` con la landing del colaborador** (D13). Decidido: un `/fix`
+  en `main` antes de `/release 031` devuelve `/` al login y deja la CI en verde (`/analyze` A1).
 - **Conflictos con la rama de la 031** en `comunes.conf`, `CabecerasSeguridadTest` y
   `verificar.sh`. Mitigación: D13 (traer `main` con la 031 liberada antes de esas tareas) y tests
   de configuración que detectan una conciliación mal hecha.
@@ -352,3 +380,9 @@ Lo actualiza T090 al implementar:
   Mitigación: es decisión del usuario (D7); el diseño no fija el orden.
 - **Riesgo aceptado:** las páginas públicas no tienen límite de peticiones propio (TM6). Las
   protegen Cloudflare y una consulta mínima.
+- **El mapa entra en la primera carga** y su JavaScript de terceros supera lo que pide P10 para
+  la ruta. Se acepta como excepción de P10 (`/analyze` A4, decisión del usuario, 2026-10-20) y se
+  mide en T042. El JavaScript propio sigue en 0 kB.
+- **La 039 relajará invariantes de esta spec**: «ningún `<script>`» y «ningún recurso externo
+  salvo el mapa» de `PaginasPublicasTest` (`/analyze` A16). Su plan modifica esos casos en lugar
+  de duplicarlos.
