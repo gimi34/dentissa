@@ -27,8 +27,8 @@ revisar_cabeceras() {
     grep -iqE '^x-frame-options: *DENY' <<< "${cabeceras}" || faltan+=("X-Frame-Options")
     grep -iqE '^x-content-type-options: *nosniff' <<< "${cabeceras}" || faltan+=("X-Content-Type-Options")
     grep -iqE '^referrer-policy: *strict-origin-when-cross-origin' <<< "${cabeceras}" || faltan+=("Referrer-Policy")
-    grep -iqE '^x-powered-by:' <<< "${cabeceras}" && faltan+=("sin X-Powered-By")
-    grep -iqE '^server:.*[0-9]' <<< "${cabeceras}" && faltan+=("Server sin versión")
+    grep -iqE '^x-powered-by:' <<< "${cabeceras}" && faltan+=("X-Powered-By presente")
+    grep -iqE '^server:.*[0-9]' <<< "${cabeceras}" && faltan+=("Server con versión")
     if [[ "${hsts}" == "hsts" ]]; then
         local edad
         edad="$(grep -ioE '^strict-transport-security:.*max-age=[0-9]+' <<< "${cabeceras}" | grep -oE '[0-9]+$' || true)"
@@ -100,7 +100,7 @@ main() {
     echo "== Cabeceras por la red interna (spec 031)"
     # curl dentro de web y sin -L: la 301 se juzga por sus propias cabeceras, sin
     # seguir la redirección (/analyze A29).
-    local cabeceras
+    local cabeceras ruta
     for ruta in /login /css/app.css /no-existe-verificacion; do
         cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1${ruta}" 2>/dev/null | tr -d '\r')"
         revisar_cabeceras "${ruta} (interna)" "${cabeceras}"
@@ -181,34 +181,45 @@ try:
     en_marcha = set(salida(*compose, 'ps', '--status', 'running', '--services').split())
 except Exception as error:
     print(f'FALLO entorno aplicado: no se pudo leer el Compose ({type(error).__name__})')
-    sys.exit(0)
+    sys.exit(1)
+
+# El shell comprueba que haya una línea OK o FALLO por cada servicio (/review R1).
+print(f"SERVICIOS {len(config['services'])}")
 
 for nombre, servicio in sorted(config['services'].items()):
-    if nombre not in en_marcha:
-        print(f'OK    {nombre} parado: no se compara')
-        continue
-    # compose config escapa el $ literal como $$ (T002).
-    esperado = {k: ('' if v is None else str(v).replace('$$', '$')) for k, v in (servicio.get('environment') or {}).items()}
-    contenedor = salida(*compose, 'ps', '-q', nombre).split()[0]
-    info = json.loads(salida('docker', 'inspect', contenedor))[0]
-    actual = entorno(info['Config']['Env'])
-    de_imagen = entorno(json.loads(salida('docker', 'image', 'inspect', info['Image']))[0]['Config'].get('Env'))
-    distintas = [k for k in esperado if actual.get(k) != esperado[k]]
-    sobrantes = [k for k in actual if k not in esperado and actual[k] != de_imagen.get(k)]
-    n = len(distintas) + len(sobrantes)
-    if n == 0:
-        print(f'OK    {nombre} usa la configuración guardada')
-    elif nombre == 'db':
-        print(f'FALLO db usa una configuración distinta de la guardada ({n} variables): db.env solo se aplica al crear la base (ver deploy/README.md)')
-    else:
-        print(f'FALLO {nombre} usa una configuración distinta de la guardada ({n} variables): bash deploy/aplicar-entorno.sh {nombre}')
+    # Un error al comparar un servicio es su FALLO, nunca un OK que falta (/review R1).
+    try:
+        if nombre not in en_marcha:
+            print(f'OK    {nombre} parado: no se compara')
+            continue
+        # compose config escapa el $ literal como $$ (T002).
+        esperado = {k: ('' if v is None else str(v).replace('$$', '$')) for k, v in (servicio.get('environment') or {}).items()}
+        contenedor = salida(*compose, 'ps', '-q', nombre).split()[0]
+        info = json.loads(salida('docker', 'inspect', contenedor))[0]
+        actual = entorno(info['Config']['Env'])
+        de_imagen = entorno(json.loads(salida('docker', 'image', 'inspect', info['Image']))[0]['Config'].get('Env'))
+        distintas = [k for k in esperado if actual.get(k) != esperado[k]]
+        sobrantes = [k for k in actual if k not in esperado and actual[k] != de_imagen.get(k)]
+        n = len(distintas) + len(sobrantes)
+        if n == 0:
+            print(f'OK    {nombre} usa la configuración guardada')
+        elif nombre == 'db':
+            print(f'FALLO db usa una configuración distinta de la guardada ({n} variables): db.env solo se aplica al crear la base (ver deploy/README.md)')
+        else:
+            print(f'FALLO {nombre} usa una configuración distinta de la guardada ({n} variables): bash deploy/aplicar-entorno.sh {nombre}')
+    except Exception as error:
+        print(f'FALLO {nombre}: no se pudo comparar ({type(error).__name__})')
 PY
 )"
-    if grep -qE '^(OK|FALLO) ' <<< "${entorno}"; then
-        grep -E '^(OK|FALLO) ' <<< "${entorno}"
-        FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${entorno}" || true)))
-    else
-        fallo "entorno aplicado: no se pudo comparar (¿falta python3?)"
+    codigo=$?
+    local servicios lineas
+    servicios="$(grep -E '^SERVICIOS [0-9]+$' <<< "${entorno}" | cut -d' ' -f2)"
+    lineas="$(grep -cE '^(OK|FALLO) ' <<< "${entorno}" || true)"
+    grep -E '^(OK|FALLO) ' <<< "${entorno}" || true
+    FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${entorno}" || true)))
+    # Sin el recuento, con python3 terminado en error o con servicios sin línea, no hay OK posible.
+    if [[ -z "${servicios}" || "${codigo}" -ne 0 || "${lineas}" -ne "${servicios}" ]]; then
+        fallo "entorno aplicado: no se compararon todos los servicios (python3 terminó con ${codigo}; ${lineas} líneas para ${servicios:-?} servicios)"
     fi
 
     echo "== Administración remota (spec 031, CA8, CA9)"

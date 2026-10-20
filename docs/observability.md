@@ -20,7 +20,7 @@ cubierta.
 | Métricas | ninguna | — | `composer.json` sin Pulse/Telescope/Prometheus |
 | Trazas distribuidas | ninguna | — | — |
 | Alertas | ninguna (canal `slack` definido sin webhook) | presente | `config/logging.php` |
-| Health check | `/up` de Laravel (no comprueba BD) | en uso | `bootstrap/app.php` |
+| Health check | `/up` de Laravel (no comprueba BD) | en uso | `bootstrap/app.php`; `deploy/verificar.sh` lo comprueba tras cada despliegue, junto a la configuración aplicada, las cabeceras y la red privada (spec 031) |
 | Visor de logs en local | `laravel/pail` | presente (require-dev), no se usa | `composer.json` |
 
 ## Logs
