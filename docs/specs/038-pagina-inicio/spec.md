@@ -1,7 +1,7 @@
 ---
 id: 038
 slug: pagina-inicio
-status: draft
+status: approved
 created: 2026-10-20
 extends: [001, 031]
 ---
@@ -204,5 +204,6 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-10-20 | Spec aprobada (`approved`) con los supuestos de Decisiones | Aprobación del usuario |
 | 2026-10-20 | Mapa de Google incrustado en la ubicación: CA4, CA5 y CA6, seguridad, rendimiento; `extends` 031 | Petición del usuario antes de aprobar |
 | 2026-10-20 | Spec creada en `draft` | La página de inicio llegó a `main` fuera del flujo (merge `f096e17`); el usuario pidió regularizarla y añadir la galería |
