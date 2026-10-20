@@ -259,7 +259,8 @@ class ConfiguracionProduccionTest extends TestCase
     public function test_el_despliegue_construye_sin_cache(): void
     {
         $script = $this->leer('deploy/desplegar.sh');
-        $construcciones = preg_grep('/^[^#\n]*\bbuild\b/', explode("\n", $script));
+        // Anclado a la orden (/review R8): un echo o un paso "build …" no cuentan.
+        $construcciones = preg_grep('/^\s*"\$\{compose\[@\]\}" build\b/', explode("\n", $script));
         $this->assertNotEmpty($construcciones, 'desplegar.sh construye las imágenes.');
         foreach ($construcciones as $linea) {
             $this->assertStringContainsString('--no-cache', $linea, 'La construcción no usa la caché.');
@@ -291,7 +292,7 @@ class ConfiguracionProduccionTest extends TestCase
         }
 
         $script = $this->leer('deploy/desplegar.sh');
-        $this->assertMatchesRegularExpression('/^[^#\n]*\bbuild\b[^\n]*--build-arg REFRESCO_SISTEMA=[^\n]*\bapp web\b/m', $script, 'desplegar.sh pasa REFRESCO_SISTEMA al construir app y web.');
+        $this->assertMatchesRegularExpression('/^\s*"\$\{compose\[@\]\}" build\b[^\n]*--build-arg REFRESCO_SISTEMA=[^\n]*\bapp web\b/m', $script, 'desplegar.sh pasa REFRESCO_SISTEMA al construir app y web.');
     }
 
     /**
@@ -341,6 +342,23 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
+     * Spec 031 (CA4, CA7; /review R7): `verificar.sh` nombra bien lo que sobra en las
+     * cabeceras (X-Powered-By o la versión de Server están presentes, no «faltan») y la ruta
+     * del bucle de cabeceras es local a la función.
+     */
+    public function test_verificar_nombra_las_cabeceras_que_sobran_y_la_ruta_es_local(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+
+        $this->assertMatchesRegularExpression('/^\s*grep -iqE \'\^x-powered-by:\' <<< "\$\{cabeceras\}" && faltan\+=\("X-Powered-By presente"\)$/m', $script);
+        $this->assertMatchesRegularExpression('/^\s*grep -iqE \'\^server:\.\*\[0-9\]\' <<< "\$\{cabeceras\}" && faltan\+=\("Server con versión"\)$/m', $script);
+
+        $bucle = strpos($script, 'for ruta in ');
+        $this->assertNotFalse($bucle, 'verificar.sh recorre las rutas de las cabeceras.');
+        $this->assertMatchesRegularExpression('/^\s*local\b[^\n]*\bruta\b/m', substr($script, 0, $bucle), 'La variable ruta se declara local antes del bucle.');
+    }
+
+    /**
      * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
      * instala desde el repositorio oficial firmado, sin ejecutar scripts
      * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
@@ -352,11 +370,17 @@ class ConfiguracionProduccionTest extends TestCase
 
         $this->assertMatchesRegularExpression('#^[^\#\n]*signed-by=\S+[^\n]*https://pkgs\.tailscale\.com/stable/ubuntu#m', $script, 'El repositorio de Tailscale debe declararse con signed-by.');
         $this->assertDoesNotMatchRegularExpression('/\|\s*(sudo\s+)?(ba)?sh\b/', $script, 'No se ejecuta ningún script descargado.');
-        $this->assertMatchesRegularExpression('/^[^#\n]*\btailscale up\b[^\n]*--ssh=false/m', $script, 'tailscale up debe desactivar el SSH de Tailscale.');
+        // Anclados a la orden real (/review R8): un echo que la imita no cuenta.
+        $this->assertMatchesRegularExpression('#^\s*curl -fsSL "https://pkgs\.tailscale\.com/stable/ubuntu/\$\{\w+\}\.noarmor\.gpg" -o "\$\{\w+\}"$#m', $script, 'La clave del repositorio se descarga a un archivo, sin ejecutarla.');
+        $this->assertMatchesRegularExpression('/^\s*tailscale up\b[^\n]*--ssh=false/m', $script, 'tailscale up debe desactivar el SSH de Tailscale.');
         // El repositorio de Tailscale no publica "a=" (archive), solo "o=" y "n=":
         // Allowed-Origins ("origen:archivo") no lo cubre, Origins-Pattern sí (T041).
-        $this->assertMatchesRegularExpression('/^[^#\n]*Unattended-Upgrade::Origins-Pattern/m', $script, 'El origen de Tailscale debe entrar en las actualizaciones automáticas.');
-        $this->assertMatchesRegularExpression('/^[^#\n]*"origin=\$\{\w+\},codename=\$\{\w+\}"/m', $script, 'El patrón debe usar el origen y el nombre de la versión del repositorio.');
-        $this->assertMatchesRegularExpression('/^[^#\n]*ufw allow in on tailscale0 to any port 22 proto tcp/m', $script);
+        // El patrón va dentro del archivo de actualizaciones que escribe el script.
+        $this->assertMatchesRegularExpression(
+            '/^\s*cat > "\$\{ACTUALIZACIONES\}" <<CONF\n(?:(?!CONF\n)[^\n]*\n)*?Unattended-Upgrade::Origins-Pattern \{\n\s*"origin=\$\{\w+\},codename=\$\{\w+\}";\n\};\nCONF$/m',
+            $script,
+            'El origen de Tailscale (origen y nombre de la versión) debe entrar en las actualizaciones automáticas.',
+        );
+        $this->assertMatchesRegularExpression('/^\s*ufw allow in on tailscale0 to any port 22 proto tcp$/m', $script);
     }
 }

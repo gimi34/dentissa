@@ -153,6 +153,12 @@ class CabecerasSeguridadTest extends TestCase
         $this->assertMatchesRegularExpression('/^expose_php\s*=\s*(Off|0)\s*$/mi', $this->leer('docker/nginx/php/local.ini'));
     }
 
+    /** /review R6: las trazas que deja report() no llevan los argumentos de las llamadas. */
+    public function test_las_trazas_no_llevan_argumentos(): void
+    {
+        $this->assertMatchesRegularExpression('/^zend\.exception_ignore_args\s*=\s*(On|1)\s*$/mi', $this->leer('docker/nginx/php/local.ini'));
+    }
+
     public function test_los_fragmentos_llegan_a_nginx_en_local_y_en_produccion(): void
     {
         $this->assertMatchesRegularExpression(
