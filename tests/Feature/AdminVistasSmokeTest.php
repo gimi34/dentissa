@@ -43,12 +43,12 @@ class AdminVistasSmokeTest extends TestCase
     private function crearUsuario(string $rol, array $valores = []): Usuario
     {
         return Usuario::create(array_merge([
-            'nombre'        => 'Persona',
-            'apellido'      => 'De Vistas',
-            'email'         => 'vistas.' . Str::random(8) . '@example.test',
-            'rol'           => $rol,
-            'telefono'      => '555-0000',
-            'activo'        => 1,
+            'nombre' => 'Persona',
+            'apellido' => 'De Vistas',
+            'email' => 'vistas.'.Str::random(8).'@example.test',
+            'rol' => $rol,
+            'telefono' => '555-0000',
+            'activo' => 1,
             'password_hash' => Hash::make('secreto-de-pruebas'),
         ], $valores, ['rol' => $rol]));
     }
@@ -62,14 +62,14 @@ class AdminVistasSmokeTest extends TestCase
         $id = (string) Str::uuid();
 
         DB::table('servicios')->insert(array_merge([
-            'id'           => $id,
-            'nombre'       => 'Limpieza dental ' . Str::random(6),
-            'descripcion'  => 'Fila creada por AdminVistasSmokeTest.',
-            'categoria'    => 'Preventiva',
+            'id' => $id,
+            'nombre' => 'Limpieza dental '.Str::random(6),
+            'descripcion' => 'Fila creada por AdminVistasSmokeTest.',
+            'categoria' => 'Preventiva',
             'duracion_min' => 30,
-            'precio'       => 850.00,
+            'precio' => 850.00,
             'color_agenda' => '#ED93B1',
-            'activo'       => 1,
+            'activo' => 1,
         ], $valores, ['id' => $id]));
 
         return $id;
@@ -83,8 +83,8 @@ class AdminVistasSmokeTest extends TestCase
      */
     public function test_las_vistas_de_administracion_de_usuarios_se_renderizan(): void
     {
-        $admin     = $this->crearUsuario('admin');
-        $cliente   = $this->crearUsuario('cliente');
+        $admin = $this->crearUsuario('admin');
+        $cliente = $this->crearUsuario('cliente');
         $asistente = $this->crearUsuario('asistente');
 
         $listado = $this->actingAs($admin)->get(route('admin.usuarios.index'));
@@ -107,9 +107,9 @@ class AdminVistasSmokeTest extends TestCase
 
         foreach (['admin', 'dentista', 'asistente', 'cliente'] as $rol) {
             $this->assertStringContainsString(
-                'value="' . $rol . '"',
+                'value="'.$rol.'"',
                 $edicion->getContent(),
-                'El selector de rol ya no ofrece la opción "' . $rol . '".'
+                'El selector de rol ya no ofrece la opción "'.$rol.'".'
             );
         }
 
@@ -140,9 +140,9 @@ class AdminVistasSmokeTest extends TestCase
      */
     public function test_el_listado_de_usuarios_sigue_filtrando_por_texto_y_por_tipo(): void
     {
-        $admin    = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $dentista = $this->crearUsuario('dentista', ['nombre' => 'Bernarda']);
-        $cliente  = $this->crearUsuario('cliente', ['nombre' => 'Casimiro']);
+        $cliente = $this->crearUsuario('cliente', ['nombre' => 'Casimiro']);
 
         $porTexto = $this->actingAs($admin)
             ->get(route('admin.usuarios.index', ['buscar' => $dentista->email]));
@@ -169,7 +169,7 @@ class AdminVistasSmokeTest extends TestCase
         $admin = $this->crearUsuario('admin');
 
         $respuesta = $this->actingAs($admin)->get(route('admin.usuarios.index', [
-            'buscar' => 'cadena-que-no-existe-' . Str::random(12),
+            'buscar' => 'cadena-que-no-existe-'.Str::random(12),
         ]));
 
         $respuesta->assertOk();
@@ -185,7 +185,7 @@ class AdminVistasSmokeTest extends TestCase
      */
     public function test_un_usuario_inexistente_responde_404_y_no_un_error_500(): void
     {
-        $admin      = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $inexistente = (string) Str::uuid();
 
         $this->actingAs($admin)
@@ -209,7 +209,7 @@ class AdminVistasSmokeTest extends TestCase
      */
     public function test_las_vistas_de_servicios_conservan_los_campos_no_tocados(): void
     {
-        $admin      = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $servicioId = $this->crearServicio();
 
         $this->actingAs($admin)->get(route('admin.servicios.create'))->assertOk();
@@ -219,11 +219,11 @@ class AdminVistasSmokeTest extends TestCase
         // está marcada, así que omitirla es lo que el formulario envía al
         // desmarcarla. Mandar 'activo' => '0' la daría por marcada.
         $camposComunes = [
-            'nombre'       => 'Limpieza dental profunda',
-            'descripcion'  => 'Descripción reescrita por la prueba de humo.',
-            'categoria'    => 'Periodoncia',
+            'nombre' => 'Limpieza dental profunda',
+            'descripcion' => 'Descripción reescrita por la prueba de humo.',
+            'categoria' => 'Periodoncia',
             'duracion_min' => 75,
-            'precio'       => '850.00',
+            'precio' => '850.00',
             'color_agenda' => '#ED93B1',
         ];
 
@@ -256,9 +256,9 @@ class AdminVistasSmokeTest extends TestCase
         $this->actingAs($admin)
             ->from(route('admin.servicios.edit', $servicioId))
             ->put(route('admin.servicios.update', $servicioId), array_merge($camposComunes, [
-                'precio'       => '1975.50',
+                'precio' => '1975.50',
                 'color_agenda' => '#0A1B2C',
-                'activo'       => '1',
+                'activo' => '1',
             ]))
             ->assertSessionHasNoErrors();
 
@@ -290,50 +290,50 @@ class AdminVistasSmokeTest extends TestCase
      */
     public function test_el_precio_correcto_se_propaga_a_las_vistas_sql(): void
     {
-        $admin      = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $servicioId = $this->crearServicio(['precio' => 18000.00]);
 
-        $cliente  = $this->crearUsuario('cliente');
+        $cliente = $this->crearUsuario('cliente');
         $dentista = $this->crearUsuario('dentista');
 
         $personalId = (string) Str::uuid();
         DB::table('personal')->insert([
-            'id'         => $personalId,
+            'id' => $personalId,
             'usuario_id' => $dentista->id,
-            'tipo'       => 'dentista',
+            'tipo' => 'dentista',
         ]);
 
         $pacienteId = (string) Str::uuid();
         DB::table('pacientes')->insert([
-            'id'               => $pacienteId,
-            'usuario_id'       => $cliente->id,
+            'id' => $pacienteId,
+            'usuario_id' => $cliente->id,
             'fecha_nacimiento' => '1990-01-01',
-            'genero'           => 'femenino',
+            'genero' => 'femenino',
         ]);
 
         $citaId = (string) Str::uuid();
         DB::table('citas')->insert([
-            'id'           => $citaId,
-            'paciente_id'  => $pacienteId,
-            'dentista_id'  => $personalId,
-            'servicio_id'  => $servicioId,
+            'id' => $citaId,
+            'paciente_id' => $pacienteId,
+            'dentista_id' => $personalId,
+            'servicio_id' => $servicioId,
             // v_citas_hoy filtra por CURDATE(), así que la cita es de hoy.
-            'fecha_hora'   => now()->setTime(9, 0)->format('Y-m-d H:i:s'),
+            'fecha_hora' => now()->setTime(9, 0)->format('Y-m-d H:i:s'),
             'duracion_min' => 45,
-            'estado'       => 'completada',
+            'estado' => 'completada',
         ]);
 
         // El gesto que destruía el precio: editar solo la duración.
         $this->actingAs($admin)
             ->from(route('admin.servicios.edit', $servicioId))
             ->put(route('admin.servicios.update', $servicioId), [
-                'nombre'       => 'Colocación de brackets',
-                'descripcion'  => 'Sin cambios.',
-                'categoria'    => 'Ortodoncia',
+                'nombre' => 'Colocación de brackets',
+                'descripcion' => 'Sin cambios.',
+                'categoria' => 'Ortodoncia',
                 'duracion_min' => 90,
-                'precio'       => '18000.00',
+                'precio' => '18000.00',
                 'color_agenda' => '#ED93B1',
-                'activo'       => '1',
+                'activo' => '1',
             ])
             ->assertSessionHasNoErrors();
 
@@ -360,19 +360,19 @@ class AdminVistasSmokeTest extends TestCase
      */
     public function test_un_usuario_creado_con_contrasena_puede_iniciar_sesion(): void
     {
-        $admin  = $this->crearUsuario('admin');
-        $correo = 'con.clave.' . Str::random(8) . '@example.test';
-        $clave  = 'clave-elegida-por-el-admin';
+        $admin = $this->crearUsuario('admin');
+        $correo = 'con.clave.'.Str::random(8).'@example.test';
+        $clave = 'clave-elegida-por-el-admin';
 
         $this->actingAs($admin)
             ->from(route('admin.usuarios.create'))
             ->post(route('admin.usuarios.store'), [
-                'nombre'   => 'Nueva',
+                'nombre' => 'Nueva',
                 'apellido' => 'Dentista',
-                'email'    => $correo,
+                'email' => $correo,
                 'telefono' => '555-2222',
-                'rol'      => 'dentista',
-                'activo'   => '1',
+                'rol' => 'dentista',
+                'activo' => '1',
                 'password' => $clave,
             ])
             ->assertSessionHasNoErrors();

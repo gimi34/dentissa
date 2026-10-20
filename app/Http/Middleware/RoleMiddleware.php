@@ -13,16 +13,16 @@ class RoleMiddleware
      *
      * @param  Closure(Request): (Response)  $next
      */
-public function handle($request, Closure $next, ...$roles)
-{
-    if (!auth()->check()) {
-        return redirect('/login');
-    }
+    public function handle($request, Closure $next, ...$roles)
+    {
+        if (! auth()->check()) {
+            return redirect('/login');
+        }
 
-    if (!in_array(auth()->user()->rol, $roles)) {
-        abort(403);
-    }
+        if (! in_array(auth()->user()->rol, $roles)) {
+            abort(403);
+        }
 
-    return $next($request);
-}
+        return $next($request);
+    }
 }

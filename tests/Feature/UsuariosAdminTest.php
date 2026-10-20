@@ -44,12 +44,12 @@ class UsuariosAdminTest extends TestCase
     private function crearUsuario(string $rol, array $valores = []): Usuario
     {
         return Usuario::create(array_merge([
-            'nombre'        => 'Persona',
-            'apellido'      => 'De Pruebas',
-            'email'         => 'usuario.pruebas.' . Str::random(8) . '@example.test',
-            'rol'           => $rol,
-            'telefono'      => '555-0000',
-            'activo'        => 1,
+            'nombre' => 'Persona',
+            'apellido' => 'De Pruebas',
+            'email' => 'usuario.pruebas.'.Str::random(8).'@example.test',
+            'rol' => $rol,
+            'telefono' => '555-0000',
+            'activo' => 1,
             'password_hash' => Hash::make('secreto-de-pruebas'),
         ], $valores, ['rol' => $rol]));
     }
@@ -60,12 +60,12 @@ class UsuariosAdminTest extends TestCase
     private function payloadFormulario(array $valores = []): array
     {
         return array_merge([
-            'nombre'   => 'Nuevo',
+            'nombre' => 'Nuevo',
             'apellido' => 'Usuario',
-            'email'    => 'nuevo.' . Str::random(8) . '@example.test',
+            'email' => 'nuevo.'.Str::random(8).'@example.test',
             'telefono' => '555-1111',
-            'rol'      => 'cliente',
-            'activo'   => '1',
+            'rol' => 'cliente',
+            'activo' => '1',
         ], $valores);
     }
 
@@ -80,47 +80,47 @@ class UsuariosAdminTest extends TestCase
      */
     private function crearHistorialClinico(string $usuarioClienteId): array
     {
-        $dentista   = $this->crearUsuario('dentista');
+        $dentista = $this->crearUsuario('dentista');
         $personalId = (string) Str::uuid();
 
         DB::table('personal')->insert([
-            'id'         => $personalId,
+            'id' => $personalId,
             'usuario_id' => $dentista->id,
-            'tipo'       => 'dentista',
+            'tipo' => 'dentista',
         ]);
 
         $pacienteId = (string) Str::uuid();
         DB::table('pacientes')->insert([
-            'id'               => $pacienteId,
-            'usuario_id'       => $usuarioClienteId,
+            'id' => $pacienteId,
+            'usuario_id' => $usuarioClienteId,
             'fecha_nacimiento' => '1990-01-01',
-            'genero'           => 'femenino',
-            'alergias'         => 'penicilina',
+            'genero' => 'femenino',
+            'alergias' => 'penicilina',
         ]);
 
         $citaId = (string) Str::uuid();
         DB::table('citas')->insert([
-            'id'           => $citaId,
-            'paciente_id'  => $pacienteId,
-            'dentista_id'  => $personalId,
-            'fecha_hora'   => '2026-04-17 09:00:00',
+            'id' => $citaId,
+            'paciente_id' => $pacienteId,
+            'dentista_id' => $personalId,
+            'fecha_hora' => '2026-04-17 09:00:00',
             'duracion_min' => 45,
-            'estado'       => 'completada',
+            'estado' => 'completada',
         ]);
 
         $expedienteId = (string) Str::uuid();
         DB::table('expedientes')->insert([
-            'id'          => $expedienteId,
+            'id' => $expedienteId,
             'paciente_id' => $pacienteId,
-            'cita_id'     => $citaId,
+            'cita_id' => $citaId,
             'dentista_id' => $personalId,
             'diagnostico' => 'Caries oclusal en primer molar inferior derecho.',
             'tratamiento' => 'Obturación con resina.',
         ]);
 
         return [
-            'paciente'   => $pacienteId,
-            'cita'       => $citaId,
+            'paciente' => $pacienteId,
+            'cita' => $citaId,
             'expediente' => $expedienteId,
         ];
     }
@@ -140,7 +140,7 @@ class UsuariosAdminTest extends TestCase
      */
     public function test_el_rol_asistente_sobrevive_a_una_edicion_parcial(): void
     {
-        $admin     = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $asistente = $this->crearUsuario('asistente');
 
         // 1. El desplegable ofrece `asistente` y lo trae marcado.
@@ -153,7 +153,7 @@ class UsuariosAdminTest extends TestCase
             '/<option\s+value="asistente"[^>]*\sselected[^>]*>/',
             $formulario->getContent(),
             'El selector de rol no preselecciona "asistente": el navegador enviaría la primera opción '
-            . 'del desplegable y convertiría al asistente en administrador al guardar.'
+            .'del desplegable y convertiría al asistente en administrador al guardar.'
         );
 
         // 2. Una edición parcial que omite el rol se rechaza y no lo toca.
@@ -181,7 +181,7 @@ class UsuariosAdminTest extends TestCase
      */
     public function test_un_correo_duplicado_se_rechaza(): void
     {
-        $admin     = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $existente = $this->crearUsuario('cliente');
 
         $respuesta = $this->actingAs($admin)
@@ -212,14 +212,14 @@ class UsuariosAdminTest extends TestCase
     {
         $admin = $this->crearUsuario('admin');
 
-        $correoUno = 'sin.clave.uno.' . Str::random(6) . '@example.test';
-        $correoDos = 'sin.clave.dos.' . Str::random(6) . '@example.test';
+        $correoUno = 'sin.clave.uno.'.Str::random(6).'@example.test';
+        $correoDos = 'sin.clave.dos.'.Str::random(6).'@example.test';
 
         foreach ([$correoUno, $correoDos] as $correo) {
             $this->actingAs($admin)
                 ->from(route('admin.usuarios.create'))
                 ->post(route('admin.usuarios.store'), $this->payloadFormulario([
-                    'email'    => $correo,
+                    'email' => $correo,
                     'password' => '', // el administrador deja el campo vacío
                 ]))
                 ->assertSessionHasNoErrors();
@@ -252,9 +252,9 @@ class UsuariosAdminTest extends TestCase
      */
     public function test_la_baja_logica_conserva_el_expediente(): void
     {
-        $admin   = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $cliente = $this->crearUsuario('cliente');
-        $fichas  = $this->crearHistorialClinico($cliente->id);
+        $fichas = $this->crearHistorialClinico($cliente->id);
 
         $respuesta = $this->actingAs($admin)
             ->from(route('admin.usuarios.index'))
@@ -295,7 +295,7 @@ class UsuariosAdminTest extends TestCase
      */
     public function test_la_reactivacion_funciona(): void
     {
-        $admin   = $this->crearUsuario('admin');
+        $admin = $this->crearUsuario('admin');
         $cliente = $this->crearUsuario('cliente', ['activo' => 1]);
 
         $this->actingAs($admin)

@@ -2,18 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Usuario extends Authenticatable
 {
     use HasUuids, Notifiable;
 
     protected $table = 'usuarios';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -24,7 +28,7 @@ class Usuario extends Authenticatable
         'password_hash',
         'rol',
         'telefono',
-        'activo'
+        'activo',
     ];
 
     protected $hidden = [

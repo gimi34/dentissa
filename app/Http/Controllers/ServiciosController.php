@@ -16,11 +16,11 @@ class ServiciosController extends Controller
     private function reglasValidacion(): array
     {
         return [
-            'nombre'       => 'required|string',
-            'categoria'    => 'required|string',
+            'nombre' => 'required|string',
+            'categoria' => 'required|string',
             'duracion_min' => 'required|integer',
-            'descripcion'  => 'nullable|string',
-            'precio'       => 'required|numeric|min:0|max:99999999.99',
+            'descripcion' => 'nullable|string',
+            'precio' => 'required|numeric|min:0|max:99999999.99',
             'color_agenda' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ];
     }
@@ -32,28 +32,30 @@ class ServiciosController extends Controller
     private function mensajesValidacion(): array
     {
         return [
-            'nombre.required'       => 'El nombre del servicio es obligatorio.',
-            'categoria.required'    => 'La categoría es obligatoria.',
+            'nombre.required' => 'El nombre del servicio es obligatorio.',
+            'categoria.required' => 'La categoría es obligatoria.',
             'duracion_min.required' => 'La duración es obligatoria.',
-            'duracion_min.integer'  => 'La duración debe ser un número entero de minutos.',
-            'precio.required'       => 'El precio es obligatorio.',
-            'precio.numeric'        => 'El precio debe ser un valor numérico.',
-            'precio.min'            => 'El precio no puede ser negativo.',
-            'precio.max'            => 'El precio supera el máximo permitido.',
+            'duracion_min.integer' => 'La duración debe ser un número entero de minutos.',
+            'precio.required' => 'El precio es obligatorio.',
+            'precio.numeric' => 'El precio debe ser un valor numérico.',
+            'precio.min' => 'El precio no puede ser negativo.',
+            'precio.max' => 'El precio supera el máximo permitido.',
             'color_agenda.required' => 'El color de agenda es obligatorio.',
-            'color_agenda.regex'    => 'El color de agenda debe tener el formato #RRGGBB.',
+            'color_agenda.regex' => 'El color de agenda debe tener el formato #RRGGBB.',
         ];
     }
 
     public function index(Request $request)
     {
         $servicios = Servicio::all();
+
         return view('servicios.index', compact('servicios'));
     }
 
     public function create()
     {
         $categorias = Servicio::whereNotNull('categoria')->distinct()->pluck('categoria');
+
         return view('servicios.create', compact('categorias'));
     }
 
@@ -61,11 +63,12 @@ class ServiciosController extends Controller
     {
         $data = $request->validate($this->reglasValidacion(), $this->mensajesValidacion());
 
-        $data['id']        = (string) Str::uuid();
-        $data['activo']    = 1;
+        $data['id'] = (string) Str::uuid();
+        $data['activo'] = 1;
         $data['creado_en'] = now();
 
         Servicio::create($data);
+
         return redirect()->route('admin.servicios.index');
     }
 
@@ -73,6 +76,7 @@ class ServiciosController extends Controller
     {
         $servicio = Servicio::findOrFail($id);
         $categorias = Servicio::whereNotNull('categoria')->distinct()->pluck('categoria');
+
         return view('servicios.edit', compact('servicio', 'categorias'));
     }
 
@@ -92,6 +96,7 @@ class ServiciosController extends Controller
     public function destroy($id)
     {
         Servicio::findOrFail($id)->delete();
+
         return redirect()->route('admin.servicios.index');
     }
 }
