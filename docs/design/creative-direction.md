@@ -14,16 +14,19 @@ el sistema extraído (`system.md`).
 
 ## Identidad
 - Territorio: **A · La consulta por dentro** — «Así es la consulta antes de que llegues».
-- Materiales del oficio que lo sostienen: fotografía real del consultorio (sillón, lámpara,
-  recepción), señalética de puertas («Consultorio 1», aviso de horario), placa de la consulta.
+- Materiales del oficio que lo sostienen: la placa de la consulta y el aviso de la puerta (horario,
+  teléfono), la señalética de puertas y las fotos reales de los trabajos hechos dentro (specs 039 y
+  040; ronda 2 de `/design-spec 038`).
 - Tono de textos e imagen: sereno, en «tú», primera persona del plural para la clínica; fotos con
   luz natural, sin filtros ni retoque excesivo.
 
 ## Concepto firma
-La página se recorre como una visita a la consulta en orden de llegada: la **entrada** (portada con
-la primera foto de la galería o, sin fotos, la placa tipográfica de la consulta), el **directorio de
-puertas** (los servicios como placas), la **sala** (galería) y la **calle** (ubicación, mapa y
-horario como el aviso de la puerta). El momento firma se ve en el directorio de puertas.
+**La puerta de la consulta** (opción B, elegida en la ronda 1 y ajustada en la ronda 2): la página
+empieza en la placa de la consulta, con el logo, el título, «Agendar mi primera cita» y el aviso de la
+puerta (horario y «Llamar»). Dentro se recorre lo que hay detrás de la puerta: quiénes somos, las
+puertas de los servicios, las promociones como avisos y los trabajos. El momento firma es el
+carrusel de trabajos: cada foto entra como una hoja de puerta que se desliza, solo cuando el
+visitante cambia de foto.
 
 ## Color y tipografía
 - El rosa es color de uniforme y de señalética: acentos y placas, no fondos enormes. Fondo `--bg`,
@@ -46,9 +49,10 @@ horario como el aviso de la puerta). El momento firma se ve en el directorio de 
   filtros; texto nunca encima de una foto sin una superficie que garantice el contraste.
 
 ## Recursos propios
-- La placa de la consulta (logo + «Odontología integral») como portada sin fotos.
-- El directorio de puertas para los servicios.
-- El aviso de horario de la puerta para el bloque de contacto.
+- La placa de la consulta (logo, título y aviso de la puerta) como portada.
+- El índice de puertas para las categorías de servicios.
+- Las promociones como avisos de la puerta, con su vigencia.
+- La placa de la dirección sobre el mapa.
 
 ## Prioridades ante conflicto
 - Accesibilidad y rendimiento ganan sobre cualquier efecto visual.

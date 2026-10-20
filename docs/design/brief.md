@@ -10,7 +10,7 @@ pública de presentación; el sistema extraído (`system.md`) solo cubre la app 
 opciones y `creative-direction.md`; no se edita después de elegir (los cambios van al sistema).
 
 ## Objetivo
-Que quien busca dentista en Lázaro Cárdenas vea **la consulta real** antes de llegar, entienda qué
+Que quien busca dentista en Lázaro Cárdenas vea **la consulta real y su trabajo** antes de llegar, entienda qué
 servicios hay, dónde está y cuándo abre, y cree su cuenta para agendar en línea (algo que casi
 ninguna clínica de la zona ofrece). Debe sentirse tranquila, cercana y fiable; sin presión
 comercial, pensando también en quien llega con miedo o con dolor.
@@ -58,8 +58,9 @@ Ninguna: CSS propio con los tokens de `system.md`, como el resto de la app (sin 
 - Servicios activos del catálogo de prueba (nombre y descripción, sin precio).
 - Contacto de la spec 038 CA4: Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950 ·
   753 000 0000 · Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00.
-- Galería: en las opciones, recuadros de foto con su descripción real de ejemplo («Sala de espera»,
-  «Consultorio 1»), marcados como muestra hasta que el administrador suba las fotos.
+- Galería de trabajos (039): recuadros de foto con descripciones de ejemplo («Resina en un incisivo,
+  antes y después»), marcados como muestra hasta que el administrador suba las fotos.
+- «Sobre nosotros» (038 CA3) y promociones de ejemplo (040), marcadas como ejemplo.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
@@ -72,4 +73,5 @@ Ninguna: CSS propio con los tokens de `system.md`, como el resto de la app (sin 
 | 2026-10-20 | diseño | Territorio | A · La consulta por dentro | usuario |
 | 2026-10-20 | diseño | Clichés del sector | Los 7 propuestos | usuario |
 | 2026-10-20 | diseño | Tono | «Tú» cercano y tranquilo | usuario |
+| 2026-10-20 | diseño | Ronda 1: ¿qué opción? | Base B «La puerta de la consulta», con fotos de trabajos (no de la entrada ni de las instalaciones), portada con placa y logo, «Sobre nosotros», servicios por categorías con su página, carrusel con su galería y promociones (specs 038–040) | usuario |
 | 2026-10-20 | supuesto | `public/images/cover-bg.jpg` es una foto de banco (licencia desconocida, uniforme azul) | No se usa; la portada es la primera foto de la galería y, sin fotos, una portada tipográfica | `anti-cliches.md` (foto de stock) · territorio A |
