@@ -13,7 +13,8 @@ FROM php:8.4.26-fpm AS app
 # REFRESCO_SISTEMA cambia en cada despliegue (deploy/desplegar.sh): obliga a rehacer
 # esta capa aunque el constructor la tenga en caché (spec 031, T057; RS18.a).
 ARG REFRESCO_SISTEMA=sin-fecha
-RUN echo "Refresco del sistema: ${REFRESCO_SISTEMA}"     && apt-get update && apt-get upgrade -y \
+RUN echo "Refresco del sistema: ${REFRESCO_SISTEMA}" \
+    && apt-get update && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
     libpng-dev \
     libonig-dev \
