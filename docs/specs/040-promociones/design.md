@@ -13,7 +13,7 @@ updated: 2026-10-20
 
 Sin composiciones propias: las promociones se diseñaron junto con la página de inicio en
 `/design-spec 038` (opción B, ronda 2). Todo el detalle está en
-[../038-pagina-inicio/design.md](../038-pagina-inicio/design.md), y las pantallas en
+[../038-pagina-inicio/design/history/ronda-2/design.md](../038-pagina-inicio/design/history/ronda-2/design.md) (archivado el 2026-10-21, cuando la 038 se rediseñó en la línea de la landing del colaborador, opción C de la ronda 3; esta spec se adaptará a esa línea en su propio `/design-spec`), y las pantallas en
 `../038-pagina-inicio/design/opcion-b.html`.
 
 - **Lo que aporta esta spec:**

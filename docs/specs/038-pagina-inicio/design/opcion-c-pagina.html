@@ -153,15 +153,19 @@ a:focus-visible, summary:focus-visible { outline: var(--focus-ring-width) solid 
   .marquesina:hover .marquesina-pista { animation-play-state: paused; }
 }
 @keyframes marquesina { to { transform: translateX(-50%); } }
-.ubicacion { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center; }
-.ubicacion-datos { display: grid; gap: var(--space-6); }
+.ubicacion-d .ubicacion { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-8); align-items: stretch; }
+.ubicacion-d .ubicacion-mapa { order: -1; }
+.ubicacion-d .mapa { min-height: 100%; }
+.ubicacion-datos { display: grid; gap: var(--space-6); align-content: center; }
 .ubicacion-sub { color: var(--p600); font-weight: var(--weight-bold); }
 @media (max-width: 899px) {
+  .ubicacion-d .ubicacion { grid-template-columns: 1fr; }
+  .ubicacion-d .ubicacion-mapa { order: 0; }
+  .ubicacion-d .mapa { min-height: calc(var(--touch-min) * 7); }
   .portada-velo { background: var(--velo-portada); }
   .portada-texto > * { max-width: none; }
   .tarjetas { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
   .tarjeta { padding: var(--space-6) var(--space-4); }
-  .ubicacion { grid-template-columns: 1fr; }
 }
 @media (max-width: 559px) {
   .portada-texto .c-btn { width: 100%; }
@@ -201,7 +205,7 @@ a:focus-visible, summary:focus-visible { outline: var(--focus-ring-width) solid 
   <p class="centro" data-reveal><a class="c-btn c-btn--secundario" href="#">Ver todos los servicios</a></p>
 </div></section>
 <div class="marquesina" aria-hidden="true"><div class="marquesina-pista"><span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00 · Agenda en línea a cualquier hora ·</span><span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00 · Agenda en línea a cualquier hora ·</span></div></div>
-<section class="lb-seccion ubicacion-sec " id="ubicacion" aria-labelledby="t-ubi"><div class="lb-wrap ubicacion">
+<section class="lb-seccion ubicacion-sec ubicacion-d" id="ubicacion" aria-labelledby="t-ubi"><div class="lb-wrap ubicacion">
   <div class="ubicacion-datos"><h2 class="t-h2" id="t-ubi" data-reveal="line">Encuéntranos fácilmente</h2>
     <p class="ubicacion-sub" data-reveal>Estamos en el centro de Lázaro Cárdenas.</p>
     <ul class="datos">

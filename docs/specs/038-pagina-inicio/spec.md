@@ -112,14 +112,17 @@ Rediseño de la página de inicio sobre el sistema de diseño de Dentissa
 ([docs/design/system.md](../../design/system.md)). `/design-spec 038` genera las opciones antes de
 `/plan` y diseña a la vez lo que añaden la 039 y la 040, para que la página se piense entera. La
 ronda 1 eligió como base la opción B («La puerta de la consulta») y la ronda 2 la adapta a las
-tres specs. Documento de diseño: [design.md](design.md).
+tres specs. La ronda 3 (2026-10-21, motor creativo de AI-DD 1.16.0) rediseña la 038 en la línea de la
+landing del colaborador: opción C «La línea de abound» con la ubicación de la opción D. La ronda 2
+queda archivada y sigue siendo el diseño de la 039 y la 040 hasta su propio `/design-spec`.
+Documento de diseño: [design.md](design.md).
 
 - **Qué debe transmitir:** una presentación breve, cercana y fiable de una clínica real, con la
   misma identidad de marca que la aplicación. No debe parecerse al panel interno.
 - **Qué se diseña (038):**
   - la página de inicio en escritorio y en móvil: cabecera con logo y navegación, presentación
-    con la placa y el logo (sin foto de la entrada), «Sobre nosotros», avance de servicios por
-    categorías, ubicación y contacto, y pie;
+    a pantalla completa con la foto, el logo, el horario y el teléfono (ronda 3), «Sobre nosotros»,
+    avance de servicios por categorías, ubicación y contacto, y pie;
   - la página `/servicios`;
   - el menú del móvil;
   - el estado sin servicios activos.
@@ -157,6 +160,7 @@ Ninguna.
 | 2026-10-20 | supuesto | Qué datos de cada servicio se publican en `/servicios` | Nombre y descripción, agrupados por categoría, sin precio ni duración | razonable: los precios cambian y se confirman en la cita |
 | 2026-10-20 | supuesto | Títulos y descripciones de las dos rutas | Los de CA10 | razonable; se confirman al aprobar |
 | 2026-10-20 | supuesto | Cabecera con sesión en `/servicios` | Ofrece «Ir a mi panel» en lugar de «Iniciar sesión» | razonable |
+| 2026-10-21 | diseño | Rediseño tras la aprobación: la opción B es «muy básica» | Ronda 3 de `/design-spec` en la línea de la landing del colaborador: opción C con la ubicación de D (`design.md`); los criterios no cambian | usuario |
 
 ## Notas para /plan
 - Punto de partida: `resources/views/landing/index.blade.php` de `origin/feat/landing-page-completa`

@@ -1,314 +1,239 @@
 ---
 spec: 038-pagina-inicio
-status: approved         # draft | approved (solo el usuario aprueba)
+status: draft            # draft | approved (solo el usuario aprueba)
 exploration: options
-system_version: 1.6.0
+system_version: 1.7.2
 created: 2026-10-20
-updated: 2026-10-20
-refinado: 2026-10-20     # /design-spec 038 --fix: cabecera y pie como la landing del colaborador, menú con icono
+updated: 2026-10-21
 ---
 
-# Diseño · 038 Página de inicio pública (y lo que añaden la 039 y la 040)
+# Diseño · 038 Página de inicio pública
 
-Hecho con `/design-spec 038` sobre el sistema `docs/design/system.md`. Cubre a la vez la página de
-inicio y `/servicios` (038), el carrusel, `/galeria` y su gestión (039), y las promociones y su
-gestión (040), para que la página se piense entera. Las specs 039 y 040 tienen su propio
-`design.md`, que remite a este. Composición elegida en `design/opcion-b.html`. Las opciones de la
-ronda 1 están archivadas en `design/history/ronda-1/`.
-
-Documentos de partida: `docs/design/nicho.md` (territorio A · «La consulta por dentro»),
-`brief.md`, `creative-direction.md` y `anti-cliches.md`, aprobados el 2026-10-20.
+Hecho con `/design-spec 038` (ronda 3, motor creativo de AI-DD 1.16.0) sobre el sistema
+`docs/design/system.md`. Composiciones en `design/opcion-c.html` y `design/opcion-d.html`, con sus
+páginas de prueba (`opcion-c-pagina.html`, `opcion-d-pagina.html`) y su crítica (`critica-c.md`,
+`critica-d.md`). Las rondas anteriores se conservan: la ronda 1 en `design/history/ronda-1/`, y la
+ronda 2 (opción B «La puerta de la consulta», con el refinado D15) en
+`design/history/ronda-2/design.md` y `design/opcion-b.html`. El diseño de la 039 (galería) y la 040
+(promociones) sigue en la ronda 2 hasta su propio `/design-spec`, que lo adaptará a esta línea.
 
 ## Dirección elegida
 
-**Opción B · «La puerta de la consulta», ronda 2.** En la ronda 1 se eligió entre A · «El
-directorio de la entrada» y B · «La puerta de la consulta». El usuario eligió la B y pidió cambios:
-fotos de trabajos en lugar de la entrada, un carrusel con su galería, un avance de servicios con su
-página, «Sobre nosotros» y promociones. La ronda 2 adapta la B a eso.
+**Opción C · «La línea de abound»**, elegida entre C · «La línea de abound» (firme) y D · «La
+ventana de la consulta» (audaz); **combinada con la ubicación de D** (mapa grande a la izquierda,
+3:2). Es la línea de la landing que el colaborador fusionó en `main` (merge `f096e17`), llevada al
+sistema de Dentissa: el usuario encontró «muy básica» la opción B y pidió seguir esa línea
+(decisión del usuario, 2026-10-21).
 
-Estás frente a la puerta de la consulta. La página empieza en la **placa** de la consulta (logo,
-título, «Agendar mi primera cita» y el **aviso de la puerta** con el horario y «Llamar»). Detrás de
-la puerta está lo demás:
-- quiénes somos, en texto corrido;
-- las categorías del catálogo como **puertas**, que llevan a `/servicios`;
-- las promociones como **avisos** con su vigencia;
-- los **trabajos** en un carrusel;
-- la dirección como otra placa, apoyada sobre el mapa.
+En esta pantalla, **el letrero de horario de la puerta de Av. Insurgentes** se convierte en **una
+franja viva que dice si la consulta está abierta ahora, pasa por la página en tipo grande y vuelve en
+la ubicación y el pie**; la portada es la de abound: la consulta en grande y el mensaje encima.
 
-- **Motivo:** la placa responde en la primera pantalla del móvil a lo que busca quien llega:
-  - qué es la consulta;
-  - cómo pedir cita;
-  - cuándo abre;
-  - cómo llamar.
+- **Modo y registro:** persuadir · firme. `/servicios` es de leer: conserva la estructura de la ronda 2
+  con la cabecera, el pie, los botones en píldora y el título centrado de esta opción.
+- **Prueba del competidor:** con otra clínica del centro de Lázaro Cárdenas la frase deja de
+  funcionar en lo que la sostiene: el horario, la dirección, el nombre y la agenda en línea son de
+  Dentissa; la portada con foto y velo, en cambio, es de la categoría (la toma de abound a propósito,
+  decisión del usuario).
+- **Reparto:** semilla 371542 → escena `hoja-sobre-imagen` y jugada `marquesina` (C); `ventana` e
+  `indice-con-vista` se descartaron al combinar.
+- **Motivo:** la línea que el usuario quiere (abound) con lo que el motor exige: una cosa viva con
+  datos reales, una escena, entradas distintas por contenido, plenitud y el pie como cierre.
+- **Vecino más parecido:** la opción B de la ronda 2 (placa sobre fondo claro) → C cambia la
+  estructura: portada a sangre con foto, hoja que sube sobre ella, tarjetas, franja del horario,
+  ubicación 3:2 y pie con el nombre. Las pantallas de la app (Roboto, barra lateral) no comparten
+  ningún esqueleto.
+- **Riesgo asumido:** la foto de la portada es de banco (ver "Imágenes") → velo de la marca, sin
+  presentarla como el equipo de la consulta, y sustitución por una foto real cuando la haya;
+  tarjetas con icono y franja tipográfica rozan clichés → son las 7 categorías reales con su número
+  de tratamientos y el horario real, una sola franja.
 
-  El resto es un avance breve que lleva a sus páginas, sin saturar la presentación (decisión del
-  usuario).
-- **Vecino más parecido:** el inicio de sesión y el registro (pantallas públicas del acceso, con
-  una tarjeta centrada). La diferencia: la página de inicio es un recorrido de secciones con la
-  placa como pieza firma y el aviso de la puerta dentro, no un formulario. Dentro de la app, el
-  vecino de `/servicios` es la lista de servicios del admin (tabla con precio y acciones). La
-  diferencia: `/servicios` es de lectura, va agrupada por categoría con un índice de puertas y no
-  muestra precios.
-- **Riesgo asumido:**
-  - **Portada sin foto, solo tipográfica.** Se compensa con la placa con borde de 2 px en
-    `--p600` y el logo grande, y los trabajos aparecen al bajar.
-  - **Las 8 puertas de servicios ocupan 8 filas a 320 px.** Se acepta porque son enlaces útiles:
-    cada una lleva a su categoría en `/servicios`.
-  - **Las promociones de ejemplo llevan cifras.** Se compensa con las condiciones y la vigencia
-    siempre visibles y sin estética de oferta (`anti-cliches.md`).
+## Cosa viva
+
+**«¿Abierto ahora?»** en la portada, junto a «Agendar mi primera cita». Con el horario de
+`config/clinica.php` (lunes a viernes 9:00–20:00, sábados 9:00–14:00) y la hora de Lázaro Cárdenas
+(`America/Mexico_City`), una pastilla blanca dice «Abierto ahora · cierra a las 20:00» o «Cerrado
+ahora · abre mañana a las 9:00» (o «el lunes»); debajo, el horario completo y el teléfono. Es
+distinta en cada visita y prueba lo que dice la página: si está cerrado, la cuenta se crea y la cita
+se agenda igual. **Sin JavaScript:** no hay pastilla; se lee el horario completo y el teléfono, como
+pide CA1. En el teléfono cabe en una línea a 320 px.
 
 ## Pantallas
 
-Todas en `opcion-b.html`; las anchas se ven a escala y su altura es la del contenido.
-
 | Pantalla y estado | Ancho menor | Intermedio | Ancho mayor | Criterios |
 |---|---|---|---|---|
-| Página de inicio completa (038 + 039 + 040) | `#inicio-320` · `#inicio-m` | `#inicio-i` | `#inicio-d` | 038 CA1, CA3–CA5, CA9 · 039 CA1 · 040 CA1 |
-| Página de inicio solo con la 038 | `#inicio-solo038-m` | — | — | 038 CA1 |
-| Página de inicio sin servicios activos, promociones ni fotos | `#inicio-vacio-m` | — | — | 038 CA4 · 039 CA3 · 040 CA3 |
-| Carrusel sin JavaScript (fila deslizable) | `#inicio-sinjs-m` | — | — | 039 CA4 |
-| `/servicios` | `#servicios-m` | — | `#servicios-d` | 038 CA6 |
-| `/servicios` sin servicios activos | `#servicios-vacio-m` | — | — | 038 CA6 |
-| `/galeria` | `#galeria-m` | — | `#galeria-d` | 039 CA2 |
-| `/galeria` vacía | `#galeria-vacia-m` | — | — | 039 CA2 |
-| Gestión de la galería | `#g-galeria-m` | — | `#g-galeria-d` | 039 CA8–CA10 |
-| Gestión de la galería · subida sin consentimiento | `#g-galeria-error-m` | — | — | 039 CA11 |
-| Quitar una foto · confirmación | `#g-quitar-m` | — | — | 039 CA10 |
-| Gestión de promociones | `#g-promos-m` | — | `#g-promos-d` | 040 CA4, CA5 |
-| Gestión de promociones · errores | `#g-promos-error-m` | — | — | 040 CA6 |
+| Página de inicio · reposo | `opcion-c.html#opcion-c-pagina-320` y `-390` | `opcion-c.html#opcion-c-pagina-900` | `opcion-c.html#opcion-c-pagina-1440` | CA1, CA3, CA4, CA5, CA8, CA9 |
+| Página de inicio · recorrido (hoja, franja, entradas) | tira `.ai/inspect/opcion-c/film-320-*` | — | tira `.ai/inspect/opcion-c/film-1440-*` | CA9 |
+| Página de inicio · sin servicios activos | sin la sección de servicios (CA4), como en la ronda 2 | — | — | CA4 |
+| `/servicios` | estructura de la ronda 2 (`opcion-b.html#servicios-m`) con la cabecera, el pie, las píldoras y el título centrado de C | — | `opcion-b.html#servicios-d` con los mismos cambios | CA6 |
 
 ## Composición y jerarquía
 
-- **Orden de lectura de `/`:**
-  1. cabecera (logo, Servicios, Promociones, Trabajos, Ubicación, «Iniciar sesión»);
-  2. placa;
-  3. «Sobre nosotros»;
-  4. servicios;
-  5. promociones (040);
-  6. trabajos (039);
-  7. ubicación;
-  8. pie.
-
-  Es el mismo orden en todos los anchos. Sin la 039 ni la 040, sus secciones no existen y no
-  dejan hueco.
-- **Proporciones:**
-  - placa: 3:2 (texto · aviso de la puerta);
-  - «Sobre nosotros»: 1:2 (título · texto, con ancho de lectura `--measure`);
-  - promociones: 1:3 (vigencia · texto), en lista;
-  - carrusel: 7:5 (foto · panel);
-  - `/servicios`: 1:3 (índice · listas);
-  - `/galeria`: mosaico 5:7 que alterna con 7:5 por filas.
-- **Rejilla de iguales:** solo en las puertas de servicios (4 columnas). El motivo es que son
-  rótulos de igual rango, como las placas de un pasillo, y cada una lleva a su categoría.
-- **Puntos de corte:**
-  - el del sistema, 900 px: todo pasa a una columna, la placa apila el aviso debajo y las puertas
-    y el índice van en 2 columnas;
-  - uno propio de esta composición, **560 px**: puertas, índice y mosaico a 1 columna, las
-    definiciones de servicio apiladas y los botones de la placa y del carrusel a todo el ancho.
-- **Momento protagonista:** M-1, en el carrusel (039). La 038 sola no tiene ninguno; según las
-  «Reglas de uso» del sistema, uno por página como máximo.
-- **Pantallas de gestión:** dentro de la app (barra lateral, barra superior, Roboto, densidad de la
-  app). Formulario arriba y lista debajo. Las entradas «Galería» y «Promociones» se añaden al menú
-  del admin.
+- **Orden de lectura (CA1):** cabecera; portada (logo, titular, texto, «Agendar mi primera cita», «¿Abierto
+  ahora?», horario y teléfono); «Sobre nosotros» (la hoja que sube); «Nuestros servicios» (tarjetas y
+  «Ver todos los servicios»); franja del horario (decorativa); «Encuéntranos fácilmente» (mapa y
+  datos); pie. Igual en todos los anchos.
+- **Proporciones:** portada de 100svh, con el texto en el 60 % izquierdo sobre el tramo fuerte del velo
+  (el titular, a todo el ancho de la columna de contenido); «Sobre nosotros» centrado en `--measure`;
+  tarjetas en rejilla de iguales (4 · 2 columnas) porque las categorías tienen el mismo rango;
+  ubicación 3:2 con el mapa a la izquierda; pie en tres columnas y el nombre a todo el ancho.
+- **Puntos de corte:** 900 px (menú con la hamburguesa, velo uniforme, ubicación apilada, tarjetas a
+  2 columnas, pie apilado) y 560 px (botones a todo el ancho).
+- **Momento protagonista:** M-1 (la hoja que sube sobre la portada). La franja (M-2) es el segundo y
+  único otro; ningún bucle más.
 
 ## Componentes
 
-- **Del sistema:**
-  - **Botones:**
-    - principal sobre `--p500` (como `.formulario-accesible`, DS1);
-    - secundario con borde `--border-control` y texto `--p600`;
-    - `.btn-danger` en «Quitar» y «Retirar».
-  - **Iconos y campos:**
-    - `.btn-icono` para «Mover antes» y «Mover después», con `aria-label` que nombra la foto;
-    - campos con el foco del sistema.
-  - **Avisos y estados:**
-    - avisos `c-alert` (error con `role="alert"`, advertencia del paciente);
-    - menú del móvil de la app (spec 033) en las pantallas de gestión.
-- **Nuevos, que pasan al sistema** (se reutilizan en varias pantallas):
-  - **Placa:** superficie blanca, borde `--border-width-strong` en `--p600`, `--radius-md`,
-    relleno `--space-8` (`--space-7` en el móvil). Aparece como placa de la consulta en la portada
-    y como placa de la dirección sobre el mapa.
-  - **Puerta (enlace de categoría):** alto ≥ `--touch-min`, borde `--border-control`, texto
-    `--p600`, fondo `--p100` al pasar el puntero o con foco. En el avance de servicios va sin
-    contador; en el índice de `/servicios`, con el número de servicios.
-  - **Cabecera pública** (refinada tras la revisión de T025, siguiendo la landing del colaborador):
-    - barra a todo el ancho en `--p500`, con el contenido dentro de `--page-max`;
-    - logo enmascarado en `--white` y enlaces de navegación en `--white` (subrayados al pasar el
-      puntero);
-    - «Iniciar sesión» (o «Ir a mi panel» con sesión) es un botón blanco con texto `--p600`, sin
-      borde;
-    - por debajo de 900 px, el menú es un `<details>` que se abre y se cierra con el teclado y sin
-      JavaScript. Su `<summary>` es solo el icono de hamburguesa (tres rayas en `--white`, de
-      `--icon-md`, `aria-hidden`), sin la palabra «Menú» a la vista, sin borde ni fondo, en una
-      caja de `--touch-min` × `--touch-min` y con `aria-label="Menú"`, como el botón «Menú» de la
-      app (034). El panel abierto sigue blanco, con los enlaces en `--text`;
-    - el foco dentro de la barra usa el anillo `--focus-ring-inverso` (blanco), porque el de
-      `--p600` no se ve sobre `--p500`.
-  - **Pie público** (refinado, como el pie de la landing del colaborador): banda a todo el ancho en
-    `--p600` con el texto en `--white`. En el escritorio, tres columnas: el logo enmascarado en
-    `--white` con la frase «Odontología integral para toda la familia en el centro de Lázaro
-    Cárdenas.»; «Horarios» (el horario de CA5); y «Contacto» (el teléfono como enlace `tel:` y los
-    enlaces Servicios, Crear cuenta e Iniciar sesión, o «Ir a mi panel»). Debajo, el © centrado
-    tras un filo `--border-width` en `--p500`. Por debajo de 900 px, las columnas se apilan. Los
-    títulos de columna son `h2` en `--text-publico` y peso `--weight-bold`; los enlaces, blancos y
-    subrayados, con alto ≥ `--touch-min`, y el foco con `--focus-ring-inverso`.
-- **Exclusivos de las páginas públicas** (no se reutilizan en la app):
-  - **Aviso de promoción (040):** fila de lista con filo inferior.
-    - A la izquierda va la vigencia corta en `--p600` (decorativa, `aria-hidden`).
-    - A la derecha van el título (h3), la descripción, «Condiciones: …» y la vigencia completa en
-      texto («Válida del … al …»).
-    - Lista con filo superior de 2 px. Sin tarjetas, cintillos ni contadores.
-  - **Carrusel de trabajos (039):** región con `aria-roledescription="carrusel"`.
-    - A la izquierda, la foto 4:3; a la derecha, el panel con «Foto n de N» (`aria-live="polite"`),
-      la descripción, «Anterior» / «Siguiente» (≥ 44 px) y «Ver toda la galería».
-    - Sin JavaScript es una fila con desplazamiento horizontal propio (`scroll-snap`, el 85 % por
-      foto, `tabindex="0"`), que no desborda la página.
-  - **Mosaico de `/galeria` (039):** filas de dos fotos que alternan 5:7 y 7:5, con la descripción
-    debajo.
-  - **Mapa con placa (038):** mapa a todo el ancho de la sección (`--radius-lg`) con la placa de la
-    dirección apoyada abajo a la izquierda. En el móvil la placa queda debajo, solapando el borde.
-    Lleva la nota «El mapa lo sirve Google».
-- **Exclusivos de la gestión:**
-  - **Pregunta del paciente (039):** `fieldset` con `legend` «¿Aparece la boca o los dientes de un
-    paciente?» y dos radios (Sí · No: corona, prótesis, modelo, laboratorio…).
-    - Debajo, la casilla «Tengo el consentimiento escrito del paciente para publicar esta foto y no
-      se le puede reconocer», siempre visible (sin JavaScript) con la ayuda «Solo si respondiste
-      «Sí». Quedará tu nombre y la fecha.».
-    - El error se ve junto a la casilla, en rojo y con texto.
-  - **Tarjeta de foto en la gestión (039):** puesto, miniatura, descripción, «Sin paciente» o «Con
-    paciente · consentimiento declarado por … el …», mover y quitar.
-  - **Estado de promoción (040):** etiqueta con texto y borde: «Se ve ahora» (`--green-texto`),
-    «Programada: desde el …» (`--amber` sobre `--amber-bg`), «No se ve: ya hay 3 vigentes que
-    vencen antes» y «Vencida el …» (`--p600`). El estado se lee en el texto, no solo en el color.
-- **Adornos generados desde datos:** la vigencia corta de cada promoción sale de sus fechas
-  («1–30 nov»). Va oculta al lector de pantalla porque la vigencia completa está en el texto.
+- **Del sistema:** cabecera pública rosa con la hamburguesa (1.7.1); pie público rosa en columnas
+  (1.7.1); foco del sistema y foco inverso sobre el rosa; `c-link`.
+- **Cambian en esta spec (pasan al sistema):**
+  - **Botón en píldora** (`.c-btn`): `--radius-pill`, `--border-width-strong`, alto `--touch-min`;
+    principal `--p500` con `--sombra-tarjeta-alta`, claro (blanco con `--p600`) en la cabecera y la
+    portada, secundario con borde `--border-control`. Cede al pulsar (`scale(0.97)`).
+  - **Tarjeta de categoría** (`.tarjeta`): blanco, borde `--border`, `--radius`, `--sombra-tarjeta`;
+    icono en círculo `--p100` con trazo `--p600` (`--icono-tarjeta`); nombre `--text-publico-h3` y
+    «N tratamientos» en `--p600`. Con el puntero o el foco: borde `--border-control`, sombra alta e icono
+    invertido (`--p600` con trazo blanco); no se levanta.
+- **Exclusivos de esta pantalla:**
+  - **Portada a sangre:** foto (`object-position` a la derecha), velo `--velo-portada` →
+    `--velo-portada-suave` de izquierda a derecha (uniforme por debajo de 900 px), titular
+    `--text-portada` con «prioridad.» en cursiva `--p200`, logo blanco.
+  - **Pastilla «¿Abierto ahora?»** (`.estado-ahora`): blanca, texto `--p600`, punto del color del
+    texto, sin salto de línea.
+  - **Franja del horario** (`.marquesina`): campo `--p600` a todo el ancho con el horario en
+    `--text-marquesina` y `--p100`.
+- **Adornos generados desde datos:** los iconos de categoría (SVG dibujados en código, uno por
+  categoría conocida, la muela para las demás) y la franja (sale del horario de `config/clinica.php`);
+  `aria-hidden` los dos.
 
 ## Cambios a incorporar al sistema
 
-La primera tarea de la 038 los aplica a `system.md` (versión **1.7.0**) y `system.html`. Los de la
-039 y la 040 entran en su primera tarea si la 038 no los necesita.
+Versión **1.8.0** de `system.md` (y `system.html`), en la primera tarea del rediseño.
 
 | Token, componente o regla | Modo | Valor (menor) | Valor (mayor) | Motivo |
 |---|---|---|---|---|
-| `--font-publica` | fijo | `"Lexend", system-ui, sans-serif` | — | Familia de las páginas públicas: lectura fluida y tono cercano (`brief.md`). La app sigue en Roboto (DS9 no cambia) |
-| `@font-face` Lexend 400 y 600 | fijo | woff2 latino de `@fontsource/lexend` 5.3.0, servido por la app | — | Sin servicios externos de fuentes (CSP de la 031). Cómo se traen los archivos (dependencia o copia con su licencia OFL) lo decide `/plan` |
-| `--text-publico-h1` | fluido | 30px (320) | 48px (1440) | Título de la placa y de `/servicios` y `/galeria` |
-| `--text-publico-h2` | fluido | 22px | 30px | Títulos de sección |
-| `--text-publico-h3` | fijo | 19px | — | Rótulos de placa, aviso y categoría |
-| `--text-publico` | fijo | 17px | — | Lectura en el móvil, con sol (el cuerpo de la app es de 13.5px) |
-| `--text-publico-small` | fijo | 15px | — | Condiciones, notas y pies de foto |
-| `--space-seccion` | fluido | 40px | 96px | Aire entre secciones públicas |
-| `--measure` | fijo | 62ch | — | Ancho de lectura |
-| `--page-max` | fijo | 1180px | — | Ancho máximo del contenido público |
-| `--foto-ratio` | fijo | 4 / 3 | — | Proporción fija de las fotos de trabajos (039) |
-| `--thumb-w` | fijo | 96px | — | Base de la miniatura en la gestión (039) |
-| `--duration-base` | fijo | 0.25s | — | Transiciones de interfaz |
-| `--duration-firma` | fijo | 0.6s | — | Momento firma (M-1, 039) |
-| `--ease-puerta` | fijo | `cubic-bezier(0.2, 0, 0, 1)` | — | Curva sin rebote del territorio |
-| `--green-texto` | fijo | `#137A5A` | — | Éxito en texto: 5.30:1 sobre `--white` y 4.95:1 sobre `--bg` (el `--green` de hoy da 2.98:1, DS1) |
-| Secundario público = `--p600` | fijo | — | — | `--text-muted` de la app sigue igual que `--text` (DS3); en las páginas públicas el secundario es `--p600` (6.54:1 sobre `--bg`) |
-| Corte propio de las páginas públicas | corte 560px | — | — | Una columna en puertas, índice, mosaico y definiciones; acompaña al corte de 900px del sistema |
-| Componentes «Placa», «Puerta», «Cabecera pública» y «Pie público» | — | — | — | Se reutilizan en `/`, `/servicios` y `/galeria` |
-| `--focus-ring-inverso` (refinado) | fijo | `var(--white)` | — | Anillo de foco sobre la cabecera `--p500` y el pie `--p600`, donde el de `--p600` no se distingue (5.42:1 y 7.00:1). Entra en `system.md` **1.7.1** con la cabecera y el pie refinados |
-| Reglas de uso | — | — | — | Páginas públicas: un momento firma como máximo (el carrusel); promociones sin cintillo, contadores ni colores de oferta; fotos nunca bajo texto |
-| Pantallas e inventario | — | — | — | `/`, `/servicios`, `/galeria`, gestión de la galería y de promociones, con sus capturas al cerrar cada spec |
+| `--text-portada` | fluido | 40px (320) | 96px (1440) | Titular de la portada, ≥ 4× el cuerpo (motor creativo §6) |
+| `--leading-portada` | fijo | 0.98 | — | Interlineado del titular de portada y de la franja |
+| `--tracking-portada` | fijo | -0.03em | — | Interletrado del titular de portada y de la franja |
+| `--text-marquesina` | fluido | 34px | 80px | Franja del horario |
+| `--velo-portada` | fijo | `rgba(114, 36, 62, 0.82)` (`--p800` al 82 %) | — | Blanco ≥ 6.41:1 sobre la foto en el peor caso |
+| `--velo-portada-suave` | fijo | `rgba(114, 36, 62, 0.35)` | — | Extremo derecho del degradado, donde se ve la foto |
+| `--radius-pill` | fijo | 999px | — | Botones, índice de `/servicios` y pastilla (línea de abound) |
+| `--sombra-tarjeta` | fijo | `0 1px 2px rgba(114, 36, 62, 0.08)` | — | Tarjetas en reposo |
+| `--sombra-tarjeta-alta` | fijo | `0 14px 32px rgba(114, 36, 62, 0.16)` | — | Botón principal y tarjeta con el puntero |
+| `--icono-tarjeta` | fijo | 56px | — | Círculo del icono de la tarjeta |
+| `--ease-out` | fijo | `cubic-bezier(0.23, 1, 0.32, 1)` | — | Respuestas por debajo de 600 ms (movimiento 1.16.0) |
+| `--ease-expo` | fijo | `cubic-bezier(0.16, 1, 0.3, 1)` | — | Entradas de sección |
+| `--duration-reveal` | fijo | 800ms | — | Entradas de sección |
+| `--stagger` | fijo | 80ms | — | Escalonado entre partes (cuatro pasos como máximo) |
+| `--duration-marquesina` | fijo | 48s | — | Una vuelta de la franja |
+| Componentes «Botón en píldora» y «Tarjeta de categoría» | — | — | — | Se reutilizarán en la 039 y la 040 |
+| Reglas de uso (páginas públicas) | — | — | — | Una escena y una franja como máximo por página; entradas que cambian con el contenido; nada se levanta al pasar el puntero; foto solo bajo un velo de la marca |
+| `docs/design/anti-cliches.md` | — | — | — | Las seis filas nuevas de AI-DD 1.16.0 (página quieta, idea de categoría, secciones delgadas, primera pantalla seguida de plantilla, pantalla de carga, scroll secuestrado) y los clichés que esta opción roza con su alternativa |
+| `docs/design/creative-direction.md` | — | — | — | Secciones «Modo y registro» (registro máximo de las páginas públicas: audaz; la 038, firme) e «Imágenes disponibles» (solo la foto de banco de abound y el logo) |
+
+## Imágenes
+
+| Imagen | Origen | Licencia y crédito | Sustituir antes de publicar |
+|---|---|---|---|
+| Portada: dentista atendiendo a una paciente (`cover-bg.jpg` de abound, 1920 × 1080) | Foto de banco que trajo el colaborador en el merge `f096e17`; recuperada del historial y comprimida (WebP 1600 px, 64 kB; 800 px, 23 kB) | **Desconocida.** Hay que confirmar con el colaborador de dónde sale y su licencia antes de publicarla; no lleva crédito porque no se conoce | **Sí**, por una foto real de la consulta en cuanto exista; hasta entonces se presenta como ambiente, nunca como el equipo de Dentissa |
+| Logo «Melissa López N. · Odontología integral» | `public/images/logo-icon.png` (del proyecto), pintado por máscara | Propio | No |
+| Iconos de categoría | Dibujados en código (SVG de 24 × 24, trazo 1.6) | Propios | No |
 
 ## Movimiento
 
-### M-1 — La hoja de la puerta (spec 039)
-- **Disparador:** pulsar «Anterior» o «Siguiente» en el carrusel. Ocurre cada vez que el visitante
-  cambia de foto y nunca solo.
-- **Elementos y propiedades:** la foto que sale y la que entra (`transform`, `opacity`).
-- **Duración y curva:** `--duration-firma` / `--ease-puerta`.
-- **Inicial → final:**
-  - la que sale va de `translateX(0)`, opaca, a `translateX(-30%)`, transparente;
-  - la que entra va de `translateX(30%)`, transparente, a `translateX(0)`, opaca;
-  - las dos a la vez (al pulsar «Anterior», en sentido contrario).
-- **Técnica:** CSS (keyframes) con una clase que pone el JavaScript del carrusel.
-- **Reducido:** cambio instantáneo. **Sin JavaScript:** no hay carrusel; la fila deslizable
-  muestra todas las fotos. **Táctil:** igual con los botones; deslizar el dedo usa el
-  desplazamiento nativo de la fila.
-- **Coste:** ~1 kB de JavaScript para el carrusel entero (botones, «Foto n de N», clase de la
-  animación), de los 100 kB por ruta de P10. No comparte propiedades con otras animaciones.
-- **Fotogramas:** `opcion-b.html#movimiento`.
+Capa del modo persuadir (`design-spec/references/movimiento.md` §2): una escena, una jugada firma,
+entradas por sección, respuesta bajo la mano. Vivo en `design/opcion-c-pagina.html`; un solo script
+común (~1.5 kB) para las entradas y la cosa viva.
 
-### Microinteracciones
-- Botones y enlaces cambian de color en `--duration-fast` y se hunden 1 px al pulsar
-  (`translateY`). Con movimiento reducido, solo cambia el color.
-- Puertas e índice: fondo `--p100` con el puntero o con foco. En táctil, sin hover, basta el foco.
-- Menú del móvil: `<details>` con el icono de hamburguesa, sin animación.
-- Sin entradas al hacer scroll ni transiciones de página.
+### M-1 — La hoja que sube sobre la consulta
+- **Tipo y filtro:** escena (`hoja-sobre-imagen`); una vez por visita; explica el paso de la portada al contenido y es el momento protagonista.
+- **Disparador:** progreso del scroll nativo; ocurre cada vez que se baja (no captura la rueda).
+- **Elementos y propiedades:** la portada es `position: sticky; top: 0` de 100svh; «Sobre nosotros» tiene fondo `--bg`, `z-index` mayor, esquinas `--radius-lg` arriba y una sombra hacia arriba, y sube encima. Nada se anima: es el desplazamiento.
+- **Duración y curva:** las del scroll; **inicial → final:** portada a la vista → la hoja la cubre.
+- **Técnica:** CSS, sin script.
+- **Reducido:** igual (no hay animación) · **Sin JavaScript:** igual · **Táctil:** igual · **Teléfono:** la misma.
+- **Coste:** 0 kB; no comparte propiedades.
+- **Fotogramas:** tira `.ai/inspect/opcion-c/film-1440-01` y `-02`.
+
+### M-2 — La franja del horario
+- **Tipo y filtro:** firma (`marquesina`); se ve una o dos veces por visita; decorativa (el horario está en la portada, la ubicación y el pie).
+- **Disparador:** carga; bucle continuo.
+- **Elementos y propiedades:** pista con el texto duplicado, `transform: translateX(-50%)`.
+- **Duración y curva:** `--duration-marquesina` (48 s), `linear`; se para con el puntero encima.
+- **Técnica:** CSS (keyframes).
+- **Reducido:** quieta · **Sin JavaScript:** se mueve igual (CSS) · **Táctil:** se mueve; no es interactiva.
+- **Coste:** 0 kB; no comparte propiedades. `aria-hidden="true"`.
+- **Fotogramas:** tira `.ai/inspect/opcion-c/film-1440-05`.
+
+### M-3 — Entradas por sección
+- **Tipo y filtro:** entrada; una vez por visita y sección.
+- **Disparador:** la parte superior llega al 88 % de la ventana; una sola vez.
+- **Elementos y propiedades:** títulos por línea (`translateY(0.6em)`), párrafos y filas de datos subiendo 24 px, tarjetas una a una, el mapa desde una máscara (`clip-path`); `opacity` en todas.
+- **Duración y curva:** `--duration-reveal` con `--ease-expo`; escalonado `--stagger` por orden, cuatro pasos como máximo.
+- **Técnica:** CSS con la clase `is-in` que pone el script común (IntersectionObserver).
+- **Reducido:** sin entradas, todo visible · **Sin JavaScript:** todo visible (la clase `js` la pone el script) · **Táctil:** igual.
+- **Coste:** parte del script común; comparte `opacity` y `transform` solo consigo misma.
+
+### M-4 — Respuesta bajo la mano
+- **Tipo y filtro:** respuesta; varias veces por visita: rápida.
+- **Elementos y propiedades:** botones `scale(0.97)` al pulsar (`--duration-fast`, `--ease-out`); tarjetas: borde, sombra y color del icono con el puntero o el foco (sin levantarse).
+- **Reducido:** solo el color · **Sin JavaScript:** igual (CSS) · **Táctil:** el foco; sin hover.
+
+### M-5 — «¿Abierto ahora?»
+- **Tipo:** cosa viva; sin animación (el texto aparece ya escrito). `aria-live="polite"`.
+
+## Inspección
+
+- **Rondas:** 2 de 3 en C y en D, y una pasada más de C tras combinar · **Inspector:** C 0 FAIL ·
+  2 WARN (titular en tres líneas a 320 y 390 px, defendido: la escala mínima de portada no cabe en
+  dos en 288 px) · **Crítica:** `design/critica-c.md` (y `critica-d.md` de la descartada).
+- **Tres problemas corregidos:** el titular en tres líneas en el escritorio (ahora dos); la pastilla
+  de «Abierto ahora» partida en el teléfono; el texto inventado de la ubicación («a unas calles de…»),
+  sustituido por «Estamos en el centro de Lázaro Cárdenas.».
 
 ## Accesibilidad
 
-- **Contraste** (calculado en `opcion-b.html#color`):
-
-  | Par | Contraste |
-  |---|---|
-  | texto `--text` sobre `--bg` | 19.59:1 |
-  | texto sobre `--white` | 21.00:1 |
-  | secundario `--p600` sobre `--bg` | 6.54:1 |
-  | secundario `--p600` sobre `--white` | 7.00:1 |
-  | rótulo `--p600` sobre `--p100` | 6.05:1 |
-  | botón principal: blanco sobre `--p500` | 5.42:1 |
-  | blanco sobre `--p600` (hover) | 7.00:1 |
-  | error `--red` sobre `--red-bg` | 6.13:1 |
-  | `--green-texto` sobre `--white` | 5.30:1 |
-  | `--green-texto` sobre `--bg` | 4.95:1 |
-  | texto sobre `--amber-bg` | 18.31:1 |
-  | texto sobre `--p100` (zona más difícil) | 18.13:1 |
-  | borde de control `--border-control` sobre `--white` | 3.93:1 |
-  | borde de placa y foco `--p600` sobre `--bg` | 6.54:1 |
-  | cabecera: blanco (logo, enlaces, icono) sobre `--p500` | 5.42:1 |
-  | cabecera: botón, `--p600` sobre `--white` | 7.00:1 |
-  | anillo `--focus-ring-inverso` (blanco) sobre `--p500` y `--p600` | 5.42:1 · 7.00:1 |
-  | pie: blanco sobre `--p600` | 7.00:1 |
-
-  La barra lateral de la app (blanco sobre `#C75078`, 4.33:1) sigue siendo deuda DS1: las
-  pantallas de gestión no la cambian.
-- **Encabezados y estructura:**
-  - Hay un solo `h1` por página: el título de la placa en `/` y «Nuestros servicios» o «Nuestros
-    trabajos» en sus páginas. El aviso de la puerta es un `h2`.
-  - Las secciones son `h2`, y las categorías y las promociones son `h3`.
-  - Las categorías de `/servicios` son `h2`, cada una con su lista de definiciones.
-  - La navegación lleva `aria-label`.
-- **Teclado:** el orden del HTML es el orden visual.
-  - El menú del móvil es un `<details>` (Intro o Espacio).
-  - El carrusel se recorre con Tab hasta «Anterior» y «Siguiente».
-  - La fila sin JavaScript es enfocable y se desplaza con las flechas.
-  - El foco del sistema (2px `--p600`) se ve en todo elemento interactivo.
-- **Decorativos ocultos:** vigencia corta de las promociones y logos con `role="img"` y nombre («Melissa
-  López N. · Odontología integral»).
-- **Textos alternativos:** la descripción de cada foto es su texto alternativo y además se ve escrita
-  (039 CA1, CA2).
-- **Sin animación:** todo el contenido está en el HTML del servidor, visible sin JavaScript y con
-  movimiento reducido. El carrusel nunca avanza solo (WCAG 2.2.2).
+- **Contraste** (calculado):
+  - titular y texto de la portada, blanco sobre el velo en el peor caso → 6.41:1;
+  - «prioridad.» en `--p200` sobre el velo → 4.06:1 (texto grande);
+  - titular sobre el degradado (≈ 61 % en el 75 % del ancho) → ≥ 3.6:1 (texto grande);
+  - pastilla `--p600` sobre blanco → 7.00:1; botón principal, blanco sobre `--p500` → 5.42:1;
+  - franja `--p100` sobre `--p600` → 6.05:1; pie, blanco sobre `--p600` → 7.00:1;
+  - tarjeta: texto sobre blanco 21.00:1, `--p600` sobre blanco 7.00:1, icono `--p600` sobre `--p100` 6.05:1;
+  - borde del botón secundario y de la tarjeta con foco, `--border-control` sobre blanco → 3.93:1.
+- **Encabezados y estructura:** un `h1` (el titular); `h2` para «Sobre nosotros», «Nuestros servicios»,
+  «Encuéntranos fácilmente» y las columnas del pie; `h3` en cada tarjeta. `nav` «Secciones» (también
+  la del menú del móvil) y «Pie».
+- **Teclado:** el orden del HTML es el visual; foco del sistema en todo lo interactivo (inverso sobre
+  el rosa y la portada); las tarjetas son enlaces enteros.
+- **Decorativos ocultos:** la foto (fondo), el velo, el logo grande de la portada y el del pie, los
+  iconos y la franja, con `aria-hidden`.
+- **Sin animación:** todo el contenido en el HTML, visible sin JavaScript y con movimiento reducido;
+  la franja se detiene con movimiento reducido (CA9).
 
 ## Anti-clichés
 
 | Cliché que esta pantalla podría caer | Alternativa usada |
 |---|---|
-| Foto de stock de sonrisa en la portada | Portada tipográfica con la placa; solo fotos reales de trabajos, subidas por el admin |
-| Azul o blanco clínico, verde menta | Rosa de la marca como señalética sobre `--bg` y blanco |
-| Iconos de muela o brackets | Sin iconos en servicios: cada categoría se nombra en su puerta |
-| Cuadrícula de tarjetas icono + título + texto para los servicios | Puertas de texto que llevan a `/servicios`, y listas de definiciones agrupadas allí |
-| Promociones en cintillo, con contadores o colores de oferta | Lista de avisos sobria, con condiciones y vigencia en texto |
-| Carrusel que avanza solo | Solo con «Anterior» y «Siguiente», y «Foto n de N» |
-| Carrusel de reseñas y logos inventados | Nada inventado: sin reseñas mientras no existan |
-| Todo entra con fundido al hacer scroll | Un solo momento (M-1) y solo cuando el visitante cambia de foto |
-| Mismo esqueleto en todas las secciones | Cada sección tiene su forma: placa, texto 1:2, puertas, avisos, carrusel 7:5 y mapa con placa |
+| Foto de stock en la portada | **Riesgo asumido por el usuario:** la foto de abound bajo el velo de la marca, sin presentarla como el equipo, y su sustitución por una foto real como condición antes de publicarla |
+| Tríada de tarjetas icono + título + texto | Siete tarjetas, una por categoría real del catálogo, con su número de tratamientos (no ventajas inventadas); iconos dibujados para cada categoría |
+| Todo entra con el mismo fundido al hacer scroll | Entradas que cambian con el contenido: títulos por línea, tarjetas una a una, mapa desde una máscara; la portada no espera al scroll |
+| Hover que levanta todas las tarjetas | La tarjeta cambia borde, sombra e icono; no se mueve |
+| Página quieta | La hoja que sube, la franja, las entradas y la cosa viva |
+| Primera pantalla distinta seguida de plantilla | Cada sección tiene su forma (hoja, rejilla, franja, 3:2, pie con el nombre) y el horario vuelve hasta el pie |
+| Marquesina decorativa sin idea | Una sola, con el horario real; se detiene con el puntero y con movimiento reducido |
 
 ## Decisiones
 
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
 |---|---|---|---|---|
-| 2026-10-20 | diseño | Territorio de identidad | A · «La consulta por dentro» (`nicho.md`) | usuario |
-| 2026-10-20 | diseño | Ronda 1: A «El directorio de la entrada» o B «La puerta de la consulta» | B, con cambios de contenido que llevaron a dividir la spec en 038, 039 y 040 | usuario |
-| 2026-10-20 | diseño | Ronda 2: una sola opción B refinada para las tres specs | Aprobada para escribir este documento | usuario |
-| 2026-10-20 | diseño | Tipografía de las páginas públicas | Lexend 400/600, servida por la app; la app sigue en Roboto | usuario (opción B) |
-| 2026-10-20 | diseño | Momento firma | M-1 en el carrusel, al cambiar de foto; la portada sin animación | `creative-direction.md` |
-| 2026-10-20 | supuesto | `public/images/cover-bg.jpg` (foto de banco, uniforme azul) | No se usa; se retira en la 038 si nada más la usa | `brief.md` · `anti-cliches.md` |
-| 2026-10-20 | supuesto | Índice de `/servicios` en el escritorio | Fijo al desplazarse (`position: sticky`); en el visor va estático para que el marco se lea bien | razonable |
-| 2026-10-20 | supuesto | Casilla de consentimiento sin JavaScript | Siempre visible, con la ayuda «Solo si respondiste «Sí»»; el servidor la exige solo si la respuesta es «Sí» | 039 CA9, CA11 (P10, sin JS) |
-| 2026-10-20 | diseño | ¿Se aprueba este documento? | Aprobado | usuario |
-| 2026-10-20 | refinado | Revisión manual de T025: «no uses la palabra "menú", usa el icono de hamburguesa sin recuadro ni contorno, y sigue un poco la línea de la landing del push de abound» | Menú del móvil con solo el icono de hamburguesa, sin borde ni fondo (nombre accesible «Menú»). De la landing del colaborador se toman la cabecera rosa (`--p500`, logo y enlaces en blanco, botón blanco) y el pie rosa con columnas (`--p600`: logo y frase, Horarios, Contacto, © centrado); su `#D4537E` con texto blanco (3.9:1) no cumple AA y se cambia por `--p500` y `--p600`. Se mantiene la placa de la portada (opción B); no se toman la foto de fondo, las tarjetas con iconos, los botones en píldora ni los fundidos al hacer scroll (anti-clichés y P10). Token nuevo `--focus-ring-inverso` (sistema 1.7.1) | usuario (/design-spec 038 --fix) |
+| 2026-10-20 | diseño | Rondas 1 y 2 | Opción B «La puerta de la consulta», con el refinado D15 (cabecera y pie rosas, hamburguesa) — archivada en `design/history/ronda-2/design.md` | usuario |
+| 2026-10-21 | diseño | ¿Rediseñar la 038 tras su aprobación? | Sí: la opción B es «muy básica»; seguir la línea de la landing de abound | usuario |
+| 2026-10-21 | diseño | Portada | A pantalla completa con la foto de abound (`cover-bg.jpg`), comprimida y bajo un velo de la marca | usuario |
+| 2026-10-21 | diseño | Servicios | Tarjetas con icono, nombre y «N tratamientos» (CA4 sin cambios: no muestran servicios sueltos) | usuario |
+| 2026-10-21 | diseño | Movimiento con JavaScript | Sí, con respaldo sin JavaScript y con movimiento reducido (~1.5 kB, P10 lo permite) | usuario |
+| 2026-10-21 | diseño | Placa del aviso de la puerta | Se quita; el horario y el teléfono van en la portada (CA1 sin cambios), la ubicación y el pie | usuario |
+| 2026-10-21 | diseño | Motor creativo de AI-DD 1.16.0 | Ronda 3 con dos composiciones (C firme, D audaz), semilla 371542, inspector y crítica | `/design-spec` 1.16.0 |
+| 2026-10-21 | diseño | Elección | C con la ubicación de D (mapa a la izquierda, 3:2) y el nombre grande en el pie | usuario |
+| 2026-10-21 | supuesto | Licencia de la foto de abound | Desconocida: se confirma con el colaborador o se sustituye antes de `/release` | `inspeccion` · `creatividad.md` §6 |
