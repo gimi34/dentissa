@@ -183,9 +183,23 @@ class PaginaInicioTest extends TestCase
         $this->assertSame(1, $llegar->length, 'Un solo «Cómo llegar» (el de la placa dice «Ver la ubicación», A15).');
         $this->assertSame('https://www.google.com/maps/dir/?api=1&destination='.rawurlencode(self::DIRECCION), $llegar->item(0)->getAttribute('href'));
         $this->assertSame('_blank', $llegar->item(0)->getAttribute('target'));
+        // /review R23: el nombre accesible avisa de la pestaña nueva y contiene el texto visible.
+        $this->assertSame('Cómo llegar (se abre en una pestaña nueva)', $llegar->item(0)->getAttribute('aria-label'));
         $this->assertSame('noopener noreferrer', $llegar->item(0)->getAttribute('rel'));
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Ver la ubicación"][@href="#ubicacion"]')->length, 'La placa lleva a la sección de ubicación.');
         $this->assertSame(1, $xpath->query('//*[@id="ubicacion"]')->length);
+    }
+
+    public function test_el_logo_de_la_placa_es_decorativo(): void
+    {
+        // /review R21: la marca ya la nombra la cabecera; el logo grande de la placa no se anuncia otra vez.
+        $xpath = $this->xpath($this->get('/')->getContent());
+        $logo = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " lb-placa ")]//*[contains(concat(" ", normalize-space(@class), " "), " logo ")]')->item(0);
+
+        $this->assertNotNull($logo, 'La placa lleva el logo.');
+        $this->assertSame('true', $logo->getAttribute('aria-hidden'));
+        $this->assertFalse($logo->hasAttribute('role'), 'Sin role="img" ni nombre.');
+        $this->assertSame(2, $xpath->query('//*[@role="img"][@aria-label="Melissa López N. · Odontología integral"]')->length, 'La marca se anuncia en la cabecera y en el pie.');
     }
 
     public function test_el_mapa_es_perezoso_y_avisa_de_google(): void

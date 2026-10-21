@@ -359,6 +359,8 @@ class PaginasPublicasTest extends TestCase
         $this->assertSame('', trim($summary->textContent), 'Sin la palabra «Menú» a la vista.');
         $this->assertSame('Menú', $summary->getAttribute('aria-label'));
         $this->assertSame(1, $xpath->query('svg[@aria-hidden="true"]', $summary)->length, 'El icono es un SVG oculto al lector.');
+        // /review R18: por debajo de 900 px el menú sigue siendo un landmark de navegación.
+        $this->assertSame(1, $xpath->query('//nav[@aria-label="Secciones"]//details[contains(@class, "pub-menu")]')->length, 'El menú del móvil va dentro de la nav «Secciones».');
 
         // Refinado D15: pie en columnas con el horario y el contacto.
         $pie = $xpath->query('//footer')->item(0);

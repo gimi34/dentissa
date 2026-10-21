@@ -155,6 +155,24 @@ class ServiciosPublicosTest extends TestCase
         $this->assertSame(['nombre', 'descripcion'], array_keys(array_diff_key($primero, ['categoria' => 1])), 'Solo nombre, descripción y categoría.');
     }
 
+    public function test_un_servicio_sin_descripcion_deja_su_dd_vacio(): void
+    {
+        // /review R24: sin descripción, el <dd> queda vacío de verdad (sin espacios), para que
+        // `.lb-lista dd:empty` lo oculte y el lector no anuncie una definición en blanco.
+        DB::table('servicios')->insert([
+            'id' => (string) Str::uuid(), 'nombre' => 'SinDescripcion038', 'descripcion' => null,
+            'categoria' => 'Vacia038', 'duracion_min' => 30, 'precio' => 100, 'activo' => 1,
+        ]);
+
+        $xpath = $this->xpath($this->get('/servicios')->getContent());
+        $dt = $xpath->query('//dt[normalize-space()="SinDescripcion038"]')->item(0);
+
+        $this->assertNotNull($dt);
+        $dd = $xpath->query('following-sibling::dd[1]', $dt)->item(0);
+        $this->assertNotNull($dd);
+        $this->assertSame(0, $dd->childNodes->length, 'El <dd> no lleva ni espacios.');
+    }
+
     public function test_con_sesion_se_ve_igual_y_ofrece_ir_al_panel(): void
     {
         $this->crearServicio('ConSesion038', 'Sesion038');
