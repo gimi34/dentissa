@@ -1,7 +1,8 @@
 /* Páginas públicas (spec 038; system.md 1.7.2; diseño en docs/specs/038-pagina-inicio/design.md).
    Se carga después de app.css, que pone los tokens de :root. Colores, tipografía, espacios, radios y
    duraciones salen de tokens; los únicos literales son los de @font-face, las condiciones de los
-   cortes de 900 y 560 px y las proporciones de rejilla (fr) y de capas (z-index). */
+   cortes de 900 y 560 px, las proporciones de rejilla (fr) y de capas (z-index) y los factores de
+   calc() sobre --touch-min y --space-8 (tokens de tamaño propios en el roadmap, /review 038 R25). */
 
 /* Lexend autoalojada (OFL-1.1, public/fonts/lexend/OFL.txt): sin servicios externos de fuentes. */
 @font-face {
@@ -255,7 +256,8 @@ summary:focus-visible {
 .lb-lista dl { display: grid; grid-template-columns: minmax(calc(var(--touch-min) * 4), 2fr) 3fr; }
 .lb-lista dt,
 .lb-lista dd { padding: var(--space-4) 0; border-bottom: var(--border-width) solid var(--border); }
-.lb-lista dt { padding-right: var(--space-6); font-weight: var(--weight-strong); }
+/* Cada nombre empieza en la primera columna: un <dd> vacío y oculto no desplaza la rejilla (/review R30). */
+.lb-lista dt { grid-column: 1; padding-right: var(--space-6); font-weight: var(--weight-strong); }
 .lb-lista dd { color: var(--p600); }
 /* Un servicio sin descripción no deja una fila vacía (/review R24). */
 .lb-lista dd:empty { display: none; }
