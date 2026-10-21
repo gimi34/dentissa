@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.7.1
+version: 1.7.2
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -92,6 +92,9 @@ Páginas públicas (spec 038; [diseño](../specs/038-pagina-inicio/design.md)): 
 `--text-publico-h2` (fluido de 22px a 30px), `--text-publico-h3` (19px), `--text-publico` (17px) y
 `--text-publico-small` (15px). La app de gestión sigue en Roboto (DS9 no cambia). En las páginas
 públicas el texto secundario es `--p600` (6.54:1 sobre `--bg`); `--text-muted` de la app no cambia (DS3).
+Interlineado de las páginas públicas (1.7.2, `/review 038` R1): `--leading-publico` (1.5) para el
+texto, `--leading-publico-h1` (1.15) para el `h1` y `--leading-publico-h2` (1.25) para los títulos de
+sección. Son proporciones sin unidad y solo van en `line-height`.
 
 Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
 `--text-meta` (13px, migas de pan) y `--text-marca` (16px; sin uso desde la spec 034, que cambia la marca de
@@ -170,6 +173,8 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - `--space-seccion`: aire entre secciones, fluido de 40px (320 px) a 96px (1440 px);
   - `--measure` (62ch): ancho de lectura;
   - `--page-max` (1180px): ancho máximo del contenido público;
+  - `--logo-ratio` (454 / 135, 1.7.2): proporción del logo enmascarado (`public/images/logo-icon.png`,
+    454 × 135 px), en `aspect-ratio`;
   - corte propio de las páginas públicas a **560 px** (`@media (max-width: 559px)`): puertas, índice y
     definiciones en una columna y botones a todo el ancho. Acompaña al de 900 px y, como él, es el único
     literal admitido, solo en la condición.
@@ -690,6 +695,7 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |
 | 2026-10-13 | diseño | ¿Qué incorpora el sistema para el móvil del personal (spec 034)? | Versión 1.5.0: opción A (tarjeta con etiquetas y filtro en la página); tokens `--tarjeta-etiqueta-w`, `--logo-movil-h`, `--space-detalle`, `--detalle-lateral-w` y los cuatro anchos mínimos del filtro; componentes «Tarjeta de lista en el móvil», «Filtro plegable», «Rejilla de estadísticas» y «Botón de icono»; cambian «Botón Menú» (solo icono), «Marca del menú del móvil» (logo con máscara) y la línea de tiempo de la dentista; `--text-marca` sin uso | usuario (spec 034 y plan 034, D1, D4, D5b, D6, D6b, D10; /analyze A33, A35, A36, A59, A60, A68, A69) |
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
+| 2026-10-21 | diseño | ¿Con qué tokens van el interlineado y la proporción del logo de las páginas públicas (`/review 038` R1, P9)? | Versión 1.7.2: `--leading-publico` (1.5), `--leading-publico-h1` (1.15), `--leading-publico-h2` (1.25) y `--logo-ratio` (454 / 135), los valores que ya usaba `publico.css` | usuario (`/review 038` r1) |
 | 2026-10-20 | diseño | ¿Cómo quedan la cabecera, el menú y el pie públicos tras la revisión de T025 (spec 038)? | Versión 1.7.1: token `--focus-ring-inverso` (`var(--white)`); «Cabecera pública» en `--p500` con logo y enlaces blancos, botón blanco y menú con solo el icono de hamburguesa sin borde; «Pie público» en `--p600` con tres columnas y ©, siguiendo la landing del colaborador (su `#D4537E` con blanco no cumple AA) | usuario (spec 038, /design-spec --fix y plan D15) |
 | 2026-10-20 | diseño | ¿Qué incorpora el sistema para las páginas públicas (spec 038)? | Versión 1.7.0: familia `--font-publica` (Lexend autoalojada), `--text-publico-h1`/`-h2` fluidos, `--text-publico-h3`, `--text-publico`, `--text-publico-small`, `--space-seccion` (fluido), `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`; secundario público `--p600`; corte de 560 px; componentes «Placa», «Puerta», «Cabecera pública» y «Pie público»; reglas de uso de las páginas públicas. Los tokens de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella | usuario (spec 038, design.md y plan D14) |
 | 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |
