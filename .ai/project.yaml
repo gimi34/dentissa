@@ -26,7 +26,7 @@ models:                        # modelo de cada perfil de subagente (shared/cont
   implementation: inherit      # /implement --parallel (inherit = el modelo de la sesión)
 sync:
   last: null                   # commit hasta el que /sync concilió la deriva
-skills_version: 1.15.0         # versión del paquete de skills (upgrade desde 1.13.0 el 2026-10-18)
+skills_version: 1.16.0         # versión del paquete de skills (upgrade desde 1.15.0 el 2026-10-21)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
   platform: servidor propio (Ubuntu Server 24.04) con Docker Compose y Cloudflare Tunnel (ADR 0005, spec 030)

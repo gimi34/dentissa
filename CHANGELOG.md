@@ -5,6 +5,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.16.0
+- Validador 1.16.0 (`aidd.py deal` para repartir jugadas y escenas entre composiciones).
+- `/design-spec` con motor creativo: modo y registro de cada pantalla (al menos una opción audaz),
+  idea con la prueba del competidor, «cosa viva», escenas de scroll con un único script común e
+  inspector en el navegador antes de enseñar cada opción; ajustes `--bolder` y `--quieter`. Las
+  capturas del inspector van a `.ai/inspect/` (ignorado).
+- Sin cambios en las plantillas de `docs/templates/`, en `.ai/project.yaml` (salvo la versión), en
+  la constitución ni en la CI. Las filas nuevas de anti-clichés, «Modo y registro» de
+  `creative-direction.md` y los tokens de movimiento entran con el rediseño de la spec 038.
+
 ## [0.10.0] - 2026-10-20
 
 ### Added
