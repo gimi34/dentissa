@@ -56,6 +56,7 @@ updated: 2026-10-18
 | `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
+| `GET /`, `GET /servicios` | HTTP público | no (con sesión, `/` redirige al panel del rol) | Páginas públicas (spec 038): sin parámetros; solo el catálogo activo (nombre, descripción y categoría), escapado (TM1, TM2), con una consulta por petición. Sin límite propio: riesgo aceptado TM6 de la 038 (Cloudflare delante, spec 030). `/` incrusta el mapa de Google: `frame-src https://www.google.com` solo en `/` (`docker/nginx/seguridad/marcos.conf`), y el navegador del visitante pide el mapa a Google al acercarse (`loading="lazy"`), enviando solo el dominio de origen (`referrerpolicy`); la página lo avisa («El mapa lo sirve Google.», TM4) |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
 | `/asistente/*` | HTTP | sí, `role:asistente` | pacientes y expedientes sin filtro de alcance |
