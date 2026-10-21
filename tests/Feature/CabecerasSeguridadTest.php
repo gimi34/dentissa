@@ -214,7 +214,8 @@ class CabecerasSeguridadTest extends TestCase
         foreach (['/', '/?utm=x', '/?utm_source=google&x=1'] as $ruta) {
             $this->assertSame(1, preg_match($patron, $ruta), "{$ruta} admite el mapa.");
         }
-        foreach (['/servicios', '/admin', '//evil', '/x/', '/servicios?x=/', '/login', '/%2F', ''] as $ruta) {
+        // /review R16: también las variantes de $request_uri que nginx no normaliza.
+        foreach (['/servicios', '/admin', '//evil', '/x/', '/servicios?x=/', '/login', '/%2F', '', '/;x', '/.', '/%3F', '/index.php'] as $ruta) {
             $this->assertSame(0, preg_match($patron, $ruta), "{$ruta} no admite el mapa.");
         }
     }
@@ -227,6 +228,22 @@ class CabecerasSeguridadTest extends TestCase
             $this->assertSame(1, preg_match('#^include\s+'.preg_quote(self::RUTA_FRAGMENTOS.'/marcos.conf', '#').'\s*;#m', $conf, $m, PREG_OFFSET_CAPTURE), "{$ruta} incluye marcos.conf fuera del server.");
             $this->assertLessThan(strpos($conf, "\nserver {") ?: strpos($conf, 'server {'), $m[0][1], "{$ruta}: marcos.conf antes del server.");
         }
+    }
+
+    /**
+     * Spec 038 (/review R14): con el túnel parado (`--interna`), `verificar.sh` también comprueba
+     * por la red de Docker que `/` admite el marco de Google y `/servicios` solo marcos propios.
+     */
+    public function test_verificar_comprueba_los_marcos_por_la_red_interna(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+        $inicio = strpos($script, 'echo "== Cabeceras por la red interna');
+        $this->assertNotFalse($inicio, 'verificar.sh tiene el bloque interno de cabeceras.');
+        $fin = strpos($script, 'echo "==', $inicio + 10);
+        $interno = substr($script, $inicio, $fin - $inicio);
+
+        $this->assertMatchesRegularExpression('/^[^#\n]*exec -T web curl [^\n]*"http:\/\/127\.0\.0\.1\/"(?:(?!curl )[\s\S]){0,300}?frame-src \'self\' https:\/\/www\\\\?\.google\\\\?\.com;/m', $interno, '/ admite el marco de Google (interna).');
+        $this->assertMatchesRegularExpression('/^[^#\n]*exec -T web curl [^\n]*"http:\/\/127\.0\.0\.1\/servicios"(?:(?!curl )[\s\S]){0,300}?frame-src \'self\';/m', $interno, '/servicios solo admite marcos propios (interna).');
     }
 
     /**
