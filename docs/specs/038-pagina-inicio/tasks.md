@@ -2,7 +2,7 @@
 spec: 038-pagina-inicio
 plan: plan.md
 impl_base: fba7a6d
-status: approved
+status: draft
 ---
 
 # Tareas · 038 Página de inicio pública
@@ -26,16 +26,16 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 
 | Principio | Resultado | Evidencia en las tareas |
 |---|---|---|
-| P1 Spec aprobada antes de código | ✅ | Spec, `design.md` y plan aprobados el 2026-10-20; estas tareas se aprueban antes de `/implement` |
-| P2 Test que falla antes y pasa después | ✅ | T010–T016 se escriben antes que la implementación (T020–T030), y T018 antes que T032 (refinado D15) y fallan hoy por la razón esperada; cada implementación `depende:` de su test. CA2 es de caracterización (T010): se comprueba rompiendo la redirección y se anota |
+| P1 Spec aprobada antes de código | ✅ | Spec, `design.md` y plan aprobados el 2026-10-20; estas tareas se aprueban antes de `/implement`. Rediseño: `design.md` de la ronda 3 (651e316) y plan con D16–D18 (f559633) aprobados el 2026-10-21 antes de T071 |
+| P2 Test que falla antes y pasa después | ✅ | T010–T016 se escriben antes que la implementación (T020–T030), y T018 antes que T032 (refinado D15) y fallan hoy por la razón esperada; cada implementación `depende:` de su test. CA2 es de caracterización (T010): se comprueba rompiendo la redirección y se anota. Rediseño: T074–T077 (tests) van antes que T080–T085 (implementación), que dependen de ellos; los casos de la opción B que cambian se reescriben en esas tareas de test, nunca se borran sin su equivalente |
 | P3 Autorización en el servidor | ✅ | T022 lleva la redirección al panel y «Ir a mi panel» al servidor (`panelDelRol()`); T010 y T012 lo prueban por rol |
 | P4 Entrada validada y SQL con bindings | ✅ | Ninguna ruta recibe entrada; T021 consulta con Eloquent y T012 prueba que los parámetros de la URL no cambian nada |
-| P5 Nada sensible en el repositorio | ✅ | Datos de contacto ficticios de la spec (T021); la fuente lleva su licencia (T002, comprobado en T013); gitleaks en T042 |
-| P6 Sin vulnerabilidades críticas o altas | ✅ | Sin dependencias nuevas (Lexend se copia, T002); `composer audit` y `npm audit` en T042 |
+| P5 Nada sensible en el repositorio | ✅ | Datos de contacto ficticios de la spec (T021); la fuente lleva su licencia (T002, comprobado en T013); gitleaks en T042. La foto de la portada, con licencia comprobada y crédito (T072, D17), probado por T075; gitleaks en T088 |
+| P6 Sin vulnerabilidades críticas o altas | ✅ | Sin dependencias nuevas (Lexend se copia, T002; `publico.js` y su test usan solo Node y el navegador, D18); `composer audit` y `npm audit` en T042 y T088 |
 | P7 Auditoría | ➖ | No toca datos sensibles, autenticación ni permisos |
 | P8 Correlación y logs | ➖ | No añade logs |
-| P9 Solo sistema de diseño, WCAG AA | ✅ | T001 incorpora el sistema 1.7.0 antes de la UI y T005 el refinado 1.7.1 (plan D15) antes de T032, probado por T018. T014 prueba tokens = sistema, CSS sin literales (también duraciones y curvas), sin `style=""`, contraste y toque; T013 prueba títulos en orden y nombres accesibles. T025/T026 llevan la verificación manual contra `opcion-b.html` y T031 `--medir` |
-| P10 Rutas indexables descubribles | ❌ aceptado en el plan (JS de terceros del mapa, aprobado por el usuario el 2026-10-20) | T013 prueba metadatos, una canónica, sin `noindex`, un `h1` y ningún script propio; T042 mide lo transferido; T040 actualiza `docs/seo.md`; Lighthouse en `/review` |
+| P9 Solo sistema de diseño, WCAG AA | ✅ | T001 incorpora el sistema 1.7.0 antes de la UI y T005 el refinado 1.7.1 (plan D15) antes de T032, probado por T018. T014 prueba tokens = sistema, CSS sin literales (también duraciones y curvas), sin `style=""`, contraste y toque; T013 prueba títulos en orden y nombres accesibles. T025/T026 llevan la verificación manual contra `opcion-b.html` y T031 `--medir`. Rediseño: T071 lleva el sistema a 1.8.0 antes que la UI (T080–T085 dependen de él), T076 prueba tokens, contraste y movimiento, T084 y T085 se verifican contra `opcion-c.html` y T086 pasa `--medir` con y sin JavaScript |
+| P10 Rutas indexables descubribles | ❌ aceptado en el plan (JS de terceros del mapa, aprobado por el usuario el 2026-10-20) | T013 prueba metadatos, una canónica, sin `noindex`, un `h1` y ningún script propio; T042 mide lo transferido; T040 actualiza `docs/seo.md`; Lighthouse en `/review`. Rediseño (D16): T075 prueba que solo carga `publico.js` con `defer` y ≤ 100 kB, T088 mide el JS propio y lo transferido, y T087 actualiza la regla de JavaScript de `docs/seo.md` |
 
 ## Preparación
 - [x] T001 Incorporar al sistema de diseño la versión 1.7.0 de `design.md` («Cambios a incorporar al sistema» que necesita la 038): tokens públicos, `--green-texto`, `--duration-base`, `--ease-puerta`, componentes «Placa», «Puerta», «Cabecera pública» y «Pie público», corte de 560 px, reglas de uso y las pantallas `/` y `/servicios` en el inventario (capturas en T031) — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` declara `version: 1.7.0` con cada token y su valor de `design.md`, y `python .ai/bin/aidd.py validate` no da errores
@@ -140,6 +140,29 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: añadida por /review: R30, R31
   - nota: 2026-10-21 — R30: `.lb-lista dt { grid-column: 1; … }`; con la descripción del primer servicio vaciada en la página, a 1440 px los tres `<dt>` quedan en x = 454 (antes, el 2 y el 3 en x = 790) y a 390 px en x = 16 (una columna). R31: el comentario de cabecera añade los factores de `calc()` sobre `--touch-min` y `--space-8` (R25, roadmap). T069 pasa y los tests públicos siguen en verde (46)
 
+### Rediseño de la ronda 3 (plan D16–D18)
+Sustituye la composición de la opción B (`design.md` aprobado en 651e316). Las rutas, el
+controlador, la consulta, nginx y `verificar.sh` no cambian.
+
+- [ ] T071 Incorporar al sistema de diseño la versión 1.8.0 de `design.md` («Cambios a incorporar al sistema»): `--text-portada` y `--text-marquesina` (fluidos), `--leading-portada`, `--tracking-portada`, `--velo-portada`, `--velo-portada-suave`, `--radius-pill`, `--sombra-tarjeta`, `--sombra-tarjeta-alta`, `--icono-tarjeta`, `--ease-out`, `--ease-expo`, `--duration-reveal`, `--stagger` y `--duration-marquesina`; componentes «Botón en píldora» y «Tarjeta de categoría»; reglas de uso de las páginas públicas; los pares de contraste del velo, la franja y `--border-control`; la pantalla `/` del inventario con la composición nueva y la fila de la decisión — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` declara `version: 1.8.0` con cada token y su valor de `design.md`, `system.html` los muestra y `python .ai/bin/aidd.py validate` no da errores
+- [ ] T072 Elegir, comprobar y preparar la foto de la portada (plan D17): una foto de un banco abierto con licencia de uso comercial que cumpla `design.md` → «Imágenes» (consulta dental con luz clara y el sujeto a la derecha), convertida a WebP de 800 y 1600 px de ancho; crédito (autor, fuente, licencia, URL y fecha) en `system.md` → «Imágenes» — `public/images/portada-800.webp`, `public/images/portada-1600.webp`, `docs/design/system.md` — hecho cuando: los dos archivos existen, la nota lleva la licencia comprobada, el origen, el tamaño de cada archivo y su SHA-256, y el crédito está en `system.md` · verificación manual: el usuario aprueba la foto antes del commit — depende: T071
+- [ ] T073 Actualizar `docs/design/anti-cliches.md` (las seis filas nuevas de AI-DD 1.16.0 y los clichés que roza la opción C con su alternativa) y `docs/design/creative-direction.md` («Modo y registro»: máximo audaz en las páginas públicas y la 038 firme; «Imágenes disponibles»: la foto de T072 y el logo), y el crédito de la foto en `design.md` → «Imágenes» — `docs/design/anti-cliches.md`, `docs/design/creative-direction.md`, `docs/specs/038-pagina-inicio/design.md` — hecho cuando: los tres documentos lo dicen y `validate` no da errores — depende: T072
+- [ ] T074 Ajustar `PaginaInicioTest` al rediseño (plan, Estrategia de pruebas → «Rediseño de la ronda 3»): orden de CA1 con la portada (titular, «Agendar mi primera cita», horario completo y teléfono `tel:` dentro de `.portada`), «Sobre nosotros», tarjetas, franja, ubicación y pie, sin `.lb-placa` ni `.lb-aviso` (los casos de T063 y T064 sobre el aviso y el logo de la placa pasan a la portada); cada `.tarjeta` enlaza a su ancla de `/servicios`, lleva un `svg` `aria-hidden`, su nombre en `h3` y «N tratamientos» con el número de servicios activos («1 tratamiento» en singular), sin nombres de servicios ni precios; la franja `aria-hidden` con el horario de la configuración; `data-horario` y `data-zona` iguales a `config/clinica.php`; el horario en texto coincide con `contacto.horario_semanal` — `tests/Feature/PaginaInicioTest.php` — hecho cuando: los casos nuevos y reescritos fallan por la razón esperada, los de CA2, CA3 y CA5 siguen en verde y cada caso de la opción B que se quita tiene su equivalente anotado — cubre: CA1, CA4, CA5 — depende: T071
+- [ ] T075 Ajustar `PaginasPublicasTest` al rediseño: `test_ninguna_pagina_publica_carga_scripts` pasa a `test_solo_carga_el_script_publico_con_defer` (un solo `<script>`, `src` de `/js/publico.js` con `defer`, sin código en línea, archivo ≤ 100 kB); `test_el_script_publico_no_usa_innerhtml` (TM1); el peso de `/` ≤ 1 MB con `publico.js` y la foto mayor; `test_la_foto_de_portada_va_acreditada` (las dos WebP existen, la `img` de la portada con `alt=""` y `srcset`, y `system.md` → «Imágenes» con autor, fuente y licencia); `cover-bg.jpg` sigue retirada; los decorativos nuevos (logo de la portada, marca del pie, iconos, franja) con `aria-hidden` — `tests/Feature/PaginasPublicasTest.php` — hecho cuando: los casos nuevos fallan por la razón esperada y el resto sigue en verde — cubre: CA7, CA8, CA10 — depende: T071
+- [ ] T076 Ajustar `PaginasPublicasCssTest` (y `ReglasCss` si hace falta) al rediseño: tokens 1.8.0 = sistema; contraste del velo (blanco y `--p200`), de la franja (`--p100` sobre `--p600`) y de `--border-control` sobre blanco; selectores de las clases del plan («Clases de los componentes», D16) en lugar de los de la placa y las puertas; `--touch-min` en `.tarjeta`; `--focus-ring-inverso` en la portada; `.portada` con `position: sticky` y la hoja encima (`z-index`); `body.publico` y `.pub-inicio` sin `overflow`; `@keyframes`, `animation` y `transition` solo dentro de `prefers-reduced-motion: no-preference`; el estado oculto de `[data-reveal]` solo bajo `.js`; ninguna regla `:hover` ni `:focus` con `translate` — `tests/Feature/PaginasPublicasCssTest.php`, `tests/Feature/Concerns/ReglasCss.php` — hecho cuando: los casos nuevos fallan por la razón esperada, cada patrón nuevo tiene su control positivo y los tests que ya usan el trait siguen en verde — cubre: CA8, CA9 — depende: T071
+- [ ] T077 Escribir `tests/js/publico.test.mjs` (`node:test`, plan D18) sobre `estadoAhora()` cargado con `node:vm`: lunes 10:00 «Abierto ahora · cierra a las 20:00»; lunes 8:00 «abre hoy a las 9:00»; lunes 21:00 «abre mañana»; sábado 15:00 «abre el lunes»; domingo «abre mañana»; la medianoche; el cierre exacto (20:00, cerrado); y un instante en UTC que en Lázaro Cárdenas es otro día. Con un esqueleto de `publico.js` que expone `globalThis.DentissaPublico.estadoAhora` y lanza «sin implementar» — `tests/js/publico.test.mjs`, `public/js/publico.js` — hecho cuando: `node --test tests/js/` falla por la razón esperada (sin implementar) — cubre: CA1
+- [ ] T078 Añadir a la CI el paso `node --test tests/js/` en el trabajo de tests (ruta protegida, aprobada por el usuario el 2026-10-21; plan D18) — `.github/workflows/ai-dd.yml` — hecho cuando: el paso está en el trabajo «Tests y lint», el YAML se carga sin errores y `validate` no da errores — depende: T077
+- [ ] T079 Ampliar `capturar.mjs`: la comprobación «038 páginas públicas» de `--medir` también con JavaScript desactivado (sin desbordamiento y todo el contenido visible) y la pastilla `.estado-ahora` en una sola línea a 320 px con JavaScript; documentado en la cabecera — `docs/design/capturar.mjs` — hecho cuando: `node docs/design/capturar.mjs --seco --medir` lista las comprobaciones nuevas, `node --check` está limpio y los tests que leen `capturar.mjs` siguen en verde — cubre: CA8, CA9
+- [ ] T080 Añadir a `:root` de `app.css` los tokens de T071 y a `config/clinica.php` `contacto.horario_semanal` (día ISO → apertura y cierre: lunes a viernes 9:00–20:00, sábado 9:00–14:00) — `public/css/app.css`, `config/clinica.php` — hecho cuando: pasan los casos de tokens y de contraste de T076 y el de «horario en texto = `horario_semanal`» de T074 — cubre: CA1, CA9 — depende: T071, T074, T076
+- [ ] T081 Implementar `publico.js` (plan D16): `estadoAhora(horario, zona, fecha)` con `Intl.DateTimeFormat`; al cargar, con movimiento normal, el IntersectionObserver de `[data-reveal]` (una vez, al 88 % de la ventana) que pone `is-in`; la pastilla `[data-live]` desde `data-horario` y `data-zona`, escrita con `textContent`; y al final la clase `js` en `<html>` — `public/js/publico.js` — hecho cuando: `node --test tests/js/` pasa dos veces, el caso `test_el_script_publico_no_usa_innerhtml` de T075 pasa y el archivo pesa ≤ 100 kB (anotar el tamaño); comprobado rompiendo el control de TM1 (con `innerHTML`, el caso falla) — cubre: CA1, CA8 — depende: T075, T077
+- [ ] T082 Cargar el script y cerrar el pie en el layout: `<script src="{{ asset('js/publico.js') }}" defer>` versionado como las hojas, y la marca grande del pie a todo el ancho con `aria-hidden="true"` — `resources/views/layouts/publico.blade.php` — hecho cuando: los casos del layout y de scripts de T075 pasan y el resto de `PaginasPublicasTest` sigue en verde — cubre: CA8 — depende: T075, T081
+- [ ] T083 Reescribir `publico.css` con los componentes de `design.md` (D16): portada a sangre con la foto, el velo y el titular; hoja de «Sobre nosotros» (`position: sticky`); botón en píldora (`.c-btn--primary`, `.c-btn--secondary`, `.c-btn--claro`); tarjeta de categoría; pastilla; franja (`@keyframes`, se para con el puntero); ubicación 3:2; pie con la marca; `/servicios` con el índice en píldoras y el título centrado; entradas bajo `.js`/`.is-in`; todo el movimiento dentro de `prefers-reduced-motion: no-preference`; cortes de 900 y 560 px; solo tokens — `public/css/publico.css` — hecho cuando: T076 pasa entero (salvo «sin `style=""`», que espera a las vistas) y los casos de T014, T018, T061 y T069 que siguen vigentes, en verde — cubre: CA8, CA9 — depende: T076, T080
+- [ ] T084 Rehacer la página de inicio (D16): portada (`<img>` decorativa con `srcset` de T072, `fetchpriority="high"`, velo, logo `aria-hidden`, h1 «Tu sonrisa, nuestra prioridad.», texto, «Agendar mi primera cita», pastilla `[data-live]` con `aria-live="polite"`, `data-horario` y `data-zona`, horario completo y teléfono `tel:`); «Sobre nosotros» como hoja (texto exacto de CA3); tarjetas con el parcial del icono, «N tratamientos» y «Ver todos los servicios»; franja del horario `aria-hidden`; ubicación 3:2 con el `iframe` (D6), los datos, «Cómo llegar» y la nota de Google; `data-reveal` según `design.md` (M-3); salida siempre escapada; y el parcial de iconos por categoría (clave normalizada como en `porCategoria()`, la muela por defecto) — `resources/views/publico/inicio.blade.php`, `resources/views/partials/icono-categoria.blade.php` — hecho cuando: T074 pasa entero y los casos de `/` de T075 y T076 pasan; comprobado rompiendo TM1 (con `{!! !!}` en el nombre de la tarjeta, el caso de escape falla) · verificación manual: `/` a 320, 390, 900 y 1440 px contra `opcion-c.html#opcion-c-pagina-320` … `-1440`, en claro, sin JavaScript y con movimiento reducido, y la tira del scroll (la hoja sube, la franja, las entradas) contra `.ai/inspect/opcion-c/film-*` — cubre: CA1, CA3, CA4, CA5, CA8 — depende: T072, T074, T075, T082, T083
+- [ ] T085 Ajustar `/servicios` a la línea de C: título centrado (`.lb-cabeza-centro`) y el índice en píldoras; la estructura, las anclas y el estado vacío no cambian — `resources/views/publico/servicios.blade.php` — hecho cuando: `ServiciosPublicosTest` sigue en verde y los casos de `/servicios` de T075 y T076 pasan · verificación manual: a 390 y 1440 px contra `opcion-b.html#servicios-m` y `#servicios-d` con la cabecera, el pie, las píldoras y el título centrado de C — cubre: CA6, CA8 — depende: T083
+- [ ] T086 Medir y capturar las páginas públicas rediseñadas: la comprobación «038 páginas públicas» de `--medir` dos veces (con y sin JavaScript) y capturas a 320, 390, 900 y 1440 px para `system.html` — `docs/design/capturas/` (generado por node docs/design/capturar.mjs publico-inicio publico-servicios) — hecho cuando: `--medir` da «todo en orden» las dos veces · verificación manual: menú del móvil con el teclado, la página de inicio con NVDA (títulos, tarjetas como enlaces con su nombre, la pastilla anunciada una vez, la franja y la foto ignoradas) — cubre: CA9 — depende: T079, T084, T085
+- [ ] T087 Documentar el rediseño (complemento de T090 para D16): `AGENTS.md` (el layout público con `public/js/publico.js` en lugar de «sin JavaScript», `public/js/` y `tests/js/` en el mapa; ruta protegida: pedir la aprobación al hacer la tarea), `docs/architecture.md` (Frontend: `publico.js`, sus pruebas con `node:test` y la foto de la portada) y `docs/seo.md` (la regla de JavaScript: ~1.5 kB propios con `defer` y la excepción del mapa) — `AGENTS.md`, `docs/architecture.md`, `docs/seo.md` — hecho cuando: los tres documentos lo dicen y `validate` no da errores — depende: T082
+- [ ] T088 Verificación final del rediseño: suite completa, `pint --test` sobre lo tocado, `node --test tests/js/`, `validate`, `composer audit`, `npm audit`, gitleaks y semgrep `p/php` desde 7cebde7, Lighthouse SEO de `/` y `/servicios` con nginx local y medición de `/` con caché vacía a 390 y 1440 px (JS propio, JS de terceros, total transferido y peso de la foto) — sin archivos — hecho cuando: todo en verde, Lighthouse SEO ≥ 90, JS propio ≤ 100 kB (anotado) y lo propio de `/` ≤ 1 MB — depende: T078, T086, T087
+
 ## Integración y documentación
 - [x] T040 Actualizar `docs/seo.md` (filas de `/` y `/servicios`, «Se indexa»: `/registro`, `/` y `/servicios`; `/` deja de redirigir) y el criterio del objetivo 7 en `docs/roadmap.md` (el sitemap tendrá que incluir `/` y `/servicios`) — `docs/seo.md`, `docs/roadmap.md` — hecho cuando: los dos documentos dicen lo del plan (Descubribilidad) y `validate` no da errores — cubre: CA10
   - nota: A17 — la corrección del sitemap en `docs/seo.md` deja de decir «la única ruta indexable» y pasa a `/registro`, `/` y `/servicios`; la regla «sin barra final» aclara que la raíz es `https://dentissa.app/`. La enmienda PATCH de P10 («hoy solo `/registro`») queda en el roadmap
@@ -162,27 +185,27 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - `deploy/desplegar.sh v0.11.0` (o la versión que toque) y `deploy/verificar.sh` sin fallos nuevos: `/` 200 con el mapa admitido, `/servicios` sin marcos externos y `/admin` redirige a `https://…/login`
-  - en https://dentissa.app/: la página de inicio contra `opcion-b.html#inicio-d` y en un móvil, el mapa visible, la consola sin bloqueos de la política, «Llamar» y «Cómo llegar» funcionan
+  - en https://dentissa.app/: la página de inicio contra `opcion-c.html#opcion-c-pagina-1440` y en un móvil (`#opcion-c-pagina-390`), la pastilla «¿Abierto ahora?» con la hora de Lázaro Cárdenas, el mapa visible, la consola sin bloqueos de la política, el teléfono y «Cómo llegar» funcionan
   - sin 5xx nuevos en `dentissa-access.log` en los 15 minutos siguientes
 - [ ] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010, T016, T018, T063, T064 | T022, T023, T025, T027, T032, T065 |
+| CA1 | T010, T016, T018, T063, T064, T074, T077 | T022, T023, T025, T027, T032, T065, T080, T081, T084 |
 | CA2 | T010, T012 | T022, T023 |
-| CA3 | T010 | T025 |
-| CA4 | T010 | T021, T025 |
-| CA5 | T010, T061, T063, T064 | T021, T025, T029, T062, T065 |
-| CA6 | T012, T061, T063, T064, T069 | T021, T022, T026, T062, T065, T070 |
-| CA7 | T013, T015, T063, T066 | T028, T029, T030, T067 |
-| CA8 | T013 | T023, T025, T026 |
-| CA9 | T014, T017, T018, T061, T064 | T020, T024, T031, T032, T062, T065 |
-| CA10 | T013, T063 | T023, T040 |
+| CA3 | T010, T074 | T025, T084 |
+| CA4 | T010, T074 | T021, T025, T084 |
+| CA5 | T010, T061, T063, T064, T074 | T021, T025, T029, T062, T065, T084 |
+| CA6 | T012, T061, T063, T064, T069 | T021, T022, T026, T062, T065, T070, T085 |
+| CA7 | T013, T015, T063, T066, T075 | T028, T029, T030, T067, T084 |
+| CA8 | T013, T075, T076, T079 | T023, T025, T026, T081, T082, T083, T084, T085 |
+| CA9 | T014, T017, T018, T061, T064, T076, T079 | T020, T024, T031, T032, T062, T065, T080, T083, T086 |
+| CA10 | T013, T063, T075 | T023, T040, T082 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
-| TM1 | T025, T026 | T012, T013 |
+| TM1 | T025, T026, T081, T084 | T012, T013, T075 |
 | TM2 | T021 | T010, T012 |
 | TM3 | T028, T030 | T015 |
 | TM4 | T025 | T010 |
@@ -194,28 +217,33 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | `routes/web.php` | T022 |
 | `app/Http/Controllers/PaginasPublicasController.php` | T022 |
 | `app/Models/Servicio.php` | T021 |
-| `config/clinica.php` | T021 |
-| `resources/views/layouts/publico.blade.php` | T023, T032 |
-| `resources/views/publico/inicio.blade.php` | T025 |
-| `resources/views/publico/servicios.blade.php` | T026 |
+| `config/clinica.php` | T021, T080 |
+| `resources/views/layouts/publico.blade.php` | T023, T032, T082 |
+| `resources/views/publico/inicio.blade.php` | T025, T084 |
+| `resources/views/publico/servicios.blade.php` | T026, T085 |
+| `resources/views/partials/icono-categoria.blade.php` | T084 |
 | `resources/views/landing/index.blade.php` | T027 |
-| `public/css/publico.css` | T024, T032 |
-| `public/css/app.css` | T020, T032 |
+| `public/css/publico.css` | T024, T032, T083 |
+| `public/css/app.css` | T020, T032, T080 |
+| `public/js/publico.js` | T077, T081 |
 | `public/fonts/lexend/` | T002 |
-| `public/images/` | T027 |
+| `public/images/` | T027, T072 |
 | `docker/nginx/seguridad/marcos.conf` | T028 |
 | `docker/nginx/seguridad/comunes.conf` | T028 |
 | `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | T029 |
 | `deploy/verificar.sh` | T030 |
 | `tests/Feature/ProxyHttpsTest.php`, `tests/Feature/ExampleTest.php` | T016 |
 | `tests/Feature/CabecerasSeguridadTest.php` | T015 |
-| Tests nuevos | T010, T012, T013, T014, T018 |
-| `docs/design/capturar.mjs` | T017, T031 |
-| Documentación | T001, T005, T040, T041, T043, T090, T091 |
+| Tests nuevos | T010, T012, T013, T014, T018, T074, T075, T076 |
+| `tests/js/publico.test.mjs` | T077 |
+| `.github/workflows/ai-dd.yml` | T078 |
+| `docs/design/capturar.mjs` | T017, T031, T079, T086 |
+| Documentación | T001, T005, T040, T041, T043, T071, T072, T073, T087, T090, T091 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
-| WCAG 2.1 AA (contraste, títulos en orden, decorativos ocultos) | T014, T018 (pares del refinado y nombre del menú), T013 (un `h1`, títulos en orden, nombres accesibles) · verificación manual en T031 (NVDA) |
-| Indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS (excepción de P10 para el JS de terceros del mapa) | T013 (sin scripts) · T042 (Lighthouse y medición) |
-| `/` ≤ 1 MB en la primera visita | T013 |
+| WCAG 2.1 AA (contraste, títulos en orden, decorativos ocultos) | T014, T018 (pares del refinado y nombre del menú), T013 (un `h1`, títulos en orden, nombres accesibles), T076 (pares del velo y la franja), T075 (decorativos nuevos) · verificación manual en T031 y T086 (NVDA) |
+| Indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS (excepción de P10 para el JS de terceros del mapa) | T013 (sin scripts), T075 (solo `publico.js` con `defer`, ≤ 100 kB) · T042 y T088 (Lighthouse y medición) |
+| `/` ≤ 1 MB en la primera visita | T013, T075 (con `publico.js` y la foto) · T088 (medición) |
 | El mapa no se descarga hasta acercarse | T010 (`loading="lazy"`) · T042 (si entra en la primera carga) |
+| Movimiento M-1 a M-5 de `design.md` (D16) | T076 (hoja, franja, entradas y respuesta en CSS), T077 (M-5) · verificación manual en T084 (tira del scroll) |
