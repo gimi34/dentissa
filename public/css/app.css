@@ -79,6 +79,19 @@
     --weight-bold:            600;
     --expediente-dato-max:    140px;
     --campo-fecha-max:        220px;
+    /* Páginas públicas (spec 038; system.md 1.7.0). Los fluidos van de 320 a 1440 px de ancho. */
+    --font-publica:       "Lexend", system-ui, sans-serif;
+    --text-publico-h1:    clamp(30px, calc(30px + 18 * (100vw - 320px) / 1120), 48px);  /* tamaño, no color */
+    --text-publico-h2:    clamp(22px, calc(22px + 8 * (100vw - 320px) / 1120), 30px);   /* tamaño, no color */
+    --text-publico-h3:    19px;  /* tamaño, no color */
+    --text-publico:       17px;  /* tamaño, no color */
+    --text-publico-small: 15px;  /* tamaño, no color */
+    --space-seccion:      clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px);
+    --measure:            62ch;
+    --page-max:           1180px;
+    --duration-base:      0.25s;
+    --ease-puerta:        cubic-bezier(0.2, 0, 0, 1);
+    --green-texto:        #137A5A;
 }
 
 body {
