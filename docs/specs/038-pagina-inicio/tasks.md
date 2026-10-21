@@ -133,6 +133,11 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: añadida por /review: verificación final de R1–R27
   - nota: 2026-10-21 — suite 404 en verde (397 + 7 casos nuevos de las correcciones); `pint --test` limpio en los 8 PHP tocados desde `ed46634`; `validate` sin errores; `composer audit` y `npm audit` sin avisos; gitleaks sin fugas y semgrep `p/php` sin hallazgos en `ed46634..HEAD`; comprobación «038 páginas públicas» de `--medir` «todo en orden» dos veces; Lighthouse 13.5.0, dos pasadas: SEO 100 en `/` y `/servicios`, móvil y escritorio (accesibilidad y buenas prácticas 100, rendimiento 99–100)
 
+- [ ] T069 Ampliar `PaginasPublicasCssTest`: `.lb-lista dt` lleva `grid-column: 1`, para que un `<dd>` vacío y oculto no desplace al `<dt>` siguiente a la columna de las descripciones — `tests/Feature/PaginasPublicasCssTest.php` — hecho cuando: el caso nuevo falla por la razón esperada y el resto sigue en verde — cubre: CA6
+  - nota: añadida por /review: R30
+- [ ] T070 Fijar `.lb-lista dt` a la primera columna (`grid-column: 1`) y completar el comentario de cabecera de `publico.css` con los factores de `calc()` sobre `--touch-min` y `--space-8` (R25, roadmap) — `public/css/publico.css` — hecho cuando: T069 pasa, los tests públicos siguen en verde y, a 1440 y 390 px con la descripción de un servicio vaciada en la página, los `<dt>` siguientes quedan en la primera columna — cubre: CA6 — depende: T069
+  - nota: añadida por /review: R30, R31
+
 ## Integración y documentación
 - [x] T040 Actualizar `docs/seo.md` (filas de `/` y `/servicios`, «Se indexa»: `/registro`, `/` y `/servicios`; `/` deja de redirigir) y el criterio del objetivo 7 en `docs/roadmap.md` (el sitemap tendrá que incluir `/` y `/servicios`) — `docs/seo.md`, `docs/roadmap.md` — hecho cuando: los dos documentos dicen lo del plan (Descubribilidad) y `validate` no da errores — cubre: CA10
   - nota: A17 — la corrección del sitemap en `docs/seo.md` deja de decir «la única ruta indexable» y pasa a `/registro`, `/` y `/servicios`; la regla «sin barra final» aclara que la raíz es `https://dentissa.app/`. La enmienda PATCH de P10 («hoy solo `/registro`») queda en el roadmap
@@ -147,7 +152,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: 2026-10-20 — `architecture.md`: módulo «Páginas públicas» (`PaginasPublicasController`, `panelDelRol()`, `Servicio::porCategoria()`); Frontend con los dos layouts y `publico.css`; SEO con los metadatos de `/` y `/servicios` desde el layout público; Integraciones externas con Lexend autoalojada y Google Maps (`iframe` perezoso y «Cómo llegar», sin clave de API); Despliegue con `frame-src` desde `marcos.conf`
 - [x] T091 Actualizar `docs/deployment.md` (comprobaciones nuevas de `verificar.sh` y `marcos.conf` en la imagen `web`) y `docs/observability.md` si hace falta (la 038 no añade logs ni eventos)
   - nota: 2026-10-20 — `deployment.md`, «Verificación post-deploy»: la redirección pública se comprueba con `/admin`, y se añaden `/` 200 y el `frame-src` de `/` y `/servicios`; `marcos.conf` llega a la imagen `web` con el `COPY docker/nginx/seguridad/` que ya existía (sin cambios en el Dockerfile ni en variables de entorno). `observability.md` no cambia: la 038 no añade logs, eventos ni métricas
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: 2026-10-20 — los 10 criterios marcados con sus tests en verde (59 tests de la 038, 780 aserciones; suite 397); spec en `implemented` con su fila de Historial y `docs/specs/README.md` actualizado. `validate` sin errores
 
 ## Despliegue (lo ejecuta `/release`)
@@ -167,7 +172,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 | CA3 | T010 | T025 |
 | CA4 | T010 | T021, T025 |
 | CA5 | T010, T061, T063, T064 | T021, T025, T029, T062, T065 |
-| CA6 | T012, T061, T063, T064 | T021, T022, T026, T062, T065 |
+| CA6 | T012, T061, T063, T064, T069 | T021, T022, T026, T062, T065, T070 |
 | CA7 | T013, T015, T063, T066 | T028, T029, T030, T067 |
 | CA8 | T013 | T023, T025, T026 |
 | CA9 | T014, T017, T018, T061, T064 | T020, T024, T031, T032, T062, T065 |

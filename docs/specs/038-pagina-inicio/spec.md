@@ -1,7 +1,7 @@
 ---
 id: 038
 slug: pagina-inicio
-status: implemented
+status: approved
 created: 2026-10-20
 extends: [001, 031]
 ---
@@ -193,3 +193,4 @@ Ninguna.
 | 2026-10-20 | Implementada (T001–T043, T090–T092; refinado D15 de la cabecera, el menú y el pie tras la revisión manual de T025) | /implement |
 | 2026-10-21 | /review r1 = changes_requested (R1 bloqueante P9; R2–R4 importantes); vuelve a `approved` con T060–T068 | /review |
 | 2026-10-21 | Implementada de nuevo tras /review r1 (T060–T068: R1–R8, R13, R14, R16, R18, R21, R23, R24, R27) | /implement |
+| 2026-10-21 | /review r2 = changes_requested (R30 importante, R31 menor); vuelve a `approved` con T069 y T070 | /review |
