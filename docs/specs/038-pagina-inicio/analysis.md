@@ -1,51 +1,44 @@
 ---
 result: pass
-round: 2
+round: 3
 mode: delta
 constitution_version: 1.3.0
 date: 2026-10-20
 spec_sha: 3672869d6dd0
-plan_sha: f53008f6a372
-tasks_sha: d42a02e68cd4
+plan_sha: 38cab2107430
+tasks_sha: e59c904ae85d
 ---
 
 # Análisis · 038 Página de inicio pública
 
 ## Resumen
-`pass`. Las 12 correcciones de la ronda 1 (A1–A11, A18) están en el plan y las tareas. La corrección
-de A8 y A10 dejó un efecto menor (A20), que se corrigió en el plan durante esta ronda. Delta sobre el
-estado de `3808f98` (unos 32 KB, sin cambios estructurales), revisado sin subagente releyendo del
-disco las secciones afectadas.
-Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 1 (resuelta en la ronda)
+`pass`. Delta sobre `eed6dc0` (ronda 2): el refinado D15 de la cabecera, el menú y el pie
+(`/design-spec 038 --fix` en `e352c32`, plan en `29be970`, tareas T005, T018 y T032 en `66e443d`).
+Unos 54 KB de diff, casi todo notas de tareas hechas; el cambio de diseño es pequeño y sin cambio
+estructural (ni módulo, ni contrato, ni criterio nuevos), así que se revisó sin subagente,
+releyendo del disco `design.md` («Cabecera pública», «Pie público», contraste, Decisiones), el
+plan (Cambios por módulo, Pantallas, Navegación, Accesibilidad medible, Estrategia de pruebas,
+Trazabilidad, D15) y las tareas T005, T018, T025, T026 y T032 con las tablas de Cobertura.
+Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 1 · BAJA 1 (los dos aceptados como notas de tarea)
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 10 / 10 (CA8 «todos los enlaces funcionan» con test en T013) |
-| Amenazas con control y test | 6 / 6 |
-| Principios de la constitución evaluados | 10 / 10 (P10 con excepción aceptada por el usuario) |
+| Criterios con tarea de test e implementación | 10 / 10 (CA1 y CA9 también con T018 y T032) |
+| Amenazas con control y test | 6 / 6 (el refinado no añade entradas ni datos) |
+| Principios de la constitución evaluados | 10 / 10 (P2: T018 antes que T032; P9: T005 incorpora 1.7.1 antes de T032; P10: el SVG del icono va en el HTML, 0 kB de JS propio; sin dependencias nuevas) |
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A1 | ALTA | resuelto | plan D13 «Prerrequisito de la 031» (decisión del usuario: `/fix` en `main`) y Riesgos; T004 resuelve los conflictos a favor de la 038 |
-| A2 | MEDIA | resuelto | T004 y nota A2 de T016 (coherentes con el `/fix`); las comprobaciones de `verificar.sh` siguen en `CabecerasSeguridadTest`, donde ya estaban (la rama de la 031 no las tiene en `ConfiguracionProduccionTest`) |
-| A3 | ALTA | resuelto | plan «Navegación de la 038» con su test; caso de enlaces en T013; nota A3 de T025 |
-| A4 | ALTA | resuelto | plan, Constitution Check P10 `❌ aceptado` (usuario, 2026-10-20), RNF y Riesgos; T042 mide JS propio, de terceros y total, y si el `iframe` entra en la primera carga |
-| A5 | MEDIA | resuelto | T014 declara `ReglasCss.php`, controles positivos y nota A5 (`var()` en `font-family`, duraciones, `rem`/`em`, `cubic-bezier(`) |
-| A6 | MEDIA | resuelto | plan «Clases de los componentes», que T014 usa |
-| A7 | MEDIA | resuelto | T021 se cierra con un caso directo de `porCategoria()`, T022 con la redirección por rol y `route:list`, y T023 con un caso del layout sobre una vista de prueba; sin vistas mínimas sin declarar |
-| A8 | MEDIA | resuelto | T016 exige «comprobado rompiendo `trustProxies`» |
-| A9 | MEDIA | resuelto | plan D10 (030 CA2 no cambia, por eso no va en `extends`); T041 anota la 030 y T043 la 031 |
-| A10 | MEDIA | resuelto con efecto nuevo (→ A20) | T043 actualiza `docs/security.md`; el plan no lo listaba |
-| A11 | ALTA | resuelto | T013 prueba títulos en orden y nombres accesibles |
-| A18 | MEDIA | resuelto | T041 anota la aprobación del usuario (2026-10-20) |
+| A1–A11, A18, A20 | — | resueltos en rondas anteriores | `history/analysis.r2.md` |
 | A12–A17, A19 | BAJA | aceptados | notas de tarea y roadmap (ver Aceptados) |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A20 | Inconsistencia | BAJA | plan «Cambios por módulo»: `ProxyHttpsTest` y Documentación | Tras A1, el plan seguía diciendo que esas pruebas «son los 2 fallos que quedan en `main`», y la fila de Documentación no recogía `security.md` ni las specs 030 y 031 que tocan T041 y T043 | Corregido en esta ronda (`plan.md`, filas de `ProxyHttpsTest` y Documentación) |
+| A21 | Constitución (P9, WCAG 2.4.7) | MEDIA | `design.md` «Cabecera pública»; plan «Accesibilidad medible» y «Estrategia de pruebas» (D15); T018, T032 | El foco «dentro de la cabecera» usa `--focus-ring-inverso` (blanco), pero el panel del menú abierto es blanco y está dentro de la cabecera: el foco de sus enlaces no se vería | Los enlaces del panel abierto (`.pub-menu li a`) usan `--focus-ring`; `--focus-ring-inverso` solo en lo que se pinta sobre `--p500` y `--p600` (barra, `summary`, botón, pie). Test: en T018, la regla de foco de `.pub-menu li a` declara `--focus-ring` y no el inverso |
+| A22 | Inconsistencia | BAJA | T025, T032; `config/clinica.php` | La columna «Horarios» del pie (T032) usa el horario en pares día → horas, un cambio de `config/clinica.php` hecho durante T025, que aún no tiene commit y ahora va después de T032 | El cambio de `config/clinica.php` entra en el commit de T032 como archivo extra justificado, con su nota; `PaginaInicioTest` sigue en verde |
 
 ## Decisiones pendientes del usuario
 Ninguna.
@@ -59,3 +52,5 @@ Aceptados por el usuario el 2026-10-20 como notas de tarea (sin otra vuelta de p
 - **A16** → roadmap: el plan de la 039 modifica los casos «ningún script» y «ningún recurso externo» de `PaginasPublicasTest` en lugar de duplicarlos
 - **A17** → nota de T040: corrección del sitemap y barra de la raíz en `docs/seo.md`; enmienda de P10 → roadmap
 - **A19** → nota de T010, T013: canónica de producción fijada en el test, búsqueda de referencias solo en `resources/` y `public/`, motivo del fallo de T010
+- **A21** → nota de T018, T032: el foco de los enlaces del panel abierto del menú es `--focus-ring`; el inverso, solo sobre el rosa
+- **A22** → nota de T032: `config/clinica.php` (horario en pares día → horas) entra en el commit de T032 como archivo extra justificado
