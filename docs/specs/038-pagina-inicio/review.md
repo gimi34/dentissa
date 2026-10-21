@@ -1,71 +1,48 @@
 ---
 spec: 038-pagina-inicio
-verdict: changes_requested
-round: 2
+verdict: approved
+round: 3
 date: 2026-10-21
-base: ed46634
-head: e78622a
+base: e78622a
+head: 1faf931
 human_signoff: no requerido
 ---
 
 # Review · 038 Página de inicio pública
 
 ## Resumen
-`changes_requested`: los 16 hallazgos que la ronda 1 mandó corregir están corregidos, pero la
-corrección de R24 (ocultar el `<dd>` vacío) descoloca la rejilla de `/servicios` cuando un servicio
-no tiene descripción (R30, importante, comprobado en el navegador). Además, el comentario de
-cabecera de `publico.css` no menciona los factores de `calc()` (R31, menor). El usuario corrige los
-dos (T069, T070). Rerun sobre `ed46634..e78622a` (32 KB de código) con un solo revisor de contexto
-limpio (encargos A, C+D y S, `opus`). Ronda anterior: [history/review.r1.md](history/review.r1.md).
-Conteo: bloqueante 0 · importante 1 · menor 1
+`approved`. Los dos hallazgos de la ronda 2 están corregidos (T069, T070) y no hay hallazgos
+nuevos. Rerun sobre `e78622a..1faf931`: 6 líneas de código en dos archivos, revisadas sin
+subagente releyendo los archivos del disco (contrato del rerun). Rondas anteriores:
+[history/review.r1.md](history/review.r1.md) y [history/review.r2.md](history/review.r2.md).
+Conteo: bloqueante 0 · importante 0 · menor 0
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
 | `php artisan test` (suite completa) | ✅ 404 pasan (0 fallos) |
-| `pint --test` sobre los 8 PHP tocados | ✅ |
+| `pint --test tests/Feature/PaginasPublicasCssTest.php` | ✅ |
 | `python .ai/bin/aidd.py validate docs/specs/038-pagina-inicio` | ✅ 0 errores |
-| `capturar.mjs --medir` (comprobación «038 páginas públicas»), dos veces | ✅ «todo en orden» ×2 |
-| Lighthouse 13.5.0, dos pasadas | ✅ SEO 100 en `/` y `/servicios`, móvil y escritorio |
+| gitleaks 8.21.2 (`e78622a..HEAD`) | ✅ sin fugas |
+| Comprobación en el navegador (Playwright 1.63.0), descripción del primer servicio vaciada en la página | ✅ los tres `<dt>` en la primera columna a 1440 px (x = 454; antes, x = 790) y a 390 px (x = 16) |
 
-## Seguimiento de la ronda 1
+El diff no toca PHP de la aplicación, vistas, rutas, nginx, scripts ni dependencias: semgrep,
+`composer audit`, `npm audit`, `--medir` y Lighthouse no cambian respecto de la ronda 2 (todos en
+verde, `e78622a`).
+
+## Seguimiento de la ronda 2
 | ID | Estado | Evidencia |
 |---|---|---|
-| R1 | corregido | Tokens 1.7.2 en `app.css` y `system.md`, usados en `publico.css:27, 51, 52, 88`; detector con controles en `PaginasPublicasCssTest`; comentario a medias (→ R31) |
-| R2 | corregido | `publico.css:293-294`, `position: relative` bajo 900 px; `elementFromPoint` devuelve la placa (nota de T062) |
-| R3 | corregido | Aserciones dentro de `.lb-aviso` y de `#ubicacion` (`PaginaInicioTest`) |
-| R4 | corregido | Precio y duración sobre el texto de `<main>` (`ServiciosPublicosTest`) |
-| R5 | corregido | Descripción de `/registro` comparada en cuanto exista |
-| R6 | corregido | Servicios propios del test en los dos casos |
-| R7 | corregido | Aserción `opacity: 0` retirada |
-| R8 | corregido | `test_los_acentos_no_separan_categorias` |
-| R13 | corregido | `hojas()` recorre `app.css` y `publico.css` en los dos tests |
-| R14 | corregido | `deploy/verificar.sh:109-121`, con su test |
-| R16 | corregido | `/;x`, `/.`, `/%3F`, `/index.php` en `CabecerasSeguridadTest` |
-| R18 | corregido | `<nav class="pub-menu" aria-label="Secciones">` con `<details class="pub-menu-detalles">`; selectores, foco, corte y `capturar.mjs` siguen valiendo |
-| R21 | corregido | Logo de la placa con `aria-hidden="true"`; test de dos `role="img"` |
-| R23 | corregido | `aria-label` que empieza por el texto visible (2.5.3) |
-| R24 | corregido con efecto nuevo (→ R30) | `.lb-lista dd:empty { display: none; }` |
-| R27 | corregido | `lang="es"` y `viewport` en el test de metadatos |
-
-Los aceptados sin tarea de la ronda 1 (R9–R12, R15, R17, R19, R20, R22, R25, R26, R28, R29) no
-empeoran.
-
-## Seguridad
-`deploy/verificar.sh`: solo expande `"${compose[@]}"` y `"${cabeceras}"`, con URL y patrones fijos
-y entrecomillados. P9: ningún literal visual nuevo (`auto`, `relative`, `none` son palabras clave).
-Herramientas: gitleaks y semgrep `p/php` sin hallazgos en el rango; `composer audit` y `npm audit`
-sin avisos.
+| R30 | corregido | `public/css/publico.css:260`, `.lb-lista dt { grid-column: 1; … }`; `PaginasPublicasCssTest::test_una_descripcion_vacia_no_deja_hueco` lo exige; medido en el navegador a 1440 y 390 px |
+| R31 | corregido | `public/css/publico.css:1-5`, el comentario nombra los factores de `calc()` sobre `--touch-min` y `--space-8` (R25) |
 
 ## Hallazgos
-| ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
-|---|---|---|---|---|
-| R30 | importante | `public/css/publico.css:255, 261` · `resources/views/publico/servicios.blade.php:31-34` | A 560 px o más, `.lb-lista dl` es una rejilla de dos columnas con colocación automática; con el `<dd>` vacío oculto, el `<dt>` siguiente cae en la columna de las descripciones y la categoría queda invertida. Comprobado a 1440 px vaciando una descripción en la página: los `<dt>` 2 y 3 pasan de x = 454 a x = 790. El test de R24 solo mira el CSS y `--medir` no crea servicios sin descripción | Fijar los `<dt>` a la primera columna, con su test de CSS y la comprobación en el navegador |
-| R31 | menor | `public/css/publico.css:1-4` | El comentario de cabecera no menciona los factores de `calc()` sobre `--touch-min` y `--space-8` (R25, aceptado) | Añadirlos al comentario |
+Ninguno.
 
-## Tareas añadidas
-- T069 ← R30
-- T070 ← R30, R31
+## Preparación para release
+Sin cambios desde la ronda 1: rollback con `deploy/volver.sh` al tag anterior, sin migraciones ni
+feature flags, `architecture.md` y `deployment.md` al día, sin avisos de SCA y ningún riesgo
+declarado mitigado de más.
 
 ## Aceptados sin tarea
 Aceptados por el usuario el 2026-10-21 (ronda 1):
