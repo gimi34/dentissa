@@ -196,8 +196,12 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   `local.ini` aplicado; desde la spec 031, `GOOGLE_CLIENT_ID` con formato de Google y
   `GOOGLE_CLIENT_SECRET` sin el texto de ejemplo, las cabeceras de seguridad de `/login`, los
   estáticos, la 404 y la 301, «Entorno aplicado» en los cuatro servicios y la red privada conectada
-  con SSH solo por clave; y en modo público, `/up` 200, redirección de `/` a https,
-  `http://<host>/login` → 301 a `https://` y las cabeceras de `https://<host>/login`. Las versiones
+  con SSH solo por clave; y en modo público, `/up` 200, redirección a https (con `/admin` desde la
+  spec 038, porque `/` es la página de inicio y ya no redirige), `/` 200, `/` con
+  `frame-src 'self' https://www.google.com` y `/servicios` con `frame-src 'self'` (spec 038),
+  `http://<host>/login` → 301 a `https://` y las cabeceras de `https://<host>/login`. La política
+  de marcos sale de `docker/nginx/seguridad/marcos.conf`, que la imagen `web` ya lleva porque copia
+  `docker/nginx/seguridad/` entera (spec 038). Las versiones
   anteriores a la 031 dan un FALLO conocido en «nada escucha fuera de localhost salvo SSH» por
   `tailscaled` (spec 031, CA8).
 - Smoke tests: login de una cuenta de prueba por rol, agendar y cancelar una cita ficticia. Sin
