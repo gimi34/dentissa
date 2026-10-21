@@ -173,4 +173,80 @@ class CabecerasSeguridadTest extends TestCase
             'El nginx de local debe montar los fragmentos de solo lectura.',
         );
     }
+
+    /** Spec 038 (D5; CA7): los marcos que admite cada ruta salen del `map` de `marcos.conf`. */
+    public function test_la_politica_toma_frame_src_del_mapa_de_marcos(): void
+    {
+        $directivas = $this->directivas((string) $this->cabecera($this->leer('docker/nginx/seguridad/comunes.conf'), 'Content-Security-Policy'));
+
+        $this->assertSame(['$dentissa_frame_src'], $directivas['frame-src'] ?? null);
+        $this->assertSame(["'none'"], $directivas['frame-ancestors'] ?? null, 'Nadie puede incrustar la app: no cambia.');
+    }
+
+    /**
+     * Spec 038 (TM3): el `map` de `marcos.conf` abre el marco de Google solo en `/` (con o sin
+     * consulta). Un error en la expresión abriría marcos en más rutas.
+     */
+    public function test_solo_la_raiz_admite_el_mapa(): void
+    {
+        $conf = $this->leer('docker/nginx/seguridad/marcos.conf');
+        $this->assertSame(1, preg_match('/^map\s+\$request_uri\s+\$dentissa_frame_src\s*\{\n(.*?)^\}/ms', $conf, $mapa), 'marcos.conf define el map sobre la ruta original de la petición.');
+
+        $entradas = [];
+        foreach (explode("\n", $mapa[1]) as $linea) {
+            $linea = trim($linea);
+            if ($linea === '' || str_starts_with($linea, '#')) {
+                continue;
+            }
+            $this->assertSame(1, preg_match('/^(default|"[^"]*")\s+"([^"]*)"\s*;$/', $linea, $m), "Entrada del map con su valor: {$linea}");
+            $entradas[trim($m[1], '"')] = $m[2];
+        }
+
+        $this->assertSame("'self'", $entradas['default'] ?? null, 'Por defecto, solo marcos propios.');
+        $reglas = array_diff_key($entradas, ['default' => true]);
+        $this->assertCount(1, $reglas, 'Una sola regla.');
+        $expresion = array_key_first($reglas);
+        $this->assertSame("'self' https://www.google.com", $reglas[$expresion], 'Un solo origen externo.');
+        $this->assertStringStartsWith('~^', $expresion, 'Expresión anclada y con mayúsculas exactas.');
+        $this->assertStringEndsWith('$', $expresion);
+
+        $patron = '#'.str_replace('#', '\#', substr($expresion, 1)).'#';
+        foreach (['/', '/?utm=x', '/?utm_source=google&x=1'] as $ruta) {
+            $this->assertSame(1, preg_match($patron, $ruta), "{$ruta} admite el mapa.");
+        }
+        foreach (['/servicios', '/admin', '//evil', '/x/', '/servicios?x=/', '/login', '/%2F', ''] as $ruta) {
+            $this->assertSame(0, preg_match($patron, $ruta), "{$ruta} no admite el mapa.");
+        }
+    }
+
+    /** Spec 038 (D5): `map` va en el contexto `http`, antes del `server` de cada configuración. */
+    public function test_las_dos_configuraciones_incluyen_los_marcos_antes_del_server(): void
+    {
+        foreach (['docker/nginx/dentissa.conf', 'docker/nginx/dentissa.prod.conf'] as $ruta) {
+            $conf = $this->leer($ruta);
+            $this->assertSame(1, preg_match('#^include\s+'.preg_quote(self::RUTA_FRAGMENTOS.'/marcos.conf', '#').'\s*;#m', $conf, $m, PREG_OFFSET_CAPTURE), "{$ruta} incluye marcos.conf fuera del server.");
+            $this->assertLessThan(strpos($conf, "\nserver {") ?: strpos($conf, 'server {'), $m[0][1], "{$ruta}: marcos.conf antes del server.");
+        }
+    }
+
+    /**
+     * Spec 038 (D10; CA7): con la página de inicio, `/` ya no redirige; `verificar.sh` comprueba
+     * la redirección a https con `/admin`, que `/` responde 200 con el marco de Google y que
+     * `/servicios` no lo admite.
+     */
+    public function test_verificar_comprueba_la_raiz_y_los_marcos(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+        $inicio = strpos($script, 'echo "== Dirección pública"');
+        $fin = strpos($script, 'if [[ "${FALLOS}" -eq 0 ]]');
+        $this->assertNotFalse($inicio, 'verificar.sh tiene el bloque público.');
+        $this->assertNotFalse($fin);
+        $publico = substr($script, $inicio, $fin - $inicio);
+
+        $this->assertMatchesRegularExpression('/^[^#\n]*curl -sI "\$\{url\}\/admin" \| grep -iqE \'\^location: https:\/\/\'/m', $publico, 'La redirección a https se comprueba con /admin.');
+        $this->assertDoesNotMatchRegularExpression('/curl -sI "\$\{url\}\/"/', $publico, '/ ya no redirige.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*curl -s -o \/dev\/null -w \'%\{http_code\}\' "\$\{url\}\/"\)/m', $publico, '/ responde 200.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*curl [^\n]*"\$\{url\}\/"(?:(?!curl )[\s\S]){0,300}?frame-src \'self\' https:\/\/www\\\\?\.google\\\\?\.com;/m', $publico, '/ admite el marco de Google.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*curl [^\n]*"\$\{url\}\/servicios"(?:(?!curl )[\s\S]){0,300}?frame-src \'self\';/m', $publico, '/servicios solo admite marcos propios.');
+    }
 }
