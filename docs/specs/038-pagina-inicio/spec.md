@@ -1,7 +1,7 @@
 ---
 id: 038
 slug: pagina-inicio
-status: approved
+status: implemented
 created: 2026-10-20
 extends: [001, 031]
 ---
@@ -31,24 +31,24 @@ promociones (040) se añaden a esta página en sus propias specs.
 
 ## Criterios de aceptación
 ### Página de inicio
-- [ ] CA1 · Dado un visitante sin sesión, cuando abre `/`, entonces ve la página de inicio de la
+- [x] CA1 · Dado un visitante sin sesión, cuando abre `/`, entonces ve la página de inicio de la
   clínica (sin redirección) en este orden: la presentación con el logo, «Agendar mi primera cita»
   (lleva al registro) y el horario y el teléfono; «Sobre nosotros»; el avance de servicios;
   ubicación y contacto. Ve además enlaces visibles a «Iniciar sesión» y a crear una cuenta
   (reemplaza 001 CA4).
-- [ ] CA2 · Dado un usuario con sesión de cualquier rol, cuando abre `/`, entonces se le lleva a su
+- [x] CA2 · Dado un usuario con sesión de cualquier rol, cuando abre `/`, entonces se le lleva a su
   panel, como hasta ahora; cuando abre `/servicios`, la ve igual que un visitante.
-- [ ] CA3 · Dado un visitante, cuando mira «Sobre nosotros», entonces lee exactamente este texto:
+- [x] CA3 · Dado un visitante, cuando mira «Sobre nosotros», entonces lee exactamente este texto:
   «Somos una consulta de odontología integral en el centro de Lázaro Cárdenas. Atendemos a toda la
   familia, desde la primera revisión de los niños hasta la ortodoncia y las prótesis de los
   adultos, en un mismo lugar y con el mismo equipo.» y «Antes de cada tratamiento te explicamos qué
   vamos a hacer, cuánto dura y qué opciones tienes, para que decidas con calma. Y para que no
   tengas que llamar en horario de trabajo, puedes crear tu cuenta y agendar tus citas en línea.»
-- [ ] CA4 · Dado un catálogo con servicios activos e inactivos, cuando un visitante abre `/`,
+- [x] CA4 · Dado un catálogo con servicios activos e inactivos, cuando un visitante abre `/`,
   entonces el avance de servicios muestra solo los nombres de las categorías que tienen algún
   servicio activo, sin servicios sueltos ni precios, y un enlace «Ver todos los servicios» a
   `/servicios`; si no hay ningún servicio activo, el avance no aparece.
-- [ ] CA5 · Dado un visitante, cuando mira la sección de contacto, entonces ve exactamente la
+- [x] CA5 · Dado un visitante, cuando mira la sección de contacto, entonces ve exactamente la
   dirección «Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950», el teléfono
   «753 000 0000» (que en un móvil se marca con un toque) y el horario «Lunes a viernes 9:00–20:00 ·
   Sábados 9:00–14:00», un mapa de Google incrustado que marca esa misma dirección, una nota visible
@@ -56,26 +56,26 @@ promociones (040) se añaden a esta página en sus propias specs.
   mapa aparte.
 
 ### Servicios
-- [ ] CA6 · Dado un catálogo con servicios activos e inactivos, cuando un visitante abre
+- [x] CA6 · Dado un catálogo con servicios activos e inactivos, cuando un visitante abre
   `/servicios`, entonces ve cada servicio activo con su nombre y su descripción, agrupados por
   categoría, sin precio y sin ningún servicio inactivo, y un enlace de vuelta al inicio; si no hay
   ninguno activo, ve «Pronto publicaremos nuestros servicios.».
 
 ### Páginas públicas
-- [ ] CA7 · Dado un visitante, cuando abre `/` o `/servicios`, entonces el navegador solo pide
+- [x] CA7 · Dado un visitante, cuando abre `/` o `/servicios`, entonces el navegador solo pide
   recursos a los sitios que ya usa el resto de la aplicación y, en `/` y para el mapa, a Google
   Maps, y no aparece ningún recurso bloqueado por la política de seguridad. El resto de las
   pantallas siguen sin poder mostrar contenido de otros sitios (amplía 031 CA1 solo en `/`).
-- [ ] CA8 · Dado un visitante con JavaScript desactivado, cuando abre `/` o `/servicios`, entonces
+- [x] CA8 · Dado un visitante con JavaScript desactivado, cuando abre `/` o `/servicios`, entonces
   todo el contenido (textos, categorías, servicios, dirección, teléfono, horario y enlaces) es
   visible y todos los enlaces funcionan; solo el mapa incrustado puede no mostrarse.
-- [ ] CA9 · Dado un visitante en una pantalla de 320 a 1440 px de ancho, cuando recorre `/` o
+- [x] CA9 · Dado un visitante en una pantalla de 320 a 1440 px de ancho, cuando recorre `/` o
   `/servicios` con el dedo, el ratón o solo el teclado, entonces no hay desplazamiento horizontal,
   cada destino de toque mide al menos 44 px, el foco se ve en todo elemento interactivo, el menú se
   abre y se cierra con el teclado, y si el visitante pidió reducir el movimiento no hay animaciones.
 
 ### Descubribilidad
-- [ ] CA10 · Dado un buscador o un visitante, cuando pide `/` o `/servicios`, entonces cada
+- [x] CA10 · Dado un buscador o un visitante, cuando pide `/` o `/servicios`, entonces cada
   respuesta trae en el HTML del servidor su título y su descripción (`/`: «Dentissa · Tu sonrisa,
   nuestra prioridad» y «Clínica dental Dentissa en Lázaro Cárdenas: conoce nuestros servicios, crea
   tu cuenta y agenda tu cita en línea.»; `/servicios`: «Servicios · Dentissa» y «Todos los
@@ -190,3 +190,4 @@ Ninguna.
 | 2026-10-20 | Spec aprobada (`approved`) con los supuestos de Decisiones | Aprobación del usuario |
 | 2026-10-20 | Mapa de Google incrustado en la ubicación; `extends` 031 | Petición del usuario antes de aprobar |
 | 2026-10-20 | Spec creada en `draft` | La página de inicio llegó a `main` fuera del flujo (merge `f096e17`); el usuario pidió regularizarla y añadir la galería |
+| 2026-10-20 | Implementada (T001–T043, T090–T092; refinado D15 de la cabecera, el menú y el pie tras la revisión manual de T025) | /implement |

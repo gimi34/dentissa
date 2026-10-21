@@ -118,7 +118,8 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: 2026-10-20 — `architecture.md`: módulo «Páginas públicas» (`PaginasPublicasController`, `panelDelRol()`, `Servicio::porCategoria()`); Frontend con los dos layouts y `publico.css`; SEO con los metadatos de `/` y `/servicios` desde el layout público; Integraciones externas con Lexend autoalojada y Google Maps (`iframe` perezoso y «Cómo llegar», sin clave de API); Despliegue con `frame-src` desde `marcos.conf`
 - [x] T091 Actualizar `docs/deployment.md` (comprobaciones nuevas de `verificar.sh` y `marcos.conf` en la imagen `web`) y `docs/observability.md` si hace falta (la 038 no añade logs ni eventos)
   - nota: 2026-10-20 — `deployment.md`, «Verificación post-deploy»: la redirección pública se comprueba con `/admin`, y se añaden `/` 200 y el `frame-src` de `/` y `/servicios`; `marcos.conf` llega a la imagen `web` con el `COPY docker/nginx/seguridad/` que ya existía (sin cambios en el Dockerfile ni en variables de entorno). `observability.md` no cambia: la 038 no añade logs, eventos ni métricas
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: 2026-10-20 — los 10 criterios marcados con sus tests en verde (59 tests de la 038, 780 aserciones; suite 397); spec en `implemented` con su fila de Historial y `docs/specs/README.md` actualizado. `validate` sin errores
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: el proyecto no tiene staging (`docs/deployment.md`); las comprobaciones de producción van en T097
