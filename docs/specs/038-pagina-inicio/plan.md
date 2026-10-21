@@ -46,12 +46,12 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | `app/Http/Controllers/PaginasPublicasController.php` (nuevo) | `inicio()`: con sesión, redirige al panel del rol (la lógica actual del closure, en un helper `panelDelRol()`); sin sesión, la vista con las categorías activas. `servicios()`: servicios activos agrupados por categoría. Ninguna de las dos recibe parámetros | Bajo |
 | `app/Models/Servicio.php` | Scope `activos()` y método estático `porCategoria()`: categorías y servicios en orden alfabético, los que no tienen categoría al final en «Otros servicios» | Bajo |
 | `config/clinica.php` | Bloque `contacto`: dirección, teléfono (texto y `tel:`) y horario de CA5, de donde salen el texto, el mapa y «Cómo llegar» | Bajo |
-| `resources/views/layouts/publico.blade.php` (nuevo) | `<html lang="es">`, `<head>` con título, descripción y canónica por sección (`@yield`), `app.css` (tokens) y `publico.css`. Cabecera: logo enmascarado, navegación, «Iniciar sesión» o «Ir a mi panel», y menú `<details>` por debajo de 900 px. Pie. Sin scripts | Medio: es el segundo layout de la app; AGENTS.md se actualiza (D2) |
+| `resources/views/layouts/publico.blade.php` (nuevo) | `<html lang="es">`, `<head>` con título, descripción y canónica por sección (`@yield`), `app.css` (tokens) y `publico.css`. Cabecera: logo enmascarado, navegación, «Iniciar sesión» o «Ir a mi panel», y menú `<details>` por debajo de 900 px. Pie. Sin scripts. Refinado (D15): cabecera en `--p500` con logo y enlaces en blanco y botón blanco; el `<summary>` del menú es solo el icono de hamburguesa (SVG `aria-hidden`, `aria-label="Menú"`); pie en `--p600` con tres columnas (logo y frase, Horarios, Contacto) y © | Medio: es el segundo layout de la app; AGENTS.md se actualiza (D2) |
 | `resources/views/publico/inicio.blade.php` (nuevo) | Placa (logo, h1, «Agendar mi primera cita» → `route('register')`, aviso de la puerta), «Sobre nosotros» (texto de CA3), puertas de categorías con «Ver todos los servicios», ubicación (mapa `iframe` y placa de dirección) | Bajo |
 | `resources/views/publico/servicios.blade.php` (nuevo) | h1, índice de categorías (anclas), una sección por categoría con `<dl>` nombre / descripción, estado vacío y «Volver al inicio» | Bajo |
 | `resources/views/landing/index.blade.php` | Se borra (la sustituye `publico/inicio`) | Bajo |
-| `public/css/publico.css` (nuevo) | `@font-face` de Lexend, `body.publico` (anula el `display: flex` y Roboto de `app.css`), componentes «Placa», «Puerta», «Cabecera pública», «Pie público», «Sobre nosotros», «Mapa con placa» y listas de `/servicios`. Cortes de 900 y 560 px. Solo tokens | Bajo |
-| `public/css/app.css` | Tokens nuevos en `:root` (system.md 1.7.0): `--font-publica`, `--text-publico-*`, `--space-seccion`, `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`. Los de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella | Bajo: solo añade variables; el resto de la app no las usa |
+| `public/css/publico.css` (nuevo) | `@font-face` de Lexend, `body.publico` (anula el `display: flex` y Roboto de `app.css`), componentes «Placa», «Puerta», «Cabecera pública», «Pie público», «Sobre nosotros», «Mapa con placa» y listas de `/servicios`. Cortes de 900 y 560 px. Solo tokens. Refinado (D15): cabecera y pie rosas, `summary` sin borde ni fondo, foco con `--focus-ring-inverso` dentro de la cabecera y del pie | Bajo |
+| `public/css/app.css` | Tokens nuevos en `:root` (system.md 1.7.0): `--font-publica`, `--text-publico-*`, `--space-seccion`, `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`. Los de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella. Refinado (D15): `--focus-ring-inverso: var(--white)` (system.md 1.7.1) | Bajo: solo añade variables; el resto de la app no las usa |
 | `public/fonts/lexend/` (nuevo) | `lexend-latin-400-normal.woff2`, `lexend-latin-600-normal.woff2` y `OFL.txt`, copiados de `@fontsource/lexend` 5.3.0 | Bajo |
 | `public/images/` | Se borran `cover-bg.jpg` (1,2 MB, foto de banco) y `logo-rosa.png` (424 kB). Las añadió el merge y nada las usa. `logo-icon1.png` se queda (DS15, posible ícono del sitio) | Bajo |
 | `docker/nginx/seguridad/marcos.conf` (nuevo) | `map $request_uri $dentissa_frame_src { default "'self'"; "~^/(\?.*)?$" "'self' https://www.google.com"; }` | Medio: un error en la expresión abriría marcos en más rutas; lo cubre un test (TM3) |
@@ -63,7 +63,7 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | `tests/Feature/CabecerasSeguridadTest.php` | Comprueba `frame-src $dentissa_frame_src` en `comunes.conf`, el `map` de `marcos.conf` y su `include` en las dos configuraciones | Medio: conflicto con la 031 (D13) |
 | `tests/Feature/PaginaInicioTest.php`, `ServiciosPublicosTest.php`, `PaginasPublicasTest.php`, `PaginasPublicasCssTest.php` (nuevos) | Ver Estrategia de pruebas | — |
 | `docs/design/capturar.mjs` | Vistas públicas `publico-inicio` y `publico-servicios` (sin sesión) a 320, 390, 900 y 1440, y comprobaciones de `--medir` para ellas: sin desbordamiento horizontal y toque ≥ 44 px | Bajo |
-| Documentación | `docs/design/system.md` y `system.html` (1.7.0), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `docs/specs/030-despliegue-servidor-propio/spec.md` y `docs/specs/031-endurecer-produccion/spec.md` (Historial, D10), `docs/security.md` (entradas públicas, TM6 aceptado y visita a Google por el mapa; `/analyze` A10, A20), `CHANGELOG.md` en `/release` | Bajo |
+| Documentación | `docs/design/system.md` y `system.html` (1.7.0; 1.7.1 con el refinado D15: `--focus-ring-inverso`, «Cabecera pública» y «Pie público»), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `docs/specs/030-despliegue-servidor-propio/spec.md` y `docs/specs/031-endurecer-produccion/spec.md` (Historial, D10), `docs/security.md` (entradas públicas, TM6 aceptado y visita a Google por el mapa; `/analyze` A10, A20), `CHANGELOG.md` en `/release` | Bajo |
 
 ## Contratos y datos
 
@@ -88,13 +88,13 @@ Ninguna recibe parámetros: los que lleguen en la URL se ignoran. No hay escritu
 |---|---|---|
 | Página de inicio | normal · sin servicios activos (sin la sección de servicios) · con sesión (redirige) | `opcion-b.html#inicio-solo038-m`, `#inicio-vacio-m`, `#inicio-d` |
 | `/servicios` | normal · sin servicios activos («Pronto publicaremos nuestros servicios.») · con sesión («Ir a mi panel») | `#servicios-m`, `#servicios-d`, `#servicios-vacio-m` |
-| Menú del móvil | cerrado · abierto (`<details open>`) | `#inicio-m` |
+| Menú del móvil | cerrado · abierto (`<details open>`) | `#inicio-m`; refinado (D15): icono de hamburguesa sin marco, según `design.md` («Cabecera pública») |
 
 ### Navegación de la 038 (`/analyze` A3)
 - Cabecera y menú del móvil: «Servicios» → `/servicios`, «Ubicación» → `#ubicacion`,
   «Iniciar sesión» (o «Ir a mi panel» con sesión) y, solo en el menú y el pie, «Crear cuenta» →
   `/registro`. «Promociones» y «Trabajos» llegan con la 040 y la 039, que los añaden.
-- Pie: «Servicios», «Crear cuenta» e «Iniciar sesión».
+- Pie: «Servicios», «Crear cuenta» e «Iniciar sesión» (o «Ir a mi panel»), en la columna «Contacto» junto al teléfono (D15).
 - Ningún enlace apunta a una sección que puede no existir: «Servicios» va siempre a `/servicios`
   (que tiene su estado vacío), no a `#servicios`.
 - Test: `PaginasPublicasTest::test_todos_los_enlaces_internos_resuelven`. En `/` y `/servicios`,
@@ -122,7 +122,9 @@ foco del sistema (`--focus-ring`).
   `/servicios`, las categorías son `h2`.
 - `nav` con `aria-label` («Secciones», «Pie», «Categorías»).
 - Toque ≥ 44 px en todo enlace y botón, comprobado con `--medir`.
-- Foco visible con `--focus-ring`.
+- Foco visible con `--focus-ring`; dentro de la cabecera (`--p500`) y del pie (`--p600`), con `--focus-ring-inverso` (blanco, 5.42:1 y 7.00:1; D15).
+- El `<summary>` del menú no tiene texto visible: su nombre es `aria-label="Menú"` y el icono es un SVG `aria-hidden="true"` (D15).
+- Contraste de los pares del refinado: blanco sobre `--p500` (5.42:1) y sobre `--p600` (7.00:1), y `--p600` sobre `--white` en el botón de la cabecera (7.00:1).
 - El `iframe` lleva `title="Mapa de Google con la ubicación de la consulta"`.
 - El logo lleva `role="img"` con su nombre.
 - El teléfono es un enlace `tel:` con el número completo.
@@ -171,6 +173,14 @@ test con categorías y nombres propios del test (no se depende del volcado).
   - un test de la expresión del `map` contra `/`, `/?utm=x`, `/servicios`, `/admin`, `//evil` y
     `/x/`;
   - las dos configuraciones lo incluyen antes del `server`.
+- **Refinado D15** (amplía los dos tests anteriores):
+  - `PaginasPublicasCssTest`: `--focus-ring-inverso` = sistema 1.7.1; las reglas de foco dentro de
+    `.pub-cabecera` y `.lb-pie` usan `--focus-ring-inverso` y el resto `--focus-ring`; `.pub-bar`
+    (o la cabecera) con fondo `--p500` y `.lb-pie` con `--p600`; `.pub-menu summary` sin borde
+    (`border: 0`) ni fondo; contraste de blanco sobre `--p500` y `--p600`;
+  - `PaginasPublicasTest` (caso del layout): el `summary` sin texto visible, con
+    `aria-label="Menú"` y un `svg` con `aria-hidden="true"`; el pie con «Horarios», las dos filas
+    del horario, el teléfono `tel:` y los enlaces de la navegación.
 - **`ProxyHttpsTest`** (ajustado) y **`ExampleTest`** (vista nueva).
 - **En el navegador** (`capturar.mjs --medir`, procedimiento de su cabecera): `publico-inicio` y
   `publico-servicios` a 320, 390, 900 y 1440 sin desbordamiento horizontal y con toque ≥ 44 px
@@ -199,7 +209,7 @@ publica el catálogo y del cambio en la política de contenido.
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: `/` sin sesión, página en el orden indicado, «Agendar mi primera cita» al registro, «Iniciar sesión» y crear cuenta visibles (reemplaza 001 CA4) | rutas, controlador, layout, `publico/inicio` | `PaginaInicioTest::test_sin_sesion_muestra_la_pagina_en_orden` · `ExampleTest` · verificación manual: inicio a 320/390/900/1440 contra `opcion-b.html#inicio-solo038-m` y `#inicio-d` |
+| CA1: `/` sin sesión, página en el orden indicado, «Agendar mi primera cita» al registro, «Iniciar sesión» y crear cuenta visibles (reemplaza 001 CA4) | rutas, controlador, layout, `publico/inicio` | `PaginaInicioTest::test_sin_sesion_muestra_la_pagina_en_orden` · `ExampleTest` · verificación manual: inicio a 320/390/900/1440 contra `opcion-b.html#inicio-solo038-m` y `#inicio-d`, con la cabecera, el menú y el pie refinados de `design.md` (D15) |
 | CA2: con sesión, `/` al panel; `/servicios` igual | controlador (`panelDelRol`), layout | `PaginaInicioTest::test_con_sesion_cada_rol_va_a_su_panel` (caracterización: comprobado rompiendo la redirección) · `ServiciosPublicosTest::test_con_sesion_se_ve_igual_y_ofrece_ir_al_panel` |
 | CA3: texto exacto de «Sobre nosotros» | `publico/inicio` | `PaginaInicioTest::test_sobre_nosotros_con_el_texto_aprobado` |
 | CA4: categorías activas sin servicios ni precios, «Ver todos los servicios»; sin activos, sin avance | `Servicio::porCategoria`, `publico/inicio` | `PaginaInicioTest::test_solo_categorias_activas_sin_servicios_sueltos`, `test_sin_servicios_activos_no_hay_avance` |
@@ -207,9 +217,9 @@ publica el catálogo y del cambio en la política de contenido.
 | CA6: `/servicios` activos agrupados, sin precio ni inactivos, volver al inicio; vacío con mensaje | `Servicio::porCategoria`, `publico/servicios` | `ServiciosPublicosTest::test_activos_agrupados_por_categoria_en_orden`, `test_solo_activos_sin_precio_ni_duracion`, `test_sin_servicios_activos_muestra_el_mensaje` · verificación manual: contra `opcion-b.html#servicios-m` y `#servicios-d` |
 | CA7: solo recursos propios y el mapa de Google en `/`; sin bloqueos de CSP; el resto sin marcos externos (amplía 031 CA1 solo en `/`) | `marcos.conf`, `comunes.conf`, configuraciones de nginx, `verificar.sh` | `PaginasPublicasTest::test_sin_recursos_externos_salvo_el_mapa` · `CabecerasSeguridadTest::test_solo_la_raiz_admite_el_mapa` · verificación manual: consola sin bloqueos en `/` y `/servicios`, y `curl -sI` de las dos con nginx local |
 | CA8: sin JavaScript, todo visible y los enlaces funcionan (salvo el mapa) | layout y vistas sin scripts | `PaginasPublicasTest::test_ninguna_pagina_publica_carga_scripts`, `test_el_contenido_va_en_el_html_del_servidor` |
-| CA9: 320–1440 sin desbordamiento, toque ≥ 44, foco visible, menú con teclado, sin animaciones con movimiento reducido | `publico.css`, layout (`<details>`) | `PaginasPublicasCssTest` (toque, cortes, foco con tokens, transiciones solo con `prefers-reduced-motion: no-preference`) · `capturar.mjs --medir` (publico-inicio, publico-servicios) · verificación manual: menú con teclado y NVDA |
+| CA9: 320–1440 sin desbordamiento, toque ≥ 44, foco visible, menú con teclado, sin animaciones con movimiento reducido | `publico.css`, layout (`<details>`) | `PaginasPublicasCssTest` (toque, cortes, foco con tokens —`--focus-ring-inverso` en la cabecera y el pie, D15—, `summary` sin borde ni fondo, transiciones solo con `prefers-reduced-motion: no-preference`) · `PaginasPublicasTest::test_el_layout_publico_con_y_sin_sesion` (menú con icono y nombre «Menú» sin texto visible; pie con Horarios y Contacto) · `capturar.mjs --medir` (publico-inicio, publico-servicios) · verificación manual: menú con teclado y NVDA |
 | CA10: título, descripción, canónica, sin `noindex`, distintos entre sí y de `/registro` | layout (`@yield`), vistas | `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_un_solo_h1` |
-| RNF: WCAG 2.1 AA (contraste, títulos en orden, decorativos ocultos) | `publico.css`, vistas | `PaginasPublicasCssTest::test_contraste_de_los_pares_nuevos` · `PaginasPublicasTest::test_un_solo_h1` · verificación manual: NVDA |
+| RNF: WCAG 2.1 AA (contraste, títulos en orden, decorativos ocultos) | `publico.css`, vistas | `PaginasPublicasCssTest::test_contraste_de_los_pares_nuevos` (también blanco sobre `--p500` y `--p600`, D15) · `PaginasPublicasTest::test_un_solo_h1` · verificación manual: NVDA |
 | RNF: indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS (sin contar el JS de terceros del mapa: excepción aceptada, P10) | vistas | `PaginasPublicasTest::test_ninguna_pagina_publica_carga_scripts` · verificación manual: Lighthouse y medición de JS propio, de terceros y total de `/` con nginx local (T042), y en `/review` |
 | RNF: `/` ≤ 1 MB en la primera visita | vistas, fuentes, `publico.css` | `PaginasPublicasTest::test_los_recursos_propios_de_la_raiz_pesan_menos_de_un_mega` |
 | RNF: el mapa no se descarga hasta acercarse | `iframe` | `PaginaInicioTest::test_el_mapa_es_perezoso_y_avisa_de_google` · verificación manual: T042 anota si el `iframe` entra en la primera carga a 390 y 1440 px (el navegador carga los perezosos a 1250–2500 px del viewport; si entra, se aplica la excepción de P10) |
@@ -350,6 +360,17 @@ auditoría.
   (fluido), `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`. La
   primera tarea los lleva a `system.md` 1.7.0, `system.html` y `app.css` en el mismo commit que el
   test de tokens.
+
+- **D15 · Refinado de la cabecera, el menú y el pie** (`/design-spec 038 --fix`, decisión del usuario,
+  2026-10-20, tras la verificación manual de T025). Cabecera en `--p500` con el logo y los enlaces
+  en blanco y «Iniciar sesión» como botón blanco; menú del móvil con solo el icono de hamburguesa
+  (SVG en línea `aria-hidden`, de `--icon-md`, con `aria-label="Menú"` en el `<summary>`, sin borde
+  ni fondo), como el botón «Menú» de la app (034); pie en `--p600` con tres columnas (logo y frase,
+  Horarios, Contacto) y el © centrado, siguiendo la landing del colaborador. Token nuevo
+  `--focus-ring-inverso: var(--white)` (system.md 1.7.1) para el foco sobre el rosa. El SVG del
+  icono va en el HTML (no es JavaScript; P10 sigue en 0 kB de JS propio). Descartados: una imagen
+  aparte para el icono (una petición más) y el carácter «☰» (cambia con la fuente y el lector lo
+  anuncia).
 
 ## Impacto en arquitectura
 Lo actualiza T090 al implementar:
