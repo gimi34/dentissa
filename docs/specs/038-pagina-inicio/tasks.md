@@ -133,8 +133,9 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: añadida por /review: verificación final de R1–R27
   - nota: 2026-10-21 — suite 404 en verde (397 + 7 casos nuevos de las correcciones); `pint --test` limpio en los 8 PHP tocados desde `ed46634`; `validate` sin errores; `composer audit` y `npm audit` sin avisos; gitleaks sin fugas y semgrep `p/php` sin hallazgos en `ed46634..HEAD`; comprobación «038 páginas públicas» de `--medir` «todo en orden» dos veces; Lighthouse 13.5.0, dos pasadas: SEO 100 en `/` y `/servicios`, móvil y escritorio (accesibilidad y buenas prácticas 100, rendimiento 99–100)
 
-- [ ] T069 Ampliar `PaginasPublicasCssTest`: `.lb-lista dt` lleva `grid-column: 1`, para que un `<dd>` vacío y oculto no desplace al `<dt>` siguiente a la columna de las descripciones — `tests/Feature/PaginasPublicasCssTest.php` — hecho cuando: el caso nuevo falla por la razón esperada y el resto sigue en verde — cubre: CA6
+- [x] T069 Ampliar `PaginasPublicasCssTest`: `.lb-lista dt` lleva `grid-column: 1`, para que un `<dd>` vacío y oculto no desplace al `<dt>` siguiente a la columna de las descripciones — `tests/Feature/PaginasPublicasCssTest.php` — hecho cuando: el caso nuevo falla por la razón esperada y el resto sigue en verde — cubre: CA6
   - nota: añadida por /review: R30
+  - nota: 2026-10-21 — R30: `test_una_descripcion_vacia_no_deja_hueco` exige además `grid-column: 1` en `.lb-lista dt`; falla por la razón esperada y los otros 13 casos siguen en verde
 - [ ] T070 Fijar `.lb-lista dt` a la primera columna (`grid-column: 1`) y completar el comentario de cabecera de `publico.css` con los factores de `calc()` sobre `--touch-min` y `--space-8` (R25, roadmap) — `public/css/publico.css` — hecho cuando: T069 pasa, los tests públicos siguen en verde y, a 1440 y 390 px con la descripción de un servicio vaciada en la página, los `<dt>` siguientes quedan en la primera columna — cubre: CA6 — depende: T069
   - nota: añadida por /review: R30, R31
 

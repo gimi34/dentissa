@@ -263,6 +263,8 @@ class PaginasPublicasCssTest extends TestCase
     {
         // /review R24: un servicio sin descripción no muestra un <dd> vacío.
         $this->assertStringContainsString('display: none', $this->declaraciones('.lb-lista dd:empty', self::HOJA));
+        // /review R30: con el <dd> oculto, el <dt> siguiente no puede caer en la columna de las descripciones.
+        $this->assertStringContainsString('grid-column: 1', $this->declaraciones('.lb-lista dt', self::HOJA), 'Cada nombre empieza en la primera columna.');
     }
 
     public function test_las_transiciones_solo_corren_sin_movimiento_reducido(): void
