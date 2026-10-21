@@ -111,3 +111,5 @@ aidlc/diagnostics/
 
 # AI-DD: copias locales para /analyze delta
 .ai/cache/
+# AI-DD 1.16.0: capturas y medidas del inspector de /design-spec
+.ai/inspect/
