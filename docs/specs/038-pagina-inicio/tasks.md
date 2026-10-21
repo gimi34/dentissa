@@ -1,6 +1,7 @@
 ---
 spec: 038-pagina-inicio
 plan: plan.md
+impl_base: fba7a6d
 status: approved
 ---
 
@@ -39,7 +40,8 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 ## Preparación
 - [ ] T001 Incorporar al sistema de diseño la versión 1.7.0 de `design.md` («Cambios a incorporar al sistema» que necesita la 038): tokens públicos, `--green-texto`, `--duration-base`, `--ease-puerta`, componentes «Placa», «Puerta», «Cabecera pública» y «Pie público», corte de 560 px, reglas de uso y las pantallas `/` y `/servicios` en el inventario (capturas en T031) — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` declara `version: 1.7.0` con cada token y su valor de `design.md`, y `python .ai/bin/aidd.py validate` no da errores
 - [ ] T002 [P] Copiar Lexend autoalojada (plan D4): `lexend-latin-400-normal.woff2`, `lexend-latin-600-normal.woff2` y su `LICENSE` como `OFL.txt`, de `@fontsource/lexend` 5.3.0 — `public/fonts/lexend/` — hecho cuando: los tres archivos existen y la nota de la tarea lleva su SHA-256 y el origen (paquete, versión y fecha)
-- [ ] T004 Traer `main` a la rama con la 031 ya liberada (v0.10.0) y resolver los conflictos (plan D13) — `feature/038-pagina-inicio` (merge) — hecho cuando: el merge está hecho, la suite pasa con el `main` traído y la nota dice qué conflictos hubo; los de `routes/web.php` y `ExampleTest` (del `/fix` de `main`, plan D13) se resuelven a favor de la 038
+- [x] T004 Traer `main` a la rama con la 031 ya liberada (v0.10.0) y resolver los conflictos (plan D13) — `feature/038-pagina-inicio` (merge) — hecho cuando: el merge está hecho, la suite pasa con el `main` traído y la nota dice qué conflictos hubo; los de `routes/web.php` y `ExampleTest` (del `/fix` de `main`, plan D13) se resuelven a favor de la 038
+  - nota: 2026-10-20 — `main` en `088e452` (031 liberada en v0.10.0, PR #39) fusionado en `ed7e009` sin conflictos: el `/fix` de la raíz (PR #36) y el `/chore` de `follow-redirects` (PR #37) no tocaban archivos de la 038. Hecha antes que T001 y T002 para tomar la línea base sobre el `main` actual. Línea base de la suite: 353 pasan, 0 fallos
 
 ## Tests (antes de implementar)
 - [ ] T010 [P] Escribir `PaginaInicioTest`: sin sesión 200 y en el orden de CA1 con «Agendar mi primera cita» al registro, «Iniciar sesión» y crear cuenta; con sesión cada rol va a su panel (caracterización); texto exacto de «Sobre nosotros»; solo categorías activas sin servicios sueltos ni precios y «Ver todos los servicios»; sin activos no hay avance; contacto exacto con `tel:`, `iframe` (src con la dirección codificada, `loading="lazy"`, `title`, `referrerpolicy`), nota de Google y «Cómo llegar» con `rel="noopener noreferrer"` — `tests/Feature/PaginaInicioTest.php` — hecho cuando: falla por la razón esperada (la vista y la ruta nuevas no existen), salvo el caso de CA2, que pasa y se comprueba rompiendo la redirección — cubre: CA1, CA2, CA3, CA4, CA5
