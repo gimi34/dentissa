@@ -220,6 +220,21 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Orden de versiones: la 033 salió en v0.7.0 (2026-10-12), la 034 en v0.8.0 (2026-10-16) y la 035
   en v0.9.0 (2026-10-19) antes que la 031, que pasa a v0.10.0 (anotarlo en su plan y fusionar
   `main` en su rama al retomarla).
+- Deuda de la spec 031 (liberada en v0.10.0; /review, aceptada sin tarea, y condiciones del release):
+  - 031/R4: refrescar `cloudflare/cloudflared` a 2026.10.1 (7 días desde el 2026-10-22) y la `mariadb:10.11.19` reconstruida (desde el 2026-10-24), volver a escanear con `trivy image` y renovar o retirar EX2 antes del 2026-11-30 (RS18.a, mitigada en v0.10.0 con este residuo).
+  - 031/R12: aserción sobre el registro de `Failed` cuando exista la auditoría (spec 021).
+  - 031/R13: decidir si la vuelta de Google captura cualquier excepción de Socialite.
+  - 031/R14: comprobar la huella de la clave del repositorio de Tailscale.
+  - 031/R15: bloque `"tests"` en la política del tailnet.
+  - 031/R16: fijar por digest las imágenes de producción.
+  - 031/R17: excluir de «nada escucha fuera de localhost» solo el proceso `tailscaled`.
+  - 031/R18: comprobar el SSH sin contraseña también para la red local y la privada (`sshd -T -C addr=…`).
+  - 031/R20: no contar dos veces el fallo de lectura del Compose en «Entorno aplicado» de `verificar.sh`.
+  - 031/R19: cumplida en T097 (2026-10-20): `http://dentissa.app/login` → 301 a https en un salto → 200, con HSTS.
+  - 031/R21: resuelta por la ficha 2026-10-20-chore-follow-redirects-1.16.1 (v0.10.0); `npm audit` en 0.
+- Despliegue (v0.10.0, T097): cada despliegue ejecuta el `desplegar.sh` de la versión que se abandona (bash lee el script entero antes del checkout). Las mejoras de un despliegue llegan una versión tarde (en v0.10.0, `--no-cache --pull` y `REFRESCO_SISTEMA`). Propuesta: que `desplegar.sh` se relance con la versión nueva tras el checkout (`/fix` o `/refactor` de `deploy/`).
+- Despliegue (v0.10.0, T097): `trivy image` no pudo descargar su base de datos desde la red del servidor (`mirror.gcr.io` y `ghcr.io`); se escaneó una imagen equivalente en el PC. Valorar descargar la base en el PC y llevarla al servidor, o escanear siempre en el PC.
+- Decisión del usuario (2026-10-20, T097): Cloudflare Web Analytics desactivada en el panel de Cloudflare para dentissa.app. Su script lo inyecta Cloudflare y la política de contenido de la 031 lo bloquea; se prefiere no cargar scripts de terceros en una app con datos de salud.
 - Deuda de la spec 035 (liberada en v0.9.0; /review, aceptada sin tarea):
   - 035/R3: el borde de los campos de los formularios de paciente y expediente (`--border` sobre
     blanco, ≈ 1,3:1) no llega a 3:1 (WCAG 1.4.11); código previo, en la spec que rehaga los formularios (DS).
@@ -428,10 +443,6 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   y RS8.c (conexión segura obligatoria en staging), creada al dividir RS8.b en la spec 031.
 - RS13.b (objetivo 2): mensaje genérico en el alta que no revele si el correo ya tiene cuenta; la
   spec 030 solo añade el límite de intentos (RS13.a) (/analyze A34).
-- RS18.a: refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más
-  nuevas con 7 días o más y volver a escanear con `trivy image` antes del 2026-10-31, cuando vence
-  la excepción EX2; renovarla o retirarla según el resultado (spec 030, T036; decisión del usuario,
-  2026-10-04).
 - Entorno local: la base `dentissa` de un equipo creado antes de la spec 030 cargó el volcado a
   medias (la colación de la base cortaba la carga en `horarios_dentista`) y le faltan
   `fk_horario_personal`, `fk_pacientes_usuario` y `fk_personal_usuario`. Para repararla hay que

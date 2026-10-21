@@ -225,16 +225,24 @@ Formato:
   - nota: `implemented` el 2026-10-19: los 11 criterios con sus tests en verde (`CabecerasSeguridadTest`, `GoogleVueltaFallidaTest`, `ConfiguracionProduccionTest`) o sus ensayos hechos en el servidor (T040: CA6–CA8; T041: CA8, CA9; T042: CA10; T031, T054–T057: CA11). Quedan para `/release` (T097) la consola del navegador sin bloqueos de la CSP por la dirección pública (CA1) y ver que la capa de `apk upgrade` de `web` no sale «CACHED» (CA11).
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación
+- [x] T095 Desplegar a staging y verificar criterios de aceptación — no aplica
   - nota: no hay staging (030, plan D2); las comprobaciones públicas van en T097.
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `desplegar.sh vX.Y.Z`, `verificar.sh` con la dirección pública y 15 minutos de vigilancia
+- [x] T096 Aprobación humana para producción
+  - aprobado por el usuario (gimi34) el 2026-10-20 para v0.10.0: «desplegar v0.10.0 a producción», tras el resumen de la puerta (rollback `volver.sh v0.9.0`, sin migraciones, condiciones R4 y R19)
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `desplegar.sh vX.Y.Z`, `verificar.sh` con la dirección pública y 15 minutos de vigilancia
   - verificación manual (CA1, RNF): recorrido de las pantallas de cada rol por `https://dentissa.app` con la consola del navegador sin bloqueos de la CSP.
   - verificación manual (CA3, CA4): `curl -sI https://dentissa.app/login` con HSTS y sin `X-Powered-By`.
   - verificación manual (CA5): login con Google correcto y cancelado en Google (vuelve al login con el mensaje).
   - condición de /review r1 (R4, CA11): si ya cumplen 7 días, refrescar `cloudflare/cloudflared` (2026.10.1 desde el 2026-10-22) y `mariadb:10.11.19` (reconstrucción del 2026-10-17, desde el 2026-10-24), con aprobación de las rutas protegidas; en el despliegue, la capa `apk upgrade` de `web` no sale «CACHED»; `trivy image` del `web` y del `app` construidos en el servidor; ajustar EX2 a lo que quede.
   - condición de /review r1 (R19): `curl -sIL http://dentissa.app/registro` da un solo salto (301 a https) y 200 al final.
-- [ ] T098 Marcar spec como `released`. Correcciones → mitigada (vX.Y.Z): RS8.a, RS8.b y RS18.a (refrescada, escaneada y EX2 decidida en T031; /analyze A4). RS8 sigue abierto (RS8.c y RS8.d pendientes); RS18 mitigado, con el residuo que siga en EX2 hasta su vencimiento. Specs extendidas: en la 001, fila de Historial; en la 030, CA3 con `→ reemplazado en parte por 031 CA8` y fila de Historial
+  - nota: 2026-10-20 — `desplegar.sh v0.10.0` en 301 s (sin la verificación), copia `dentissa-20261020-202455.sql.gz`; verificación interna y pública «todo OK» (cabeceras de la 031 en `/login`, estáticos, 404 y 301; «Entorno aplicado» con los 4 servicios; Tailscale sin el FALLO conocido; credenciales de Google con formato válido).
+  - nota: 2026-10-20 — CA1 y RNF: el usuario recorrió las pantallas de los cuatro roles por https://dentissa.app sin bloqueos de la CSP propios de la app. El único bloqueo era el script de Cloudflare Web Analytics, que Cloudflare inyecta por su cuenta: se desactivó en el panel de Cloudflare (decisión del usuario), sin tocar la política. CA5: Google correcto y cancelado, OK (usuario).
+  - nota: 2026-10-20 — R19: `curl -sIL http://dentissa.app/login` → 301 a `https://dentissa.app/login` (un salto) → 200, HSTS `max-age=15552000; includeSubDomains` en las dos respuestas. CA3, CA4: `verificar.sh` público OK.
+  - nota: 2026-10-20 — R4: `cloudflared` 2026.10.1 (7 días el 22-10) y la `mariadb:10.11.19` reconstruida (7 días el 24-10) aún no cumplían 7 días: se desplegaron las fijadas y el refresco queda en el roadmap (031/R4) antes de que venza EX2 (30-11). La capa de actualización de `app` y `web` no salió «CACHED». Este despliegue lo hizo el `desplegar.sh` de la v0.9.0 (cada despliegue usa el script de la versión que se abandona): sin `--no-cache --pull` ni `REFRESCO_SISTEMA`; las capas se rehicieron porque el `Dockerfile` de la v0.10.0 cambia antes de ellas → roadmap. `trivy image` no pudo bajar su base desde el servidor (red); se escaneó en el PC una `web` equivalente construida desde `v0.10.0` sin caché y con `--pull` (Alpine 3.24.2): 0 altas o críticas. EX2 sin cambios (vigente hasta el 2026-11-30).
+  - nota: 2026-10-20 — 15 minutos de vigilancia: 0 respuestas 5xx en `dentissa-access.log` y 0 errores de Laravel desde el despliegue.
+- [x] T098 Marcar spec como `released`. Correcciones → mitigada (vX.Y.Z): RS8.a, RS8.b y RS18.a (refrescada, escaneada y EX2 decidida en T031; /analyze A4). RS8 sigue abierto (RS8.c y RS8.d pendientes); RS18 mitigado, con el residuo que siga en EX2 hasta su vencimiento. Specs extendidas: en la 001, fila de Historial; en la 030, CA3 con `→ reemplazado en parte por 031 CA8` y fila de Historial
+  - nota: 2026-10-20 — spec `released` (v0.10.0); RS8.a, RS8.b y RS18.a mitigadas (v0.10.0); RS8 sigue abierto (RS8.c, RS8.d); RS18 mitigado con el residuo de EX2 y el refresco pendiente (031/R4). Historial en la 001 y la 030 (CA3 reemplazado en parte por 031 CA8). Deuda 031/R4, R12–R18 y R20 en el roadmap
+  - nota: A25 — en la 030, CA7 lleva `→ modificado por 031 CA8` y su Historial registra que la excepción P7 vence con la 021 (el roadmap ya la remite a la 021 desde T051)
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

@@ -1,7 +1,8 @@
 ---
 id: 031
 slug: endurecer-produccion
-status: implemented
+status: released
+released: v0.10.0 (2026-10-20)
 created: 2026-10-05
 extends: [001, 030]
 ---
@@ -125,3 +126,4 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-06 | Aprobada de nuevo (al aprobar el plan) | Decisión del usuario |
 | 2026-10-06 | CA8 declara el fallo conocido al volver a versiones anteriores (modifica 030 CA7); la excepción P7 vence con la 021; HSTS como decisión del usuario. Vuelve a `draft` | /analyze 031 A2, A9, A16 |
 | 2026-10-06 | Aprobada de nuevo | Decisión del usuario |
+| 2026-10-20 | Liberada en v0.10.0 (PR #38, merge `e4fd141`, tag `v0.10.0`) y desplegada en producción | /release |

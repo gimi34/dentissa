@@ -204,8 +204,8 @@ Ni la app ni nginx envían CSP, X-Frame-Options/frame-ancestors, X-Content-Type-
 Referrer-Policy ni HSTS. Evidencia: `PreventBackHistory.php`, `docker/nginx/dentissa.conf`.
 
 Correcciones:
-- RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: en curso (spec 031)
-- RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: en curso (spec 031)
+- RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: mitigada (v0.10.0)
+- RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: mitigada (v0.10.0)
 - RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
 - RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05)
 
@@ -314,7 +314,7 @@ de Docker y la capa de `apt-get upgrade` / `apk upgrade` no se renueva: el `web`
 avisos y con caché, con 3 (→ spec 031, T054–T055, dentro de RS18.a).
 
 Correcciones:
-- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: en curso (spec 031: refrescadas y escaneadas el 2026-10-19, EX2 renovada hasta el 2026-11-30; quedan `mariadb` y `cloudflared` cuando cumplan 7 días)
+- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: mitigada (v0.10.0): imágenes refrescadas y escaneadas, construcción sin caché, EX2 renovada hasta el 2026-11-30; queda refrescar `cloudflared` 2026.10.1 y la `mariadb` reconstruida antes de ese vencimiento (roadmap, 031/R4)
 
 ### RS19 · Media — Un admin puede dejar la aplicación sin administradores (A01 Broken Access Control)
 Detectado en la re-sincronización del 2026-10-18. `UsuarioController@update` toma `rol` y `activo` del
