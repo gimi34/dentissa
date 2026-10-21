@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: draft   # draft | approved | blocked
+status: approved   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-10-20
 ---
@@ -76,7 +76,7 @@ controlador, la política de marcos y los textos de CA3 y CA5 no cambian. Cambia
 | `tests/Feature/CabecerasSeguridadTest.php` | Comprueba `frame-src $dentissa_frame_src` en `comunes.conf`, el `map` de `marcos.conf` y su `include` en las dos configuraciones | Medio: conflicto con la 031 (D13) |
 | `tests/Feature/PaginaInicioTest.php`, `ServiciosPublicosTest.php`, `PaginasPublicasTest.php`, `PaginasPublicasCssTest.php` (nuevos) | Ver Estrategia de pruebas. Rediseño (D16): se ajustan los casos de la opción B (scripts, placa y aviso, puertas → tarjetas) y se añaden los de la portada, la franja, la hoja, el pie y el movimiento | Medio: hay que cambiar aserciones existentes sin debilitarlas (cada cambio, a su caso nuevo) |
 | `tests/js/publico.test.mjs` (nuevo, D18) | `node:test` sobre `estadoAhora()` cargado con `vm` | Bajo |
-| `.github/workflows/ai-dd.yml` (D18) | Paso `node --test tests/js/` en el trabajo de tests. Ruta protegida: solo con la aprobación del usuario | Bajo |
+| `.github/workflows/ai-dd.yml` (D18) | Paso `node --test tests/js/` en el trabajo de tests. Ruta protegida, aprobada por el usuario el 2026-10-21 | Bajo |
 | `docs/design/capturar.mjs` | Vistas públicas `publico-inicio` y `publico-servicios` (sin sesión) a 320, 390, 900 y 1440, y comprobaciones de `--medir` para ellas: sin desbordamiento horizontal y toque ≥ 44 px. Rediseño (D16): `--medir` también con JavaScript desactivado, y la pastilla en una línea a 320 px | Bajo |
 | Documentación | `docs/design/system.md` y `system.html` (1.7.0; 1.7.1 con el refinado D15: `--focus-ring-inverso`, «Cabecera pública» y «Pie público»), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `docs/specs/030-despliegue-servidor-propio/spec.md` y `docs/specs/031-endurecer-produccion/spec.md` (Historial, D10), `docs/security.md` (entradas públicas, TM6 aceptado y visita a Google por el mapa; `/analyze` A10, A20), `CHANGELOG.md` en `/release`. Rediseño (D16, D17): `system.md` y `system.html` 1.8.0 (con la foto acreditada en «Imágenes»), `docs/design/anti-cliches.md` y `docs/design/creative-direction.md` («Modo y registro», «Imágenes disponibles»), y `AGENTS.md` («sin JavaScript» → «con `public/js/publico.js`»; ruta protegida, con aprobación en su tarea) | Bajo |
 
@@ -476,7 +476,8 @@ auditoría.
   sin dependencia ni `package.json` nuevos. Comprobado con una prueba de concepto el 2026-10-21:
   función con `Intl` en `America/Mexico_City`, cargada con `vm`, dos casos en verde.
   - Se ejecuta con `node --test tests/js/` en cada tarea que toque el script y en `/review`.
-  - En la CI, solo si el usuario aprueba el paso en `.github/workflows/ai-dd.yml` (ruta protegida).
+  - En la CI: un paso en `.github/workflows/ai-dd.yml` (ruta protegida; decisión del usuario,
+    2026-10-21).
 
   Descartados:
   - Jest o Vitest: una dependencia nueva;
