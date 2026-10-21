@@ -43,8 +43,9 @@ la ubicación y el pie**; la portada es la de abound: la consulta en grande y el
   estructura: portada a sangre con foto, hoja que sube sobre ella, tarjetas, franja del horario,
   ubicación 3:2 y pie con el nombre. Las pantallas de la app (Roboto, barra lateral) no comparten
   ningún esqueleto.
-- **Riesgo asumido:** la foto de la portada es de banco (ver "Imágenes") → velo de la marca, sin
-  presentarla como el equipo de la consulta, y sustitución por una foto real cuando la haya;
+- **Riesgo asumido:** la foto de la portada es de banco (ver "Imágenes": libre y acreditada) → velo
+  de la marca, sin presentarla como el equipo de la consulta, y sustitución por una foto real cuando
+  la haya;
   tarjetas con icono y franja tipográfica rozan clichés → son las 7 categorías reales con su número
   de tratamientos y el horario real, una sola franja.
 
@@ -130,13 +131,13 @@ Versión **1.8.0** de `system.md` (y `system.html`), en la primera tarea del red
 | Componentes «Botón en píldora» y «Tarjeta de categoría» | — | — | — | Se reutilizarán en la 039 y la 040 |
 | Reglas de uso (páginas públicas) | — | — | — | Una escena y una franja como máximo por página; entradas que cambian con el contenido; nada se levanta al pasar el puntero; foto solo bajo un velo de la marca |
 | `docs/design/anti-cliches.md` | — | — | — | Las seis filas nuevas de AI-DD 1.16.0 (página quieta, idea de categoría, secciones delgadas, primera pantalla seguida de plantilla, pantalla de carga, scroll secuestrado) y los clichés que esta opción roza con su alternativa |
-| `docs/design/creative-direction.md` | — | — | — | Secciones «Modo y registro» (registro máximo de las páginas públicas: audaz; la 038, firme) e «Imágenes disponibles» (solo la foto de banco de abound y el logo) |
+| `docs/design/creative-direction.md` | — | — | — | Secciones «Modo y registro» (registro máximo de las páginas públicas: audaz; la 038, firme) e «Imágenes disponibles» (la foto libre de la portada, acreditada, y el logo) |
 
 ## Imágenes
 
 | Imagen | Origen | Licencia y crédito | Sustituir antes de publicar |
 |---|---|---|---|
-| Portada: dentista atendiendo a una paciente (`cover-bg.jpg` de abound, 1920 × 1080) | Foto de banco que trajo el colaborador en el merge `f096e17`; recuperada del historial y comprimida (WebP 1600 px, 64 kB; 800 px, 23 kB) | **Desconocida.** Hay que confirmar con el colaborador de dónde sale y su licencia antes de publicarla; no lleva crédito porque no se conoce | **Sí**, por una foto real de la consulta en cuanto exista; hasta entonces se presenta como ambiente, nunca como el equipo de Dentissa |
+| Portada: una consulta dental (dentista y paciente, luz clara, encuadre con el sujeto a la derecha) | Foto de un banco abierto con licencia de uso comercial (p. ej. Unsplash o Pexels), descargada al repo; sustituye a la de abound (`cover-bg.jpg`, licencia desconocida), que solo se usa en las maquetas | La del banco, con autor y fuente acreditados en el pie de `design.md` y en `docs/design/system.md` → «Imágenes»; la elige `/implement` y la aprueba el usuario | Sí, por una foto real de la consulta cuando exista; nunca se presenta como el equipo de Dentissa |
 | Logo «Melissa López N. · Odontología integral» | `public/images/logo-icon.png` (del proyecto), pintado por máscara | Propio | No |
 | Iconos de categoría | Dibujados en código (SVG de 24 × 24, trazo 1.6) | Propios | No |
 
@@ -216,7 +217,7 @@ común (~1.5 kB) para las entradas y la cosa viva.
 
 | Cliché que esta pantalla podría caer | Alternativa usada |
 |---|---|
-| Foto de stock en la portada | **Riesgo asumido por el usuario:** la foto de abound bajo el velo de la marca, sin presentarla como el equipo, y su sustitución por una foto real como condición antes de publicarla |
+| Foto de stock en la portada | **Riesgo asumido por el usuario:** una foto libre de un banco abierto, acreditada, bajo el velo de la marca y sin presentarla como el equipo; se sustituye por una foto real cuando la haya (refinado del 2026-10-21) |
 | Tríada de tarjetas icono + título + texto | Siete tarjetas, una por categoría real del catálogo, con su número de tratamientos (no ventajas inventadas); iconos dibujados para cada categoría |
 | Todo entra con el mismo fundido al hacer scroll | Entradas que cambian con el contenido: títulos por línea, tarjetas una a una, mapa desde una máscara; la portada no espera al scroll |
 | Hover que levanta todas las tarjetas | La tarjeta cambia borde, sombra e icono; no se mueve |
@@ -237,4 +238,5 @@ común (~1.5 kB) para las entradas y la cosa viva.
 | 2026-10-21 | diseño | Motor creativo de AI-DD 1.16.0 | Ronda 3 con dos composiciones (C firme, D audaz), semilla 371542, inspector y crítica | `/design-spec` 1.16.0 |
 | 2026-10-21 | diseño | Elección | C con la ubicación de D (mapa a la izquierda, 3:2) y el nombre grande en el pie | usuario |
 | 2026-10-21 | supuesto | Licencia de la foto de abound | Desconocida: se confirma con el colaborador o se sustituye antes de `/release` | `inspeccion` · `creatividad.md` §6 |
+| 2026-10-21 | refinado | ¿Cómo se resuelve la licencia de la foto de la portada? | Foto libre de un banco abierto con licencia de uso comercial, descargada al repo y acreditada; la de abound queda solo en las maquetas | usuario (`/plan 038 --fix`) |
 | 2026-10-21 | diseño | ¿Se aprueba este documento (ronda 3)? | Aprobado | usuario |

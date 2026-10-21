@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: approved   # draft | approved | blocked
+status: draft   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-10-20
 ---
@@ -11,7 +11,9 @@ created: 2026-10-20
 La raíz y `/servicios` pasan a un controlador público nuevo (`PaginasPublicasController`) con un
 layout público propio (`layouts/publico.blade.php`), separado del de la app. El layout lleva la
 cabecera con el menú del móvil hecho con `<details>`, el pie, Lexend autoalojada y los metadatos
-de cada ruta. Todo se renderiza en el servidor y sin JavaScript: la 038 no añade ningún script.
+de cada ruta. Todo se renderiza en el servidor y se ve completo sin JavaScript. Un único script
+propio, `public/js/publico.js` (~1.5 kB, con `defer`), añade las entradas al bajar y la pastilla
+«¿Abierto ahora?»; sin él la página está terminada (D16).
 
 Los servicios salen del catálogo (`servicios` activos, solo nombre, descripción y categoría,
 agrupados por categoría en orden alfabético). Los textos fijos (presentación, «Sobre nosotros»,
@@ -25,6 +27,15 @@ PHP. Se comprobó con una prueba de concepto el 2026-10-20 (D5).
 La vista del colaborador (`landing/index.blade.php`, Tailwind por CDN) se sustituye y se retiran
 sus imágenes sin uso. La 038 no tiene migraciones.
 
+**Rediseño de la ronda 3** (`design.md` aprobado en 651e316, D16): la página de inicio sigue la
+línea de la landing de abound. Lleva una portada a sangre con una foto libre de un banco abierto,
+acreditada (D17), bajo el velo de la marca, y la hoja de «Sobre nosotros» que sube sobre ella (CSS
+sticky). Siguen las tarjetas de categoría con icono y «N tratamientos», la franja del horario, la
+ubicación 3:2 con el mapa a la izquierda y el pie con el nombre grande. Desaparece la placa del
+aviso de la puerta: el horario y el teléfono pasan a la portada. Las rutas, los datos, el
+controlador, la política de marcos y los textos de CA3 y CA5 no cambian. Cambian las dos vistas,
+`publico.css`, los tokens (sistema 1.8.0) y los tests que asertaban la opción B.
+
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste | Cómo se verifica |
 |---|---|---|---|
@@ -32,12 +43,12 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | P2 Test que falla antes y pasa después | ✅ | Cada criterio tiene su test en Trazabilidad. CA2 (con sesión, `/` lleva al panel) es de caracterización: ya se cumple y se comprueba rompiendo la redirección del controlador | test: los de Trazabilidad · manual: nota «comprobado rompiendo…» en la tarea de CA2 |
 | P3 Autorización en el servidor | ✅ | `/` y `/servicios` son públicas por diseño, sin datos por rol ni por recurso. Lo único que depende del usuario es la redirección al panel (`/`) y el enlace «Ir a mi panel», ambos en el servidor. Las rutas de la app no cambian | test: `PaginaInicioTest::test_con_sesion_cada_rol_va_a_su_panel`, `ServiciosPublicosTest::test_con_sesion_se_ve_igual_y_ofrece_ir_al_panel` |
 | P4 Entrada validada y SQL con bindings | ✅ | Las rutas no reciben entrada del visitante (sin parámetros ni formularios). La consulta del catálogo usa Eloquent sin SQL crudo | test: `ServiciosPublicosTest::test_parametros_en_la_url_no_cambian_la_lista` · lint: semgrep `p/php` en la CI |
-| P5 Nada sensible en el repositorio | ✅ | Datos de contacto ficticios (spec CA5). La fuente va con su licencia OFL-1.1. Sin secretos | lint: gitleaks en la CI · test: `PaginasPublicasTest::test_la_fuente_va_con_su_licencia` |
+| P5 Nada sensible en el repositorio | ✅ | Datos de contacto ficticios (spec CA5). La fuente va con su licencia OFL-1.1. La foto de la portada es de un banco abierto con licencia de uso comercial, con autor, fuente y licencia en `system.md` → «Imágenes» (D17). Sin secretos | lint: gitleaks en la CI · test: `PaginasPublicasTest::test_la_fuente_va_con_su_licencia`, `test_la_foto_de_portada_va_acreditada` |
 | P6 Sin vulnerabilidades críticas o altas | ✅ | Línea base del 2026-10-20: `composer audit` sin avisos y `npm audit` con 0. No hay dependencias nuevas | lint: `composer audit` y `npm audit` en la CI y en `/review` |
 | P7 Auditoría de datos sensibles | ➖ | No toca datos sensibles, autenticación ni permisos: solo publica el catálogo activo y textos fijos | — |
 | P8 Correlación y logs sin datos sensibles | ➖ | No añade logs ni procesa datos personales. Las respuestas siguen pasando por la correlación existente | — |
-| P9 Solo sistema de diseño, WCAG 2.1 AA | ✅ | La primera tarea incorpora a `system.md` 1.7.0 los «Cambios a incorporar al sistema» de `design.md`. `publico.css` usa solo tokens y la vista no lleva `style=""`. Contraste calculado en `design.md` | test: `PaginasPublicasCssTest` (tokens = sistema, sin literales, contraste de los pares nuevos, sin `style=""`) · manual: capturas contra `design/opcion-b.html` a 320, 390, 900 y 1440 px, y teclado y NVDA en el menú |
-| P10 Rutas indexables descubribles | ❌ aceptado: el JavaScript de terceros del `iframe` del mapa de Google no cuenta para el límite de 100 kB por ruta (y el peso del mapa no cuenta para el 1 MB de `/`), porque el navegador puede cargarlo en la primera visita aunque sea perezoso; el JavaScript propio sigue en 0 kB y lo transferido se mide y anota (`/analyze` A4) — aprobado por el usuario el 2026-10-20 | `/` y `/servicios` pasan a indexables (decisión del usuario en la spec): título y descripción únicos, una canónica absoluta desde `APP_URL`, sin `noindex`, contenido en el HTML del servidor y 0 kB de JavaScript propio. Se actualiza `docs/seo.md` | test: `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_ninguna_pagina_publica_carga_scripts` · manual: Lighthouse SEO ≥ 90 y medición de JS y total transferido de `/` con nginx local, caché vacía, a 390 y 1440 px (T042) |
+| P9 Solo sistema de diseño, WCAG 2.1 AA | ✅ | La primera tarea incorpora a `system.md` 1.7.0 los «Cambios a incorporar al sistema» de `design.md`. `publico.css` usa solo tokens y la vista no lleva `style=""`. Contraste calculado en `design.md`. Rediseño (D16): la primera tarea del rediseño lleva el sistema a 1.8.0 (tokens de portada, franja, velo, píldora, sombras, icono y movimiento; «Botón en píldora» y «Tarjeta de categoría»; reglas de uso) antes de tocar `publico.css` | test: `PaginasPublicasCssTest` (tokens = sistema, sin literales, contraste de los pares nuevos —también los del velo y la franja—, sin `style=""`) · manual: capturas contra `design/opcion-c.html` a 320, 390, 900 y 1440 px (`/servicios`, contra `opcion-b.html` con los cambios de C), y teclado y NVDA en el menú |
+| P10 Rutas indexables descubribles | ❌ aceptado: el JavaScript de terceros del `iframe` del mapa de Google no cuenta para el límite de 100 kB por ruta (y el peso del mapa no cuenta para el 1 MB de `/`), porque el navegador puede cargarlo en la primera visita aunque sea perezoso; el JavaScript propio sigue en 0 kB y lo transferido se mide y anota (`/analyze` A4) — aprobado por el usuario el 2026-10-20. Con el rediseño (D16) el JavaScript propio pasa a ~1.5 kB (`publico.js`), muy por debajo del límite; la excepción del mapa no cambia | `/` y `/servicios` pasan a indexables (decisión del usuario en la spec): título y descripción únicos, una canónica absoluta desde `APP_URL`, sin `noindex` y contenido en el HTML del servidor. El único JavaScript propio es `publico.js` con `defer` (≤ 100 kB; ~1.5 kB), y sin él se ve todo (CA8). Se actualiza `docs/seo.md` | test: `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_solo_carga_el_script_publico_con_defer` (un solo `<script src>`, el propio, con `defer`, sin scripts en línea y ≤ 100 kB) · manual: Lighthouse SEO ≥ 90 y medición de JS y total transferido de `/` con nginx local, caché vacía, a 390 y 1440 px (T042) |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
@@ -45,15 +56,17 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | `routes/web.php` | `/` deja el closure y pasa a `PaginasPublicasController@inicio` (nombre `inicio`). Nueva `GET /servicios` → `@servicios` (nombre `servicios.publicos`), fuera de los grupos por rol | Bajo: el nombre `servicios.publicos` no choca con `admin.servicios.*` |
 | `app/Http/Controllers/PaginasPublicasController.php` (nuevo) | `inicio()`: con sesión, redirige al panel del rol (la lógica actual del closure, en un helper `panelDelRol()`); sin sesión, la vista con las categorías activas. `servicios()`: servicios activos agrupados por categoría. Ninguna de las dos recibe parámetros | Bajo |
 | `app/Models/Servicio.php` | Scope `activos()` y método estático `porCategoria()`: categorías y servicios en orden alfabético, los que no tienen categoría al final en «Otros servicios» | Bajo |
-| `config/clinica.php` | Bloque `contacto`: dirección, teléfono (texto y `tel:`) y horario de CA5, de donde salen el texto, el mapa y «Cómo llegar» | Bajo |
-| `resources/views/layouts/publico.blade.php` (nuevo) | `<html lang="es">`, `<head>` con título, descripción y canónica por sección (`@yield`), `app.css` (tokens) y `publico.css`. Cabecera: logo enmascarado, navegación, «Iniciar sesión» o «Ir a mi panel», y menú `<details>` por debajo de 900 px. Pie. Sin scripts. Refinado (D15): cabecera en `--p500` con logo y enlaces en blanco y botón blanco; el `<summary>` del menú es solo el icono de hamburguesa (SVG `aria-hidden`, `aria-label="Menú"`); pie en `--p600` con tres columnas (logo y frase, Horarios, Contacto) y © | Medio: es el segundo layout de la app; AGENTS.md se actualiza (D2) |
-| `resources/views/publico/inicio.blade.php` (nuevo) | Placa (logo, h1, «Agendar mi primera cita» → `route('register')`, aviso de la puerta), «Sobre nosotros» (texto de CA3), puertas de categorías con «Ver todos los servicios», ubicación (mapa `iframe` y placa de dirección) | Bajo |
-| `resources/views/publico/servicios.blade.php` (nuevo) | h1, índice de categorías (anclas), una sección por categoría con `<dl>` nombre / descripción, estado vacío y «Volver al inicio» | Bajo |
+| `config/clinica.php` | Bloque `contacto`: dirección, teléfono (texto y `tel:`) y horario de CA5, de donde salen el texto, el mapa y «Cómo llegar». Rediseño (D16): `contacto.horario_semanal` (día ISO 1–7 → hora de apertura y de cierre) para la pastilla «¿Abierto ahora?», junto al horario en texto; un test los mantiene iguales | Bajo |
+| `resources/views/layouts/publico.blade.php` (nuevo) | `<html lang="es">`, `<head>` con título, descripción y canónica por sección (`@yield`), `app.css` (tokens) y `publico.css`. Cabecera: logo enmascarado, navegación, «Iniciar sesión» o «Ir a mi panel», y menú `<details>` por debajo de 900 px. Pie. Sin scripts. Refinado (D15): cabecera en `--p500` con logo y enlaces en blanco y botón blanco; el `<summary>` del menú es solo el icono de hamburguesa (SVG `aria-hidden`, `aria-label="Menú"`); pie en `--p600` con tres columnas (logo y frase, Horarios, Contacto) y ©. Rediseño (D16): carga `/js/publico.js` con `defer` (sin script en línea) y el pie gana la marca grande a todo el ancho (`aria-hidden`) | Medio: es el segundo layout de la app; AGENTS.md se actualiza (D2) |
+| `resources/views/publico/inicio.blade.php` (nuevo) | Placa (logo, h1, «Agendar mi primera cita» → `route('register')`, aviso de la puerta), «Sobre nosotros» (texto de CA3), puertas de categorías con «Ver todos los servicios», ubicación (mapa `iframe` y placa de dirección). Rediseño (D16), se rehace: portada a sangre (foto `<img>` decorativa con `srcset`, velo, logo, h1, texto, «Agendar mi primera cita», pastilla `[data-live]` vacía con `data-horario` y `data-zona`, horario completo y teléfono `tel:`), hoja de «Sobre nosotros», tarjetas de categoría (icono, nombre, «N tratamientos», enlace a su ancla de `/servicios`) con «Ver todos los servicios», franja del horario (`aria-hidden`) y ubicación 3:2 (mapa a la izquierda, datos y «Cómo llegar»). Entradas con `data-reveal`. Sin placa ni aviso | Medio: cambia casi toda la vista y los tests que la asertan |
+| `resources/views/publico/servicios.blade.php` (nuevo) | h1, índice de categorías (anclas), una sección por categoría con `<dl>` nombre / descripción, estado vacío y «Volver al inicio». Rediseño (D16): título centrado y el índice en píldoras; la estructura no cambia | Bajo |
+| `resources/views/partials/icono-categoria.blade.php` (nuevo, D16) | SVG en línea (24 × 24, trazo 1.6, `aria-hidden`) por categoría conocida, con la clave normalizada como en `porCategoria()`; la muela para las demás y para «Otros servicios» | Bajo |
 | `resources/views/landing/index.blade.php` | Se borra (la sustituye `publico/inicio`) | Bajo |
-| `public/css/publico.css` (nuevo) | `@font-face` de Lexend, `body.publico` (anula el `display: flex` y Roboto de `app.css`), componentes «Placa», «Puerta», «Cabecera pública», «Pie público», «Sobre nosotros», «Mapa con placa» y listas de `/servicios`. Cortes de 900 y 560 px. Solo tokens. Refinado (D15): cabecera y pie rosas, `summary` sin borde ni fondo, foco con `--focus-ring-inverso` dentro de la cabecera y del pie | Bajo |
-| `public/css/app.css` | Tokens nuevos en `:root` (system.md 1.7.0): `--font-publica`, `--text-publico-*`, `--space-seccion`, `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`. Los de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella. Refinado (D15): `--focus-ring-inverso: var(--white)` (system.md 1.7.1) | Bajo: solo añade variables; el resto de la app no las usa |
+| `public/css/publico.css` (nuevo) | `@font-face` de Lexend, `body.publico` (anula el `display: flex` y Roboto de `app.css`), componentes «Placa», «Puerta», «Cabecera pública», «Pie público», «Sobre nosotros», «Mapa con placa» y listas de `/servicios`. Cortes de 900 y 560 px. Solo tokens. Refinado (D15): cabecera y pie rosas, `summary` sin borde ni fondo, foco con `--focus-ring-inverso` dentro de la cabecera y del pie. Rediseño (D16), se reescribe con los componentes de `design.md` (portada, hoja, botón en píldora, tarjeta, pastilla, franja, ubicación 3:2, pie con la marca, `/servicios` con píldoras): la hoja es `position: sticky`; la franja, `@keyframes`; las entradas solo ocultan bajo `.js` y todo el movimiento va dentro de `prefers-reduced-motion: no-preference` | Medio: reescritura completa; la cubren `PaginasPublicasCssTest` y las capturas |
+| `public/css/app.css` | Tokens nuevos en `:root` (system.md 1.7.0): `--font-publica`, `--text-publico-*`, `--space-seccion`, `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`. Los de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella. Refinado (D15): `--focus-ring-inverso: var(--white)` (system.md 1.7.1). Rediseño (D16): los tokens de system.md 1.8.0 (`--text-portada`, `--leading-portada`, `--tracking-portada`, `--text-marquesina`, `--velo-portada`, `--velo-portada-suave`, `--radius-pill`, `--sombra-tarjeta`, `--sombra-tarjeta-alta`, `--icono-tarjeta`, `--ease-out`, `--ease-expo`, `--duration-reveal`, `--stagger` y `--duration-marquesina`) | Bajo: solo añade variables; el resto de la app no las usa |
+| `public/js/publico.js` (nuevo, D16) | Script clásico (~1.5 kB, sin dependencias) cargado con `defer`: pone la clase `js` en `<html>`; con movimiento normal observa `[data-reveal]` (IntersectionObserver, una vez) y pone `is-in`; rellena `[data-live]` con `estadoAhora()` desde `data-horario` y `data-zona` (`Intl.DateTimeFormat`), escribiendo con `textContent`. Expone `estadoAhora()` para su test (D18) | Bajo: sin él la página está completa (CA8) |
 | `public/fonts/lexend/` (nuevo) | `lexend-latin-400-normal.woff2`, `lexend-latin-600-normal.woff2` y `OFL.txt`, copiados de `@fontsource/lexend` 5.3.0 | Bajo |
-| `public/images/` | Se borran `cover-bg.jpg` (1,2 MB, foto de banco) y `logo-rosa.png` (424 kB). Las añadió el merge y nada las usa. `logo-icon1.png` se queda (DS15, posible ícono del sitio) | Bajo |
+| `public/images/` | Se borran `cover-bg.jpg` (1,2 MB, foto de banco) y `logo-rosa.png` (424 kB). Las añadió el merge y nada las usa. `logo-icon1.png` se queda (DS15, posible ícono del sitio). Rediseño (D17): `portada-800.webp` y `portada-1600.webp` (nuevas), la foto libre de la portada | Bajo: la licencia se comprueba y se acredita al elegirla |
 | `docker/nginx/seguridad/marcos.conf` (nuevo) | `map $request_uri $dentissa_frame_src { default "'self'"; "~^/(\?.*)?$" "'self' https://www.google.com"; }` | Medio: un error en la expresión abriría marcos en más rutas; lo cubre un test (TM3) |
 | `docker/nginx/seguridad/comunes.conf` | La política añade `frame-src $dentissa_frame_src;`. El resto queda igual | Medio: conflicto con la 031 (D13) |
 | `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | `include /etc/nginx/snippets/dentissa/marcos.conf;` antes del `server` (contexto `http`) | Bajo: el `Dockerfile` de producción ya copia `seguridad/` entera |
@@ -61,9 +74,11 @@ sus imágenes sin uso. La 038 no tiene migraciones.
 | `tests/Feature/ProxyHttpsTest.php` | Las dos pruebas de redirección usan `/admin` en lugar de `/` (misma intención: la redirección sale en https y sin el puerto ajeno). Tras el `/fix` de `main` (D13) pasan con `/`; con la 038, `/` deja de redirigir y pasan a ser caracterización de 030 CA2 (`/analyze` A8, A20) | Bajo |
 | `tests/Feature/ExampleTest.php` | Espera la vista `publico.inicio` | Bajo |
 | `tests/Feature/CabecerasSeguridadTest.php` | Comprueba `frame-src $dentissa_frame_src` en `comunes.conf`, el `map` de `marcos.conf` y su `include` en las dos configuraciones | Medio: conflicto con la 031 (D13) |
-| `tests/Feature/PaginaInicioTest.php`, `ServiciosPublicosTest.php`, `PaginasPublicasTest.php`, `PaginasPublicasCssTest.php` (nuevos) | Ver Estrategia de pruebas | — |
-| `docs/design/capturar.mjs` | Vistas públicas `publico-inicio` y `publico-servicios` (sin sesión) a 320, 390, 900 y 1440, y comprobaciones de `--medir` para ellas: sin desbordamiento horizontal y toque ≥ 44 px | Bajo |
-| Documentación | `docs/design/system.md` y `system.html` (1.7.0; 1.7.1 con el refinado D15: `--focus-ring-inverso`, «Cabecera pública» y «Pie público»), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `docs/specs/030-despliegue-servidor-propio/spec.md` y `docs/specs/031-endurecer-produccion/spec.md` (Historial, D10), `docs/security.md` (entradas públicas, TM6 aceptado y visita a Google por el mapa; `/analyze` A10, A20), `CHANGELOG.md` en `/release` | Bajo |
+| `tests/Feature/PaginaInicioTest.php`, `ServiciosPublicosTest.php`, `PaginasPublicasTest.php`, `PaginasPublicasCssTest.php` (nuevos) | Ver Estrategia de pruebas. Rediseño (D16): se ajustan los casos de la opción B (scripts, placa y aviso, puertas → tarjetas) y se añaden los de la portada, la franja, la hoja, el pie y el movimiento | Medio: hay que cambiar aserciones existentes sin debilitarlas (cada cambio, a su caso nuevo) |
+| `tests/js/publico.test.mjs` (nuevo, D18) | `node:test` sobre `estadoAhora()` cargado con `vm` | Bajo |
+| `.github/workflows/ai-dd.yml` (D18) | Paso `node --test tests/js/` en el trabajo de tests. Ruta protegida: solo con la aprobación del usuario | Bajo |
+| `docs/design/capturar.mjs` | Vistas públicas `publico-inicio` y `publico-servicios` (sin sesión) a 320, 390, 900 y 1440, y comprobaciones de `--medir` para ellas: sin desbordamiento horizontal y toque ≥ 44 px. Rediseño (D16): `--medir` también con JavaScript desactivado, y la pastilla en una línea a 320 px | Bajo |
+| Documentación | `docs/design/system.md` y `system.html` (1.7.0; 1.7.1 con el refinado D15: `--focus-ring-inverso`, «Cabecera pública» y «Pie público»), `docs/seo.md` (filas de `/` y `/servicios`), objetivo 7 en `docs/roadmap.md`, `AGENTS.md` (dos layouts), `docs/architecture.md` (T090), `docs/specs/001-autenticacion/spec.md` (CA4 reemplazado), `docs/specs/030-despliegue-servidor-propio/spec.md` y `docs/specs/031-endurecer-produccion/spec.md` (Historial, D10), `docs/security.md` (entradas públicas, TM6 aceptado y visita a Google por el mapa; `/analyze` A10, A20), `CHANGELOG.md` en `/release`. Rediseño (D16, D17): `system.md` y `system.html` 1.8.0 (con la foto acreditada en «Imágenes»), `docs/design/anti-cliches.md` y `docs/design/creative-direction.md` («Modo y registro», «Imágenes disponibles»), y `AGENTS.md` («sin JavaScript» → «con `public/js/publico.js`»; ruta protegida, con aprobación en su tarea) | Bajo |
 
 ## Contratos y datos
 
@@ -83,48 +98,67 @@ Ninguna recibe parámetros: los que lleguen en la URL se ignoran. No hay escritu
   acentos).
 - En `/`, solo los nombres de las categorías (CA4). En `/servicios`, todo agrupado (CA6).
 
-### Pantallas y estados (según `design.md`, opción B ronda 2)
+### Pantallas y estados (según `design.md`, ronda 3: opción C con la ubicación de D)
 | Pantalla | Estados | Referencia |
 |---|---|---|
-| Página de inicio | normal · sin servicios activos (sin la sección de servicios) · con sesión (redirige) | `opcion-b.html#inicio-solo038-m`, `#inicio-vacio-m`, `#inicio-d` |
-| `/servicios` | normal · sin servicios activos («Pronto publicaremos nuestros servicios.») · con sesión («Ir a mi panel») | `#servicios-m`, `#servicios-d`, `#servicios-vacio-m` |
+| Página de inicio | normal · sin servicios activos (sin la sección de servicios) · con sesión (redirige) · sin JavaScript (todo visible, sin pastilla) · movimiento reducido (sin entradas, franja quieta) | `opcion-c.html#opcion-c-pagina-320`, `-390`, `-900` y `-1440`; sin servicios, como en `opcion-b.html#inicio-vacio-m` |
+| Pastilla «¿Abierto ahora?» | abierto («Abierto ahora · cierra a las 20:00») · cerrado («Cerrado ahora · abre hoy / mañana / el lunes a las 9:00») · sin JavaScript (no aparece) | `opcion-c-pagina.html` (script común) |
+| `/servicios` | normal · sin servicios activos («Pronto publicaremos nuestros servicios.») · con sesión («Ir a mi panel») | `opcion-b.html#servicios-m`, `#servicios-d`, `#servicios-vacio-m`, con la cabecera, el pie, las píldoras y el título centrado de C |
 | Menú del móvil | cerrado · abierto (`<details open>`) | `#inicio-m`; refinado (D15): icono de hamburguesa sin marco, según `design.md` («Cabecera pública») |
 
 ### Navegación de la 038 (`/analyze` A3)
 - Cabecera y menú del móvil: «Servicios» → `/servicios`, «Ubicación» → `#ubicacion`,
   «Iniciar sesión» (o «Ir a mi panel» con sesión) y, solo en el menú y el pie, «Crear cuenta» →
   `/registro`. «Promociones» y «Trabajos» llegan con la 040 y la 039, que los añaden.
-- Pie: «Servicios», «Crear cuenta» e «Iniciar sesión» (o «Ir a mi panel»), en la columna «Contacto» junto al teléfono (D15).
+- Pie: «Servicios», «Crear cuenta» e «Iniciar sesión» (o «Ir a mi panel»), en la columna «Contacto» junto al teléfono (D15). Debajo, la marca grande a todo el ancho, decorativa (D16).
+- Tarjetas (D16): cada una enlaza a la sección de su categoría en `/servicios` (`/servicios#<id>`).
 - Ningún enlace apunta a una sección que puede no existir: «Servicios» va siempre a `/servicios`
   (que tiene su estado vacío), no a `#servicios`.
 - Test: `PaginasPublicasTest::test_todos_los_enlaces_internos_resuelven`. En `/` y `/servicios`,
   con y sin servicios activos, cada `href="#id"` tiene su `id` en la página y cada ruta interna
   responde 200 o 302.
 
-### Clases de los componentes (`/analyze` A6)
-Las de `design/opcion-b.html`, que T014 usa para comprobar el toque y el foco:
-- cabecera: `.pub-bar`, `.pub-nav-d` (enlaces y `.c-btn`), `.pub-menu` y `.pub-menu summary`;
-- placa: `.lb-placa`, `.lb-placa-texto`, `.lb-aviso`, `.lb-llamar`;
-- «Sobre nosotros»: `.lb-nosotros`;
-- puertas: `.lb-puertas a`; índice de `/servicios`: `.lb-indice a`;
-- listas de `/servicios`: `.lb-servicios`, `.lb-lista`;
-- mapa con placa: `.lb-calle`, `.mapa`, `.lb-placa-dir`, `.nota-mapa`;
-- pie: `.lb-pie`;
-- comunes: `.c-btn`, `.c-btn--primary`, `.c-btn--secondary`, `.c-link`, `.lb-wrap`, `.lb-seccion`, `.lb-cabeza`.
+### Clases de los componentes (`/analyze` A6; rediseño D16)
+Las de `design/opcion-c-pagina.html`, que sustituyen a las de la opción B y que
+`PaginasPublicasCssTest` usa para comprobar el toque y el foco:
+- cabecera: `.pub-cabecera`, `.pub-bar`, `.pub-nav-d` (enlaces y `.c-btn`), `.pub-menu` y
+  `.pub-menu summary`;
+- portada: `.portada`, `.portada-foto`, `.portada-velo`, `.portada-texto`, `.t-portada`,
+  `.portada-lead`, `.estado`, `.estado-ahora`, `.datos`, `.dato-icono`;
+- hoja de «Sobre nosotros»: `.hoja`, `.hoja-capitulo`, `.lb-nosotros`;
+- tarjetas: `.tarjetas`, `.tarjeta`, `.tarjeta .icono`;
+- franja: `.marquesina`, `.marquesina-pista`;
+- ubicación: `.ubicacion-sec`, `.ubicacion`, `.ubicacion-mapa`, `.mapa`, `.ubicacion-datos`,
+  `.ubicacion-sub`, `.nota-mapa`;
+- pie: `.lb-pie`, `.lb-pie-cols`, `.lb-pie-marca`, `.lb-pie-legal`;
+- `/servicios`: `.lb-cabeza-centro`, `.lb-indice a` (píldoras), `.lb-servicios`, `.lb-lista`;
+- comunes: `.c-btn`, `.c-btn--primary`, `.c-btn--secondary`, `.c-btn--claro` (las maquetas dicen
+  `--principal` y `--secundario`; se conservan los nombres del código), `.c-link`, `.lb-wrap`,
+  `.lb-seccion`, `.lb-seccion--blanca`, `.t-h2`;
+- atributos del script: `data-reveal` (`line`, `rise`, `mask`, `scale`), `data-escena` y
+  `data-live`.
 
 Llevan `--touch-min` como alto mínimo los enlaces y botones de `.pub-nav-d`, `.pub-menu summary`,
-los enlaces de `.pub-menu`, `.lb-puertas a`, `.lb-indice a`, `.c-btn` y `.c-link`. Todos usan el
-foco del sistema (`--focus-ring`).
+los enlaces de `.pub-menu`, `.tarjeta`, `.lb-indice a`, `.c-btn` y `.c-link`. Usan el foco del
+sistema (`--focus-ring`), salvo dentro de la cabecera, la portada y el pie, donde usan
+`--focus-ring-inverso`.
 
 ### Accesibilidad medible
-- Un solo `h1` por página: el título de la placa o «Nuestros servicios». En el inicio, el aviso de
-  la puerta, «Sobre nosotros», «Nuestros servicios» y «Encuéntranos fácilmente» son `h2`; en
-  `/servicios`, las categorías son `h2`.
+- Un solo `h1` por página: el titular de la portada o «Nuestros servicios». En el inicio, «Sobre
+  nosotros», «Nuestros servicios», «Encuéntranos fácilmente» y las columnas del pie son `h2`, y el
+  nombre de cada tarjeta es `h3` (D16: sin el aviso de la puerta); en `/servicios`, las categorías
+  son `h2`.
 - `nav` con `aria-label` («Secciones», «Pie», «Categorías»).
 - Toque ≥ 44 px en todo enlace y botón, comprobado con `--medir`.
 - Foco visible con `--focus-ring`; dentro de la cabecera (`--p500`) y del pie (`--p600`), con `--focus-ring-inverso` (blanco, 5.42:1 y 7.00:1; D15).
 - El `<summary>` del menú no tiene texto visible: su nombre es `aria-label="Menú"` y el icono es un SVG `aria-hidden="true"` (D15).
 - Contraste de los pares del refinado: blanco sobre `--p500` (5.42:1) y sobre `--p600` (7.00:1), y `--p600` sobre `--white` en el botón de la cabecera (7.00:1).
+- Rediseño (D16): blanco sobre el velo en el peor caso 6.41:1; «prioridad.» en `--p200` sobre el
+  velo 4.06:1 (texto grande); `--p100` sobre `--p600` en la franja 6.05:1; `--border-control`
+  sobre blanco 3.93:1 (borde de la tarjeta y del botón secundario).
+- La pastilla lleva `aria-live="polite"`; la foto es una `<img alt="">`; el velo, el logo grande
+  de la portada, la marca del pie, los iconos y la franja llevan `aria-hidden="true"`.
+- Las tarjetas son enlaces enteros, con el nombre de la categoría y «N tratamientos» como texto.
 - El `iframe` lleva `title="Mapa de Google con la ubicación de la consulta"`.
 - El logo lleva `role="img"` con su nombre.
 - El teléfono es un enlace `tel:` con el número completo.
@@ -181,12 +215,41 @@ test con categorías y nombres propios del test (no se depende del volcado).
   - `PaginasPublicasTest` (caso del layout): el `summary` sin texto visible, con
     `aria-label="Menú"` y un `svg` con `aria-hidden="true"`; el pie con «Horarios», las dos filas
     del horario, el teléfono `tel:` y los enlaces de la navegación.
+- **Rediseño de la ronda 3** (D16–D18). Sustituye las aserciones de la opción B; cada caso que cambia
+  pasa a su versión nueva, sin perder lo que comprobaba:
+  - `PaginaInicioTest`: el orden de CA1 con la portada (titular, «Agendar mi primera cita», el
+    horario completo y el teléfono `tel:` dentro de la portada), «Sobre nosotros», tarjetas, franja,
+    ubicación y pie, sin la placa ni el aviso; cada tarjeta enlaza a su ancla de `/servicios` y dice
+    «N tratamientos» con el número de servicios activos («1 tratamiento» en singular), sin nombres
+    de servicios ni precios (CA4); la franja es `aria-hidden` y repite el horario de la
+    configuración; `data-horario` y `data-zona` salen de `config/clinica.php`, y el horario en
+    texto coincide con `horario_semanal`;
+  - `PaginasPublicasTest`: `test_ninguna_pagina_publica_carga_scripts` pasa a
+    `test_solo_carga_el_script_publico_con_defer` (un solo `<script>`, con `src="/js/publico.js"` y
+    `defer`, sin código en línea, ≤ 100 kB); `test_el_script_publico_no_usa_innerhtml` (TM1); el
+    peso de `/` ≤ 1 MB cuenta `publico.js` y la foto mayor; `test_la_foto_de_portada_va_acreditada`
+    (existen las dos WebP, la `img` tiene `alt=""` y `srcset`, y `system.md` → «Imágenes» lleva
+    autor, fuente y licencia); `cover-bg.jpg` sigue retirada; el layout con la marca del pie
+    `aria-hidden`;
+  - `PaginasPublicasCssTest`: tokens 1.8.0 = sistema; contraste de los pares nuevos (el velo, la
+    franja y `--border-control`); `--touch-min` en `.tarjeta`; `--focus-ring-inverso` en la
+    portada; `.portada` con `position: sticky` y la hoja por encima; las animaciones y las
+    transiciones solo dentro de `prefers-reduced-motion: no-preference`; el estado oculto de las
+    entradas solo bajo `.js`; ninguna regla `:hover` ni `:focus` con `translate` (nada se
+    levanta);
+  - `tests/js/publico.test.mjs` (`node --test tests/js/`, D18): `estadoAhora()` con instantes
+    fijos en `America/Mexico_City` (lunes 10:00 abierto y cierra a las 20:00; lunes 8:00 abre hoy;
+    lunes 21:00 abre mañana; sábado 15:00 abre el lunes; domingo abre mañana; la medianoche y el
+    cierre exacto) y un instante en UTC que en Lázaro Cárdenas es otro día.
 - **`ProxyHttpsTest`** (ajustado) y **`ExampleTest`** (vista nueva).
 - **En el navegador** (`capturar.mjs --medir`, procedimiento de su cabecera): `publico-inicio` y
   `publico-servicios` a 320, 390, 900 y 1440 sin desbordamiento horizontal y con toque ≥ 44 px
-  (CA9).
+  (CA9). Con el rediseño, también con JavaScript desactivado y con la pastilla en una línea a 320.
 - **Manual** (anotada en su tarea):
-  - capturas contra `opcion-b.html`;
+  - capturas contra `opcion-b.html`; con el rediseño, contra `opcion-c.html` (inicio) y
+    `opcion-b.html` con los cambios de C (`/servicios`), en claro, sin JavaScript y con movimiento
+    reducido, y la tira del scroll (la hoja sube, la franja, las entradas);
+  - la foto elegida, aprobada por el usuario antes de su commit (D17);
   - menú del móvil con el teclado (Tab, Intro, Espacio);
   - consola sin bloqueos de la CSP y el mapa visible en `/` con nginx local (`curl -sI` de `/` y de
     `/servicios` para `frame-src`);
@@ -199,7 +262,7 @@ publica el catálogo y del cambio en la política de contenido.
 
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
-| TM1 | Tampering: código en el nombre, la descripción o la categoría de un servicio (lo escribe el admin) se ejecuta en una página pública (XSS almacenado) | A05:2025 Injection | `publico/inicio`, `publico/servicios` | Siempre la salida escapada de Blade (doble llave); nunca la salida sin escapar (`{!! !!}`) en las vistas públicas | `ServiciosPublicosTest::test_el_texto_del_catalogo_sale_escapado` (y en `/`) · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` |
+| TM1 | Tampering: código en el nombre, la descripción o la categoría de un servicio (lo escribe el admin) se ejecuta en una página pública (XSS almacenado) | A05:2025 Injection | `publico/inicio`, `publico/servicios` | Siempre la salida escapada de Blade (doble llave); nunca la salida sin escapar (`{!! !!}`) en las vistas públicas. `publico.js` escribe solo con `textContent` (D16) | `ServiciosPublicosTest::test_el_texto_del_catalogo_sale_escapado` (y en `/`) · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar`, `test_el_script_publico_no_usa_innerhtml` |
 | TM2 | Information disclosure: precios, duraciones, colores de agenda o servicios inactivos en una página pública | A01:2025 Broken Access Control | `PaginasPublicasController`, `Servicio::porCategoria` | Solo `activo = 1` y solo `nombre`, `descripcion` y `categoria` | `ServiciosPublicosTest::test_solo_activos_sin_precio_ni_duracion`, `PaginaInicioTest::test_solo_categorias_activas_sin_servicios_sueltos` |
 | TM3 | Security misconfiguration: la excepción de `frame-src` se abre en más rutas que `/` o a más orígenes | A02:2025 Security Misconfiguration | `marcos.conf`, `comunes.conf` | `map` sobre `$request_uri` con una sola expresión anclada (`^/(\?.*)?$`) y un solo origen, y valor por defecto `'self'`. `frame-ancestors 'none'` y `X-Frame-Options` no cambian | `CabecerasSeguridadTest::test_solo_la_raiz_admite_el_mapa` (casos de la expresión) · `verificar.sh` en el servidor |
 | TM4 | Information disclosure (privacidad): la visita y la página de origen llegan a Google | A02:2025 Security Misconfiguration | `iframe` del mapa | `loading="lazy"` (solo al acercarse), `referrerpolicy="strict-origin-when-cross-origin"` (solo el dominio) y la nota visible (CA5) | `PaginaInicioTest::test_el_mapa_es_perezoso_y_avisa_de_google` |
@@ -209,21 +272,22 @@ publica el catálogo y del cambio en la política de contenido.
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: `/` sin sesión, página en el orden indicado, «Agendar mi primera cita» al registro, «Iniciar sesión» y crear cuenta visibles (reemplaza 001 CA4) | rutas, controlador, layout, `publico/inicio` | `PaginaInicioTest::test_sin_sesion_muestra_la_pagina_en_orden` · `ExampleTest` · verificación manual: inicio a 320/390/900/1440 contra `opcion-b.html#inicio-solo038-m` y `#inicio-d`, con la cabecera, el menú y el pie refinados de `design.md` (D15) |
+| CA1: `/` sin sesión, página en el orden indicado, «Agendar mi primera cita» al registro, «Iniciar sesión» y crear cuenta visibles (reemplaza 001 CA4) | rutas, controlador, layout, `publico/inicio` | `PaginaInicioTest::test_sin_sesion_muestra_la_pagina_en_orden`, `test_la_portada_lleva_el_horario_y_el_telefono` (D16) · `ExampleTest` · verificación manual: inicio a 320/390/900/1440 contra `opcion-c.html#opcion-c-pagina-320` … `-1440` (D16; antes `opcion-b.html`) |
 | CA2: con sesión, `/` al panel; `/servicios` igual | controlador (`panelDelRol`), layout | `PaginaInicioTest::test_con_sesion_cada_rol_va_a_su_panel` (caracterización: comprobado rompiendo la redirección) · `ServiciosPublicosTest::test_con_sesion_se_ve_igual_y_ofrece_ir_al_panel` |
 | CA3: texto exacto de «Sobre nosotros» | `publico/inicio` | `PaginaInicioTest::test_sobre_nosotros_con_el_texto_aprobado` |
-| CA4: categorías activas sin servicios ni precios, «Ver todos los servicios»; sin activos, sin avance | `Servicio::porCategoria`, `publico/inicio` | `PaginaInicioTest::test_solo_categorias_activas_sin_servicios_sueltos`, `test_sin_servicios_activos_no_hay_avance` |
+| CA4: categorías activas sin servicios ni precios, «Ver todos los servicios»; sin activos, sin avance | `Servicio::porCategoria`, `publico/inicio` | `PaginaInicioTest::test_solo_categorias_activas_sin_servicios_sueltos`, `test_sin_servicios_activos_no_hay_avance`, `test_cada_tarjeta_cuenta_sus_tratamientos` (D16) |
 | CA5: contacto exacto, `tel:`, mapa incrustado de esa dirección, nota de Google, «Cómo llegar» | `config/clinica.php`, `publico/inicio` | `PaginaInicioTest::test_contacto_exacto_con_mapa_y_como_llegar`, `test_el_mapa_es_perezoso_y_avisa_de_google` · verificación manual: el mapa se ve en `/` con nginx local |
 | CA6: `/servicios` activos agrupados, sin precio ni inactivos, volver al inicio; vacío con mensaje | `Servicio::porCategoria`, `publico/servicios` | `ServiciosPublicosTest::test_activos_agrupados_por_categoria_en_orden`, `test_solo_activos_sin_precio_ni_duracion`, `test_sin_servicios_activos_muestra_el_mensaje` · verificación manual: contra `opcion-b.html#servicios-m` y `#servicios-d` |
 | CA7: solo recursos propios y el mapa de Google en `/`; sin bloqueos de CSP; el resto sin marcos externos (amplía 031 CA1 solo en `/`) | `marcos.conf`, `comunes.conf`, configuraciones de nginx, `verificar.sh` | `PaginasPublicasTest::test_sin_recursos_externos_salvo_el_mapa` · `CabecerasSeguridadTest::test_solo_la_raiz_admite_el_mapa` · verificación manual: consola sin bloqueos en `/` y `/servicios`, y `curl -sI` de las dos con nginx local |
-| CA8: sin JavaScript, todo visible y los enlaces funcionan (salvo el mapa) | layout y vistas sin scripts | `PaginasPublicasTest::test_ninguna_pagina_publica_carga_scripts`, `test_el_contenido_va_en_el_html_del_servidor` |
-| CA9: 320–1440 sin desbordamiento, toque ≥ 44, foco visible, menú con teclado, sin animaciones con movimiento reducido | `publico.css`, layout (`<details>`) | `PaginasPublicasCssTest` (toque, cortes, foco con tokens —`--focus-ring-inverso` en la cabecera y el pie, D15—, `summary` sin borde ni fondo, transiciones solo con `prefers-reduced-motion: no-preference`) · `PaginasPublicasTest::test_el_layout_publico_con_y_sin_sesion` (menú con icono y nombre «Menú» sin texto visible; pie con Horarios y Contacto) · `capturar.mjs --medir` (publico-inicio, publico-servicios) · verificación manual: menú con teclado y NVDA |
+| CA8: sin JavaScript, todo visible y los enlaces funcionan (salvo el mapa) | layout y vistas con todo en el HTML; `publico.js` solo añade (D16) | `PaginasPublicasTest::test_solo_carga_el_script_publico_con_defer`, `test_el_contenido_va_en_el_html_del_servidor` · `PaginasPublicasCssTest` (estado oculto de las entradas solo bajo `.js`) · `capturar.mjs --medir` sin JavaScript · verificación manual: capturas sin JavaScript a 320 y 1440 |
+| CA9: 320–1440 sin desbordamiento, toque ≥ 44, foco visible, menú con teclado, sin animaciones con movimiento reducido | `publico.css`, layout (`<details>`) | `PaginasPublicasCssTest` (toque, cortes, foco con tokens —`--focus-ring-inverso` en la cabecera y el pie, D15—, `summary` sin borde ni fondo, transiciones solo con `prefers-reduced-motion: no-preference`; con el rediseño, también la franja y las entradas) · `PaginasPublicasTest::test_el_layout_publico_con_y_sin_sesion` (menú con icono y nombre «Menú» sin texto visible; pie con Horarios y Contacto) · `capturar.mjs --medir` (publico-inicio, publico-servicios) · verificación manual: menú con teclado y NVDA |
 | CA10: título, descripción, canónica, sin `noindex`, distintos entre sí y de `/registro` | layout (`@yield`), vistas | `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`, `test_un_solo_h1` |
 | RNF: WCAG 2.1 AA (contraste, títulos en orden, decorativos ocultos) | `publico.css`, vistas | `PaginasPublicasCssTest::test_contraste_de_los_pares_nuevos` (también blanco sobre `--p500` y `--p600`, D15) · `PaginasPublicasTest::test_un_solo_h1` · verificación manual: NVDA |
-| RNF: indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS (sin contar el JS de terceros del mapa: excepción aceptada, P10) | vistas | `PaginasPublicasTest::test_ninguna_pagina_publica_carga_scripts` · verificación manual: Lighthouse y medición de JS propio, de terceros y total de `/` con nginx local (T042), y en `/review` |
-| RNF: `/` ≤ 1 MB en la primera visita | vistas, fuentes, `publico.css` | `PaginasPublicasTest::test_los_recursos_propios_de_la_raiz_pesan_menos_de_un_mega` |
+| RNF: indexables con Lighthouse SEO ≥ 90 y ≤ 100 kB de JS (sin contar el JS de terceros del mapa: excepción aceptada, P10) | vistas, `publico.js` | `PaginasPublicasTest::test_solo_carga_el_script_publico_con_defer` · verificación manual: Lighthouse y medición de JS propio, de terceros y total de `/` con nginx local (T042), y en `/review` |
+| RNF: `/` ≤ 1 MB en la primera visita | vistas, fuentes, `publico.css`, `publico.js` y la foto (D16, D17) | `PaginasPublicasTest::test_los_recursos_propios_de_la_raiz_pesan_menos_de_un_mega` |
 | RNF: el mapa no se descarga hasta acercarse | `iframe` | `PaginaInicioTest::test_el_mapa_es_perezoso_y_avisa_de_google` · verificación manual: T042 anota si el `iframe` entra en la primera carga a 390 y 1440 px (el navegador carga los perezosos a 1250–2500 px del viewport; si entra, se aplica la excepción de P10) |
-| TM1: XSS almacenado desde el catálogo | `publico/inicio`, `publico/servicios` | `ServiciosPublicosTest::test_el_texto_del_catalogo_sale_escapado` · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` |
+| Diseño M-1 a M-5 (`design.md`, D16) | `publico.css`, `publico.js`, `publico/inicio` | M-1 hoja y M-2 franja: `PaginasPublicasCssTest` (sticky, `@keyframes` con movimiento reducido) · M-3 entradas: `PaginasPublicasCssTest` (solo bajo `.js`) · M-4 respuesta: `PaginasPublicasCssTest` (sin `translate` al pasar) · M-5 «¿Abierto ahora?»: `tests/js/publico.test.mjs` · verificación manual: la tira del scroll a 320 y 1440 contra `.ai/inspect/opcion-c/film-*` |
+| TM1: XSS almacenado desde el catálogo | `publico/inicio`, `publico/servicios`, `publico.js` | `ServiciosPublicosTest::test_el_texto_del_catalogo_sale_escapado` · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar`, `test_el_script_publico_no_usa_innerhtml` |
 | TM2: precios, duraciones o inactivos en público | `Servicio::porCategoria` | `ServiciosPublicosTest::test_solo_activos_sin_precio_ni_duracion` · `PaginaInicioTest::test_solo_categorias_activas_sin_servicios_sueltos` |
 | TM3: la excepción de marcos se abre de más | `marcos.conf`, `comunes.conf` | `CabecerasSeguridadTest::test_solo_la_raiz_admite_el_mapa` |
 | TM4: la visita llega a Google | `iframe` del mapa | `PaginaInicioTest::test_el_mapa_es_perezoso_y_avisa_de_google` |
@@ -247,7 +311,8 @@ auditoría.
 | `/` | sí (decisión del usuario, spec 038) | «Dentissa · Tu sonrisa, nuestra prioridad» | «Clínica dental Dentissa en Lázaro Cárdenas: conoce nuestros servicios, crea tu cuenta y agenda tu cita en línea.» | `https://dentissa.app/` (`rtrim(config('app.url'), '/').'/'`) | no: el sitemap es del objetivo 7, que tendrá que incluirla | — (datos estructurados fuera de alcance) | `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` |
 | `/servicios` | sí | «Servicios · Dentissa» | «Todos los tratamientos de la consulta Dentissa en Lázaro Cárdenas, de la revisión general a la ortodoncia y las prótesis.» | `https://dentissa.app/servicios` | no (objetivo 7) | — | `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` |
 
-- Renderizado: el del proyecto (`ssr`, Blade en el servidor), sin JavaScript.
+- Renderizado: el del proyecto (`ssr`, Blade en el servidor), con todo el contenido en el HTML;
+  `publico.js` solo añade las entradas y la pastilla (D16).
 - Imagen para compartir: ninguna (la vista previa al compartir queda fuera de alcance). Sin `og:*`
   ni `twitter:*` (`docs/seo.md` → Exclusiones).
 - `<html lang="es">`. Sin `theme-color` ni íconos nuevos (los íconos del sitio quedan fuera).
@@ -263,7 +328,8 @@ auditoría.
   2. La rama de la 038 trae `main` antes de las tareas de nginx y `verificar.sh`.
   3. `/release 038` con su versión: v0.11.0, salvo que otra salga antes.
   4. `deploy/desplegar.sh v0.11.0` reconstruye `app` y `web`. La imagen `web` lleva las
-     configuraciones nuevas de nginx, `publico.css` y las fuentes.
+     configuraciones nuevas de nginx, `publico.css`, las fuentes y, con el rediseño, `publico.js`
+     y las fotos de la portada.
   5. Sin migraciones.
 - **Compatibilidad:** sin cambios de datos, así que el despliegue y la vuelta atrás no tocan la base.
 - **Rollback:** `deploy/volver.sh v0.10.0` (sin copia de la base; no hace falta).
@@ -326,7 +392,7 @@ auditoría.
   horario van en `config/clinica.php`, porque los usan el texto, el `tel:`, el mapa y «Cómo
   llegar». No son variables de entorno: son contenido, no configuración del despliegue.
 - **D9 · Sin JavaScript en la 038.** El menú del móvil es `<details>/<summary>` (teclado nativo y
-  sin JS); el mapa es un `iframe` perezoso. El primer script público llega con el carrusel (039).
+  sin JS); el mapa es un `iframe` perezoso. El primer script público llega con el carrusel (039). **Sustituida por D16** (ronda 3, 2026-10-21).
 - **D10 · `ProxyHttpsTest` y `verificar.sh` comprueban la redirección con `/admin`.** Mantienen la
   intención de la 030 (la redirección sale en https, con el host y el puerto propios). `/` ya no
   redirige sin sesión (CA1).
@@ -372,10 +438,55 @@ auditoría.
   aparte para el icono (una petición más) y el carácter «☰» (cambia con la fuente y el lector lo
   anuncia).
 
+- **D16 · Rediseño de la ronda 3** (`/design-spec 038`, `design.md` aprobado en 651e316; decisión del
+  usuario, 2026-10-21: la opción B es «muy básica», seguir la línea de abound). Lo que cambia:
+  - Las dos vistas, `publico.css`, los tokens (system.md 1.8.0) y los tests que asertaban la opción B.
+  - Un solo script propio, `public/js/publico.js` (~1.5 kB, sin dependencias), cargado con `defer`
+    desde el layout en las dos rutas (se guarda en caché y la 039 lo ampliará). No hay script en
+    línea. El script:
+    - pone la clase `js` en `<html>`; sin ella no se oculta nada;
+    - con movimiento normal, pone `is-in` a cada `[data-reveal]` al llegar al 88 % de la ventana;
+    - rellena `[data-live]` con `estadoAhora(horario, zona, fecha)` usando `Intl.DateTimeFormat`, y
+      escribe solo con `textContent`.
+  - El horario estructurado `contacto.horario_semanal` vive junto al texto en `config/clinica.php`;
+    la vista lo pasa al script en `data-horario` (escapado por Blade) y la zona en `data-zona`.
+  - La hoja es CSS (`position: sticky`) y la franja, `@keyframes`; ninguna usa JavaScript.
+  - Los iconos de categoría son un parcial Blade con SVG en línea (`partials/icono-categoria`).
+  - Lo que no cambia: rutas, controlador, consulta, política de marcos (D5), textos de CA3 y CA5.
+
+  Descartados:
+  - calcular el estado en el servidor: el diseño lo fija como cosa viva del navegador (sin
+    JavaScript no hay pastilla), y en una respuesta en caché quedaría viejo;
+  - una librería de animación: dependencia y peso para lo que hacen CSS e IntersectionObserver.
+
+  Sin ADR: la app ya carga scripts propios (`menu.js`, `filtros.js`) y no cambia la arquitectura.
+- **D17 · Foto de la portada** (decisión del usuario, 2026-10-21, `/plan 038 --fix`). Es una foto
+  de un banco abierto con licencia de uso comercial (Unsplash o Pexels) que cumple la descripción de
+  `design.md` → «Imágenes». La elige `/implement` y el usuario la aprueba antes de su commit.
+  - Formato: dos WebP, de 800 y 1600 px de ancho, comprimidas para que `/` quede ≤ 1 MB. Van en una
+    `<img alt="">` con `srcset` y `sizes`, `fetchpriority="high"` y sin `loading="lazy"`, porque es
+    la primera pantalla.
+  - Crédito (autor, fuente, licencia, URL y fecha de la descarga) en `system.md` → «Imágenes» y en
+    el pie de `design.md`.
+  - No es una dependencia de código. La licencia se comprueba en la página de la foto y la
+    comprobación se anota en la tarea.
+  - `cover-bg.jpg` de abound sigue retirada (D11) y solo vive en las maquetas.
+- **D18 · Pruebas del script con `node:test`.** `publico.js` expone `estadoAhora()` en
+  `globalThis.DentissaPublico`, y `tests/js/publico.test.mjs` lo carga con `node:vm`. Usa Node 24,
+  sin dependencia ni `package.json` nuevos. Comprobado con una prueba de concepto el 2026-10-21:
+  función con `Intl` en `America/Mexico_City`, cargada con `vm`, dos casos en verde.
+  - Se ejecuta con `node --test tests/js/` en cada tarea que toque el script y en `/review`.
+  - En la CI, solo si el usuario aprueba el paso en `.github/workflows/ai-dd.yml` (ruta protegida).
+
+  Descartados:
+  - Jest o Vitest: una dependencia nueva;
+  - probarlo solo a mano: la salida depende de la hora, y los casos del sábado y del domingo no se
+    ven en una sesión.
+
 ## Impacto en arquitectura
 Lo actualiza T090 al implementar:
-- **Frontend:** dos layouts (app y público), `publico.css`, fuentes autoalojadas y la excepción de
-  `frame-src` en `/`.
+- **Frontend:** dos layouts (app y público), `publico.css`, `publico.js` (D16), fuentes
+  autoalojadas y la excepción de `frame-src` en `/`.
 - **Módulos:** las páginas públicas (`PaginasPublicasController`).
 - **Integraciones externas:** el mapa de Google incrustado en `/` (sin clave) y el enlace «Cómo
   llegar».
@@ -406,4 +517,21 @@ Lo actualiza T090 al implementar:
   mide en T042. El JavaScript propio sigue en 0 kB.
 - **La 039 relajará invariantes de esta spec**: «ningún `<script>`» y «ningún recurso externo
   salvo el mapa» de `PaginasPublicasTest` (`/analyze` A16). Su plan modifica esos casos en lugar
-  de duplicarlos.
+  de duplicarlos. Con D16 el primero ya es «solo `publico.js` con `defer`», y la 039 amplía ese
+  script en lugar de añadir otro.
+- **Licencia de la foto** (D17). Una foto de banco mal elegida, sin licencia comercial o con
+  personas reconocibles presentadas como el equipo, sería un problema de P5 y de confianza.
+  Mitigación: un banco con licencia comercial explícita, la comprobación anotada en la tarea, el
+  crédito en `system.md` y su test, la aprobación del usuario, y nunca presentarla como el equipo.
+  Se sustituye por una foto real cuando la haya.
+- **El script falla o no carga** (red, error, navegador antiguo). Mitigación: el contenido no
+  depende de él (las entradas solo ocultan bajo `.js`, que pone el propio script al ejecutarse) y
+  `--medir` se pasa también sin JavaScript. Riesgo residual: si el script falla después de poner
+  `.js`, alguna entrada quedaría oculta. Por eso `.js` se pone al final, tras preparar el
+  observador.
+- **El rediseño rompe tests aprobados en `/review`** (r3, 7cebde7). Mitigación: cada caso que cambia
+  se reescribe con su equivalente del diseño nuevo, en la misma tarea que el cambio, y la
+  `/review --rerun` cubre el diff desde 7cebde7.
+- **La hoja con `position: sticky`** falla si un ancestro tiene `overflow` distinto de `visible`.
+  Mitigación: `body.publico` y `.pub-inicio` sin `overflow` (lo comprueba `PaginasPublicasCssTest`)
+  y la tira del scroll en la verificación manual.
