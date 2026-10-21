@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PacientesController;
+use App\Http\Controllers\PaginasPublicasController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\RegisterController;
@@ -26,19 +27,9 @@ Route::post('/registro/contacto', [RegisterController::class, 'contactoStore'])-
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:google')->name('auth.google.callback');
 
-// ── Raíz ────────────────────────────────────────────────────────────────
-Route::get('/', function () {
-    if (auth()->check()) {
-        return match (auth()->user()->rol) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'dentista' => redirect()->route('dentista.dashboard'),
-            'asistente' => redirect()->route('asistente.dashboard'),
-            default => redirect()->route('cliente.dashboard'),
-        };
-    }
-
-    return redirect('/login');
-});
+// ── Páginas públicas (spec 038) ─────────────────────────────────────────
+Route::get('/', [PaginasPublicasController::class, 'inicio'])->name('inicio');
+Route::get('/servicios', [PaginasPublicasController::class, 'servicios'])->name('servicios.publicos');
 
 // ── Admin ───────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
