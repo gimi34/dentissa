@@ -104,6 +104,26 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 - [x] T032 Aplicar el refinado (plan D15): `--focus-ring-inverso` en `:root` de `app.css`; en el layout, el `<summary>` con el SVG de hamburguesa y `aria-label="Menú"` y el pie en tres columnas (logo y frase, Horarios con `config('clinica.contacto.horario')`, Contacto con el teléfono y los enlaces) con el ©; en `publico.css`, la cabecera `--p500`, el logo y los enlaces en blanco, el botón blanco, el `summary` sin borde ni fondo, el pie `--p600` y el foco inverso — `public/css/app.css`, `resources/views/layouts/publico.blade.php`, `public/css/publico.css` — hecho cuando: T018 pasa y T013 y T014 siguen en verde · verificación manual: cabecera, menú abierto y cerrado y pie a 320, 390, 900 y 1440 px contra `design.md` («Cabecera pública» y «Pie público» refinados) — cubre: CA1, CA9 — depende: T018, T023, T024
   - nota: 2026-10-20 — token `--focus-ring-inverso: var(--white)` en `app.css`; layout con el `<summary>` solo con el SVG de hamburguesa (`aria-hidden`, `focusable=false`) y `aria-label="Menú"`, y el pie en tres columnas (logo y frase, «Horarios» con `config('clinica.contacto.horario')`, «Contacto» con el teléfono y los enlaces) y el © tras un filo `--p500`; `publico.css` con la cabecera `--p500`, logo y enlaces en blanco, botón blanco sin borde, `summary` sin borde ni fondo y el pie `--p600`. A21: el foco base pasa a `a:focus-visible`/`summary:focus-visible` (especificidad baja), el inverso en `.pub-cabecera` y `.lb-pie` y `.pub-menu li a:focus-visible` vuelve a `--focus-ring`, que gana por especificidad en el panel blanco. A22: entra en este commit `config/clinica.php` con el horario en pares día → horas (cambio hecho durante T025, archivo extra justificado). T018, T013 y T014 en verde (41 de 42 tests públicos; falta la retirada de T027). Capturas a 320, 390, 900 y 1440 sin desplazamiento horizontal. Verificación manual OK 2026-10-20 (usuario)
 
+### Correcciones de /review (ronda 1)
+- [ ] T060 Incorporar al sistema de diseño la versión 1.7.2: interlineado de las páginas públicas `--leading-publico` (1.5), `--leading-publico-h1` (1.15) y `--leading-publico-h2` (1.25), y la proporción del logo `--logo-ratio` (454 / 135), con su fila de Decisiones (`/review` R1, P9) — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` declara `version: 1.7.2` con los cuatro tokens y sus valores y `python .ai/bin/aidd.py validate` no da errores
+  - nota: añadida por /review: R1
+- [ ] T061 Ampliar `PaginasPublicasCssTest` y `ReglasCss`: los cuatro tokens de T060 en `app.css` = sistema; `literalesPublicos()` detecta `line-height` y `aspect-ratio` con números (control positivo de cada uno y control negativo con `var(--…)`); por debajo de 900 px, `.lb-placa-dir` con `position: relative` (encima del mapa); `.lb-lista dd:empty` con `display: none` — `tests/Feature/PaginasPublicasCssTest.php`, `tests/Feature/Concerns/ReglasCss.php` — hecho cuando: los casos nuevos fallan por la razón esperada, los tests que ya usan el trait siguen en verde y cada patrón tiene su control positivo — cubre: CA5, CA6, CA9 — depende: T060
+  - nota: añadida por /review: R1, R2, R24
+- [ ] T062 Aplicar en `app.css` los tokens de T060 y en `publico.css` usarlos en `body.publico`, `.t-h1`, `.t-h2` y `.logo`, poner `.lb-placa-dir` en `position: relative` por debajo de 900 px, ocultar `.lb-lista dd:empty` y corregir el comentario de cabecera (qué literales quedan: los de `@font-face`, las condiciones de los cortes y las proporciones de rejilla) — `public/css/app.css`, `public/css/publico.css` — hecho cuando: T061 pasa y T013 y T014 siguen en verde · verificación manual: la ubicación a 390 px con el mapa cargado, con la placa de la dirección entera encima del mapa, y `/` a 1440 px sin cambios visibles — cubre: CA5, CA6, CA9 — depende: T061
+  - nota: añadida por /review: R1, R2, R24
+- [ ] T063 Reforzar los tests de contenido: en `PaginaInicioTest`, el horario y el teléfono de CA1 dentro de `.lb-aviso`, y el teléfono, el mapa y «Cómo llegar» de CA5 dentro de `#ubicacion` (R3), y servicios propios del test en los casos que exigen «Nuestros servicios» (R6); en `ServiciosPublicosTest`, precio y duración sobre el texto de `<main>` (R4) y un caso de agrupación sin acentos «Prótesis038» / «Protesis038» (R8); en `PaginasPublicasTest`, la descripción de `/registro` en la comparación cuando exista (R5), sin la aserción `opacity: 0` (R7), recursos externos y peso sobre todas las hojas enlazadas (R13) y `lang` y `viewport` en el test de metadatos (R27) — `tests/Feature/PaginaInicioTest.php`, `tests/Feature/ServiciosPublicosTest.php`, `tests/Feature/PaginasPublicasTest.php` — hecho cuando: los tres archivos pasan y cada aserción reforzada se comprobó rompiendo lo que protege (anotado en la nota) — cubre: CA1, CA5, CA6, CA7, CA10
+  - nota: añadida por /review: R3, R4, R5, R6, R7, R8, R13, R27
+- [ ] T064 Escribir los tests de accesibilidad: el `<details>` del menú dentro de una `nav` con `aria-label="Secciones"` (R18, en `PaginasPublicasTest`); en `/`, el logo de la placa decorativo (`aria-hidden="true"`, sin `role="img"`; R21) y «Cómo llegar» con nombre accesible «Cómo llegar (se abre en una pestaña nueva)» y texto visible «Cómo llegar» (R23, en `PaginaInicioTest`); en `/servicios`, un servicio sin descripción no deja texto en su `<dd>` (`<dd></dd>`, R24, en `ServiciosPublicosTest`) — `tests/Feature/PaginasPublicasTest.php`, `tests/Feature/PaginaInicioTest.php`, `tests/Feature/ServiciosPublicosTest.php` — hecho cuando: los casos nuevos fallan por la razón esperada y el resto sigue en verde — cubre: CA1, CA5, CA6, CA9 — depende: T063
+  - nota: añadida por /review: R18, R21, R23, R24
+- [ ] T065 Aplicar las correcciones de accesibilidad: el `<details>` del menú dentro de `<nav aria-label="Secciones">` en el layout; en `/`, el logo de la placa con `aria-hidden="true"` y sin `role="img"`, y `aria-label="Cómo llegar (se abre en una pestaña nueva)"` en «Cómo llegar»; en `/servicios`, el `<dd>` en una línea sin espacios (`<dd>{{ … }}</dd>`) — `resources/views/layouts/publico.blade.php`, `resources/views/publico/inicio.blade.php`, `resources/views/publico/servicios.blade.php` — hecho cuando: T064 pasa y los tests públicos siguen en verde · verificación manual: `/` y `/servicios` a 390 y 1440 px sin cambios visibles — cubre: CA1, CA5, CA6, CA9 — depende: T062, T064
+  - nota: añadida por /review: R18, R21, R23, R24
+- [ ] T066 Ampliar `CabecerasSeguridadTest`: casos negativos del `map` `/;x`, `/.`, `/%3F` y `/index.php` (R16), y que el bloque interno de `verificar.sh` (red de Docker, sin túnel) compruebe el `frame-src` de `/` (Google) y de `/servicios` (`'self'`) (R14) — `tests/Feature/CabecerasSeguridadTest.php` — hecho cuando: el caso de R14 falla por la razón esperada y los de R16 pasan, comprobados rompiendo la expresión — cubre: CA7
+  - nota: añadida por /review: R14, R16
+- [ ] T067 Añadir al bloque interno de `verificar.sh` las comprobaciones de `frame-src` de `/` y de `/servicios` (curl dentro de `web`, sin seguir redirecciones) — `deploy/verificar.sh` — hecho cuando: T066 pasa y `bash -n deploy/verificar.sh` no da errores — cubre: CA7 — depende: T066
+  - nota: añadida por /review: R14
+- [ ] T068 Verificación final de las correcciones: suite completa, `pint --test` sobre lo tocado, `validate`, `composer audit`, `npm audit`, gitleaks y semgrep, la comprobación «038 páginas públicas» de `capturar.mjs --medir` dos veces y Lighthouse SEO de `/` y `/servicios` — sin archivos — hecho cuando: todo en verde, `--medir` en orden y SEO ≥ 90
+  - nota: añadida por /review: verificación final de R1–R27
+
 ## Integración y documentación
 - [x] T040 Actualizar `docs/seo.md` (filas de `/` y `/servicios`, «Se indexa»: `/registro`, `/` y `/servicios`; `/` deja de redirigir) y el criterio del objetivo 7 en `docs/roadmap.md` (el sitemap tendrá que incluir `/` y `/servicios`) — `docs/seo.md`, `docs/roadmap.md` — hecho cuando: los dos documentos dicen lo del plan (Descubribilidad) y `validate` no da errores — cubre: CA10
   - nota: A17 — la corrección del sitemap en `docs/seo.md` deja de decir «la única ruta indexable» y pasa a `/registro`, `/` y `/servicios`; la regla «sin barra final» aclara que la raíz es `https://dentissa.app/`. La enmienda PATCH de P10 («hoy solo `/registro`») queda en el roadmap
@@ -118,7 +138,7 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
   - nota: 2026-10-20 — `architecture.md`: módulo «Páginas públicas» (`PaginasPublicasController`, `panelDelRol()`, `Servicio::porCategoria()`); Frontend con los dos layouts y `publico.css`; SEO con los metadatos de `/` y `/servicios` desde el layout público; Integraciones externas con Lexend autoalojada y Google Maps (`iframe` perezoso y «Cómo llegar», sin clave de API); Despliegue con `frame-src` desde `marcos.conf`
 - [x] T091 Actualizar `docs/deployment.md` (comprobaciones nuevas de `verificar.sh` y `marcos.conf` en la imagen `web`) y `docs/observability.md` si hace falta (la 038 no añade logs ni eventos)
   - nota: 2026-10-20 — `deployment.md`, «Verificación post-deploy»: la redirección pública se comprueba con `/admin`, y se añaden `/` 200 y el `frame-src` de `/` y `/servicios`; `marcos.conf` llega a la imagen `web` con el `COPY docker/nginx/seguridad/` que ya existía (sin cambios en el Dockerfile ni en variables de entorno). `observability.md` no cambia: la 038 no añade logs, eventos ni métricas
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: 2026-10-20 — los 10 criterios marcados con sus tests en verde (59 tests de la 038, 780 aserciones; suite 397); spec en `implemented` con su fila de Historial y `docs/specs/README.md` actualizado. `validate` sin errores
 
 ## Despliegue (lo ejecuta `/release`)
@@ -133,16 +153,16 @@ Sobre el desglose (el análisis completo está en `plan.md`, contra la constituc
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010, T016, T018 | T022, T023, T025, T027, T032 |
+| CA1 | T010, T016, T018, T063, T064 | T022, T023, T025, T027, T032, T065 |
 | CA2 | T010, T012 | T022, T023 |
 | CA3 | T010 | T025 |
 | CA4 | T010 | T021, T025 |
-| CA5 | T010 | T021, T025, T029 |
-| CA6 | T012 | T021, T022, T026 |
-| CA7 | T013, T015 | T028, T029, T030 |
+| CA5 | T010, T061, T063, T064 | T021, T025, T029, T062, T065 |
+| CA6 | T012, T061, T063, T064 | T021, T022, T026, T062, T065 |
+| CA7 | T013, T015, T063, T066 | T028, T029, T030, T067 |
 | CA8 | T013 | T023, T025, T026 |
-| CA9 | T014, T017, T018 | T020, T024, T031, T032 |
-| CA10 | T013 | T023, T040 |
+| CA9 | T014, T017, T018, T061, T064 | T020, T024, T031, T032, T062, T065 |
+| CA10 | T013, T063 | T023, T040 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
