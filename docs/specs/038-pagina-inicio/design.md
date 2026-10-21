@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: options
 system_version: 1.7.2
 created: 2026-10-20
@@ -237,3 +237,4 @@ común (~1.5 kB) para las entradas y la cosa viva.
 | 2026-10-21 | diseño | Motor creativo de AI-DD 1.16.0 | Ronda 3 con dos composiciones (C firme, D audaz), semilla 371542, inspector y crítica | `/design-spec` 1.16.0 |
 | 2026-10-21 | diseño | Elección | C con la ubicación de D (mapa a la izquierda, 3:2) y el nombre grande en el pie | usuario |
 | 2026-10-21 | supuesto | Licencia de la foto de abound | Desconocida: se confirma con el colaborador o se sustituye antes de `/release` | `inspeccion` · `creatividad.md` §6 |
+| 2026-10-21 | diseño | ¿Se aprueba este documento (ronda 3)? | Aprobado | usuario |
