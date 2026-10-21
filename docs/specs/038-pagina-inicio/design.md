@@ -5,6 +5,7 @@ exploration: options
 system_version: 1.6.0
 created: 2026-10-20
 updated: 2026-10-20
+refinado: 2026-10-20     # /design-spec 038 --fix: cabecera y pie como la landing del colaborador, menú con icono
 ---
 
 # Diseño · 038 Página de inicio pública (y lo que añaden la 039 y la 040)
@@ -130,10 +131,27 @@ Todas en `opcion-b.html`; las anchas se ven a escala y su altura es la del conte
   - **Puerta (enlace de categoría):** alto ≥ `--touch-min`, borde `--border-control`, texto
     `--p600`, fondo `--p100` al pasar el puntero o con foco. En el avance de servicios va sin
     contador; en el índice de `/servicios`, con el número de servicios.
-  - **Cabecera pública:** logo enmascarado en `--p600` (como el menú del móvil, 034) y navegación.
-    Por debajo de 900 px, el menú es un `<details>` («Menú») que se abre y se cierra con el
-    teclado y sin JavaScript. «Iniciar sesión» pasa a «Ir a mi panel» con sesión.
-  - **Pie público:** logo, enlaces y © con filo superior.
+  - **Cabecera pública** (refinada tras la revisión de T025, siguiendo la landing del colaborador):
+    - barra a todo el ancho en `--p500`, con el contenido dentro de `--page-max`;
+    - logo enmascarado en `--white` y enlaces de navegación en `--white` (subrayados al pasar el
+      puntero);
+    - «Iniciar sesión» (o «Ir a mi panel» con sesión) es un botón blanco con texto `--p600`, sin
+      borde;
+    - por debajo de 900 px, el menú es un `<details>` que se abre y se cierra con el teclado y sin
+      JavaScript. Su `<summary>` es solo el icono de hamburguesa (tres rayas en `--white`, de
+      `--icon-md`, `aria-hidden`), sin la palabra «Menú» a la vista, sin borde ni fondo, en una
+      caja de `--touch-min` × `--touch-min` y con `aria-label="Menú"`, como el botón «Menú» de la
+      app (034). El panel abierto sigue blanco, con los enlaces en `--text`;
+    - el foco dentro de la barra usa el anillo `--focus-ring-inverso` (blanco), porque el de
+      `--p600` no se ve sobre `--p500`.
+  - **Pie público** (refinado, como el pie de la landing del colaborador): banda a todo el ancho en
+    `--p600` con el texto en `--white`. En el escritorio, tres columnas: el logo enmascarado en
+    `--white` con la frase «Odontología integral para toda la familia en el centro de Lázaro
+    Cárdenas.»; «Horarios» (el horario de CA5); y «Contacto» (el teléfono como enlace `tel:` y los
+    enlaces Servicios, Crear cuenta e Iniciar sesión, o «Ir a mi panel»). Debajo, el © centrado
+    tras un filo `--border-width` en `--p500`. Por debajo de 900 px, las columnas se apilan. Los
+    títulos de columna son `h2` en `--text-publico` y peso `--weight-bold`; los enlaces, blancos y
+    subrayados, con alto ≥ `--touch-min`, y el foco con `--focus-ring-inverso`.
 - **Exclusivos de las páginas públicas** (no se reutilizan en la app):
   - **Aviso de promoción (040):** fila de lista con filo inferior.
     - A la izquierda va la vigencia corta en `--p600` (decorativa, `aria-hidden`).
@@ -191,6 +209,7 @@ La primera tarea de la 038 los aplica a `system.md` (versión **1.7.0**) y `syst
 | Secundario público = `--p600` | fijo | — | — | `--text-muted` de la app sigue igual que `--text` (DS3); en las páginas públicas el secundario es `--p600` (6.54:1 sobre `--bg`) |
 | Corte propio de las páginas públicas | corte 560px | — | — | Una columna en puertas, índice, mosaico y definiciones; acompaña al corte de 900px del sistema |
 | Componentes «Placa», «Puerta», «Cabecera pública» y «Pie público» | — | — | — | Se reutilizan en `/`, `/servicios` y `/galeria` |
+| `--focus-ring-inverso` (refinado) | fijo | `var(--white)` | — | Anillo de foco sobre la cabecera `--p500` y el pie `--p600`, donde el de `--p600` no se distingue (5.42:1 y 7.00:1). Entra en `system.md` **1.7.1** con la cabecera y el pie refinados |
 | Reglas de uso | — | — | — | Páginas públicas: un momento firma como máximo (el carrusel); promociones sin cintillo, contadores ni colores de oferta; fotos nunca bajo texto |
 | Pantallas e inventario | — | — | — | `/`, `/servicios`, `/galeria`, gestión de la galería y de promociones, con sus capturas al cerrar cada spec |
 
@@ -217,7 +236,7 @@ La primera tarea de la 038 los aplica a `system.md` (versión **1.7.0**) y `syst
 - Botones y enlaces cambian de color en `--duration-fast` y se hunden 1 px al pulsar
   (`translateY`). Con movimiento reducido, solo cambia el color.
 - Puertas e índice: fondo `--p100` con el puntero o con foco. En táctil, sin hover, basta el foco.
-- Menú del móvil: `<details>`, sin animación.
+- Menú del móvil: `<details>` con el icono de hamburguesa, sin animación.
 - Sin entradas al hacer scroll ni transiciones de página.
 
 ## Accesibilidad
@@ -240,6 +259,10 @@ La primera tarea de la 038 los aplica a `system.md` (versión **1.7.0**) y `syst
   | texto sobre `--p100` (zona más difícil) | 18.13:1 |
   | borde de control `--border-control` sobre `--white` | 3.93:1 |
   | borde de placa y foco `--p600` sobre `--bg` | 6.54:1 |
+  | cabecera: blanco (logo, enlaces, icono) sobre `--p500` | 5.42:1 |
+  | cabecera: botón, `--p600` sobre `--white` | 7.00:1 |
+  | anillo `--focus-ring-inverso` (blanco) sobre `--p500` y `--p600` | 5.42:1 · 7.00:1 |
+  | pie: blanco sobre `--p600` | 7.00:1 |
 
   La barra lateral de la app (blanco sobre `#C75078`, 4.33:1) sigue siendo deuda DS1: las
   pantallas de gestión no la cambian.
@@ -288,3 +311,4 @@ La primera tarea de la 038 los aplica a `system.md` (versión **1.7.0**) y `syst
 | 2026-10-20 | supuesto | Índice de `/servicios` en el escritorio | Fijo al desplazarse (`position: sticky`); en el visor va estático para que el marco se lea bien | razonable |
 | 2026-10-20 | supuesto | Casilla de consentimiento sin JavaScript | Siempre visible, con la ayuda «Solo si respondiste «Sí»»; el servidor la exige solo si la respuesta es «Sí» | 039 CA9, CA11 (P10, sin JS) |
 | 2026-10-20 | diseño | ¿Se aprueba este documento? | Aprobado | usuario |
+| 2026-10-20 | refinado | Revisión manual de T025: «no uses la palabra "menú", usa el icono de hamburguesa sin recuadro ni contorno, y sigue un poco la línea de la landing del push de abound» | Menú del móvil con solo el icono de hamburguesa, sin borde ni fondo (nombre accesible «Menú»). De la landing del colaborador se toman la cabecera rosa (`--p500`, logo y enlaces en blanco, botón blanco) y el pie rosa con columnas (`--p600`: logo y frase, Horarios, Contacto, © centrado); su `#D4537E` con texto blanco (3.9:1) no cumple AA y se cambia por `--p500` y `--p600`. Se mantiene la placa de la portada (opción B); no se toman la foto de fondo, las tarjetas con iconos, los botones en píldora ni los fundidos al hacer scroll (anti-clichés y P10). Token nuevo `--focus-ring-inverso` (sistema 1.7.1) | usuario (/design-spec 038 --fix) |
