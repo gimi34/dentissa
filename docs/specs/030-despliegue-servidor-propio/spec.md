@@ -178,3 +178,4 @@ inicio de sesión.
 | 2026-10-19 | Cobertura de riesgos: RS8.c y RS8.d, creadas por la 031 al dividir RS8, declaradas fuera | /implement 031 (T091) |
 | 2026-10-20 | Comportamiento modificado por 031 en v0.10.0 (cabeceras, administración remota por la red privada; CA3 reemplazado en parte por 031 CA8) | /release |
 | 2026-10-20 | CA7 modificado por 031 CA8; la excepción P7 (inicios de sesión fallidos sin evento de auditoría) vence con la spec 021, no con la 020 (031 /analyze A25) | /release |
+| 2026-10-20 | La comprobación de la redirección a https de CA2 pasa de `/` a `/admin` en `ProxyHttpsTest` y en `deploy/verificar.sh`, porque con la 038 `/` es la página de inicio y ya no redirige (038 D10). CA2 no cambia. Rige al liberar la 038 | /implement 038 (T041) |

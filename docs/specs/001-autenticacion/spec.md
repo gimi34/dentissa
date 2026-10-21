@@ -72,3 +72,4 @@ Eventos requeridos en `docs/observability.md`.
 | 2026-10-04 | Comportamiento modificado por 030 en v0.5.0 | /release |
 | 2026-10-20 | Comportamiento modificado por 031 en v0.10.0 (vuelta fallida de Google al login con mensaje) | /release |
 | 2026-10-20 | Corregido por la ficha 2026-10-20-fix-raiz-al-login en v0.10.0 (CA4) | /release |
+| 2026-10-20 | CA4 reemplazado por la 038 CA1: sin sesión, `/` muestra la página de inicio pública (con sesión, cada rol sigue yendo a su panel); el test de CA4 pasa a `ExampleTest::test_el_visitante_sin_sesion_ve_la_pagina_de_inicio` y `PaginaInicioTest`. Rige al liberar la 038 | /implement 038 (T041) |
