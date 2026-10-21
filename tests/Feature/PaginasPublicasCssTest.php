@@ -41,6 +41,7 @@ class PaginasPublicasCssTest extends TestCase
         '--duration-base' => '0.25s',
         '--ease-puerta' => 'cubic-bezier(0.2, 0, 0, 1)',
         '--green-texto' => '#137A5A',
+        '--focus-ring-inverso' => 'var(--white)',
     ];
 
     /** Lo que `system.md` dice de cada token (los fluidos, sus extremos). */
@@ -57,6 +58,7 @@ class PaginasPublicasCssTest extends TestCase
         '--duration-base' => ['0.25s'],
         '--ease-puerta' => ['cubic-bezier(0.2, 0, 0, 1)'],
         '--green-texto' => ['#137A5A'],
+        '--focus-ring-inverso' => ['var(--white)'],
     ];
 
     /** Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). */
@@ -148,6 +150,9 @@ class PaginasPublicasCssTest extends TestCase
             ['--green-texto', '--white', 'Éxito en texto sobre blanco'],
             ['--green-texto', '--bg', 'Éxito en texto sobre el fondo'],
             ['--p600', '--bg', 'Texto secundario público sobre el fondo'],
+            // Refinado D15 (system.md 1.7.1): cabecera --p500 y pie --p600.
+            ['--white', '--p500', 'Logo, enlaces e icono de la cabecera'],
+            ['--white', '--p600', 'Texto y enlaces del pie'],
         ] as [$texto, $fondo, $uso]) {
             $this->assertArrayHasKey($texto, $t, "{$texto} es un token de color.");
             $this->assertGreaterThanOrEqual(4.5, $this->contraste($t[$texto], $t[$fondo]), "{$uso}: AA.");
@@ -163,18 +168,50 @@ class PaginasPublicasCssTest extends TestCase
         }
     }
 
+    /** Selector que se pinta sobre el rosa (cabecera o pie) y no dentro del panel blanco del menú (/analyze A21). */
+    private function sobreElRosa(string $selector): bool
+    {
+        return (str_contains($selector, '.pub-cabecera') || str_contains($selector, '.lb-pie')) && ! str_contains($selector, '.pub-menu li');
+    }
+
     public function test_el_foco_es_el_del_sistema(): void
     {
         $focos = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], ':focus'));
         $this->assertNotEmpty($focos);
         $selectores = [];
         foreach ($focos as [$selector, $cuerpo]) {
-            $this->assertStringContainsString('outline: var(--focus-ring-width) solid var(--focus-ring);', $cuerpo, "{$selector}: anillo del sistema.");
+            $lista = array_map('trim', explode(',', $selector));
+            $rosa = array_map(fn ($s) => $this->sobreElRosa($s), $lista);
+            $this->assertCount(1, array_unique($rosa), "{$selector}: no mezcla selectores sobre el rosa con otros.");
+            // Refinado D15: sobre --p500 y --p600, el anillo inverso; en el resto (también el panel del menú), el del sistema.
+            $anillo = $rosa[0] ? '--focus-ring-inverso' : '--focus-ring';
+            $this->assertStringContainsString("outline: var(--focus-ring-width) solid var({$anillo});", $cuerpo, "{$selector}: anillo {$anillo}.");
             $this->assertStringContainsString('outline-offset: var(--focus-ring-offset);', $cuerpo, "{$selector}: separación del sistema.");
-            $selectores = array_merge($selectores, array_map('trim', explode(',', $selector)));
+            $selectores = array_merge($selectores, $lista);
         }
         $this->assertNotEmpty(array_filter($selectores, fn ($s) => str_ends_with($s, 'a:focus-visible')), 'Los enlaces tienen foco visible.');
         $this->assertNotEmpty(array_filter($selectores, fn ($s) => str_ends_with($s, 'summary:focus-visible')), 'El menú tiene foco visible.');
+        foreach (['.pub-cabecera a:focus-visible', '.pub-cabecera summary:focus-visible', '.lb-pie a:focus-visible'] as $inverso) {
+            $this->assertContains($inverso, $selectores, "{$inverso} lleva el anillo inverso.");
+        }
+        $this->assertContains('.pub-menu li a:focus-visible', $selectores, 'Los enlaces del panel blanco del menú vuelven al anillo del sistema (A21).');
+    }
+
+    public function test_cabecera_y_pie_en_rosa_con_el_menu_sin_marco(): void
+    {
+        // Refinado D15 (system.md 1.7.1), siguiendo la landing del colaborador.
+        $this->assertStringContainsString('background: var(--p500)', $this->declaraciones('.pub-cabecera', self::HOJA), 'Cabecera en --p500.');
+        $this->assertStringContainsString('background: var(--p600)', $this->declaraciones('.lb-pie', self::HOJA), 'Pie en --p600.');
+        foreach (['.pub-cabecera .logo', '.lb-pie .logo'] as $logo) {
+            $this->assertStringContainsString('background: var(--white)', $this->declaraciones($logo, self::HOJA), "{$logo}: logo en blanco.");
+        }
+        $this->assertStringContainsString('color: var(--white)', $this->declaraciones('.pub-nav-d a:not(.c-btn)', self::HOJA), 'Enlaces de la cabecera en blanco.');
+
+        $summary = $this->declaraciones('.pub-menu summary', self::HOJA);
+        $this->assertStringContainsString('border: 0', $summary, 'El icono del menú va sin contorno.');
+        $this->assertStringContainsString('background: none', $summary, 'El icono del menú va sin recuadro.');
+        $this->assertStringContainsString('color: var(--white)', $summary, 'Icono en blanco.');
+        $this->assertStringContainsString('min-width: var(--touch-min)', $summary, 'Caja de toque de 44 × 44.');
     }
 
     public function test_los_cortes_son_900_y_560(): void

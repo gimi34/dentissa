@@ -49,9 +49,13 @@ class PaginasPublicasTest extends TestCase
         'resources/views/publico/servicios.blade.php',
     ];
 
+    /** Host de las peticiones del test (el de `APP_URL` de `phpunit.xml`): también es propio. */
+    private string $hostDePruebas;
+
     protected function setUp(): void
     {
         parent::setUp();
+        $this->hostDePruebas = (string) parse_url(config('app.url'), PHP_URL_HOST);
         // La canónica sale del dominio de producción (/analyze A19).
         config(['app.url' => self::DOMINIO]);
     }
@@ -181,7 +185,9 @@ class PaginasPublicasTest extends TestCase
             return false;
         }
 
-        return parse_url(str_starts_with($url, '//') ? 'https:'.$url : $url, PHP_URL_HOST) !== parse_url(self::DOMINIO, PHP_URL_HOST);
+        $host = parse_url(str_starts_with($url, '//') ? 'https:'.$url : $url, PHP_URL_HOST);
+
+        return ! in_array($host, [parse_url(self::DOMINIO, PHP_URL_HOST), $this->hostDePruebas], true);
     }
 
     public function test_sin_recursos_externos_salvo_el_mapa(): void
@@ -275,7 +281,7 @@ class PaginasPublicasTest extends TestCase
                 $this->assertGreaterThan(0, $xpath->query('//a[@href]')->length, "{$ruta}: tiene enlaces.");
                 foreach ($xpath->query('//a[@href]') as $enlace) {
                     $href = $enlace->getAttribute('href');
-                    if (preg_match('#^(tel:|mailto:)#', $href) || ($this->esExterno($href) && ! str_starts_with($href, self::DOMINIO))) {
+                    if (preg_match('#^(tel:|mailto:)#', $href) || $this->esExterno($href)) {
                         continue;
                     }
                     if (str_starts_with($href, '#')) {
@@ -286,7 +292,7 @@ class PaginasPublicasTest extends TestCase
                     $estado = $this->get(parse_url($href, PHP_URL_PATH) ?: '/')->getStatusCode();
                     $this->assertContains($estado, [200, 302], "{$ruta}: {$href} responde.");
                     if (($ancla = parse_url($href, PHP_URL_FRAGMENT)) !== null) {
-                        $destino = $this->xpath($this->get(parse_url($href, PHP_URL_PATH))->getContent());
+                        $destino = $this->xpath($this->get(parse_url($href, PHP_URL_PATH) ?: '/')->getContent());
                         $this->assertSame(1, $destino->query('//*[@id="'.$ancla.'"]')->length, "{$ruta}: {$href} lleva a un ancla que existe.");
                     }
                 }
@@ -314,6 +320,27 @@ class PaginasPublicasTest extends TestCase
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Servicios"][@href="'.url('/servicios').'"]')->length, 'Navegación de la 038: Servicios → /servicios.');
         $this->assertSame(0, $xpath->query('//a[normalize-space()="Promociones" or normalize-space()="Trabajos"]')->length, 'Sin enlaces de la 039 y la 040.');
         $this->assertSame('publico', $xpath->query('//body')->item(0)->getAttribute('class'));
+
+        // Refinado D15: el menú del móvil es solo el icono de hamburguesa, con nombre y sin texto visible.
+        $summary = $xpath->query('//details[contains(@class, "pub-menu")]/summary')->item(0);
+        $this->assertNotNull($summary);
+        $this->assertSame('', trim($summary->textContent), 'Sin la palabra «Menú» a la vista.');
+        $this->assertSame('Menú', $summary->getAttribute('aria-label'));
+        $this->assertSame(1, $xpath->query('svg[@aria-hidden="true"]', $summary)->length, 'El icono es un SVG oculto al lector.');
+
+        // Refinado D15: pie en columnas con el horario y el contacto.
+        $pie = $xpath->query('//footer')->item(0);
+        $textoPie = preg_replace('/\s+/u', ' ', $pie->textContent);
+        foreach (['Horarios', 'Contacto'] as $titulo) {
+            $this->assertSame(1, $xpath->query('.//h2[normalize-space()="'.$titulo.'"]', $pie)->length, "El pie tiene la columna «{$titulo}».");
+        }
+        foreach (['Lunes a viernes 9:00–20:00', 'Sábados 9:00–14:00', 'Odontología integral para toda la familia en el centro de Lázaro Cárdenas.'] as $texto) {
+            $this->assertStringContainsString($texto, $textoPie);
+        }
+        $this->assertSame(1, $xpath->query('.//a[@href="tel:+527530000000"][contains(normalize-space(), "753 000 0000")]', $pie)->length, 'El teléfono del pie se marca con un toque.');
+        foreach (['Servicios', 'Crear cuenta', 'Iniciar sesión'] as $enlace) {
+            $this->assertSame(1, $xpath->query('.//a[normalize-space()="'.$enlace.'"]', $pie)->length, "El pie enlaza «{$enlace}».");
+        }
 
         $cliente = Usuario::create([
             'nombre' => 'Paciente', 'apellido' => 'De Pruebas', 'email' => 'layout.'.Str::random(8).'@example.test',
