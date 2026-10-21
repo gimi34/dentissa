@@ -106,6 +106,19 @@ main() {
         cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1${ruta}" 2>/dev/null | tr -d '\r')"
         revisar_cabeceras "${ruta} (interna)" "${cabeceras}"
     done
+    # Spec 038 (CA7, TM3; /review R14): solo / admite el mapa de Google, también con el túnel parado.
+    cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1/" 2>/dev/null | tr -d '\r')"
+    if grep -iqE "^content-security-policy:.*frame-src 'self' https://www\.google\.com;" <<< "${cabeceras}"; then
+        ok "/ admite el mapa de Google (interna)"
+    else
+        fallo "/ admite el mapa de Google (interna; frame-src 'self' https://www.google.com)"
+    fi
+    cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1/servicios" 2>/dev/null | tr -d '\r')"
+    if grep -iqE "^content-security-policy:.*frame-src 'self';" <<< "${cabeceras}"; then
+        ok "/servicios no admite marcos externos (interna)"
+    else
+        fallo "/servicios no admite marcos externos (interna; frame-src 'self')"
+    fi
     cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - -H "X-Forwarded-Proto: http" "http://127.0.0.1/login" 2>/dev/null | tr -d '\r')"
     if grep -qE '^HTTP/[0-9.]+ 301' <<< "${cabeceras}" && grep -iqE '^location: https://' <<< "${cabeceras}"; then
         revisar_cabeceras "la 301 de nginx (interna)" "${cabeceras}"
