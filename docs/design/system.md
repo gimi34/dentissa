@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.7.0
+version: 1.7.1
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -58,6 +58,7 @@ que usa `system.html`.
 | `--border` | `#F0DCE4` | `--color-border` | Borde de tarjeta (1px) y de campo (1px medido) | 1.31:1 sobre --white (no cumple como borde de control, DS2) |
 | `--border-control` = `--p400` | `#D4537E` | `--color-border-control` | Borde de control que cumple 3:1; solo en los campos de hora del horario | 3.93:1 sobre --white |
 | `--focus-ring` = `--p600` | `#993556` | `--color-focus` | Anillo `:focus-visible` (2px, desplazamiento 2px) del horario y de la lista de citas | 7.00:1 sobre --white |
+| `--focus-ring-inverso` (spec 038, 1.7.1) | `var(--white)` (`#FFFFFF`) | `--color-focus-inverse` | Anillo `:focus-visible` sobre el rosa: barra de la cabecera pública (`--p500`) y pie público (`--p600`). El panel blanco del menú abierto sigue con `--focus-ring` | 5.42:1 sobre --p500 · 7.00:1 sobre --p600 |
 | `--p300` | `#ED93B1` | — (foco antiguo) | Borde de campo con foco en el código previo y en el acceso | 2.23:1 sobre --white (no cumple, DS2) |
 | `--red` / `--red-bg` | `#A32D2D` / `#FCEBEB` | `--color-danger` | Errores, badge "Cancelada", flash de error, botón "Desactivar" | 6.13:1 sobre --red-bg · 7.07:1 sobre --white |
 | `--green-texto` (spec 038) | `#137A5A` | `--color-success-text` | Éxito en texto en las páginas públicas y su gestión (estado «Se ve ahora», avisos de éxito) | 5.30:1 sobre --white · 4.95:1 sobre --bg |
@@ -264,6 +265,10 @@ Pares de contraste que comprueba el test de la spec 028:
 | Badges | `--p600`/`--p100`, `--blue`/`--blue-bg`, `--amber`/`--amber-bg`, `--text`/`--green-bg`, `--red`/`--red-bg`, `--text-muted`/`--p50` | — | 6.05, 5.70, 5.87, 18.50, 6.13 y 19.59:1 |
 | Borde de campo y de `.btn-danger` (≥ 3:1) | `--border-control` / `--red` | `--white`, `--p50` | 3.93 y 3.67:1 / 7.07 y 6.60:1 |
 | Anillo de foco (≥ 3:1) | `--focus-ring` | `--white` / `--p50` | 7.00:1 / 6.54:1 |
+| Cabecera pública: logo, enlaces e icono del menú (spec 038, 1.7.1) | `--white` | `--p500` | 5.42:1 |
+| Cabecera pública: botón «Iniciar sesión» | `--p600` | `--white` | 7.00:1 |
+| Pie público: texto, logo y enlaces | `--white` | `--p600` | 7.00:1 |
+| Anillo de foco sobre el rosa (≥ 3:1) | `--focus-ring-inverso` | `--p500` / `--p600` | 5.42:1 / 7.00:1 |
 
 ### Día del horario (spec 027)
 - `.horario-dia`: fila de un día, con casilla, nombre, dos campos de hora y la duración.
@@ -414,10 +419,22 @@ tokens ([diseño](../specs/038-pagina-inicio/design.md), opción B «La puerta d
 - **Puerta** (`.lb-puertas a`, `.lb-indice a`): enlace de categoría con alto ≥ `--touch-min`, borde
   `--border-control`, texto `--p600` y fondo `--p100` con el puntero o el foco. En el índice de
   `/servicios` lleva el número de servicios.
-- **Cabecera pública** (`.pub-bar`): logo enmascarado en `--p600` (como el menú del móvil, 034),
-  navegación (`.pub-nav-d`) y «Iniciar sesión» o «Ir a mi panel». Por debajo de 900 px, un `<details>`
-  «Menú» (`.pub-menu`) que se abre y se cierra con el teclado y sin JavaScript.
-- **Pie público** (`.lb-pie`): logo, enlaces y © con filo superior `--border`.
+- **Cabecera pública** (`.pub-cabecera`, `.pub-bar`; refinada en 1.7.1 siguiendo la landing del
+  colaborador): barra a todo el ancho en `--p500` con el contenido dentro de `--page-max`; logo
+  enmascarado en `--white` y navegación (`.pub-nav-d`) en `--white`, subrayada con el puntero;
+  «Iniciar sesión» o «Ir a mi panel» es un botón `--white` con texto `--p600` y sin borde. Por debajo
+  de 900 px, un `<details>` (`.pub-menu`) que se abre y se cierra con el teclado y sin JavaScript: su
+  `<summary>` es solo el icono de hamburguesa (tres rayas en `--white`, de `--icon-md`, SVG
+  `aria-hidden`), sin la palabra «Menú» a la vista, sin borde ni fondo, en una caja de `--touch-min` ×
+  `--touch-min` y con `aria-label="Menú"`, como el botón «Menú» de la app (034). El panel abierto es
+  `--white` con los enlaces en `--text`. El foco sobre la barra usa `--focus-ring-inverso`; dentro
+  del panel, `--focus-ring`.
+- **Pie público** (`.lb-pie`; refinado en 1.7.1): banda a todo el ancho en `--p600` con el texto en
+  `--white`. En el escritorio, tres columnas: logo enmascarado en `--white` con «Odontología integral
+  para toda la familia en el centro de Lázaro Cárdenas.»; «Horarios»; y «Contacto» (teléfono `tel:` y
+  enlaces). Debajo, el © centrado tras un filo `--border-width` en `--p500`. Por debajo de 900 px, las
+  columnas se apilan. Títulos de columna `h2` en `--text-publico` y `--weight-bold`; enlaces blancos y
+  subrayados, con alto ≥ `--touch-min`, y foco `--focus-ring-inverso`.
 
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
@@ -673,5 +690,6 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |
 | 2026-10-13 | diseño | ¿Qué incorpora el sistema para el móvil del personal (spec 034)? | Versión 1.5.0: opción A (tarjeta con etiquetas y filtro en la página); tokens `--tarjeta-etiqueta-w`, `--logo-movil-h`, `--space-detalle`, `--detalle-lateral-w` y los cuatro anchos mínimos del filtro; componentes «Tarjeta de lista en el móvil», «Filtro plegable», «Rejilla de estadísticas» y «Botón de icono»; cambian «Botón Menú» (solo icono), «Marca del menú del móvil» (logo con máscara) y la línea de tiempo de la dentista; `--text-marca` sin uso | usuario (spec 034 y plan 034, D1, D4, D5b, D6, D6b, D10; /analyze A33, A35, A36, A59, A60, A68, A69) |
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
+| 2026-10-20 | diseño | ¿Cómo quedan la cabecera, el menú y el pie públicos tras la revisión de T025 (spec 038)? | Versión 1.7.1: token `--focus-ring-inverso` (`var(--white)`); «Cabecera pública» en `--p500` con logo y enlaces blancos, botón blanco y menú con solo el icono de hamburguesa sin borde; «Pie público» en `--p600` con tres columnas y ©, siguiendo la landing del colaborador (su `#D4537E` con blanco no cumple AA) | usuario (spec 038, /design-spec --fix y plan D15) |
 | 2026-10-20 | diseño | ¿Qué incorpora el sistema para las páginas públicas (spec 038)? | Versión 1.7.0: familia `--font-publica` (Lexend autoalojada), `--text-publico-h1`/`-h2` fluidos, `--text-publico-h3`, `--text-publico`, `--text-publico-small`, `--space-seccion` (fluido), `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`; secundario público `--p600`; corte de 560 px; componentes «Placa», «Puerta», «Cabecera pública» y «Pie público»; reglas de uso de las páginas públicas. Los tokens de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella | usuario (spec 038, design.md y plan D14) |
 | 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |

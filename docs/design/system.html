@@ -176,6 +176,16 @@
                       border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm); color: var(--color-accent-text); text-decoration: none; }
   .opt .p-puertas a:hover, .opt .p-puertas a:focus-visible { background: var(--color-active-bg); }
   .opt .p-ok { color: var(--color-success-text); }
+  /* 1.7.1: cabecera y pie públicos en rosa, menú con solo el icono de hamburguesa. */
+  .opt .p-cabecera { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); max-width: 420px;
+                     padding: var(--space-3) var(--space-5); background: var(--color-link); color: var(--color-on-primary); }
+  .opt .p-cabecera .p-marca { font-weight: var(--weight-bold); }
+  .opt .p-hamburguesa { display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); color: var(--color-on-primary); }
+  .opt .p-hamburguesa svg { width: var(--icon-md); height: var(--icon-md); }
+  .opt .p-hamburguesa:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-inverse); outline-offset: var(--focus-ring-offset); }
+  .opt .p-pie { display: grid; gap: var(--space-3); max-width: 420px; padding: var(--space-5); background: var(--color-accent-text); color: var(--color-on-primary);
+                font-size: var(--text-publico-small); }
+  .opt .p-pie a { color: var(--color-on-primary); }
 </style>
 <style id="componentes-035">
   /* Muestras vivas de la spec 035 (perfil compacto, acciones de la barra y de formulario, campo con foco del sistema), con los tokens de .opt. */
@@ -256,6 +266,7 @@
     --color-border: #F0DCE4;        /* --border */
     --color-border-control: #D4537E;/* --border-control (solo el horario) */
     --color-focus: #993556;         /* --focus-ring */
+    --color-focus-inverse: #FFFFFF; /* --focus-ring-inverso (spec 038, 1.7.1) */
     --color-focus-legacy: #ED93B1;  /* --p300, foco del código previo */
     --color-danger: #A32D2D;        /* --red */
     --color-danger-bg: #FCEBEB;
@@ -385,6 +396,10 @@
       <li class="v-pair" data-fg="--color-success-text" data-bg="--color-surface" data-min="4.5">Éxito en texto sobre blanco (--green-texto, spec 038)</li>
       <li class="v-pair" data-fg="--color-success-text" data-bg="--color-bg" data-min="4.5">Éxito en texto sobre fondo (--green-texto, spec 038)</li>
       <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Botón principal de las páginas públicas (--p500, spec 038)</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Cabecera pública: logo, enlaces e icono del menú en blanco sobre --p500 (spec 038, 1.7.1)</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-accent-text" data-min="4.5">Pie público: blanco sobre --p600 (spec 038, 1.7.1)</li>
+      <li class="v-pair" data-fg="--color-focus-inverse" data-bg="--color-link" data-min="3">Anillo de foco inverso sobre la cabecera --p500 (spec 038, 1.7.1)</li>
+      <li class="v-pair" data-fg="--color-focus-inverse" data-bg="--color-accent-text" data-min="3">Anillo de foco inverso sobre el pie --p600 (spec 038, 1.7.1)</li>
       <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-bg" data-min="3">Borde de la placa (--p600, spec 038)</li>
     </ul>
   </section>
@@ -553,6 +568,15 @@
           <li><a href="#paginas-publicas-038">Endodoncia</a></li><li><a href="#paginas-publicas-038">Estética</a></li>
         </ul>
         <p class="p-ok">Se ve ahora</p>
+        <div class="p-cabecera" aria-label="Cabecera pública a 390 px (1.7.1)">
+          <span class="p-marca">Melissa López N.</span>
+          <a class="p-hamburguesa" href="#paginas-publicas-038" aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+        </div>
+        <div class="p-pie" aria-label="Pie público (1.7.1)">
+          <strong>Horarios</strong><span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</span>
+          <strong>Contacto</strong><a href="#paginas-publicas-038">753 000 0000</a>
+          <span>© 2026 Dentissa</span>
+        </div>
       </div>
     </div></div>
 
