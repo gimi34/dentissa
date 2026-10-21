@@ -28,9 +28,20 @@ body.publico {
     color: var(--text);
 }
 
-/* Foco del sistema en todo lo que se enfoca. */
-body.publico a:focus-visible,
-body.publico summary:focus-visible {
+/* Foco del sistema en todo lo que se enfoca; sobre el rosa de la cabecera y el pie, el anillo inverso
+   (D15). Los enlaces del panel blanco del menú vuelven al del sistema (/analyze A21). */
+a:focus-visible,
+summary:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+.pub-cabecera a:focus-visible,
+.pub-cabecera summary:focus-visible,
+.lb-pie a:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-inverso);
+    outline-offset: var(--focus-ring-offset);
+}
+.pub-menu li a:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
 }
@@ -80,7 +91,11 @@ body.publico summary:focus-visible {
 }
 .logo--grande { width: min(100%, calc(var(--touch-min) * 8)); }
 
-/* Cabecera pública: navegación en el escritorio y menú <details> por debajo de 900 px. */
+/* Cabecera pública: barra --p500 a todo el ancho, como la landing del colaborador (D15); navegación en
+   el escritorio y menú <details> con el icono de hamburguesa por debajo de 900 px. */
+.pub-cabecera { background: var(--p500); color: var(--white); }
+.pub-cabecera .logo { background: var(--white); }
+.pub-cabecera .c-btn--secondary { border-color: transparent; }
 .pub-bar {
     display: flex;
     align-items: center;
@@ -97,26 +112,24 @@ body.publico summary:focus-visible {
     display: inline-flex;
     align-items: center;
     min-height: var(--touch-min);
-    color: var(--text);
+    color: var(--white);
     text-decoration: none;
 }
-.pub-nav-d a:not(.c-btn):hover { color: var(--p600); text-decoration: underline; }
+.pub-nav-d a:not(.c-btn):hover { text-decoration: underline; }
 .pub-menu { display: none; position: relative; }
 .pub-menu summary {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
+    display: inline-grid;
+    place-items: center;
+    min-width: var(--touch-min);
     min-height: var(--touch-min);
-    padding: 0 var(--space-5);
     list-style: none;
-    border: var(--border-width) solid var(--border-control);
-    border-radius: var(--radius-sm);
-    background: var(--white);
-    color: var(--p600);
-    font-weight: var(--weight-bold);
+    border: 0;
+    background: none;
+    color: var(--white);
     cursor: pointer;
 }
 .pub-menu summary::-webkit-details-marker { display: none; }
+.pub-menu summary svg { width: var(--icon-md); height: var(--icon-md); }
 .pub-menu ul {
     position: absolute;
     right: 0;
@@ -245,11 +258,23 @@ body.publico summary:focus-visible {
 .lb-lista dd { color: var(--p600); }
 .lb-volver { margin-top: var(--space-7); }
 
-/* Pie público: logo, enlaces y © con filo superior. */
-.lb-pie { padding: var(--space-8) 0; border-top: var(--border-width) solid var(--border); }
-.lb-pie .lb-wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-6); }
+/* Pie público: banda --p600 en tres columnas y el © centrado, como la landing del colaborador (D15). */
+.lb-pie { padding: var(--space-8) 0 var(--space-6); background: var(--p600); color: var(--white); }
+.lb-pie .logo { background: var(--white); }
+.lb-pie .c-link { color: var(--white); }
+.lb-pie-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-8); }
+.lb-pie-cols > div { display: grid; gap: var(--space-3); align-content: start; }
+.lb-pie h2 { font-size: var(--text-publico); font-weight: var(--weight-bold); }
+.lb-pie dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-6); }
+.lb-pie dd { font-variant-numeric: tabular-nums; }
 .lb-pie nav { display: flex; flex-wrap: wrap; gap: var(--space-5); }
-.lb-pie p { color: var(--p600); font-size: var(--text-publico-small); }
+.lb-pie-legal {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: var(--border-width) solid var(--p500);
+    font-size: var(--text-publico-small);
+    text-align: center;
+}
 
 /* Por debajo de 900 px: menú <details>, placa y bloques en una columna. */
 @media (max-width: 899px) {
@@ -263,6 +288,7 @@ body.publico summary:focus-visible {
     .lb-indice { grid-template-columns: 1fr 1fr; }
     .lb-indice { position: static; }
     .lb-placa-dir { position: static; max-width: none; margin-top: calc(var(--space-8) * -1.5); margin-inline: var(--space-6); }
+    .lb-pie-cols { grid-template-columns: 1fr; gap: var(--space-7); }
 }
 
 /* Por debajo de 560 px: puertas, índice y definiciones en una columna y botones a todo el ancho. */

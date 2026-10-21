@@ -92,6 +92,7 @@
     --duration-base:      0.25s;
     --ease-puerta:        cubic-bezier(0.2, 0, 0, 1);
     --green-texto:        #137A5A;
+    --focus-ring-inverso: var(--white);  /* foco sobre el rosa de la cabecera y el pie públicos (system.md 1.7.1) */
 }
 
 body {

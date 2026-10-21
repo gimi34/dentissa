@@ -30,9 +30,10 @@
                 <a class="c-btn c-btn--secondary" href="{{ route('login') }}">Iniciar sesión</a>
             @endauth
         </nav>
-        {{-- Menú del móvil por debajo de 900 px: <details> funciona con el teclado y sin JavaScript. --}}
+        {{-- Menú del móvil por debajo de 900 px: <details> funciona con el teclado y sin JavaScript.
+             Solo el icono de hamburguesa; el nombre «Menú» lo lleva aria-label (D15). --}}
         <details class="pub-menu">
-            <summary>Menú</summary>
+            <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
             <ul>
                 <li><a href="{{ url('/servicios') }}">Servicios</a></li>
                 <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
@@ -51,19 +52,38 @@
     @yield('contenido')
 </main>
 
+{{-- Pie en tres columnas, como el de la landing del colaborador (D15). --}}
 <footer class="lb-pie">
     <div class="lb-wrap">
-        <span class="logo" role="img" aria-label="Melissa López N. · Odontología integral"></span>
-        <nav aria-label="Pie">
-            <a class="c-link" href="{{ url('/servicios') }}">Servicios</a>
-            @auth
-                <a class="c-link" href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a>
-            @else
-                <a class="c-link" href="{{ route('register') }}">Crear cuenta</a>
-                <a class="c-link" href="{{ route('login') }}">Iniciar sesión</a>
-            @endauth
-        </nav>
-        <p>© {{ now()->year }} Dentissa</p>
+        <div class="lb-pie-cols">
+            <div>
+                <span class="logo" role="img" aria-label="Melissa López N. · Odontología integral"></span>
+                <p>Odontología integral para toda la familia en el centro de Lázaro Cárdenas.</p>
+            </div>
+            <div>
+                <h2>Horarios</h2>
+                <dl>
+                    @foreach (config('clinica.contacto.horario') as $dias => $horas)
+                        <dt>{{ $dias }}</dt>
+                        <dd>{{ $horas }}</dd>
+                    @endforeach
+                </dl>
+            </div>
+            <div>
+                <h2>Contacto</h2>
+                <a class="c-link" href="{{ config('clinica.contacto.telefono_enlace') }}">{{ config('clinica.contacto.telefono') }}</a>
+                <nav aria-label="Pie">
+                    <a class="c-link" href="{{ url('/servicios') }}">Servicios</a>
+                    @auth
+                        <a class="c-link" href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a>
+                    @else
+                        <a class="c-link" href="{{ route('register') }}">Crear cuenta</a>
+                        <a class="c-link" href="{{ route('login') }}">Iniciar sesión</a>
+                    @endauth
+                </nav>
+            </div>
+        </div>
+        <p class="lb-pie-legal">© {{ now()->year }} Dentissa</p>
     </div>
 </footer>
 

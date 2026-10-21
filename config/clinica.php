@@ -31,7 +31,7 @@ return [
         'direccion' => 'Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950',
         'telefono' => '753 000 0000',
         'telefono_enlace' => 'tel:+527530000000',
-        'horario' => ['Lunes a viernes 9:00–20:00', 'Sábados 9:00–14:00'],
+        'horario' => ['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00'],
     ],
 
 ];
