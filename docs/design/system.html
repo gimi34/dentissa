@@ -162,6 +162,21 @@
                     min-width: var(--touch-min); color: var(--color-text-muted); text-decoration: none; }
   .opt .m-migas .m-actual { color: var(--color-text); }
 </style>
+<style id="componentes-038">
+  /* Muestras vivas de la spec 038 (placa, puertas y pie de las páginas públicas), con los tokens de .opt. */
+  @font-face { font-family: "Lexend"; font-weight: 400; font-display: swap; src: url("../../public/fonts/lexend/lexend-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Lexend"; font-weight: 600; font-display: swap; src: url("../../public/fonts/lexend/lexend-latin-600-normal.woff2") format("woff2"); }
+  .opt .p-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); }
+  .opt .p-placa { background: var(--color-surface); border: var(--border-width-strong) solid var(--color-accent-text); border-radius: var(--radius-md);
+                  padding: var(--space-7); display: grid; gap: var(--space-5); max-width: 360px; }
+  .opt .p-placa h3 { margin: 0; font-size: var(--text-publico-h2); }
+  .opt .p-placa .p-aviso { border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-5); color: var(--color-accent-text); font-size: var(--text-publico-small); }
+  .opt .p-puertas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); max-width: 420px; }
+  .opt .p-puertas a { display: flex; align-items: center; min-height: var(--touch-min); padding: 0 var(--space-5); background: var(--color-surface);
+                      border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm); color: var(--color-accent-text); text-decoration: none; }
+  .opt .p-puertas a:hover, .opt .p-puertas a:focus-visible { background: var(--color-active-bg); }
+  .opt .p-ok { color: var(--color-success-text); }
+</style>
 <style id="componentes-035">
   /* Muestras vivas de la spec 035 (perfil compacto, acciones de la barra y de formulario, campo con foco del sistema), con los tokens de .opt. */
   .opt .m-perfil { background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
@@ -253,6 +268,7 @@
     --color-sidebar: #C75078;       /* literal en app.css:63 (DS4) */
     --color-on-sidebar: #F9EEF2;  /* blanco al 90 % sobre la barra lateral */
     --color-nav-label: #EBC2D0;    /* blanco al 65 % (.nav-label) */
+    --color-success-text: #137A5A;  /* --green-texto (spec 038) */
 
     --font-sans: Roboto, system-ui, sans-serif;
     --font-mono: ui-monospace, monospace;
@@ -275,8 +291,13 @@
     --ficha-lateral-w: 320px; --expediente-lateral-w: 300px; --perfil-avatar-w: 64px; --perfil-avatar-movil: 48px; /* spec 035 */
     --perfil-iniciales-text: 22px; --perfil-iniciales-movil: 17px; --perfil-nombre-text: 20px; --perfil-nombre-movil: 16px; --weight-bold: 600; /* spec 035 */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
+    --font-publica: "Lexend", system-ui, sans-serif; /* spec 038 */
+    --text-publico-h1: clamp(30px, calc(30px + 18 * (100vw - 320px) / 1120), 48px); --text-publico-h2: clamp(22px, calc(22px + 8 * (100vw - 320px) / 1120), 30px); /* spec 038 */
+    --text-publico-h3: 19px; --text-publico: 17px; --text-publico-small: 15px; /* spec 038 */
+    --space-seccion: clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px); --measure: 62ch; --page-max: 1180px; /* spec 038 */
+    --ease-puerta: cubic-bezier(0.2, 0, 0, 1); /* spec 038 */
 
-    --duration-fast: 150ms; --duration-base: 150ms;
+    --duration-fast: 150ms; --duration-base: 250ms; /* --duration-base: 0.25s (spec 038) */
     --ease-out: ease;
   }
   .opt[data-motion="reduced"] { --duration-fast: 0ms; --duration-base: 0ms; }
@@ -360,6 +381,11 @@
       <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde de «Filtros» y de los campos del filtro de citas, en los dos modos (spec 034)</li>
       <li class="v-pair" data-fg="--color-focus" data-bg="--color-surface" data-min="3">Foco del filtro, de las tarjetas y del botón de icono (spec 034)</li>
       <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="3">Logo del menú del móvil (máscara en --p600, spec 034)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-bg" data-min="4.5">Texto secundario de las páginas públicas (--p600, spec 038)</li>
+      <li class="v-pair" data-fg="--color-success-text" data-bg="--color-surface" data-min="4.5">Éxito en texto sobre blanco (--green-texto, spec 038)</li>
+      <li class="v-pair" data-fg="--color-success-text" data-bg="--color-bg" data-min="4.5">Éxito en texto sobre fondo (--green-texto, spec 038)</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Botón principal de las páginas públicas (--p500, spec 038)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-bg" data-min="3">Borde de la placa (--p600, spec 038)</li>
     </ul>
   </section>
 
@@ -507,6 +533,26 @@
           <button type="button" class="m-menu-btn m-solo-icono" aria-label="Menú" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
           <span class="m-logo" role="img" aria-label="Melissa López N."></span>
         </div>
+      </div>
+    </div></div>
+
+    <h3 id="paginas-publicas-038">Placa, puertas y pie de las páginas públicas (spec 038)</h3>
+    <p class="v-note">Muestras vivas, no capturas: la composición elegida de la spec 038
+      (<a href="../specs/038-pagina-inicio/design.md">diseño</a>, opción B «La puerta de la consulta»;
+      <a href="../specs/038-pagina-inicio/design/opcion-b.html">composición</a>), con Lexend y los tokens de
+      <code>app.css</code>. Las capturas de <code>/</code> y <code>/servicios</code> llegan en T031.</p>
+    <div class="v-stage"><div class="opt" style="padding:24px">
+      <div class="p-publico">
+        <div class="p-placa" aria-label="Placa de la consulta">
+          <h3>Tu sonrisa, nuestra prioridad.</h3>
+          <p class="t-body" style="font-size:inherit;margin:0">Agendar mi primera cita · Llamar al 753 000 0000</p>
+          <p class="p-aviso">Aviso de la puerta: lunes a viernes 9:00–20:00 · sábados 9:00–14:00</p>
+        </div>
+        <ul class="p-puertas" aria-label="Puertas de categorías">
+          <li><a href="#paginas-publicas-038">Cirugía</a></li><li><a href="#paginas-publicas-038">Diagnóstico</a></li>
+          <li><a href="#paginas-publicas-038">Endodoncia</a></li><li><a href="#paginas-publicas-038">Estética</a></li>
+        </ul>
+        <p class="p-ok">Se ve ahora</p>
       </div>
     </div></div>
 

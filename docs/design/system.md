@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.6.0
+version: 1.7.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-10-16
+updated: 2026-10-20
 ---
 
 # Sistema de diseño de Dentissa
@@ -60,6 +60,7 @@ que usa `system.html`.
 | `--focus-ring` = `--p600` | `#993556` | `--color-focus` | Anillo `:focus-visible` (2px, desplazamiento 2px) del horario y de la lista de citas | 7.00:1 sobre --white |
 | `--p300` | `#ED93B1` | — (foco antiguo) | Borde de campo con foco en el código previo y en el acceso | 2.23:1 sobre --white (no cumple, DS2) |
 | `--red` / `--red-bg` | `#A32D2D` / `#FCEBEB` | `--color-danger` | Errores, badge "Cancelada", flash de error, botón "Desactivar" | 6.13:1 sobre --red-bg · 7.07:1 sobre --white |
+| `--green-texto` (spec 038) | `#137A5A` | `--color-success-text` | Éxito en texto en las páginas públicas y su gestión (estado «Se ve ahora», avisos de éxito) | 5.30:1 sobre --white · 4.95:1 sobre --bg |
 | `--green` / `--green-bg` | `#1D9E75` / `#E1F5EE` | `--color-success` | Badge "Completada", flash de éxito, cifra "Completadas" | 2.98:1 sobre --green-bg · 3.39:1 sobre --white (no cumple, DS1) |
 | `--amber` / `--amber-bg` | `#854F0B` / `#FAEEDA` | `--color-warning` | Badge "En curso", avisos | 5.87:1 sobre --amber-bg |
 | `--blue` / `--blue-bg` | `#185FA5` / `#E6F1FB` | `--color-info` | Badge "Confirmada" | 5.70:1 sobre --blue-bg |
@@ -82,6 +83,14 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 | `--weight-bold` | — | 600 | Iniciales del perfil del paciente (spec 035; el valor de hoy) |
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
+
+Páginas públicas (spec 038; [diseño](../specs/038-pagina-inicio/design.md)): familia `--font-publica`
+(`"Lexend", system-ui, sans-serif`), con Lexend 400 y 600 autoalojada en `public/fonts/lexend/`
+(woff2 latino de `@fontsource/lexend` 5.3.0, licencia OFL-1.1) y declarada con `@font-face` en
+`public/css/publico.css`. Tamaños: `--text-publico-h1` (fluido de 30px a 320 px a 48px a 1440 px),
+`--text-publico-h2` (fluido de 22px a 30px), `--text-publico-h3` (19px), `--text-publico` (17px) y
+`--text-publico-small` (15px). La app de gestión sigue en Roboto (DS9 no cambia). En las páginas
+públicas el texto secundario es `--p600` (6.54:1 sobre `--bg`); `--text-muted` de la app no cambia (DS3).
 
 Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
 `--text-meta` (13px, migas de pan) y `--text-marca` (16px; sin uso desde la spec 034, que cambia la marca de
@@ -156,6 +165,13 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - `--campo-fecha-max` (220px): ancho máximo de hoy de la fecha sugerida del alta de expediente en el
     escritorio (`.campo-fecha`); en el móvil, sin máximo (/review 035 R14);
   - `--weight-bold` (600, en la tabla de tipografía).
+- **Spec 038 (páginas públicas):**
+  - `--space-seccion`: aire entre secciones, fluido de 40px (320 px) a 96px (1440 px);
+  - `--measure` (62ch): ancho de lectura;
+  - `--page-max` (1180px): ancho máximo del contenido público;
+  - corte propio de las páginas públicas a **560 px** (`@media (max-width: 559px)`): puertas, índice y
+    definiciones en una columna y botones a todo el ancho. Acompaña al de 900 px y, como él, es el único
+    literal admitido, solo en la condición.
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -388,6 +404,21 @@ con los botones a partes iguales y el texto centrado. Sin `:has()`, queda a la d
 `.acciones-formulario` («Cancelar», «Guardar…»): a la derecha en el escritorio, con hueco
 `--space-4`; por debajo de 900 px, botones del mismo ancho con el texto y el icono centrados.
 
+### Páginas públicas (spec 038)
+Componentes de `/` y `/servicios` (y de `/galeria` con la 039), en `public/css/publico.css`, solo con
+tokens ([diseño](../specs/038-pagina-inicio/design.md), opción B «La puerta de la consulta»):
+- **Placa** (`.lb-placa`, también `.lb-placa-dir`): superficie `--white`, borde `--border-width-strong`
+  en `--p600`, `--radius` y relleno `--space-8` (`--space-7` por debajo de 900 px). Es la placa de la
+  consulta en la portada (logo, título, «Agendar mi primera cita» y el aviso de la puerta con horario y
+  «Llamar») y la placa de la dirección sobre el mapa.
+- **Puerta** (`.lb-puertas a`, `.lb-indice a`): enlace de categoría con alto ≥ `--touch-min`, borde
+  `--border-control`, texto `--p600` y fondo `--p100` con el puntero o el foco. En el índice de
+  `/servicios` lleva el número de servicios.
+- **Cabecera pública** (`.pub-bar`): logo enmascarado en `--p600` (como el menú del móvil, 034),
+  navegación (`.pub-nav-d`) y «Iniciar sesión» o «Ir a mi panel». Por debajo de 900 px, un `<details>`
+  «Menú» (`.pub-menu`) que se abre y se cierra con el teclado y sin JavaScript.
+- **Pie público** (`.lb-pie`): logo, enlaces y © con filo superior `--border`.
+
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
 - agendada → pink (`--p600` sobre `--p100`, 6.05:1);
@@ -428,6 +459,8 @@ emojis (🕐, 👨‍⚕️, 💡) (DS14).
 | Token | Valor | Uso |
 |---|---|---|
 | `--duration-fast` | `0.15s` | La duración que ya usan las transiciones de `app.css`; con token, la transición del menú del móvil (spec 033) |
+| `--duration-base` (spec 038) | `0.25s` | Transiciones de las páginas públicas |
+| `--ease-puerta` (spec 038) | `cubic-bezier(0.2, 0, 0, 1)` | Curva sin rebote del territorio de las páginas públicas |
 | (sin token) | `all 0.15s` | Hover de botones, menú y accesos rápidos (`translateY(-1px)` en `.quick-action`) |
 | (sin token) | animaciones `fadeUp` y `modalIn` | Entrada del acceso y del registro, y diálogos |
 
@@ -457,6 +490,8 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Nuevo y editar paciente (spec 035) | `system.html#pacientes-create-admin-390` · `capturas/pacientes-create-admin-320.png` | `system.html#pacientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, foco del sistema, acciones de formulario |
 | Expedientes (spec 035) | `system.html#expedientes-index-dentista-390` · `capturas/expedientes-index-dentista-320.png` | `system.html#expedientes-index-dentista-1440` | buscador con etiqueta, tabla (tarjetas en el móvil), paginación |
 | Expediente (spec 035) | `system.html#expedientes-show-admin-390` · `capturas/expedientes-show-admin-320.png` | `system.html#expedientes-show-admin-1440` | migas, cabecera, avisos de alergias y medicamentos, formulario con etiquetas, próxima visita, información (ficha en una columna) |
+| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública, placa, «Sobre nosotros», puertas de categorías, mapa con placa, pie |
+| Servicios (`/servicios`, spec 038) | capturas en T031 | capturas en T031 | cabecera pública, índice de puertas, listas por categoría, pie |
 | Nuevo expediente (spec 035) | `system.html#expedientes-create-admin-390` · `capturas/expedientes-create-admin-320.png` | `system.html#expedientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, acciones de formulario |
 
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
@@ -589,6 +624,9 @@ Estados: `capturada` · `sin captura (motivo)` · `no accesible (motivo)`.
 - Pantallas nuevas o modificadas: solo tokens de este documento, sin valores literales de color,
   tamaño ni espaciado. Si falta un valor, se añade aquí primero. El código anterior no bloquea
   (regla de "Código previo"; constitución, P9).
+- Páginas públicas (spec 038): un momento firma como máximo por página (el carrusel de la 039); las
+  promociones (040) sin cintillo, contadores ni colores de oferta; ninguna foto bajo texto; sin scripts
+  propios salvo el del carrusel.
 
 ## Deuda de diseño
 
@@ -635,4 +673,5 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |
 | 2026-10-13 | diseño | ¿Qué incorpora el sistema para el móvil del personal (spec 034)? | Versión 1.5.0: opción A (tarjeta con etiquetas y filtro en la página); tokens `--tarjeta-etiqueta-w`, `--logo-movil-h`, `--space-detalle`, `--detalle-lateral-w` y los cuatro anchos mínimos del filtro; componentes «Tarjeta de lista en el móvil», «Filtro plegable», «Rejilla de estadísticas» y «Botón de icono»; cambian «Botón Menú» (solo icono), «Marca del menú del móvil» (logo con máscara) y la línea de tiempo de la dentista; `--text-marca` sin uso | usuario (spec 034 y plan 034, D1, D4, D5b, D6, D6b, D10; /analyze A33, A35, A36, A59, A60, A68, A69) |
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
+| 2026-10-20 | diseño | ¿Qué incorpora el sistema para las páginas públicas (spec 038)? | Versión 1.7.0: familia `--font-publica` (Lexend autoalojada), `--text-publico-h1`/`-h2` fluidos, `--text-publico-h3`, `--text-publico`, `--text-publico-small`, `--space-seccion` (fluido), `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`; secundario público `--p600`; corte de 560 px; componentes «Placa», «Puerta», «Cabecera pública» y «Pie público»; reglas de uso de las páginas públicas. Los tokens de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella | usuario (spec 038, design.md y plan D14) |
 | 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |
