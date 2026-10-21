@@ -42,6 +42,11 @@ class PaginasPublicasCssTest extends TestCase
         '--ease-puerta' => 'cubic-bezier(0.2, 0, 0, 1)',
         '--green-texto' => '#137A5A',
         '--focus-ring-inverso' => 'var(--white)',
+        // system.md 1.7.2 (/review R1).
+        '--leading-publico' => '1.5',
+        '--leading-publico-h1' => '1.15',
+        '--leading-publico-h2' => '1.25',
+        '--logo-ratio' => '454 / 135',
     ];
 
     /** Lo que `system.md` dice de cada token (los fluidos, sus extremos). */
@@ -59,6 +64,10 @@ class PaginasPublicasCssTest extends TestCase
         '--ease-puerta' => ['cubic-bezier(0.2, 0, 0, 1)'],
         '--green-texto' => ['#137A5A'],
         '--focus-ring-inverso' => ['var(--white)'],
+        '--leading-publico' => ['1.5'],
+        '--leading-publico-h1' => ['1.15'],
+        '--leading-publico-h2' => ['1.25'],
+        '--logo-ratio' => ['454 / 135'],
     ];
 
     /** Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). */
@@ -227,6 +236,33 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertContains('@media (max-width: 899px)', $condiciones, 'Corte del menú y la placa.');
         $this->assertContains('@media (max-width: 559px)', $condiciones, 'Corte de puertas, índice y botones.');
         $this->assertSame([], array_values(array_diff($condiciones, ['@media (max-width: 899px)', '@media (max-width: 559px)', self::SIN_MOVIMIENTO])), 'Sin otros cortes.');
+    }
+
+    public function test_interlineado_y_proporciones_van_con_token(): void
+    {
+        // /review R1 (P9): control positivo y negativo de los patrones nuevos de literalesPublicos().
+        $this->assertSame(['line-height: 1.5', 'aspect-ratio: 454 / 135'], array_map('trim', $this->literalesPublicos('line-height: 1.5; aspect-ratio: 454 / 135;')));
+        $this->assertSame([], $this->literalesPublicos('line-height: var(--leading-publico); aspect-ratio: var(--logo-ratio);'));
+
+        $this->assertStringContainsString('line-height: var(--leading-publico)', $this->declaraciones('body.publico', self::HOJA));
+        $this->assertStringContainsString('line-height: var(--leading-publico-h1)', $this->declaraciones('.t-h1', self::HOJA));
+        $this->assertStringContainsString('line-height: var(--leading-publico-h2)', $this->declaraciones('.t-h2', self::HOJA));
+        $this->assertStringContainsString('aspect-ratio: var(--logo-ratio)', $this->declaraciones('.logo', self::HOJA));
+    }
+
+    public function test_la_placa_de_la_direccion_queda_encima_del_mapa_en_el_movil(): void
+    {
+        // /review R2: por debajo de 900 px la placa deja de ser absoluta y debe pintarse sobre el iframe.
+        $movil = array_filter($this->reglasCss(self::HOJA), fn ($r) => in_array('@media (max-width: 899px)', $r[2], true)
+            && in_array('.lb-placa-dir', array_map('trim', explode(',', $r[0])), true));
+        $this->assertNotEmpty($movil, 'Hay una regla de .lb-placa-dir para el móvil.');
+        $this->assertStringContainsString('position: relative', implode("\n", array_column($movil, 1)), 'La placa posicionada se pinta encima del mapa.');
+    }
+
+    public function test_una_descripcion_vacia_no_deja_hueco(): void
+    {
+        // /review R24: un servicio sin descripción no muestra un <dd> vacío.
+        $this->assertStringContainsString('display: none', $this->declaraciones('.lb-lista dd:empty', self::HOJA));
     }
 
     public function test_las_transiciones_solo_corren_sin_movimiento_reducido(): void
