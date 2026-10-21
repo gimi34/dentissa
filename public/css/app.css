@@ -93,6 +93,10 @@
     --ease-puerta:        cubic-bezier(0.2, 0, 0, 1);
     --green-texto:        #137A5A;
     --focus-ring-inverso: var(--white);  /* foco sobre el rosa de la cabecera y el pie públicos (system.md 1.7.1) */
+    --leading-publico:    1.5;   /* interlineado público (system.md 1.7.2) */
+    --leading-publico-h1: 1.15;
+    --leading-publico-h2: 1.25;
+    --logo-ratio:         454 / 135;  /* proporción de public/images/logo-icon.png */
 }
 
 body {

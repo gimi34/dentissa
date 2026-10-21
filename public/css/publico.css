@@ -1,6 +1,7 @@
-/* Páginas públicas (spec 038; system.md 1.7.0; diseño en docs/specs/038-pagina-inicio/design.md).
-   Se carga después de app.css, que pone los tokens de :root. Solo tokens: los únicos literales son
-   los de @font-face y las condiciones de los cortes de 900 y 560 px. */
+/* Páginas públicas (spec 038; system.md 1.7.2; diseño en docs/specs/038-pagina-inicio/design.md).
+   Se carga después de app.css, que pone los tokens de :root. Colores, tipografía, espacios, radios y
+   duraciones salen de tokens; los únicos literales son los de @font-face, las condiciones de los
+   cortes de 900 y 560 px y las proporciones de rejilla (fr) y de capas (z-index). */
 
 /* Lexend autoalojada (OFL-1.1, public/fonts/lexend/OFL.txt): sin servicios externos de fuentes. */
 @font-face {
@@ -23,7 +24,7 @@ body.publico {
     display: block;
     font-family: var(--font-publica);
     font-size: var(--text-publico);
-    line-height: 1.5;
+    line-height: var(--leading-publico);
     background: var(--bg);
     color: var(--text);
 }
@@ -47,8 +48,8 @@ summary:focus-visible {
 }
 
 /* Tipografía */
-.t-h1 { font-size: var(--text-publico-h1); line-height: 1.15; font-weight: var(--weight-bold); }
-.t-h2 { font-size: var(--text-publico-h2); line-height: 1.25; font-weight: var(--weight-bold); }
+.t-h1 { font-size: var(--text-publico-h1); line-height: var(--leading-publico-h1); font-weight: var(--weight-bold); }
+.t-h2 { font-size: var(--text-publico-h2); line-height: var(--leading-publico-h2); font-weight: var(--weight-bold); }
 .t-body { max-width: var(--measure); }
 
 /* Botones y enlaces */
@@ -84,7 +85,7 @@ summary:focus-visible {
 .logo {
     display: block;
     width: calc(var(--touch-min) * 4);
-    aspect-ratio: 454 / 135;
+    aspect-ratio: var(--logo-ratio);
     background: var(--p600);
     -webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat;
     mask: url("../images/logo-icon.png") left center / contain no-repeat;
@@ -256,6 +257,8 @@ summary:focus-visible {
 .lb-lista dd { padding: var(--space-4) 0; border-bottom: var(--border-width) solid var(--border); }
 .lb-lista dt { padding-right: var(--space-6); font-weight: var(--weight-strong); }
 .lb-lista dd { color: var(--p600); }
+/* Un servicio sin descripción no deja una fila vacía (/review R24). */
+.lb-lista dd:empty { display: none; }
 .lb-volver { margin-top: var(--space-7); }
 
 /* Pie público: banda --p600 en tres columnas y el © centrado, como la landing del colaborador (D15). */
@@ -287,7 +290,8 @@ summary:focus-visible {
     .lb-puertas,
     .lb-indice { grid-template-columns: 1fr 1fr; }
     .lb-indice { position: static; }
-    .lb-placa-dir { position: static; max-width: none; margin-top: calc(var(--space-8) * -1.5); margin-inline: var(--space-6); }
+    /* Posicionada para pintarse sobre el iframe del mapa, al que se superpone (/review R2). */
+    .lb-placa-dir { position: relative; left: auto; bottom: auto; max-width: none; margin-top: calc(var(--space-8) * -1.5); margin-inline: var(--space-6); }
     .lb-pie-cols { grid-template-columns: 1fr; gap: var(--space-7); }
 }
 
