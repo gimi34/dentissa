@@ -285,7 +285,8 @@ Recuento de la spec 024 antes de actualizar (T010, 2026-09-29): `composer audit`
 bajas ajenas a RS16 que cubre la excepción EX1. `npm audit` reporta 2 críticas, 6 altas y 1
 moderada. `rolldown` queda fijado en 1.2.9 con `overrides` en `package.json` hasta que una versión
 más reciente cumpla los 7 días de antigüedad; entonces una actualización futura puede retirar la
-fijación.
+fijación. El 2026-10-20 (`docs/changes/2026-10-20-chore-vite-8.3.4.md`) la fijación pasa a
+`rolldown` 1.2.13 y se añade `postcss` 8.5.30, las más recientes con 7 días que pide `vite` 8.3.4.
 
 Correcciones:
 - RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: mitigada (v0.1.0)
