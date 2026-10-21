@@ -16,4 +16,22 @@ return [
 
     'zona_horaria' => env('CLINICA_ZONA_HORARIA', 'America/Mexico_City'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contacto de la consulta
+    |--------------------------------------------------------------------------
+    |
+    | Lo que muestra la página de inicio pública (spec 038, CA5): la dirección
+    | (también la del mapa y la de «Cómo llegar»), el teléfono en texto y como
+    | enlace `tel:`, y el horario. Son datos ficticios del proyecto académico.
+    |
+    */
+
+    'contacto' => [
+        'direccion' => 'Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950',
+        'telefono' => '753 000 0000',
+        'telefono_enlace' => 'tel:+527530000000',
+        'horario' => ['Lunes a viernes 9:00–20:00', 'Sábados 9:00–14:00'],
+    ],
+
 ];
