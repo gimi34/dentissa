@@ -94,12 +94,20 @@ class PaginasPublicasTest extends TestCase
             $this->assertSame($esperado['canonica'], $canonicas->item(0)->getAttribute('href'), "{$ruta}: canónica absoluta en el dominio de producción, aunque llegue otro host.");
             $this->assertStringNotContainsString('noindex', strtolower((string) $this->meta($xpath, 'robots')), "{$ruta}: indexable.");
             $this->assertStringNotContainsStringIgnoringCase('noindex', (string) $respuesta->headers->get('X-Robots-Tag'));
+            // /review R27: idioma y viewport en cada ruta indexable.
+            $this->assertSame('es', $xpath->query('//html')->item(0)?->getAttribute('lang'), "{$ruta}: lang=\"es\".");
+            $this->assertStringContainsString('width=device-width', (string) $this->meta($xpath, 'viewport'), "{$ruta}: viewport.");
 
             $vistos[] = $esperado['titulo'];
             $vistos[] = $esperado['descripcion'];
         }
 
         $this->assertNotContains(trim($registro->query('//title')->item(0)?->textContent ?? ''), $vistos, 'Distintos de /registro.');
+        // /review R5: /registro aún no tiene descripción (SE1.a); en cuanto la tenga, tampoco se repite.
+        $descripcionRegistro = $this->meta($registro, 'description');
+        if ($descripcionRegistro !== null) {
+            $this->assertNotContains($descripcionRegistro, $vistos, 'Descripción distinta de la de /registro.');
+        }
         $this->assertSame(count($vistos), count(array_unique($vistos)), 'Títulos y descripciones distintos entre sí.');
     }
 
@@ -157,12 +165,18 @@ class PaginasPublicasTest extends TestCase
 
     public function test_el_contenido_va_en_el_html_del_servidor(): void
     {
+        // /review R6: un servicio propio del test, para no depender del volcado.
+        DB::table('servicios')->insert([
+            'id' => (string) Str::uuid(), 'nombre' => 'Servicio038 Html', 'descripcion' => 'Descripción038 Html',
+            'categoria' => 'Categoria038 Html', 'duracion_min' => 30, 'precio' => 100, 'activo' => 1,
+        ]);
         $inicio = $this->get('/')->getContent();
-        foreach (['Tu sonrisa, nuestra prioridad.', 'Sobre nosotros', 'Nuestros servicios', '753 000 0000', 'Lunes a viernes', 'Cómo llegar'] as $texto) {
+        foreach (['Tu sonrisa, nuestra prioridad.', 'Sobre nosotros', 'Nuestros servicios', 'Categoria038 Html', '753 000 0000', 'Lunes a viernes', 'Cómo llegar'] as $texto) {
             $this->assertStringContainsString($texto, $inicio, "/ trae «{$texto}» en el HTML.");
         }
-        $this->assertStringContainsString('Nuestros servicios', $this->get('/servicios')->getContent());
-        $this->assertStringNotContainsString('opacity: 0', $inicio, 'Nada oculto hasta que actúe un script.');
+        $servicios = $this->get('/servicios')->getContent();
+        $this->assertStringContainsString('Nuestros servicios', $servicios);
+        $this->assertStringContainsString('Descripción038 Html', $servicios, '/servicios trae el catálogo en el HTML.');
     }
 
     /** Recursos que pide la página: src de img/iframe/source y hojas o íconos enlazados. */
@@ -203,12 +217,28 @@ class PaginasPublicasTest extends TestCase
             }
         }
 
-        $css = file_get_contents(public_path('css/publico.css'));
-        $this->assertDoesNotMatchRegularExpression('/@import/i', $css, 'publico.css no importa hojas.');
-        preg_match_all('/url\(\s*[\'"]?([^\'")]+)/i', $css, $m);
-        foreach ($m[1] as $url) {
-            $this->assertFalse($this->esExterno($url), "publico.css no pide {$url}.");
+        // /review R13: todas las hojas que enlaza el layout (app.css y publico.css), no solo una.
+        foreach ($this->hojas() as $ruta => $css) {
+            $this->assertDoesNotMatchRegularExpression('/@import/i', $css, "{$ruta} no importa hojas.");
+            preg_match_all('/url\(\s*[\'"]?([^\'")]+)/i', $css, $m);
+            foreach ($m[1] as $url) {
+                $this->assertFalse($this->esExterno($url), "{$ruta} no pide {$url}.");
+            }
         }
+    }
+
+    /** Hojas de estilo que enlaza `/`, como `[ruta pública => contenido]`. */
+    private function hojas(): array
+    {
+        $hojas = [];
+        foreach ($this->xpath($this->get('/')->getContent())->query('//link[@rel="stylesheet"]') as $enlace) {
+            $ruta = (string) parse_url($enlace->getAttribute('href'), PHP_URL_PATH);
+            $this->assertFileExists(public_path(ltrim($ruta, '/')), "Existe {$ruta}.");
+            $hojas[$ruta] = file_get_contents(public_path(ltrim($ruta, '/')));
+        }
+        $this->assertCount(2, $hojas, 'El layout público enlaza app.css y publico.css.');
+
+        return $hojas;
     }
 
     public function test_los_recursos_propios_de_la_raiz_pesan_menos_de_un_mega(): void
@@ -217,9 +247,11 @@ class PaginasPublicasTest extends TestCase
         $total = strlen($html);
         $propios = array_filter($this->recursos($this->xpath($html)), fn ($r) => ! $this->esExterno($r[1]) && ! str_starts_with($r[1], 'data:'));
         $rutas = array_map(fn ($r) => parse_url($r[1], PHP_URL_PATH), $propios);
-        preg_match_all('/url\(\s*[\'"]?([^\'")]+)/i', file_get_contents(public_path('css/publico.css')), $m);
-        foreach ($m[1] as $url) {
-            $rutas[] = '/css/'.$url;
+        foreach ($this->hojas() as $hoja => $css) {
+            preg_match_all('/url\(\s*[\'"]?([^\'")]+)/i', $css, $m);
+            foreach ($m[1] as $url) {
+                $rutas[] = dirname($hoja).'/'.$url;
+            }
         }
         foreach (array_unique($rutas) as $ruta) {
             $archivo = realpath(public_path(ltrim($ruta, '/')));

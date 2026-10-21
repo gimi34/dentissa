@@ -83,6 +83,8 @@ class PaginaInicioTest extends TestCase
 
     public function test_sin_sesion_muestra_la_pagina_en_orden(): void
     {
+        // /review R6: un servicio propio, para que «Nuestros servicios» no dependa del volcado.
+        $this->crearServicio('Servicio038 Orden', 'Categoria038 Orden');
         $respuesta = $this->get('/');
 
         $respuesta->assertOk();
@@ -99,6 +101,14 @@ class PaginaInicioTest extends TestCase
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Agendar mi primera cita"][@href="'.route('register').'"]')->length, '«Agendar mi primera cita» lleva al registro.');
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Iniciar sesión"][@href="'.route('login').'"]')->length, 'Hay un enlace visible a «Iniciar sesión».');
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Crear cuenta"][@href="'.route('register').'"]')->length, 'Hay un enlace a crear una cuenta.');
+
+        // /review R3: el horario y el teléfono del aviso de la puerta, dentro del aviso (el pie los repite).
+        $aviso = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " lb-aviso ")]')->item(0);
+        $this->assertNotNull($aviso, 'Hay un aviso de la puerta.');
+        $textoAviso = preg_replace('/\s+/u', ' ', $aviso->textContent);
+        $this->assertStringContainsString('Lunes a viernes 9:00–20:00', $textoAviso);
+        $this->assertStringContainsString('Sábados 9:00–14:00', $textoAviso);
+        $this->assertSame(1, $xpath->query('.//a[@href="tel:+527530000000"][contains(normalize-space(), "753 000 0000")]', $aviso)->length, 'El aviso ofrece llamar.');
     }
 
     public function test_con_sesion_cada_rol_va_a_su_panel(): void
@@ -154,17 +164,22 @@ class PaginaInicioTest extends TestCase
         $texto = $this->texto($respuesta->getContent());
         $xpath = $this->xpath($respuesta->getContent());
 
-        $this->assertStringContainsString(self::DIRECCION, $texto);
         $this->assertStringContainsString('Lunes a viernes 9:00–20:00', $texto);
         $this->assertStringContainsString('Sábados 9:00–14:00', $texto);
-        $this->assertGreaterThan(0, $xpath->query('//a[@href="tel:+527530000000"][contains(normalize-space(), "753 000 0000")]')->length, 'El teléfono se marca con un toque.');
 
-        $mapa = $xpath->query('//iframe[starts-with(@src, "https://www.google.com/maps?")]');
+        // /review R3: la dirección, el teléfono, el mapa y «Cómo llegar», dentro de la sección de ubicación.
+        $ubicacion = $xpath->query('//*[@id="ubicacion"]')->item(0);
+        $this->assertNotNull($ubicacion);
+        $this->assertStringContainsString(self::DIRECCION, preg_replace('/\s+/u', ' ', $ubicacion->textContent));
+        $this->assertSame(1, $xpath->query('.//a[@href="tel:+527530000000"][contains(normalize-space(), "753 000 0000")]', $ubicacion)->length, 'El teléfono se marca con un toque.');
+
+        $mapa = $xpath->query('.//iframe[starts-with(@src, "https://www.google.com/maps?")]', $ubicacion);
         $this->assertSame(1, $mapa->length, 'Un mapa de Google incrustado.');
         $this->assertSame('https://www.google.com/maps?q='.rawurlencode(self::DIRECCION).'&output=embed', $mapa->item(0)->getAttribute('src'), 'El mapa marca la dirección de contacto.');
 
         // TM5: el mapa aparte se abre sin dar acceso a la página de origen.
-        $llegar = $xpath->query('//a[normalize-space()="Cómo llegar"]');
+        $llegar = $xpath->query('.//a[normalize-space()="Cómo llegar"]', $ubicacion);
+        $this->assertSame(1, $xpath->query('//a[normalize-space()="Cómo llegar"]')->length, 'Ningún otro «Cómo llegar» en la página.');
         $this->assertSame(1, $llegar->length, 'Un solo «Cómo llegar» (el de la placa dice «Ver la ubicación», A15).');
         $this->assertSame('https://www.google.com/maps/dir/?api=1&destination='.rawurlencode(self::DIRECCION), $llegar->item(0)->getAttribute('href'));
         $this->assertSame('_blank', $llegar->item(0)->getAttribute('target'));

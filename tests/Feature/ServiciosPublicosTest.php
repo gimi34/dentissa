@@ -92,9 +92,13 @@ class ServiciosPublicosTest extends TestCase
         $respuesta->assertSee('Visible038');
         $respuesta->assertDontSee('Oculto038');
         $respuesta->assertDontSee('Inactiva038');
-        $respuesta->assertDontSee('777.77');
-        $respuesta->assertDontSee('777,77');
-        $respuesta->assertDontSee('173');
+        // /review R4: precio y duración sobre el texto de <main>, no sobre el HTML entero (las hojas
+        // llevan `?v=<filemtime>` y un número de 10 cifras puede contener «173»).
+        $principal = preg_replace('/\s+/u', ' ', $this->xpath($respuesta->getContent())->query('//main')->item(0)->textContent);
+        $this->assertStringContainsString('Visible038', $principal);
+        foreach (['777.77', '777,77', '173', ' min'] as $dato) {
+            $this->assertStringNotContainsString($dato, $principal, "Sin precio ni duración: «{$dato}».");
+        }
     }
 
     public function test_sin_servicios_activos_muestra_el_mensaje(): void
@@ -121,6 +125,17 @@ class ServiciosPublicosTest extends TestCase
 
         $this->assertCount(1, array_filter($categorias, fn ($c) => mb_strtolower($c) === 'ortodoncia038'));
         $this->assertCount(1, array_filter($categorias, fn ($c) => $c === 'Otros servicios'));
+    }
+
+    public function test_los_acentos_no_separan_categorias(): void
+    {
+        // /review R8: «Prótesis038» y «Protesis038» son la misma categoría (A13).
+        $this->crearServicio('Cinco038', 'Prótesis038');
+        $this->crearServicio('Seis038', 'Protesis038');
+
+        $categorias = $this->categorias($this->xpath($this->get('/servicios')->getContent()));
+
+        $this->assertCount(1, array_filter($categorias, fn ($c) => in_array($c, ['Prótesis038', 'Protesis038'], true)));
     }
 
     public function test_porcategoria_devuelve_los_activos_agrupados(): void
