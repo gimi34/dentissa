@@ -31,20 +31,23 @@
             @endauth
         </nav>
         {{-- Menú del móvil por debajo de 900 px: <details> funciona con el teclado y sin JavaScript.
-             Solo el icono de hamburguesa; el nombre «Menú» lo lleva aria-label (D15). --}}
-        <details class="pub-menu">
-            <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-            <ul>
-                <li><a href="{{ url('/servicios') }}">Servicios</a></li>
-                <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
-                @auth
-                    <li><a href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a></li>
-                @else
-                    <li><a href="{{ route('login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ route('register') }}">Crear cuenta</a></li>
-                @endauth
-            </ul>
-        </details>
+             Solo el icono de hamburguesa; el nombre «Menú» lo lleva aria-label (D15). La nav lo
+             mantiene como landmark en el móvil y se oculta con él en el escritorio (/review R18). --}}
+        <nav class="pub-menu" aria-label="Secciones">
+            <details class="pub-menu-detalles">
+                <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+                <ul>
+                    <li><a href="{{ url('/servicios') }}">Servicios</a></li>
+                    <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
+                    @auth
+                        <li><a href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a></li>
+                    @else
+                        <li><a href="{{ route('login') }}">Iniciar sesión</a></li>
+                        <li><a href="{{ route('register') }}">Crear cuenta</a></li>
+                    @endauth
+                </ul>
+            </details>
+        </nav>
     </div>
 </header>
 

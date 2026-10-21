@@ -9,7 +9,8 @@
 <div class="lb-wrap">
     <div class="lb-placa">
         <div class="lb-placa-texto">
-            <span class="logo logo--grande" role="img" aria-label="Melissa López N. · Odontología integral"></span>
+            {{-- Decorativo: la marca ya la nombra la cabecera (/review R21). --}}
+            <span class="logo logo--grande" aria-hidden="true"></span>
             <h1 class="t-h1">Tu sonrisa, nuestra prioridad.</h1>
             <p class="t-body">Gestiona tus citas, consulta tu historial y mantén tu salud dental al día con nuestra plataforma moderna.</p>
             <div class="lb-acciones">
@@ -74,7 +75,7 @@
                 <address>{{ $contacto['direccion'] }}</address>
                 <a class="c-link" href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a>
                 {{-- TM5: la pestaña nueva no puede tocar esta página. --}}
-                <a class="c-link" href="https://www.google.com/maps/dir/?api=1&amp;destination={{ rawurlencode($contacto['direccion']) }}" target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+                <a class="c-link" href="https://www.google.com/maps/dir/?api=1&amp;destination={{ rawurlencode($contacto['direccion']) }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar (se abre en una pestaña nueva)">Cómo llegar</a>
             </div>
         </div>
         <p class="nota-mapa">El mapa lo sirve Google.</p>
