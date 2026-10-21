@@ -235,6 +235,9 @@ dispositivo perdido (Seguridad y privacidad) → TM10.
   - `verificar.sh` con la dirección pública: cabeceras, entorno aplicado y administración remota;
   - en `dentissa-access.log`, ningún 5xx en `/auth/google/callback` tras la liberación.
 
+## Descubribilidad
+No aplica: la 031 solo cambia cabeceras del hosting, la configuración de PHP y nginx, scripts de despliegue y la vuelta del acceso con Google; no crea ni cambia rutas públicas, vistas ni metadatos (/review R11).
+
 ## Rollout
 - **Feature flag:** no aplica. Es configuración de nginx y PHP más una corrección del
   controlador, y la CSP se prueba en local antes de liberar.

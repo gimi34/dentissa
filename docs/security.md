@@ -62,7 +62,7 @@ updated: 2026-10-18
 | `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente`, salvo en cancelar (spec 026) y reprogramar (spec 028) |
 | phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
-| SSH del servidor de producción | red local | clave | solo desde la red local (`ufw`), sin contraseña ni root (spec 030) |
+| SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
 
 No hay rutas API, webhooks, colas ni tareas programadas.
 
@@ -204,8 +204,10 @@ Ni la app ni nginx envían CSP, X-Frame-Options/frame-ancestors, X-Content-Type-
 Referrer-Policy ni HSTS. Evidencia: `PreventBackHistory.php`, `docker/nginx/dentissa.conf`.
 
 Correcciones:
-- RS8.a Middleware o `add_header` en nginx con CSP, X-Frame-Options, X-Content-Type-Options y Referrer-Policy — estado: pendiente
-- RS8.b HSTS en staging/prod detrás de TLS — estado: pendiente
+- RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: mitigada (v0.10.0)
+- RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: mitigada (v0.10.0)
+- RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
+- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05)
 
 ### RS9 · Media — Sesión y email no protegidos al cambiar credenciales (A07 Authentication Failures)
 Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar el email del
@@ -312,7 +314,7 @@ de Docker y la capa de `apt-get upgrade` / `apk upgrade` no se renueva: el `web`
 avisos y con caché, con 3 (→ spec 031, T054–T055, dentro de RS18.a).
 
 Correcciones:
-- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: en curso (spec 031: refrescadas y escaneadas el 2026-10-19, EX2 renovada hasta el 2026-11-30; quedan `mariadb` y `cloudflared` cuando cumplan 7 días)
+- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: mitigada (v0.10.0): imágenes refrescadas y escaneadas, construcción sin caché, EX2 renovada hasta el 2026-11-30; queda refrescar `cloudflared` 2026.10.1 y la `mariadb` reconstruida antes de ese vencimiento (roadmap, 031/R4)
 
 ### RS19 · Media — Un admin puede dejar la aplicación sin administradores (A01 Broken Access Control)
 Detectado en la re-sincronización del 2026-10-18. `UsuarioController@update` toma `rol` y `activo` del

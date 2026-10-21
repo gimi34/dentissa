@@ -84,9 +84,21 @@ de `app` y `web` sin caché y bajando las imágenes base (`--no-cache --pull`, s
 `verificar.sh --interna`. Nunca arranca ni para `cloudflared`: el túnel se abre a mano la primera
 vez (`docker compose -f docker-compose.prod.yml up -d cloudflared`) y desde entonces vuelve solo
 tras un reinicio. Tiempo ensayado: 86 s el primer despliegue y 10 s uno posterior, sin la
-verificación (spec 030, T040 y T044). Sin caché, cada despliegue tarda lo que el primero, que reconstruye todo
-(unos 90 s; se mide en el ensayo de la spec 031, T040). `volver.sh` sigue construyendo con caché:
-en una vuelta atrás importa la rapidez y la versión anterior ya se construyó antes.
+verificación (spec 030, T040 y T044). Desde la spec 031, cada despliegue reconstruye todo sin caché
+y con `REFRESCO_SISTEMA` nuevo: medido en el ensayo del 2026-10-19 (spec 031, T040), 376 s de
+construcción (`apt-get upgrade` 193 s, `composer install` 136 s) y 418 s en total. `volver.sh` sigue
+construyendo con caché: en una vuelta atrás importa la rapidez (22 s en el mismo ensayo) y la versión
+anterior ya se construyó antes.
+
+Cambiar un archivo de entorno (`app.env`, `db.env`, `tunnel.env`): editarlo y después
+`bash deploy/aplicar-entorno.sh <servicio>`, que recrea ese contenedor (un `restart` no relee el
+archivo) y verifica; `verificar.sh` da FALLO en «Entorno aplicado» si un servicio usa una
+configuración distinta de la guardada o si no puede comparar alguno (spec 031, CA7, /review R1;
+guía `deploy/README.md` §10).
+
+Administrar desde fuera de casa: SSH con clave por la red privada de Tailscale, instalada con
+`sudo bash deploy/preparar-acceso-remoto.sh` (spec 031, CA8; ADR 0006; guía §11, que también dice
+cómo retirar un dispositivo). Sin puertos abiertos en el router.
 
 Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
@@ -126,7 +138,7 @@ fuera del repositorio y del chat).
 - `deploy/restaurar.sh <copia>`: con confirmación escrita, borra la base y la recrea desde la copia
   (queda exactamente como estaba). Ensayado el 2026-10-04 (spec 030, T043): mismas filas y
   `CHECKSUM TABLE` en las 18 tablas.
-- Sin cifrar todavía (RS15.b → spec 031).
+- Sin cifrar todavía (RS15.b → spec 032, alertas y cifrado de copias; /analyze 031 A17).
 
 ## Rollback
 1. Para dejar la aplicación sin exposición al instante:
@@ -180,8 +192,14 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   `CACHE_STORE` distinto de `array`, `SESSION_SECURE_COOKIE=true`, `APP_URL` y
   `GOOGLE_REDIRECT_URI` en https; usuario de la base distinto de root y que la app no se conecta como
   root; que ninguna contraseña del README autentica; ningún puerto
-  publicado ni nada escuchando fuera de localhost salvo SSH; `local.ini` aplicado; y en modo
-  público, `/up` 200, redirección de `/` a https y `http://<host>/login` → 301 a `https://`.
+  publicado ni nada escuchando fuera de localhost salvo SSH (y las direcciones de la red privada);
+  `local.ini` aplicado; desde la spec 031, `GOOGLE_CLIENT_ID` con formato de Google y
+  `GOOGLE_CLIENT_SECRET` sin el texto de ejemplo, las cabeceras de seguridad de `/login`, los
+  estáticos, la 404 y la 301, «Entorno aplicado» en los cuatro servicios y la red privada conectada
+  con SSH solo por clave; y en modo público, `/up` 200, redirección de `/` a https,
+  `http://<host>/login` → 301 a `https://` y las cabeceras de `https://<host>/login`. Las versiones
+  anteriores a la 031 dan un FALLO conocido en «nada escucha fuera de localhost salvo SSH» por
+  `tailscaled` (spec 031, CA8).
 - Smoke tests: login de una cuenta de prueba por rol, agendar y cancelar una cita ficticia. Sin
   exponer, por túnel SSH al contenedor `web` (`http://localhost:<puerto>`, ver `deploy/README.md`).
 - Health check: `GET /up` (hoy no comprueba la BD; ver OB6).

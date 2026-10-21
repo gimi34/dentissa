@@ -5,6 +5,34 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-20
+
+### Added
+- Administración del servidor desde fuera de casa por una red privada (Tailscale), con clave y sin
+  abrir puertos en el router; la guía explica cómo retirar un dispositivo perdido (spec 031).
+- La verificación posterior al despliegue avisa si faltan las credenciales de Google o si un
+  servicio no usa la configuración guardada, y explica cómo aplicarla (spec 031).
+
+### Changed
+- Si el acceso con Google falla (se cancela, caduca o llega manipulado), se vuelve al inicio de
+  sesión con el mensaje «No se pudo iniciar sesión con Google. Inténtalo de nuevo.» en lugar de
+  un error (spec 031).
+- Cada despliegue reconstruye las imágenes sin caché para que las correcciones del sistema
+  operativo lleguen a producción; imágenes base actualizadas (spec 031).
+
+### Fixed
+- `/` sin sesión vuelve a llevar al inicio de sesión (fix 2026-10-20-fix-raiz-al-login).
+- Código con conflictos de fusión sin resolver que impedía arrancar la aplicación desde `main`
+  (fix 2026-10-20-fix-marcadores-conflicto-main).
+
+### Security
+- Cabeceras de seguridad en todas las respuestas: política de contenido, protección frente a que
+  otra web incruste la aplicación, conexión segura obligatoria durante 180 días y sin versiones del
+  servidor ni de PHP a la vista (spec 031).
+- Las trazas de errores ya no incluyen los argumentos de las llamadas (spec 031).
+- `follow-redirects` 1.16.1, sin dos avisos altos publicados el 2026-10-20; solo afecta a las
+  herramientas de desarrollo (chore 2026-10-20-chore-follow-redirects-1.16.1).
+
 ## [0.9.0] - 2026-10-19
 
 ### Added

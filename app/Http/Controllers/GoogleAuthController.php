@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Usuario;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Auth\Events\Failed;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
@@ -86,7 +87,7 @@ class GoogleAuthController extends Controller
      * Fallo de la vuelta de Google: login fallido para la auditoría de la spec 021
      * (excepción P7) y vuelta al inicio de sesión con un mensaje genérico.
      */
-    private function volverAlLoginPorFallo()
+    private function volverAlLoginPorFallo(): RedirectResponse
     {
         event(new Failed('web', null, ['proveedor' => 'google']));
 
