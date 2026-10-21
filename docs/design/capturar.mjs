@@ -5,9 +5,10 @@
 //   node capturar.mjs <vista> [<vista>…]   solo esas vistas (por su id en VISTAS), sin recortes
 //   node capturar.mjs --seco [<vista>…]    imprime lo que capturaría y termina (sin navegador ni base)
 //   node capturar.mjs --anchos=1024,1440 <vista>…   esos anchos en lugar de los de cada vista
-//   node capturar.mjs --medir               test en el navegador de las specs 033, 034 y 035 (anchos, toque,
+//   node capturar.mjs --medir               test en el navegador de las specs 033, 034, 035 y 038 (anchos, toque,
 //                                           menú, recortes, solapes, tarjetas, filtro, palabras largas,
-//                                           sin JS y escritorio frente a la línea base); sale con 1 si algo falla
+//                                           sin JS, escritorio frente a la línea base y páginas públicas);
+//                                           sale con 1 si algo falla
 //   node capturar.mjs --seco --medir       lista las comprobaciones de --medir y termina
 //   OUT=/tmp/capturas/base node capturar.mjs --linea-base   capturas a 1024 y 1440 de las pantallas que
 //                                           --medir compara con la línea base (spec 034, D13)
@@ -104,6 +105,10 @@
 //    docker volume rm dentissa_pw_node; git worktree remove de la copia de v0.7.0 y su .env; y borrar
 //    la carpeta temporal (ids.json, medidas.json, medir.json y la línea base).
 //
+// Spec 038 (D12): las páginas públicas `/` y `/servicios` se capturan y se miden sin sesión, con los
+// servicios del volcado; `--medir` las abre a 320, 390, 900 y 1440 (por debajo de 900, también con el
+// menú <details> abierto). No necesitan ids.json ni cuentas, pero el resto de la pasada sí.
+//
 // Entradas: /tmp/capturas/ids.json y las cuentas <rol>1@dentissa.test (cliente1, con
 // CORREO_CLIENTE) con la contraseña de CLAVE.
 // Salidas: /design/capturas/<vista>-<ancho>.png (o en OUT), /design/capturas/componentes/<componente>.png
@@ -135,8 +140,11 @@ const ANCHOS = {
 // Spec 033: las 7 vistas del paciente se capturan también a 320; el menú abierto, solo en el móvil.
 const VISTAS_PACIENTE = ['cliente-dashboard', 'citas-index-cliente', 'citas-index-cliente-pasadas', 'citas-show-cliente',
   'citas-reprogramar-cliente', 'cliente-agendar', 'cliente-perfil'];
+// Spec 038: las páginas públicas, a 320, 390, 900 y 1440 (D12).
+const ANCHOS_PUBLICOS = ['320', '390', '900', '1440'];
 const anchosDe = (id) => ANCHOS_ARG ?? (id.startsWith('menu-abierto-') ? ['390']
-  : VISTAS_PACIENTE.includes(id) ? ['320', '390', '1440'] : ['390', '1440']);
+  : id.startsWith('publico-') ? ANCHOS_PUBLICOS
+    : VISTAS_PACIENTE.includes(id) ? ['320', '390', '1440'] : ['390', '1440']);
 const abrirMenu = async (p) => {
   await p.locator('.menu-btn').click({ timeout: 2000 });
   await p.waitForFunction(() => document.querySelector('.menu-btn')?.getAttribute('aria-expanded') === 'true');
@@ -165,6 +173,10 @@ const VISTAS = [
     await sinValidar(p);
     await Promise.all([p.waitForNavigation(), p.evaluate(() => document.querySelector('form').submit())]);
   }],
+
+  // Spec 038: páginas públicas, sin sesión.
+  ['publico-inicio', null, '/'],
+  ['publico-servicios', null, '/servicios'],
 
   ['admin-dashboard', 'admin', '/admin'],
   ['servicios-index', 'admin', '/admin/servicios'],
@@ -311,6 +323,7 @@ const COMPROBACIONES = [
   '035 migas: a 320, una palabra de 60 letras (más ancha que el hueco) en el enlace del nombre del paciente de la ficha y del alta de expediente no se sale del enlace ni ensancha la página, con control positivo (CA8, CA9, /review R1)',
   '035 menú: a 390, «Menú» y «Cerrar menú» sin borde ni fondo, de 44 × 44 y con foco visible (CA11)',
   '035 sin JS: a 390, las pantallas de la 035 sin desplazamiento horizontal (CA9)',
+  '038 páginas públicas: / y /servicios sin sesión, a 320, 390, 900 y 1440 sin desplazamiento horizontal ni recortes; enlaces, botones y summary visibles ≥ 44 × 44 (sin enlaces dentro de un <p>), y por debajo de 900, también con el menú <details> abierto (CA9)',
 ];
 
 const PANELES = { admin: '/admin', dentista: '/dentista', asistente: '/asistente', cliente: '/cliente' };
@@ -720,6 +733,9 @@ async function compararImagenes(lienzo, base, actual, fuera) {
 }
 
 const TOQUE_MAIN = '.main a, .main button, .main input:not([type=hidden]), .main select, .main textarea';
+// Spec 038: controles de las páginas públicas (cabecera, menú, contenido y pie).
+const TOQUE_PUBLICO = 'body.publico a, body.publico button, body.publico summary';
+const PUBLICAS = [['publico-inicio', '/'], ['publico-servicios', '/servicios']];
 const TOQUE_MENU = '#menu-principal nav a, #menu-principal .menu-cerrar, #menu-principal .btn-logout';
 
 async function abrir(rol, ruta, ancho, opciones) {
@@ -1109,6 +1125,37 @@ async function medir() {
           else if (c.proporcion > 0.001 || c.maximo > 2) falla(donde, `distinto de la línea base: ${(c.proporcion * 100).toFixed(2)} % de píxeles, diferencia máxima ${c.maximo}/255`);
         });
       }
+    }
+  }
+
+  // Spec 038 (CA9): páginas públicas sin sesión.
+  for (const [id, ruta] of PUBLICAS) {
+    for (const ancho of ANCHOS_PUBLICOS) {
+      const donde = `${id}@${ancho}`;
+      await intenta(donde, async () => {
+        const page = await abrir(null, ruta, ancho);
+        const a = await page.evaluate(EN_PAGINA.anchos);
+        if (a.doc > a.vista) falla(donde, `la página mide ${a.doc} px de ${a.vista}`);
+        for (const r of await page.evaluate(() => {
+          const W = window.innerWidth;
+          return [...document.querySelectorAll('body.publico a, body.publico button, body.publico summary, body.publico h1, body.publico h2, body.publico p')]
+            .filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
+            .filter((el) => { const r = el.getBoundingClientRect(); return r.left < -1 || r.right > W + 1; })
+            .map((el) => `${el.tagName.toLowerCase()} «${el.textContent.trim().slice(0, 30)}»`);
+        })) falla(donde, `fuera de la pantalla: ${r}`);
+        for (const t of await page.evaluate(EN_PAGINA.toque, TOQUE_PUBLICO)) falla(donde, `toque < 44: ${t}`);
+        if (Number(ancho) < 900) {
+          const menu = page.locator('.pub-menu summary');
+          if (!(await menu.isVisible())) falla(donde, 'el menú <details> no se ve por debajo de 900');
+          else {
+            await menu.click();
+            for (const t of await page.evaluate(EN_PAGINA.toque, '.pub-menu a')) falla(`${donde} menú abierto`, `toque < 44: ${t}`);
+            const b = await page.evaluate(EN_PAGINA.anchos);
+            if (b.doc > b.vista) falla(`${donde} menú abierto`, `la página mide ${b.doc} px de ${b.vista}`);
+          }
+        }
+        await page.close();
+      });
     }
   }
 
