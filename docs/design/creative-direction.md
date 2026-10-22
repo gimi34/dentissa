@@ -1,84 +1,78 @@
-# Dirección creativa de Dentissa — página de inicio pública
+# Dirección creativa de Dentissa — páginas públicas
 
-Decisiones fijadas con el usuario a partir de `brief.md` (spec 038). Cambiarlas requiere petición
-explícita; las skills la leen antes de diseñar cualquier pantalla pública. La app de gestión sigue
-el sistema extraído (`system.md`).
-
-## Modo y registro
-Fijados en la ronda 3 de `/design-spec 038` (2026-10-21, motor creativo de AI-DD 1.16.0;
-[diseño](../specs/038-pagina-inicio/design.md)):
-- **Registro máximo de las páginas públicas: audaz.** Ninguna página pública pasa de ahí.
-- **Página de inicio (038): persuadir · firme**, opción C «La línea de abound» con la ubicación de D.
-  `/servicios` es de leer y sigue en sobrio, con la cabecera, el pie y los botones de C.
-- La 039 (galería) y la 040 (promociones) eligen su registro en su `/design-spec`, dentro de este
-  máximo.
+Decisiones fijadas con el usuario a partir de `brief.md` en la ronda 4 de `/design-spec 038`
+(2026-10-21), que empieza el diseño desde cero: no parte de la landing del colaborador ni de las
+rondas 1–3 (archivadas en `history/creative-direction.ronda-3.md` y en
+`docs/specs/038-pagina-inicio/design/history/`). Cambiarlas requiere petición explícita; las skills
+la leen antes de diseñar cualquier pantalla pública. La app de gestión sigue el sistema extraído
+(`system.md`).
 
 ## Estética
-- Serena y concreta: lo que se ve es la consulta real, sin decorado.
-- Cálida dentro del rosa de la marca; aire generoso y lectura cómoda en el móvil.
-- Ordenada como la señalética de una consulta: rótulos claros, formas rectangulares de esquinas
-  suaves, líneas finas.
-- Referencias de sensación: ninguna con nombre (decisión del usuario); manda el territorio de
-  `nicho.md`.
+- **Profesional y seria:** confianza por rigor; lo que se muestra es preciso, ordenado y verificable
+  (horario, dirección, servicios reales), como un documento clínico bien hecho.
+- **Moderna y con carácter:** no puede parecer otra clínica más; una idea propia reconocible en la
+  primera pantalla y en todas las secciones.
+- **Tranquila y cercana:** pensada para quien llega con miedo o con dolor; nada empuja ni grita.
+- Referencias de sensación: ninguna (decisión del usuario: sin ejemplos ni base); las opciones salen
+  del inventario del sujeto.
 
 ## Identidad
-- Territorio: **A · La consulta por dentro** — «Así es la consulta antes de que llegues».
-- Materiales del oficio que lo sostienen: la placa de la consulta y el aviso de la puerta (horario,
-  teléfono), la señalética de puertas y las fotos reales de los trabajos hechos dentro (specs 039 y
-  040; ronda 2 de `/design-spec 038`).
-- Tono de textos e imagen: sereno, en «tú», primera persona del plural para la clínica; fotos con
-  luz natural, sin filtros ni retoque excesivo.
+- Territorio: **lo deciden las opciones**. Se desarrollan los tres territorios nuevos de la ronda 4:
+  1 · La panorámica (audaz), 2 · De 20 a 32 (firme) y 3 · Te lo explicamos antes (sobrio).
+- Materiales del oficio que lo sostienen:
+  - la radiografía panorámica, que está en el catálogo;
+  - el odontograma de 32 piezas con su numeración FDI;
+  - el arco dental como forma;
+  - los 20 dientes de leche frente a los 32 permanentes («toda la familia»);
+  - el ritual de explicar antes de tratar («qué vamos a hacer, cuánto dura y qué opciones tienes»);
+  - el horario real y la cita en línea, que casi ninguna clínica de la zona ofrece;
+  - el nombre de la doctora y el logo «Melissa López N. · Odontología integral».
+- Tono de textos e imagen: «tú» cercano y tranquilo, primera persona del plural para la clínica;
+  frases cortas y precisas, sin promesas comerciales.
 
 ## Concepto firma
-**Desde la ronda 3 (2026-10-21): «La línea de abound».** La portada a sangre con una foto de la
-consulta bajo el velo de la marca, la hoja de «Sobre nosotros» que sube sobre ella y el letrero del
-horario convertido en una franja viva que dice si la consulta está abierta ahora y vuelve en la
-ubicación y el pie. Lo que sigue describe la ronda 2, que la 039 y la 040 adaptarán a esta línea.
-
-**La puerta de la consulta** (opción B, elegida en la ronda 1 y ajustada en la ronda 2): la página
-empieza en la placa de la consulta, con el logo, el título, «Agendar mi primera cita» y el aviso de la
-puerta (horario y «Llamar»). Dentro se recorre lo que hay detrás de la puerta: quiénes somos, las
-puertas de los servicios, las promociones como avisos y los trabajos. El momento firma es el
-carrusel de trabajos: cada foto entra como una hoja de puerta que se desliza, solo cuando el
-visitante cambia de foto.
+Lo deciden las opciones: cada una desarrolla su territorio con su idea y su momento firma.
 
 ## Color y tipografía
-- El rosa es color de uniforme y de señalética: acentos y placas, no fondos enormes. Fondo `--bg`,
-  superficies blancas, texto oscuro; `--p600` para bordes de placa y foco.
-- Una familia de marca con motivo para títulos (la eligen las opciones) y una de lectura; servidas
-  por la app. Nada de fuentes de moda sin motivo.
+- **El rosa de la marca es la base** (`--p400` `#D4537E`, `--p500` `#B83C65`, `--p600` `#993556`,
+  `--p800` `#72243E`, `--p100`, `--p50`); cada opción propone los neutros, el acento oscuro y cómo
+  ocupa el rosa la página. El logo se pinta por máscara en el color que toque.
+- Nada de azul o blanco clínico ni verde menta.
+- Tipografía: cada opción propone una familia de marca con motivo (legible a tamaño grande en el
+  móvil y con sol, cifras claras para el horario, acentos del español), con licencia abierta y
+  servida por la app; Lexend no es obligatoria.
+
+## Modo y registro
+- Pantallas por modo: persuadir: `/` · leer: `/servicios` (y la galería de la 039 y las promociones
+  de la 040 deciden el suyo en su `/design-spec`).
+- Registro máximo permitido: **audaz** (decisión del usuario). Las opciones cubren los tres
+  registros: sobrio, firme y audaz.
 
 ## Movimiento
-- Intensidad: sobria; un único momento protagonista por pantalla como máximo.
-- Carácter: preciso y suave, como una puerta que se abre: nada rebota.
-- Paleta: momento firma en el directorio de puertas (lo concretan las opciones);
-  microinteracciones de color y hundimiento de 1 px en botones y enlaces; sin entradas al hacer
-  scroll; sin transiciones de página.
-- Ronda 3 (página de inicio): una escena (la hoja que sube), una jugada firma (la franja del
-  horario, con pausa), entradas por sección que cambian con el contenido y respuesta bajo la mano;
-  un solo script propio y todo completo sin él.
+- Intensidad: hasta protagonista en la opción audaz; escenas de scroll por página en Persuadir:
+  hasta 3; una jugada firma por pantalla como máximo.
+- Carácter: preciso y suave, como un gesto clínico seguro: nada rebota ni se sacude.
+- Paleta: jugada firma y escenas las deciden las opciones; entradas que cambian con el contenido;
+  respuesta inmediata en cada control; sin transiciones de página.
 
 ## Superficies y fondos
-- Fondo `--bg` liso; secciones separadas por cambio de superficie (blanca / `--bg`) y líneas finas,
-  no por degradados.
-- Placas: relleno blanco, borde fino `--p600`, esquinas suaves con los radios del sistema.
-- Tratamiento de imagen: fotos reales en proporción fija y recorte centrado, con borde fino, sin
-  filtros; texto nunca encima de una foto sin una superficie que garantice el contraste. En la
-  portada de la ronda 3, esa superficie es el velo de la marca (`--velo-portada`), con el texto
-  pequeño siempre sobre su tramo fuerte.
+- Estrategia de color: la declara cada opción (de `contenida` a `empapada`).
+- Escena física: la persona busca dentista desde el móvil, a menudo en la calle con el sol de Lázaro
+  Cárdenas o de noche en casa con dolor; el claro predomina, y un campo oscuro solo si la idea lo
+  pide (la panorámica).
+- Imágenes disponibles (decisión del usuario: mezcla):
+  - dibujadas en código desde el oficio (odontograma, arco, panorámica, instrumental), en los colores
+    de la paleta;
+  - fotos reales de la consulta cuando existan, en huecos marcados hasta entonces;
+  - la foto libre de la ronda 3 (Unsplash, acreditada) solo si una opción la necesita, nunca como el
+    equipo de Dentissa.
+- Separadores y cambios entre secciones: los decide cada opción, desde su idea.
+- Tratamiento de imagen: un solo lenguaje de dibujo por opción (trazo, grosor y colores fijos).
 
 ## Recursos propios
-- La placa de la consulta (logo, título y aviso de la puerta) como portada.
-- El índice de puertas para las categorías de servicios.
-- Las promociones como avisos de la puerta, con su vigencia.
-- La placa de la dirección sobre el mapa.
-
-## Imágenes disponibles
-- La foto libre de la portada: dentistas con mascarilla atendiendo a una paciente, de Jonathan Borba
-  en Unsplash (Unsplash License), acreditada en `system.md` → «Imágenes». Es de banco: va bajo el
-  velo y nunca se presenta como el equipo de Dentissa.
-- El logo «Melissa López N. · Odontología integral» (`public/images/logo-icon.png`).
-- Ninguna foto real de la consulta todavía: cuando las haya (039), sustituyen a la de banco.
+- El odontograma FDI de 32 piezas y el arco dental, dibujados en código.
+- El horario real y la cita en línea como diferenciador.
+- El logo de la consulta.
 
 ## Prioridades ante conflicto
 - Accesibilidad y rendimiento ganan sobre cualquier efecto visual.
