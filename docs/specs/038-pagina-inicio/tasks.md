@@ -2,7 +2,7 @@
 spec: 038-pagina-inicio
 plan: plan.md
 impl_base: fba7a6d
-status: draft
+status: approved
 ---
 
 # Tareas · 038 Página de inicio pública
