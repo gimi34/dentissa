@@ -103,6 +103,11 @@ pide CA1. En el teléfono cabe en una línea a 320 px.
     texto, sin salto de línea.
   - **Franja del horario** (`.marquesina`): campo `--p600` a todo el ancho con el horario en
     `--text-marquesina` y `--p100`.
+  - **Pausa de la franja** (`.marquesina-pausa`, refinado A23): `button` de `--touch-min` × `--touch-min`
+    en el extremo derecho de la franja, fuera de la zona `aria-hidden`, con el icono de pausa o de
+    reproducir (SVG `--icon-md` en `--p100`, `aria-hidden`) y borde `--border-width-strong` en `--p100`;
+    nombre fijo «Pausar la franja del horario» y estado en `aria-pressed`; foco `--focus-ring-inverso`.
+    Lleva el atributo `hidden` en el HTML y lo quita el script común, que es quien lo maneja.
 - **Adornos generados desde datos:** los iconos de categoría (SVG dibujados en código, uno por
   categoría conocida, la muela para las demás) y la franja (sale del horario de `config/clinica.php`);
   `aria-hidden` los dos.
@@ -159,11 +164,14 @@ común (~1.5 kB) para las entradas y la cosa viva.
 
 ### M-2 — La franja del horario
 - **Tipo y filtro:** firma (`marquesina`); se ve una o dos veces por visita; decorativa (el horario está en la portada, la ubicación y el pie).
-- **Disparador:** carga; bucle continuo.
+- **Disparador:** carga, solo con JavaScript (clase `js`); bucle continuo hasta que se pausa.
 - **Elementos y propiedades:** pista con el texto duplicado, `transform: translateX(-50%)`.
-- **Duración y curva:** `--duration-marquesina` (48 s), `linear`; se para con el puntero encima.
-- **Técnica:** CSS (keyframes).
-- **Reducido:** quieta · **Sin JavaScript:** se mueve igual (CSS) · **Táctil:** se mueve; no es interactiva.
+- **Duración y curva:** `--duration-marquesina` (48 s), `linear`; se para con el puntero encima y con
+  el botón «Pausar la franja del horario» (`aria-pressed="true"`, clase `is-pausada`), que la reanuda
+  al volver a pulsarlo (WCAG 2.2.2, refinado A23).
+- **Técnica:** CSS (keyframes) bajo `.js`; el script común solo maneja el botón.
+- **Reducido:** quieta y sin botón · **Sin JavaScript:** quieta y sin botón (no hay forma de pararla
+  sin script, así que no se mueve) · **Táctil:** se mueve; el botón la pausa.
 - **Coste:** 0 kB; no comparte propiedades. `aria-hidden="true"`.
 - **Fotogramas:** tira `.ai/inspect/opcion-c/film-1440-05`.
 
@@ -207,11 +215,14 @@ común (~1.5 kB) para las entradas y la cosa viva.
   «Encuéntranos fácilmente» y las columnas del pie; `h3` en cada tarjeta. `nav` «Secciones» (también
   la del menú del móvil) y «Pie».
 - **Teclado:** el orden del HTML es el visual; foco del sistema en todo lo interactivo (inverso sobre
-  el rosa y la portada); las tarjetas son enlaces enteros.
+  el rosa y la portada); las tarjetas son enlaces enteros; la franja se pausa y se reanuda con su
+  botón (Intro o Espacio), que anuncia su estado con `aria-pressed` (WCAG 2.2.2).
+- **Botón de la franja:** borde e icono `--p100` sobre `--p600` → 6.05:1 (≥ 3:1, componente); foco
+  blanco sobre `--p600` → 7.00:1.
 - **Decorativos ocultos:** la foto (fondo), el velo, el logo grande de la portada y el del pie, los
   iconos y la franja, con `aria-hidden`.
 - **Sin animación:** todo el contenido en el HTML, visible sin JavaScript y con movimiento reducido;
-  la franja se detiene con movimiento reducido (CA9).
+  la franja queda quieta con movimiento reducido y sin JavaScript, y con el botón de pausa (CA9).
 
 ## Anti-clichés
 
@@ -223,7 +234,7 @@ común (~1.5 kB) para las entradas y la cosa viva.
 | Hover que levanta todas las tarjetas | La tarjeta cambia borde, sombra e icono; no se mueve |
 | Página quieta | La hoja que sube, la franja, las entradas y la cosa viva |
 | Primera pantalla distinta seguida de plantilla | Cada sección tiene su forma (hoja, rejilla, franja, 3:2, pie con el nombre) y el horario vuelve hasta el pie |
-| Marquesina decorativa sin idea | Una sola, con el horario real; se detiene con el puntero y con movimiento reducido |
+| Marquesina decorativa sin idea | Una sola, con el horario real; se detiene con el puntero, con su botón de pausa y con movimiento reducido |
 
 ## Decisiones
 
@@ -240,3 +251,4 @@ común (~1.5 kB) para las entradas y la cosa viva.
 | 2026-10-21 | supuesto | Licencia de la foto de abound | Desconocida: se confirma con el colaborador o se sustituye antes de `/release` | `inspeccion` · `creatividad.md` §6 |
 | 2026-10-21 | refinado | ¿Cómo se resuelve la licencia de la foto de la portada? | Foto libre de un banco abierto con licencia de uso comercial, descargada al repo y acreditada; la de abound queda solo en las maquetas | usuario (`/plan 038 --fix`) |
 | 2026-10-21 | diseño | ¿Se aprueba este documento (ronda 3)? | Aprobado | usuario |
+| 2026-10-21 | refinado | La franja solo se detiene con el puntero: con teclado o táctil no se puede parar (WCAG 2.2.2, `/analyze` A23) | Botón de pausa accesible en la franja, que maneja el script común; sin JavaScript y con movimiento reducido la franja queda quieta | usuario (`/analyze 038` r4) |
