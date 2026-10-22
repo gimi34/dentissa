@@ -25,6 +25,11 @@ return [
     | (también la del mapa y la de «Cómo llegar»), el teléfono en texto y como
     | enlace `tel:`, y el horario. Son datos ficticios del proyecto académico.
     |
+    | `horario_semanal` es el mismo horario por día ISO (1 = lunes … 7 = domingo;
+    | el que falta, cerrado) con la hora de apertura y la de cierre. Lo usa la
+    | pastilla «¿Abierto ahora?» de la portada (spec 038, D16); un test lo
+    | mantiene igual que `horario`.
+    |
     */
 
     'contacto' => [
@@ -32,6 +37,14 @@ return [
         'telefono' => '753 000 0000',
         'telefono_enlace' => 'tel:+527530000000',
         'horario' => ['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00'],
+        'horario_semanal' => [
+            1 => ['9:00', '20:00'],
+            2 => ['9:00', '20:00'],
+            3 => ['9:00', '20:00'],
+            4 => ['9:00', '20:00'],
+            5 => ['9:00', '20:00'],
+            6 => ['9:00', '14:00'],
+        ],
     ],
 
 ];
