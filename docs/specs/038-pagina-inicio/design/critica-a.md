@@ -1,20 +1,20 @@
-# Crítica · opción A · ronda 4 (desde cero)
+# Crítica · opción A «La ventana del diente» · ronda 5
 
-Inspector: 0 FAIL · 2 WARN (`titular-largo` a 320 y 390: la escala mínima del titular no cabe en dos líneas en 288 px). Capturas en `.ai/inspect/r4-a/` (no versionadas): claro, oscuro, reducido y sin JavaScript a 320, 390, 900 y 1440 px, y la tira del scroll a 320 y 1440.
+Inspector: 0 FAIL · 4 WARN (`titular-largo` en los cuatro anchos: el titular va a propósito en tres líneas, una palabra por línea, como cartel). Capturas en `.ai/inspect/r5/` (no versionadas): claro, oscuro, reducido y sin JavaScript a 320, 390, 900 y 1440 px, la tira del scroll a 320 y 1440 y la ficha.
 
 | Pase | Nota 0–10 | Qué se ve (captura) |
 |---|---|---|
-| Idea: se reconoce el sujeto en la primera pantalla; pasa la prueba del competidor | 7 | `1440-reducido`: el titular y, al lado, la hoja del plan con «Qué vamos a hacer · Cuánto dura · Qué opciones tienes», el texto aprobado de CA3 |
-| Cinco segundos | 8 | Titular, «Agendar mi primera cita», horario y teléfono en la primera pantalla |
-| Jerarquía y escala | 7 | Titular de 76 px en serif; números de apartado de 64 px; una sola cosa dominante por apartado |
-| Plenitud | 6 | Siete fichas completas y ficha de datos con mapa; el margen izquierdo de cada apartado queda vacío a propósito (documento), lo que alarga la página |
-| Composición | 7 | Portada en dos columnas, apartados numerados, fila de fichas, ficha de datos: la idea llega al pie (la firma) |
-| Color | 7 | Contenida: rosa oscuro solo en filetes, números y botón |
-| Imágenes | 5 | Sin imágenes: el dibujo es el propio documento (casillas, filetes); la más sobria |
-| Movimiento | 6 | Casillas que se marcan, entradas por línea y la fila arrastrable; sin escenas (registro sobrio) |
-| Cosa viva | 8 | «¿Qué te trae?» lleva a la ficha que toca y dice «Te orientamos a…»; sin JavaScript, la tabla |
-| Teléfono | 8 | `320-reducido`: una columna, el plan bajo el titular, la fila con el dedo |
-| Reducido y sin JS | 9 | Todo visible; las casillas ya marcadas |
-| Accesibilidad | 9 | Contraste ≥ 7:1 en botones y textos; foco del sistema; motivos con `aria-pressed` y resultado en `aria-live` |
+| Idea: se reconoce el sujeto en la primera pantalla; pasa la prueba del competidor | 9 | `film-1440-00`: el titular de cartel y, al lado, la foto de la marca dentro del contorno del diente del logo, con su trazo rosa |
+| Cinco segundos | 8 | Titular, «Agendar mi primera cita», la pastilla «Cerrado · abrimos mañana a las 9:00», el horario completo y el teléfono |
+| Jerarquía y escala | 9 | Titular de 120 px; índice de 56 px; el nombre de 360 px en el pie |
+| Plenitud | 8 | Siete categorías reales con su número; dirección de cartel; semana con «hoy»; mapa grande; promesas completas |
+| Composición | 8 | Portada en dos columnas, escena a pantalla completa, campo rosa, historia fijada, índice, tarjeta de tinta, ubicación y pie: cada sección con su forma |
+| Color | 8 | Comprometida: el rosa de marca en la escena y en «Sobre nosotros»; tinta en la tarjeta de la agenda |
+| Imágenes | 8 | La foto propia de la marca, enmarcada por su logo; solo existe a 900 px (riesgo) |
+| Movimiento | 9 | `film-1440-02/03`: la ventana con forma de diente crece al bajar hasta abrir la foto; trazo que se dibuja; titular por líneas; índice que responde |
+| Cosa viva | 8 | «¿Está abierto ahora?» con la hora de Lázaro Cárdenas y la fila de hoy marcada; sin JavaScript, el horario completo |
+| Teléfono | 8 | `320-reducido`: una columna, la ventana bajo los botones, la foto contenida sobre el rosa en la escena, índice con la cuenta al lado |
+| Reducido y sin JS | 9 | `1440-reducido` y `1440-sin-js`: la foto entera sin velo, todas las secciones, el horario |
+| Accesibilidad | 9 | Tinta sobre `--p400` 5.34:1; botón principal 5.34:1 y 15.4:1 con el puntero; foco del sistema; decorativos ocultos; menú con Escape |
 
-Tres problemas corregidos en la ronda 2: el titular en tres líneas en el escritorio (columna 8fr y 76 px: ahora dos); el horario de la ficha de datos heredaba el estilo de etiqueta; el aire vertical entre apartados (de 120 a 96 px).
+Tres problemas corregidos en la ronda 2: el nombre del pie no llegaba a todo el ancho (`--text-firma` hasta 360 px); la pastilla del estado partía su píldora en dos líneas a 320 (esquinas de 22 px); y, respecto a la referencia, el horario desaparecía al escribirse la pastilla (ahora va siempre al lado).
