@@ -235,3 +235,4 @@ entradas, escena, cabecera y menú).
 | 2026-10-21 | diseño | Tipografía y superficie «Sitio público» | Cormorant Garamond (títulos) y Montserrat (texto) en woff2 servidas por la app; `--text-display`, `--text-statement`, `--shadow-soft`, píldoras y tokens de movimiento; el panel no cambia | usuario |
 | 2026-10-21 | implícita | Mapa | El iframe de Google con carga diferida, `title` y `referrerpolicy`, y su nota | spec CA5, CA7 · plan TM4 |
 | 2026-10-21 | implícita | Horario en la presentación | Siempre visible junto a la pastilla (en la referencia lo sustituía) | spec CA1 |
+| 2026-10-21 | diseño | ¿Se aprueba este documento (ronda 5)? | Aprobado | usuario |
