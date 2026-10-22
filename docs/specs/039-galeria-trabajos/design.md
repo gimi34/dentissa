@@ -15,7 +15,7 @@ Sin composiciones propias: la galería se diseñó junto con la página de inici
 (opción B, ronda 2), para que la página se pensara entera. Todo el detalle (composición, componentes,
 cambios al sistema, movimiento, accesibilidad y anti-clichés) está en
 [../038-pagina-inicio/design/history/ronda-2/design.md](../038-pagina-inicio/design/history/ronda-2/design.md) (archivado el 2026-10-21, cuando la 038 se rediseñó en la línea de la landing del colaborador, opción C de la ronda 3; esta spec se adaptará a esa línea en su propio `/design-spec`), y las pantallas en
-`../038-pagina-inicio/design/opcion-b.html`.
+`../038-pagina-inicio/design/history/ronda-2/opcion-b.html`.
 
 - **Lo que aporta esta spec:**
   - el carrusel de trabajos de la página de inicio (foto 7 · panel 5, sin avance automático), con

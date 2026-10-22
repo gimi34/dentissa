@@ -13,7 +13,7 @@ refinado: 2026-10-20     # /design-spec 038 --fix: cabecera y pie como la landin
 Hecho con `/design-spec 038` sobre el sistema `docs/design/system.md`. Cubre a la vez la página de
 inicio y `/servicios` (038), el carrusel, `/galeria` y su gestión (039), y las promociones y su
 gestión (040), para que la página se piense entera. Las specs 039 y 040 tienen su propio
-`design.md`, que remite a este. Composición elegida en `design/opcion-b.html`. Las opciones de la
+`design.md`, que remite a este. Composición elegida en `opcion-b.html` (en esta misma carpeta). Las opciones de la
 ronda 1 están archivadas en `design/history/ronda-1/`.
 
 Documentos de partida: `docs/design/nicho.md` (territorio A · «La consulta por dentro»),
