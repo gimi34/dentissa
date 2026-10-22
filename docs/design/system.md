@@ -446,8 +446,10 @@ la ubicación de D):
   `--text-portada` con «prioridad.» en cursiva `--p200`. Es `position: sticky` y la hoja de «Sobre
   nosotros» (`--bg`, esquinas `--radius-lg` arriba) sube encima.
 - **Pastilla «¿Abierto ahora?»** (`.estado-ahora`, 1.8.0): `--white` con texto `--p600`,
-  `--radius-pill`, sin salto de línea, con un punto del color del texto; la escribe el script común
-  (`aria-live="polite"`). Sin JavaScript no aparece.
+  `--radius-pill`, en una línea desde 560 px, con un punto del color del texto; la escribe el script
+  común en tres partes (`aria-live="polite"`). Por debajo de 560 px, en dos líneas: el estado arriba y
+  la hora debajo, sin el «·» a la vista y con esquinas `--radius` (refinado del 2026-10-21: el texto más
+  largo no cabe a 320 px). Sin JavaScript no aparece.
 - **Franja del horario** (`.marquesina`, 1.8.0): campo `--p600` a todo el ancho con el horario en
   `--text-marquesina` y `--p100`, `aria-hidden`. Se mueve (`--duration-marquesina`, `linear`) solo con
   JavaScript y sin movimiento reducido; se para con el puntero y con su **botón de pausa**

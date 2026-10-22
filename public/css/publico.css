@@ -430,6 +430,10 @@ summary:focus-visible {
     .lb-lista dl { grid-template-columns: 1fr; }
     .lb-lista dt { padding-bottom: 0; border-bottom: 0; }
     .portada-texto .c-btn { width: 100%; }
+    /* La pastilla en dos líneas: el estado arriba y la hora debajo, sin el «·» (refinado de design.md). */
+    .estado-ahora { flex-wrap: wrap; row-gap: 0; border-radius: var(--radius); }
+    .estado-sep { display: none; }
+    .estado-ahora > :last-child { flex-basis: 100%; padding-left: calc(var(--space-3) * 2); }
 }
 
 /* Movimiento solo si nadie lo ha pedido reducido (y, el que oculta o mueve, solo con JavaScript). */

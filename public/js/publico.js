@@ -58,7 +58,21 @@
         }
     }
 
-    global.DentissaPublico = { estadoAhora: estadoAhora };
+    // Escribe el texto en tres span (estado, « · » y hora) para que publico.css lo parta en dos
+    // líneas por debajo de 560 px (refinado de design.md); el textContent junto es el texto entero.
+    function escribirPastilla(elemento, texto) {
+        var corte = texto.indexOf(' · ');
+        var partes = corte < 0 ? [texto] : [texto.slice(0, corte), ' · ', texto.slice(corte + 3)];
+        elemento.textContent = '';
+        partes.forEach(function (parte, i) {
+            var span = elemento.ownerDocument.createElement('span');
+            if (i === 1) span.className = 'estado-sep';
+            span.textContent = parte;
+            elemento.appendChild(span);
+        });
+    }
+
+    global.DentissaPublico = { estadoAhora: estadoAhora, escribirPastilla: escribirPastilla };
 
     var doc = global.document;
     if (!doc) return;
@@ -67,7 +81,7 @@
         var vivo = doc.querySelector('[data-live]');
         var pastilla = vivo && vivo.querySelector('.estado-ahora');
         var texto = vivo && estadoAhora(vivo.getAttribute('data-horario'), vivo.getAttribute('data-zona'), new Date());
-        if (pastilla && texto) pastilla.textContent = texto;
+        if (pastilla && texto) escribirPastilla(pastilla, texto);
 
         // Con movimiento reducido o sin IntersectionObserver, nada se oculta ni se mueve.
         var reducido = typeof global.matchMedia === 'function' && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
