@@ -1,8 +1,11 @@
-/* Páginas públicas (spec 038; system.md 1.7.2; diseño en docs/specs/038-pagina-inicio/design.md).
-   Se carga después de app.css, que pone los tokens de :root. Colores, tipografía, espacios, radios y
-   duraciones salen de tokens; los únicos literales son los de @font-face, las condiciones de los
-   cortes de 900 y 560 px, las proporciones de rejilla (fr) y de capas (z-index) y los factores de
-   calc() sobre --touch-min y --space-8 (tokens de tamaño propios en el roadmap, /review 038 R25). */
+/* Páginas públicas (spec 038; system.md 1.8.0, rediseño de la ronda 3; diseño en
+   docs/specs/038-pagina-inicio/design.md, opción C «La línea de abound» con la ubicación de D).
+   Se carga después de app.css, que pone los tokens de :root. Colores, tipografía, espacios, radios,
+   sombras y duraciones salen de tokens; los únicos literales son los de @font-face, las condiciones de
+   los cortes de 900 y 560 px, las proporciones de rejilla (fr) y de capas (z-index), los porcentajes
+   del velo y de la columna de texto, la escala del botón al pulsar y los factores de calc() sobre
+   --touch-min, --space-6, --space-8 y --text-publico-h2 (tokens de tamaño propios en el roadmap,
+   /review 038 R25). La clase js la pone public/js/publico.js: sin ella todo está visible y quieto. */
 
 /* Lexend autoalojada (OFL-1.1, public/fonts/lexend/OFL.txt): sin servicios externos de fuentes. */
 @font-face {
@@ -20,7 +23,8 @@
     src: url("../fonts/lexend/lexend-latin-600-normal.woff2") format("woff2");
 }
 
-/* Anula el display: flex y la familia del body de app.css (plan D3). */
+/* Anula el display: flex y la familia del body de app.css (plan D3). Sin overflow: la portada es
+   sticky y un ancestro que recorte la rompería (plan, Riesgos). */
 body.publico {
     display: block;
     font-family: var(--font-publica);
@@ -30,8 +34,8 @@ body.publico {
     color: var(--text);
 }
 
-/* Foco del sistema en todo lo que se enfoca; sobre el rosa de la cabecera y el pie, el anillo inverso
-   (D15). Los enlaces del panel blanco del menú vuelven al del sistema (/analyze A21). */
+/* Foco del sistema en todo lo que se enfoca; sobre el rosa (cabecera, pie, portada y franja), el
+   anillo inverso (D15, D16). Los enlaces del panel blanco del menú vuelven al del sistema (A21). */
 a:focus-visible,
 summary:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring);
@@ -39,7 +43,9 @@ summary:focus-visible {
 }
 .pub-cabecera a:focus-visible,
 .pub-cabecera summary:focus-visible,
-.lb-pie a:focus-visible {
+.lb-pie a:focus-visible,
+.portada a:focus-visible,
+.marquesina-pausa:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-inverso);
     outline-offset: var(--focus-ring-offset);
 }
@@ -53,7 +59,7 @@ summary:focus-visible {
 .t-h2 { font-size: var(--text-publico-h2); line-height: var(--leading-publico-h2); font-weight: var(--weight-bold); }
 .t-body { max-width: var(--measure); }
 
-/* Botones y enlaces */
+/* Botón en píldora (system.md 1.8.0): principal, claro (cabecera y portada) y secundario. */
 .c-btn {
     display: inline-flex;
     align-items: center;
@@ -61,16 +67,18 @@ summary:focus-visible {
     gap: var(--space-3);
     min-height: var(--touch-min);
     min-width: var(--touch-min);
-    padding: 0 var(--space-7);
-    border-radius: var(--radius-sm);
-    border: var(--border-width) solid transparent;
+    padding: 0 var(--space-8);
+    border-radius: var(--radius-pill);
+    border: var(--border-width-strong) solid transparent;
     font: inherit;
     font-weight: var(--weight-bold);
     text-align: center;
     text-decoration: none;
 }
-.c-btn--primary { background: var(--p500); color: var(--white); }
+.c-btn--primary { background: var(--p500); color: var(--white); box-shadow: var(--sombra-tarjeta-alta); }
 .c-btn--primary:hover { background: var(--p600); }
+.c-btn--claro { background: var(--white); color: var(--p600); }
+.c-btn--claro:hover { background: var(--p100); }
 .c-btn--secondary { background: var(--white); color: var(--p600); border-color: var(--border-control); }
 .c-btn--secondary:hover { background: var(--p100); }
 .c-link {
@@ -82,7 +90,7 @@ summary:focus-visible {
     text-underline-offset: var(--space-1);
 }
 
-/* Logo: el PNG pintado con --p600 por máscara, como el menú del móvil (spec 034, D10). */
+/* Logo: el PNG pintado por máscara, como el menú del móvil (spec 034, D10). */
 .logo {
     display: block;
     width: calc(var(--touch-min) * 4);
@@ -91,13 +99,11 @@ summary:focus-visible {
     -webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat;
     mask: url("../images/logo-icon.png") left center / contain no-repeat;
 }
-.logo--grande { width: min(100%, calc(var(--touch-min) * 8)); }
 
-/* Cabecera pública: barra --p500 a todo el ancho, como la landing del colaborador (D15); navegación en
-   el escritorio y menú <details> con el icono de hamburguesa por debajo de 900 px. */
-.pub-cabecera { background: var(--p500); color: var(--white); }
+/* Cabecera pública: barra --p500 a todo el ancho (D15); navegación en el escritorio y menú <details>
+   con el icono de hamburguesa por debajo de 900 px. */
+.pub-cabecera { position: relative; z-index: 3; background: var(--p500); color: var(--white); }
 .pub-cabecera .logo { background: var(--white); }
-.pub-cabecera .c-btn--secondary { border-color: transparent; }
 .pub-bar {
     display: flex;
     align-items: center;
@@ -108,13 +114,14 @@ summary:focus-visible {
     padding: var(--space-4) var(--space-6);
 }
 .pub-inicio { display: inline-flex; align-items: center; min-height: var(--touch-min); }
-.pub-nav-d { display: flex; align-items: center; gap: var(--space-7); }
-.pub-nav-d ul { display: flex; gap: var(--space-7); list-style: none; }
+.pub-nav-d { display: flex; align-items: center; gap: var(--space-8); }
+.pub-nav-d ul { display: flex; gap: var(--space-8); list-style: none; }
 .pub-nav-d a:not(.c-btn) {
     display: inline-flex;
     align-items: center;
     min-height: var(--touch-min);
     color: var(--white);
+    font-weight: var(--weight-strong);
     text-decoration: none;
 }
 .pub-nav-d a:not(.c-btn):hover { text-decoration: underline; }
@@ -135,7 +142,7 @@ summary:focus-visible {
 .pub-menu ul {
     position: absolute;
     right: 0;
-    z-index: 2;
+    z-index: 4;
     min-width: calc(var(--touch-min) * 5);
     margin-top: var(--space-3);
     padding: var(--space-3);
@@ -158,93 +165,211 @@ summary:focus-visible {
 .lb-seccion { padding: var(--space-seccion) 0; }
 .lb-seccion--blanca { background: var(--white); border-block: var(--border-width) solid var(--border); }
 .lb-cabeza { display: grid; gap: var(--space-3); margin-bottom: var(--space-8); }
-.lb-cabeza-fila { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-5); }
+.lb-cabeza-centro { display: grid; justify-items: center; gap: var(--space-3); margin-bottom: var(--space-8); text-align: center; }
+.lb-cabeza-centro p { max-width: var(--measure); color: var(--p600); }
+.centro { margin-top: var(--space-8); text-align: center; }
 
-/* Placa de la consulta con el aviso de la puerta. */
-.lb-placa {
+/* M-1 · La hoja que sube sobre la consulta: la portada a sangre queda fija una pantalla y «Sobre
+   nosotros» sube encima con el desplazamiento nativo, sin script. */
+.hoja { position: relative; }
+.portada {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    min-height: 100svh;
+    color: var(--white);
+}
+.portada-foto {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+}
+/* El texto pequeño queda entero sobre el tramo fuerte del velo (/analyze A24). */
+.portada-velo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, var(--velo-portada) 0 60%, var(--velo-portada-suave) 100%);
+}
+.portada-texto {
+    position: relative;
+    z-index: 1;
     display: grid;
-    grid-template-columns: 3fr 2fr;
-    gap: var(--space-8);
-    margin: var(--space-seccion) auto 0;
-    padding: var(--space-8);
+    justify-items: start;
+    gap: var(--space-7);
+    width: 100%;
+    padding-block: var(--space-seccion);
+}
+.portada .logo { width: calc(var(--touch-min) * 6); background: var(--white); }
+.t-portada {
+    font-size: var(--text-portada);
+    line-height: var(--leading-portada);
+    letter-spacing: var(--tracking-portada);
+    font-weight: var(--weight-bold);
+}
+.t-portada em { font-style: italic; color: var(--p200); }
+.portada-lead { max-width: 60%; font-size: var(--text-publico-h3); }
+.portada a:not(.c-btn) { color: inherit; }
+
+/* «¿Abierto ahora?» (cosa viva): la escribe el script; vacía (sin JavaScript), no se ve. */
+.estado { display: grid; justify-items: start; gap: var(--space-2); max-width: 60%; font-size: var(--text-publico-small); }
+.estado-ahora {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-pill);
     background: var(--white);
-    border: var(--border-width-strong) solid var(--p600);
-    border-radius: var(--radius);
+    color: var(--p600);
+    font-weight: var(--weight-bold);
+    white-space: nowrap;
 }
-.lb-placa-texto { display: grid; gap: var(--space-6); align-content: start; }
-.lb-acciones { display: flex; flex-wrap: wrap; gap: var(--space-5); align-items: center; }
-.lb-aviso {
+.estado-ahora::before { content: ""; width: var(--space-3); height: var(--space-3); border-radius: var(--radius-pill); background: currentColor; }
+.estado-ahora:empty { display: none; }
+.estado a { display: inline-flex; align-items: center; min-height: var(--touch-min); font-weight: var(--weight-bold); }
+
+.hoja-capitulo {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 calc(var(--space-6) * -1.5) calc(var(--space-6) * 3) var(--velo-portada-suave);
+}
+
+/* Sobre nosotros: centrado en el ancho de lectura. */
+.lb-nosotros { display: grid; justify-items: center; gap: var(--space-6); text-align: center; }
+.lb-nosotros p { max-width: var(--measure); }
+
+/* Tarjeta de categoría (system.md 1.8.0): enlace entero; con el puntero o el foco cambian el borde,
+   la sombra y el icono; no se levanta. */
+.tarjetas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-7); list-style: none; }
+.tarjeta {
+    --tarjeta-icono-fondo: var(--p100);
+    --tarjeta-icono-trazo: var(--p600);
     display: grid;
-    gap: var(--space-5);
+    justify-items: center;
     align-content: start;
-    padding-left: var(--space-8);
-    border-left: var(--border-width) solid var(--border);
+    gap: var(--space-3);
+    height: 100%;
+    min-height: var(--touch-min);
+    padding: var(--space-8) var(--space-6);
+    text-align: center;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--white);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--sombra-tarjeta);
 }
-.lb-aviso h2 { font-size: var(--text-publico-h3); color: var(--p600); }
-.lb-aviso dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-6); }
-.lb-aviso dt { font-weight: var(--weight-bold); }
-.lb-aviso dd { font-variant-numeric: tabular-nums; }
-.lb-llamar { justify-self: start; }
+.tarjeta h3 { font-size: var(--text-publico-h3); font-weight: var(--weight-bold); }
+.tarjeta p { color: var(--p600); font-size: var(--text-publico-small); }
+.tarjeta .icono {
+    width: var(--icono-tarjeta);
+    height: var(--icono-tarjeta);
+    padding: var(--space-5);
+    border-radius: var(--radius-pill);
+    background: var(--tarjeta-icono-fondo);
+    color: var(--tarjeta-icono-trazo);
+}
+.tarjeta:hover {
+    --tarjeta-icono-fondo: var(--p600);
+    --tarjeta-icono-trazo: var(--white);
+    border-color: var(--border-control);
+    box-shadow: var(--sombra-tarjeta-alta);
+}
+.tarjeta:focus-visible {
+    --tarjeta-icono-fondo: var(--p600);
+    --tarjeta-icono-trazo: var(--white);
+    border-color: var(--border-control);
+    box-shadow: var(--sombra-tarjeta-alta);
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
 
-/* Sobre nosotros: título a la izquierda y texto de lectura a la derecha (1:2). */
-.lb-nosotros { display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-8); }
-.lb-nosotros p { max-width: var(--measure); margin-bottom: var(--space-6); }
+/* M-2 · La franja del horario: decorativa (el horario está en el texto). Solo se mueve con
+   JavaScript, que muestra su botón de pausa (WCAG 2.2.2, /analyze A23). */
+.marquesina-zona { position: relative; background: var(--p600); }
+.marquesina { overflow: hidden; padding: var(--space-8) 0; color: var(--p100); }
+.marquesina-pista { display: flex; width: max-content; }
+.marquesina-pista span {
+    padding-right: 1ch;
+    font-size: var(--text-marquesina);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-portada);
+    letter-spacing: var(--tracking-portada);
+    white-space: nowrap;
+}
+.marquesina-pausa {
+    position: absolute;
+    right: var(--space-6);
+    bottom: var(--space-4);
+    display: inline-grid;
+    place-items: center;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    padding: 0;
+    border: var(--border-width-strong) solid var(--p100);
+    border-radius: var(--radius-pill);
+    background: var(--p600);
+    color: var(--p100);
+    cursor: pointer;
+}
+/* El botón lleva hidden en el HTML: su display no lo anula (/analyze A33). */
+.marquesina-pausa[hidden] { display: none; }
+.marquesina-pausa svg { width: var(--icon-md); height: var(--icon-md); }
+.marquesina-pausa .icono-reanudar,
+.marquesina-pausa[aria-pressed="true"] .icono-pausar { display: none; }
+.marquesina-pausa[aria-pressed="true"] .icono-reanudar { display: block; }
+@keyframes marquesina { to { transform: translateX(-50%); } }
 
-/* Puertas: las categorías del avance (sin contador) y el índice de /servicios (con contador). */
-.lb-puertas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); list-style: none; }
-.lb-puertas a,
+/* Ubicación 3:2 con el mapa grande a la izquierda (opción D). */
+.ubicacion { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-8); align-items: stretch; }
+.ubicacion-mapa { order: -1; display: grid; grid-template-rows: 1fr auto; }
+.ubicacion-datos { display: grid; align-content: center; gap: var(--space-6); }
+.ubicacion-sub { color: var(--p600); font-weight: var(--weight-bold); }
+.datos { display: grid; gap: var(--space-4); list-style: none; }
+.datos li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--space-4); }
+.datos address { font-style: normal; }
+.dato-icono { width: calc(var(--icon-md) * 4 / 3); height: calc(var(--icon-md) * 4 / 3); color: var(--p600); }
+.mapa {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: calc(var(--touch-min) * 9);
+    background: var(--white);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-lg);
+}
+.nota-mapa { margin-top: var(--space-3); color: var(--p600); font-size: var(--text-publico-small); }
+
+/* /servicios: título centrado, índice en píldoras a la izquierda y listas de definiciones. */
+.lb-servicios { display: grid; grid-template-columns: 1fr 3fr; gap: var(--space-8); align-items: start; }
+.lb-indice { position: sticky; top: var(--space-6); display: grid; gap: var(--space-2); }
 .lb-indice a {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
     min-height: var(--touch-min);
-    padding: 0 var(--space-5);
+    padding: 0 var(--space-6);
     background: var(--white);
     border: var(--border-width) solid var(--border-control);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-pill);
     color: var(--p600);
     font-weight: var(--weight-strong);
     text-decoration: none;
 }
-.lb-puertas a:hover,
 .lb-indice a:hover { background: var(--p100); }
-.lb-puertas a:focus-visible,
 .lb-indice a:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
     background: var(--p100);
 }
 .lb-indice small { color: var(--text); font-weight: var(--weight-regular); font-size: var(--text-publico-small); }
-
-/* La calle: el mapa con la placa de la dirección apoyada encima. */
-.lb-calle { position: relative; }
-.mapa {
-    display: block;
-    width: 100%;
-    height: calc(var(--touch-min) * 9);
-    background: var(--white);
-    border: var(--border-width) solid var(--border);
-    border-radius: var(--radius-lg);
-}
-.lb-placa-dir {
-    position: absolute;
-    left: var(--space-8);
-    bottom: var(--space-8);
-    display: grid;
-    gap: var(--space-4);
-    max-width: calc(var(--touch-min) * 9);
-    padding: var(--space-7);
-    background: var(--white);
-    border: var(--border-width-strong) solid var(--p600);
-    border-radius: var(--radius);
-}
-.lb-placa-dir address { font-style: normal; }
-.nota-mapa { margin-top: var(--space-3); color: var(--p600); font-size: var(--text-publico-small); }
-
-/* /servicios: índice de puertas a la izquierda y listas de definiciones por categoría. */
-.lb-servicios { display: grid; grid-template-columns: 1fr 3fr; gap: var(--space-8); align-items: start; }
-.lb-indice { position: sticky; top: var(--space-6); display: grid; gap: var(--space-2); }
 .lb-lista { display: grid; gap: var(--space-8); }
 .lb-lista section h2 {
     margin-bottom: var(--space-4);
@@ -263,7 +388,7 @@ summary:focus-visible {
 .lb-lista dd:empty { display: none; }
 .lb-volver { margin-top: var(--space-7); }
 
-/* Pie público: banda --p600 en tres columnas y el © centrado, como la landing del colaborador (D15). */
+/* Pie público: banda --p600 en tres columnas (D15) y la marca grande a todo el ancho (D16). */
 .lb-pie { padding: var(--space-8) 0 var(--space-6); background: var(--p600); color: var(--white); }
 .lb-pie .logo { background: var(--white); }
 .lb-pie .c-link { color: var(--white); }
@@ -273,44 +398,67 @@ summary:focus-visible {
 .lb-pie dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-6); }
 .lb-pie dd { font-variant-numeric: tabular-nums; }
 .lb-pie nav { display: flex; flex-wrap: wrap; gap: var(--space-5); }
+.lb-pie .lb-pie-marca { width: 100%; margin-top: var(--space-8); background: var(--p500); }
 .lb-pie-legal {
-    margin-top: var(--space-8);
+    margin-top: var(--space-6);
     padding-top: var(--space-6);
     border-top: var(--border-width) solid var(--p500);
     font-size: var(--text-publico-small);
     text-align: center;
 }
 
-/* Por debajo de 900 px: menú <details>, placa y bloques en una columna. */
+/* Por debajo de 900 px: menú <details>, velo uniforme, tarjetas a dos columnas y bloques apilados. */
 @media (max-width: 899px) {
     .pub-nav-d { display: none; }
     .pub-menu { display: block; }
-    .lb-placa { grid-template-columns: 1fr; gap: var(--space-7); margin-top: var(--space-7); padding: var(--space-7); }
-    .lb-aviso { padding-left: 0; padding-top: var(--space-7); border-left: 0; border-top: var(--border-width) solid var(--border); }
-    .lb-nosotros,
+    .portada-velo { background: var(--velo-portada); }
+    .portada-lead,
+    .estado { max-width: none; }
+    .tarjetas { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .tarjeta { padding: var(--space-6) var(--space-4); }
+    .ubicacion,
     .lb-servicios { grid-template-columns: 1fr; }
-    .lb-puertas,
-    .lb-indice { grid-template-columns: 1fr 1fr; }
-    .lb-indice { position: static; }
-    /* Posicionada para pintarse sobre el iframe del mapa, al que se superpone (/review R2). */
-    .lb-placa-dir { position: relative; left: auto; bottom: auto; max-width: none; margin-top: calc(var(--space-8) * -1.5); margin-inline: var(--space-6); }
+    .ubicacion-mapa { order: 0; }
+    .mapa { min-height: calc(var(--touch-min) * 7); }
+    .lb-indice { grid-template-columns: 1fr 1fr; position: static; }
     .lb-pie-cols { grid-template-columns: 1fr; gap: var(--space-7); }
 }
 
-/* Por debajo de 560 px: puertas, índice y definiciones en una columna y botones a todo el ancho. */
+/* Por debajo de 560 px: índice y definiciones en una columna y botones a todo el ancho. */
 @media (max-width: 559px) {
-    .lb-puertas,
     .lb-indice,
     .lb-lista dl { grid-template-columns: 1fr; }
     .lb-lista dt { padding-bottom: 0; border-bottom: 0; }
-    .lb-acciones .c-btn,
-    .lb-llamar { width: 100%; justify-self: stretch; }
+    .portada-texto .c-btn { width: 100%; }
 }
 
-/* Movimiento solo si nadie lo ha pedido reducido: color en --duration-fast y botones que se hunden. */
+/* Movimiento solo si nadie lo ha pedido reducido (y, el que oculta o mueve, solo con JavaScript). */
 @media (prefers-reduced-motion: no-preference) {
-    .c-btn { transition: background-color var(--duration-fast) var(--ease-puerta), transform var(--duration-fast) var(--ease-puerta); }
-    .c-btn:active { transform: translateY(var(--border-width)); }
-    .lb-puertas a,
+    /* M-4 · Respuesta bajo la mano: el botón cede al pulsarlo; la tarjeta solo cambia de color. */
+    .c-btn { transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out); }
+    .c-btn:active { transform: scale(0.97); }
+    .tarjeta { transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+    .tarjeta .icono { transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
     .lb-indice a { transition: background-color var(--duration-base) var(--ease-puerta); }
+
+    /* M-2 · La franja: una vuelta en --duration-marquesina; se para con el puntero y con su botón. */
+    .js .marquesina-pista { animation: marquesina var(--duration-marquesina) linear infinite; }
+    .js .marquesina:hover .marquesina-pista,
+    .js .marquesina.is-pausada .marquesina-pista { animation-play-state: paused; animation-duration: var(--duration-marquesina); }
+
+    /* M-3 · Entradas por sección: títulos por línea, partes subiendo, el mapa desde una máscara;
+       escalonadas con --i (lo pone el script) y una sola vez (is-in). */
+    .js [data-reveal] {
+        opacity: 0;
+        transform: translateY(calc(var(--space-6) * 1.5));
+        transition: opacity var(--duration-reveal) var(--ease-expo), transform var(--duration-reveal) var(--ease-expo);
+        transition-delay: calc(var(--i, 0) * var(--stagger));
+    }
+    .js [data-reveal="line"] { transform: translateY(calc(var(--text-publico-h2) * 0.6)); }
+    .js [data-reveal="mask"] {
+        transform: none;
+        clip-path: inset(0 0 100% 0);
+        transition: opacity var(--duration-reveal) var(--ease-expo), clip-path var(--duration-reveal) var(--ease-expo);
+    }
+    .js [data-reveal].is-in { opacity: 1; transform: none; clip-path: inset(0); }
 }
