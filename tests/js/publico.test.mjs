@@ -97,3 +97,32 @@ test('con IntersectionObserver pone la clase js al terminar (A27)', () => {
     cargar({ document: falso.document, matchMedia: falso.matchMedia, IntersectionObserver });
     assert.equal(falso.clases.has('js'), true);
 });
+
+/** Elemento falso con lo justo para escribir la pastilla: hijos, textContent y su documento. */
+function elementoFalso() {
+    const crear = (etiqueta) => ({
+        tagName: etiqueta.toUpperCase(), className: '', textContent: '', hijos: [],
+        appendChild(hijo) { this.hijos.push(hijo); return hijo; },
+        set innerHTML(_) { throw new Error('innerHTML no se usa'); },
+    });
+    const el = crear('span');
+    el.ownerDocument = { createElement: crear };
+    Object.defineProperty(el, 'textContent', {
+        get() { return this.hijos.map((h) => h.textContent).join(''); },
+        set(valor) { if (valor !== '') throw new Error('se escribe por partes'); this.hijos = []; },
+    });
+    return el;
+}
+
+test('la pastilla se escribe en tres partes para partirse en el móvil (refinado)', () => {
+    const { escribirPastilla } = cargar().DentissaPublico;
+    assert.equal(typeof escribirPastilla, 'function', 'publico.js expone escribirPastilla');
+    const el = elementoFalso();
+    escribirPastilla(el, 'Cerrado ahora · abre mañana a las 9:00');
+    assert.deepEqual(el.hijos.map((h) => [h.tagName, h.className, h.textContent]), [
+        ['SPAN', '', 'Cerrado ahora'],
+        ['SPAN', 'estado-sep', ' · '],
+        ['SPAN', '', 'abre mañana a las 9:00'],
+    ]);
+    assert.equal(el.textContent, 'Cerrado ahora · abre mañana a las 9:00', 'el texto entero no cambia');
+});

@@ -109,8 +109,9 @@
 // servicios del volcado; `--medir` las abre a 320, 390, 900 y 1440 (por debajo de 900, también con el
 // menú <details> abierto). No necesitan ids.json ni cuentas, pero el resto de la pasada sí.
 // Rediseño de la ronda 3 (D16): las mismas comprobaciones también con JavaScript desactivado (todo
-// visible y sin el botón de pausa); con JavaScript, la pastilla «¿Abierto ahora?» en una línea a 320 y
-// el botón de la franja, que con el teclado la pausa y la reanuda (WCAG 2.2.2, /analyze A23).
+// visible y sin el botón de pausa); con JavaScript, la pastilla «¿Abierto ahora?» (dos líneas por
+// debajo de 560 px y una desde ahí, refinado de design.md) y el botón de la franja, que con el teclado
+// la pausa y la reanuda (WCAG 2.2.2, /analyze A23).
 //
 // Entradas: /tmp/capturas/ids.json y las cuentas <rol>1@dentissa.test (cliente1, con
 // CORREO_CLIENTE) con la contraseña de CLAVE.
@@ -328,7 +329,7 @@ const COMPROBACIONES = [
   '035 sin JS: a 390, las pantallas de la 035 sin desplazamiento horizontal (CA9)',
   '038 páginas públicas: / y /servicios sin sesión, a 320, 390, 900 y 1440 sin desplazamiento horizontal ni recortes; enlaces, botones y summary visibles ≥ 44 × 44 (sin enlaces dentro de un <p>), y por debajo de 900, también con el menú <details> abierto (CA9)',
   '038 sin JS: / y /servicios a 320, 390, 900 y 1440 con JavaScript desactivado, sin desplazamiento horizontal ni recortes, con todas las entradas visibles y sin el botón de pausa de la franja (CA8, D16)',
-  '038 pastilla: a 320, con JavaScript, «¿Abierto ahora?» escrita, en una sola línea y dentro de la pantalla (D16)',
+  '038 pastilla: con JavaScript, «¿Abierto ahora?» escrita y dentro de la pantalla; a 320 y 390, en dos líneas como mucho con la hora en la segunda; a 900 y 1440, en una línea (D16, refinado de design.md)',
   '038 franja: a 390, con JavaScript, el botón de pausa se ve; con el teclado, Intro la pausa (aria-pressed=true y la animación en pausa) y Espacio la reanuda (WCAG 2.2.2, /analyze A23)',
 ];
 
@@ -1181,20 +1182,27 @@ async function medir() {
     }
   }
 
-  // Rediseño (D16): la pastilla «¿Abierto ahora?» cabe en una línea a 320.
-  await intenta('publico-inicio@320 pastilla', async () => {
-    const page = await abrir(null, '/', '320');
-    await page.waitForFunction(() => document.querySelector('.estado-ahora')?.textContent.trim() !== '', null, { timeout: 5000 });
-    const p = await page.evaluate(() => {
-      const el = document.querySelector('.estado-ahora');
-      const r = el.getBoundingClientRect();
-      return { texto: el.textContent.trim(), alto: r.height, linea: parseFloat(getComputedStyle(el).lineHeight), derecha: r.right, W: window.innerWidth };
+  // Rediseño (D16): la pastilla «¿Abierto ahora?»: dos líneas por debajo de 560 px (estado arriba y
+  // hora debajo) y una desde ahí (refinado de design.md del 2026-10-21).
+  for (const ancho of ANCHOS_PUBLICOS) {
+    const donde = `publico-inicio@${ancho} pastilla`;
+    await intenta(donde, async () => {
+      const page = await abrir(null, '/', ancho);
+      await page.waitForFunction(() => document.querySelector('.estado-ahora')?.textContent.trim() !== '', null, { timeout: 5000 });
+      const p = await page.evaluate(() => {
+        const el = document.querySelector('.estado-ahora');
+        const partes = [...el.children].filter((h) => h.getClientRects().length);
+        const filas = new Set(partes.map((h) => Math.round(h.getBoundingClientRect().top)));
+        return { texto: el.textContent.trim(), filas: filas.size, derecha: el.getBoundingClientRect().right, W: window.innerWidth,
+          horaAbajo: partes.length > 1 && partes.at(-1).getBoundingClientRect().top > partes[0].getBoundingClientRect().top + 1 };
+      });
+      if (!/^(Abierto|Cerrado) ahora · /.test(p.texto)) falla(donde, `texto inesperado: «${p.texto}»`);
+      if (p.derecha > p.W + 1) falla(donde, 'se sale de la pantalla');
+      if (Number(ancho) < 560 && (p.filas > 2 || !p.horaAbajo)) falla(donde, `en el móvil, ${p.filas} filas y la hora ${p.horaAbajo ? 'debajo' : 'al lado'}`);
+      if (Number(ancho) >= 560 && p.filas !== 1) falla(donde, `ocupa ${p.filas} filas desde 560 px`);
+      await page.close();
     });
-    if (!/^(Abierto|Cerrado) ahora · /.test(p.texto)) falla('publico-inicio@320 pastilla', `texto inesperado: «${p.texto}»`);
-    if (p.alto > p.linea * 1.9) falla('publico-inicio@320 pastilla', `ocupa más de una línea (${Math.round(p.alto)} px)`);
-    if (p.derecha > p.W + 1) falla('publico-inicio@320 pastilla', 'se sale de la pantalla');
-    await page.close();
-  });
+  }
 
   // Rediseño (D16) y /analyze A23 (WCAG 2.2.2): el botón de pausa de la franja, con el teclado.
   await intenta('publico-inicio@390 franja', async () => {
