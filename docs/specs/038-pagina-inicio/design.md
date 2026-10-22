@@ -142,7 +142,7 @@ Versión **1.8.0** de `system.md` (y `system.html`), en la primera tarea del red
 
 | Imagen | Origen | Licencia y crédito | Sustituir antes de publicar |
 |---|---|---|---|
-| Portada: una consulta dental (dentista y paciente, luz clara, encuadre con el sujeto a la derecha) | Foto de un banco abierto con licencia de uso comercial (p. ej. Unsplash o Pexels), descargada al repo; sustituye a la de abound (`cover-bg.jpg`, licencia desconocida), que solo se usa en las maquetas | La del banco, con autor y fuente acreditados en el pie de `design.md` y en `docs/design/system.md` → «Imágenes»; la elige `/implement` y la aprueba el usuario | Sí, por una foto real de la consulta cuando exista; nunca se presenta como el equipo de Dentissa |
+| Portada: una consulta dental (dentista y paciente, luz clara, encuadre con el sujeto a la derecha) | Foto de un banco abierto con licencia de uso comercial (p. ej. Unsplash o Pexels), descargada al repo; sustituye a la de abound (`cover-bg.jpg`, licencia desconocida), que solo se usa en las maquetas. Elegida en T072: dentistas con mascarilla atendiendo a una paciente (`public/images/portada-800.webp` y `-1600.webp`) | Jonathan Borba, Unsplash (https://unsplash.com/photos/hl6uG9cHW5A), Unsplash License; descargada el 2026-10-21. Crédito completo y SHA-256 en `docs/design/system.md` → «Imágenes». Aprobada por el usuario el 2026-10-21 | Sí, por una foto real de la consulta cuando exista; nunca se presenta como el equipo de Dentissa |
 | Logo «Melissa López N. · Odontología integral» | `public/images/logo-icon.png` (del proyecto), pintado por máscara | Propio | No |
 | Iconos de categoría | Dibujados en código (SVG de 24 × 24, trazo 1.6) | Propios | No |
 
