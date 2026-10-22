@@ -220,7 +220,6 @@ summary:focus-visible {
 .estado-ahora {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-3);
     padding: var(--space-2) var(--space-5);
     border-radius: var(--radius-pill);
     background: var(--white);
@@ -228,7 +227,7 @@ summary:focus-visible {
     font-weight: var(--weight-bold);
     white-space: nowrap;
 }
-.estado-ahora::before { content: ""; width: var(--space-3); height: var(--space-3); border-radius: var(--radius-pill); background: currentColor; }
+.estado-ahora::before { content: ""; flex: none; width: var(--space-3); height: var(--space-3); margin-right: var(--space-3); border-radius: var(--radius-pill); background: currentColor; }
 .estado-ahora:empty { display: none; }
 .estado a { display: inline-flex; align-items: center; min-height: var(--touch-min); font-weight: var(--weight-bold); }
 
@@ -431,7 +430,7 @@ summary:focus-visible {
     .lb-lista dt { padding-bottom: 0; border-bottom: 0; }
     .portada-texto .c-btn { width: 100%; }
     /* La pastilla en dos líneas: el estado arriba y la hora debajo, sin el «·» (refinado de design.md). */
-    .estado-ahora { flex-wrap: wrap; row-gap: 0; border-radius: var(--radius); }
+    .estado-ahora { flex-wrap: wrap; border-radius: var(--radius); }
     .estado-sep { display: none; }
     .estado-ahora > :last-child { flex-basis: 100%; padding-left: calc(var(--space-3) * 2); }
 }
