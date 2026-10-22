@@ -108,6 +108,9 @@
 // Spec 038 (D12): las páginas públicas `/` y `/servicios` se capturan y se miden sin sesión, con los
 // servicios del volcado; `--medir` las abre a 320, 390, 900 y 1440 (por debajo de 900, también con el
 // menú <details> abierto). No necesitan ids.json ni cuentas, pero el resto de la pasada sí.
+// Rediseño de la ronda 3 (D16): las mismas comprobaciones también con JavaScript desactivado (todo
+// visible y sin el botón de pausa); con JavaScript, la pastilla «¿Abierto ahora?» en una línea a 320 y
+// el botón de la franja, que con el teclado la pausa y la reanuda (WCAG 2.2.2, /analyze A23).
 //
 // Entradas: /tmp/capturas/ids.json y las cuentas <rol>1@dentissa.test (cliente1, con
 // CORREO_CLIENTE) con la contraseña de CLAVE.
@@ -324,6 +327,9 @@ const COMPROBACIONES = [
   '035 menú: a 390, «Menú» y «Cerrar menú» sin borde ni fondo, de 44 × 44 y con foco visible (CA11)',
   '035 sin JS: a 390, las pantallas de la 035 sin desplazamiento horizontal (CA9)',
   '038 páginas públicas: / y /servicios sin sesión, a 320, 390, 900 y 1440 sin desplazamiento horizontal ni recortes; enlaces, botones y summary visibles ≥ 44 × 44 (sin enlaces dentro de un <p>), y por debajo de 900, también con el menú <details> abierto (CA9)',
+  '038 sin JS: / y /servicios a 320, 390, 900 y 1440 con JavaScript desactivado, sin desplazamiento horizontal ni recortes, con todas las entradas visibles y sin el botón de pausa de la franja (CA8, D16)',
+  '038 pastilla: a 320, con JavaScript, «¿Abierto ahora?» escrita, en una sola línea y dentro de la pantalla (D16)',
+  '038 franja: a 390, con JavaScript, el botón de pausa se ve; con el teclado, Intro la pausa (aria-pressed=true y la animación en pausa) y Espacio la reanuda (WCAG 2.2.2, /analyze A23)',
 ];
 
 const PANELES = { admin: '/admin', dentista: '/dentista', asistente: '/asistente', cliente: '/cliente' };
@@ -735,6 +741,8 @@ async function compararImagenes(lienzo, base, actual, fuera) {
 const TOQUE_MAIN = '.main a, .main button, .main input:not([type=hidden]), .main select, .main textarea';
 // Spec 038: controles de las páginas públicas (cabecera, menú, contenido y pie).
 const TOQUE_PUBLICO = 'body.publico a, body.publico button, body.publico summary';
+// Lo que debe quedar dentro de la pantalla en las páginas públicas.
+const RECORTE_PUBLICO = 'body.publico a, body.publico button, body.publico summary, body.publico h1, body.publico h2, body.publico p';
 const PUBLICAS = [['publico-inicio', '/'], ['publico-servicios', '/servicios']];
 const TOQUE_MENU = '#menu-principal nav a, #menu-principal .menu-cerrar, #menu-principal .btn-logout';
 
@@ -1129,6 +1137,13 @@ async function medir() {
   }
 
   // Spec 038 (CA9): páginas públicas sin sesión.
+  const fueraDeLaPantalla = (selector) => {
+    const W = window.innerWidth;
+    return [...document.querySelectorAll(selector)]
+      .filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
+      .filter((el) => { const r = el.getBoundingClientRect(); return r.left < -1 || r.right > W + 1; })
+      .map((el) => `${el.tagName.toLowerCase()} «${el.textContent.trim().slice(0, 30)}»`);
+  };
   for (const [id, ruta] of PUBLICAS) {
     for (const ancho of ANCHOS_PUBLICOS) {
       const donde = `${id}@${ancho}`;
@@ -1136,13 +1151,7 @@ async function medir() {
         const page = await abrir(null, ruta, ancho);
         const a = await page.evaluate(EN_PAGINA.anchos);
         if (a.doc > a.vista) falla(donde, `la página mide ${a.doc} px de ${a.vista}`);
-        for (const r of await page.evaluate(() => {
-          const W = window.innerWidth;
-          return [...document.querySelectorAll('body.publico a, body.publico button, body.publico summary, body.publico h1, body.publico h2, body.publico p')]
-            .filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
-            .filter((el) => { const r = el.getBoundingClientRect(); return r.left < -1 || r.right > W + 1; })
-            .map((el) => `${el.tagName.toLowerCase()} «${el.textContent.trim().slice(0, 30)}»`);
-        })) falla(donde, `fuera de la pantalla: ${r}`);
+        for (const r of await page.evaluate(fueraDeLaPantalla, RECORTE_PUBLICO)) falla(donde, `fuera de la pantalla: ${r}`);
         for (const t of await page.evaluate(EN_PAGINA.toque, TOQUE_PUBLICO)) falla(donde, `toque < 44: ${t}`);
         if (Number(ancho) < 900) {
           const menu = page.locator('.pub-menu summary');
@@ -1156,8 +1165,57 @@ async function medir() {
         }
         await page.close();
       });
+
+      // Rediseño (D16): sin JavaScript, la página terminada: todo visible y la franja quieta, sin botón.
+      await intenta(`${donde} sin JS`, async () => {
+        const page = await abrir(null, ruta, ancho, { js: false });
+        const a = await page.evaluate(EN_PAGINA.anchos);
+        if (a.doc > a.vista) falla(`${donde} sin JS`, `la página mide ${a.doc} px de ${a.vista}`);
+        for (const r of await page.evaluate(fueraDeLaPantalla, RECORTE_PUBLICO)) falla(`${donde} sin JS`, `fuera de la pantalla: ${r}`);
+        for (const r of await page.evaluate(() => [...document.querySelectorAll('[data-reveal]')]
+          .filter((el) => getComputedStyle(el).opacity !== '1')
+          .map((el) => `«${el.textContent.trim().slice(0, 30)}»`))) falla(`${donde} sin JS`, `entrada oculta: ${r}`);
+        if (await page.locator('.marquesina-pausa').isVisible()) falla(`${donde} sin JS`, 'el botón de pausa se ve sin JavaScript');
+        await page.close();
+      });
     }
   }
+
+  // Rediseño (D16): la pastilla «¿Abierto ahora?» cabe en una línea a 320.
+  await intenta('publico-inicio@320 pastilla', async () => {
+    const page = await abrir(null, '/', '320');
+    await page.waitForFunction(() => document.querySelector('.estado-ahora')?.textContent.trim() !== '', null, { timeout: 5000 });
+    const p = await page.evaluate(() => {
+      const el = document.querySelector('.estado-ahora');
+      const r = el.getBoundingClientRect();
+      return { texto: el.textContent.trim(), alto: r.height, linea: parseFloat(getComputedStyle(el).lineHeight), derecha: r.right, W: window.innerWidth };
+    });
+    if (!/^(Abierto|Cerrado) ahora · /.test(p.texto)) falla('publico-inicio@320 pastilla', `texto inesperado: «${p.texto}»`);
+    if (p.alto > p.linea * 1.9) falla('publico-inicio@320 pastilla', `ocupa más de una línea (${Math.round(p.alto)} px)`);
+    if (p.derecha > p.W + 1) falla('publico-inicio@320 pastilla', 'se sale de la pantalla');
+    await page.close();
+  });
+
+  // Rediseño (D16) y /analyze A23 (WCAG 2.2.2): el botón de pausa de la franja, con el teclado.
+  await intenta('publico-inicio@390 franja', async () => {
+    const page = await abrir(null, '/', '390');
+    const boton = page.locator('.marquesina-pausa');
+    if (!(await boton.isVisible())) throw new Error('el botón de pausa no se ve con JavaScript');
+    const estado = () => page.evaluate(() => ({
+      pulsado: document.querySelector('.marquesina-pausa').getAttribute('aria-pressed'),
+      animacion: document.querySelector('.marquesina-pista').getAnimations().map((x) => x.playState).join(','),
+    }));
+    await boton.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelector('.marquesina-pausa').getAttribute('aria-pressed') === 'true', null, { timeout: 2000 });
+    const pausada = await estado();
+    if (pausada.animacion !== 'paused') falla('publico-inicio@390 franja', `con Intro la animación está «${pausada.animacion}»`);
+    await page.keyboard.press('Space');
+    await page.waitForFunction(() => document.querySelector('.marquesina-pausa').getAttribute('aria-pressed') === 'false', null, { timeout: 2000 });
+    const reanudada = await estado();
+    if (reanudada.animacion !== 'running') falla('publico-inicio@390 franja', `con Espacio la animación está «${reanudada.animacion}»`);
+    await page.close();
+  });
 
   return fallos;
 }
