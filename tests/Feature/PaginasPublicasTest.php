@@ -19,10 +19,12 @@ use Tests\TestCase;
  *
  * Metadatos propios y una sola canónica absoluta en el dominio de producción,
  * sin `noindex`; un solo `h1` y títulos sin saltos; nombres accesibles;
- * ningún script; ningún recurso de otros sitios salvo el mapa de Google en
- * `/`; todo el contenido en el HTML; peso de `/` por debajo de 1 MB; la fuente
- * con su licencia; ninguna salida sin escapar; la página del colaborador y sus
- * imágenes retiradas; y todos los enlaces internos resuelven.
+ * un solo script propio (`publico.js` con `defer`, rediseño D16); ningún
+ * recurso de otros sitios salvo el mapa de Google en `/`; todo el contenido en
+ * el HTML; peso de `/` por debajo de 1 MB; la fuente con su licencia y la foto
+ * de la portada con su crédito (D17); ninguna salida sin escapar ni sumideros
+ * de HTML en el script (TM1); la página del colaborador y sus imágenes
+ * retiradas; y todos los enlaces internos resuelven.
  */
 class PaginasPublicasTest extends TestCase
 {
@@ -42,6 +44,13 @@ class PaginasPublicasTest extends TestCase
             'canonica' => self::DOMINIO.'/servicios',
         ],
     ];
+
+    private const SCRIPT = 'js/publico.js';
+
+    /** Sumideros de HTML y de código que `publico.js` no puede usar (TM1, /analyze A27). */
+    private const SUMIDEROS = '/\binnerHTML\b|\bouterHTML\b|\binsertAdjacentHTML\b|document\.write|\beval\s*\(|\bnew\s+Function\b/';
+
+    private const FOTOS = ['images/portada-800.webp' => '800w', 'images/portada-1600.webp' => '1600w'];
 
     private const VISTAS = [
         'resources/views/layouts/publico.blade.php',
@@ -154,12 +163,84 @@ class PaginasPublicasTest extends TestCase
         }
     }
 
-    public function test_ninguna_pagina_publica_carga_scripts(): void
+    /** Comprueba que la página solo carga `publico.js`, con `defer` y sin código en línea. */
+    private function soloElScriptPublico(DOMXPath $xpath, string $ruta): void
     {
+        $scripts = $xpath->query('//script');
+        $this->assertSame(1, $scripts->length, "{$ruta}: un solo script (D16).");
+        $script = $scripts->item(0);
+        $this->assertSame('/'.self::SCRIPT, parse_url($script->getAttribute('src'), PHP_URL_PATH), "{$ruta}: el script es el propio.");
+        $this->assertTrue($script->hasAttribute('defer'), "{$ruta}: con defer, sin bloquear el render.");
+        $this->assertSame('', trim($script->textContent), "{$ruta}: sin código en línea.");
+    }
+
+    public function test_solo_carga_el_script_publico_con_defer(): void
+    {
+        // Sustituye a «ninguna página pública carga scripts»: con el rediseño (D16) hay un solo
+        // script propio; sin él la página está completa (CA8) y P10 sigue por debajo de 100 kB.
         foreach (array_keys(self::METADATOS) as $ruta) {
             $xpath = $this->xpath($this->get($ruta)->assertOk()->getContent());
-            $this->assertSame(0, $xpath->query('//script')->length, "{$ruta}: sin JavaScript (CA8, 0 kB de JS propio).");
+            $this->soloElScriptPublico($xpath, $ruta);
             $this->assertSame(0, $xpath->query('//*[@onclick or @onload or @onerror or @onchange or @onsubmit]')->length, "{$ruta}: sin manejadores en línea.");
+        }
+
+        $this->assertFileExists(public_path(self::SCRIPT));
+        $this->assertLessThanOrEqual(100_000, filesize(public_path(self::SCRIPT)), 'El JavaScript propio pesa como mucho 100 kB (P10).');
+    }
+
+    public function test_el_script_publico_no_usa_innerhtml(): void
+    {
+        // TM1 (/analyze A27): el script escribe solo con textContent; ningún sumidero de HTML ni de código.
+        foreach (['el.innerHTML = x', 'el.outerHTML = x', 'el.insertAdjacentHTML("a", x)', 'document.write(x)', 'eval(x)', 'new Function(x)'] as $control) {
+            $this->assertMatchesRegularExpression(self::SUMIDEROS, $control, "El patrón detecta «{$control}».");
+        }
+        $this->assertDoesNotMatchRegularExpression(self::SUMIDEROS, 'el.textContent = x; evaluar(x)', 'Y no confunde textContent.');
+
+        $this->assertFileExists(public_path(self::SCRIPT));
+        $codigo = file_get_contents(public_path(self::SCRIPT));
+        $this->assertDoesNotMatchRegularExpression(self::SUMIDEROS, $codigo, 'publico.js no usa sumideros de HTML ni de código.');
+        $this->assertStringContainsString('textContent', $codigo, 'publico.js escribe con textContent.');
+    }
+
+    public function test_la_foto_de_portada_va_acreditada(): void
+    {
+        // D17 y /analyze A28: las dos WebP existen, la foto es decorativa y responsiva, y su crédito
+        // (autor, fuente, licencia, fecha y el SHA-256 de cada archivo) está en system.md.
+        $xpath = $this->xpath($this->get('/')->getContent());
+        $imagenes = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " portada ")]//img');
+        $this->assertSame(1, $imagenes->length, 'Una sola foto en la portada.');
+        $img = $imagenes->item(0);
+        $this->assertTrue($img->hasAttribute('alt'));
+        $this->assertSame('', $img->getAttribute('alt'), 'Es decorativa.');
+        $this->assertNotSame('', trim($img->getAttribute('sizes')), 'Con sizes.');
+        $this->assertSame('high', $img->getAttribute('fetchpriority'), 'Primera pantalla: con prioridad alta.');
+        $this->assertNotSame('lazy', $img->getAttribute('loading'), 'Primera pantalla: no es perezosa.');
+
+        $sistema = file_get_contents(base_path('docs/design/system.md'));
+        $this->assertMatchesRegularExpression('/^## Imágenes$/m', $sistema);
+        $seccion = preg_split('/^## /m', substr($sistema, strpos($sistema, "## Imágenes
+") ?: strpos($sistema, "## Imágenes
+")))[1];
+
+        foreach (self::FOTOS as $foto => $ancho) {
+            $this->assertFileExists(public_path($foto));
+            $this->assertMatchesRegularExpression('~(^|,)\s*\S*/'.preg_quote($foto, '~').'(\?\S*)?\s+'.$ancho.'\s*(,|$)~', $img->getAttribute('srcset'), "El srcset ofrece {$foto} a {$ancho}.");
+            $this->assertStringContainsString(hash_file('sha256', public_path($foto)), $seccion, "system.md lleva el SHA-256 de {$foto}.");
+        }
+        $this->assertMatchesRegularExpression('/Autor: \S[^.]*\S/u', $seccion, 'Con autor.');
+        $this->assertMatchesRegularExpression('~Fuente: [^,]+, https://\S+~u', $seccion, 'Con fuente y URL.');
+        $this->assertMatchesRegularExpression('~Licencia: [^(]+\(https://\S+\)~u', $seccion, 'Con licencia y su enlace.');
+        $this->assertMatchesRegularExpression('/Descargada el \d{4}-\d{2}-\d{2}/u', $seccion, 'Con la fecha de descarga.');
+    }
+
+    public function test_los_adornos_del_rediseno_estan_ocultos(): void
+    {
+        // Rediseño (D16): el velo, la franja y la marca grande del pie no se anuncian.
+        $xpath = $this->xpath($this->get('/')->getContent());
+        foreach (['portada-velo', 'marquesina', 'lb-pie-marca'] as $clase) {
+            $nodo = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " '.$clase.' ")]')->item(0);
+            $this->assertNotNull($nodo, "/: hay .{$clase}.");
+            $this->assertSame('true', $nodo->getAttribute('aria-hidden'), "/: .{$clase} es decorativo.");
         }
     }
 
@@ -170,7 +251,8 @@ class PaginasPublicasTest extends TestCase
             'id' => (string) Str::uuid(), 'nombre' => 'Servicio038 Html', 'descripcion' => 'Descripción038 Html',
             'categoria' => 'Categoria038 Html', 'duracion_min' => 30, 'precio' => 100, 'activo' => 1,
         ]);
-        $inicio = $this->get('/')->getContent();
+        // Sobre el texto del HTML, no sobre el código: el titular lleva un salto y una cursiva (D16).
+        $inicio = trim(preg_replace('/\s+/u', ' ', $this->xpath($this->get('/')->getContent())->query('//body')->item(0)->textContent));
         foreach (['Tu sonrisa, nuestra prioridad.', 'Sobre nosotros', 'Nuestros servicios', 'Categoria038 Html', '753 000 0000', 'Lunes a viernes', 'Cómo llegar'] as $texto) {
             $this->assertStringContainsString($texto, $inicio, "/ trae «{$texto}» en el HTML.");
         }
@@ -185,6 +267,12 @@ class PaginasPublicasTest extends TestCase
         $urls = [];
         foreach ($xpath->query('//*[@src]') as $n) {
             $urls[] = [$n->nodeName, $n->getAttribute('src')];
+        }
+        // Rediseño (D17): cada candidata del srcset de la foto cuenta (la mayor incluida).
+        foreach ($xpath->query('//*[@srcset]') as $n) {
+            foreach (explode(',', $n->getAttribute('srcset')) as $candidata) {
+                $urls[] = [$n->nodeName, preg_split('/\s+/', trim($candidata))[0]];
+            }
         }
         foreach ($xpath->query('//link[@href][@rel!="canonical"]') as $n) {
             $urls[] = ['link', $n->getAttribute('href')];
@@ -259,6 +347,8 @@ class PaginasPublicasTest extends TestCase
             $total += filesize($archivo);
         }
 
+        $this->assertContains('/'.self::SCRIPT, $rutas, 'El peso cuenta publico.js (D16).');
+        $this->assertContains('/images/portada-1600.webp', $rutas, 'El peso cuenta la foto mayor (D17).');
         $this->assertLessThanOrEqual(1_000_000, $total, 'La primera visita a / pesa como mucho 1 MB (sin el mapa).');
     }
 
@@ -346,7 +436,8 @@ class PaginasPublicasTest extends TestCase
         $this->assertSame('Prueba 038', trim($xpath->query('//title')->item(0)->textContent));
         $this->assertSame('Descripción de prueba 038', $this->meta($xpath, 'description'));
         $this->assertSame('https://dentissa.app/_prueba', $xpath->query('//link[@rel="canonical"]')->item(0)->getAttribute('href'));
-        $this->assertSame(0, $xpath->query('//script')->length);
+        // Rediseño (D16): el layout carga publico.js con defer (antes, ningún script).
+        $this->soloElScriptPublico($xpath, '/_prueba/publico');
         $this->assertGreaterThan(0, $xpath->query('//details/summary')->length, 'Menú del móvil con details y summary.');
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Iniciar sesión"]')->length);
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Servicios"][@href="'.url('/servicios').'"]')->length, 'Navegación de la 038: Servicios → /servicios.');
