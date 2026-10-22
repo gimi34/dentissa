@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved            # draft | approved (solo el usuario aprueba)
 exploration: options
 system_version: 1.8.0
 created: 2026-10-20
