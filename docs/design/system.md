@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.7.2
+version: 1.8.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # Sistema de diseño de Dentissa
@@ -65,6 +65,8 @@ que usa `system.html`.
 | `--green` / `--green-bg` | `#1D9E75` / `#E1F5EE` | `--color-success` | Badge "Completada", flash de éxito, cifra "Completadas" | 2.98:1 sobre --green-bg · 3.39:1 sobre --white (no cumple, DS1) |
 | `--amber` / `--amber-bg` | `#854F0B` / `#FAEEDA` | `--color-warning` | Badge "En curso", avisos | 5.87:1 sobre --amber-bg |
 | `--blue` / `--blue-bg` | `#185FA5` / `#E6F1FB` | `--color-info` | Badge "Confirmada" | 5.70:1 sobre --blue-bg |
+| `--velo-portada` (spec 038, 1.8.0) | `rgba(114, 36, 62, 0.82)` (`--p800` al 82 %) | `--color-velo` | Velo de la marca sobre la foto de la portada pública, en el tramo del texto | blanco 6.41:1 y `--p200` 4.06:1 (texto grande) en el peor caso (foto blanca: `#8B4B61`) |
+| `--velo-portada-suave` (spec 038, 1.8.0) | `rgba(114, 36, 62, 0.35)` | `--color-velo-suave` | Extremo derecho del degradado del velo, donde se ve la foto; sin texto encima | — (no lleva texto pequeño) |
 | `--overlay` | `rgba(0, 0, 0, 0.45)` | `--color-overlay` | Velo bajo el menú abierto en el móvil (spec 033) | — (no lleva texto) |
 | (literal) `#C75078` | `#C75078` | `--color-sidebar` | Barra lateral, medida en las 104 capturas con menú; no es token (DS4) | blanco 4.33:1 · menú en blanco al 90% 3.82:1 (no cumple, DS1) · `.nav-label` en blanco al 65% 2.72:1 (no cumple, DS1) |
 
@@ -95,6 +97,10 @@ públicas el texto secundario es `--p600` (6.54:1 sobre `--bg`); `--text-muted` 
 Interlineado de las páginas públicas (1.7.2, `/review 038` R1): `--leading-publico` (1.5) para el
 texto, `--leading-publico-h1` (1.15) para el `h1` y `--leading-publico-h2` (1.25) para los títulos de
 sección. Son proporciones sin unidad y solo van en `line-height`.
+Portada y franja (1.8.0, rediseño de la ronda 3): `--text-portada` (fluido de 40px a 320 px a 96px a
+1440 px, el titular de la portada, ≥ 4× el cuerpo), `--text-marquesina` (fluido de 34px a 80px, la
+franja del horario), `--leading-portada` (0.98, solo en `line-height`) y `--tracking-portada`
+(-0.03em, solo en `letter-spacing`), estos dos para el titular y la franja.
 
 Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
 `--text-meta` (13px, migas de pan) y `--text-marca` (16px; sin uso desde la spec 034, que cambia la marca de
@@ -178,6 +184,12 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - corte propio de las páginas públicas a **560 px** (`@media (max-width: 559px)`): puertas, índice y
     definiciones en una columna y botones a todo el ancho. Acompaña al de 900 px y, como él, es el único
     literal admitido, solo en la condición.
+- **Spec 038, rediseño de la ronda 3 (1.8.0):**
+  - `--radius-pill` (999px): botones, índice de `/servicios`, pastilla «¿Abierto ahora?»;
+  - `--sombra-tarjeta` (`0 1px 2px rgba(114, 36, 62, 0.08)`): tarjeta de categoría en reposo;
+  - `--sombra-tarjeta-alta` (`0 14px 32px rgba(114, 36, 62, 0.16)`): botón principal y tarjeta con el
+    puntero o el foco. Son las únicas sombras de las páginas públicas;
+  - `--icono-tarjeta` (56px): círculo del icono de la tarjeta de categoría.
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -416,7 +428,34 @@ con los botones a partes iguales y el texto centrado. Sin `:has()`, queda a la d
 
 ### Páginas públicas (spec 038)
 Componentes de `/` y `/servicios` (y de `/galeria` con la 039), en `public/css/publico.css`, solo con
-tokens ([diseño](../specs/038-pagina-inicio/design.md), opción B «La puerta de la consulta»):
+tokens. Desde 1.8.0 siguen el rediseño de la ronda 3 ([diseño](../specs/038-pagina-inicio/design.md), opción C «La línea de abound» con
+la ubicación de D):
+- **Botón en píldora** (`.c-btn`, 1.8.0): `--radius-pill`, borde `--border-width-strong`, alto
+  `--touch-min`. Principal (`.c-btn--primary`) en `--p500` con texto `--white` y
+  `--sombra-tarjeta-alta`; claro (`.c-btn--claro`) `--white` con texto `--p600`, en la cabecera y la
+  portada; secundario (`.c-btn--secondary`) `--white` con borde `--border-control`. Cede al pulsar
+  (`scale(0.97)`, `--duration-fast`, `--ease-out`), solo sin movimiento reducido.
+- **Tarjeta de categoría** (`.tarjeta`, 1.8.0): enlace entero `--white` con borde `--border`,
+  `--radius` y `--sombra-tarjeta`; icono en un círculo `--p100` de `--icono-tarjeta` con trazo `--p600`
+  (SVG `aria-hidden`); nombre (`h3`) en `--text-publico-h3` y «N tratamientos» en `--p600`. Con el
+  puntero o el foco: borde `--border-control`, `--sombra-tarjeta-alta` e icono invertido (`--p600`
+  con trazo `--white`); no se levanta. Rejilla de iguales: 4 columnas, 2 por debajo de 900 px.
+- **Portada a sangre** (exclusivo de `/`, 1.8.0): 100svh, foto decorativa (`<img alt="">`, ver
+  «Imágenes») con `object-position` a la derecha, velo `--velo-portada` → `--velo-portada-suave` de
+  izquierda a derecha (uniforme por debajo de 900 px), texto en el 60 % izquierdo y titular
+  `--text-portada` con «prioridad.» en cursiva `--p200`. Es `position: sticky` y la hoja de «Sobre
+  nosotros» (`--bg`, esquinas `--radius-lg` arriba) sube encima.
+- **Pastilla «¿Abierto ahora?»** (`.estado-ahora`, 1.8.0): `--white` con texto `--p600`,
+  `--radius-pill`, sin salto de línea, con un punto del color del texto; la escribe el script común
+  (`aria-live="polite"`). Sin JavaScript no aparece.
+- **Franja del horario** (`.marquesina`, 1.8.0): campo `--p600` a todo el ancho con el horario en
+  `--text-marquesina` y `--p100`, `aria-hidden`. Se mueve (`--duration-marquesina`, `linear`) solo con
+  JavaScript y sin movimiento reducido; se para con el puntero y con su **botón de pausa**
+  (`.marquesina-pausa`: `button` de `--touch-min`, icono `--icon-md` y borde `--border-width-strong`
+  en `--p100`, nombre «Pausar la franja del horario» con `aria-pressed`, foco `--focus-ring-inverso`;
+  lleva `hidden` hasta que el script lo muestra; WCAG 2.2.2).
+- **Placa** y **Puerta** (1.7.0, opción B): sustituidas en 1.8.0 por la portada, la tarjeta y la
+  ubicación 3:2 del rediseño; se documentan mientras el código las use.
 - **Placa** (`.lb-placa`, también `.lb-placa-dir`): superficie `--white`, borde `--border-width-strong`
   en `--p600`, `--radius` y relleno `--space-8` (`--space-7` por debajo de 900 px). Es la placa de la
   consulta en la portada (logo, título, «Agendar mi primera cita» y el aviso de la puerta con horario y
@@ -476,6 +515,17 @@ El estado se lee en el texto, no solo por el color.
 Iconos SVG de línea en el menú, los botones y las tarjetas. En el panel del paciente se mezclan con
 emojis (🕐, 👨‍⚕️, 💡) (DS14).
 
+## Imágenes
+
+| Imagen | Archivo | Origen y licencia | Uso |
+|---|---|---|---|
+| Logo «Melissa López N. · Odontología integral» | `public/images/logo-icon.png` | Propio | Logo enmascarado de la app y de las páginas públicas |
+| Iconos de categoría (spec 038, 1.8.0) | SVG en línea (`partials/icono-categoria`) | Propios, dibujados en código (24 × 24, trazo 1.6) | Tarjetas de categoría |
+
+Regla: la única foto de las páginas públicas va bajo un velo de la marca y nunca se presenta como el
+equipo de la consulta. Cada foto lleva aquí su autor, fuente, licencia, URL, fecha de descarga y el
+SHA-256 de cada archivo.
+
 ## Movimiento
 
 | Token | Valor | Uso |
@@ -483,11 +533,23 @@ emojis (🕐, 👨‍⚕️, 💡) (DS14).
 | `--duration-fast` | `0.15s` | La duración que ya usan las transiciones de `app.css`; con token, la transición del menú del móvil (spec 033) |
 | `--duration-base` (spec 038) | `0.25s` | Transiciones de las páginas públicas |
 | `--ease-puerta` (spec 038) | `cubic-bezier(0.2, 0, 0, 1)` | Curva sin rebote del territorio de las páginas públicas |
+| `--ease-out` (spec 038, 1.8.0) | `cubic-bezier(0.23, 1, 0.32, 1)` | Respuestas por debajo de 600 ms en las páginas públicas (botón que cede) |
+| `--ease-expo` (spec 038, 1.8.0) | `cubic-bezier(0.16, 1, 0.3, 1)` | Entradas de sección de las páginas públicas |
+| `--duration-reveal` (spec 038, 1.8.0) | `800ms` | Entradas de sección |
+| `--stagger` (spec 038, 1.8.0) | `80ms` | Escalonado entre partes de una entrada (cuatro pasos como máximo) |
+| `--duration-marquesina` (spec 038, 1.8.0) | `48s` | Una vuelta de la franja del horario |
 | (sin token) | `all 0.15s` | Hover de botones, menú y accesos rápidos (`translateY(-1px)` en `.quick-action`) |
 | (sin token) | animaciones `fadeUp` y `modalIn` | Entrada del acceso y del registro, y diálogos |
 
 No respeta `prefers-reduced-motion` (DS10), salvo el menú del móvil de la spec 033, que solo se anima
-con `prefers-reduced-motion: no-preference`.
+con `prefers-reduced-motion: no-preference`. Las páginas públicas (1.8.0) tampoco animan nada con
+movimiento reducido y, sin JavaScript, dejan todo visible y la franja quieta.
+
+Páginas públicas (1.8.0): una escena (la hoja que sube sobre la portada, CSS sticky), una jugada
+firma (la franja del horario), entradas por sección que cambian con el contenido (títulos por línea,
+tarjetas una a una, mapa desde una máscara) con la clase `is-in` que pone el script común
+`public/js/publico.js`, y respuesta bajo la mano (botones que ceden, tarjetas que cambian borde,
+sombra e icono).
 
 ## Pantallas principales
 
@@ -512,8 +574,8 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Nuevo y editar paciente (spec 035) | `system.html#pacientes-create-admin-390` · `capturas/pacientes-create-admin-320.png` | `system.html#pacientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, foco del sistema, acciones de formulario |
 | Expedientes (spec 035) | `system.html#expedientes-index-dentista-390` · `capturas/expedientes-index-dentista-320.png` | `system.html#expedientes-index-dentista-1440` | buscador con etiqueta, tabla (tarjetas en el móvil), paginación |
 | Expediente (spec 035) | `system.html#expedientes-show-admin-390` · `capturas/expedientes-show-admin-320.png` | `system.html#expedientes-show-admin-1440` | migas, cabecera, avisos de alergias y medicamentos, formulario con etiquetas, próxima visita, información (ficha en una columna) |
-| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública, placa, «Sobre nosotros», puertas de categorías, mapa con placa, pie |
-| Servicios (`/servicios`, spec 038) | capturas en T031 | capturas en T031 | cabecera pública, índice de puertas, listas por categoría, pie |
+| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública, portada a sangre con la pastilla «¿Abierto ahora?», hoja de «Sobre nosotros», tarjetas de categoría, franja del horario con su pausa, ubicación 3:2, pie con la marca (1.8.0; capturas en T086) |
+| Servicios (`/servicios`, spec 038) | capturas en T031 | capturas en T031 | cabecera pública, título centrado, índice en píldoras, listas por categoría, pie (1.8.0; capturas en T086) |
 | Nuevo expediente (spec 035) | `system.html#expedientes-create-admin-390` · `capturas/expedientes-create-admin-320.png` | `system.html#expedientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, acciones de formulario |
 
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
@@ -646,9 +708,11 @@ Estados: `capturada` · `sin captura (motivo)` · `no accesible (motivo)`.
 - Pantallas nuevas o modificadas: solo tokens de este documento, sin valores literales de color,
   tamaño ni espaciado. Si falta un valor, se añade aquí primero. El código anterior no bloquea
   (regla de "Código previo"; constitución, P9).
-- Páginas públicas (spec 038): un momento firma como máximo por página (el carrusel de la 039); las
-  promociones (040) sin cintillo, contadores ni colores de oferta; ninguna foto bajo texto; sin scripts
-  propios salvo el del carrusel.
+- Páginas públicas (spec 038; 1.8.0, rediseño de la ronda 3): una escena y una franja como máximo
+  por página; entradas que cambian con el contenido, nunca el mismo fundido en todo; nada se levanta al
+  pasar el puntero; la foto solo bajo un velo de la marca; un solo script propio
+  (`public/js/publico.js`, con `defer`) y la página completa sin él; todo movimiento de más de 5 s se
+  puede pausar (WCAG 2.2.2); las promociones (040) sin cintillo, contadores ni colores de oferta.
 
 ## Deuda de diseño
 
@@ -695,6 +759,7 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-10 | diseño | ¿Cómo se confirma la cancelación definitiva de «No reagendar»? | Con una casilla obligatoria «Entiendo que la cancelación no se puede deshacer» (`.campo-casilla`), validada en el servidor y sin JS; sustituye a «sin confirmación» (WCAG 3.3.4) | usuario (/review 028 R6; modifica D12) |
 | 2026-10-13 | diseño | ¿Qué incorpora el sistema para el móvil del personal (spec 034)? | Versión 1.5.0: opción A (tarjeta con etiquetas y filtro en la página); tokens `--tarjeta-etiqueta-w`, `--logo-movil-h`, `--space-detalle`, `--detalle-lateral-w` y los cuatro anchos mínimos del filtro; componentes «Tarjeta de lista en el móvil», «Filtro plegable», «Rejilla de estadísticas» y «Botón de icono»; cambian «Botón Menú» (solo icono), «Marca del menú del móvil» (logo con máscara) y la línea de tiempo de la dentista; `--text-marca` sin uso | usuario (spec 034 y plan 034, D1, D4, D5b, D6, D6b, D10; /analyze A33, A35, A36, A59, A60, A68, A69) |
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
+| 2026-10-21 | diseño | ¿Qué incorpora el sistema para el rediseño de la ronda 3 de las páginas públicas (spec 038)? | Versión 1.8.0: `--text-portada` y `--text-marquesina` (fluidos), `--leading-portada`, `--tracking-portada`, `--velo-portada`, `--velo-portada-suave`, `--radius-pill`, `--sombra-tarjeta`, `--sombra-tarjeta-alta`, `--icono-tarjeta`, `--ease-out`, `--ease-expo`, `--duration-reveal`, `--stagger` y `--duration-marquesina`; componentes «Botón en píldora» y «Tarjeta de categoría» (y los exclusivos de `/`: portada, pastilla, franja con su pausa); sección «Imágenes»; reglas de uso de las páginas públicas | usuario (spec 038, design.md ronda 3 y plan D16) |
 | 2026-10-21 | diseño | ¿Con qué tokens van el interlineado y la proporción del logo de las páginas públicas (`/review 038` R1, P9)? | Versión 1.7.2: `--leading-publico` (1.5), `--leading-publico-h1` (1.15), `--leading-publico-h2` (1.25) y `--logo-ratio` (454 / 135), los valores que ya usaba `publico.css` | usuario (`/review 038` r1) |
 | 2026-10-20 | diseño | ¿Cómo quedan la cabecera, el menú y el pie públicos tras la revisión de T025 (spec 038)? | Versión 1.7.1: token `--focus-ring-inverso` (`var(--white)`); «Cabecera pública» en `--p500` con logo y enlaces blancos, botón blanco y menú con solo el icono de hamburguesa sin borde; «Pie público» en `--p600` con tres columnas y ©, siguiendo la landing del colaborador (su `#D4537E` con blanco no cumple AA) | usuario (spec 038, /design-spec --fix y plan D15) |
 | 2026-10-20 | diseño | ¿Qué incorpora el sistema para las páginas públicas (spec 038)? | Versión 1.7.0: familia `--font-publica` (Lexend autoalojada), `--text-publico-h1`/`-h2` fluidos, `--text-publico-h3`, `--text-publico`, `--text-publico-small`, `--space-seccion` (fluido), `--measure`, `--page-max`, `--duration-base`, `--ease-puerta` y `--green-texto`; secundario público `--p600`; corte de 560 px; componentes «Placa», «Puerta», «Cabecera pública» y «Pie público»; reglas de uso de las páginas públicas. Los tokens de la 039 (`--foto-ratio`, `--thumb-w`, `--duration-firma`) entran con ella | usuario (spec 038, design.md y plan D14) |

@@ -186,6 +186,20 @@
   .opt .p-pie { display: grid; gap: var(--space-3); max-width: 420px; padding: var(--space-5); background: var(--color-accent-text); color: var(--color-on-primary);
                 font-size: var(--text-publico-small); }
   .opt .p-pie a { color: var(--color-on-primary); }
+  .opt .p-pildora { display: inline-flex; align-items: center; min-height: var(--touch-min); padding: 0 var(--space-7); border-radius: var(--radius-pill);
+         border: var(--border-width-strong) solid transparent; background: var(--color-link); color: var(--color-on-primary); box-shadow: var(--sombra-tarjeta-alta); text-decoration: none; }
+  .opt .p-tarjeta { display: grid; gap: var(--space-3); max-width: 220px; padding: var(--space-7); background: var(--color-surface); color: var(--color-text);
+         border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--sombra-tarjeta); text-decoration: none; }
+  .opt .p-tarjeta .p-icono { display: grid; place-items: center; width: var(--icono-tarjeta); height: var(--icono-tarjeta); border-radius: var(--radius-pill);
+         background: var(--color-p100); color: var(--color-accent-text); }
+  .opt .p-tarjeta:hover, .opt .p-tarjeta:focus-visible { border-color: var(--color-border-control); box-shadow: var(--sombra-tarjeta-alta); }
+  .opt .p-tarjeta:hover .p-icono, .opt .p-tarjeta:focus-visible .p-icono { background: var(--color-accent-text); color: var(--color-on-primary); }
+  .opt .p-tarjeta small { color: var(--color-accent-text); }
+  .opt .p-franja { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); padding: var(--space-5); background: var(--color-accent-text);
+         color: var(--color-p100); font-size: var(--text-publico-h2); line-height: var(--leading-portada); letter-spacing: var(--tracking-portada); }
+  .opt .p-franja button { display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); background: none; color: var(--color-p100);
+         border: var(--border-width-strong) solid var(--color-p100); border-radius: var(--radius-pill); }
+  .opt .p-franja button:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-inverse); outline-offset: var(--focus-ring-offset); }
 </style>
 <style id="componentes-035">
   /* Muestras vivas de la spec 035 (perfil compacto, acciones de la barra y de formulario, campo con foco del sistema), con los tokens de .opt. */
@@ -308,9 +322,16 @@
     --leading-publico: 1.5; --leading-publico-h1: 1.15; --leading-publico-h2: 1.25; --logo-ratio: 454 / 135; /* spec 038, 1.7.2 */
     --space-seccion: clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px); --measure: 62ch; --page-max: 1180px; /* spec 038 */
     --ease-puerta: cubic-bezier(0.2, 0, 0, 1); /* spec 038 */
+    --text-portada: clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px); --text-marquesina: clamp(34px, calc(34px + 46 * (100vw - 320px) / 1120), 80px); /* spec 038, 1.8.0 */
+    --leading-portada: 0.98; --tracking-portada: -0.03em; --radius-pill: 999px; --icono-tarjeta: 56px; /* spec 038, 1.8.0 */
+    --velo-portada: rgba(114, 36, 62, 0.82); --velo-portada-suave: rgba(114, 36, 62, 0.35); /* spec 038, 1.8.0 */
+    --sombra-tarjeta: 0 1px 2px rgba(114, 36, 62, 0.08); --sombra-tarjeta-alta: 0 14px 32px rgba(114, 36, 62, 0.16); /* spec 038, 1.8.0 */
+    --color-velo-peor: #8B4B61;     /* --velo-portada sobre una foto blanca: el peor caso del texto (1.8.0) */
+    --color-p200: #F4C0D1; --color-p100: #FBEAF0; /* --p200 («prioridad.») y --p100 (franja), 1.8.0 */
 
     --duration-fast: 150ms; --duration-base: 250ms; /* --duration-base: 0.25s (spec 038) */
-    --ease-out: ease;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); /* spec 038, 1.8.0 */
+    --duration-reveal: 800ms; --stagger: 80ms; --duration-marquesina: 48s; /* spec 038, 1.8.0 */
   }
   .opt[data-motion="reduced"] { --duration-fast: 0ms; --duration-base: 0ms; }
   @media (prefers-reduced-motion: reduce) { .opt { --duration-fast: 0ms; --duration-base: 0ms; } }
@@ -402,6 +423,13 @@
       <li class="v-pair" data-fg="--color-focus-inverse" data-bg="--color-link" data-min="3">Anillo de foco inverso sobre la cabecera --p500 (spec 038, 1.7.1)</li>
       <li class="v-pair" data-fg="--color-focus-inverse" data-bg="--color-accent-text" data-min="3">Anillo de foco inverso sobre el pie --p600 (spec 038, 1.7.1)</li>
       <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-bg" data-min="3">Borde de la placa (--p600, spec 038)</li>
+      <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-velo-peor" data-min="4.5">Texto de la portada en blanco sobre el velo, peor caso (spec 038, 1.8.0)</li>
+      <li class="v-pair" data-fg="--color-p200" data-bg="--color-velo-peor" data-min="3">«prioridad.» en --p200 sobre el velo, texto grande (spec 038, 1.8.0)</li>
+      <li class="v-pair" data-fg="--color-p100" data-bg="--color-accent-text" data-min="4.5">Franja del horario: --p100 sobre --p600 (spec 038, 1.8.0)</li>
+      <li class="v-pair" data-fg="--color-p100" data-bg="--color-accent-text" data-min="3">Borde e icono del botón de pausa de la franja (spec 038, 1.8.0)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="4.5">Pastilla «¿Abierto ahora?» y «N tratamientos»: --p600 sobre blanco (spec 038, 1.8.0)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-p100" data-min="3">Icono de la tarjeta: trazo --p600 sobre --p100 (spec 038, 1.8.0)</li>
+      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-surface" data-min="3">Borde del botón secundario y de la tarjeta con foco (spec 038, 1.8.0)</li>
     </ul>
   </section>
 
@@ -572,6 +600,15 @@
         <div class="p-cabecera" aria-label="Cabecera pública a 390 px (1.7.1)">
           <span class="p-marca">Melissa López N.</span>
           <a class="p-hamburguesa" href="#paginas-publicas-038" aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+        </div>
+        <p><a class="p-pildora" href="#paginas-publicas-038">Agendar mi primera cita</a></p>
+        <a class="p-tarjeta" href="#paginas-publicas-038" aria-label="Tarjeta de categoría (1.8.0)">
+          <span class="p-icono" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 3c-2 0-3 2-3 4 0 3 1 5 2 8 .5 2 1 6 2.5 6S10 16 12 16s2 5 3.5 5S17 17 18 15c1-3 2-5 2-8 0-2-1-4-3-4-2 0-3 1-5 1S9 3 7 3z"/></svg></span>
+          <strong>Endodoncia</strong><small>3 tratamientos</small>
+        </a>
+        <div class="p-franja" aria-label="Franja del horario con su pausa (1.8.0)">
+          <span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</span>
+          <button type="button" aria-label="Pausar la franja del horario" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2"/></svg></button>
         </div>
         <div class="p-pie" aria-label="Pie público (1.7.1)">
           <strong>Horarios</strong><span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</span>
