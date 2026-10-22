@@ -8,9 +8,11 @@
     <title>@yield('titulo')</title>
     <meta name="description" content="@yield('descripcion')">
     <link rel="canonical" href="@yield('canonica')">
-    {{-- app.css por los tokens de :root; publico.css, Lexend autoalojada y los componentes públicos. Sin scripts (CA8). --}}
+    {{-- app.css por los tokens de :root; publico.css, Lexend autoalojada y los componentes públicos. --}}
     <link href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/publico.css') }}?v={{ filemtime(public_path('css/publico.css')) }}" rel="stylesheet">
+    {{-- Un solo script propio, con defer y sin código en línea: la página está completa sin él (CA8, D16). --}}
+    <script src="{{ asset('js/publico.js') }}?v={{ filemtime(public_path('js/publico.js')) }}" defer></script>
 </head>
 <body class="publico">
 
@@ -25,9 +27,9 @@
                 <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
             </ul>
             @auth
-                <a class="c-btn c-btn--secondary" href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a>
+                <a class="c-btn c-btn--claro" href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a>
             @else
-                <a class="c-btn c-btn--secondary" href="{{ route('login') }}">Iniciar sesión</a>
+                <a class="c-btn c-btn--claro" href="{{ route('login') }}">Iniciar sesión</a>
             @endauth
         </nav>
         {{-- Menú del móvil por debajo de 900 px: <details> funciona con el teclado y sin JavaScript.
@@ -55,7 +57,7 @@
     @yield('contenido')
 </main>
 
-{{-- Pie en tres columnas, como el de la landing del colaborador (D15). --}}
+{{-- Pie en tres columnas, como el de la landing del colaborador (D15), y la marca grande debajo (D16). --}}
 <footer class="lb-pie">
     <div class="lb-wrap">
         <div class="lb-pie-cols">
@@ -86,6 +88,8 @@
                 </nav>
             </div>
         </div>
+        {{-- Decorativa: la marca ya la nombran la cabecera y la primera columna. --}}
+        <span class="logo lb-pie-marca" aria-hidden="true"></span>
         <p class="lb-pie-legal">© {{ now()->year }} Dentissa</p>
     </div>
 </footer>
