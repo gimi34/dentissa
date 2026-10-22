@@ -520,6 +520,7 @@ emojis (🕐, 👨‍⚕️, 💡) (DS14).
 | Imagen | Archivo | Origen y licencia | Uso |
 |---|---|---|---|
 | Logo «Melissa López N. · Odontología integral» | `public/images/logo-icon.png` | Propio | Logo enmascarado de la app y de las páginas públicas |
+| Foto de la portada pública (spec 038, 1.8.0) | `public/images/portada-1600.webp` (1600 × 1600, 93 838 B, SHA-256 `64f37cb08654a2fd9e1cdfa527b1665cae250128009be12e2694b1dc242b3f0b`) y `public/images/portada-800.webp` (800 × 800, 34 948 B, SHA-256 `a5cf0a47ffcf1c0881e9312a633d052cb13d2486bac7f9c8e1e6fb2c29b55bf2`) | Autor: Jonathan Borba (https://unsplash.com/@jonathanborba). Fuente: Unsplash, https://unsplash.com/photos/hl6uG9cHW5A (publicada el 2020-05-06). Licencia: Unsplash License (https://unsplash.com/license), uso comercial gratuito sin atribución obligatoria; se acredita igual. Descargada el 2026-10-21, recortada a un cuadrado y convertida a WebP sin metadatos EXIF. Dos dentistas con mascarilla, gorro y bata atienden a una paciente: ningún rostro reconocible ni logotipos | Portada de `/`, bajo `--velo-portada`; nunca se presenta como el equipo de Dentissa y se sustituye por una foto real de la consulta cuando exista |
 | Iconos de categoría (spec 038, 1.8.0) | SVG en línea (`partials/icono-categoria`) | Propios, dibujados en código (24 × 24, trazo 1.6) | Tarjetas de categoría |
 
 Regla: la única foto de las páginas públicas va bajo un velo de la marca y nunca se presenta como el
