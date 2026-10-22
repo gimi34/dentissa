@@ -57,7 +57,9 @@ la ubicación y el pie**; la portada es la de abound: la consulta en grande y el
 ahora · abre mañana a las 9:00» (o «el lunes»); debajo, el horario completo y el teléfono. Es
 distinta en cada visita y prueba lo que dice la página: si está cerrado, la cuenta se crea y la cita
 se agenda igual. **Sin JavaScript:** no hay pastilla; se lee el horario completo y el teléfono, como
-pide CA1. En el teléfono cabe en una línea a 320 px.
+pide CA1. Desde 560 px cabe en una línea; por debajo, en dos: el estado arriba («Cerrado ahora») y la
+hora debajo («abre mañana a las 9:00»), sin cambiar el texto (refinado del 2026-10-21: el texto más
+largo mide 354 px y a 320 px la columna tiene 288).
 
 ## Pantallas
 
@@ -100,7 +102,8 @@ pide CA1. En el teléfono cabe en una línea a 320 px.
     `--velo-portada-suave` de izquierda a derecha (uniforme por debajo de 900 px), titular
     `--text-portada` con «prioridad.» en cursiva `--p200`, logo blanco.
   - **Pastilla «¿Abierto ahora?»** (`.estado-ahora`): blanca, texto `--p600`, punto del color del
-    texto, sin salto de línea.
+    texto, en una línea desde 560 px; por debajo, en dos líneas partidas tras el «·» (sin el «·» a la
+    vista) y con esquinas `--radius` en lugar de píldora (refinado).
   - **Franja del horario** (`.marquesina`): campo `--p600` a todo el ancho con el horario en
     `--text-marquesina` y `--p100`.
   - **Pausa de la franja** (`.marquesina-pausa`, refinado A23): `button` de `--touch-min` × `--touch-min`
@@ -251,4 +254,5 @@ común (~1.5 kB) para las entradas y la cosa viva.
 | 2026-10-21 | supuesto | Licencia de la foto de abound | Desconocida: se confirma con el colaborador o se sustituye antes de `/release` | `inspeccion` · `creatividad.md` §6 |
 | 2026-10-21 | refinado | ¿Cómo se resuelve la licencia de la foto de la portada? | Foto libre de un banco abierto con licencia de uso comercial, descargada al repo y acreditada; la de abound queda solo en las maquetas | usuario (`/plan 038 --fix`) |
 | 2026-10-21 | diseño | ¿Se aprueba este documento (ronda 3)? | Aprobado | usuario |
+| 2026-10-21 | refinado | La pastilla no cabe en una línea a 320 px con los textos reales («Cerrado ahora · abre mañana a las 9:00» mide 354 px; la columna, 288) | Por debajo de 560 px, en dos líneas partidas tras el «·», con esquinas `--radius`; el texto no cambia | usuario (`/implement 038`, T084) |
 | 2026-10-21 | refinado | La franja solo se detiene con el puntero: con teclado o táctil no se puede parar (WCAG 2.2.2, `/analyze` A23) | Botón de pausa accesible en la franja, que maneja el script común; sin JavaScript y con movimiento reducido la franja queda quieta | usuario (`/analyze 038` r4) |
