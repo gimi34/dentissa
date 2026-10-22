@@ -115,6 +115,8 @@ ronda 1 eligió como base la opción B («La puerta de la consulta») y la ronda
 tres specs. La ronda 3 (2026-10-21, motor creativo de AI-DD 1.16.0) rediseña la 038 en la línea de la
 landing del colaborador: opción C «La línea de abound» con la ubicación de la opción D. La ronda 2
 queda archivada y sigue siendo el diseño de la 039 y la 040 hasta su propio `/design-spec`.
+Las rondas 4 y 5 (2026-10-21) empiezan desde cero: la 5 elige «La ventana del diente», desde la
+referencia del usuario, con una superficie «Sitio público» (Cormorant Garamond y Montserrat).
 Documento de diseño: [design.md](design.md).
 
 - **Qué debe transmitir:** una presentación breve, cercana y fiable de una clínica real, con la
@@ -161,6 +163,7 @@ Ninguna.
 | 2026-10-20 | supuesto | Títulos y descripciones de las dos rutas | Los de CA10 | razonable; se confirman al aprobar |
 | 2026-10-20 | supuesto | Cabecera con sesión en `/servicios` | Ofrece «Ir a mi panel» en lugar de «Iniciar sesión» | razonable |
 | 2026-10-21 | diseño | Rediseño tras la aprobación: la opción B es «muy básica» | Ronda 3 de `/design-spec` en la línea de la landing del colaborador: opción C con la ubicación de D (`design.md`); los criterios no cambian | usuario |
+| 2026-10-21 | diseño | Rediseño desde cero: las rondas anteriores se ven genéricas | Ronda 5 de `/design-spec`: «La ventana del diente» desde la referencia del usuario, con la superficie «Sitio público» (`design.md`); los criterios no cambian | usuario |
 
 ## Notas para /plan
 - Punto de partida: `resources/views/landing/index.blade.php` de `origin/feat/landing-page-completa`
