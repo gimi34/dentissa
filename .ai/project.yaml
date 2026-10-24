@@ -25,7 +25,7 @@ models:                        # modelo de cada perfil de subagente (shared/cont
   mechanical: haiku            # exploración de /plan; comprobar que un hallazgo existe
   implementation: inherit      # /implement --parallel (inherit = el modelo de la sesión)
 sync:
-  last: null                   # commit hasta el que /sync concilió la deriva
+  last: ae820ba                # commit hasta el que /sync concilió la deriva
 skills_version: 1.16.0         # versión del paquete de skills (upgrade desde 1.15.0 el 2026-10-21)
 deploy:
   strategy: manual             # none | manual | ci-on-merge | ci-on-tag
