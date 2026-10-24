@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — Opción B · Barra inferior</title>
+<style>
+  /* Tokens del sistema de diseño (docs/design/system.md 1.2.0 = public/css/app.css). */
+  :root {
+    --p50:#FDF5F8; --p100:#FBEAF0; --p200:#F4C0D1; --p400:#D4537E; --p500:#B83C65; --p600:#993556; --p800:#72243E;
+    --text:#000000; --border:#F0DCE4; --bg:#FDF5F8; --white:#FFFFFF;
+    --red:#A32D2D; --red-bg:#FCEBEB; --radius:12px; --radius-sm:8px; --radius-lg:16px;
+    --space-1:4px; --space-2:6px; --space-3:8px; --space-4:10px; --space-5:14px; --space-6:16px; --space-7:20px;
+    --border-width:1px; --text-body:13.5px; --text-small:11.5px; --weight-strong:500;
+    --touch-min:44px; /* propuesto por esta spec (DS6) */
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  /* Marco del visor (neutro, fuera del sistema). */
+  body { font-family:Roboto, system-ui, sans-serif; background:#eef0f2; color:#1d2125; padding:24px 16px; }
+  .visor { max-width:1260px; margin:0 auto; }
+  .visor > h1 { font-size:20px; margin-bottom:6px; }
+  .intro { font-size:14px; color:#3f474d; max-width:75ch; margin-bottom:18px; line-height:1.5; }
+  .marcos { display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; }
+  .marco > h2 { font-size:13px; font-weight:600; color:#3f474d; margin-bottom:8px; }
+  .tel { width:390px; height:760px; border:1px solid #c9ced3; border-radius:18px; overflow:hidden; position:relative; background:var(--bg); color:var(--text); font-size:var(--text-body); }
+  .notas { font-size:13.5px; line-height:1.55; color:#262c31; max-width:80ch; margin-top:22px; }
+  .notas li { margin:0 0 8px 18px; }
+
+  /* Pantalla: componentes de la app, solo tokens. */
+  .topbar { height:60px; background:var(--white); border-bottom:var(--border-width) solid var(--border); display:flex; align-items:center; gap:var(--space-3); padding:0 var(--space-6); }
+  .topbar-title { font-size:17px; font-weight:var(--weight-strong); }
+  .content { padding:var(--space-6); display:flex; flex-direction:column; gap:var(--space-6); }
+  .banner { background:var(--p500); color:var(--white); border-radius:var(--radius-lg); padding:var(--space-7); }
+  .banner b { font-size:20px; display:block; margin-bottom:var(--space-5); }
+  .fila { display:flex; flex-wrap:wrap; gap:var(--space-3); }
+  .btn { min-height:var(--touch-min); display:inline-flex; align-items:center; justify-content:center; padding:0 var(--space-6); border-radius:var(--radius-sm); font:inherit; font-weight:var(--weight-strong); border:var(--border-width) solid var(--p200); background:var(--white); color:var(--p600); text-decoration:none; }
+  .btn-ancho { width:100%; }
+  .btn-danger { background:var(--red-bg); color:var(--red); border-color:var(--red); }
+  .card { background:var(--white); border:var(--border-width) solid var(--border); border-radius:var(--radius); padding:var(--space-6); }
+  .card h3 { font-size:15px; font-weight:var(--weight-strong); margin-bottom:var(--space-3); }
+  .cita { display:flex; gap:var(--space-5); margin-bottom:var(--space-3); }
+  .fecha { background:var(--p100); color:var(--p800); border-radius:var(--radius-sm); padding:var(--space-3) var(--space-5); text-align:center; font-size:22px; font-weight:var(--weight-strong); line-height:1.1; }
+  .fecha small { display:block; font-size:var(--text-small); }
+  .badge { display:inline-block; background:var(--p100); color:var(--p800); border-radius:20px; padding:2px var(--space-4); font-size:var(--text-small); font-weight:var(--weight-strong); margin-bottom:var(--space-5); }
+  .velo { position:absolute; inset:0; background:rgba(0,0,0,.45); }
+  .menu-btn { min-width:var(--touch-min); min-height:var(--touch-min); display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2); border:var(--border-width) solid var(--p200); border-radius:var(--radius-sm); background:var(--white); color:var(--p600); font:inherit; font-weight:var(--weight-strong); padding:0 var(--space-4); }
+  .ico { width:18px; height:18px; flex-shrink:0; }
+  .nav-item { min-height:var(--touch-min); display:flex; align-items:center; gap:var(--space-4); padding:0 var(--space-5); border-radius:var(--radius-sm); color:var(--text); text-decoration:none; }
+  .nav-item.activo { background:var(--p100); color:var(--p600); font-weight:var(--weight-strong); }
+  .nav-label { display:block; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--p600); padding:var(--space-4) var(--space-5) var(--space-1); font-weight:600; }
+  .usuario { display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); background:var(--p50); border-radius:var(--radius-sm); min-width:0; }
+  .usuario strong { overflow-wrap:anywhere; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:var(--p200); color:var(--p800); display:flex; align-items:center; justify-content:center; font-weight:600; flex-shrink:0; }
+  .rol { font-size:var(--text-small); }
+  .tabs { position:absolute; left:0; right:0; bottom:0; height:64px; background:var(--white); border-top:var(--border-width) solid var(--border); display:grid; grid-template-columns:repeat(5,1fr); }
+  .tab { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:var(--touch-min); color:var(--text); text-decoration:none; font-size:var(--text-small); background:none; border:0; font-family:inherit; }
+  .tab.activo { color:var(--p600); font-weight:var(--weight-strong); box-shadow:inset 0 3px 0 var(--p600); }
+  .hoja { position:absolute; left:0; right:0; bottom:64px; background:var(--white); border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:var(--space-6); display:flex; flex-direction:column; gap:var(--space-3); }
+  .hoja-cab { display:flex; justify-content:space-between; align-items:center; }
+</style>
+</head>
+<body>
+<div class="visor">
+<h1>Opción B · Barra inferior</h1>
+<p class="intro">La navegación del móvil con pestañas fijas abajo y «Más» para el resto. Maquetas estáticas a 390 px, con el contenido del panel del paciente y los tokens del sistema.</p>
+<div class="marcos">
+<div class="marco"><h2>Pestañas · paciente</h2><div class="tel"><header class="topbar"><h1 class="topbar-title">Mi salud dental</h1></header><div class="content">
+      <div class="banner"><b>Hola, Carlos</b><div class="fila"><a class="btn" href="#">Agendar cita</a><a class="btn" href="#">Mi perfil</a></div></div>
+      <div class="card"><h3>Tu próxima cita</h3>
+        <div class="cita"><div class="fecha">20<small>OCT.</small></div><div><strong>Consulta general</strong><br>10:00 hrs · 30 min<br>Diana Dentista 1</div></div>
+        <span class="badge">Agendada</span>
+        <div class="fila"><a class="btn" href="#">Ver detalles</a><a class="btn" href="#">Reprogramar</a><button class="btn btn-danger">Cancelar</button></div>
+      </div>
+    </div><nav class="tabs" aria-label="Secciones"><a class="tab activo" aria-current="page" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Inicio</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Mis citas</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Agendar</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</a><button class="tab" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Más</button></nav></div></div><div class="marco"><h2>«Más» abierto · paciente</h2><div class="tel"><header class="topbar"><h1 class="topbar-title">Mi salud dental</h1></header><div class="content">
+      <div class="banner"><b>Hola, Carlos</b><div class="fila"><a class="btn" href="#">Agendar cita</a><a class="btn" href="#">Mi perfil</a></div></div>
+      <div class="card"><h3>Tu próxima cita</h3>
+        <div class="cita"><div class="fecha">20<small>OCT.</small></div><div><strong>Consulta general</strong><br>10:00 hrs · 30 min<br>Diana Dentista 1</div></div>
+        <span class="badge">Agendada</span>
+        <div class="fila"><a class="btn" href="#">Ver detalles</a><a class="btn" href="#">Reprogramar</a><button class="btn btn-danger">Cancelar</button></div>
+      </div>
+    </div><div class="velo"></div><div class="hoja" role="dialog" aria-modal="true" aria-label="Mi cuenta"><div class="hoja-cab"><strong>Mi cuenta</strong><button class="menu-btn" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="usuario"><div class="avatar">CP</div><div><strong>Carlos Paciente Cervantes Padilla</strong><div class="rol">Cliente</div></div></div><button class="btn btn-ancho">Cerrar sesión</button></div><nav class="tabs" aria-label="Secciones"><a class="tab activo" aria-current="page" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Inicio</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Mis citas</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Agendar</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</a><button class="tab" aria-expanded="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Más</button></nav></div></div><div class="marco"><h2>«Más» abierto · administración (7 secciones)</h2><div class="tel"><header class="topbar"><h1 class="topbar-title">Mi salud dental</h1></header><div class="velo"></div><div class="hoja" role="dialog" aria-modal="true" aria-label="Más secciones"><div class="hoja-cab"><strong>Más secciones</strong><button class="menu-btn" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><a class="nav-item" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Personal</a><a class="nav-item" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Reportes</a><a class="nav-item" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Usuarios</a><div class="usuario"><div class="avatar">AA</div><div><strong>Ana Administra 1</strong><div class="rol">Admin</div></div></div><button class="btn btn-ancho">Cerrar sesión</button></div><nav class="tabs" aria-label="Secciones"><a class="tab activo" aria-current="page" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Home</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Citas</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Pacientes</a><a class="tab" href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Servicios</a><button class="tab" aria-expanded="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Más</button></nav></div></div>
+</div>
+<ul class="notas">
+<li><strong>Cómo funciona:</strong> una barra fija abajo con las secciones principales del rol (el paciente tiene sus 4) y «Más», que abre una hoja con el resto: el nombre, «Cerrar sesión» y, en el personal, las secciones que no caben. La hoja se cierra con «Cerrar», pulsando el fondo o con Escape.</li>
+<li><strong>A favor:</strong> el paciente ve siempre sus 4 secciones y cambia de una a otra con un solo toque, al alcance del pulgar.</li>
+<li><strong>En contra:</strong> ocupa 64 px de alto de forma permanente y las pantallas tienen que dejar ese hueco abajo; en el personal (4–7 secciones) hay que decidir cuáles quedan fuera de «Más»; son dos patrones según el rol.</li>
+<li><strong>Choca con la spec:</strong> CA2 dice que el menú «no ocupa espacio fijo en la pantalla». Si eliges esta opción, antes hay que corregir CA2 con <code>/specify --edit 033</code>.</li>
+<li>Por encima del punto de corte (escritorio), todo sigue como hoy (CA8).</li>
+</ul>
+</div>
+</body>
+</html>

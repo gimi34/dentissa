@@ -21,7 +21,7 @@
 @section('content')
 
 {{-- Resumen del día ──────────────────────────────────────────────────────── --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+<div class="stats-grid">
     @php
         $resumen = $resumenHoy ?? (object)['total'=>0,'completadas'=>0,'agendadas'=>0,'canceladas'=>0];
     @endphp
@@ -43,61 +43,75 @@
     </div>
 </div>
 
-{{-- Filtros ────────────────────────────────────────────────────────────── --}}
-<div class="card" style="margin-bottom:20px;padding:16px 20px">
-    <form method="GET" action="{{ route("$rp.citas") }}" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+{{-- Filtros (spec 034, D6): buscador, atajos con «Filtros» y el panel que filtros.js pliega en el móvil.
+     En el escritorio se ven como antes: el panel no es una caja y los atajos van al final. --}}
+@php
+    $aplicados = collect([
+        request()->filled('fecha_desde') || request()->filled('fecha_hasta'),
+        request()->filled('dentista_id'),
+        request()->filled('estado'),
+    ])->filter()->count();
+@endphp
+<div class="card filtro-tarjeta">
+    <form method="GET" action="{{ route("$rp.citas") }}" class="filtro-citas">
 
-        <div style="flex:1;min-width:180px">
-            <label class="field-label">Buscar paciente / dentista</label>
-            <input type="text" name="buscar" value="{{ request('buscar') }}"
+        <div class="filtro-buscar">
+            <label class="field-label" for="filtro-buscar">Buscar paciente / dentista</label>
+            <input type="text" id="filtro-buscar" name="buscar" value="{{ request('buscar') }}"
                 placeholder="Nombre, teléfono..." class="field">
+            {{-- Con el panel plegado en el móvil, «Filtrar» no se ve: el buscador se envía con su botón (/review R2). --}}
+            <button type="submit" class="btn btn-primary solo-movil">Buscar</button>
         </div>
 
-        <div style="min-width:130px">
-            <label class="field-label">Desde</label>
-            <input type="date" name="fecha_desde" value="{{ request('fecha_desde', now()->format('Y-m-d')) }}" class="field">
-        </div>
-
-        <div style="min-width:130px">
-            <label class="field-label">Hasta</label>
-            <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}" class="field">
-        </div>
-
-        @if($rp !== 'dentista')
-        <div style="min-width:150px">
-            <label class="field-label">Dentista</label>
-            <select name="dentista_id" class="field">
-                <option value="">Todos</option>
-                @foreach($dentistas as $d)
-                    <option value="{{ $d->id }}" {{ request('dentista_id') == $d->id ? 'selected' : '' }}>
-                        {{ $d->nombre }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        @endif
-
-        <div style="min-width:140px">
-            <label class="field-label">Estado</label>
-            <select name="estado" class="field">
-                <option value="">Todos</option>
-                @foreach(['agendada','confirmada','en_curso','completada','cancelada','no_asistio'] as $e)
-                    <option value="{{ $e }}" {{ request('estado') == $e ? 'selected' : '' }}>
-                        {{ ucfirst(str_replace('_',' ',$e)) }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary" style="margin-top:0">Filtrar</button>
-        <a href="{{ route("$rp.citas") }}" class="btn btn-ghost">Limpiar</a>
-
-        {{-- Acceso rápido a semanas --}}
-        <div style="margin-left:auto;display:flex;gap:6px">
+        {{-- Acceso rápido a semanas y botón del panel --}}
+        <div class="filtro-atajos">
             <a href="{{ route("$rp.citas", ['fecha_desde'=>now()->startOfWeek()->format('Y-m-d'),'fecha_hasta'=>now()->endOfWeek()->format('Y-m-d')]) }}"
                class="btn btn-outline btn-sm">Esta semana</a>
             <a href="{{ route("$rp.citas", ['fecha_desde'=>now()->format('Y-m-d'),'fecha_hasta'=>now()->format('Y-m-d')]) }}"
                class="btn {{ !request()->has('fecha_desde') ? 'btn-primary' : 'btn-outline' }} btn-sm">Hoy</a>
+            <button type="button" class="btn btn-outline filtro-btn" aria-expanded="false" aria-controls="filtro-panel"
+                @if($aplicados) aria-label="{{ $aplicados === 1 ? 'Filtros, 1 aplicado' : "Filtros, {$aplicados} aplicados" }}" @endif>Filtros @if($aplicados)<span class="filtro-contador">{{ $aplicados }}</span>@endif</button>
+        </div>
+
+        <div id="filtro-panel" class="filtro-panel">
+            <div class="filtro-fecha">
+                <label class="field-label" for="filtro-desde">Desde</label>
+                <input type="date" id="filtro-desde" name="fecha_desde" value="{{ request('fecha_desde', now()->format('Y-m-d')) }}" class="field">
+            </div>
+
+            <div class="filtro-fecha">
+                <label class="field-label" for="filtro-hasta">Hasta</label>
+                <input type="date" id="filtro-hasta" name="fecha_hasta" value="{{ request('fecha_hasta') }}" class="field">
+            </div>
+
+            @if($rp !== 'dentista')
+            <div class="filtro-dentista">
+                <label class="field-label" for="filtro-dentista">Dentista</label>
+                <select id="filtro-dentista" name="dentista_id" class="field">
+                    <option value="">Todos</option>
+                    @foreach($dentistas as $d)
+                        <option value="{{ $d->id }}" {{ request('dentista_id') == $d->id ? 'selected' : '' }}>
+                            {{ $d->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+
+            <div class="filtro-estado">
+                <label class="field-label" for="filtro-estado">Estado</label>
+                <select id="filtro-estado" name="estado" class="field">
+                    <option value="">Todos</option>
+                    @foreach(['agendada','confirmada','en_curso','completada','cancelada','no_asistio'] as $e)
+                        <option value="{{ $e }}" {{ request('estado') == $e ? 'selected' : '' }}>
+                            {{ ucfirst(str_replace('_',' ',$e)) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top:0">Filtrar</button>
+            <a href="{{ route("$rp.citas") }}" class="btn btn-ghost">Limpiar</a>
         </div>
     </form>
 </div>
@@ -106,16 +120,16 @@
 <div class="card card-0">
     @if($citas->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th>Hora / Fecha</th>
+                        <th class="celda-cab">Hora / Fecha</th>
                         <th>Paciente</th>
                         <th>Dentista</th>
                         <th>Servicio</th>
                         <th>Duración</th>
-                        <th>Estado</th>
-                        <th style="text-align:right">Acciones</th>
+                        <th class="celda-estado">Estado</th>
+                        <th class="celda-acciones" style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,8 +138,8 @@
                         $esHoy   = \Carbon\Carbon::parse($cita->fecha_hora)->isToday();
                         $esFutura = \Carbon\Carbon::parse($cita->fecha_hora)->isFuture();
                     @endphp
-                    <tr style="{{ $esHoy ? 'background:var(--p50)' : '' }}">
-                        <td>
+                    <tr @class(['fila-hoy' => $esHoy])>
+                        <td class="celda-cab" data-label="Hora / Fecha">
                             <div style="font-weight:600;color:var(--p600);font-size:14px">
                                 {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}
                             </div>
@@ -137,16 +151,18 @@
                             </div>
                         </td>
 
-                        <td>
-                            <div style="font-weight:500">{{ $cita->paciente }}</div>
-                            @if($cita->tel_paciente)
-                                <div style="font-size:11.5px;color:var(--text-muted)">{{ $cita->tel_paciente }}</div>
-                            @endif
+                        <td data-label="Paciente">
+                            <div class="celda-valor">
+                                <div style="font-weight:500">{{ $cita->paciente }}</div>
+                                @if($cita->tel_paciente)
+                                    <div style="font-size:11.5px;color:var(--text-muted)">{{ $cita->tel_paciente }}</div>
+                                @endif
+                            </div>
                         </td>
 
-                        <td style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
+                        <td data-label="Dentista" style="color:var(--text-muted);font-size:13px">{{ $cita->dentista }}</td>
 
-                        <td>
+                        <td data-label="Servicio">
                             @if($cita->servicio)
                                 <div style="font-size:13px">{{ $cita->servicio }}</div>
                             @else
@@ -154,20 +170,21 @@
                             @endif
                         </td>
 
-                        <td style="color:var(--text-muted);font-size:13px">
+                        <td data-label="Duración" style="color:var(--text-muted);font-size:13px">
                             {{ $cita->duracion_min ?? $cita->duracion_servicio ?? 30 }} min
                         </td>
 
-                        <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                        <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
 
-                        <td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div style="display:flex;justify-content:flex-end">
                                 <a href="{{ route("$rp.citas.show", $cita->id) }}"
-                                   class="btn btn-ghost btn-sm" title="Ver detalle">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   class="btn btn-ghost btn-sm" title="Ver detalle" aria-label="Ver detalle">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
+                                    <span class="solo-movil">Ver detalle</span>
                                 </a>
                             </div>
                         </td>
@@ -213,6 +230,8 @@
 
 @push('styles')
 <link href="{{ asset('css/citas.css') }}?v={{ filemtime(public_path('css/citas.css')) }}" rel="stylesheet">
+{{-- Sin defer: marca <html> con filtros-js antes de pintar, sin salto de maquetación (spec 034, D6). --}}
+<script src="{{ asset('js/filtros.js') }}?v={{ filemtime(public_path('js/filtros.js')) }}"></script>
 @endpush
 
 @endsection

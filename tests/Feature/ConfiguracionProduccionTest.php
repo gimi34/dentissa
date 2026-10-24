@@ -28,6 +28,17 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
+     * Órdenes de un script de shell, una por línea y sin sangría: sin comentarios, líneas en
+     * blanco ni `echo`, para que un texto que imita la orden no cuente como la orden.
+     */
+    private function ordenes(string $ruta): string
+    {
+        $lineas = array_map('trim', explode("\n", $this->leer($ruta)));
+
+        return implode("\n", array_filter($lineas, fn (string $l) => $l !== '' && ! str_starts_with($l, '#') && ! str_starts_with($l, 'echo ')));
+    }
+
+    /**
      * Bloques de `services:` de un Compose: nombre → texto del bloque.
      *
      * @return array<string, string>
@@ -238,5 +249,138 @@ class ConfiguracionProduccionTest extends TestCase
                 "{$archivo}: db no arranca con la colación del volcado.",
             );
         }
+    }
+
+    /**
+     * RS18.a (spec 031, T054): cada despliegue construye app y web sin caché y bajando las
+     * imágenes base, para que la capa de apt-get/apk upgrade se renueve (con caché, el web de
+     * producción conservaba avisos ya corregidos).
+     */
+    public function test_el_despliegue_construye_sin_cache(): void
+    {
+        $script = $this->leer('deploy/desplegar.sh');
+        // Anclado a la orden (/review R8): un echo o un paso "build …" no cuentan.
+        $construcciones = preg_grep('/^\s*"\$\{compose\[@\]\}" build\b/', explode("\n", $script));
+        $this->assertNotEmpty($construcciones, 'desplegar.sh construye las imágenes.');
+        foreach ($construcciones as $linea) {
+            $this->assertStringContainsString('--no-cache', $linea, 'La construcción no usa la caché.');
+            $this->assertStringContainsString('--pull', $linea, 'La construcción baja las imágenes base.');
+            $this->assertMatchesRegularExpression('/\bapp web\b/', $linea, 'Se construyen app y web.');
+        }
+    }
+
+    /**
+     * RS18.a (spec 031, T056): un argumento que cambia en cada despliegue obliga a rehacer la capa
+     * de apt-get/apk upgrade de cada etapa aunque el constructor la tenga en caché (en el servidor,
+     * --no-cache no lo garantizó para web).
+     */
+    public function test_cada_despliegue_rehace_la_actualizacion_del_sistema(): void
+    {
+        $dockerfile = $this->leer('docker/prod/Dockerfile');
+        $etapas = preg_split('/^FROM\s/m', $dockerfile);
+        $actualizaciones = ['app' => 'apt-get upgrade', 'web' => 'apk upgrade'];
+        foreach ($actualizaciones as $etapa => $orden) {
+            $cuerpo = current(array_filter($etapas, fn ($e) => preg_match('/^\S+\s+AS\s+'.$etapa.'\s*$/m', $e)));
+            $this->assertIsString($cuerpo, "docker/prod/Dockerfile tiene la etapa {$etapa}.");
+            $arg = strpos($cuerpo, "\nARG REFRESCO_SISTEMA");
+            $run = strpos($cuerpo, $orden);
+            $this->assertNotFalse($arg, "La etapa {$etapa} declara ARG REFRESCO_SISTEMA.");
+            $this->assertNotFalse($run, "La etapa {$etapa} actualiza el sistema con {$orden}.");
+            $this->assertLessThan($run, $arg, "En {$etapa}, el ARG va antes de {$orden}.");
+            $inicio = strrpos(substr($cuerpo, 0, $run), "\nRUN ");
+            $this->assertStringContainsString('REFRESCO_SISTEMA', substr($cuerpo, $inicio, $run - $inicio), "En {$etapa}, el RUN de {$orden} usa el argumento.");
+        }
+
+        $script = $this->leer('deploy/desplegar.sh');
+        $this->assertMatchesRegularExpression('/^\s*"\$\{compose\[@\]\}" build\b[^\n]*--build-arg REFRESCO_SISTEMA=[^\n]*\bapp web\b/m', $script, 'desplegar.sh pasa REFRESCO_SISTEMA al construir app y web.');
+    }
+
+    /**
+     * Spec 031 (CA7; /review R1): «Entorno aplicado» de verificar.sh no puede dar OK sin
+     * comparar todos los servicios. Un error al comparar uno es su FALLO, python3 declara
+     * cuántos servicios hay y el shell falla si faltan líneas o python3 no termina bien.
+     */
+    public function test_el_entorno_aplicado_no_da_ok_sin_comparar_todos_los_servicios(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+        $this->assertSame(1, preg_match('/^    echo "== Entorno aplicado.*?\n(.*?)^    echo "== /ms', $script, $bloque), 'verificar.sh tiene el bloque «Entorno aplicado».');
+        $this->assertSame(1, preg_match("/<<'PY'\n(.*?)\nPY\n(.*)/s", $bloque[1], $partes), 'El bloque compara con python3.');
+        [, $python, $shell] = $partes;
+
+        $this->assertSame(1, preg_match('/^for nombre, servicio in [^\n]*:\n((?:    [^\n]*(?:\n|\z)|\n)+)/m', $python, $bucle), 'python3 recorre los servicios del Compose.');
+        $this->assertMatchesRegularExpression('/^    try:\n/m', $bucle[1], 'Cada servicio se compara dentro de su propio try.');
+        $this->assertMatchesRegularExpression('/^    except Exception\b[^\n]*:\n        print\(f[\'"]FALLO \{nombre\}: no se pudo comparar/m', $bucle[1], 'Un error al comparar un servicio es su FALLO.');
+        $this->assertMatchesRegularExpression('/^print\(f[\'"]SERVICIOS \{len\(config\[[\'"]services[\'"]\]\)\}[\'"]\)/m', $python, 'python3 declara cuántos servicios compara.');
+
+        $this->assertMatchesRegularExpression('/^\)"\n    codigo=\$\?\n/', $shell, 'El shell guarda el código de salida de python3.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*\bgrep\b[^\n]*\^SERVICIOS /m', $shell, 'El shell lee el número de servicios.');
+        $this->assertMatchesRegularExpression('/^[^#\n]*"\$\{codigo\}" -ne 0 \|\|[^\n]*-ne "\$\{servicios\}"/m', $shell, 'El shell falla si python3 termina mal o faltan líneas.');
+    }
+
+    /**
+     * Spec 031 (CA7, D8; /review R2, R5): `aplicar-entorno.sh` aplica el archivo de entorno de
+     * un servicio recreándolo. Rechaza `db`, acepta solo un servicio que exista tal cual en el
+     * Compose (sin expresiones regulares ni opciones), recrea sin tocar los demás, rehace las
+     * cachés de `app` como `www-data` y termina con la verificación interna.
+     */
+    public function test_aplicar_entorno_recrea_el_servicio_y_termina_verificando(): void
+    {
+        $ordenes = $this->ordenes('deploy/aplicar-entorno.sh');
+        $compose = preg_quote('"${compose[@]}"', '/');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes, 'El script se detiene ante cualquier error.');
+        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{servicio\}" == "db" \]\]; then\nerror /m', $ordenes, 'Rechaza db: db.env solo se aplica al crear la base.');
+        $this->assertMatchesRegularExpression('/^servicios="\$\('.$compose.' config --services\)"/m', $ordenes, 'Lee los servicios del Compose de producción.');
+        $this->assertMatchesRegularExpression('/^grep -qxF -- "\$\{servicio\}" <<< "\$\{servicios\}" \|\| error /m', $ordenes, 'El servicio se compara como texto fijo y nunca como opción (R5).');
+        $this->assertMatchesRegularExpression('/^'.$compose.' up -d --force-recreate --no-deps "\$\{servicio\}"$/m', $ordenes, 'Recrea solo ese servicio para que relea su archivo de entorno.');
+        $this->assertMatchesRegularExpression(
+            '/^if \[\[ "\$\{servicio\}" == "app" \]\]; then\n(?:paso "[^"\n]*"\n)?'.$compose.' exec -T -u www-data app php artisan config:cache\n'.$compose.' exec -T -u www-data app php artisan route:cache\nfi$/m',
+            $ordenes,
+            'En app rehace las cachés de configuración y rutas como www-data.',
+        );
+        $this->assertMatchesRegularExpression('/^bash deploy\/verificar\.sh --interna\n\}\nmain "\$@"$/', substr($ordenes, strrpos($ordenes, 'bash deploy/') ?: 0), 'Termina con la verificación interna.');
+    }
+
+    /**
+     * Spec 031 (CA4, CA7; /review R7): `verificar.sh` nombra bien lo que sobra en las
+     * cabeceras (X-Powered-By o la versión de Server están presentes, no «faltan») y la ruta
+     * del bucle de cabeceras es local a la función.
+     */
+    public function test_verificar_nombra_las_cabeceras_que_sobran_y_la_ruta_es_local(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+
+        $this->assertMatchesRegularExpression('/^\s*grep -iqE \'\^x-powered-by:\' <<< "\$\{cabeceras\}" && faltan\+=\("X-Powered-By presente"\)$/m', $script);
+        $this->assertMatchesRegularExpression('/^\s*grep -iqE \'\^server:\.\*\[0-9\]\' <<< "\$\{cabeceras\}" && faltan\+=\("Server con versión"\)$/m', $script);
+
+        $bucle = strpos($script, 'for ruta in ');
+        $this->assertNotFalse($bucle, 'verificar.sh recorre las rutas de las cabeceras.');
+        $this->assertMatchesRegularExpression('/^\s*local\b[^\n]*\bruta\b/m', substr($script, 0, $bucle), 'La variable ruta se declara local antes del bucle.');
+    }
+
+    /**
+     * Spec 031 (CA9; TM9, TM11, TM12): la red privada de administración se
+     * instala desde el repositorio oficial firmado, sin ejecutar scripts
+     * descargados, con el SSH propio de Tailscale desactivado (se sigue usando
+     * OpenSSH con clave) y con su origen en las actualizaciones automáticas.
+     */
+    public function test_el_acceso_remoto_usa_el_repositorio_firmado_y_openssh(): void
+    {
+        $script = $this->leer('deploy/preparar-acceso-remoto.sh');
+
+        $this->assertMatchesRegularExpression('#^[^\#\n]*signed-by=\S+[^\n]*https://pkgs\.tailscale\.com/stable/ubuntu#m', $script, 'El repositorio de Tailscale debe declararse con signed-by.');
+        $this->assertDoesNotMatchRegularExpression('/\|\s*(sudo\s+)?(ba)?sh\b/', $script, 'No se ejecuta ningún script descargado.');
+        // Anclados a la orden real (/review R8): un echo que la imita no cuenta.
+        $this->assertMatchesRegularExpression('#^\s*curl -fsSL "https://pkgs\.tailscale\.com/stable/ubuntu/\$\{\w+\}\.noarmor\.gpg" -o "\$\{\w+\}"$#m', $script, 'La clave del repositorio se descarga a un archivo, sin ejecutarla.');
+        $this->assertMatchesRegularExpression('/^\s*tailscale up\b[^\n]*--ssh=false/m', $script, 'tailscale up debe desactivar el SSH de Tailscale.');
+        // El repositorio de Tailscale no publica "a=" (archive), solo "o=" y "n=":
+        // Allowed-Origins ("origen:archivo") no lo cubre, Origins-Pattern sí (T041).
+        // El patrón va dentro del archivo de actualizaciones que escribe el script.
+        $this->assertMatchesRegularExpression(
+            '/^\s*cat > "\$\{ACTUALIZACIONES\}" <<CONF\n(?:(?!CONF\n)[^\n]*\n)*?Unattended-Upgrade::Origins-Pattern \{\n\s*"origin=\$\{\w+\},codename=\$\{\w+\}";\n\};\nCONF$/m',
+            $script,
+            'El origen de Tailscale (origen y nombre de la versión) debe entrar en las actualizaciones automáticas.',
+        );
+        $this->assertMatchesRegularExpression('/^\s*ufw allow in on tailscale0 to any port 22 proto tcp$/m', $script);
     }
 }

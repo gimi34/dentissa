@@ -33,19 +33,19 @@ class ExpedientesController extends Controller
         }
 
         if ($request->filled('buscar')) {
-            $b = '%' . $request->buscar . '%';
+            $b = '%'.$request->buscar.'%';
             $query->where(function ($q) use ($b) {
                 $q->whereRaw("CONCAT(up.nombre, ' ', up.apellido) LIKE ?", [$b])
-                  ->orWhere('expedientes.diagnostico', 'LIKE', $b);
+                    ->orWhere('expedientes.diagnostico', 'LIKE', $b);
             });
         }
 
         $expedientes = $query->orderByDesc('expedientes.creado_en')->paginate(20)->withQueryString();
 
-        $base = match(auth()->user()->rol) {
-            'dentista'  => 'dentista',
+        $base = match (auth()->user()->rol) {
+            'dentista' => 'dentista',
             'asistente' => 'asistente',
-            default     => 'admin',
+            default => 'admin',
         };
 
         return view('expedientes.index', compact('expedientes', 'base'));
@@ -55,7 +55,9 @@ class ExpedientesController extends Controller
     public function create(Request $request)
     {
         // Solo el doctor (o el admin) puede registrar el diagnóstico clínico
-        if (auth()->user()->rol === 'asistente') abort(403);
+        if (auth()->user()->rol === 'asistente') {
+            abort(403);
+        }
 
         $pacienteId = $request->get('paciente_id');
 
@@ -65,7 +67,9 @@ class ExpedientesController extends Controller
             ->select('pacientes.id', DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
             ->first();
 
-        if (!$paciente) abort(404);
+        if (! $paciente) {
+            abort(404);
+        }
 
         // Citas completadas del paciente sin expediente aún
         $citas = DB::table('citas')
@@ -101,16 +105,18 @@ class ExpedientesController extends Controller
     // ── STORE ──────────────────────────────────────────────────────────
     public function store(Request $request)
     {
-        if (auth()->user()->rol === 'asistente') abort(403);
+        if (auth()->user()->rol === 'asistente') {
+            abort(403);
+        }
 
         $data = $request->validate([
-            'paciente_id'    => 'required|exists:pacientes,id',
-            'dentista_id'    => 'required|exists:personal,id',
-            'cita_id'        => 'nullable|exists:citas,id',
-            'diagnostico'    => 'required|string|max:2000',
-            'tratamiento'    => 'nullable|string|max:2000',
-            'receta'         => 'nullable|string|max:2000',
-            'observaciones'  => 'nullable|string|max:2000',
+            'paciente_id' => 'required|exists:pacientes,id',
+            'dentista_id' => 'required|exists:personal,id',
+            'cita_id' => 'nullable|exists:citas,id',
+            'diagnostico' => 'required|string|max:2000',
+            'tratamiento' => 'nullable|string|max:2000',
+            'receta' => 'nullable|string|max:2000',
+            'observaciones' => 'nullable|string|max:2000',
             'proxima_visita' => 'nullable|date|after:today',
         ], [
             'diagnostico.required' => 'El diagnóstico es obligatorio.',
@@ -119,24 +125,24 @@ class ExpedientesController extends Controller
         $id = (string) Str::uuid();
 
         DB::table('expedientes')->insert([
-            'id'             => $id,
-            'paciente_id'    => $data['paciente_id'],
-            'dentista_id'    => $data['dentista_id'],
-            'cita_id'        => $data['cita_id'] ?: null,
-            'diagnostico'    => $data['diagnostico'],
-            'tratamiento'    => $data['tratamiento'] ?? null,
-            'receta'         => $data['receta'] ?? null,
-            'observaciones'  => $data['observaciones'] ?? null,
+            'id' => $id,
+            'paciente_id' => $data['paciente_id'],
+            'dentista_id' => $data['dentista_id'],
+            'cita_id' => $data['cita_id'] ?: null,
+            'diagnostico' => $data['diagnostico'],
+            'tratamiento' => $data['tratamiento'] ?? null,
+            'receta' => $data['receta'] ?? null,
+            'observaciones' => $data['observaciones'] ?? null,
             'proxima_visita' => $data['proxima_visita'] ?? null,
-            'archivos_url'   => null,
-            'creado_en'      => now(),
+            'archivos_url' => null,
+            'creado_en' => now(),
         ]);
 
         // Redirigir al rol correcto
-        $base = match(auth()->user()->rol) {
-            'dentista'  => 'dentista',
+        $base = match (auth()->user()->rol) {
+            'dentista' => 'dentista',
             'asistente' => 'asistente',
-            default     => 'admin',
+            default => 'admin',
         };
 
         return redirect()->route("{$base}.pacientes.show", $data['paciente_id'])
@@ -167,12 +173,14 @@ class ExpedientesController extends Controller
             )
             ->first();
 
-        if (!$expediente) abort(404);
+        if (! $expediente) {
+            abort(404);
+        }
 
-        $base = match(auth()->user()->rol) {
-            'dentista'  => 'dentista',
+        $base = match (auth()->user()->rol) {
+            'dentista' => 'dentista',
             'asistente' => 'asistente',
-            default     => 'admin',
+            default => 'admin',
         };
 
         return view('expedientes.show', compact('expediente', 'base'));
@@ -181,13 +189,15 @@ class ExpedientesController extends Controller
     // ── UPDATE ─────────────────────────────────────────────────────────
     public function update(Request $request, string $id)
     {
-        if (auth()->user()->rol === 'asistente') abort(403);
+        if (auth()->user()->rol === 'asistente') {
+            abort(403);
+        }
 
         $data = $request->validate([
-            'diagnostico'    => 'required|string|max:2000',
-            'tratamiento'    => 'nullable|string|max:2000',
-            'receta'         => 'nullable|string|max:2000',
-            'observaciones'  => 'nullable|string|max:2000',
+            'diagnostico' => 'required|string|max:2000',
+            'tratamiento' => 'nullable|string|max:2000',
+            'receta' => 'nullable|string|max:2000',
+            'observaciones' => 'nullable|string|max:2000',
             'proxima_visita' => 'nullable|date',
         ]);
 

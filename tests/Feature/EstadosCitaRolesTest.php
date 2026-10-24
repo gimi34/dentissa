@@ -204,8 +204,9 @@ class EstadosCitaRolesTest extends TestCase
 
     public function test_el_paciente_cancela_su_cita_antes_de_que_empiece(): void
     {
-        // 15:30 UTC son las 09:30 en la clínica: la cita de las 10:00 aún no empieza.
-        Carbon::setTestNow(Carbon::parse('2026-10-05 15:30:00', 'UTC'));
+        // Spec 028 (CA3): el paciente cancela con 24 horas o más de antelación. El domingo
+        // 2026-10-04 a las 15:30 UTC (09:30 en la clínica) faltan 24 h 30 min para la cita.
+        Carbon::setTestNow(Carbon::parse('2026-10-04 15:30:00', 'UTC'));
 
         foreach (['agendada', 'confirmada'] as $origen) {
             $cita = $this->cita($this->d1, $this->p1, $origen, self::INICIO);

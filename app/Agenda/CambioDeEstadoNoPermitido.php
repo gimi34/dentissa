@@ -39,9 +39,12 @@ class CambioDeEstadoNoPermitido extends RuntimeException
         return new self('cerrada', "Esta cita ya está {$como} y no puede cambiar de estado. Para volver a atender al paciente, agenda una cita nueva.");
     }
 
-    public static function vuelta(): self
+    /** El mensaje dice cómo mover la cita según quién lo intenta (spec 028, CA5). */
+    public static function vuelta(string $rol): self
     {
-        return new self('vuelta', 'Una cita no puede volver a «Agendada». Si hay que moverla, cancélala y agenda una nueva.');
+        return new self('vuelta', $rol === 'dentista'
+            ? 'Una cita no puede volver a «Agendada». Pide a tu asistente o a la administración que la reprogramen.'
+            : 'Una cita no puede volver a «Agendada». Si hay que moverla, usa «Reprogramar».');
     }
 
     /** @param  string[]  $desde  estados de origen permitidos para `$nuevo` */
@@ -64,6 +67,30 @@ class CambioDeEstadoNoPermitido extends RuntimeException
     public static function yaEmpezo(): self
     {
         return new self('yaEmpezo', 'Tu cita ya empezó y no se puede cancelar. Si necesitas ayuda, llama a la clínica.');
+    }
+
+    /** Spec 028: el paciente cancela o reprograma con menos de 24 horas de antelación. */
+    public static function fueraDePlazo(): self
+    {
+        return new self('fueraDePlazo', 'Faltan menos de 24 horas para tu cita: ya no puedes cambiarla ni cancelarla desde aquí. Llama a la clínica.');
+    }
+
+    /** Spec 028: el personal intenta reprogramar una cita en curso o que ya empezó. */
+    public static function yaEmpezoPersonal(): self
+    {
+        return new self('yaEmpezoPersonal', 'Esta cita ya empezó y no se puede reprogramar.');
+    }
+
+    // Al reprogramar, como al agendar: el dentista debe seguir activo (/review 028 R19).
+    public static function dentistaInactivo(): self
+    {
+        return new self('dentistaInactivo', 'El dentista de esta cita ya no está activo y no se puede reprogramar. Cancélala o agenda una cita nueva con otro dentista.');
+    }
+
+    // Una cita sin duración no se puede colocar en otro hueco (/review 028 R19).
+    public static function sinDuracion(): self
+    {
+        return new self('sinDuracion', 'Esta cita no tiene una duración válida y no se puede reprogramar. Cancélala o agenda una cita nueva.');
     }
 
     public static function ocupada(): self

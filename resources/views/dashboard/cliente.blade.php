@@ -23,7 +23,7 @@
         {{-- Próxima cita --}}
         <div>
             <div class="section-head">
-                <span class="section-title">Tu próxima cita</span>
+                <h2 class="section-title">Tu próxima cita</h2>
                 <a href="/cliente/citas" class="btn btn-ghost btn-sm">Ver todas →</a>
             </div>
 
@@ -34,7 +34,7 @@
                         <div class="appt-day">{{ \Carbon\Carbon::parse($proximaCita->fecha_hora)->format('d') }}</div>
                         <div class="appt-month">{{ \Carbon\Carbon::parse($proximaCita->fecha_hora)->locale('es')->isoFormat('MMM') }}</div>
                     </div>
-                    <div style="flex:1">
+                    <div class="texto-partible" style="flex:1">
                         <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:6px">
                             {{ $proximaCita->servicio ?? 'Consulta dental' }}
                         </div>
@@ -47,16 +47,26 @@
                             </span>
                             <span>👨‍⚕️ {{ $proximaCita->dentista }}</span>
                         </div>
-                        <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
-                            @include('partials.badge-estado', ['estado' => $proximaCita->estado])
-                            <a href="/cliente/citas/{{ $proximaCita->id }}" class="btn btn-outline btn-sm">Ver detalles</a>
-                            @if($proximaCita->estado === 'agendada')
-                                <form action="/cliente/citas/{{ $proximaCita->id }}/cancelar" method="POST" style="display:inline">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red)"
-                                        onclick="return confirm('¿Deseas cancelar esta cita?')">Cancelar</button>
-                                </form>
-                            @endif
+                        {{-- Estado y acciones con el plazo de 24 horas del paciente (spec 028; /review 028 R2, R21). --}}
+                        <div class="formulario-accesible">
+                            <div class="proxima-acciones">
+                                @include('partials.badge-estado', ['estado' => $proximaCita->estado])
+                                <div id="acciones-proxima" class="acciones-fila">
+                                    <a href="{{ route('cliente.citas.show', $proximaCita->id) }}" class="btn btn-outline btn-sm">Ver detalles</a>
+                                    @if($proximaCita->puede_reprogramar)
+                                        <a href="{{ route('cliente.citas.reprogramar', $proximaCita->id) }}" class="btn btn-outline btn-sm">Reprogramar</a>
+                                    @endif
+                                    @if($proximaCita->puede_cancelar)
+                                        <form action="{{ route('cliente.citas.cancelar', $proximaCita->id) }}" method="POST" class="form-en-linea">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('¿Deseas cancelar esta cita?')">Cancelar</button>
+                                        </form>
+                                    @elseif($proximaCita->aviso_plazo_corto)
+                                        <p class="aviso-plazo">{{ $proximaCita->aviso_plazo_corto }}</p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -89,24 +99,24 @@
             <div class="card card-0">
                 @if(isset($citasPasadas) && $citasPasadas->count() > 0)
                     <div class="table-wrap">
-                        <table>
+                        <table class="tabla-tarjetas">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
+                                    <th class="celda-cab">Fecha</th>
                                     <th>Servicio</th>
                                     <th>Dentista</th>
-                                    <th>Estado</th>
+                                    <th class="celda-estado">Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($citasPasadas as $cita)
                                 <tr>
-                                    <td style="white-space:nowrap;color:var(--text-muted)">
+                                    <td class="celda-cab" data-label="Fecha" style="white-space:nowrap;color:var(--text-muted)">
                                         {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('d/m/Y') }}
                                     </td>
-                                    <td style="font-weight:500">{{ $cita->servicio ?? '—' }}</td>
-                                    <td style="color:var(--text-muted)">{{ $cita->dentista }}</td>
-                                    <td>@include('partials.badge-estado', ['estado' => $cita->estado])</td>
+                                    <td data-label="Servicio" style="font-weight:500">{{ $cita->servicio ?? '—' }}</td>
+                                    <td data-label="Dentista" style="color:var(--text-muted)">{{ $cita->dentista }}</td>
+                                    <td class="celda-estado" data-label="Estado">@include('partials.badge-estado', ['estado' => $cita->estado])</td>
                                 </tr>
                                 @endforeach
                             </tbody>

@@ -38,12 +38,12 @@ class ServiciosPrecioTest extends TestCase
     private function crearAdmin(): Usuario
     {
         return Usuario::create([
-            'nombre'        => 'Admin',
-            'apellido'      => 'De Pruebas',
-            'email'         => 'admin.pruebas.' . Str::random(8) . '@example.test',
-            'rol'           => 'admin',
-            'telefono'      => '555-0000',
-            'activo'        => 1,
+            'nombre' => 'Admin',
+            'apellido' => 'De Pruebas',
+            'email' => 'admin.pruebas.'.Str::random(8).'@example.test',
+            'rol' => 'admin',
+            'telefono' => '555-0000',
+            'activo' => 1,
             'password_hash' => Hash::make('secreto-de-pruebas'),
         ]);
     }
@@ -57,14 +57,14 @@ class ServiciosPrecioTest extends TestCase
         $id = (string) Str::uuid();
 
         DB::table('servicios')->insert(array_merge([
-            'id'           => $id,
-            'nombre'       => 'Servicio de pruebas ' . Str::random(6),
-            'descripcion'  => 'Fila creada por ServiciosPrecioTest.',
-            'categoria'    => 'Pruebas',
+            'id' => $id,
+            'nombre' => 'Servicio de pruebas '.Str::random(6),
+            'descripcion' => 'Fila creada por ServiciosPrecioTest.',
+            'categoria' => 'Pruebas',
             'duracion_min' => 45,
-            'precio'       => 18000.00,
+            'precio' => 18000.00,
             'color_agenda' => '#ED93B1',
-            'activo'       => 1,
+            'activo' => 1,
         ], $valores, ['id' => $id]));
 
         return $id;
@@ -77,13 +77,13 @@ class ServiciosPrecioTest extends TestCase
     private function payloadFormulario(array $valores = []): array
     {
         return array_merge([
-            'nombre'       => 'Colocación de brackets',
-            'categoria'    => 'Ortodoncia',
+            'nombre' => 'Colocación de brackets',
+            'categoria' => 'Ortodoncia',
             'duracion_min' => 90,
-            'descripcion'  => 'Aparatología fija metálica completa',
-            'precio'       => '18000.00',
+            'descripcion' => 'Aparatología fija metálica completa',
+            'precio' => '18000.00',
             'color_agenda' => '#ED93B1',
-            'activo'       => '1',
+            'activo' => '1',
         ], $valores);
     }
 
@@ -98,7 +98,7 @@ class ServiciosPrecioTest extends TestCase
     public function test_el_precio_sobrevive_a_una_edicion_parcial(): void
     {
         $admin = $this->crearAdmin();
-        $id    = $this->crearServicio(['duracion_min' => 90, 'precio' => 18000.00]);
+        $id = $this->crearServicio(['duracion_min' => 90, 'precio' => 18000.00]);
 
         $respuesta = $this->actingAs($admin)
             ->from(route('admin.servicios.edit', $id))
@@ -138,14 +138,14 @@ class ServiciosPrecioTest extends TestCase
      */
     public function test_el_alta_guarda_el_precio_y_el_color_escritos(): void
     {
-        $admin  = $this->crearAdmin();
-        $nombre = 'Servicio nuevo ' . Str::random(6);
+        $admin = $this->crearAdmin();
+        $nombre = 'Servicio nuevo '.Str::random(6);
 
         $respuesta = $this->actingAs($admin)
             ->from(route('admin.servicios.create'))
             ->post(route('admin.servicios.store'), $this->payloadFormulario([
-                'nombre'       => $nombre,
-                'precio'       => '1234.56',
+                'nombre' => $nombre,
+                'precio' => '1234.56',
                 'color_agenda' => '#ABCDEF',
             ]));
 
@@ -178,12 +178,12 @@ class ServiciosPrecioTest extends TestCase
     public function test_un_precio_negativo_se_rechaza_y_no_modifica_el_servicio(): void
     {
         $admin = $this->crearAdmin();
-        $id    = $this->crearServicio(['precio' => 18000.00, 'duracion_min' => 90]);
+        $id = $this->crearServicio(['precio' => 18000.00, 'duracion_min' => 90]);
 
         $respuesta = $this->actingAs($admin)
             ->from(route('admin.servicios.edit', $id))
             ->put(route('admin.servicios.update', $id), $this->payloadFormulario([
-                'precio'       => '-50',
+                'precio' => '-50',
                 'duracion_min' => 120,
             ]));
 
@@ -214,7 +214,7 @@ class ServiciosPrecioTest extends TestCase
     public function test_un_color_de_agenda_invalido_se_rechaza(): void
     {
         $admin = $this->crearAdmin();
-        $id    = $this->crearServicio(['color_agenda' => '#ED93B1']);
+        $id = $this->crearServicio(['color_agenda' => '#ED93B1']);
 
         $respuesta = $this->actingAs($admin)
             ->from(route('admin.servicios.edit', $id))

@@ -81,7 +81,10 @@ main() {
     git -c advice.detachedHead=false checkout "${ref}"
 
     paso "Construyendo las imágenes"
-    "${compose[@]}" build app web
+    # Sin caché, bajando las imágenes base y con REFRESCO_SISTEMA nuevo: la capa de apt-get/apk
+    # upgrade se rehace en cada despliegue y las correcciones del sistema llegan a producción
+    # (spec 031, T055 y T057; RS18.a). --no-cache solo no lo garantizó para web en el servidor.
+    "${compose[@]}" build --no-cache --pull --build-arg REFRESCO_SISTEMA="$(date -u +%Y%m%dT%H%M%SZ)" app web
 
     paso "Base de datos"
     "${compose[@]}" up -d db

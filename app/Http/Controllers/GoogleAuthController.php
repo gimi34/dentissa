@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\InvalidStateException;
 
 class GoogleAuthController extends Controller
 {
+    public const MENSAJE_FALLO_GOOGLE = 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+
     public function redirect()
     {
         return Socialite::driver('google')->redirect();
@@ -15,7 +21,23 @@ class GoogleAuthController extends Controller
 
     public function callback()
     {
-        $googleUser = Socialite::driver('google')->user();
+        // Spec 031 (CA5): una vuelta cancelada en Google, sin inicio previo, con el
+        // estado caducado o manipulado, o con un error del proveedor vuelve al login
+        // sin sesión ni cuentas. Solo el error del proveedor se reporta, para que un
+        // fallo de configuración (p. ej. invalid_client) deje rastro (/analyze A12).
+        if (request()->has('error')) {
+            return $this->volverAlLoginPorFallo();
+        }
+
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (InvalidStateException) {
+            return $this->volverAlLoginPorFallo();
+        } catch (GuzzleException $e) {
+            report($e);
+
+            return $this->volverAlLoginPorFallo();
+        }
 
         $usuario = Usuario::where('google_id', $googleUser->getId())->first();
 
@@ -35,10 +57,10 @@ class GoogleAuthController extends Controller
 
             request()->session()->put('google_registro', [
                 'google_id' => $googleUser->getId(),
-                'nombre'    => $nombre,
-                'apellido'  => $apellido,
-                'email'     => $googleUser->getEmail(),
-                'foto_url'  => $googleUser->getAvatar(),
+                'nombre' => $nombre,
+                'apellido' => $apellido,
+                'email' => $googleUser->getEmail(),
+                'foto_url' => $googleUser->getAvatar(),
             ]);
 
             return redirect()->route('register.contacto');
@@ -59,5 +81,18 @@ class GoogleAuthController extends Controller
             'asistente' => redirect()->route('asistente.dashboard'),
             default => redirect()->route('cliente.dashboard'),
         };
+    }
+
+    /**
+     * Fallo de la vuelta de Google: login fallido para la auditoría de la spec 021
+     * (excepción P7) y vuelta al inicio de sesión con un mensaje genérico.
+     */
+    private function volverAlLoginPorFallo(): RedirectResponse
+    {
+        event(new Failed('web', null, ['proveedor' => 'google']));
+
+        return redirect()->route('login')->withErrors([
+            'email' => self::MENSAJE_FALLO_GOOGLE,
+        ]);
     }
 }

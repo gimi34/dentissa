@@ -5,6 +5,154 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.16.0
+- Validador 1.16.0 (`aidd.py deal` para repartir jugadas y escenas entre composiciones).
+- `/design-spec` con motor creativo: modo y registro de cada pantalla (al menos una opción audaz),
+  idea con la prueba del competidor, «cosa viva», escenas de scroll con un único script común e
+  inspector en el navegador antes de enseñar cada opción; ajustes `--bolder` y `--quieter`. Las
+  capturas del inspector van a `.ai/inspect/` (ignorado).
+- Sin cambios en las plantillas de `docs/templates/`, en `.ai/project.yaml` (salvo la versión), en
+  la constitución ni en la CI. Las filas nuevas de anti-clichés, «Modo y registro» de
+  `creative-direction.md` y los tokens de movimiento entran con el rediseño de la spec 038.
+
+## [0.10.0] - 2026-10-20
+
+### Added
+- Administración del servidor desde fuera de casa por una red privada (Tailscale), con clave y sin
+  abrir puertos en el router; la guía explica cómo retirar un dispositivo perdido (spec 031).
+- La verificación posterior al despliegue avisa si faltan las credenciales de Google o si un
+  servicio no usa la configuración guardada, y explica cómo aplicarla (spec 031).
+
+### Changed
+- Si el acceso con Google falla (se cancela, caduca o llega manipulado), se vuelve al inicio de
+  sesión con el mensaje «No se pudo iniciar sesión con Google. Inténtalo de nuevo.» en lugar de
+  un error (spec 031).
+- Cada despliegue reconstruye las imágenes sin caché para que las correcciones del sistema
+  operativo lleguen a producción; imágenes base actualizadas (spec 031).
+
+### Fixed
+- `/` sin sesión vuelve a llevar al inicio de sesión (fix 2026-10-20-fix-raiz-al-login).
+- Código con conflictos de fusión sin resolver que impedía arrancar la aplicación desde `main`
+  (fix 2026-10-20-fix-marcadores-conflicto-main).
+
+### Security
+- Cabeceras de seguridad en todas las respuestas: política de contenido, protección frente a que
+  otra web incruste la aplicación, conexión segura obligatoria durante 180 días y sin versiones del
+  servidor ni de PHP a la vista (spec 031).
+- Las trazas de errores ya no incluyen los argumentos de las llamadas (spec 031).
+- `follow-redirects` 1.16.1, sin dos avisos altos publicados el 2026-10-20; solo afecta a las
+  herramientas de desarrollo (chore 2026-10-20-chore-follow-redirects-1.16.1).
+
+## [0.9.0] - 2026-10-19
+
+### Added
+- Versión para el móvil de la ficha del paciente, su formulario de alta y edición, y la lista, la
+  ficha y el alta de expedientes: se ven sin desplazamiento lateral desde 320 px de ancho, también con
+  el móvil en horizontal (spec 035).
+
+### Changed
+- En el móvil, la ficha del paciente y la del expediente se leen en una columna; el perfil del
+  paciente es compacto (iniciales, nombre y cada dato de contacto con su etiqueta) y «Nuevo
+  expediente» y «Nueva cita» bajan a una fila bajo el título (spec 035).
+- El historial de citas de la ficha y la lista de expedientes se leen como tarjetas en el móvil, con
+  «Ver detalle» y «Ver» con su nombre visible (spec 035).
+- Los formularios de paciente y de expediente muestran cada error junto a su campo y lo enlazan para
+  los lectores de pantalla; cada etiqueta está asociada a su campo y el campo enfocado lleva el anillo
+  de foco del sistema (spec 035).
+- Los nombres y textos largos (también los de las migas) pasan a la línea siguiente sin ensanchar la
+  página (spec 035).
+- Los iconos «Menú» y «Cerrar menú» del móvil se muestran sin recuadro (spec 035).
+- En el escritorio no cambia nada visible, salvo el foco de los campos de esos formularios y el borde
+  rojo del campo con error en la ficha del expediente (spec 035).
+
+### Changed — flujo AI-DD actualizado a 1.15.0
+- Validador 1.15.0. Carriles ligeros `/fix`, `/refactor` y `/chore` con fichas en `docs/changes/`
+  (plantilla `change.md`), `/sync` para la deriva, sección «Hotfix» en `docs/deployment.md` y el
+  párrafo de carriles en `AGENTS.md`.
+- Modelo por subagente: bloque `models` en `.ai/project.yaml` con los perfiles por defecto
+  (`critical` opus, `standard` sonnet, `mechanical` haiku, `implementation` el de la sesión).
+
+### Changed — flujo AI-DD actualizado a 1.13.0
+- Validador 1.12.0 y plantillas de plan, review y spec nuevas (sección «Descubribilidad», revisor de
+  SEO y brechas `SE`).
+- SEO técnico: `docs/seo.md` (solo `/registro` indexable) con sus brechas SE1–SE7, objetivo 7 en el
+  roadmap y principio P10 en la constitución (1.3.0).
+
+## [0.8.0] - 2026-10-16
+
+### Added
+- Versión para el móvil de las pantallas del personal: los paneles de administración, dentista y
+  asistente, la lista y el detalle de citas y las listas de pacientes y servicios se ven sin
+  desplazamiento lateral desde 320 px de ancho, también con el móvil en horizontal (spec 034).
+- En el móvil, las tablas de citas, pacientes y servicios (y las de los paneles) se leen como
+  tarjetas, una por fila, con la etiqueta de cada dato y las acciones con su nombre visible; las
+  columnas secundarias solo se ven en el escritorio (spec 034).
+- Filtro de citas plegable en el móvil: el buscador, los atajos «Esta semana» y «Hoy», un botón
+  «Buscar» y «Filtros», que despliega las fechas, el dentista y el estado e indica cuántos filtros
+  hay aplicados. Sin JavaScript, el filtro queda desplegado (spec 034).
+
+### Changed
+- «Mis citas» y el panel del paciente muestran sus citas en tarjetas en el móvil, con «Ver»,
+  «Reprogramar» y «Cancelar» siempre visibles (spec 034).
+- El detalle de una cita del personal se lee en una columna en el móvil, en este orden: datos,
+  cambiar estado, información, acciones, control interno e historial (spec 034).
+- El botón del menú del móvil muestra solo su icono y el menú abierto muestra el logo de la clínica
+  (spec 034).
+- Los textos largos pasan a la línea siguiente sin partir letra a letra las palabras que caben
+  (spec 034).
+- En el escritorio no cambia nada visible, salvo que los campos del filtro de citas tienen un borde
+  más marcado y lo que la spec toca muestra el anillo de foco de la marca al recorrerlo con el
+  teclado (spec 034).
+
+## [0.7.0] - 2026-10-12
+
+### Added
+- Versión para el móvil: por debajo de 900 px de ancho, la barra lateral se convierte en un menú
+  desplegable con el botón «Menú», para todos los roles. Se abre y se cierra con el dedo, el teclado
+  (Escape) o tocando fuera, marca la sección actual y funciona con lector de pantalla (spec 033).
+- Las siete pantallas del paciente (panel, mis citas próximas y pasadas, detalle, reprogramar,
+  agendar y perfil) se ven sin desplazamiento lateral desde 320 px de ancho, también con el móvil en
+  horizontal; los nombres, correos y servicios largos pasan a la línea siguiente (spec 033).
+- Botones, enlaces, campos y elementos del menú con un área de toque de al menos 44 × 44 px en el
+  móvil (spec 033).
+
+### Changed
+- En el escritorio no cambia nada visible, salvo que las pestañas de «Mis citas» y las migas de pan
+  muestran el anillo de foco de la marca al recorrerlas con el teclado (spec 033).
+- Las pantallas del personal ganan el menú desplegable en el móvil; su contenido todavía no está
+  adaptado y sus tablas se desplazan dentro de su tarjeta (pendiente de una spec propia).
+
+## [0.6.0] - 2026-10-11
+
+### Added
+- La administración y los asistentes (con las citas de sus dentistas) pueden reprogramar una cita
+  agendada o confirmada que aún no ha empezado: solo cambian la fecha y la hora, con la misma regla de
+  agenda que al agendar y sin que la propia cita cuente como conflicto (spec 028).
+- El paciente puede reprogramar sus citas desde su panel, su lista y el detalle si faltan 24 horas o
+  más (spec 028).
+- En la pantalla de reprogramar, la opción «No reagendar» cancela la cita definitivamente, con un
+  motivo opcional y una casilla para confirmar que no se puede deshacer (spec 028).
+- El historial de la cita muestra cada reprogramación con la fecha y hora anteriores y las nuevas,
+  quién la hizo y el motivo (spec 028).
+
+### Changed
+- El paciente solo puede cancelar una cita con 24 horas o más de antelación; antes podía hasta el
+  inicio. Con menos tiempo se le pide que llame a la clínica (spec 028).
+- Una cita confirmada que se reprograma vuelve a agendada (spec 028).
+- Si una cita no se puede mover porque ya empezó, está cerrada, su dentista ya no está activo o no
+  tiene duración, la pantalla lo explica y no ofrece el formulario (spec 028).
+
+### Security
+- Herramientas de desarrollo actualizadas sin avisos críticos ni altos de `npm audit` (`shell-quote`
+  1.11.0 y `source-map-js` 1.2.2). No llegan a producción, que no instala dependencias de npm. Se
+  adelanta de la spec 031, T004.
+
+### Changed — flujo AI-DD actualizado a 1.11.5
+- Solo cambia la versión del flujo: las novedades de 1.11.3–1.11.5 (opciones de diseño con idea
+  propia, rehacer opciones y afinar un eje) aplican a proyectos sin sistema de diseño aprobado; el
+  de Dentissa es extraído y está aprobado (1.2.0), así que no se tocan. Validador y plantillas sin
+  cambios.
+
 ## [0.5.0] - 2026-10-04
 
 ### Added

@@ -25,21 +25,20 @@
 @section('content')
 
 {{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route("$rp.citas") }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
+<div id="migas" class="migas">
+    <a href="{{ route("$rp.citas") }}">Citas</a>
     <span>›</span>
-    <span style="color:var(--text)">{{ $cita->paciente }}</span>
+    <span class="migas-actual">{{ $cita->paciente }}</span>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 360px;gap:20px">
-
-    {{-- ── Columna principal ─────────────────────────────────────────── --}}
-    <div style="display:flex;flex-direction:column;gap:18px">
+{{-- Detalle (spec 034, D7): el HTML va en el orden de la spec, que es también el de la lectura y el foco
+     en el móvil. En el escritorio, una rejilla con la columna lateral sobre todas las filas lo deja como antes. --}}
+<div class="detalle-cita">
 
         {{-- Info de la cita --}}
-        <div class="card">
+        <div class="card detalle-datos">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
-                <div>
+                <div class="texto-partible">
                     <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
                         {{ $cita->servicio ?? 'Consulta dental' }}
                     </div>
@@ -51,7 +50,7 @@
                 @include('partials.badge-estado', ['estado' => $cita->estado])
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <div class="detalle-datos-rejilla" style="display:grid;gap:12px">
                 <div style="background:var(--p50);border-radius:var(--radius-sm);padding:12px 14px">
                     <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Paciente</div>
                     <div style="font-size:14px;font-weight:500">{{ $cita->paciente }}</div>
@@ -85,77 +84,8 @@
             @endif
         </div>
 
-        {{-- ── Control interno ───────────────────────────────────────── --}}
-        @if($rp === 'admin')
-        <div class="card" style="border-left:3px solid var(--p400)" id="control-interno">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p400)" stroke-width="2">
-                    <rect x="1" y="4" width="22" height="16" rx="2"/>
-                    <line x1="1" y1="10" x2="23" y2="10"/>
-                </svg>
-                <span style="font-size:14px;font-weight:500;color:var(--text)">Control interno</span>
-                <span style="font-size:11.5px;color:var(--text-light);margin-left:4px">Solo visible para el personal</span>
-            </div>
-
-            {{-- Notas internas editables --}}
-            <form action="{{ route('admin.citas.notas', $cita->id) }}" method="POST">
-                @csrf @method('PATCH')
-                <label class="field-label">Notas internas del staff</label>
-                <textarea name="notas_internas" class="field" rows="4"
-                    placeholder="Ej: Paciente pagó en efectivo. Reagendar en 6 meses. Requiere radiografía previa..."
-                    style="resize:vertical;margin-bottom:10px">{{ $cita->notas_internas }}</textarea>
-                <button type="submit" class="btn btn-outline btn-sm">Guardar notas</button>
-            </form>
-        </div>
-        @endif
-
-        {{-- Historial de cambios --}}
-        <div id="historial">
-            <div class="section-head">
-                <span class="section-title">Historial de cambios</span>
-            </div>
-            <div class="card card-0">
-                @if($historial->count() > 0)
-                    <div style="padding:6px 20px">
-                        @foreach($historial as $h)
-                            <div class="timeline-item">
-                                <div class="timeline-time" style="width:100px">
-                                    {{ \Carbon\Carbon::parse($h->fecha)->format('d/m H:i') }}
-                                </div>
-                                <div class="timeline-dot" style="background:var(--p300)"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">
-                                        @if($h->estado_anterior && $h->estado_nuevo)
-                                            <span style="color:var(--text-muted)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
-                                            → <span style="color:var(--p600)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
-                                        @elseif($h->estado_nuevo)
-                                            Estado: <span style="color:var(--p600)">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
-                                        @else
-                                            Cambio registrado
-                                        @endif
-                                    </div>
-                                    @if($h->motivo)
-                                        <div class="timeline-sub">{{ $h->motivo }}</div>
-                                    @endif
-                                    <div style="font-size:11.5px;color:var(--text-light);margin-top:2px">
-                                        por {{ trim($h->cambiado_por_nombre) ?: 'Sistema' }}
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="empty-state" style="padding:22px">
-                        <p>Sin cambios de estado registrados</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-    </div>
-
-    {{-- ── Sidebar derecho ───────────────────────────────────────────── --}}
-    <div style="display:flex;flex-direction:column;gap:18px">
+    {{-- ── Columna lateral: cambiar estado, información y acciones ─────────── --}}
+    <div class="detalle-lateral">
 
         {{-- Cambiar estado --}}
         <div id="estado">
@@ -231,18 +161,100 @@
         </div>
 
         {{-- Acciones rápidas --}}
-        <div style="display:flex;flex-direction:column;gap:8px">
-            <a href="{{ route("$rp.pacientes.show", $cita->paciente_id) }}"
-               class="btn btn-outline" style="justify-content:center">
-               Ver expediente del paciente
-            </a>
-            <a href="{{ route("$rp.citas.create", ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
-               class="btn btn-ghost" style="justify-content:center">
-               Reagendar / Nueva cita
-            </a>
+        <div class="formulario-accesible">
+            <div id="acciones" class="acciones-columna">
+                <a href="{{ route("$rp.pacientes.show", $cita->paciente_id) }}" class="btn btn-outline">
+                   Ver expediente del paciente
+                </a>
+                @if($cita->puede_reprogramar)
+                    <a href="{{ route("$rp.citas.reprogramar", $cita->id) }}" class="btn btn-outline">
+                       Reprogramar
+                    </a>
+                @endif
+                <a href="{{ route("$rp.citas.create", ['fecha' => \Carbon\Carbon::parse($cita->fecha_hora)->addMonth()->format('Y-m-d'), 'dentista' => $cita->dentista_id]) }}"
+                   class="btn btn-ghost">
+                   Agendar otra cita
+                </a>
+            </div>
         </div>
 
     </div>
+
+        {{-- ── Control interno ───────────────────────────────────────── --}}
+        @if($rp === 'admin')
+        <div class="card detalle-control" style="border-left:3px solid var(--p400)" id="control-interno">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p400)" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                <span style="font-size:14px;font-weight:500;color:var(--text)">Control interno</span>
+                <span style="font-size:11.5px;color:var(--text-light);margin-left:4px">Solo visible para el personal</span>
+            </div>
+
+            {{-- Notas internas editables --}}
+            <form action="{{ route('admin.citas.notas', $cita->id) }}" method="POST">
+                @csrf @method('PATCH')
+                <label class="field-label">Notas internas del staff</label>
+                <textarea name="notas_internas" class="field" rows="4"
+                    placeholder="Ej: Paciente pagó en efectivo. Reagendar en 6 meses. Requiere radiografía previa..."
+                    style="resize:vertical;margin-bottom:10px">{{ $cita->notas_internas }}</textarea>
+                <button type="submit" class="btn btn-outline btn-sm">Guardar notas</button>
+            </form>
+        </div>
+        @endif
+
+        {{-- Historial de cambios --}}
+        <div class="formulario-accesible detalle-historial">
+            <div id="historial">
+                <div class="section-head">
+                    <h2 class="section-title">Historial de cambios</h2>
+                </div>
+                <div class="card card-0">
+                    @if($historial->count() > 0)
+                        <div class="historial-lista">
+                            @foreach($historial as $h)
+                                <div class="timeline-item">
+                                    <div class="timeline-time">
+                                        {{ \Carbon\Carbon::parse($h->fecha)->format('d/m H:i') }}
+                                    </div>
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            @if($h->fecha_hora_anterior && $h->fecha_hora_nueva)
+                                                Reprogramada del {{ \Carbon\Carbon::parse($h->fecha_hora_anterior)->format('d/m/Y H:i') }} al {{ \Carbon\Carbon::parse($h->fecha_hora_nueva)->format('d/m/Y H:i') }}
+                                                @if($h->estado_anterior && $h->estado_nuevo && $h->estado_anterior !== $h->estado_nuevo)
+                                                    <br><span class="historial-estado-anterior">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
+                                                    → <span class="historial-estado-nuevo">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
+                                                @endif
+                                            @elseif($h->estado_anterior && $h->estado_nuevo)
+                                                <span class="historial-estado-anterior">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_anterior) }}</span>
+                                                → <span class="historial-estado-nuevo">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
+                                            @elseif($h->estado_nuevo)
+                                                Estado: <span class="historial-estado-nuevo">{{ \App\Agenda\CambioDeEstadoNoPermitido::etiqueta($h->estado_nuevo) }}</span>
+                                            @else
+                                                Cambio registrado
+                                            @endif
+                                        </div>
+                                        @if($h->motivo)
+                                            <div class="timeline-sub">{{ $h->motivo }}</div>
+                                        @endif
+                                        <div class="historial-autor">
+                                            por {{ trim($h->cambiado_por_nombre) ?: 'Sistema' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-state historial-vacio">
+                            <p>Sin cambios de estado registrados</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
 </div>
 
 @push('styles')

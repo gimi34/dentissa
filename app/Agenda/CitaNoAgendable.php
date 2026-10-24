@@ -31,4 +31,16 @@ class CitaNoAgendable extends RuntimeException
     {
         return new self('Ese horario ya no está disponible. Por favor elige otro.');
     }
+
+    /** Spec 028: la nueva fecha y hora ya pasaron en la hora de la clínica. */
+    public static function enElPasado(): self
+    {
+        return new self('Elige una fecha y hora que aún no hayan pasado.');
+    }
+
+    /** Spec 028: la nueva fecha y hora son las mismas que tiene la cita. */
+    public static function mismaFechaYHora(): self
+    {
+        return new self('La cita ya está en esa fecha y hora. Elige otra.');
+    }
 }

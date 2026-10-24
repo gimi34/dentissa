@@ -3,7 +3,8 @@
 
 Uso:
   aidd.py validate [RUTA ...] [--all]
-                                   Valida specs (carpetas docs/specs/NNN-slug o archivos).
+                                   Valida specs (carpetas docs/specs/NNN-slug o archivos) y fichas
+                                   de cambio (docs/changes/*.md).
                                    Sin rutas valida todas. Código de salida 1 si hay errores.
                                    Los avisos de specs implemented/released se resumen como
                                    heredados; --all los muestra.
@@ -24,6 +25,18 @@ Uso:
   aidd.py review-pack RUTA [--base REF] [--head REF]
                                    Prepara el paquete compartido de /review en .ai/cache/review/:
                                    diff de código filtrado, alcance (archivos vs tareas) y contexto.
+  aidd.py lane-check FICHA [--files RUTA ...] [--json]
+                                   Carriles (/fix, /refactor, /chore): ¿el cambio debe escalar al
+                                   flujo completo? Mira el diff desde `base` de la ficha (o las
+                                   rutas dadas). Código de salida 1 si hay motivos para escalar.
+  aidd.py drift [--since REF] [--json]
+                                   Deriva para /sync: commits de código sin spec ni ficha, specs
+                                   released tocadas después, huecos de architecture.md, specs
+                                   inferred y fichas abiertas viejas.
+  aidd.py deal [--mode persuadir|experiencia|operar|leer] [--n N] [--seed S] [--json]
+                                   Reparte jugadas firma y escenas del catálogo de diseño para N
+                                   composiciones (por defecto 3), distintas entre sí, con una
+                                   semilla reproducible (la usa /design-spec contra el sesgo).
   aidd.py hook pre-tool            Hook PreToolUse: lee el evento JSON por stdin.
 
 Solo usa la biblioteca estándar de Python 3.8+. Se copia a cada proyecto como .ai/bin/aidd.py
@@ -38,7 +51,7 @@ import re
 import subprocess
 import sys
 
-VERSION = "1.11.2"
+VERSION = "1.16.0"
 
 SPEC_STATES = {"draft", "inferred", "approved", "implemented", "released"}
 PLAN_STATES = {"draft", "approved", "blocked"}
@@ -74,9 +87,27 @@ VOCAB = {
     "color": ["Color", "Colour"],
     "design_debt": ["Deuda de diseño", "Design debt"],
     "view_inventory": ["Inventario de vistas", "View inventory"],
+    "discoverability": ["Descubribilidad", "Discoverability"],
+    "route_inventory": ["Inventario de rutas", "Route inventory"],
+    # Fichas de cambio de los carriles (docs/changes/, shared/contract.md → "Carriles")
+    "reproduction": ["Reproducción", "Reproduction"],
+    "root_cause": ["Causa raíz", "Root cause"],
+    "characterization": ["Tests de caracterización", "Characterization tests"],
+    "change": ["Cambio", "Change"],
+    "escalation": ["Escalado", "Escalation"],
+    "verification": ["Verificación", "Verification"],
 }
 DESIGN_STATES = {"none", "declined", "draft", "approved"}
 DESIGN_SOURCES = {"chosen", "extracted", "null", ""}
+# SEO técnico (shared/contract.md → "SEO técnico", shared/seo-checklist.md).
+SEO_STATES = {"none", "declined", "proposed", "inferred", "approved"}
+# Diseño de una spec (docs/specs/NNN-<slug>/design.md, /design-spec NNN).
+SPEC_DESIGN_STATES = {"draft", "approved"}
+SPEC_DESIGN_EXPLORATION = {"options", "none"}
+SEO_RENDERING = {"static", "ssr", "spa", "hybrid"}
+# Modelo de cada perfil de subagente (shared/contract.md → "Modelo de cada subagente").
+MODEL_PROFILES = ("critical", "standard", "mechanical", "implementation")
+MODEL_ALIASES = {"opus", "sonnet", "haiku", "fable", "inherit"}
 # Tipos de "Decisiones" (shared/contract.md → "Decisiones").
 DECISION_TYPES = {
     "brecha": "gap", "gap": "gap",
@@ -85,6 +116,7 @@ DECISION_TYPES = {
     "supuesto": "assumption", "assumption": "assumption",
     "diseño": "design", "diseno": "design", "design": "design",
     "cierre": "closure", "closure": "closure",
+    "refinado": "refined", "refined": "refined",
 }
 W = {
     "done_when": r"(?:hecho cuando|done when):",
@@ -112,6 +144,11 @@ W = {
     "obsolete": r"(?:obsoleta|obsolete):",
     "user": r"\b(?:usuario|user)\b",
     "verified_by": r"(?:c[oó]mo se verifica|how (?:it is )?verified|verificaci[oó]n|verification)",
+    "indexable_col": r"^\s*indexable\s*$",
+    "indexable_yes": r"^(?:s[ií]|yes)$",
+    "indexable_no": r"^no\b\s*[(:—-]\s*\S",
+    "user_decision": r"\((?:decisi[oó]n del usuario|user decision|confirmado por el usuario|confirmed by the user)\b",
+    "spa_gap": r"\b(?:spa|javascript|js|prerender\w*|pre-?renderiz\w*|renderiz\w*|render\w*|ssr|hidrat\w*|hydrat\w*)\b",
 }
 PLACEHOLDER_RE = re.compile(r"\{\{[^}]*\}\}")
 COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
@@ -192,6 +229,19 @@ def design_config(root):
     return {k: (yaml_scalar(block, k) or "") for k in ("status", "source", "system", "html")}
 
 
+def seo_config(root):
+    """Bloque `seo` de project.yaml (None si no existe). Valores en minúsculas; `null` → ''."""
+    p = os.path.join(root, ".ai", "project.yaml") if root else ""
+    block = yaml_block(read(p), "seo") if p and os.path.isfile(p) else None
+    if block is None:
+        return None
+    cfg = {}
+    for k in ("status", "indexable", "site_url", "rendering"):
+        v = (yaml_scalar(block, k) or "").strip()
+        cfg[k] = "" if v.lower() in {"null", "~"} else (v if k == "site_url" else v.lower())
+    return cfg
+
+
 def yaml_list(text, key):
     m = re.search(r"^(\s*)" + re.escape(key) + r":\s*(.*)$", text, re.M)
     if not m:
@@ -241,10 +291,26 @@ class Report:
 
 def load_spec_dir(d):
     spec = {"dir": d, "name": os.path.basename(os.path.normpath(d))}
-    for kind in ("spec", "plan", "tasks", "review", "analysis"):
+    for kind in ("spec", "plan", "tasks", "review", "analysis", "design"):
         p = os.path.join(d, kind + ".md")
         spec[kind] = read(p) if os.path.isfile(p) else None
     return spec
+
+
+def needs_design(s, root):
+    """La spec tiene interfaz (sección 'Diseño' que no dice 'No aplica') y hay sistema de diseño."""
+    if not s["spec"] or frontmatter(s["spec"]).get("status") == "inferred":
+        return False
+    dcfg = design_config(root) if root else None
+    if not dcfg or dcfg["status"].lower() not in {"draft", "approved"}:
+        return False
+    dsec = section(body(COMMENT_RE.sub("", s["spec"])), "design")
+    return dsec is not None and not re.search(W["not_applicable"], dsec, re.I)
+
+
+def spec_design_state(s):
+    """Estado del design.md de la spec: None si no existe."""
+    return frontmatter(s["design"]).get("status") if s.get("design") else None
 
 
 def spec_cas(spec_text):
@@ -439,8 +505,8 @@ def git(root, *args):
     return p.returncode, p.stdout.decode("utf-8", "replace")
 
 
-RISK_DOCS = ("security.md", "observability.md", "deployment.md")
-RISK_RE = r"(?:RS|OB|RD)\d+"
+RISK_DOCS = ("security.md", "observability.md", "deployment.md", "seo.md")
+RISK_RE = r"(?:RS|OB|RD|SE)\d+"
 
 
 def load_risks(root):
@@ -479,7 +545,7 @@ def coverage_rows(spec_text):
     sec = section(body(spec_text), "risk_coverage") or ""
     rows = {}
     for line in sec.splitlines():
-        for cid in re.findall(r"\b((?:RS|OB|RD)\d+\.[a-z])\b", line):
+        for cid in re.findall(r"\b(" + RISK_RE + r"\.[a-z])\b", line):
             cells = [c.strip() for c in line.split("|")]
             idx = next((i for i, c in enumerate(cells) if cid in c), None)
             # Columna "Alcance / Scope": la celda siguiente a la de la corrección.
@@ -591,8 +657,18 @@ def validate_spec_dir(d, root):
     dcfg = design_config(root)
     dsec = section(body(text), "design")
     if dsec is not None and dcfg and dcfg["status"] == "approved" and st not in {"inferred"} \
-            and not re.search(r"system\.md", dsec):
-        rep.warn("spec: tiene sección 'Diseño' pero no enlaza docs/design/system.md (sistema aprobado)")
+            and not re.search(r"(?:system|design)\.md", dsec) and not re.search(W["not_applicable"], dsec, re.I):
+        rep.warn("spec: tiene sección 'Diseño' pero no enlaza su design.md ni docs/design/system.md (sistema aprobado)")
+    if s.get("design"):
+        dfm = frontmatter(s["design"])
+        if dfm.get("status") not in SPEC_DESIGN_STATES:
+            rep.err(f"design.md: status inválido o ausente ({dfm.get('status')!r}; draft, approved)")
+        if dfm.get("exploration") not in SPEC_DESIGN_EXPLORATION:
+            rep.err(f"design.md: exploration inválido o ausente ({dfm.get('exploration')!r}; options, none)")
+        if PLACEHOLDER_RE.search(COMMENT_RE.sub("", s["design"])):
+            rep.err("design.md: quedan {{placeholders}} sin sustituir")
+    if s["plan"] and needs_design(s, root) and spec_design_state(s) != "approved":
+        rep.warn("plan: la spec tiene interfaz y su design.md no está aprobado (/design-spec NNN)")
     for header, cells in table_rows(section(body(text), "decisions")):
         if len(cells) < 5 or PLACEHOLDER_RE.search(" ".join(cells)):
             continue
@@ -706,6 +782,11 @@ def validate_spec_dir(d, root):
         if sensitive and ptype != "library" and section(body(ptext), "observability") is None:
             rep.warn("plan: la spec toca datos sensibles o permisos y el plan no tiene sección "
                      "'Observabilidad' (logs, eventos de auditoría, métricas)")
+        scfg = seo_config(root)
+        if scfg and scfg["indexable"] == "true" and scfg["status"] != "declined" \
+                and section(body(ptext), "discoverability") is None:
+            rep.warn("plan: el sitio es indexable (seo.indexable) y el plan no tiene sección "
+                     "'Descubribilidad' (rutas, metadatos, sitemap, indexable o no; o 'No aplica: <motivo>')")
 
     # --- tasks
     if s["tasks"]:
@@ -899,6 +980,88 @@ def validate_design(root):
     return len(rep.errors)
 
 
+def validate_models(root):
+    """Bloque `models` de project.yaml: perfiles conocidos y modelos válidos (falta = por defecto)."""
+    p = os.path.join(root, ".ai", "project.yaml")
+    block = yaml_block(read(p), "models") if os.path.isfile(p) else None
+    if block is None:
+        return 0
+    rep = Report(".ai/project.yaml")
+    for m in re.finditer(r"^[ \t]+([A-Za-z_][\w-]*):[ \t]*([^#\n]*)", block, re.M):
+        key, val = m.group(1), m.group(2).strip().strip('"').strip("'")
+        if key not in MODEL_PROFILES:
+            rep.warn(f"models: perfil desconocido {key!r} (se ignora; {', '.join(MODEL_PROFILES)})")
+        elif val and val.lower() not in {"null", "~"} and val.lower() not in MODEL_ALIASES \
+                and not re.match(r"^claude-[a-z0-9.-]+$", val):
+            rep.err(f"models.{key} inválido ({val!r}; opus, sonnet, haiku, fable, inherit o un ID claude-…)")
+    if rep.errors or rep.warnings:
+        rep.print()
+    return len(rep.errors)
+
+
+def validate_seo(root):
+    """Bloque `seo` de project.yaml y docs/seo.md (shared/contract.md → "SEO técnico")."""
+    cfg = seo_config(root)
+    if cfg is None:
+        return 0
+    rep = Report("docs/seo.md")
+    st, idx, rend, url = cfg["status"], cfg["indexable"], cfg["rendering"], cfg["site_url"]
+    if st not in SEO_STATES:
+        rep.err(f"project.yaml: seo.status inválido ({st!r}; none, declined, proposed, inferred, approved)")
+    if idx not in {"true", "false", ""}:
+        rep.err(f"project.yaml: seo.indexable inválido ({idx!r}; true, false o null)")
+    if rend and rend not in SEO_RENDERING:
+        rep.err(f"project.yaml: seo.rendering inválido ({rend!r}; static, ssr, spa, hybrid)")
+    if url and not re.match(r"^https://[^\s/]+\.[^\s]+$", url):
+        rep.err(f"project.yaml: seo.site_url debe ser una URL https absoluta ({url!r})")
+    ptype = yaml_scalar(read(os.path.join(root, ".ai", "project.yaml")), "type")
+    if idx == "true" and ptype in {"backend", "library"}:
+        rep.warn(f"project.yaml: seo.indexable true en un proyecto {ptype} (el SEO aplica a sitios web públicos)")
+    path = os.path.join(root, "docs", "seo.md")
+    if idx == "true" and st != "declined":
+        if not os.path.isfile(path):
+            (rep.err if st in {"proposed", "inferred", "approved"} else rep.warn)(
+                f"seo.indexable true{' y seo.status ' + st if st and st != 'none' else ''} "
+                "pero no existe docs/seo.md")
+        if not url:
+            rep.warn("seo.indexable true sin seo.site_url (canónica, sitemap y og:url se construyen con ella)")
+        if not rend:
+            rep.warn("seo.indexable true sin seo.rendering (static, ssr, spa, hybrid)")
+    if os.path.isfile(path):
+        txt = read(path)
+        clean = COMMENT_RE.sub("", txt)
+        if PLACEHOLDER_RE.search(clean):
+            rep.err("seo.md: quedan {{placeholders}} sin sustituir")
+        heads = re.findall(r"^###\s+(SE\d+)\b", clean, re.M)
+        dup = sorted({h for h in heads if heads.count(h) > 1}, key=lambda x: int(x[2:]))
+        if dup:
+            rep.err(f"seo.md: IDs de brecha repetidos {dup} (un ID no se reutiliza)")
+        if rend == "spa" and idx == "true":
+            gaps = re.findall(r"^###\s+SE\d+\b(.*?)(?=^###\s|^##\s|\Z)", clean, re.M | re.S)
+            decided = any(re.search(r"\bspa\b", l, re.I) and re.search(W["user_decision"], l, re.I)
+                          for l in clean.splitlines())
+            if not decided and not any(re.search(W["spa_gap"], g, re.I) for g in gaps):
+                rep.warn("seo.md: rendering spa sin brecha SE sobre el renderizado ni decisión del usuario "
+                         "que lo justifique (un rastreador sin JavaScript ve el mismo HTML en todas las rutas)")
+        check_route_inventory(rep, clean)
+    if rep.errors or rep.warnings:
+        rep.print()
+    return len(rep.errors)
+
+
+def check_route_inventory(rep, txt):
+    """Columna Indexable del inventario de rutas: sí/yes o no (motivo)."""
+    for header, cells in table_rows(section(body(txt), "route_inventory")):
+        col = next((i for i, h in enumerate(header) if re.search(W["indexable_col"], h, re.I)), None)
+        if col is None or col >= len(cells) or not cells[0].strip():
+            continue
+        val = cells[col].strip()
+        if re.match(W["indexable_yes"], val, re.I) or re.match(W["indexable_no"], val, re.I):
+            continue
+        hint = " sin motivo" if re.match(r"^no$", val, re.I) else f" con valor '{val[:20]}'"
+        rep.warn(f"seo.md: ruta '{cells[0].strip()[:30]}'{hint} en Indexable (sí, yes, no (motivo))")
+
+
 VIEW_STATES = r"^(?:capturada|captured|sin captura|not captured|no accesible|not reachable)\b"
 DS_RE = r"\bDS\d+\b"
 
@@ -965,14 +1128,17 @@ def cmd_validate(args):
         args = [a for a in args if a != "--all"]
     targets = []
     for a in args:
+        if CHANGE_NAME_RE.match(os.path.basename(a)):
+            continue  # ficha de cambio: se valida abajo
         a = os.path.abspath(a)
         targets.append(os.path.dirname(a) if os.path.isfile(a) else a)
-    design_errors = validate_design(root) if not args else 0
-    if not targets:
+    design_errors = (validate_design(root) + validate_seo(root) + validate_models(root)) if not args else 0
+    if not targets and not args:
         targets = spec_dirs(root)
-        if not targets:
+        if not targets and not change_files(root):
+            # Sin specs (p. ej. recién inicializado) el roadmap ya puede citar brechas: se valida igual.
             print("No hay specs en docs/specs/.")
-            return 1 if design_errors else 0
+            return 1 if design_errors + validate_roadmap(root) else 0
     seen, errors = set(), 0
     nums = {}
     for d in targets:
@@ -985,11 +1151,18 @@ def cmd_validate(args):
         num = os.path.basename(d)[:3]
         nums.setdefault(num, []).append(os.path.basename(d))
     errors += validate_roadmap(root) + design_errors
+    changes = [os.path.abspath(a) for a in args if CHANGE_NAME_RE.match(os.path.basename(a))] if args \
+        else change_files(root)
+    for c in changes:
+        rep = validate_change(c, root)
+        rep.print()
+        errors += len(rep.errors)
     for num, names in nums.items():
         if len(names) > 1:
             print(f"✗ número de spec repetido {num}: {names}")
             errors += 1
-    print(f"\n{len(seen)} spec(s), {errors} error(es).")
+    extra = f", {len(changes)} ficha(s)" if changes else ""
+    print(f"\n{len(seen)} spec(s){extra}, {errors} error(es).")
     return 1 if errors else 0
 
 
@@ -1030,7 +1203,7 @@ def release_next(s):
     return "/release"
 
 
-def next_step(s):
+def next_step(s, root=None):
     st = frontmatter(s["spec"]).get("status") if s["spec"] else None
     pst = frontmatter(s["plan"]).get("status") if s["plan"] else None
     tst = frontmatter(s["tasks"]).get("status") if s["tasks"] else None
@@ -1041,6 +1214,12 @@ def next_step(s):
     if st == "draft":
         return "/clarify y aprobar la spec"
     if st == "approved":
+        if not s["plan"] and needs_design(s, root):
+            dst = spec_design_state(s)
+            if dst is None:
+                return "/design-spec"
+            if dst != "approved":
+                return "aprobar el diseño (design.md)"
         if not s["plan"]:
             return "/plan"
         if pst == "blocked":
@@ -1094,19 +1273,50 @@ def cmd_status(args):
             "tasks": f"{sum(t['done'] for t in work)}/{len(work)}" if s["tasks"] else None,
             "review": frontmatter(s["review"]).get("verdict") if s["review"] else None,
             "rondas": rounds(s),
-            "next": next_step(s),
+            "next": next_step(s, root),
         })
+    changes = []
+    for p in change_files(root):
+        fm = frontmatter(read(p))
+        st = fm.get("status")
+        if st == "released":
+            continue
+        lane = fm.get("lane", "")
+        nxt = {"open": f"terminar con /{'fix --hotfix' if lane == 'hotfix' else lane}",
+               "done": "/release --changes" if lane == "hotfix" else "se libera con la siguiente /release",
+               "escalated": f"spec {fm.get('escalated_to', '?')}"}.get(st, "revisar la ficha")
+        changes.append({"change": os.path.basename(p)[:-3], "lane": lane, "status": st, "next": nxt})
+    outside = None
+    if git(root, "rev-parse", "--git-dir")[0] == 0 and ("--json" in args or rows or changes):
+        try:
+            outside = len(drift_report(root)["outside"])
+        except Exception:  # el estado nunca debe fallar por la deriva
+            outside = None
     if "--json" in args:
-        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        if changes or outside:
+            print(json.dumps({"specs": rows, "changes": changes, "outside_flow_commits": outside},
+                             ensure_ascii=False, indent=2))
+        else:
+            print(json.dumps(rows, ensure_ascii=False, indent=2))
         return 0
-    if not rows:
+    if not rows and not changes:
         print("No hay specs todavía. Siguiente paso: /specify")
         return 0
-    cols = ["spec", "status", "plan", "tasks", "review", "rondas", "next"]
-    print("| " + " | ".join(cols) + " |")
-    print("|" + "---|" * len(cols))
-    for r in rows:
-        print("| " + " | ".join(str(r[c] or "—") for c in cols) + " |")
+    if rows:
+        cols = ["spec", "status", "plan", "tasks", "review", "rondas", "next"]
+        print("| " + " | ".join(cols) + " |")
+        print("|" + "---|" * len(cols))
+        for r in rows:
+            print("| " + " | ".join(str(r[c] or "—") for c in cols) + " |")
+    if changes:
+        print("\nFichas de cambio (docs/changes/):\n")
+        cols = ["change", "lane", "status", "next"]
+        print("| " + " | ".join(cols) + " |")
+        print("|" + "---|" * len(cols))
+        for r in changes:
+            print("| " + " | ".join(str(r[c] or "—") for c in cols) + " |")
+    if outside:
+        print(f"\n{outside} commit(s) de código fuera del flujo desde el último /sync → /sync")
     return 0
 
 
@@ -1488,6 +1698,376 @@ def cmd_review_pack(args):
     return 0
 
 
+# ---------------------------------------------------------------- carriles ligeros (fichas de cambio)
+
+LANES = ("fix", "hotfix", "refactor", "chore")
+CHANGE_STATES = {"open", "done", "escalated", "released"}
+CHANGE_NAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-(fix|hotfix|refactor|chore)-[\w.-]+\.md$")
+LANE_SECTIONS = {
+    "fix": ["problem", "reproduction", "root_cause", "change", "escalation", "verification"],
+    "hotfix": ["problem", "reproduction", "root_cause", "change", "escalation", "verification"],
+    "refactor": ["problem", "characterization", "change", "escalation", "verification"],
+    "chore": ["problem", "change", "escalation", "verification"],
+}
+LANE_ONLY = {"reproduction": ("fix", "hotfix"), "root_cause": ("fix", "hotfix"),
+             "characterization": ("refactor",)}
+DEFAULT_MAX_FILES = 5
+NON_CODE_EXT = (".md", ".mdx", ".txt", ".rst", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico")
+TEST_RE = re.compile(r"(^|/)(tests?|__tests__|spec|specs|e2e|testdata|fixtures)/|[._-](test|spec)\.[A-Za-z]+$|"
+                     r"(^|/)test_[^/]+\.py$|_test\.go$", re.I)
+MIGRATION_RE = re.compile(r"(^|/)(migrations?|migrate|alembic/versions|db/migrate|prisma/migrations)/|"
+                          r"\.sql$|(^|/)schema\.(prisma|rb|graphql|gql)$", re.I)
+CONTRACT_RE = re.compile(r"(^|/)(openapi|swagger|asyncapi)[^/]*\.(ya?ml|json)$|\.(proto|graphql|gql|avsc)$", re.I)
+SECURITY_NAME_RE = re.compile(r"(auth|login|logout|password|passwd|permission|rbac|acl|session|token|crypto|"
+                              r"oauth|jwt|csrf|cors|secret)", re.I)
+DESIGN_RE = re.compile(r"(^|/)docs/design/system\.md$|(^|/)[^/]*tokens?\.(css|scss|json|ts|js)$", re.I)
+COMMIT_REF_RE = re.compile(r"\(\d{3}\)|\((?:fix|hotfix|refactor|chore)\b[^)]*\)|^chore\(release\)", re.I)
+
+
+def change_files(root):
+    base = os.path.join(root, "docs", "changes")
+    if not os.path.isdir(base):
+        return []
+    return sorted(os.path.join(base, f) for f in os.listdir(base) if CHANGE_NAME_RE.match(f))
+
+
+def fm_list(value):
+    return [x.strip().strip('"').strip("'") for x in (value or "").strip("[]").split(",")
+            if x.strip() and x.strip() not in ("null", "~")]
+
+
+def filled(sec):
+    """Una sección cuenta como escrita si tiene texto que no es comentario ni marcador de plantilla."""
+    if sec is None:
+        return False
+    txt = PLACEHOLDER_RE.sub("", COMMENT_RE.sub("", sec)).strip()
+    return bool(re.sub(r"[\s|:\-]", "", txt))
+
+
+def spec_dir_by_num(root, num):
+    for d in spec_dirs(root):
+        if os.path.basename(d)[:3] == str(num).zfill(3):
+            return d
+    return None
+
+
+def validate_change(path, root):
+    name = os.path.basename(path)
+    rep = Report(f"docs/changes/{name}")
+    text = read(path)
+    fm = frontmatter(text)
+    m = CHANGE_NAME_RE.match(name)
+    lane, st = fm.get("lane", ""), fm.get("status", "")
+    if lane not in LANES:
+        rep.err(f"lane '{lane}' no válido (fix | hotfix | refactor | chore)")
+        return rep
+    if m and m.group(2) != lane:
+        rep.err(f"el nombre dice '{m.group(2)}' pero lane es '{lane}'")
+    if st not in CHANGE_STATES:
+        rep.err(f"status '{st}' no válido (open | done | escalated | released)")
+        return rep
+    b = body(text)
+    if not filled(section(b, "problem")):
+        rep.err("falta la sección Problema / Problem")
+    if st == "open" and not fm.get("base"):
+        rep.warn("sin `base`: la skill registra el commit de partida al empezar (lo usa lane-check)")
+    if st in ("done", "released"):
+        for key in LANE_SECTIONS[lane]:
+            if not filled(section(b, key)):
+                rep.err(f"ficha {st} sin la sección '{VOCAB[key][0]}' / '{VOCAB[key][1]}' escrita")
+        if PLACEHOLDER_RE.search(COMMENT_RE.sub("", b)):
+            rep.err("quedan marcadores {{…}} de la plantilla")
+    for key, lanes in LANE_ONLY.items():
+        if lane not in lanes and filled(section(b, key)):
+            rep.warn(f"la sección '{VOCAB[key][0]}' es de los carriles {', '.join(lanes)}, no de {lane}")
+    if st == "escalated":
+        to = fm.get("escalated_to", "")
+        if not to or to in ("null", "~"):
+            rep.err("ficha escalated sin `escalated_to: NNN`")
+        elif not spec_dir_by_num(root, to):
+            rep.err(f"escalated_to: {to} no existe en docs/specs/")
+    relates = fm_list(fm.get("relates"))
+    cas = set()
+    for n in relates:
+        d = spec_dir_by_num(root, n)
+        if not d:
+            rep.err(f"relates: la spec {n} no existe")
+            continue
+        sp = os.path.join(d, "spec.md")
+        if os.path.isfile(sp):
+            cas |= {c[0] for c in spec_cas(read(sp))}
+    for ca in fm_list(fm.get("covers")):
+        if not relates:
+            rep.err(f"covers: {ca} sin `relates` que diga de qué spec es")
+        elif ca not in cas:
+            rep.err(f"covers: {ca} no existe en las specs de relates ({', '.join(relates)})")
+    return rep
+
+
+def open_change(root):
+    for p in change_files(root):
+        if frontmatter(read(p)).get("status") == "open":
+            return os.path.basename(p)
+    return None
+
+
+def lanes_config(root):
+    cfg = read(os.path.join(root, ".ai", "project.yaml")) if os.path.isfile(
+        os.path.join(root, ".ai", "project.yaml")) else ""
+    block = yaml_block(cfg, "workflow") or ""
+    try:
+        max_files = int(yaml_scalar(block, "max_files") or DEFAULT_MAX_FILES)
+    except ValueError:
+        max_files = DEFAULT_MAX_FILES
+    return cfg, max_files, yaml_list(block, "contract_paths")
+
+
+def is_code(f):
+    f = f.replace("\\", "/")
+    if f.startswith(DOC_PREFIXES) or f.lower().endswith(NON_CODE_EXT) or os.path.basename(f) in LOCKFILES:
+        return False
+    return True
+
+
+def dep_name(ln):
+    m = re.match(r"""\s*(?:gem\s+|require\s+|(?:implementation|api|compileOnly|runtimeOnly)\s*\(?\s*)?["']?"""
+                 r"""([@\w./:-]+?)["']?\s*(?:[:=<>~!(\[{]|\s|$)""", ln)
+    return m.group(1).lower() if m else ln.strip().lower()
+
+
+def new_dependencies(root, base, files):
+    """Dependencias que aparecen en un manifiesto y no estaban antes (subir versión no cuenta)."""
+    out = []
+    for f in files:
+        b = os.path.basename(f)
+        if not (b in MANIFESTS or f.endswith(".csproj") or (b.startswith("requirements") and b.endswith(".txt"))):
+            continue
+        code, diff = git(root, "diff", base, "--", f) if base else (1, "")
+        if code != 0:
+            continue
+        dep = (lambda ln: bool(ln.strip()) and not ln.lstrip().startswith(("#", "-"))) \
+            if b.startswith("requirements") else is_dependency_line
+        removed = {dep_name(l[1:]) for l in diff.splitlines()
+                   if l.startswith("-") and not l.startswith("---") and dep(l[1:])}
+        for l in diff.splitlines():
+            if l.startswith("+") and not l.startswith("+++") and dep(l[1:]) and dep_name(l[1:]) not in removed:
+                out.append(f"{f}: {l[1:].strip()[:60]}")
+    return out
+
+
+def changed_since(root, base):
+    files = set()
+    if base:
+        code, out = git(root, "diff", "--name-only", base)
+        if code == 0:
+            files |= set(out.split())
+    code, out = git(root, "status", "--porcelain", "--untracked-files=all")
+    if code == 0:
+        for ln in out.splitlines():
+            p = ln[3:].strip().strip('"')
+            if " -> " in p:
+                p = p.split(" -> ")[1]
+            files.add(p)
+    return sorted(f.replace("\\", "/") for f in files if f)
+
+
+def lane_triggers(root, files, base, lane):
+    cfg, max_files, contract_paths = lanes_config(root)
+    protected = yaml_list(cfg, "protected_paths")
+    code = [f for f in files if is_code(f) and not TEST_RE.search(f)]
+    trig = []
+    if len(code) > max_files:
+        trig.append(("tamaño", f"{len(code)} archivos de código (máximo {max_files}; sin contar tests ni docs)",
+                     code))
+    hits = [f for f in files if MIGRATION_RE.search(f)]
+    if hits:
+        trig.append(("datos", "migraciones o esquema persistido", hits))
+    hits = [f for f in files if CONTRACT_RE.search(f) or any(under(f, c.rstrip("/")) for c in contract_paths)]
+    if hits:
+        trig.append(("contrato", "definición de API, eventos o esquema público", hits))
+    hits = [f for f in files if is_protected(f, protected)]
+    if hits:
+        trig.append(("seguridad", "rutas protegidas (shared/agent-security.md §4)", hits))
+    hits = [f for f in code if SECURITY_NAME_RE.search(os.path.basename(f))]
+    if hits:
+        trig.append(("seguridad?", "por el nombre parece autenticación, permisos o secretos: confírmalo", hits))
+    deps = new_dependencies(root, base, files)
+    if deps:
+        trig.append(("dependencia", "dependencia nueva (subir la versión de una existente no cuenta)", deps))
+    hits = [f for f in files if DESIGN_RE.search(f)]
+    if hits:
+        trig.append(("diseño", "tokens o componentes del sistema de diseño", hits))
+    return code, trig
+
+
+def cmd_lane_check(args):
+    root = find_root(os.getcwd())
+    if not root:
+        print("No se encontró .ai/project.yaml (¿se ejecutó /init?).")
+        return 2
+    paths = [a for a in args if not a.startswith("--")]
+    listed = []
+    if "--files" in args:
+        i = args.index("--files")
+        listed = [a.replace("\\", "/") for a in args[i + 1:] if not a.startswith("--")]
+        paths = [p for p in paths if p not in listed]
+    if not paths:
+        print("Uso: aidd.py lane-check docs/changes/<ficha>.md [--files RUTA ...] [--json]")
+        return 2
+    fpath = os.path.abspath(paths[0])
+    fm = frontmatter(read(fpath)) if os.path.isfile(fpath) else {}
+    lane, base = fm.get("lane", "fix"), fm.get("base") or None
+    if base and git(root, "rev-parse", "--verify", base + "^{commit}")[0] != 0:
+        print(f"aviso: base {base} no existe en git; se usan solo los cambios sin commitear")
+        base = None
+    files = listed or changed_since(root, base)
+    code, trig = lane_triggers(root, files, base, lane)
+    if "--json" in args:
+        print(json.dumps({"lane": lane, "base": base, "files": files, "code_files": len(code),
+                          "escalate": bool(trig),
+                          "triggers": [{"kind": k, "why": w, "files": f} for k, w, f in trig]},
+                         ensure_ascii=False, indent=2))
+        return 1 if trig else 0
+    print(f"Carril: {lane} · base: {base or '—'} · {len(files)} archivo(s), {len(code)} de código")
+    if not trig:
+        print("Escalar: no. El cambio cabe en el carril.")
+        return 0
+    print("Escalar: sí, salvo aceptación explícita del usuario (regístrala como `supuesto` en Decisiones):")
+    for k, why, fs in trig:
+        print(f"  - {k}: {why}")
+        for f in fs[:8]:
+            print(f"      {f}")
+        if len(fs) > 8:
+            print(f"      … y {len(fs) - 8} más")
+    return 1
+
+
+# ---------------------------------------------------------------- deriva (/sync)
+
+def sync_since(root, cfg):
+    last = yaml_scalar(yaml_block(cfg, "sync") or "", "last")
+    if last and last not in ("null", "~") and git(root, "rev-parse", "--verify", last + "^{commit}")[0] == 0:
+        return last, "sync.last"
+    code, out = git(root, "log", "--reverse", "--format=%H", "--diff-filter=A", "--", ".ai/project.yaml")
+    if code == 0 and out.split():
+        return out.split()[0], "commit de /init"
+    return None, ""
+
+
+def commits_since(root, since):
+    rng = f"{since}..HEAD" if since else "HEAD"
+    code, out = git(root, "log", "--no-merges", "--format=\x1e%H\x1f%ad\x1f%s\x1f%b\x1f", "--date=short",
+                    "--name-only", rng)
+    if code != 0:
+        return []
+    res = []
+    for chunk in out.split("\x1e")[1:]:
+        parts = chunk.split("\x1f")
+        if len(parts) < 5:
+            continue
+        h, date, subj, bodytxt, names = parts[0], parts[1], parts[2], parts[3], parts[4]
+        files = [f.strip() for f in names.splitlines() if f.strip()]
+        res.append({"hash": h, "date": date, "subject": subj, "body": bodytxt, "files": files})
+    return res
+
+
+def is_referenced(c):
+    if COMMIT_REF_RE.search(c["subject"]):
+        return True
+    if re.search(r"^\s*(?:Ficha|Change):\s*\S", c["body"], re.M | re.I):
+        return True
+    return any(f.startswith(("docs/changes/", "docs/specs/")) for f in c["files"])
+
+
+def drift_report(root, since_arg=None):
+    cfg = read(os.path.join(root, ".ai", "project.yaml"))
+    since, origin = (since_arg, "--since") if since_arg else sync_since(root, cfg)
+    commits = commits_since(root, since)
+    outside = [c for c in commits if any(is_code(f) for f in c["files"]) and not is_referenced(c)]
+    rep = {"since": since, "since_origin": origin, "commits": len(commits), "outside": [], "released": [],
+           "architecture": [], "inferred": [], "changes": []}
+    for c in outside:
+        rep["outside"].append({"hash": c["hash"][:10], "date": c["date"], "subject": c["subject"],
+                               "files": [f for f in c["files"] if is_code(f)]})
+    for d in spec_dirs(root):
+        s = load_spec_dir(d)
+        st = frontmatter(s["spec"]).get("status") if s["spec"] else None
+        rel = os.path.relpath(os.path.join(d, "spec.md"), root).replace("\\", "/")
+        if st == "released" and s["tasks"]:
+            paths = task_paths(s["tasks"])
+            code, out = git(root, "log", "-1", "--format=%H", "--", rel)
+            mark = out.strip()
+            hits = []
+            for c in outside:
+                if mark and git(root, "merge-base", "--is-ancestor", mark, c["hash"])[0] != 0:
+                    continue
+                touched = [f for f in c["files"] if is_code(f) and in_scope(f, paths)]
+                if touched:
+                    hits.append({"hash": c["hash"][:10], "files": touched})
+            if hits:
+                rep["released"].append({"spec": s["name"], "commits": hits})
+        if st == "inferred":
+            code, out = git(root, "log", "-1", "--format=%ad", "--date=short", "--", rel)
+            rep["inferred"].append({"spec": s["name"], "updated": out.strip() or "—"})
+    arch = os.path.join(root, "docs", "architecture.md")
+    if os.path.isfile(arch):
+        atext = read(arch)
+        upd = frontmatter(atext).get("updated", "")
+        if re.match(r"^\d{4}-\d{2}-\d{2}$", upd):
+            code, out = git(root, "log", f"--since={upd}", "--diff-filter=A", "--name-only", "--format=")
+            new = set()
+            for f in out.split():
+                top = f.split("/")[0]
+                if top.startswith(".") or top in ("docs", "tests", "test"):
+                    continue
+                if "/" in f or os.path.basename(f) in MANIFESTS:
+                    new.add(top if "/" in f else f)
+            for n in sorted(new):
+                if n not in atext:
+                    rep["architecture"].append(n)
+    import datetime
+    today = datetime.date.today()
+    for p in change_files(root):
+        fm = frontmatter(read(p))
+        if fm.get("status") == "open":
+            d0 = datetime.date.fromisoformat(CHANGE_NAME_RE.match(os.path.basename(p)).group(1))
+            if (today - d0).days > 14:
+                rep["changes"].append({"change": os.path.basename(p), "days": (today - d0).days})
+    return rep
+
+
+def cmd_drift(args):
+    root = find_root(os.getcwd())
+    if not root:
+        print("No se encontró .ai/project.yaml (¿se ejecutó /init?).")
+        return 2
+    if git(root, "rev-parse", "--git-dir")[0] != 0:
+        print("No es un repositorio git: no hay historia que comparar.")
+        return 2
+    rep = drift_report(root, opt(args, "--since"))
+    if "--json" in args:
+        print(json.dumps(rep, ensure_ascii=False, indent=2))
+        return 0
+    print(f"Desde {rep['since'][:10] if rep['since'] else 'el principio'} ({rep['since_origin'] or 'sin referencia'}): "
+          f"{rep['commits']} commit(s)")
+    print(f"\n## Commits fuera del flujo ({len(rep['outside'])})")
+    for c in rep["outside"]:
+        print(f"- {c['hash']} {c['date']} {c['subject']} — {', '.join(c['files'][:5])}")
+    print(f"\n## Specs released con código cambiado fuera del flujo ({len(rep['released'])})")
+    for r in rep["released"]:
+        print(f"- {r['spec']}: " + "; ".join(f"{c['hash']} ({', '.join(c['files'][:3])})" for c in r["commits"]))
+    print(f"\n## Posibles huecos en architecture.md ({len(rep['architecture'])})")
+    for n in rep["architecture"]:
+        print(f"- {n}")
+    print(f"\n## Specs inferred sin validar ({len(rep['inferred'])})")
+    for r in rep["inferred"]:
+        print(f"- {r['spec']} (último cambio {r['updated']})")
+    print(f"\n## Fichas abiertas hace más de 14 días ({len(rep['changes'])})")
+    for r in rep["changes"]:
+        print(f"- {r['change']} ({r['days']} días)")
+    return 0
+
+
 # ---------------------------------------------------------------- hook
 
 DOC_PREFIXES = ("docs/", ".ai/")
@@ -1631,7 +2211,7 @@ def cmd_hook(args):
     if base in MANIFESTS or rel.endswith(".csproj") or (base.startswith("requirements") and base.endswith(".txt")):
         deps = added_dependency_lines(tool, tin, os.path.basename(rel))
         if deps:
-            return decide("ask" if active_spec(root) else soft,
+            return decide("ask" if (active_spec(root) or open_change(root)) else soft,
                           f"Se añaden o cambian dependencias en '{rel}' ({deps[0].strip()[:60]}…). "
                           "Verifica antes que existen, su antigüedad, reputación y licencia "
                           "(shared/agent-security.md §2) y que el plan lo aprobó.")
@@ -1640,11 +2220,11 @@ def cmd_hook(args):
                             "explícita y una tarea aprobada que lo indique.")
     if rel.startswith(DOC_PREFIXES) or rel.lower().endswith(".md"):
         return 0
-    if active_spec(root):
+    if active_spec(root) or open_change(root):
         return 0
-    return decide(soft, f"Se va a editar código ('{rel}') sin ninguna spec con tasks.md aprobado. "
-                        "El flujo pide /specify → /plan → /tasks antes de implementar. Si es un cambio "
-                        "menor fuera del flujo, apruébalo explícitamente.")
+    return decide(soft, f"Se va a editar código ('{rel}') sin ninguna spec con tasks.md aprobado ni ficha de "
+                        "cambio abierta. Para una feature: /specify → /plan → /tasks. Para un bug, refactor o "
+                        "mantenimiento: /fix, /refactor o /chore (abren una ficha en docs/changes/).")
 
 
 # ---------------------------------------------------------------- main
@@ -1663,6 +2243,83 @@ def template_sha(path):
     lines = [l.rstrip() for l in read(path).replace("\r\n", "\n").split("\n")]
     return hashlib.sha256("\n".join(lines).strip().encode("utf-8")).hexdigest()[:12]
 
+
+# Catálogo de /design-spec (skills/design-spec/references/movimiento.md §5): id, nombre, cuándo.
+DEAL_SCENES = (
+    ("ventana", "Ventana que se abre a la imagen a sangre", "un producto o un lugar con una gran fotografía"),
+    ("historia-fijada", "Titular fijo mientras pasan sus elementos", "un proceso, un método, capítulos"),
+    ("galeria-lateral", "Fila de imágenes que avanza de lado", "pocas salas, platos o piezas"),
+    ("hoja-sobre-imagen", "Capítulo que sube como hoja sobre una foto fija", "capítulos con imagen propia"),
+    ("vuelo", "Cámara que atraviesa el propio trabajo", "un estudio, un archivo, mucha obra"),
+    ("reparto", "Tarjetas reales que se reparten y aterrizan", "una colección, un menú, un catálogo corto"),
+    ("palabra-empujada", "Una línea enorme empujada por el scroll", "una marca cuyo argumento es una palabra"),
+    ("cambio-de-estado", "El objeto pasa por sus estados", "un producto que transforma algo"),
+)
+DEAL_MOVES = (
+    ("titular-enmascarado", "Líneas del titular que suben desde su base", "un nombre o argumento corto"),
+    ("persiana", "Imagen del hero que se abre desde un borde", "un producto con su objeto"),
+    ("marca-que-escala", "Marca gigante que cambia de escala con el scroll", "un nombre corto y fuerte"),
+    ("indice-con-vista", "Filas de texto que muestran su imagen", "un portafolio o lista de obras"),
+    ("fundido-lento", "Hero que cruza 3–4 fotografías", "un restaurante, un hotel, un lugar"),
+    ("marquesina", "Línea de tipo grande que viaja despacio", "un evento, una agenda, un manifiesto"),
+    ("tinta", "Frase que se llena de tinta al subir", "un manifiesto, una declaración"),
+    ("cifras-que-ruedan", "Cifras reales que ruedan una vez", "un informe o una práctica con números"),
+    ("telon-final", "Pie que aparece desde debajo de la página", "un cierre con el nombre a todo el ancho"),
+    ("imagen-que-viaja", "La imagen pulsada viaja a la página siguiente", "un índice con fichas"),
+    ("color-por-capitulo", "Cada capítulo es su campo de color", "una historia con partes claras"),
+    ("fila-arrastrable", "Fila horizontal de imágenes con imán", "galerías, productos, habitaciones"),
+)
+DEAL_FEEL = (
+    ("nace-del-disparador", "Menú o panel que crece desde su botón", "menús, popovers, paneles"),
+    ("fila-a-detalle", "La fila pulsada se transforma en el detalle", "listas con vista de detalle"),
+    ("guardado-optimista", "El cambio se ve al instante y se revierte si falla", "edición frecuente"),
+    ("arrastre-con-resortes", "Arrastrar y soltar con física", "tableros, ordenar, descartar"),
+    ("lista-que-reordena", "Filas que se desplazan a su sitio", "listas que se filtran u ordenan"),
+    ("datos-que-transicionan", "Gráfico que pasa de un estado a otro", "paneles con periodos o filtros"),
+    ("mantener-para-confirmar", "Confirmar manteniendo pulsado", "acciones destructivas"),
+    ("vacio-que-orienta", "Vacío o primer uso con la siguiente acción", "primer uso"),
+    ("exito-proporcional", "Éxito en proporción al esfuerzo", "hitos y cierres de tarea"),
+)
+
+
+def cmd_deal(args):
+    """Reparte jugadas firma y escenas para las composiciones de /design-spec."""
+    import random
+    def opt(name, default):
+        return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else default
+    mode = opt("--mode", "persuadir")
+    if mode not in ("persuadir", "experiencia", "operar", "leer"):
+        print(f"Modo desconocido: {mode} (persuadir · experiencia · operar · leer)")
+        return 2
+    try:
+        n = max(1, min(4, int(opt("--n", "3"))))
+        seed = int(opt("--seed", str(random.SystemRandom().randrange(1, 10**6))))
+    except ValueError:
+        print("--n y --seed son números enteros")
+        return 2
+    rng = random.Random(seed)
+    if mode in ("persuadir", "experiencia"):
+        scenes, moves = rng.sample(DEAL_SCENES, min(len(DEAL_SCENES), 2 * n)), rng.sample(DEAL_MOVES, 2 * n)
+        hand = [{"composicion": "abcd"[i], "escenas": [scenes[2 * i][0], scenes[2 * i + 1][0]],
+                 "jugadas": [moves[2 * i][0], moves[2 * i + 1][0]]} for i in range(n)]
+    else:
+        feel = rng.sample(DEAL_FEEL, min(len(DEAL_FEEL), 2 * n))
+        hand = [{"composicion": "abcd"[i], "escenas": [], "jugadas": [feel[2 * i][0], feel[2 * i + 1][0]]}
+                for i in range(n)]
+    if "--json" in args:
+        print(json.dumps({"mode": mode, "seed": seed, "hand": hand}, ensure_ascii=False, indent=2))
+        return 0
+    names = {k: (nm, wh) for k, nm, wh in DEAL_SCENES + DEAL_MOVES + DEAL_FEEL}
+    print(f"Reparto · modo {mode} · semilla {seed}\n")
+    print("| Composición | Tipo | ID | Qué pasa | Le conviene a |\n|---|---|---|---|---|")
+    for h in hand:
+        for kind, ids in (("escena", h["escenas"]), ("jugada", h["jugadas"])):
+            for k in ids:
+                print(f"| {h['composicion']} | {kind} | `{k}` | {names[k][0]} | {names[k][1]} |")
+    print("\nElige para cada composición lo que su inventario puede llenar (una escena y una jugada,")
+    print("o ninguna si no dice nada del sujeto). Otra mano solo con motivo: --seed <otra>, y")
+    print("regístralo en Decisiones. Catálogo completo: design-spec/references/movimiento.md §5.")
+    return 0
 
 def cmd_templates(args):
     """Huellas de docs/templates/ frente a las registradas en project.yaml → template_hashes."""
@@ -1712,6 +2369,8 @@ def main(argv):
         return 0
     if cmd == "templates":
         return cmd_templates(args)
+    if cmd == "deal":
+        return cmd_deal(args)
     if cmd == "snapshot":
         return cmd_snapshot(args)
     if cmd == "changes":
@@ -1722,6 +2381,10 @@ def main(argv):
         return cmd_history(args)
     if cmd == "review-pack":
         return cmd_review_pack(args)
+    if cmd == "lane-check":
+        return cmd_lane_check(args)
+    if cmd == "drift":
+        return cmd_drift(args)
     if cmd == "hook":
         try:
             return cmd_hook(args)

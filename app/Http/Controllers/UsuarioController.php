@@ -17,14 +17,14 @@ class UsuarioController extends Controller
     private function mensajesValidacion(): array
     {
         return [
-            'nombre.required'   => 'El nombre es obligatorio.',
+            'nombre.required' => 'El nombre es obligatorio.',
             'apellido.required' => 'Los apellidos son obligatorios.',
-            'email.required'    => 'El correo electrónico es obligatorio.',
-            'email.email'       => 'El correo electrónico no tiene un formato válido.',
-            'email.unique'      => 'Este correo ya está registrado en el sistema.',
-            'password.min'      => 'La contraseña debe tener al menos 6 caracteres.',
-            'rol.required'      => 'El rol es obligatorio.',
-            'rol.in'            => 'El rol seleccionado no es válido.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no tiene un formato válido.',
+            'email.unique' => 'Este correo ya está registrado en el sistema.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+            'rol.required' => 'El rol es obligatorio.',
+            'rol.in' => 'El rol seleccionado no es válido.',
         ];
     }
 
@@ -35,12 +35,12 @@ class UsuarioController extends Controller
 
         // 2. ¿El usuario escribió algo en la cajita de búsqueda?
         if ($request->filled('buscar')) {
-            $b = '%' . $request->buscar . '%';
+            $b = '%'.$request->buscar.'%';
             $query->where(function ($q) use ($b) {
                 // Buscamos si el texto coincide con nombre, apellido, correo o teléfono
                 $q->whereRaw("CONCAT(nombre, ' ', apellido) LIKE ?", [$b])
-                  ->orWhere('email', 'LIKE', $b)
-                  ->orWhere('telefono', 'LIKE', $b);
+                    ->orWhere('email', 'LIKE', $b)
+                    ->orWhere('telefono', 'LIKE', $b);
             });
         }
 
@@ -54,9 +54,9 @@ class UsuarioController extends Controller
 
         // 5. Creamos contadores para las tarjetas de estadísticas superiores (Estos no cambian con el filtro)
         $totales = [
-            'admin'    => Usuario::where('rol', 'admin')->count(),
+            'admin' => Usuario::where('rol', 'admin')->count(),
             'dentista' => Usuario::where('rol', 'dentista')->count(),
-            'cliente'  => Usuario::where('rol', 'cliente')->count(),
+            'cliente' => Usuario::where('rol', 'cliente')->count(),
         ];
 
         // 6. Retornamos la vista pasando las variables
@@ -84,26 +84,26 @@ class UsuarioController extends Controller
         //    valores del enum de la columna usuarios.rol, de modo que una
         //    petición manipulada no pueda escribir otra cosa (FR3.1, FR3.3, NFR1).
         $data = $request->validate([
-            'nombre'   => 'required|string|max:100',
+            'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
-            'email'    => 'required|email|unique:usuarios,email',
+            'email' => 'required|email|unique:usuarios,email',
             'telefono' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6',
-            'rol'      => 'required|in:cliente,asistente,dentista,admin',
+            'rol' => 'required|in:cliente,asistente,dentista,admin',
         ], $this->mensajesValidacion());
 
         // 2. Usamos la contraseña escrita en el formulario; si viene vacía se
         //    genera una aleatoria, como promete el texto de la vista (FR3.6).
-        $passwordPlain = !empty($data['password']) ? $data['password'] : Str::random(10);
+        $passwordPlain = ! empty($data['password']) ? $data['password'] : Str::random(10);
 
         // 3. Guardamos al usuario nuevo en la base de datos
         Usuario::create([
-            'nombre'        => $data['nombre'],
-            'apellido'      => $data['apellido'],
-            'email'         => $data['email'],
-            'telefono'      => $data['telefono'] ?? null,
-            'rol'           => $data['rol'],
-            'activo'        => $request->has('activo') ? 1 : 0,
+            'nombre' => $data['nombre'],
+            'apellido' => $data['apellido'],
+            'email' => $data['email'],
+            'telefono' => $data['telefono'] ?? null,
+            'rol' => $data['rol'],
+            'activo' => $request->has('activo') ? 1 : 0,
             'password_hash' => Hash::make($passwordPlain),
         ]);
 
@@ -129,21 +129,21 @@ class UsuarioController extends Controller
         // propio registro que se está editando (FR3.2). El formulario de edición
         // no muestra el campo de contraseña, así que aquí no se valida ni se toca.
         $data = $request->validate([
-            'nombre'   => 'required|string|max:100',
+            'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
-            'email'    => ['required', 'email', Rule::unique('usuarios', 'email')->ignore($id)],
+            'email' => ['required', 'email', Rule::unique('usuarios', 'email')->ignore($id)],
             'telefono' => 'nullable|string|max:20',
-            'rol'      => 'required|in:cliente,asistente,dentista,admin',
+            'rol' => 'required|in:cliente,asistente,dentista,admin',
         ], $this->mensajesValidacion());
 
         // Actualizamos los campos con lo que el administrador escribió en el formulario
         $usuario->fill([
-            'nombre'   => $data['nombre'],
+            'nombre' => $data['nombre'],
             'apellido' => $data['apellido'],
-            'email'    => $data['email'],
+            'email' => $data['email'],
             'telefono' => $data['telefono'] ?? null,
-            'rol'      => $data['rol'],
-            'activo'   => $request->has('activo') ? 1 : 0, // Si el checkbox está marcado, es 1, si no, 0
+            'rol' => $data['rol'],
+            'activo' => $request->has('activo') ? 1 : 0, // Si el checkbox está marcado, es 1, si no, 0
         ]);
 
         // El modelo declara $timestamps = false y 'actualizado_en' no es asignable
@@ -163,14 +163,17 @@ class UsuarioController extends Controller
     public function toggleActivo(string $id)
     {
         $usuario = DB::table('usuarios')->where('id', $id)->first();
-        if (!$usuario) abort(404);
+        if (! $usuario) {
+            abort(404);
+        }
 
         DB::table('usuarios')->where('id', $id)->update([
-            'activo'         => $usuario->activo ? 0 : 1,
+            'activo' => $usuario->activo ? 0 : 1,
             'actualizado_en' => now(),
         ]);
 
         $msg = $usuario->activo ? 'Usuario desactivado.' : 'Usuario reactivado.';
+
         return back()->with('success', $msg);
     }
 }

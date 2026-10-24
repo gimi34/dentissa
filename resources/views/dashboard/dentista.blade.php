@@ -25,7 +25,7 @@
 </div>
 
 {{-- Stats --}}
-<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px">
+<div class="stats-grid stats-grid-3">
     <div class="stat-card">
         <div class="stat-icon" style="background:var(--p100)">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="1.8">
@@ -95,10 +95,10 @@
                                 <div style="font-size:11.5px;color:var(--text-light);margin-top:2px">{{ $cita->telefono }}</div>
                             @endif
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px">
+                        <div class="timeline-acciones">
                             @include('partials.badge-estado', ['estado' => $cita->estado])
-                            <a href="/dentista/citas/{{ $cita->id }}" class="btn btn-ghost btn-sm" style="padding:4px 8px">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="/dentista/citas/{{ $cita->id }}" class="btn btn-ghost btn-sm btn-icono" aria-label="Ver detalle">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                     <circle cx="12" cy="12" r="3"/>
                                 </svg>
@@ -131,7 +131,7 @@
                         {{ strtoupper(substr($proximaCita->paciente, 0, 1)) }}
                     </div>
                     <div>
-                        <div style="font-weight:500;font-size:14px">{{ $proximaCita->paciente }}</div>
+                        <div class="texto-partible" style="font-weight:500;font-size:14px">{{ $proximaCita->paciente }}</div>
                         <div style="font-size:12px;color:var(--text-muted)">{{ $proximaCita->telefono ?? 'Sin teléfono' }}</div>
                     </div>
                 </div>

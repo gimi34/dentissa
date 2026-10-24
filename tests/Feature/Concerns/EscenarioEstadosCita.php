@@ -85,6 +85,43 @@ trait EscenarioEstadosCita
         ));
     }
 
+    /**
+     * Horario de lunes a viernes de 09:00 a 18:00 para D1 y D2 (spec 028). No lo crea
+     * `crearEscenario`: solo lo llaman los tests que reprograman.
+     */
+    protected function conHorarios(): void
+    {
+        foreach ([$this->d1, $this->d2] as $dentista) {
+            foreach (range(1, 5) as $dia) {
+                DB::table('horarios_dentista')->insert([
+                    'id' => (string) Str::uuid(),
+                    'personal_id' => $dentista,
+                    'dia_semana' => $dia,
+                    'hora_inicio' => '09:00:00',
+                    'hora_fin' => '18:00:00',
+                    'disponible' => 1,
+                ]);
+            }
+        }
+    }
+
+    /** Reprogramación por la ruta del grupo del usuario (`PATCH /{rol}/citas/{id}/reprogramar`). */
+    protected function reprogramar(Usuario $usuario, string $cita, string $fecha, string $hora, ?string $motivo = null, array $extra = []): TestResponse
+    {
+        return $this->actingAs($usuario)->patch("/{$usuario->rol}/citas/{$cita}/reprogramar", array_merge(
+            ['fecha' => $fecha, 'hora' => $hora, 'motivo' => $motivo],
+            $extra,
+        ));
+    }
+
+    /** Fecha y hora de inicio guardadas, como 'Y-m-d H:i'. */
+    protected function fechaHoraDe(string $cita): ?string
+    {
+        $valor = DB::table('citas')->where('id', $cita)->value('fecha_hora');
+
+        return $valor === null ? null : substr((string) $valor, 0, 16);
+    }
+
     protected function estadoDe(string $cita): ?string
     {
         return DB::table('citas')->where('id', $cita)->value('estado');

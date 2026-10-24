@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-09-28
+updated: 2026-10-18
 ---
 
 # Seguridad de Dentissa
@@ -20,7 +20,7 @@ updated: 2026-09-28
 | Nombre, email, teléfono, fecha de nacimiento, dirección, contacto de emergencia | confidencial (personal) | `usuarios`, `pacientes` | acceso por rol |
 | Hash de contraseña | restringida (credencial) | `usuarios.password_hash` | bcrypt (`Hash::make`) |
 | `google_id` | confidencial | `usuarios.google_id` | acceso por rol |
-| Sesiones (IP, user agent, payload) | confidencial | `storage/framework/sessions` (driver `file` en local, confirmado por el usuario, 2026-09-28) | sin cifrar (`SESSION_ENCRYPT=false`) |
+| Sesiones (IP, user agent, payload) | confidencial | `storage/framework/sessions` (driver `file` en local, confirmado por el usuario, 2026-09-28; también en producción, plantilla de `app.env` en `deploy/README.md`) | sin cifrar (`SESSION_ENCRYPT=false`; en producción, RS10.c) |
 | Credenciales OAuth y de BD | restringida (secreto) | `.env` (no versionado) | fuera del repo |
 
 ## Autenticación y autorización
@@ -40,24 +40,29 @@ updated: 2026-09-28
   `app/Autorizacion/CambiarEstadoCita.php`; la cancelación del paciente exige además `role:cliente`
   (spec 026). El horario del dentista (`POST /admin/personal/{id}/horarios`) y su sección en la
   ficha usan, además de `role:admin`, el Gate `definir-horario` (`app/Autorizacion/GestionPersonal.php`):
-  solo la administración y solo sobre un dentista; otro tipo de personal → 404 (spec 027). No hay
-  Policies.
+  solo la administración y solo sobre un dentista; otro tipo de personal → 404 (spec 027). La
+  reprogramación (`GET` y `PATCH /{admin,asistente,cliente}/citas/{id}/reprogramar`) exige el rol
+  del grupo con middleware (`role:admin`, `role:asistente`, `role:cliente`; no hay ruta en el grupo
+  del dentista) y el Gate `reprogramar-cita` (`app/Autorizacion/ReprogramarCita.php`): primero el
+  alcance de la 026 (personal fuera de alcance → 403; cita de otro paciente → 404) y después el
+  rol (el dentista no reprograma); el paciente busca además la cita entre las suyas (spec 028). No
+  hay Policies.
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
 |---|---|---|---|
 | `GET/POST /login` | HTTP público | no | 5 fallos por minuto por correo e IP (spec 030) |
-| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | 5 peticiones por minuto por IP en las dos rutas (spec 030); sin captcha |
+| `GET/POST /registro`, `/registro/contacto` | HTTP público | no | los `POST` de las dos rutas, 5 por minuto por IP (spec 030); los `GET`, sin límite; sin captcha |
 | `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
 | `/asistente/*` | HTTP | sí, `role:asistente` | pacientes y expedientes sin filtro de alcance |
-| `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente` |
+| `/cliente/*` | HTTP | sí, solo `auth` | falta `role:cliente`, salvo en cancelar (spec 026) y reprogramar (spec 028) |
 | phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
-| SSH del servidor de producción | red local | clave | solo desde la red local (`ufw`), sin contraseña ni root (spec 030) |
+| SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
 
 No hay rutas API, webhooks, colas ni tareas programadas.
 
@@ -78,10 +83,13 @@ Adoptadas en la entrevista (decisión del usuario, 2026-09-28). Desde la spec 02
 
 | Tipo | Herramienta | Comando | Estado | Cuándo corre |
 |---|---|---|---|---|
-| Secretos | gitleaks | `gitleaks detect --no-banner` | en-ci | /implement, /review, CI |
-| SAST | semgrep | `semgrep scan --config p/php --metrics=off --error` | en-ci | /implement (archivos tocados), /review, CI |
-| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | en-ci | /review, /release, CI |
-| Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | en-ci | /review, /release, CI |
+| Secretos | gitleaks | `gitleaks detect --no-banner` | en-ci | /implement, /review; CI: en cada PR sobre sus commits (bloquea) y en el job semanal sobre todo el repo (no bloquea) |
+| SAST | semgrep | `semgrep scan --config p/php --metrics=off --error` | en-ci | /implement (archivos tocados), /review; CI: en cada PR solo los hallazgos nuevos (`--baseline-commit`, bloquea) y en el job semanal (no bloquea) |
+| SCA (dependencias) | composer audit + npm audit | `composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high` | en-ci | /review, /release; CI: en un PR solo si cambia un lockfile (bloquea) y en el job semanal (no bloquea) |
+| Contenedores / IaC | trivy | `trivy fs --severity HIGH,CRITICAL .` | en-ci | /review, /release; CI: solo en el job semanal o manual, sin bloquear (`continue-on-error`) |
+
+Cuándo bloquea cada una en la CI: descrito tal como está en `.github/workflows/ai-dd.yml` (decisión del usuario, 2026-10-18).
+Cambiar el workflow para que trivy o SCA bloqueen en cada PR sería una tarea aparte (`/chore`).
 | DAST | ninguna | — | no-aplica: no hay staging (`docs/deployment.md`, objetivo 5); se decide al crearlo | — |
 
 `--metrics=off`: semgrep descarga `p/php` de semgrep.dev, y sin esa opción enviaría métricas de uso
@@ -101,7 +109,7 @@ Vigente: EX2. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, apr
 
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
-| EX2 | Avisos sin corrección publicada en las imágenes de producción (`trivy image`, 2026-10-04, spec 030 T033/T035, RS18). `app` (`php:8.4.25-fpm`, Debian 13, ya con `apt-get upgrade`): 114 altas y 3 críticas "affected" y 4 altas "fix_deferred" (`linux-libc-dev`, libxml2 con CVE-2026-6653, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.18`: 23 altas y 1 crítica (openssl de Ubuntu y Go de `gosu`), corregidas en imágenes más nuevas que aún no cumplen 7 días. `cloudflare/cloudflared:2026.9.3`: 2 altas de libssl, pendientes de imagen nueva. `web` queda sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; el 64 % es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescar las imágenes fijadas con ≥ 7 días (RS18.a). Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04 | 2026-10-31 |
+| EX2 | Avisos sin corrección aplicable en las imágenes de producción (`trivy image`; 2026-10-04, spec 030 T033/T035; repetido el 2026-10-19, spec 031 T031, RS18). `app` (`php:8.4.26-fpm`, Debian 13, construida con `apt-get upgrade`): 114 altas y 4 críticas «affected» y 4 altas «fix_deferred», ninguna con corrección publicada (`linux-libc-dev` 56, libxml2, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.19`: 25 altas (Go de `gosu`) y 1 crítica (libssl3), corregidas en la reconstrucción de la misma etiqueta del 2026-10-17, que cumple 7 días el 2026-10-24. `cloudflare/cloudflared:2026.10.0`: 5 altas (Go `stdlib`, `golang.org/x/net`, libssl3), corregidas en la 2026.10.1, que cumple 7 días el 2026-10-22. `web` (nginx 1.30.5) construida sin caché: sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; casi la mitad es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescarlas cuando cumplan 7 días (RS18.a) y volver a escanear antes del vencimiento. Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04; renovada por el usuario el 2026-10-19 | 2026-11-30 |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -131,7 +139,7 @@ El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usar
 Evidencia: `routes/web.php:147`, `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; resto del grupo → spec 015)
+- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; reprogramar del paciente, `GET` y `PATCH /cliente/citas/{id}/reprogramar`, con `role:cliente`: spec 028; resto del grupo → spec 015)
 - RS2.b `PerfilController::update` no crea ficha de paciente para usuarios que no son cliente — estado: pendiente
 
 ### RS3 · Alta — Usuarios desactivados conservan su sesión (A07 Authentication Failures)
@@ -196,8 +204,10 @@ Ni la app ni nginx envían CSP, X-Frame-Options/frame-ancestors, X-Content-Type-
 Referrer-Policy ni HSTS. Evidencia: `PreventBackHistory.php`, `docker/nginx/dentissa.conf`.
 
 Correcciones:
-- RS8.a Middleware o `add_header` en nginx con CSP, X-Frame-Options, X-Content-Type-Options y Referrer-Policy — estado: pendiente
-- RS8.b HSTS en staging/prod detrás de TLS — estado: pendiente
+- RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: mitigada (v0.10.0)
+- RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: mitigada (v0.10.0)
+- RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
+- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05)
 
 ### RS9 · Media — Sesión y email no protegidos al cambiar credenciales (A07 Authentication Failures)
 Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar el email del
@@ -214,7 +224,8 @@ Evidencia: `PacientesController.php`, `PersonalController.php`, `layouts/app.bla
 
 Correcciones:
 - RS10.a No persistir la contraseña en sesión: sustituir por enlace de establecimiento de contraseña o mostrarla solo en la respuesta inmediata — estado: pendiente
-- RS10.b Usar `@js()` para cualquier valor que se pase a JavaScript — estado: pendiente
+- RS10.b Usar `@js()` para cualquier valor que se pase a JavaScript (también el nombre del servicio en `servicios/index.blade.php`, hoy con `addslashes`) — estado: pendiente
+- RS10.c En producción, sesiones cifradas (`SESSION_ENCRYPT=true` en la plantilla de `app.env` y comprobado por `deploy/verificar.sh`) — estado: pendiente (→ objetivo 2; re-sincronización 2026-10-18)
 
 ### RS11 · Baja — Política de contraseñas inconsistente (A07 Authentication Failures)
 Mínimo 6 caracteres en altas hechas por el personal frente a `Password::min(8)` en registro y
@@ -273,7 +284,8 @@ Recuento de la spec 024 antes de actualizar (T010, 2026-09-29): `composer audit`
 bajas ajenas a RS16 que cubre la excepción EX1. `npm audit` reporta 2 críticas, 6 altas y 1
 moderada. `rolldown` queda fijado en 1.2.9 con `overrides` en `package.json` hasta que una versión
 más reciente cumpla los 7 días de antigüedad; entonces una actualización futura puede retirar la
-fijación.
+fijación. El 2026-10-20 (`docs/changes/2026-10-20-chore-vite-8.3.4.md`) la fijación pasa a
+`rolldown` 1.2.13 y se añade `postcss` 8.5.30, las más recientes con 7 días que pide `vite` 8.3.4.
 
 Correcciones:
 - RS16.a Actualizar `league/commonmark` y `guzzlehttp/guzzle` a versiones corregidas dentro de las restricciones de `composer.json` — estado: mitigada (v0.1.0)
@@ -297,13 +309,32 @@ Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 0
 Debian 13 de `php:8.4.25-fpm` arrastra avisos altos y críticos sin corrección publicada, y
 `mariadb:10.11.18` y `cloudflare/cloudflared:2026.9.3` tienen avisos ya corregidos en imágenes más
 nuevas. Las correcciones publicadas de los paquetes del sistema de `app` y `web` se aplican al
-construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-10-31.
+construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-11-30 (renovada el
+2026-10-19, spec 031 T031). El 2026-10-19 se vio además que `desplegar.sh` construye con la caché
+de Docker y la capa de `apt-get upgrade` / `apk upgrade` no se renueva: el `web` sin caché sale sin
+avisos y con caché, con 3 (→ spec 031, T054–T055, dentro de RS18.a).
 
 Correcciones:
-- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes del 2026-10-31; renovar o retirar EX2 según el resultado — estado: pendiente (→ roadmap)
+- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: mitigada (v0.10.0): imágenes refrescadas y escaneadas, construcción sin caché, EX2 renovada hasta el 2026-11-30; queda refrescar `cloudflared` 2026.10.1 y la `mariadb` reconstruida antes de ese vencimiento (roadmap, 031/R4)
+
+### RS19 · Media — Un admin puede dejar la aplicación sin administradores (A01 Broken Access Control)
+Detectado en la re-sincronización del 2026-10-18. `UsuarioController@update` toma `rol` y `activo` del
+formulario sin excepción para la propia cuenta: un admin que guarda su ficha sin marcar «Activo», o
+con otro rol, se desactiva o se degrada a sí mismo, y nada impide desactivar o degradar al último
+admin activo. Además, el cambio de rol no crea ni retira la ficha de `personal` o `pacientes` que
+el nuevo rol necesita. Evidencia: `app/Http/Controllers/UsuarioController.php` (`update`,
+`toggleActivo`); spec 010.
+
+Correcciones:
+- RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: pendiente (→ objetivo 2)
+- RS19.b No se puede desactivar ni quitar el rol al último admin activo — estado: pendiente (→ objetivo 2)
+- RS19.c Al cambiar el rol, crear o retirar la ficha de `personal` o `pacientes` que corresponde (o impedir el cambio si no se puede) — estado: pendiente (→ objetivo 2)
 
 ## No determinado
-- Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI` en
-  staging y producción: esos entornos aún no existen. En local coinciden con `.env.example`
-  (`APP_DEBUG=true`), confirmado por el usuario, 2026-09-28.
+- Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI`: en
+  local coinciden con `.env.example` (`APP_DEBUG=true`), confirmado por el usuario, 2026-09-28.
+  Staging no existe. Producción (desde v0.5.0): la plantilla de `app.env` (`deploy/README.md`) fija
+  `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true` y `GOOGLE_REDIRECT_URI` en https, y
+  `deploy/verificar.sh` los comprueba en cada despliegue; `SESSION_ENCRYPT` no se fija (vale
+  `false`, RS10.c). Lo declarado en la plantilla no garantiza el valor real de `app.env`.
 - Restricción de dominios de la app de Google OAuth.

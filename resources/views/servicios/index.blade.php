@@ -13,7 +13,7 @@
 @section('content')
 
 {{-- ── Tarjetas de Estadísticas ────────────────────────────────── --}}
-<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:22px;max-width:600px">
+<div class="stats-grid stats-grid-2" style="max-width:600px">
     <div class="stat-card">
         <div class="stat-value">{{ $servicios->count() }}</div>
         <div class="stat-label">Servicios registrados</div>
@@ -46,56 +46,58 @@
 <div class="card card-0">
     @if($servicios->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th style="width: 25%; text-align:center;">Nombre</th>
-                        <th style="width: 35%; text-align:center;">Descripción</th>
-                        <th style="width: 15%; text-align:center;">Categoría</th>
-                        <th style="width: 10%; text-align:center;">Duración</th>
-                        <th style="width: 5%; text-align:center;">Estado</th>
-                        <th style="width: 10%; text-align:right">Acciones</th>
+                        <th class="celda-cab celda-centrada" style="width: 25%; text-align:center;">Nombre</th>
+                        <th class="solo-escritorio celda-centrada" style="width: 35%; text-align:center;">Descripción</th>
+                        <th class="solo-escritorio celda-centrada" style="width: 15%; text-align:center;">Categoría</th>
+                        <th class="celda-centrada" style="width: 10%; text-align:center;">Duración</th>
+                        <th class="celda-centrada" style="width: 5%; text-align:center;">Estado</th>
+                        <th class="celda-acciones" style="width: 10%; text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($servicios as $servicio)
                     <tr>
-                        <td style="text-align:center;">
+                        <td class="celda-cab celda-centrada" data-label="Nombre">
                             <div style="font-weight:500">{{ $servicio->nombre }}</div>
                         </td>
-                        <td style="color:var(--text-muted); font-size:13px; text-align:center;">
+                        <td class="solo-escritorio celda-centrada" data-label="Descripción" style="color:var(--text-muted); font-size:13px;">
                             {{ $servicio->descripcion }}
                         </td>
-                        <td style="text-align:center; font-weight:500;">
+                        <td class="solo-escritorio celda-centrada" data-label="Categoría" style="font-weight:500;">
                             {{ $servicio->categoria }}
                         </td>
-                        <td style="text-align:center; color:var(--text-muted); font-size:13px;">
+                        <td class="celda-centrada" data-label="Duración" style="color:var(--text-muted); font-size:13px;">
                             {{ $servicio->duracion_min }} min
                         </td>
-                        <td style="text-align:center;">
+                        <td class="celda-centrada" data-label="Estado">
                             @if($servicio->activo)
                                 <span style="color:var(--green); font-size:12px; font-weight:bold;">Activo</span>
                             @else
                                 <span style="color:var(--red); font-size:12px; font-weight:bold;">Inactivo</span>
                             @endif
                         </td>
-                        <td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div style="display:flex;gap:4px;justify-content:flex-end">
                                 <a href="{{ route('admin.servicios.edit', $servicio->id) }}"
-                                   class="btn btn-outline btn-sm" title="Editar">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   class="btn btn-outline btn-sm" title="Editar" aria-label="Editar">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                     </svg>
+                                    <span class="solo-movil">Editar</span>
                                 </a>
-                                <button type="button" class="btn btn-ghost btn-sm" title="Eliminar" style="color:var(--red);"
+                                <button type="button" class="btn btn-ghost btn-sm" title="Eliminar" aria-label="Eliminar" style="color:var(--red);"
                                         onclick="abrirModalEliminar('{{ route('admin.servicios.destroy', $servicio->id) }}', '{{ addslashes($servicio->nombre) }}')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <polyline points="3 6 5 6 21 6"/>
                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                                         <line x1="10" y1="11" x2="10" y2="17"/>
                                         <line x1="14" y1="11" x2="14" y2="17"/>
                                     </svg>
+                                    <span class="solo-movil">Eliminar</span>
                                 </button>
                             </div>
                         </td>

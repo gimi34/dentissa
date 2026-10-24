@@ -14,7 +14,7 @@
 @section('content')
 
 {{-- Stats ────────────────────────────────────────────────────────────── --}}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px">
+<div class="stats-grid stats-grid-3">
     <div class="stat-card">
         <div class="stat-icon" style="background:var(--p100)">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="1.8">
@@ -95,54 +95,54 @@
 <div class="card card-0">
     @if($pacientes->count() > 0)
         <div class="table-wrap">
-            <table>
+            <table class="tabla-tarjetas">
                 <thead>
                     <tr>
-                        <th>Paciente</th>
+                        <th class="celda-cab">Paciente</th>
                         <th>Contacto</th>
-                        <th>Doctor</th>
-                        <th>Ciudad</th>
-                        <th>Tipo sangre</th>
+                        <th class="solo-escritorio">Doctor</th>
+                        <th class="solo-escritorio">Ciudad</th>
+                        <th class="solo-escritorio">Tipo sangre</th>
                         <th>Alergias</th>
-                        <th>Registrado</th>
-                        <th style="text-align:right">Acciones</th>
+                        <th class="solo-escritorio">Registrado</th>
+                        <th class="celda-acciones" style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($pacientes as $p)
                     <tr>
-                        <td>
+                        <td class="celda-cab" data-label="Paciente">
                             <div style="display:flex;align-items:center;gap:10px">
                                 <div style="width:34px;height:34px;border-radius:50%;background:var(--p200);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--p800);flex-shrink:0">
                                     {{ strtoupper(substr($p->nombre,0,1)) }}{{ strtoupper(substr($p->apellido,0,1)) }}
                                 </div>
-                                <div>
+                                <div class="texto-partible">
                                     <div style="font-weight:500">{{ $p->nombre_completo }}</div>
-                                    <div style="font-size:11.5px;color:var(--text-muted)">{{ $p->email }}</div>
+                                    <div class="solo-escritorio" style="font-size:11.5px;color:var(--text-muted)">{{ $p->email }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td style="color:var(--text-muted);font-size:13px">
+                        <td data-label="Teléfono" style="color:var(--text-muted);font-size:13px">
                             {{ $p->telefono ?? '—' }}
                         </td>
-                        <td style="font-size:13px">
+                        <td class="solo-escritorio" data-label="Doctor" style="font-size:13px">
                             @if($p->dentista_id)
                                 {{ trim($p->dentista_nombre) }}
                             @else
                                 <span style="color:var(--text-light)">Sin asignar</span>
                             @endif
                         </td>
-                        <td style="color:var(--text-muted);font-size:13px">
+                        <td class="solo-escritorio" data-label="Ciudad" style="color:var(--text-muted);font-size:13px">
                             {{ $p->ciudad ?? '—' }}
                         </td>
-                        <td>
+                        <td class="solo-escritorio" data-label="Tipo sangre">
                             @if($p->tipo_sangre)
                                 <span class="badge badge-pink">{{ $p->tipo_sangre }}</span>
                             @else
                                 <span style="color:var(--text-light)">—</span>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="Alergias">
                             @if($p->alergias)
                                 <span style="font-size:12px;color:var(--red);background:var(--red-bg);padding:2px 8px;border-radius:20px">
                                     ⚠ Sí
@@ -151,28 +151,30 @@
                                 <span style="color:var(--text-light);font-size:12px">Ninguna</span>
                             @endif
                         </td>
-                        <td style="color:var(--text-muted);font-size:12.5px;white-space:nowrap">
+                        <td class="solo-escritorio" data-label="Registrado" style="color:var(--text-muted);font-size:12.5px;white-space:nowrap">
                             {{ \Carbon\Carbon::parse($p->creado_en)->format('d/m/Y') }}
                         </td>
-                        <td>
+                        <td class="celda-acciones" data-label="Acciones">
                             <div style="display:flex;gap:4px;justify-content:flex-end">
                                 @php
                                     $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente');
                                 @endphp
                                 <a href="{{ route("{$base}.pacientes.show", $p->id) }}"
-                                   class="btn btn-ghost btn-sm" title="Ver perfil">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   class="btn btn-ghost btn-sm" title="Ver perfil" aria-label="Ver perfil">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
+                                    <span class="solo-movil">Ver perfil</span>
                                 </a>
                                 @if(auth()->user()->rol === 'admin' || auth()->user()->rol === 'dentista')
                                     <a href="{{ route("{$base}.pacientes.edit", $p->id) }}"
-                                       class="btn btn-outline btn-sm" title="Editar">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                       class="btn btn-outline btn-sm" title="Editar" aria-label="Editar">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                         </svg>
+                                        <span class="solo-movil">Editar</span>
                                     </a>
                                 @endif
                             </div>

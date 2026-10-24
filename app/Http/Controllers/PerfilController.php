@@ -12,7 +12,7 @@ class PerfilController extends Controller
 {
     public function edit()
     {
-        $user     = auth()->user();
+        $user = auth()->user();
         $paciente = DB::table('pacientes')
             ->leftJoin('personal', 'pacientes.dentista_id', '=', 'personal.id')
             ->leftJoin('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
@@ -29,42 +29,42 @@ class PerfilController extends Controller
         $user = auth()->user();
 
         $data = $request->validate([
-            'nombre'           => ['required', 'string', 'max:100'],
-            'apellido'         => ['required', 'string', 'max:100'],
-            'email'            => ['required', 'email', 'max:255', "unique:usuarios,email,{$user->id},id"],
-            'telefono'         => ['nullable', 'string', 'max:20'],
+            'nombre' => ['required', 'string', 'max:100'],
+            'apellido' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:255', "unique:usuarios,email,{$user->id},id"],
+            'telefono' => ['nullable', 'string', 'max:20'],
             'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
-            'genero'           => ['nullable', 'string', 'max:20'],
-            'direccion'        => ['nullable', 'string', 'max:500'],
-            'ciudad'           => ['nullable', 'string', 'max:100'],
+            'genero' => ['nullable', 'string', 'max:20'],
+            'direccion' => ['nullable', 'string', 'max:500'],
+            'ciudad' => ['nullable', 'string', 'max:100'],
         ], [
-            'email.unique'             => 'Este correo ya está en uso por otra cuenta.',
-            'fecha_nacimiento.before'  => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'email.unique' => 'Este correo ya está en uso por otra cuenta.',
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
         DB::table('usuarios')->where('id', $user->id)->update([
-            'nombre'         => $data['nombre'],
-            'apellido'       => $data['apellido'],
-            'email'          => $data['email'],
-            'telefono'       => $data['telefono'] ?? null,
+            'nombre' => $data['nombre'],
+            'apellido' => $data['apellido'],
+            'email' => $data['email'],
+            'telefono' => $data['telefono'] ?? null,
             'actualizado_en' => now(),
         ]);
 
         $paciente = DB::table('pacientes')->where('usuario_id', $user->id)->first();
         $datosPaciente = [
             'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
-            'genero'           => $data['genero'] ?? null,
-            'direccion'        => $data['direccion'] ?? null,
-            'ciudad'           => $data['ciudad'] ?? null,
+            'genero' => $data['genero'] ?? null,
+            'direccion' => $data['direccion'] ?? null,
+            'ciudad' => $data['ciudad'] ?? null,
         ];
 
         if ($paciente) {
             DB::table('pacientes')->where('id', $paciente->id)->update($datosPaciente);
         } else {
             DB::table('pacientes')->insert(array_merge($datosPaciente, [
-                'id'         => (string) Str::uuid(),
+                'id' => (string) Str::uuid(),
                 'usuario_id' => $user->id,
-                'creado_en'  => now(),
+                'creado_en' => now(),
             ]));
         }
 
@@ -84,8 +84,8 @@ class PerfilController extends Controller
 
         $data = $request->validate($rules, [
             'password_actual.required' => 'Ingresa tu contraseña actual.',
-            'password.confirmed'       => 'Las contraseñas no coinciden.',
-            'password.min'             => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
         if ($user->password_hash && ! Hash::check($data['password_actual'], $user->password_hash)) {
@@ -93,7 +93,7 @@ class PerfilController extends Controller
         }
 
         DB::table('usuarios')->where('id', $user->id)->update([
-            'password_hash'  => Hash::make($data['password']),
+            'password_hash' => Hash::make($data['password']),
             'actualizado_en' => now(),
         ]);
 
