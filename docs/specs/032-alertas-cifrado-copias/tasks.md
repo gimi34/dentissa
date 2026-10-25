@@ -80,7 +80,7 @@ Formato:
   - nota: falla por la razón esperada (2026-10-25): 9 de 10 casos fallan con «actual size 0» porque no hay canal seguridad ni listener; el canal se redirige a una carpeta temporal por test.
   - nota: test_un_login_correcto_no_escribe_nada pasa desde el principio (todavía no se escribe nada): se comprueba rompiendo en T020, haciendo que el listener escriba también en el login correcto.
   - nota: A45 aplicado: el test exige channel = seguridad, así que T020 declara name en el canal.
-- [ ] T011 [P] Escribir en `VigilanteTest` los casos de errores (D8, con `Mail::fake()`, reloj fijo y logs en una carpeta temporal) — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada (no existe `App\Avisos\Vigilante`), anotado — cubre: CA1
+- [x] T011 [P] Escribir en `VigilanteTest` los casos de errores (D8, con `Mail::fake()`, reloj fijo y logs en una carpeta temporal) — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada (no existe `App\Avisos\Vigilante`), anotado — cubre: CA1
   - `test_mas_del_1_por_ciento_de_5xx_avisa`, `test_el_1_por_ciento_no_avisa`.
   - `test_ventana_de_5_minutos`: los 5xx de hace 6 minutos no cuentan.
   - `test_ignora_las_lineas_que_no_tienen_el_formato`.
@@ -91,6 +91,10 @@ Formato:
   - `test_el_estado_no_guarda_peticiones` (TM14).
   - `test_avisa_si_el_log_cambia_de_formato`: con al menos 20 líneas en la ventana y más de la mitad sin el formato, llega el aviso `formato` (/analyze A36).
   - nota: aceptado en /analyze r3 (2026-10-25), A49 — el aviso `formato` también salta con poco tráfico (p. ej., líneas que no encajan acumuladas entre ventanas, sin ninguna buena en medio), con su caso: 5 líneas malas repartidas en varias ventanas dan el aviso, y 5 buenas no.
+  - nota: falla por la razón esperada (2026-10-25): los 14 casos con «Target class [App\Avisos\Vigilante] does not exist».
+  - nota: Interfaz que fija el test para T023 y T024: app(Vigilante::class)->ejecutar(): bool; ventanaDeErrores(): ['peticiones' => int, 'errores' => int]; AvisoProduccion con propiedades públicas tipo y recuento. Rutas por config('avisos.*') y reloj con travelTo.
+  - nota: Añadido test_detecta_log_rotado (inodo distinto con un log más largo), separado del truncado.
+  - nota: A49 aplicado: test_avisa_del_formato_con_poco_trafico (5 líneas en otro formato en tres ventanas dan el aviso formato) y test_pocas_lineas_buenas_no_avisan_del_formato.
 - [ ] T012 Añadir a `VigilanteTest` los casos de accesos y de silencio — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada, anotado — cubre: CA2, CA4 — depende: T011
   - Accesos, leyendo el canal `seguridad` de hoy y de ayer:
     - `test_mas_de_10_fallos_por_origen_avisa`, `test_mas_de_10_fallos_por_cuenta_avisa` y `test_10_fallos_no_avisa`;
