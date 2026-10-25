@@ -262,10 +262,10 @@ class VigilanteTest extends TestCase
         File::move($this->logAcceso(), $this->logAcceso().'.1');
         File::put($this->logAcceso(), '');
         $this->escribirAcceso(500, 3);
-        $this->escribirAcceso(200, 197);
+        $this->escribirAcceso(200, 147);
         $this->vigilar();
 
-        $this->assertSame(['peticiones' => 300, 'errores' => 3], app(Vigilante::class)->ventanaDeErrores());
+        $this->assertSame(['peticiones' => 250, 'errores' => 3], app(Vigilante::class)->ventanaDeErrores());
         $this->assertAvisoDeErrores(3);
     }
 

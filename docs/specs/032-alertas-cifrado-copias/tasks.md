@@ -214,7 +214,7 @@ Formato:
   - «Cómo consultar el detalle en el servidor», con las órdenes exactas (`journalctl -u dentissa-vigilar`, el canal `seguridad`, el log de acceso de `web`) y sin valores.
   - nota: test_lleva_tipo_recuentos_horas_y_como_consultar pasa; pint limpio. Asuntos: «[Dentissa] Errores del servidor», «Inicios de sesión fallidos», «El log de acceso tiene otro formato» y «Aviso de prueba». Cuerpo revisado en tres tipos renderizados: solo recuento, horas de la clínica, acumulado y órdenes de consulta.
   - nota: Comprobado rompiendo (2026-10-25): sin la conversión a la hora de la clínica falla el caso de contenido. La rotura de CA5 (una línea de log en el cuerpo) necesita el camino entero del comando y se hace en T025, cuando test_el_correo_no_lleva_datos_personales_ni_secretos puede pasar.
-- [ ] T023 Crear `App\Avisos\Estado` y `App\Avisos\Vigilante` con el aviso de errores (D8) (control de TM12, TM14, TM15 y P4) — app/Avisos/Estado.php, app/Avisos/Vigilante.php — hecho cuando: T011 pasa dos veces y se comprueba rompiendo (quitar el tope, la detección de truncado o el anclaje de la expresión hace fallar su caso), anotado — cubre: CA1 — depende: T003, T011, T021
+- [x] T023 Crear `App\Avisos\Estado` y `App\Avisos\Vigilante` con el aviso de errores (D8) (control de TM12, TM14, TM15 y P4) — app/Avisos/Estado.php, app/Avisos/Vigilante.php — hecho cuando: T011 pasa dos veces y se comprueba rompiendo (quitar el tope, la detección de truncado o el anclaje de la expresión hace fallar su caso), anotado — cubre: CA1 — depende: T003, T011, T021
   - `Estado`:
     - desplazamiento e inodo del log de acceso;
     - contadores por minuto de los últimos 5, con total y 5xx;
@@ -231,6 +231,11 @@ Formato:
     - aviso `formato` si, con al menos 20 líneas en la ventana, más de la mitad no encajan (/analyze A36);
     - reloj y rutas inyectados.
   - nota: aceptado en /analyze r3 (2026-10-25), A49 — detección del cambio de formato con poco tráfico, según el caso de T011.
+  - nota: Los 14 casos de T011 pasan dos veces; los de T012 siguen fallando hasta T024. pint limpio.
+  - nota: Comprobado rompiendo (2026-10-25), uno a uno y restaurando: sin tope falla test_lo_que_supera_el_tope_se_lee_despues; sin la comprobación de tamaño, test_detecta_log_truncado; sin la del inodo, test_detecta_log_rotado; empezando por el byte 0, test_primera_ejecucion_empieza_al_final; guardando la línea en el estado, test_el_estado_no_guarda_peticiones; con una expresión ingenua (primer corchete y primer número), test_no_se_engana_con_corchetes_ni_espacios y test_ignora_las_lineas_que_no_tienen_el_formato.
+  - nota: Corregido el test de T011 test_detecta_log_rotado: tenía 3 errores entre 300 peticiones, justo el 1 %, que no avisa; ahora el log nuevo lleva 147 respuestas buenas (250 en total), sigue siendo más largo que lo leído y el caso sigue probando el inodo.
+  - nota: Las líneas vacías no cuentan como «sin formato», para que un salto de línea suelto no acerque el aviso formato (A49).
+  - nota: A49 aplicado: aviso formato también con 5 líneas seguidas sin el formato y ninguna buena en medio (malas_seguidas en el estado).
 - [ ] T024 Añadir a `Vigilante` el aviso de accesos y el silencio (D8) (control de TM5, TM6 y TM10) — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T011 y T012 pasan dos veces y se comprueba rompiendo (quitar el silencio hace fallar `test_silencio_de_30_minutos_acumula`, y contar desde el inicio de la ventana hace fallar `test_cada_evento_se_cuenta_una_vez`), anotado — cubre: CA2, CA4 — depende: T012, T020, T023
   - Accesos: lee las líneas del canal `seguridad` de hoy y de ayer dentro de la ventana (`datetime` y `context`, ignorando `extra`) y las agrupa por origen y por cuenta; umbral > 10.
   - Silencio:
