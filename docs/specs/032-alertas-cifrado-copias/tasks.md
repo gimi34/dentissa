@@ -50,7 +50,7 @@ Formato:
   - nota: línea base 2026-10-25: commit de partida 853226f (impl_base); php artisan test 353 passed (6666 aserciones), en un contenedor efímero de dentissa-app:latest con el worktree montado y el vendor del Compose local; composer audit --locked sin avisos; npm audit 0 vulnerabilidades; Git Bash del PC con gpg (GnuPG) 2.4.9 y OpenSSH_10.3p1.
 - [x] T002 Comprobar en la web de UptimeRobot (plan D13) que el plan gratuito permite un monitor HTTP(s) cada 5 minutos con avisos por correo al caer y al volver, y si pide confirmación o tarjeta — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge el intervalo mínimo, los tipos de aviso y que no hay coste, con la fecha de la consulta — cubre: CA3
   - nota: consulta del 2026-10-25 en uptimerobot.com: precios (/pricing) — plan Free con 50 monitores, «5 min. monitoring interval», monitores HTTP(s) y de palabra clave, «No credit card required!»; términos (/terms, modificados el 2026-06-24) — «available for any use, including commercial and business use», sin coste; FAQ — se pueden probar las notificaciones «UP and DOWN», y con un monitor caído comprueba cada minuto. El correo como contacto del plan Free no aparece explícito en las páginas consultadas: se confirma en la práctica con los dos correos del ensayo T043 (caída y vuelta).
-- [ ] T003 Crear `config/avisos.php` según el contrato del plan (D8, D9) — config/avisos.php, .env.example — hecho cuando: `php artisan config:show avisos` muestra los valores por defecto y `.env.example` no tiene valores
+- [x] T003 Crear `config/avisos.php` según el contrato del plan (D8, D9) — config/avisos.php, .env.example — hecho cuando: `php artisan config:show avisos` muestra los valores por defecto y `.env.example` no tiene valores
   - `config/avisos.php`:
     - destino `AVISOS_CORREO`;
     - umbral de 5xx (1 %) y umbral de fallos (10);
@@ -60,6 +60,7 @@ Formato:
     - ruta del estado (`storage/app/avisos/estado.json`);
     - tope de 50 MiB por ejecución.
   - `.env.example`: `AVISOS_CORREO=` vacío. En local sigue `MAIL_MAILER=log`.
+  - nota: php artisan config:show avisos muestra destino null, umbrales 0.01 y 10, ventana 5, silencio 30, log de acceso, ruta base del canal seguridad, estado y tope 52428800; pint limpio. En .env.example, AVISOS_CORREO= vacío, con una línea de comentario.
 
 ## Tests (antes de implementar)
 - [ ] T010 [P] Escribir `RegistroFallosAccesoTest` (D7, contrato de la línea) — tests/Feature/RegistroFallosAccesoTest.php — hecho cuando: falla por la razón esperada (no hay canal ni listener), anotado — cubre: CA2
