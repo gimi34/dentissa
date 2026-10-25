@@ -524,6 +524,7 @@ class VigilanteTest extends TestCase
         $this->iniciar();
         $this->escribirFallos(11);
 
+        $falso = Mail::getFacadeRoot();
         Log::spy();
         Mail::shouldReceive('to')->andThrow(new TransportException('535 credenciales de envio@example.test rechazadas'));
 
@@ -531,7 +532,7 @@ class VigilanteTest extends TestCase
         Log::shouldHaveReceived('warning')->with('aviso no enviado', ['tipo' => 'accesos'])->once();
 
         // Al minuto siguiente el envío funciona y el aviso sale.
-        Mail::fake();
+        Mail::swap($falso);
         $this->travel(1)->minutes();
 
         $this->assertTrue($this->vigilar());

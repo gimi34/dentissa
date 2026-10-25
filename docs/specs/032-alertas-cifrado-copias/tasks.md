@@ -236,7 +236,7 @@ Formato:
   - nota: Corregido el test de T011 test_detecta_log_rotado: tenía 3 errores entre 300 peticiones, justo el 1 %, que no avisa; ahora el log nuevo lleva 147 respuestas buenas (250 en total), sigue siendo más largo que lo leído y el caso sigue probando el inodo.
   - nota: Las líneas vacías no cuentan como «sin formato», para que un salto de línea suelto no acerque el aviso formato (A49).
   - nota: A49 aplicado: aviso formato también con 5 líneas seguidas sin el formato y ninguna buena en medio (malas_seguidas en el estado).
-- [ ] T024 Añadir a `Vigilante` el aviso de accesos y el silencio (D8) (control de TM5, TM6 y TM10) — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T011 y T012 pasan dos veces y se comprueba rompiendo (quitar el silencio hace fallar `test_silencio_de_30_minutos_acumula`, y contar desde el inicio de la ventana hace fallar `test_cada_evento_se_cuenta_una_vez`), anotado — cubre: CA2, CA4 — depende: T012, T020, T023
+- [x] T024 Añadir a `Vigilante` el aviso de accesos y el silencio (D8) (control de TM5, TM6 y TM10) — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T011 y T012 pasan dos veces y se comprueba rompiendo (quitar el silencio hace fallar `test_silencio_de_30_minutos_acumula`, y contar desde el inicio de la ventana hace fallar `test_cada_evento_se_cuenta_una_vez`), anotado — cubre: CA2, CA4 — depende: T012, T020, T023
   - Accesos: lee las líneas del canal `seguridad` de hoy y de ayer dentro de la ventana (`datetime` y `context`, ignorando `extra`) y las agrupa por origen y por cuenta; umbral > 10.
   - Silencio:
     - 30 minutos por tipo (`errores`, `accesos`, `formato`);
@@ -244,6 +244,10 @@ Formato:
     - lo pendiente se envía al acabar el silencio.
   - Envío fallido: no actualiza el último envío y deja `Log::warning('aviso no enviado', ['tipo' => …])`.
   - nota: aceptado en /analyze r2 (2026-10-25), A44 — lectura incremental o con tope del canal `seguridad`.
+  - nota: VigilanteTest completo (T011 y T012, 25 casos) pasa dos veces; pint limpio.
+  - nota: Comprobado rompiendo (2026-10-25), uno a uno y restaurando: sin silencio fallan test_silencio_de_30_minutos_acumula, test_los_tipos_tienen_silencio_propio y test_cada_evento_se_cuenta_una_vez; contando otra vez lo de la ventana durante el silencio (sin exigir eventos nuevos) fallan test_silencio_de_30_minutos_acumula, test_envia_lo_pendiente_al_acabar_el_silencio y test_cada_evento_se_cuenta_una_vez; dando por enviado un envío fallido, test_un_envio_fallido_no_marca_el_aviso_como_enviado; con el umbral sobre el total y no por grupo, test_10_fallos_no_avisa; sin tope en el canal seguridad, test_el_canal_seguridad_se_lee_con_tope.
+  - nota: A44 aplicado: el canal seguridad se lee de forma incremental, por archivo diario (hoy y ayer), con el mismo tope que el log de acceso.
+  - nota: Corregida la mecánica de test_un_envio_fallido_no_marca_el_aviso_como_enviado (T012): Mail::fake() después de Mail::shouldReceive no se puede crear de nuevo; se guarda la falsificación del setUp y se restaura con Mail::swap. Lo que comprueba no cambia.
 - [ ] T025 Crear el comando `dentissa:vigilar` y su opción `--prueba` (D8, CA6) (control de TM10) — app/Console/Commands/Vigilar.php — hecho cuando: T013 pasa completo dos veces, `php artisan list` muestra `dentissa:vigilar`, y en local `php artisan dentissa:vigilar --prueba` deja el correo en `laravel.log` (`MAIL_MAILER=log`), anotado — cubre: CA1, CA6 — depende: T013, T024
   - Sin opción, ejecuta el vigilante y sale con código distinto de 0 si un envío falla.
   - Con `--prueba`, envía un aviso de prueba a `AVISOS_CORREO`.

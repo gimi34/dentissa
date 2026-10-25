@@ -9,14 +9,15 @@ use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 /**
- * Spec 032 (CA1, CA4; TM12, TM14, TM15; plan D8): vigilante que lanza
- * `dentissa:vigilar` cada minuto.
+ * Spec 032 (CA1, CA2, CA4; TM5, TM6, TM10, TM12, TM14, TM15; plan D8):
+ * vigilante que lanza `dentissa:vigilar` cada minuto.
  *
- * Lee lo nuevo del log de acceso de nginx desde el desplazamiento guardado y
- * cuenta, por minuto, las respuestas y los errores del servidor (5xx). Avisa por
- * correo si en la ventana pasan del umbral. Las rutas, los umbrales y el tope
- * salen de config/avisos.php y la hora, del reloj de la aplicación, así que los
- * tests los fijan.
+ * Lee lo nuevo del log de acceso de nginx y del canal `seguridad` desde los
+ * desplazamientos guardados, cuenta en una ventana deslizante y avisa por correo
+ * si pasa del umbral. Cada tipo de aviso tiene su silencio: lo que pasa durante
+ * él se acumula y se envía al acabar, con cada evento contado una sola vez. Las
+ * rutas, los umbrales y el tope salen de config/avisos.php y la hora, del reloj de
+ * la aplicación, así que los tests los fijan.
  */
 class Vigilante
 {
@@ -50,10 +51,12 @@ class Vigilante
 
         $ahora = CarbonImmutable::now();
         $nuevas = $this->leerAcceso($estado);
+        $fallos = $this->leerSeguridad($estado, $ahora);
         $this->podar($estado, $ahora);
 
         $enviados = $this->avisoDeErrores($estado, $ahora, $nuevas['errores'])
-            & $this->avisoDeFormato($estado, $ahora, $nuevas['malas']);
+            & $this->avisoDeFormato($estado, $ahora, $nuevas['malas'])
+            & $this->avisoDeAccesos($estado, $ahora, $fallos);
 
         $estado->guardar();
 
@@ -85,6 +88,89 @@ class Vigilante
             'desplazamiento' => is_file($log) ? filesize($log) : 0,
             'malas_seguidas' => 0,
         ];
+
+        foreach ($this->archivosDeSeguridad(CarbonImmutable::now()) as $nombre => $archivo) {
+            $estado->datos['seguridad']['desplazamientos'][$nombre] = is_file($archivo) ? filesize($archivo) : 0;
+        }
+    }
+
+    /**
+     * Archivos diarios del canal `seguridad` que pueden tener fallos de la ventana:
+     * el de ayer y el de hoy.
+     *
+     * @return array<string, string> nombre → ruta
+     */
+    private function archivosDeSeguridad(CarbonImmutable $ahora): array
+    {
+        $base = config('avisos.log_seguridad');
+        $carpeta = dirname($base);
+        $prefijo = pathinfo($base, PATHINFO_FILENAME);
+        $archivos = [];
+        foreach ([$ahora->subDay(), $ahora] as $dia) {
+            $nombre = $prefijo.'-'.$dia->format('Y-m-d').'.log';
+            $archivos[$nombre] = $carpeta.'/'.$nombre;
+        }
+
+        return $archivos;
+    }
+
+    /**
+     * Lee lo nuevo del canal `seguridad`, con el mismo tope que el log de acceso
+     * (/analyze A44). De cada línea solo se guardan el momento y las huellas.
+     *
+     * @return int fallos leídos ahora
+     */
+    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora): int
+    {
+        $seguridad = &$estado->datos['seguridad'];
+        $desplazamientos = [];
+        $leidos = 0;
+
+        clearstatcache();
+        foreach ($this->archivosDeSeguridad($ahora) as $nombre => $archivo) {
+            $desplazamiento = $seguridad['desplazamientos'][$nombre] ?? 0;
+            if (! is_file($archivo)) {
+                continue;
+            }
+            if (filesize($archivo) < $desplazamiento) {
+                $desplazamiento = 0;
+            }
+
+            foreach ($this->lineasNuevas($archivo, $desplazamiento) as $linea) {
+                $fallo = $this->interpretarFallo($linea);
+                if ($fallo !== null) {
+                    $seguridad['fallos'][] = $fallo;
+                    $leidos++;
+                }
+            }
+            $desplazamientos[$nombre] = $desplazamiento;
+        }
+        $seguridad['desplazamientos'] = $desplazamientos;
+
+        return $leidos;
+    }
+
+    /**
+     * Línea del canal `seguridad` (JsonFormatter): se leen `datetime` y `context`
+     * y se ignora `extra`, donde la 020 añadirá su contexto (/analyze A11).
+     *
+     * @return array{0: int, 1: string|null, 2: string|null}|null momento, origen y cuenta
+     */
+    private function interpretarFallo(string $linea): ?array
+    {
+        $datos = json_decode($linea, true);
+        if (! is_array($datos) || ! is_string($datos['datetime'] ?? null) || ! is_array($datos['context'] ?? null)) {
+            return null;
+        }
+
+        try {
+            $momento = CarbonImmutable::parse($datos['datetime']);
+        } catch (Throwable) {
+            return null;
+        }
+        $huella = fn ($valor) => is_string($valor) ? $valor : null;
+
+        return [$momento->getTimestamp(), $huella($datos['context']['origen'] ?? null), $huella($datos['context']['cuenta'] ?? null)];
     }
 
     /**
@@ -184,10 +270,15 @@ class Vigilante
         $estado->datos['minutos'][$minuto][$campo]++;
     }
 
-    /** Quita los minutos que ya no están en la ventana. */
+    /** Quita los minutos y los fallos que ya no están en la ventana. */
     private function podar(Estado $estado, CarbonImmutable $ahora): void
     {
+        $inicio = $this->inicioDeVentana($ahora)->getTimestamp();
         $estado->datos['minutos'] = $this->minutosEnVentana($estado, $ahora);
+        $estado->datos['seguridad']['fallos'] = array_values(array_filter(
+            $estado->datos['seguridad']['fallos'],
+            fn (array $fallo) => $fallo[0] >= $inicio,
+        ));
     }
 
     /** @return array<int, array{peticiones: int, errores: int, malas: int}> */
@@ -230,17 +321,61 @@ class Vigilante
         return $this->avisar($estado, 'formato', $condicion, max($malas, $seguidas), $nuevas, $ahora);
     }
 
+    /** Más del umbral de fallos de acceso en la ventana desde un origen o contra una cuenta (CA2). */
+    private function avisoDeAccesos(Estado $estado, CarbonImmutable $ahora, int $nuevos): bool
+    {
+        $fallos = $estado->datos['seguridad']['fallos'];
+        $mayor = 0;
+        foreach ([1, 2] as $campo) {
+            $grupos = array_count_values(array_filter(array_column($fallos, $campo), 'is_string'));
+            $mayor = max($mayor, $grupos === [] ? 0 : max($grupos));
+        }
+
+        return $this->avisar($estado, 'accesos', $mayor > (int) config('avisos.umbral_fallos'), count($fallos), $nuevos, $ahora);
+    }
+
     /**
-     * Envía el aviso de un tipo si se cumple su condición. Devuelve false si el
-     * envío falla.
+     * Aviso de un tipo con su silencio (CA4, TM6). Como mucho un correo por tipo en
+     * el silencio; lo que pasa durante él se acumula (solo los eventos nuevos, cada
+     * uno una vez: /analyze A9) y, si la condición se cumplió con eventos nuevos, se
+     * envía al acabar aunque ya no se cumpla. Un envío fallido no cuenta como
+     * enviado y se reintenta en la ejecución siguiente (TM10).
+     *
+     * @return bool false si el envío falló
      */
     private function avisar(Estado $estado, string $tipo, bool $condicion, int $enVentana, int $nuevos, CarbonImmutable $ahora): bool
     {
-        if (! $condicion) {
+        $aviso = $estado->aviso($tipo);
+        $anterior = $aviso['ultimo_envio'] === null ? null : CarbonImmutable::createFromTimestamp($aviso['ultimo_envio']);
+
+        if ($anterior !== null && $ahora->lt($anterior->addMinutes((int) config('avisos.silencio_minutos')))) {
+            $aviso['acumulado'] += $nuevos;
+            $aviso['pendiente'] = $aviso['pendiente'] || ($condicion && $nuevos > 0);
+            $estado->guardarAviso($tipo, $aviso);
+
             return true;
         }
 
-        return $this->enviar(new AvisoProduccion($tipo, $enVentana, $this->inicioDeVentana($ahora), $ahora));
+        if ($anterior !== null && $aviso['pendiente']) {
+            $aviso['acumulado'] += $nuevos;
+            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $anterior, $ahora, $anterior);
+        } elseif ($condicion) {
+            $correo = new AvisoProduccion($tipo, $enVentana, $this->inicioDeVentana($ahora), $ahora);
+        } else {
+            $estado->guardarAviso($tipo, ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => false, 'acumulado' => 0]);
+
+            return true;
+        }
+
+        if (! $this->enviar($correo)) {
+            $estado->guardarAviso($tipo, $aviso);
+
+            return false;
+        }
+
+        $estado->guardarAviso($tipo, ['ultimo_envio' => $ahora->getTimestamp(), 'pendiente' => false, 'acumulado' => 0]);
+
+        return true;
     }
 
     private function enviar(AvisoProduccion $aviso): bool
