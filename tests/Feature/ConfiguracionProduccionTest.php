@@ -540,7 +540,7 @@ class ConfiguracionProduccionTest extends TestCase
             'la copia está alterada o cortada (falla la comprobación de integridad)',
             'el volcado está incompleto (falta -- Dump completed)',
         ] as $mensaje) {
-            $this->assertMatchesRegularExpression('/^(?:[^\n]*\b(?:then|&&|\|\|) )?rechazar "'.preg_quote($mensaje, '/').'"/m', $ordenes, "Falta el rechazo «{$mensaje}».");
+            $this->assertMatchesRegularExpression('/^(?:[^\n]* (?:then|&&|\|\|) )?rechazar "'.preg_quote($mensaje, '/').'"/m', $ordenes, "Falta el rechazo «{$mensaje}».");
         }
         $this->assertMatchesRegularExpression('/grep -q \'\^\\\\\[GNUPG:\\\\\] NO_SECKEY\' "\$\{estado\}"/', $ordenes);
         $this->assertMatchesRegularExpression('/ERROR pkdecrypt_failed/', $ordenes);
