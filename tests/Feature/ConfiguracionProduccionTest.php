@@ -491,4 +491,125 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^find "\$\{DESTINO\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\.gpg\' /m', $ordenes);
         $this->assertMatchesRegularExpression('/^echo "\$\{copia\}"\n\}\nmain "\$@"$/', substr($ordenes, strrpos($ordenes, 'echo "${copia}"') ?: 0), 'La última línea es la ruta de la copia.');
     }
+
+    /** Script que restaurar.sh ejecuta en el servidor para cargar la copia (heredoc CARGA). */
+    private function cargaRemota(): string
+    {
+        $this->assertSame(1, preg_match("/^read -r -d '' CARGA <<'REMOTO' \|\| true\n(.*?)\nREMOTO$/ms", $this->leer('deploy/restaurar.sh'), $m), 'restaurar.sh define la carga remota en el heredoc CARGA.');
+
+        return $m[1];
+    }
+
+    /**
+     * Spec 032 (CA9, TM3; D3): restaurar.sh corre en el PC. Antes de pedir la confirmación y
+     * de tocar nada en el servidor, descifra la copia entera hacia ningún sitio y comprueba
+     * su línea final.
+     */
+    public function test_restaurar_comprueba_antes_de_borrar(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{copia\}" == \*\.sql\.gz\.gpg \]\] \|\| error /m', $ordenes, 'Solo acepta copias cifradas.');
+        $this->assertMatchesRegularExpression('/^gpg --status-fd 3 --decrypt -- "\$\{copia\}" 3> "\$\{estado\}" 2> \/dev\/null \| gzip -cd 2> \/dev\/null \| tail -n 1 > "\$\{final\}"$/m', $ordenes, 'La pasada de comprobación descifra y descomprime entera.');
+        $this->assertMatchesRegularExpression('/^comprobar\n\[\[ -n "\$\{solo\}" \]\] && return 0$/m', $ordenes, '--solo-comprobar termina tras la comprobación.');
+
+        $main = $this->posicion($ordenes, "\nmain() {", 'Falta main().');
+        $comprobar = $this->posicion(substr($ordenes, $main), "\ncomprobar\n", 'main() no llama a comprobar.');
+        $confirmar = $this->posicion(substr($ordenes, $main), 'read -r -p ', 'main() no pide la confirmación.');
+        $this->assertLessThan($confirmar, $comprobar, 'Comprueba antes de pedir la confirmación.');
+        foreach (['bash deploy/volver.sh', 'stop app web', '| ssh '] as $cambio) {
+            $this->assertGreaterThan($confirmar, $this->posicion(substr($ordenes, $main), $cambio, "main() no hace «{$cambio}»."), "«{$cambio}» va después de la confirmación.");
+        }
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{respuesta\}" == "\$\{base\}" \]\] \|\| error "confirmación incorrecta; no se ha tocado nada"$/m', $ordenes);
+    }
+
+    /**
+     * Spec 032 (CA9; /analyze A13, A34): cada rechazo dice por qué. gpg sale con 2 en todos;
+     * se distinguen por sus líneas de estado: NO_SECKEY con el código 17 (No secret key) es una
+     * copia para otra clave, y con otro código (frase incorrecta, cancelada) es la clave que no
+     * se pudo usar; sin NO_SECKEY es la integridad (alterada o cortada).
+     */
+    public function test_restaurar_distingue_los_rechazos(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        foreach ([
+            'la copia no es para tu clave',
+            'no se pudo usar la clave (frase incorrecta o cancelada)',
+            'la copia está alterada o cortada (falla la comprobación de integridad)',
+            'el volcado está incompleto (falta -- Dump completed)',
+        ] as $mensaje) {
+            $this->assertMatchesRegularExpression('/^(?:[^\n]*\b(?:then|&&|\|\|) )?rechazar "'.preg_quote($mensaje, '/').'"/m', $ordenes, "Falta el rechazo «{$mensaje}».");
+        }
+        $this->assertMatchesRegularExpression('/grep -q \'\^\\\\\[GNUPG:\\\\\] NO_SECKEY\' "\$\{estado\}"/', $ordenes);
+        $this->assertMatchesRegularExpression('/ERROR pkdecrypt_failed/', $ordenes);
+        $this->assertMatchesRegularExpression('/\$\(\( codigo & 65535 \)\) -ne 17/', $ordenes, 'El código 17 (No secret key) separa la clave ajena de la frase.');
+    }
+
+    /**
+     * Spec 032 (CA9; /analyze A29, A51): la base no se toca hasta que llegan datos
+     * descifrados. Si gpg falla en la segunda pasada (la caché de la frase caducó y se
+     * cancela), la orden remota no recibe ninguna línea y termina sin DROP. El éxito exige
+     * código 0 a los dos lados y la línea final del volcado en lo cargado.
+     */
+    public function test_restaurar_no_toca_la_base_sin_datos_descifrados(): void
+    {
+        $carga = $this->cargaRemota();
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $carga, 'La orden remota también usa pipefail.');
+        $leer = $this->posicion($carga, 'IFS= read -r primera || exit 3', 'La orden remota espera la primera línea.');
+        $borrar = $this->posicion($carga, 'DROP DATABASE', 'La orden remota recrea la base.');
+        $this->assertLessThan($borrar, $leer, 'DROP solo después de recibir la primera línea.');
+        $this->assertMatchesRegularExpression('/^\s*"\$\{compose\[@\]\}" exec -T db sh -c [^\n]*DROP DATABASE[^\n]*< \/dev\/null$/m', $carga, 'El DROP no consume la entrada con los datos.');
+        $this->assertMatchesRegularExpression('/\{ printf \'%s\\\\n\' "\$\{primera\}"; cat; \} \\\\\n\s*\| awk -v marca="\$\{marca\}" \'\{ print \} END \{ print > marca \}\' \\\\\n\s*\| "\$\{compose\[@\]\}" exec -T db /', $carga, 'Carga la primera línea y el resto, guardando la última.');
+        $this->assertMatchesRegularExpression('/grep -q -- \'-- Dump completed\' "\$\{marca\}" \|\| \{ rm -f "\$\{marca\}"; exit 4; \}/', $carga, 'Sin la línea final, la carga quedó incompleta.');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^gpg --decrypt -- "\$\{copia\}" 2> \/dev\/null \| ssh -- "\$\{servidor\}" [^\n]*CARGA[^\n]*$\nresultado=\("\$\{PIPESTATUS\[@\]\}"\)$/m', $ordenes, 'Guarda el código de gpg y el de la carga remota.');
+        $this->assertStringContainsString('la carga quedó incompleta', $ordenes);
+    }
+
+    /**
+     * Spec 032 (CA8, TM4; /analyze A5): la clave secreta y su frase nunca llegan al servidor.
+     * Por SSH solo viaja la salida de gpg --decrypt, y ningún script que corre en el servidor
+     * descifra ni importa claves.
+     */
+    public function test_la_clave_nunca_llega_al_servidor(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        foreach (['--import', '--export-secret-keys', '--pinentry-mode', '--passphrase', 'scp '] as $prohibido) {
+            $this->assertStringNotContainsString($prohibido, $ordenes, "restaurar.sh no usa {$prohibido}.");
+        }
+        $entradas = preg_grep('/\|\s*ssh\b/', explode("\n", $ordenes));
+        $this->assertCount(1, $entradas, 'Solo la carga envía datos por SSH.');
+        $this->assertStringStartsWith('gpg --decrypt -- "${copia}"', (string) current($entradas));
+        $this->assertMatchesRegularExpression('/^ssh -- "\$\{servidor\}" "\$\{orden\}" < \/dev\/null$/m', $ordenes, 'Las demás órdenes remotas no reciben entrada.');
+
+        foreach (glob(base_path('deploy/*.sh')) as $script) {
+            if (basename($script) === 'restaurar.sh') {
+                continue;
+            }
+            $texto = $this->ordenes('deploy/'.basename($script));
+            $this->assertStringNotContainsString('--decrypt', $texto, basename($script).' no descifra en el servidor.');
+            $this->assertStringNotContainsString('--import', $texto, basename($script).' no importa claves en el servidor.');
+        }
+    }
+
+    /**
+     * Spec 032 (/analyze A2, A43): restaurar.sh no depende de su ruta ni de la versión
+     * instalada; el clon del servidor es DENTISSA_APP, y lo que viaja a la orden remota se
+     * valida y se cita.
+     */
+    public function test_restaurar_no_depende_de_su_ruta_y_cita_lo_remoto(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^APP="\$\{DENTISSA_APP:-\/opt\/dentissa\/app\}"$/m', $ordenes);
+        $this->assertStringNotContainsString('dirname', $ordenes);
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{APP\}" =~ \^\/\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'DENTISSA_APP es una ruta absoluta sin espacios.');
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ;.');
+        $this->assertMatchesRegularExpression('/^orden="cd \$\(printf \'%q\' "\$\{APP\}"\) && \$\(printf \'%q \' "\$@"\)"$/m', $ordenes, 'Cada argumento de la orden remota va citado.');
+    }
 }

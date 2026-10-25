@@ -134,7 +134,7 @@ Formato:
   - Conserva 14 copias `dentissa-*.sql.gz.gpg`.
   - nota: falla por la razón esperada (2026-10-25): los cuatro casos no encuentran la clave pública, la tubería con awk y gpg, las comprobaciones previas ni la retención de .sql.gz.gpg en el respaldar.sh de la 030.
   - nota: Fija las órdenes de T028: CLAVE_PUBLICA con DENTISSA_CLAVE_PUBLICA, copia y parte, marca con mktemp -p /dev/shm, la tubería mariadb-dump | awk -v marca … | gzip | gpg … --output parte --encrypt, la comprobación de la marca tras la tubería y mv -- parte copia. Además rechaza una clave pública con ^sec: (CA8).
-- [ ] T016 Añadir a `ConfiguracionProduccionTest` los casos de `restaurar.sh`, que se ejecuta en el PC (D3) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA8, CA9 — depende: T015
+- [x] T016 Añadir a `ConfiguracionProduccionTest` los casos de `restaurar.sh`, que se ejecuta en el PC (D3) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA8, CA9 — depende: T015
   - `test_restaurar_comprueba_antes_de_borrar`: la pasada de comprobación local (`gpg --decrypt`, `gzip -cd` y `-- Dump completed`) va antes de la confirmación y de cualquier `ssh` que pare servicios o haga `DROP DATABASE`; `--solo-comprobar` sale tras ella.
   - `test_restaurar_distingue_los_rechazos`: los cuatro mensajes de Contratos, con «no se pudo usar la clave» distinto de «alterada o cortada», a partir de `--status-fd` y de `gzip` (/analyze A13, A34).
   - `test_restaurar_no_toca_la_base_sin_datos_descifrados` (/analyze A29):
@@ -149,6 +149,11 @@ Formato:
   - nota: aceptado en /analyze r2 (2026-10-25), A43 — `<ref>` y `DENTISSA_APP` se validan (tag, commit o ruta absoluta sin espacios) o se citan con `printf %q` en la orden remota, con su caso en el test.
   - nota: aceptado en /analyze r3 (2026-10-25), A50 — caso del primer despliegue sin copia: `desplegar.sh` imprime una orden coherente.
   - nota: aceptado en /analyze r3 (2026-10-25), A51 — caso con un volcado cortado después de la primera línea: la orden remota registra la última línea cargada y el script dice «la carga quedó incompleta».
+  - nota: falla por la razón esperada (2026-10-25): los cinco casos fallan sobre el restaurar.sh de la 030 (no exige .sql.gz.gpg, no tiene la pasada con --status-fd, ni el heredoc CARGA, ni DENTISSA_APP).
+  - nota: Clasificación fijada con una prueba de concepto el 2026-10-25 (gpg 2.4.9 de Git Bash, llavero temporal): buena → DECRYPTION_OKAY; clave ajena → NO_SECKEY + ERROR pkdecrypt_failed 33554449 (código 17); frase incorrecta → NO_SECKEY + pkdecrypt_failed 67108875 (11); cancelada → NO_SECKEY + pkdecrypt_failed 67108963 (99); alterada → BADMDC + DECRYPTION_FAILED; cortada → DECRYPTION_FAILED sin BADMDC. default-cache-ttl del agente: 600 s.
+  - nota: A43 aplicado: test_restaurar_no_depende_de_su_ruta_y_cita_lo_remoto exige validar DENTISSA_APP y la versión de --volver, y citar con printf %q cada argumento remoto.
+  - nota: A51 aplicado: la carga remota guarda la última línea con un awk de su tubería y sale con 4 sin -- Dump completed; el PC dice «la carga quedó incompleta».
+  - nota: A50: el caso sin copia es de desplegar.sh y va en el test de T017 (test_desplegar_imprime_la_vuelta_del_contrato).
 - [ ] T017 Añadir a `ConfiguracionProduccionTest` los casos de la vuelta atrás (D4) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada, anotado — cubre: CA9 — depende: T016
   - `test_volver_con_copia_no_depende_de_la_version_de_destino` (/analyze A1, A17):
     - `volver.sh` admite `--sin-levantar` (checkout, construcción, `app` y `web` parados, `db` sana, sin `up` de `app` ni `web`);
