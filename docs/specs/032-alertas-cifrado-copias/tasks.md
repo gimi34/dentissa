@@ -110,11 +110,14 @@ Formato:
   - nota: Fija para T024: el envío es Mail::to(destino)->send(AvisoProduccion), con la propiedad pública anterior (momento del aviso anterior o null); lo pendiente solo nace si en el silencio se cumple la condición con eventos nuevos.
   - nota: Añadido test_10_fallos_no_avisa con un undécimo fallo de otro origen y otra cuenta, para que el umbral sea por grupo y no total.
   - nota: A44 aplicado: test_el_canal_seguridad_se_lee_con_tope (con el tope de 5 líneas, 11 fallos se leen en tres ejecuciones y el aviso llega en la tercera).
-- [ ] T013 [P] Escribir `AvisoProduccionTest` — tests/Feature/AvisoProduccionTest.php — hecho cuando: falla por la razón esperada (no existen el correo ni el comando), anotado — cubre: CA5, CA6
+- [x] T013 [P] Escribir `AvisoProduccionTest` — tests/Feature/AvisoProduccionTest.php — hecho cuando: falla por la razón esperada (no existen el correo ni el comando), anotado — cubre: CA5, CA6
   - `test_el_correo_no_lleva_datos_personales_ni_secretos`: con logs de entrada que contienen una IP y un correo, y con `APP_KEY` y `MAIL_PASSWORD` de prueba, ni el cuerpo ni el asunto contienen ninguno, ni las huellas.
   - `test_lleva_tipo_recuentos_horas_y_como_consultar`: asunto `[Dentissa] <tipo>`, recuento, inicio y fin en `CLINICA_ZONA_HORARIA`, acumulado desde el aviso anterior y las órdenes de consulta, en español.
   - `test_el_aviso_de_prueba_se_envia`: `dentissa:vigilar --prueba` envía un aviso de prueba a `AVISOS_CORREO` y sale con 0.
   - `test_vigilar_sale_con_error_si_falla_el_envio` (TM10, /analyze A21).
+  - nota: falla por la razón esperada (2026-10-25): tres casos con «The command dentissa:vigilar does not exist» y el de contenido con «Class App\Mail\AvisoProduccion not found».
+  - nota: test_el_correo_no_lleva_datos_personales_ni_secretos recorre el camino entero (logs con IP, correo, búsqueda y huellas → comando → correo), así que pasa con T025; T021 cubre el caso de contenido.
+  - nota: Fija el constructor del correo: AvisoProduccion(tipo, recuento, desde, hasta, anterior = null), con fechas en UTC; asunto «[Dentissa] <tipo legible>», p. ej. «Errores del servidor».
 - [ ] T014 Añadir a `ConfiguracionProduccionTest` los casos del Compose y de los archivos ignorados — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada y el resto del archivo sigue en verde, anotado — cubre: CA1, CA8
   - En `docker-compose.prod.yml`, `app` monta `nginx_logs:/var/log/nginx:ro`.
   - `test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo`: `*.asc` y `*.gpg` en `.gitignore`, y `**/*.asc` y `**/*.gpg` en `.dockerignore` (/analyze A18).
