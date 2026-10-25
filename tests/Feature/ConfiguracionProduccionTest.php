@@ -690,4 +690,50 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertStringNotContainsString('volver.sh', $primerDespliegue[1], 'Sin copia no se propone ninguna vuelta.');
         $this->assertStringNotContainsString('restaurar.sh', $primerDespliegue[1], 'Sin copia no se propone ninguna vuelta.');
     }
+
+    /**
+     * Spec 032 (CA10; D5, /analyze A16): las copias en claro de antes se cifran y solo
+     * entonces se borran las originales. Una copia dañada también se cifra, con otro nombre,
+     * para que no quede nada en claro.
+     */
+    public function test_cifrar_copias_antiguas_cifra_antes_de_borrar(): void
+    {
+        $ordenes = $this->ordenes('deploy/cifrar-copias-antiguas.sh');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^for original in "\$\{DESTINO\}"\/dentissa-\*\.sql\.gz; do$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^destino="\$\{original\}\.gpg"$/m', $ordenes, 'Una copia buena pasa a .sql.gz.gpg.');
+        $this->assertMatchesRegularExpression('/^destino="\$\{original%\.sql\.gz\}\.sql\.gz\.danada\.gpg"$/m', $ordenes, 'Una dañada pasa a .sql.gz.danada.gpg.');
+
+        $comprobacion = $this->posicion($ordenes, 'if gzip -t -- "${original}" 2> /dev/null && gzip -cd -- "${original}" | tail -n 1 | grep -q -- \'-- Dump completed\'; then', 'Comprueba cada copia antes de cifrarla.');
+        $cifrado = $this->posicion($ordenes, 'gpg --batch --yes --quiet --trust-model always --recipient-file "${CLAVE_PUBLICA}" --output "${destino}.part" --encrypt -- "${original}"', 'Cifra hacia un archivo parcial.');
+        $mover = $this->posicion($ordenes, 'mv -- "${destino}.part" "${destino}"', 'Pasa el parcial a la copia cifrada.');
+        $fecha = $this->posicion($ordenes, 'touch -r "${original}" -- "${destino}"', 'Conserva la fecha de la original.');
+        $borrado = $this->posicion($ordenes, 'shred -u -- "${original}"', 'Borra la original con shred.');
+        $this->assertTrue($comprobacion < $cifrado && $cifrado < $mover && $mover < $fecha && $fecha < $borrado, 'Comprobar → cifrar → mover → fecha → borrar.');
+        $this->assertSame(1, substr_count($ordenes, 'shred -u'), 'Solo se borra tras cifrar.');
+        $this->assertDoesNotMatchRegularExpression('/^rm\b[^\n]*original/m', $ordenes);
+    }
+
+    /**
+     * Spec 032 (CA1, CA2, TM10; D11): el temporizador de systemd lanza el vigilante cada
+     * minuto con la cuenta de despliegue, dentro de app como www-data.
+     */
+    public function test_preparar_vigilancia_instala_el_temporizador(): void
+    {
+        $script = $this->leer('deploy/preparar-vigilancia.sh');
+        $ordenes = $this->ordenes('deploy/preparar-vigilancia.sh');
+
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{EUID\}" -eq 0 \]\] \|\| error /m', $ordenes, 'Exige root.');
+        $this->assertMatchesRegularExpression('/^\[\[ -n "\$\{cuenta\}" && "\$\{cuenta\}" != "root" \]\] \|\| error /m', $ordenes, 'Usa la cuenta de despliegue que llama con sudo.');
+        $this->assertSame(1, preg_match('/^cat > \/etc\/systemd\/system\/dentissa-vigilar\.service <<UNIDAD\n(.*?)\nUNIDAD$/ms', $ordenes, $servicio), 'Instala el servicio.');
+        $this->assertMatchesRegularExpression('/^Type=oneshot$/m', $servicio[1]);
+        $this->assertMatchesRegularExpression('/^User=\$\{cuenta\}$/m', $servicio[1]);
+        $this->assertMatchesRegularExpression('#^ExecStart=/usr/bin/docker compose -f /opt/dentissa/app/docker-compose\.prod\.yml exec -T -u www-data app php artisan dentissa:vigilar$#m', $servicio[1]);
+        $this->assertSame(1, preg_match('/^cat > \/etc\/systemd\/system\/dentissa-vigilar\.timer <<UNIDAD\n(.*?)\nUNIDAD$/ms', $ordenes, $temporizador), 'Instala el temporizador.');
+        $this->assertMatchesRegularExpression('/^OnCalendar=minutely$/m', $temporizador[1]);
+        $this->assertMatchesRegularExpression('/^WantedBy=timers\.target$/m', $temporizador[1]);
+        $this->assertMatchesRegularExpression('/^systemctl daemon-reload\nsystemctl enable --now dentissa-vigilar\.timer$/m', $ordenes);
+        $this->assertStringContainsString('gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"', $script, 'Comprueba antes la clave pública.');
+    }
 }

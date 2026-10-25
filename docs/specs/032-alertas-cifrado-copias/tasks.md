@@ -166,7 +166,7 @@ Formato:
   - nota: falla por la razón esperada (2026-10-25): volver.sh de la 030 no rechaza otros argumentos ni tiene --sin-levantar, y desplegar.sh no define sin_migraciones_pendientes().
   - nota: A40 aplicado: volver.sh rechaza antes del checkout cualquier segundo argumento distinto de --sin-levantar, o más de dos, con la orden de restaurar.sh --volver.
   - nota: A50 aplicado: el caso ejecuta en bash la función sin_migraciones_pendientes() de desplegar.sh con cuatro salidas simuladas (sin pendientes y código 0 → si; con una migración Pending y código 1, un fallo de conexión, o «No pending migrations» con código 1 → no), y comprueba que el primer despliegue, sin copia, no propone ninguna vuelta. Criterio sobre la salida real de Laravel 12: StatusCommand imprime «No pending migrations» y sale con 0 sin pendientes, y con distinto de 0 si las hay (vendor/laravel/framework, StatusCommand.php:81-88).
-- [ ] T018 Añadir a `ConfiguracionProduccionTest` los casos de los dos scripts nuevos — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA1, CA10 — depende: T017
+- [x] T018 Añadir a `ConfiguracionProduccionTest` los casos de los dos scripts nuevos — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA1, CA10 — depende: T017
   - `test_cifrar_copias_antiguas_cifra_antes_de_borrar` (D5):
     - `gzip -t` y `-- Dump completed` antes de cifrar;
     - `gpg --recipient-file` hacia `.part`, luego `mv`, `touch -r` y `shred -u`;
@@ -176,6 +176,8 @@ Formato:
     - servicio `Type=oneshot` con la cuenta de despliegue y `docker compose -f /opt/dentissa/app/docker-compose.prod.yml exec -T -u www-data app php artisan dentissa:vigilar`;
     - timer `OnCalendar=minutely`;
     - `systemctl enable --now dentissa-vigilar.timer`.
+  - nota: falla por la razón esperada (2026-10-25): los dos scripts no existen.
+  - nota: Fija el orden de cifrar-copias-antiguas.sh (comprobar → gpg hacia .part → mv → touch -r → shred -u, una sola vez) y las unidades de preparar-vigilancia.sh: servicio oneshot con User=\ (la de SUDO_USER, nunca root) y el ExecStart del plan, temporizador OnCalendar=minutely con WantedBy=timers.target, daemon-reload y enable --now.
 - [ ] T019 Añadir a `ConfiguracionProduccionTest` los casos de `verificar.sh` (D12) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA6, CA8, CA10 — depende: T018
   - El bloque de configuración tiene 16 comprobaciones.
   - `test_verificar_comprueba_el_envio_de_avisos`: `MAIL_MAILER=smtp`, `MAIL_HOST` y `MAIL_PORT`, `MAIL_USERNAME` y `MAIL_PASSWORD` sin `<…>`, y `MAIL_FROM_ADDRESS` y `AVISOS_CORREO` con formato de correo y sin `<…>` (/analyze A28).
