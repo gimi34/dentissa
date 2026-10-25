@@ -83,6 +83,7 @@ Formato:
   - `test_lo_que_supera_el_tope_se_lee_despues` (/analyze A10).
   - `test_el_estado_no_guarda_peticiones` (TM14).
   - `test_avisa_si_el_log_cambia_de_formato`: con al menos 20 líneas en la ventana y más de la mitad sin el formato, llega el aviso `formato` (/analyze A36).
+  - nota: aceptado en /analyze r3 (2026-10-25), A49 — el aviso `formato` también salta con poco tráfico (p. ej., líneas que no encajan acumuladas entre ventanas, sin ninguna buena en medio), con su caso: 5 líneas malas repartidas en varias ventanas dan el aviso, y 5 buenas no.
 - [ ] T012 Añadir a `VigilanteTest` los casos de accesos y de silencio — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada, anotado — cubre: CA2, CA4 — depende: T011
   - Accesos, leyendo el canal `seguridad` de hoy y de ayer:
     - `test_mas_de_10_fallos_por_origen_avisa`, `test_mas_de_10_fallos_por_cuenta_avisa` y `test_10_fallos_no_avisa`;
@@ -124,6 +125,8 @@ Formato:
     - ningún script de `deploy/` que corre en el servidor llama a `gpg --decrypt` ni importa claves (/analyze A5).
   - Usa `DENTISSA_APP` (por defecto `/opt/dentissa/app`) y no `dirname "$0"` para las órdenes del servidor (/analyze A2).
   - nota: aceptado en /analyze r2 (2026-10-25), A43 — `<ref>` y `DENTISSA_APP` se validan (tag, commit o ruta absoluta sin espacios) o se citan con `printf %q` en la orden remota, con su caso en el test.
+  - nota: aceptado en /analyze r3 (2026-10-25), A50 — caso del primer despliegue sin copia: `desplegar.sh` imprime una orden coherente.
+  - nota: aceptado en /analyze r3 (2026-10-25), A51 — caso con un volcado cortado después de la primera línea: la orden remota registra la última línea cargada y el script dice «la carga quedó incompleta».
 - [ ] T017 Añadir a `ConfiguracionProduccionTest` los casos de la vuelta atrás (D4) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada, anotado — cubre: CA9 — depende: T016
   - `test_volver_con_copia_no_depende_de_la_version_de_destino` (/analyze A1, A17):
     - `volver.sh` admite `--sin-levantar` (checkout, construcción, `app` y `web` parados, `db` sana, sin `up` de `app` ni `web`);
@@ -132,6 +135,7 @@ Formato:
     - `restaurar.sh --volver` llama a `volver.sh <ref> --sin-levantar` y carga y levanta con sus propias órdenes de `docker compose`.
   - `test_desplegar_imprime_la_vuelta_del_contrato`: si la verificación falla, `desplegar.sh` imprime `volver.sh <anterior>` sin copia solo cuando `migrate:status --pending` contó 0 migraciones antes de `migrate --force`; en otro caso, o si no pudo contarlas, imprime la orden de `restaurar.sh … --volver <anterior>` (/analyze A32).
   - nota: aceptado en /analyze r2 (2026-10-25), A40 — cualquier segundo argumento de `volver.sh` distinto de `--sin-levantar` se rechaza antes del checkout, con su caso en el test.
+  - nota: aceptado en /analyze r3 (2026-10-25), A50 — `test_desplegar_imprime_la_vuelta_del_contrato` cubre tres salidas reales de Laravel 12 (0 pendientes, N pendientes, fallo del comando) y el caso sin copia.
 - [ ] T018 Añadir a `ConfiguracionProduccionTest` los casos de los dos scripts nuevos — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA1, CA10 — depende: T017
   - `test_cifrar_copias_antiguas_cifra_antes_de_borrar` (D5):
     - `gzip -t` y `-- Dump completed` antes de cifrar;
@@ -184,6 +188,7 @@ Formato:
     - ventana de 5 minutos y umbral > 1 %;
     - aviso `formato` si, con al menos 20 líneas en la ventana, más de la mitad no encajan (/analyze A36);
     - reloj y rutas inyectados.
+  - nota: aceptado en /analyze r3 (2026-10-25), A49 — detección del cambio de formato con poco tráfico, según el caso de T011.
 - [ ] T024 Añadir a `Vigilante` el aviso de accesos y el silencio (D8) (control de TM5, TM6 y TM10) — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T011 y T012 pasan dos veces y se comprueba rompiendo (quitar el silencio hace fallar `test_silencio_de_30_minutos_acumula`, y contar desde el inicio de la ventana hace fallar `test_cada_evento_se_cuenta_una_vez`), anotado — cubre: CA2, CA4 — depende: T012, T020, T023
   - Accesos: lee las líneas del canal `seguridad` de hoy y de ayer dentro de la ventana (`datetime` y `context`, ignorando `extra`) y las agrupa por origen y por cuenta; umbral > 10.
   - Silencio:
@@ -226,12 +231,14 @@ Formato:
   - En el servidor usa `DENTISSA_APP` (por defecto `/opt/dentissa/app`).
   - Si la carga se corta, da la orden para repetir.
   - nota: aceptado en /analyze r2 (2026-10-25), A43 — validar o citar `<ref>` y `DENTISSA_APP` en la orden remota.
+  - nota: aceptado en /analyze r3 (2026-10-25), A51 — la orden remota conoce la última línea cargada con un miembro de su tubería (como el `awk` de D2), sin escribir el volcado en el disco.
 - [ ] T030 Adaptar `volver.sh` según D4 (control de TM11) — deploy/volver.sh — hecho cuando: el caso de `volver.sh` de T017 pasa, `bash -n` limpio y se comprueba rompiendo (levantar `app` con `--sin-levantar` hace fallar el caso), anotado — cubre: CA9 — depende: T017, T029
   - `volver.sh <ref> [--sin-levantar]`.
   - Un segundo argumento de archivo se rechaza antes de cambiar nada, con la orden de `restaurar.sh --volver`.
   - Avisa de parar el temporizador si el destino no tiene `Vigilar.php`.
   - nota: aceptado en /analyze r2 (2026-10-25), A40 — rechazar cualquier segundo argumento distinto de `--sin-levantar` antes del checkout.
 - [ ] T037 Alinear con D4 la orden de vuelta que imprime `desplegar.sh` cuando falla la verificación: contar antes de `migrate --force` las migraciones pendientes con `php artisan migrate:status --pending`; `volver.sh <anterior>` solo si contó 0 y, en otro caso o si no pudo contarlas (/analyze A32), `scp <servidor>:<copia> .` y `bash deploy/restaurar.sh <copia> <servidor> --volver <anterior>` desde el PC (/analyze A17) — deploy/desplegar.sh — hecho cuando: `test_desplegar_imprime_la_vuelta_del_contrato` de T017 pasa y `bash -n` limpio — cubre: CA9 — depende: T017, T030
+  - nota: aceptado en /analyze r3 (2026-10-25), A50 — el criterio de «0 pendientes» se fija sobre la salida real de `migrate:status --pending` en Laravel 12 (o contando las filas de `migrations` antes y después de `migrate --force`), y se distingue de un fallo del comando. Sin copia, el mensaje no propone una vuelta con copia inexistente.
 - [ ] T031 Crear `deploy/cifrar-copias-antiguas.sh` según D5 — deploy/cifrar-copias-antiguas.sh — hecho cuando: el caso de T018 pasa y `bash -n` limpio — cubre: CA10 — depende: T018
   - Por cada `dentissa-*.sql.gz` de `/var/backups/dentissa`, comprueba `gzip -t` y `-- Dump completed`.
   - Las buenas se cifran hacia `.part` y luego `mv` a `.sql.gz.gpg`; las dañadas, como `.sql.gz.danada.gpg`.
