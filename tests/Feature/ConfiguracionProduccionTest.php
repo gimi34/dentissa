@@ -489,7 +489,8 @@ class ConfiguracionProduccionTest extends TestCase
 
         $this->assertMatchesRegularExpression('/^CONSERVAR=14$/m', $ordenes);
         $this->assertMatchesRegularExpression('/^find "\$\{DESTINO\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\.gpg\' /m', $ordenes);
-        $this->assertMatchesRegularExpression('/^echo "\$\{copia\}"\n\}\nmain "\$@"$/', substr($ordenes, strrpos($ordenes, 'echo "${copia}"') ?: 0), 'La última línea es la ruta de la copia.');
+        // Con leer() y no ordenes(), que quita los echo.
+        $this->assertMatchesRegularExpression('/\n    echo "\$\{copia\}"\n\}\n\nmain "\$@"\n?$/', $this->leer('deploy/respaldar.sh'), 'La última línea es la ruta de la copia.');
     }
 
     /** Script que restaurar.sh ejecuta en el servidor para cargar la copia (heredoc CARGA). */
