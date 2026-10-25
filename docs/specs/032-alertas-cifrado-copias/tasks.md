@@ -208,10 +208,12 @@ Formato:
   - nota: El registro va en try/catch con report(): un fallo al escribir el log nunca cambia la respuesta del login ni del limitador.
 
 ### Correo y vigilante (CA1, CA2, CA4, CA5, CA6)
-- [ ] T021 Crear `App\Mail\AvisoProduccion` y su plantilla de texto en español según el contrato del correo (D9) (control de TM7) — app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php — hecho cuando: los casos de contenido de T013 pasan y se comprueba rompiendo (pasar una línea de log al cuerpo hace fallar `test_el_correo_no_lleva_datos_personales_ni_secretos`), anotado — cubre: CA5 — depende: T013
+- [x] T021 Crear `App\Mail\AvisoProduccion` y su plantilla de texto en español según el contrato del correo (D9) (control de TM7) — app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php — hecho cuando: los casos de contenido de T013 pasan y se comprueba rompiendo (pasar una línea de log al cuerpo hace fallar `test_el_correo_no_lleva_datos_personales_ni_secretos`), anotado — cubre: CA5 — depende: T013
   - Solo recibe el tipo, los recuentos, el intervalo y el acumulado, nunca líneas de log.
   - Horas en `CLINICA_ZONA_HORARIA`.
   - «Cómo consultar el detalle en el servidor», con las órdenes exactas (`journalctl -u dentissa-vigilar`, el canal `seguridad`, el log de acceso de `web`) y sin valores.
+  - nota: test_lleva_tipo_recuentos_horas_y_como_consultar pasa; pint limpio. Asuntos: «[Dentissa] Errores del servidor», «Inicios de sesión fallidos», «El log de acceso tiene otro formato» y «Aviso de prueba». Cuerpo revisado en tres tipos renderizados: solo recuento, horas de la clínica, acumulado y órdenes de consulta.
+  - nota: Comprobado rompiendo (2026-10-25): sin la conversión a la hora de la clínica falla el caso de contenido. La rotura de CA5 (una línea de log en el cuerpo) necesita el camino entero del comando y se hace en T025, cuando test_el_correo_no_lleva_datos_personales_ni_secretos puede pasar.
 - [ ] T023 Crear `App\Avisos\Estado` y `App\Avisos\Vigilante` con el aviso de errores (D8) (control de TM12, TM14, TM15 y P4) — app/Avisos/Estado.php, app/Avisos/Vigilante.php — hecho cuando: T011 pasa dos veces y se comprueba rompiendo (quitar el tope, la detección de truncado o el anclaje de la expresión hace fallar su caso), anotado — cubre: CA1 — depende: T003, T011, T021
   - `Estado`:
     - desplazamiento e inodo del log de acceso;
