@@ -25,20 +25,25 @@ class AuthController extends Controller
         return "Demasiados intentos. Vuelve a intentarlo en {$segundos} segundos.";
     }
 
-    /**
-     * Clave del límite del login: la cuenta y el origen. La cuenta se busca con
-     * la misma comparación que la autenticación (colación de `usuarios.email`),
-     * así que las variantes de un correo que entran en la misma cuenta
-     * comparten contador (/review R1). Si no hay cuenta, cuenta el correo en
-     * minúsculas; la respuesta es la misma en los dos casos.
-     */
+    /** Clave del límite del login: la cuenta y el origen. */
     private function claveLimiteLogin(string $email, Request $request): string
+    {
+        return 'login:'.self::sujetoLimite($email).'|'.self::origenLimite($request);
+    }
+
+    /**
+     * Cuenta que cuenta el límite del login, y que agrupa el registro de fallos
+     * de la spec 032 (plan D7). Se busca con la misma comparación que la
+     * autenticación (colación de `usuarios.email`), así que las variantes de un
+     * correo que entran en la misma cuenta comparten contador (/review R1), esté
+     * activa o no. Si no hay cuenta, cuenta el correo en minúsculas; la respuesta
+     * es la misma en los dos casos.
+     */
+    public static function sujetoLimite(string $email): string
     {
         $cuenta = Usuario::where('email', $email)->value('id');
 
-        $sujeto = $cuenta !== null ? 'cuenta:'.$cuenta : 'correo:'.Str::lower($email);
-
-        return 'login:'.$sujeto.'|'.self::origenLimite($request);
+        return $cuenta !== null ? 'cuenta:'.$cuenta : 'correo:'.Str::lower($email);
     }
 
     /**
