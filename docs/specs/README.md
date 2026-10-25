@@ -35,6 +35,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
 | 031 | [endurecer-produccion](031-endurecer-produccion/spec.md) | Transversal | released (v0.10.0) | — | — (2026-10-19) |
+| 032 | [alertas-cifrado-copias](032-alertas-cifrado-copias/spec.md) | Transversal | approved | — | — (2026-10-07) |
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
 | 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
 | 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | released (v0.9.0) | — | — (2026-10-19) |

@@ -63,16 +63,30 @@ updated: 2026-10-18
 | phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
 | SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
+| Temporizador `dentissa-vigilar` (systemd, cada minuto) | tarea programada | cuenta de despliegue | `php artisan dentissa:vigilar` en `app` como `www-data`: lee el log de acceso de nginx (montado en solo lectura) y el canal `seguridad`, y envía avisos por correo; sin entrada externa propia (spec 032, ADR 0007) |
+| Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar los avisos; los correos no llevan datos personales ni secretos (spec 032, TM7, TM13) |
 
-No hay rutas API, webhooks, colas ni tareas programadas.
+No hay rutas API, webhooks ni colas. La única tarea programada es el vigilante de avisos (spec 032).
 
 ## Manejo de secretos
 - Dónde se guardan: `.env` local no versionado (en `.gitignore`). Credenciales de BD de desarrollo
   escritas en `docker-compose.yml` y `phpunit.xml`. En producción (spec 030): `app.env`, `db.env` y
   `tunnel.env` en `/opt/dentissa/entorno` del servidor (carpeta 700, archivos 600, fuera del clon,
   excluidos de git y de la imagen); cada servicio lee solo el suyo (ver [deployment.md](deployment.md)).
+- Avisos de producción (spec 032): `MAIL_USERNAME` y `MAIL_PASSWORD` de `app.env` son la contraseña
+  de aplicación de una **cuenta de Gmail solo para enviar**, sin otros datos ni reenvíos (TM13): una
+  contraseña de aplicación da acceso a todo el buzón de su cuenta. `verificar.sh` comprueba que
+  están definidas, sin el texto de ejemplo y con TLS (puerto 465), sin mostrar los valores.
+- Copias de la base (spec 032, ADR 0007): cifradas (`.sql.gz.gpg`) para la clave del responsable. En
+  el servidor solo está la **clave pública** (`/opt/dentissa/entorno/copias.pub.asc`, 600). La
+  **clave secreta**, con su frase (al menos 5 palabras al azar o 20 caracteres), está solo en el PC
+  del responsable y en una segunda copia fuera del PC; nunca llega al servidor (se restaura desde el
+  PC, `deploy/restaurar.sh`), ni al repositorio ni al paquete (`*.asc` y `*.gpg` en `.gitignore` y
+  `.dockerignore`). Si se pierden las dos copias de la clave, las copias no se recuperan.
 - Rotación: las contraseñas de las cuentas del volcado se rotan en producción con
-  `php artisan dentissa:rotar-credenciales --confirmar` (spec 030); el resto, sin procedimiento.
+  `php artisan dentissa:rotar-credenciales --confirmar` (spec 030). La contraseña de aplicación de
+  Gmail se revoca y se crea otra en la cuenta de envío, y se aplica con `aplicar-entorno.sh app`
+  (spec 032). La clave de las copias no caduca ni se rota; el resto, sin procedimiento.
 - `README.md` contiene contraseñas de cuentas de prueba y `database/dentissa.sql` datos ficticios
   con hashes (datos ficticios y repo privado, confirmado por el usuario, 2026-09-28).
 
@@ -104,12 +118,14 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 - Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com, hub.docker.com (solo para consultar la fecha de publicación de las etiquetas de imagen al fijar versiones; aprobado por el usuario el 2026-10-03, spec 030, /analyze A28)
 
 ## Excepciones aceptadas
-Vigente: EX2. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, aprobada el
-2026-09-29) se retiró en v0.4.1 (spec 029, 2026-10-03): sus avisos quedaron corregidos.
+Vigentes: EX2, y EX3 desde su aprobación en la liberación de la spec 032. EX1 (avisos bajos de
+`laravel/framework` y `league/flysystem`, aprobada el 2026-09-29) se retiró en v0.4.1 (spec 029,
+2026-10-03): sus avisos quedaron corregidos.
 
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
 | EX2 | Avisos sin corrección aplicable en las imágenes de producción (`trivy image`; 2026-10-04, spec 030 T033/T035; repetido el 2026-10-19, spec 031 T031, RS18). `app` (`php:8.4.26-fpm`, Debian 13, construida con `apt-get upgrade`): 114 altas y 4 críticas «affected» y 4 altas «fix_deferred», ninguna con corrección publicada (`linux-libc-dev` 56, libxml2, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.19`: 25 altas (Go de `gosu`) y 1 crítica (libssl3), corregidas en la reconstrucción de la misma etiqueta del 2026-10-17, que cumple 7 días el 2026-10-24. `cloudflare/cloudflared:2026.10.0`: 5 altas (Go `stdlib`, `golang.org/x/net`, libssl3), corregidas en la 2026.10.1, que cumple 7 días el 2026-10-22. `web` (nginx 1.30.5) construida sin caché: sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; casi la mitad es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescarlas cuando cumplan 7 días (RS18.a) y volver a escanear antes del vencimiento. Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04; renovada por el usuario el 2026-10-19 | 2026-11-30 |
+| EX3 | Disco del servidor de producción sin cifrar (RS15.c; spec 032 CA10) | Media | Cifrarlo exige reinstalar el servidor. Los datos de hoy son ficticios; las copias ya van cifradas (RS15.b) y la clave secreta no está en el servidor. Residuo: un archivo borrado puede quedar en el disco (`shred` no garantiza el borrado en ext4 con journal), por ejemplo las copias en claro de antes de la 032 | pendiente: el responsable, en la liberación de la spec 032 (T096) | al cargar el primer dato real de pacientes |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -266,7 +282,9 @@ notas de `citas` están en claro. Con Query Builder los casts de Eloquent no apl
 
 Correcciones:
 - RS15.a Cast `encrypted` en los campos clínicos al introducir los modelos Eloquent (spec 013) — estado: pendiente
-- RS15.b Cifrado de disco y de backups en staging/prod — estado: pendiente
+- RS15.b Cifrado de las copias de la base en producción — estado: en curso (spec 032)
+- RS15.c Cifrado del disco del servidor de producción — estado: en curso (spec 032: se acepta como excepción EX3 en su liberación)
+- RS15.d Cifrado del disco y de las copias en staging — estado: pendiente (→ roadmap, objetivo 5)
 
 ### RS16 · Alta — Dependencias con vulnerabilidades conocidas (A03 Software Supply Chain Failures)
 **Mitigado en v0.1.0 (spec 024, 2026-10-02):** RS16.a, RS16.b y RS16.c mitigadas. Los dos avisos

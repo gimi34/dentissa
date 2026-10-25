@@ -5,6 +5,9 @@
 .env.production
 # Spec 030: archivos de entorno de producción (app.env, db.env, tunnel.env).
 *.env
+# Spec 032 (CA8): claves OpenPGP y copias cifradas de la base.
+*.asc
+*.gpg
 .phpactor.json
 .phpunit.result.cache
 /.fleet

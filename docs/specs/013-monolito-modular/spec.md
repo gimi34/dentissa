@@ -64,6 +64,8 @@ en pausa (ver `referencias/`).
 | RS12.c — `exists` con `tipo=dentista`, en pacientes, expedientes y asignación de asistentes | dentro | CA7 |
 | RS15.a — cast `encrypted` en campos clínicos | dentro | CA9 |
 | RS15.b — cifrado de disco y backups | fuera | depende de la plataforma de staging/prod → roadmap objetivo 5 |
+| RS15.c — cifrado del disco del servidor de producción (creada por la 032 al dividir RS15.b) | fuera | → spec 032: aceptado como excepción EX3 |
+| RS15.d — cifrado del disco y de las copias en staging (creada por la 032 al dividir RS15.b) | fuera | → roadmap objetivo 5 |
 
 ## Auditoría
 Esta spec no añade eventos de auditoría (roadmap objetivo 3). Si el plan retira el trigger
@@ -91,3 +93,4 @@ Esta spec no añade eventos de auditoría (roadmap objetivo 3). Si el plan retir
 |---|---|---|
 | 2026-09-28 | Migrada desde la intención AI-DLC `260920-monolito-modular` (en pausa) | /init, decisión del usuario |
 | 2026-09-29 | Retirados CA4, CA5 y CA6, las historias de agenda y la pregunta de citas seguidas (pasan a la spec 025); CA7 queda solo para pacientes, expedientes y asignación de asistentes (RS12.a y RS12.c del agendado → 025, RS12.b → 027); `extends` pasa a [006, 007, 008] | Corte de la lógica de citas en 025–027 (decisión del usuario, 2026-09-29) |
+| 2026-10-25 | Cobertura de riesgos: RS15.c y RS15.d, creadas por la 032 al dividir RS15.b, declaradas fuera (RS15.c aceptada como EX3 por la 032; RS15.d → objetivo 5) | /implement 032 (T038) |

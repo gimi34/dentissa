@@ -100,6 +100,8 @@ aplicación quedará abierta a todo internet.
 | RS8.d — política de contenido estricta (creada por la 031 al dividir RS8.a) | fuera | → roadmap, por pantallas |
 | RS15.a — cifrar los campos clínicos en la base | fuera | → objetivo 4 (spec 013) |
 | RS15.b — cifrado del disco y de las copias de seguridad | fuera | → spec 031 |
+| RS15.c — cifrado del disco del servidor de producción (creada por la 032 al dividir RS15.b) | fuera | → spec 032: aceptado como excepción EX3 hasta cargar el primer dato real de pacientes |
+| RS15.d — cifrado del disco y de las copias en staging (creada por la 032 al dividir RS15.b) | fuera | → objetivo 5, cuando exista staging |
 | OB4.a — redactar los datos de las consultas en los errores registrados | fuera | → objetivo 3 |
 | OB4.b — modo de producción y depuración apagada verificados en la lista de despliegue de producción (corrección dividida, /analyze A1) | dentro | CA4 |
 | OB4.c — lo mismo en la lista de despliegue de staging (nueva al dividir OB4.b) | fuera | No hay staging → roadmap, objetivo 5 |
@@ -178,3 +180,4 @@ inicio de sesión.
 | 2026-10-19 | Cobertura de riesgos: RS8.c y RS8.d, creadas por la 031 al dividir RS8, declaradas fuera | /implement 031 (T091) |
 | 2026-10-20 | Comportamiento modificado por 031 en v0.10.0 (cabeceras, administración remota por la red privada; CA3 reemplazado en parte por 031 CA8) | /release |
 | 2026-10-20 | CA7 modificado por 031 CA8; la excepción P7 (inicios de sesión fallidos sin evento de auditoría) vence con la spec 021, no con la 020 (031 /analyze A25) | /release |
+| 2026-10-25 | Cobertura de riesgos: RS15.c y RS15.d, creadas por la 032 al dividir RS15.b, declaradas fuera (RS15.c aceptada como EX3 por la 032; RS15.d → objetivo 5) | /implement 032 (T038) |

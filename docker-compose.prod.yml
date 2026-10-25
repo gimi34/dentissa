@@ -22,6 +22,8 @@ services:
     volumes:
       - storage:/var/www/storage
       - ./docker/nginx/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
+      # Spec 032 (D10): el vigilante cuenta las respuestas 5xx del log de acceso.
+      - nginx_logs:/var/log/nginx:ro
     networks:
       - produccion
     depends_on:
