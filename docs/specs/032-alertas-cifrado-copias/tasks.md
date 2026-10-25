@@ -193,7 +193,7 @@ Formato:
 ### Registro de fallos de acceso (CA2)
 - [x] T036 Extraer la regla de la cuenta del limitador a `AuthController::sujetoLimite(string $email): string`, pública y estática como `origenLimite` (`cuenta:<id>` buscando por correo sin mirar `activo`; si no hay cuenta, `correo:<minúsculas>`), y usarla en `claveLimiteLogin`, sin cambiar su comportamiento (D7, /analyze A12) — app/Http/Controllers/AuthController.php — hecho cuando: `LimiteIntentosTest` pasa sin cambios antes y después, `pint --test` limpio, y el método es público y estático — cubre: CA2 — depende: T010
   - nota: LimiteIntentosTest 9/9 en verde antes (línea base) y después; pint limpio. sujetoLimite(string \) es público y estático, con la misma consulta (sin mirar activo) y claveLimiteLogin la usa; el comentario de la regla pasa al método nuevo.
-- [ ] T020 Añadir el canal `seguridad` (`daily`, 14 días, `JsonFormatter`) y crear `App\Listeners\RegistrarFalloAcceso` para `Failed` y `Lockout` según el contrato de la línea (control de TM5 y TM8) — config/logging.php, app/Listeners/RegistrarFalloAcceso.php — hecho cuando: T010 pasa dos veces, `LimiteIntentosTest` sigue en verde, y se comprueba rompiendo (escribir la IP en `origen` hace fallar `test_el_registro_no_contiene_ip_ni_correo`), anotado — cubre: CA2 — depende: T003, T010, T036
+- [x] T020 Añadir el canal `seguridad` (`daily`, 14 días, `JsonFormatter`) y crear `App\Listeners\RegistrarFalloAcceso` para `Failed` y `Lockout` según el contrato de la línea (control de TM5 y TM8) — config/logging.php, app/Listeners/RegistrarFalloAcceso.php — hecho cuando: T010 pasa dos veces, `LimiteIntentosTest` sigue en verde, y se comprueba rompiendo (escribir la IP en `origen` hace fallar `test_el_registro_no_contiene_ip_ni_correo`), anotado — cubre: CA2 — depende: T003, T010, T036
   - `message` `acceso_fallido`; `context` con `tipo`, `metodo`, `origen` y `cuenta`.
   - `origen` = HMAC de `AuthController::origenLimite()`.
   - `metodo`: `google` en un `Failed` con `proveedor` `google` o en un `Lockout` de la ruta de la vuelta de Google; `contrasena` en otro caso (/analyze A33).
@@ -202,6 +202,10 @@ Formato:
   - Clave HMAC derivada: `hash_hmac('sha256', 'dentissa-seguridad', APP_KEY)` (/analyze A27).
   - Huellas recortadas a 16 hexadecimales.
   - nota: aceptado en /analyze r2 (2026-10-25), A45 — `name` `seguridad` en el canal, o el contrato con el valor real.
+  - nota: T010 pasa dos veces (10/10) y LimiteIntentosTest sigue en verde (9/9); pint limpio. event:list muestra Failed → handleFallo y Lockout → handleBloqueo por descubrimiento automático.
+  - nota: Comprobado rompiendo (2026-10-25): escribir la IP en origen hace fallar test_el_registro_no_contiene_ip_ni_correo (y los dos de formato de huella); un handler extra para Login hace fallar test_un_login_correcto_no_escribe_nada (la comprobación pendiente de T010); tomar todo Lockout como contraseña hace fallar test_el_bloqueo_de_la_vuelta_de_google_escribe_sin_cuenta. Restaurado tras cada uno.
+  - nota: A45 aplicado: el canal declara name seguridad y T010 lo comprueba.
+  - nota: El registro va en try/catch con report(): un fallo al escribir el log nunca cambia la respuesta del login ni del limitador.
 
 ### Correo y vigilante (CA1, CA2, CA4, CA5, CA6)
 - [ ] T021 Crear `App\Mail\AvisoProduccion` y su plantilla de texto en español según el contrato del correo (D9) (control de TM7) — app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php — hecho cuando: los casos de contenido de T013 pasan y se comprueba rompiendo (pasar una línea de log al cuerpo hace fallar `test_el_correo_no_lleva_datos_personales_ni_secretos`), anotado — cubre: CA5 — depende: T013
