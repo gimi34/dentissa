@@ -325,11 +325,15 @@ Formato:
   - nota: Prueba local en Git Bash (2026-10-25), con una clave de prueba y tres copias en claro (una buena, una sin la línea final, una con el gzip cortado): la buena queda como .sql.gz.gpg con su fecha original y se descifra hasta -- Dump completed; las dos dañadas quedan como .sql.gz.danada.gpg; ninguna en claro; una segunda ejecución no hace nada.
   - nota: Comprobado rompiendo (2026-10-25): borrar antes de cifrar o borrar una dañada sin cifrarla hacen fallar el caso.
   - nota: Si hay dañadas, el aviso final dice que no se pueden restaurar y que se borren cuando no se quieran (restaurar.sh solo acepta .sql.gz.gpg).
-- [ ] T032 Ampliar `verificar.sh` según D12 (control de TM1, TM4, TM9 y TM10) — deploy/verificar.sh — hecho cuando: los casos de T019 pasan, `bash -n` limpio y se comprueba rompiendo (imprimir `MAIL_USERNAME` hace fallar `test_verificar_no_imprime_valores_del_correo`), anotado — cubre: CA6, CA8, CA10 — depende: T019
+- [x] T032 Ampliar `verificar.sh` según D12 (control de TM1, TM4, TM9 y TM10) — deploy/verificar.sh — hecho cuando: los casos de T019 pasan, `bash -n` limpio y se comprueba rompiendo (imprimir `MAIL_USERNAME` hace fallar `test_verificar_no_imprime_valores_del_correo`), anotado — cubre: CA6, CA8, CA10 — depende: T019
   - El bloque de configuración pasa de 12 a 16 comprobaciones de correo, con `MAIL_FROM_ADDRESS`.
   - Sección nueva «Avisos y copias (spec 032)», fuera de `--interna`. La búsqueda de copias en claro incluye la carpeta personal de la cuenta de despliegue.
   - Ninguna comprobación imprime valores.
   - nota: aceptado en /analyze r2 (2026-10-25), A42 — comprobación de TLS obligatorio en el envío.
+  - nota: Los cuatro casos de T019 pasan; bash -n limpio.
+  - nota: Bloque de configuración ejecutado en el contenedor (2026-10-25) con tres configuraciones de correo: bien configurado (465) → las cuatro OK; con los marcadores <…> de la guía y el puerto 587 → FALLO de host/puerto, de usuario/contraseña y de formato de correo; sin correo (local) → las cuatro FALLO. 16 líneas, código 0 y ningún valor impreso.
+  - nota: Comprobado rompiendo (2026-10-25): imprimir MAIL_USERNAME hace fallar test_verificar_no_imprime_valores_del_correo; la sección «Avisos y copias» también con --interna, test_verificar_comprueba_avisos_y_copias_fuera_de_la_interna; buscar copias en claro solo en el destino, test_verificar_falla_con_copias_en_claro.
+  - nota: A42 aplicado: «MAIL_HOST definido y MAIL_PORT=465 (TLS obligatorio)»; con el 587 da FALLO.
 
 ### Guía y riesgo aceptado (CA3, CA6, CA7, CA9, CA10)
 - [ ] T033 Actualizar la guía de las copias — deploy/README.md — hecho cuando: cada punto de CA7, CA9 y CA10 sobre la guía tiene su apartado y los comandos coinciden con los scripts de T028–T031 y T037 · verificación manual: el usuario revisa §7 y §8 — cubre: CA7, CA9, CA10 — depende: T028, T029, T030, T031, T037
