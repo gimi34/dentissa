@@ -1,6 +1,6 @@
 ---
 spec: 032-alertas-cifrado-copias
-status: draft
+status: approved
 constitution_version: 1.3.0
 created: 2026-10-23
 ---
@@ -329,7 +329,7 @@ No aplica: la spec no crea ni cambia rutas públicas.
   - 0 5xx nuevos.
 
 ## Decisiones (→ ADR si son arquitectónicas)
-- **D1 · Cifrado de copias → [ADR 0007](../../adr/0007-copias-cifradas-y-avisos.md)** (proposed de nuevo hasta aprobar esta corrección;
+- **D1 · Cifrado de copias → [ADR 0007](../../adr/0007-copias-cifradas-y-avisos.md)** (accepted;
   también recoge D8, D9 y D13). OpenPGP asimétrico con GnuPG y la clave pública del
   responsable (`--recipient-file`, `--trust-model always`), sin llavero en el servidor.
   - Alternativas descartadas:
