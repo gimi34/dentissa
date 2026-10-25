@@ -178,13 +178,16 @@ Formato:
     - `systemctl enable --now dentissa-vigilar.timer`.
   - nota: falla por la razón esperada (2026-10-25): los dos scripts no existen.
   - nota: Fija el orden de cifrar-copias-antiguas.sh (comprobar → gpg hacia .part → mv → touch -r → shred -u, una sola vez) y las unidades de preparar-vigilancia.sh: servicio oneshot con User=\ (la de SUDO_USER, nunca root) y el ExecStart del plan, temporizador OnCalendar=minutely con WantedBy=timers.target, daemon-reload y enable --now.
-- [ ] T019 Añadir a `ConfiguracionProduccionTest` los casos de `verificar.sh` (D12) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA6, CA8, CA10 — depende: T018
+- [x] T019 Añadir a `ConfiguracionProduccionTest` los casos de `verificar.sh` (D12) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA6, CA8, CA10 — depende: T018
   - El bloque de configuración tiene 16 comprobaciones.
   - `test_verificar_comprueba_el_envio_de_avisos`: `MAIL_MAILER=smtp`, `MAIL_HOST` y `MAIL_PORT`, `MAIL_USERNAME` y `MAIL_PASSWORD` sin `<…>`, y `MAIL_FROM_ADDRESS` y `AVISOS_CORREO` con formato de correo y sin `<…>` (/analyze A28).
   - `test_verificar_no_imprime_valores_del_correo`.
   - La sección «Avisos y copias (spec 032)» está dentro del bloque que no corre con `--interna` (/analyze A3). Comprueba el temporizador activo, la clave pública sin `sec`, el llavero sin claves secretas y la lectura del log de acceso desde `app`.
   - `test_verificar_falla_con_copias_en_claro`: `dentissa-*.sql.gz` en `/var/backups/dentissa` o en la carpeta personal de la cuenta de despliegue.
   - nota: aceptado en /analyze r2 (2026-10-25), A42 — `verificar.sh` exige TLS obligatorio en el envío (465 con TLS implícito, o 587 con el cifrado exigido en la configuración del mailer), con su caso en el test.
+  - nota: falla por la razón esperada (2026-10-25): el bloque tiene 12 comprobaciones, no hay sección «Avisos y copias» ni búsqueda de copias en claro. El caso «no imprime valores» ya reconoce las 12 actuales y falla solo por el recuento.
+  - nota: A42 aplicado: TLS obligatorio con el puerto 465 (Laravel elige smtps, TLS implícito, con port 465: MailManager::createSmtpTransport), que no exige tocar config/mail.php. Sustituye el 587 con STARTTLS de D9 dentro de lo que permite el aceptado; Gmail admite 465. La guía (T034) dirá MAIL_PORT=465.
+  - nota: A28 aplicado: MAIL_FROM_ADDRESS y AVISOS_CORREO con FILTER_VALIDATE_EMAIL, que también rechaza el <…> de la guía.
 
 ## Implementación
 ### Registro de fallos de acceso (CA2)

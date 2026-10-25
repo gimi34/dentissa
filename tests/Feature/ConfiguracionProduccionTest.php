@@ -736,4 +736,79 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^systemctl daemon-reload\nsystemctl enable --now dentissa-vigilar\.timer$/m', $ordenes);
         $this->assertStringContainsString('gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"', $script, 'Comprueba antes la clave pública.');
     }
+
+    /** Código PHP del bloque «Configuración de producción» de verificar.sh. */
+    private function configuracionDeVerificar(): string
+    {
+        $this->assertSame(1, preg_match('/^    config="\$\("\$\{php\[@\]\}" -r "\$\{ARRANQUE\}"\'\n(.*?)\n    \'\)"$/ms', $this->leer('deploy/verificar.sh'), $m), 'verificar.sh tiene el bloque de configuración.');
+
+        return $m[1];
+    }
+
+    /**
+     * Spec 032 (CA6; D12, /analyze A28, A42): sin el envío de avisos configurado, o con el
+     * texto de ejemplo de la guía, la verificación falla. El envío exige TLS (puerto 465 con
+     * TLS implícito: la contraseña de aplicación nunca viaja sin cifrar).
+     */
+    public function test_verificar_comprueba_el_envio_de_avisos(): void
+    {
+        $php = $this->configuracionDeVerificar();
+        $script = $this->leer('deploy/verificar.sh');
+
+        preg_match_all('/^\s*\$c\(/m', $php, $comprobaciones);
+        $this->assertCount(16, $comprobaciones[0], 'El bloque tiene 16 comprobaciones.');
+        $this->assertMatchesRegularExpression('/"\$\{lineas\}" -ne 16 \]\]/', $script);
+        $this->assertStringContainsString('de 16 comprobaciones', $script);
+
+        $this->assertMatchesRegularExpression('/^\s*\$c\(config\("mail\.default"\) === "smtp", "MAIL_MAILER=smtp"\);$/m', $php);
+        $this->assertMatchesRegularExpression('/^\s*\$c\([^\n]*config\("mail\.mailers\.smtp\.host"\)[^\n]*\(int\) config\("mail\.mailers\.smtp\.port"\) === 465[^\n]*"MAIL_HOST definido y MAIL_PORT=465 \(TLS obligatorio\)"\);$/m', $php, 'Exige el host y TLS implícito (A42).');
+        $this->assertMatchesRegularExpression('/^\s*\$c\([^\n]*config\("mail\.mailers\.smtp\.username"\)[^\n]*config\("mail\.mailers\.smtp\.password"\)[^\n]*\[<>\\\\\\\\s\][^\n]*"MAIL_USERNAME y MAIL_PASSWORD definidos y sin el texto de ejemplo de la guía"\);$/m', $php);
+        $this->assertMatchesRegularExpression('/^\s*\$c\([^\n]*filter_var\(\(string\) config\("mail\.from\.address"\), FILTER_VALIDATE_EMAIL\)[^\n]*filter_var\(\(string\) config\("avisos\.destino"\), FILTER_VALIDATE_EMAIL\)[^\n]*"MAIL_FROM_ADDRESS y AVISOS_CORREO con formato de correo"\);$/m', $php, 'Con el remitente (A28).');
+    }
+
+    /** Spec 032 (CA6, TM9): ninguna comprobación imprime un valor de la configuración. */
+    public function test_verificar_no_imprime_valores_del_correo(): void
+    {
+        $php = $this->configuracionDeVerificar();
+        $script = $this->leer('deploy/verificar.sh');
+
+        preg_match_all('/^\s*\$c\((.*), ("[^"\n]*")\);$/m', $php, $comprobaciones);
+        $this->assertCount(16, $comprobaciones[2]);
+        foreach ($comprobaciones[2] as $texto) {
+            $this->assertStringNotContainsString('config(', $texto, "El texto {$texto} no lleva valores.");
+            $this->assertStringNotContainsString('$', $texto, "El texto {$texto} no lleva variables.");
+        }
+        $this->assertDoesNotMatchRegularExpression('/\becho\b[^\n]*config\("(mail|avisos)/', $php);
+        $this->assertDoesNotMatchRegularExpression('/printenv\s+(MAIL_|AVISOS_)/', $script);
+    }
+
+    /**
+     * Spec 032 (CA8, CA10, TM1, TM4, TM10; D12, /analyze A3): la sección «Avisos y copias»
+     * solo corre sin --interna, para que desplegar.sh y volver.sh pasen antes de instalar el
+     * temporizador y de cifrar las copias antiguas.
+     */
+    public function test_verificar_comprueba_avisos_y_copias_fuera_de_la_interna(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+
+        $this->assertSame(1, preg_match('/^    if \[\[ "\$\{modo\}" != "--interna" \]\]; then\n        echo "== Avisos y copias \(spec 032\)"\n(.*?)^    fi$/ms', $script, $seccion), 'La sección es un bloque que no corre con --interna.');
+        foreach ([
+            'systemctl is-active --quiet dentissa-vigilar.timer' => 'temporizador activo',
+            'gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"' => 'clave pública válida',
+            "grep -q '^sec:'" => 'sin clave secreta en el archivo',
+            'gpg --list-secret-keys --with-colons' => 'llavero sin claves secretas',
+            '"${compose[@]}" exec -T -u www-data app test -r /var/log/nginx/dentissa-access.log' => 'app lee el log de acceso',
+        ] as $orden => $que) {
+            $this->assertStringContainsString($orden, $seccion[1], "La sección comprueba: {$que}.");
+        }
+    }
+
+    /** Spec 032 (CA10; /analyze A16): una copia en claro en el servidor es un FALLO. */
+    public function test_verificar_falla_con_copias_en_claro(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then ok [^\n]*\n\s*else fallo [^\n]*copias en claro[^\n]*$/m',
+            $this->leer('deploy/verificar.sh'),
+        );
+    }
 }
