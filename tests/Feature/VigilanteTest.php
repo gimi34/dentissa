@@ -6,8 +6,10 @@ use App\Avisos\Vigilante;
 use App\Mail\AvisoProduccion;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 /**
@@ -86,6 +88,47 @@ class VigilanteTest extends TestCase
     private function escribirLineas(array $lineas): void
     {
         File::append($this->logAcceso(), implode("\n", $lineas)."\n");
+    }
+
+    /**
+     * Línea del canal `seguridad` con la forma del `JsonFormatter` (contrato del
+     * plan), en el archivo diario de su fecha.
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    private function escribirFallo(string $origen, ?string $cuenta, string $tipo = 'fallido', ?CarbonImmutable $momento = null, array $extra = []): void
+    {
+        $momento ??= CarbonImmutable::now();
+
+        $linea = json_encode([
+            'message' => 'acceso_fallido',
+            'context' => ['tipo' => $tipo, 'metodo' => 'contrasena', 'origen' => $origen, 'cuenta' => $cuenta],
+            'level' => 200,
+            'level_name' => 'INFO',
+            'channel' => 'seguridad',
+            'datetime' => $momento->format('Y-m-d\TH:i:s.uP'),
+            'extra' => (object) $extra,
+        ]);
+
+        File::append($this->carpeta.'/seguridad-'.$momento->format('Y-m-d').'.log', $linea."\n");
+    }
+
+    /** `$cuantos` fallos; el origen o la cuenta cambian en cada uno si se pide. */
+    private function escribirFallos(int $cuantos, bool $mismoOrigen = true, bool $mismaCuenta = true): void
+    {
+        for ($i = 0; $i < $cuantos; $i++) {
+            $this->escribirFallo(
+                $mismoOrigen ? 'aaaaaaaaaaaaaaaa' : sprintf('%016x', $i + 1),
+                $mismaCuenta ? 'bbbbbbbbbbbbbbbb' : sprintf('%016x', 1000 + $i),
+            );
+        }
+    }
+
+    private function assertAvisoDeAccesos(int $recuento): void
+    {
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'accesos'
+            && $aviso->recuento === $recuento
+            && $aviso->hasTo(self::DESTINO));
     }
 
     private function assertAvisoDeErrores(int $recuento): void
@@ -315,5 +358,183 @@ class VigilanteTest extends TestCase
         }
 
         Mail::assertNothingSent();
+    }
+
+    public function test_mas_de_10_fallos_por_origen_avisa(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11, mismoOrigen: true, mismaCuenta: false);
+
+        $this->vigilar();
+
+        Mail::assertSentCount(1);
+        $this->assertAvisoDeAccesos(11);
+    }
+
+    public function test_mas_de_10_fallos_por_cuenta_avisa(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11, mismoOrigen: false, mismaCuenta: true);
+
+        $this->vigilar();
+
+        Mail::assertSentCount(1);
+        $this->assertAvisoDeAccesos(11);
+    }
+
+    public function test_10_fallos_no_avisa(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(10);
+        // Once en total, pero ni el origen ni la cuenta pasan de 10.
+        $this->escribirFallo('cccccccccccccccc', 'dddddddddddddddd');
+
+        $this->vigilar();
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_cuenta_los_fallos_de_ayer_dentro_de_la_ventana(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-26 00:02:00', 'UTC'));
+        $this->iniciar();
+
+        for ($i = 0; $i < 6; $i++) {
+            $this->escribirFallo('aaaaaaaaaaaaaaaa', null, momento: CarbonImmutable::parse('2026-10-25 23:58:30', 'UTC'));
+        }
+        for ($i = 0; $i < 5; $i++) {
+            $this->escribirFallo('aaaaaaaaaaaaaaaa', null, momento: CarbonImmutable::parse('2026-10-26 00:01:00', 'UTC'));
+        }
+
+        $this->vigilar();
+
+        $this->assertAvisoDeAccesos(11);
+    }
+
+    /** /analyze A11: la 020 añadirá `request_id` y `actor_id` en `extra`. */
+    public function test_lee_lineas_con_extra(): void
+    {
+        $this->iniciar();
+
+        for ($i = 0; $i < 11; $i++) {
+            $this->escribirFallo('aaaaaaaaaaaaaaaa', null, extra: ['request_id' => (string) Str::uuid(), 'actor_id' => null]);
+        }
+
+        $this->vigilar();
+
+        $this->assertAvisoDeAccesos(11);
+    }
+
+    /** /analyze A44: el canal `seguridad` se lee con el mismo tope que el log de acceso. */
+    public function test_el_canal_seguridad_se_lee_con_tope(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $archivo = $this->carpeta.'/seguridad-2026-10-25.log';
+        $porLinea = intdiv(File::size($archivo), 11);
+        config(['avisos.tope_bytes' => 5 * $porLinea + 3]);
+
+        $this->vigilar();
+        $this->vigilar();
+        Mail::assertNothingSent();
+
+        $this->vigilar();
+        $this->assertAvisoDeAccesos(11);
+    }
+
+    public function test_silencio_de_30_minutos_acumula(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $this->vigilar();
+
+        $this->travel(10)->minutes();
+        $this->escribirFallos(12);
+        $this->vigilar();
+
+        $this->travel(5)->minutes();
+        $this->escribirFallos(3);
+        $this->vigilar();
+
+        Mail::assertSentCount(1);
+
+        $this->travel(16)->minutes();
+        $this->vigilar();
+
+        Mail::assertSentCount(2);
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'accesos'
+            && $aviso->recuento === 15
+            && $aviso->anterior !== null);
+    }
+
+    public function test_envia_lo_pendiente_al_acabar_el_silencio(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $this->vigilar();
+
+        $this->travel(10)->minutes();
+        $this->escribirFallos(12);
+        $this->vigilar();
+
+        // La ráfaga terminó: en la ventana ya no hay fallos.
+        $this->travel(21)->minutes();
+        $this->vigilar();
+
+        Mail::assertSentCount(2);
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'accesos'
+            && $aviso->recuento === 12);
+    }
+
+    public function test_los_tipos_tienen_silencio_propio(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $this->vigilar();
+
+        $this->travel(5)->minutes();
+        $this->escribirAcceso(500, 3);
+        $this->escribirAcceso(200, 97);
+        $this->vigilar();
+
+        Mail::assertSentCount(2);
+        $this->assertAvisoDeAccesos(11);
+        $this->assertAvisoDeErrores(3);
+    }
+
+    /** /analyze A9: 11 fallos y 10 ejecuciones dan un solo aviso con 11. */
+    public function test_cada_evento_se_cuenta_una_vez(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+
+        for ($minuto = 0; $minuto < 10; $minuto++) {
+            $this->vigilar();
+            $this->travel(1)->minutes();
+        }
+        $this->travel(25)->minutes();
+        $this->vigilar();
+
+        Mail::assertSentCount(1);
+        $this->assertAvisoDeAccesos(11);
+    }
+
+    public function test_un_envio_fallido_no_marca_el_aviso_como_enviado(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+
+        Log::spy();
+        Mail::shouldReceive('to')->andThrow(new TransportException('535 credenciales de envio@example.test rechazadas'));
+
+        $this->assertFalse($this->vigilar());
+        Log::shouldHaveReceived('warning')->with('aviso no enviado', ['tipo' => 'accesos'])->once();
+
+        // Al minuto siguiente el envío funciona y el aviso sale.
+        Mail::fake();
+        $this->travel(1)->minutes();
+
+        $this->assertTrue($this->vigilar());
+        $this->assertAvisoDeAccesos(11);
     }
 }

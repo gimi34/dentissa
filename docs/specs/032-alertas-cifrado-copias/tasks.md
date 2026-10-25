@@ -95,7 +95,7 @@ Formato:
   - nota: Interfaz que fija el test para T023 y T024: app(Vigilante::class)->ejecutar(): bool; ventanaDeErrores(): ['peticiones' => int, 'errores' => int]; AvisoProduccion con propiedades públicas tipo y recuento. Rutas por config('avisos.*') y reloj con travelTo.
   - nota: Añadido test_detecta_log_rotado (inodo distinto con un log más largo), separado del truncado.
   - nota: A49 aplicado: test_avisa_del_formato_con_poco_trafico (5 líneas en otro formato en tres ventanas dan el aviso formato) y test_pocas_lineas_buenas_no_avisan_del_formato.
-- [ ] T012 Añadir a `VigilanteTest` los casos de accesos y de silencio — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada, anotado — cubre: CA2, CA4 — depende: T011
+- [x] T012 Añadir a `VigilanteTest` los casos de accesos y de silencio — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada, anotado — cubre: CA2, CA4 — depende: T011
   - Accesos, leyendo el canal `seguridad` de hoy y de ayer:
     - `test_mas_de_10_fallos_por_origen_avisa`, `test_mas_de_10_fallos_por_cuenta_avisa` y `test_10_fallos_no_avisa`;
     - `test_lee_lineas_con_extra`.
@@ -106,6 +106,10 @@ Formato:
     - `test_cada_evento_se_cuenta_una_vez`: 11 fallos en un minuto y 10 ejecuciones dan un aviso con 11 (/analyze A9).
   - `test_un_envio_fallido_no_marca_el_aviso_como_enviado`: el transporte lanza una excepción, queda `Log::warning` con el tipo y sin el mensaje, y se reintenta al minuto siguiente.
   - nota: aceptado en /analyze r2 (2026-10-25), A44 — la lectura del canal `seguridad` es incremental o con tope, con su caso en VigilanteTest.
+  - nota: falla por la razón esperada (2026-10-25): los 11 casos nuevos, como los 14 de T011, con «Target class [App\Avisos\Vigilante] does not exist».
+  - nota: Fija para T024: el envío es Mail::to(destino)->send(AvisoProduccion), con la propiedad pública anterior (momento del aviso anterior o null); lo pendiente solo nace si en el silencio se cumple la condición con eventos nuevos.
+  - nota: Añadido test_10_fallos_no_avisa con un undécimo fallo de otro origen y otra cuenta, para que el umbral sea por grupo y no total.
+  - nota: A44 aplicado: test_el_canal_seguridad_se_lee_con_tope (con el tope de 5 líneas, 11 fallos se leen en tres ejecuciones y el aviso llega en la tercera).
 - [ ] T013 [P] Escribir `AvisoProduccionTest` — tests/Feature/AvisoProduccionTest.php — hecho cuando: falla por la razón esperada (no existen el correo ni el comando), anotado — cubre: CA5, CA6
   - `test_el_correo_no_lleva_datos_personales_ni_secretos`: con logs de entrada que contienen una IP y un correo, y con `APP_KEY` y `MAIL_PASSWORD` de prueba, ni el cuerpo ni el asunto contienen ninguno, ni las huellas.
   - `test_lleva_tipo_recuentos_horas_y_como_consultar`: asunto `[Dentissa] <tipo>`, recuento, inicio y fin en `CLINICA_ZONA_HORARIA`, acumulado desde el aviso anterior y las órdenes de consulta, en español.
