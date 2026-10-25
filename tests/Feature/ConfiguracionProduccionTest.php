@@ -612,4 +612,82 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ;.');
         $this->assertMatchesRegularExpression('/^orden="cd \$\(printf \'%q\' "\$\{APP\}"\) && \$\(printf \'%q \' "\$@"\)"$/m', $ordenes, 'Cada argumento de la orden remota va citado.');
     }
+
+    /**
+     * Spec 032 (CA9, TM11; D4, /analyze A1, A17, A40): la vuelta con copia la dirige
+     * restaurar.sh desde el PC. volver.sh ya no recibe la copia: con --sin-levantar deja app y
+     * web parados y db sana, y restaurar.sh carga y levanta con sus propias órdenes, que
+     * existen desde la 030, así que vale para cualquier versión de destino.
+     */
+    public function test_volver_con_copia_no_depende_de_la_version_de_destino(): void
+    {
+        $volver = $this->ordenes('deploy/volver.sh');
+        $checkout = $this->posicion($volver, 'git -c advice.detachedHead=false checkout "${ref}"', 'volver.sh hace el checkout.');
+
+        $rechazo = $this->posicion($volver, 'if [[ $# -gt 2 || ( -n "${opcion}" && "${opcion}" != "--sin-levantar" ) ]]; then', 'volver.sh rechaza cualquier otro argumento (A40).');
+        $this->assertLessThan($checkout, $rechazo, 'El rechazo va antes de cambiar nada.');
+        $this->assertMatchesRegularExpression('/^if \[\[ \$# -gt 2[^\n]*\nerror "[^"\n]*restaurar\.sh [^"\n]*--volver \$\{ref\}"$/m', $volver, 'El rechazo da la orden de restaurar.sh --volver.');
+        $this->assertStringNotContainsString('deploy/restaurar.sh', $volver, 'volver.sh ya no restaura.');
+
+        $sinLevantar = $this->posicion($volver, 'if [[ "${opcion}" == "--sin-levantar" ]]; then', 'volver.sh admite --sin-levantar.');
+        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d db\nesperar_db\nreturn 0\nfi$/m', $volver);
+        $this->assertLessThan($this->posicion($volver, '"${compose[@]}" up -d app web', 'volver.sh levanta app y web.'), $sinLevantar, '--sin-levantar sale antes de levantar app y web.');
+
+        $aviso = $this->posicion($volver, 'if [[ ! -f app/Console/Commands/Vigilar.php ]]; then', 'volver.sh avisa del temporizador.');
+        $this->assertGreaterThan($checkout, $aviso, 'El aviso mira la versión de destino.');
+        $this->assertStringContainsString('sudo systemctl disable --now dentissa-vigilar.timer', $this->leer('deploy/volver.sh'));
+
+        $restaurar = $this->ordenes('deploy/restaurar.sh');
+        $preparar = $this->posicion($restaurar, 'en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null', 'restaurar.sh --volver usa volver.sh --sin-levantar.');
+        $cargar = $this->posicion($restaurar, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.');
+        $this->assertLessThan($cargar, $preparar, 'Primero la versión de destino, después la carga.');
+        foreach ([
+            'en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null',
+            'en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan config:cache < /dev/null',
+            'en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan route:cache < /dev/null',
+            'en_servidor bash deploy/verificar.sh --interna < /dev/null',
+        ] as $orden) {
+            $this->assertGreaterThan($cargar, $this->posicion($restaurar, $orden, "restaurar.sh no hace «{$orden}»."), "«{$orden}» va después de la carga.");
+        }
+    }
+
+    /**
+     * Spec 032 (D4; /analyze A17, A32, A50): si la verificación falla, desplegar.sh propone
+     * la vuelta sin copia solo si sabe que no hubo migraciones (migrate:status --pending dijo
+     * «No pending migrations» y salió con 0); en la duda, la vuelta con la copia desde el PC.
+     * Sin copia (primer despliegue) no propone ninguna vuelta.
+     */
+    public function test_desplegar_imprime_la_vuelta_del_contrato(): void
+    {
+        $script = $this->leer('deploy/desplegar.sh');
+        $ordenes = $this->ordenes('deploy/desplegar.sh');
+
+        $this->assertSame(1, preg_match('/^sin_migraciones_pendientes\(\) \{\n.*?^\}$/ms', $script, $funcion), 'desplegar.sh define sin_migraciones_pendientes().');
+        foreach ([
+            ['INFO  No pending migrations.', 0, 'si'],
+            ["Migration name ........ Batch / Status\n2026_10_25_000000_nueva ... Pending", 1, 'no'],
+            ['Illuminate\\Database\\QueryException: SQLSTATE[HY000] [2002] Connection refused', 1, 'no'],
+            ['INFO  No pending migrations.', 1, 'no'],
+        ] as [$salida, $codigo, $esperado]) {
+            $prueba = 'falso() { printf "%s\n" "$SALIDA"; return "$CODIGO"; }; compose=(falso); '.$funcion[0]."\n".'if sin_migraciones_pendientes; then echo si; else echo no; fi';
+            $resultado = trim((string) shell_exec('SALIDA='.escapeshellarg($salida).' CODIGO='.$codigo.' bash -c '.escapeshellarg($prueba)));
+            $this->assertSame($esperado, $resultado, "Con «{$salida}» y código {$codigo}.");
+        }
+        $this->assertMatchesRegularExpression('/^salida="\$\("\$\{compose\[@\]\}" run --rm -u www-data app php artisan migrate:status --pending --no-ansi 2>&1\)" \|\| return 1$/m', $ordenes);
+
+        $this->assertMatchesRegularExpression('/^local sin_migraciones="no"$/m', $ordenes);
+        $deteccion = $this->posicion($ordenes, 'sin_migraciones_pendientes && sin_migraciones="si"', 'desplegar.sh cuenta las migraciones pendientes.');
+        $this->assertLessThan($this->posicion($ordenes, 'php artisan migrate --force', 'desplegar.sh migra.'), $deteccion, 'Se cuentan antes de migrar.');
+
+        $this->assertMatchesRegularExpression(
+            '/^\s*if \[\[ "\$\{sin_migraciones\}" == "si" \]\]; then\n(?:\s*echo "[^\n]*"\n)*?\s*echo "    bash deploy\/volver\.sh \$\{anterior\}"\n\s*else\n(?:\s*echo "[^\n]*"\n)*?\s*echo "    scp [^"\n]*:\$\{copia\} \."\n\s*echo "    bash deploy\/restaurar\.sh \$\{copia##\*\/\} [^"\n]* --volver \$\{anterior\}"\n\s*fi$/m',
+            $script,
+            'Sin migraciones, volver.sh; si no, la vuelta con la copia desde el PC.',
+        );
+        $this->assertStringNotContainsString('volver.sh ${anterior} ${copia}', $script, 'La forma de la 030 ya no existe.');
+
+        $this->assertSame(1, preg_match('/^\s*if \[\[ -z "\$\{copia\}" \]\]; then\n(.*?)^\s*else$/ms', $script, $primerDespliegue), 'desplegar.sh distingue el primer despliegue.');
+        $this->assertStringNotContainsString('volver.sh', $primerDespliegue[1], 'Sin copia no se propone ninguna vuelta.');
+        $this->assertStringNotContainsString('restaurar.sh', $primerDespliegue[1], 'Sin copia no se propone ninguna vuelta.');
+    }
 }

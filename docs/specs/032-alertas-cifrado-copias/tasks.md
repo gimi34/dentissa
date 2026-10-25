@@ -154,7 +154,7 @@ Formato:
   - nota: A43 aplicado: test_restaurar_no_depende_de_su_ruta_y_cita_lo_remoto exige validar DENTISSA_APP y la versión de --volver, y citar con printf %q cada argumento remoto.
   - nota: A51 aplicado: la carga remota guarda la última línea con un awk de su tubería y sale con 4 sin -- Dump completed; el PC dice «la carga quedó incompleta».
   - nota: A50: el caso sin copia es de desplegar.sh y va en el test de T017 (test_desplegar_imprime_la_vuelta_del_contrato).
-- [ ] T017 Añadir a `ConfiguracionProduccionTest` los casos de la vuelta atrás (D4) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada, anotado — cubre: CA9 — depende: T016
+- [x] T017 Añadir a `ConfiguracionProduccionTest` los casos de la vuelta atrás (D4) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada, anotado — cubre: CA9 — depende: T016
   - `test_volver_con_copia_no_depende_de_la_version_de_destino` (/analyze A1, A17):
     - `volver.sh` admite `--sin-levantar` (checkout, construcción, `app` y `web` parados, `db` sana, sin `up` de `app` ni `web`);
     - rechaza un segundo argumento de archivo con la orden de `restaurar.sh --volver`;
@@ -163,6 +163,9 @@ Formato:
   - `test_desplegar_imprime_la_vuelta_del_contrato`: si la verificación falla, `desplegar.sh` imprime `volver.sh <anterior>` sin copia solo cuando `migrate:status --pending` contó 0 migraciones antes de `migrate --force`; en otro caso, o si no pudo contarlas, imprime la orden de `restaurar.sh … --volver <anterior>` (/analyze A32).
   - nota: aceptado en /analyze r2 (2026-10-25), A40 — cualquier segundo argumento de `volver.sh` distinto de `--sin-levantar` se rechaza antes del checkout, con su caso en el test.
   - nota: aceptado en /analyze r3 (2026-10-25), A50 — `test_desplegar_imprime_la_vuelta_del_contrato` cubre tres salidas reales de Laravel 12 (0 pendientes, N pendientes, fallo del comando) y el caso sin copia.
+  - nota: falla por la razón esperada (2026-10-25): volver.sh de la 030 no rechaza otros argumentos ni tiene --sin-levantar, y desplegar.sh no define sin_migraciones_pendientes().
+  - nota: A40 aplicado: volver.sh rechaza antes del checkout cualquier segundo argumento distinto de --sin-levantar, o más de dos, con la orden de restaurar.sh --volver.
+  - nota: A50 aplicado: el caso ejecuta en bash la función sin_migraciones_pendientes() de desplegar.sh con cuatro salidas simuladas (sin pendientes y código 0 → si; con una migración Pending y código 1, un fallo de conexión, o «No pending migrations» con código 1 → no), y comprueba que el primer despliegue, sin copia, no propone ninguna vuelta. Criterio sobre la salida real de Laravel 12: StatusCommand imprime «No pending migrations» y sale con 0 sin pendientes, y con distinto de 0 si las hay (vendor/laravel/framework, StatusCommand.php:81-88).
 - [ ] T018 Añadir a `ConfiguracionProduccionTest` los casos de los dos scripts nuevos — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA1, CA10 — depende: T017
   - `test_cifrar_copias_antiguas_cifra_antes_de_borrar` (D5):
     - `gzip -t` y `-- Dump completed` antes de cifrar;
