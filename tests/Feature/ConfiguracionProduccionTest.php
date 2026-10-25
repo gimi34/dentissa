@@ -383,4 +383,33 @@ class ConfiguracionProduccionTest extends TestCase
         );
         $this->assertMatchesRegularExpression('/^\s*ufw allow in on tailscale0 to any port 22 proto tcp$/m', $script);
     }
+
+    /**
+     * Spec 032 (CA1, D10): app lee el log de acceso de nginx, en solo lectura, para que el
+     * vigilante cuente las respuestas 5xx (también las 502/504 que no pasan por Laravel).
+     */
+    public function test_app_monta_el_log_de_nginx_en_solo_lectura(): void
+    {
+        $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
+
+        $this->assertMatchesRegularExpression('/^      - nginx_logs:\/var\/log\/nginx:ro$/m', $servicios['app'], 'app monta nginx_logs en solo lectura.');
+        $this->assertMatchesRegularExpression('/^      - nginx_logs:\/var\/log\/nginx$/m', $servicios['web'], 'web sigue escribiendo en nginx_logs.');
+    }
+
+    /**
+     * Spec 032 (CA8, TM1, TM9; /analyze A18): ninguna clave (`*.asc`) ni copia cifrada (`*.gpg`)
+     * entra en el repo ni en el paquete, en ninguna carpeta.
+     */
+    public function test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo(): void
+    {
+        $dockerignore = array_map('trim', explode("\n", $this->leer('.dockerignore')));
+        $gitignore = array_map('trim', explode("\n", $this->leer('.gitignore')));
+
+        foreach (['**/*.asc', '**/*.gpg'] as $exclusion) {
+            $this->assertContains($exclusion, $dockerignore, ".dockerignore no excluye {$exclusion}.");
+        }
+        foreach (['*.asc', '*.gpg'] as $exclusion) {
+            $this->assertContains($exclusion, $gitignore, ".gitignore no ignora {$exclusion}.");
+        }
+    }
 }

@@ -118,9 +118,11 @@ Formato:
   - nota: falla por la razón esperada (2026-10-25): tres casos con «The command dentissa:vigilar does not exist» y el de contenido con «Class App\Mail\AvisoProduccion not found».
   - nota: test_el_correo_no_lleva_datos_personales_ni_secretos recorre el camino entero (logs con IP, correo, búsqueda y huellas → comando → correo), así que pasa con T025; T021 cubre el caso de contenido.
   - nota: Fija el constructor del correo: AvisoProduccion(tipo, recuento, desde, hasta, anterior = null), con fechas en UTC; asunto «[Dentissa] <tipo legible>», p. ej. «Errores del servidor».
-- [ ] T014 Añadir a `ConfiguracionProduccionTest` los casos del Compose y de los archivos ignorados — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada y el resto del archivo sigue en verde, anotado — cubre: CA1, CA8
+- [x] T014 Añadir a `ConfiguracionProduccionTest` los casos del Compose y de los archivos ignorados — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada y el resto del archivo sigue en verde, anotado — cubre: CA1, CA8
   - En `docker-compose.prod.yml`, `app` monta `nginx_logs:/var/log/nginx:ro`.
   - `test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo`: `*.asc` y `*.gpg` en `.gitignore`, y `**/*.asc` y `**/*.gpg` en `.dockerignore` (/analyze A18).
+  - nota: falla por la razón esperada (2026-10-25): app no monta nginx_logs en solo lectura y .dockerignore no excluye **/*.asc; los otros 17 casos siguen en verde.
+  - nota: El caso del Compose también exige que web siga montando nginx_logs con escritura.
 - [ ] T015 Añadir a `ConfiguracionProduccionTest` los casos de `respaldar.sh` (D2), anclados a las órdenes reales — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA7, CA8 — depende: T014
   - `test_respaldar_cifra_con_la_clave_publica`: `gpg` con `--recipient-file` y `--trust-model always`, sin `--symmetric` ni `--passphrase`.
   - `test_respaldar_no_escribe_en_claro`:
