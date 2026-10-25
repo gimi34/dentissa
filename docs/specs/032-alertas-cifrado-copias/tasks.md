@@ -123,7 +123,7 @@ Formato:
   - `test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo`: `*.asc` y `*.gpg` en `.gitignore`, y `**/*.asc` y `**/*.gpg` en `.dockerignore` (/analyze A18).
   - nota: falla por la razón esperada (2026-10-25): app no monta nginx_logs en solo lectura y .dockerignore no excluye **/*.asc; los otros 17 casos siguen en verde.
   - nota: El caso del Compose también exige que web siga montando nginx_logs con escritura.
-- [ ] T015 Añadir a `ConfiguracionProduccionTest` los casos de `respaldar.sh` (D2), anclados a las órdenes reales — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA7, CA8 — depende: T014
+- [x] T015 Añadir a `ConfiguracionProduccionTest` los casos de `respaldar.sh` (D2), anclados a las órdenes reales — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA7, CA8 — depende: T014
   - `test_respaldar_cifra_con_la_clave_publica`: `gpg` con `--recipient-file` y `--trust-model always`, sin `--symmetric` ni `--passphrase`.
   - `test_respaldar_no_escribe_en_claro`:
     - la tubería `mariadb-dump | awk … | gzip | gpg` va hacia `.part`, con `mv` a `.sql.gz.gpg`;
@@ -132,6 +132,8 @@ Formato:
     - con `pipefail`, y la comprobación de `-- Dump completed` en la marca va después de la tubería.
   - `test_respaldar_se_detiene_sin_gpg_o_sin_clave`: `gpg --version` y `gpg --show-keys` antes de `mariadb-dump`.
   - Conserva 14 copias `dentissa-*.sql.gz.gpg`.
+  - nota: falla por la razón esperada (2026-10-25): los cuatro casos no encuentran la clave pública, la tubería con awk y gpg, las comprobaciones previas ni la retención de .sql.gz.gpg en el respaldar.sh de la 030.
+  - nota: Fija las órdenes de T028: CLAVE_PUBLICA con DENTISSA_CLAVE_PUBLICA, copia y parte, marca con mktemp -p /dev/shm, la tubería mariadb-dump | awk -v marca … | gzip | gpg … --output parte --encrypt, la comprobación de la marca tras la tubería y mv -- parte copia. Además rechaza una clave pública con ^sec: (CA8).
 - [ ] T016 Añadir a `ConfiguracionProduccionTest` los casos de `restaurar.sh`, que se ejecuta en el PC (D3) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA8, CA9 — depende: T015
   - `test_restaurar_comprueba_antes_de_borrar`: la pasada de comprobación local (`gpg --decrypt`, `gzip -cd` y `-- Dump completed`) va antes de la confirmación y de cualquier `ssh` que pare servicios o haga `DROP DATABASE`; `--solo-comprobar` sale tras ella.
   - `test_restaurar_distingue_los_rechazos`: los cuatro mensajes de Contratos, con «no se pudo usar la clave» distinto de «alterada o cortada», a partir de `--status-fd` y de `gzip` (/analyze A13, A34).

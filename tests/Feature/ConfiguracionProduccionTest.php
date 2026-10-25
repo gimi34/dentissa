@@ -412,4 +412,83 @@ class ConfiguracionProduccionTest extends TestCase
             $this->assertContains($exclusion, $gitignore, ".gitignore no ignora {$exclusion}.");
         }
     }
+
+    /** Posición de `$aguja` en `$texto`; falla si no está. */
+    private function posicion(string $texto, string $aguja, string $mensaje): int
+    {
+        $posicion = strpos($texto, $aguja);
+        $this->assertNotFalse($posicion, $mensaje);
+
+        return $posicion;
+    }
+
+    /**
+     * Spec 032 (CA7, CA8, TM1; D2): la copia se cifra para la clave pública del responsable.
+     * El servidor solo tiene esa clave: puede cifrar, pero no descifrar.
+     */
+    public function test_respaldar_cifra_con_la_clave_publica(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+
+        $this->assertMatchesRegularExpression('/^CLAVE_PUBLICA="\$\{DENTISSA_CLAVE_PUBLICA:-\/opt\/dentissa\/entorno\/copias\.pub\.asc\}"$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^\| gpg [^\n]*--trust-model always --recipient-file "\$\{CLAVE_PUBLICA\}" --output "\$\{parte\}" --encrypt\b/m', $ordenes, 'Cifra para la clave pública, hacia el archivo parcial.');
+        $this->assertDoesNotMatchRegularExpression('/--symmetric|--passphrase|\bgpg\b[^\n]*\s-c\b/', $ordenes, 'Nunca con una contraseña simétrica, que tendría que estar en el servidor.');
+    }
+
+    /**
+     * Spec 032 (CA7, TM2; D2, /analyze A8): el volcado no existe en claro en el disco. La
+     * tubería va de mariadb-dump a gpg; la línea final la guarda un miembro de la tubería
+     * (awk), que el script ya ha esperado al terminar, a diferencia de una sustitución de
+     * procesos `>(…)`.
+     */
+    public function test_respaldar_no_escribe_en_claro(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^copia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^parte="\$\{copia\}\.part"$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^marca="\$\(mktemp -p \/dev\/shm dentissa-marca\.XXXXXX\)"$/m', $ordenes, 'La marca vive en memoria.');
+        $this->assertMatchesRegularExpression(
+            '/mariadb-dump[^\n]*\\\\\n\| awk -v marca="\$\{marca\}" \'\{ print \} END \{ print > marca \}\' \\\\\n\| gzip \\\\\n\| gpg /',
+            $ordenes,
+            'mariadb-dump | awk | gzip | gpg, sin archivos intermedios.',
+        );
+        $this->assertStringNotContainsString('>(', $ordenes, 'Sin sustitución de procesos (/analyze A8).');
+        $this->assertDoesNotMatchRegularExpression('/>\s*"?\$\{?(copia|parte)\b/', $ordenes, 'Nada se redirige a la copia: la escribe gpg.');
+        $this->assertStringNotContainsString('gzip -cd', $ordenes, 'La copia no se vuelve a leer en claro.');
+
+        $tuberia = $this->posicion($ordenes, '| gpg ', 'Falta la tubería de cifrado.');
+        $comprobacion = $this->posicion($ordenes, 'grep -q -- \'-- Dump completed\' "${marca}"', 'Falta la comprobación de la línea final.');
+        $mover = $this->posicion($ordenes, 'mv -- "${parte}" "${copia}"', 'Falta el paso del archivo parcial a la copia.');
+        $this->assertGreaterThan($tuberia, $comprobacion, 'La línea final se comprueba después de la tubería.');
+        $this->assertGreaterThan($comprobacion, $mover, 'La copia solo se da por buena tras comprobarla.');
+    }
+
+    /** Spec 032 (CA7; D2): sin gpg o sin clave pública válida no se vuelca nada. */
+    public function test_respaldar_se_detiene_sin_gpg_o_sin_clave(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+        $volcado = $this->posicion($ordenes, 'mariadb-dump', 'Falta el volcado.');
+
+        foreach ([
+            'command -v gpg > /dev/null || error ',
+            '[[ -r "${CLAVE_PUBLICA}" ]] || error ',
+            'gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"',
+        ] as $comprobacion) {
+            $this->assertLessThan($volcado, $this->posicion($ordenes, $comprobacion, "Falta «{$comprobacion}»."), "«{$comprobacion}» va antes del volcado.");
+        }
+        $this->assertMatchesRegularExpression('/grep -q \'\^pub:\'[^\n]*\|\| error /', $ordenes, 'Exige una clave pública.');
+        $this->assertMatchesRegularExpression('/grep -q \'\^sec:\'[^\n]*&& error /', $ordenes, 'Rechaza un archivo con clave secreta (CA8).');
+    }
+
+    /** Spec 032 (D2): se conservan las 14 copias cifradas más recientes. */
+    public function test_respaldar_conserva_14_copias_cifradas(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+
+        $this->assertMatchesRegularExpression('/^CONSERVAR=14$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^find "\$\{DESTINO\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\.gpg\' /m', $ordenes);
+        $this->assertMatchesRegularExpression('/^echo "\$\{copia\}"\n\}\nmain "\$@"$/', substr($ordenes, strrpos($ordenes, 'echo "${copia}"') ?: 0), 'La última línea es la ruta de la copia.');
+    }
 }
