@@ -420,7 +420,7 @@ Formato:
 ## Integración y documentación
 - [ ] T050 Ejecutar la puerta de calidad sobre el diff de la spec: suite completa, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks, semgrep `p/php`, `composer audit --locked`, `npm audit` y revisión de cada `Log::` nuevo — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: todo pasa sin hallazgos críticos ni altos, anotado con los recuentos — cubre: CA5, CA8 — depende: T020, T025, T026, T027, T028, T029, T030, T031, T032, T036, T037
   - nota: aceptado en /analyze r2 (2026-10-25), A47 — registrar el coste de explorar los listeners al arrancar, o comprobar que `desplegar.sh` hace `event:cache`, y anotarlo en la verificación manual del RNF «no ralentiza».
-- [ ] T051 Actualizar el roadmap — docs/roadmap.md — hecho cuando: las entradas existen, citan la 032 y el validador no da errores
+- [x] T051 Actualizar el roadmap — docs/roadmap.md — hecho cuando: las entradas existen, citan la 032 y el validador no da errores
   - En el objetivo 5: OB6.c y RS15.d nuevas (staging), RS15.c como excepción EX3, y la 032 en curso.
   - En Pendientes:
     - «cada despliegue usa el `desplegar.sh` de la versión anterior» (D6);
@@ -428,6 +428,8 @@ Formato:
     - pasar `dentissa:vigilar` al planificador de la 020 y retirar el temporizador (D11, A20);
     - la vuelta de la 038 a v0.11.0 al retomarla (D15, A25).
   - nota: aceptado en /analyze r2 (2026-10-25), A39 — la entrada del roadmap dice que la 020 debe añadir el `scheduler` al Compose de producción, mover `dentissa:vigilar` a él y retirar el temporizador.
+  - nota: Objetivo 3: OB6.b y OB6.c → objetivo 5. Objetivo 4: RS15.b, RS15.c y RS15.d → objetivo 5. Objetivo 5: RS15.c, RS15.d y OB6.c en su lista; la 032 en curso (OB6.b, RS15.b; RS15.c como EX3; OB6.c y RS15.d pendientes). En Pendientes, los cuatro puntos de la 032: desplegar.sh de la versión instalada (D6), umbral de 5xx sin mínimo (A26), la 020 y el temporizador (A20), la vuelta de la 038 (A25). Validador sin errores.
+  - nota: A39 aplicado: la entrada dice que la 020 tiene que llevar su scheduler también al Compose de producción, mover dentissa:vigilar a él y retirar el temporizador.
 - [ ] T090 Actualizar `docs/architecture.md` en sus secciones reales (/analyze A23), según el ADR 0007:
   - **Diagrama de componentes:** el temporizador → `dentissa:vigilar` en `app`, `nginx_logs` también en `app`, la salida SMTP a Gmail y UptimeRobot hacia `/up`.
   - **Módulos:** `App\Avisos` y `App\Listeners\RegistrarFalloAcceso`.
