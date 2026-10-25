@@ -1,6 +1,6 @@
 ---
 spec: 032-alertas-cifrado-copias
-status: draft
+status: approved
 constitution_version: 1.3.0
 created: 2026-10-23
 ---
