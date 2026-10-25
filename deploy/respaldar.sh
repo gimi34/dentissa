@@ -47,6 +47,11 @@ main() {
     umask 077
     local copia
     copia="${DESTINO}/dentissa-$(date +%Y%m%d-%H%M%S).sql.gz.gpg"
+    # Dos copias en el mismo segundo no comparten nombre: nunca se pisa una copia.
+    while [[ -e "${copia}" ]]; do
+        sleep 1
+        copia="${DESTINO}/dentissa-$(date +%Y%m%d-%H%M%S).sql.gz.gpg"
+    done
     # parte y marca son globales: el trap se ejecuta al salir, cuando main() ya
     # no existe. La marca solo guarda la última línea del volcado (sin datos),
     # en memoria.

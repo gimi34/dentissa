@@ -378,6 +378,10 @@ Formato:
 - [x] T038 Declarar en la cobertura de riesgos de las specs 030 y 013 las correcciones de RS15 que crea T035: RS15.c (disco de producción) → aceptada como EX3 por la 032, y RS15.d (staging) → fuera, objetivo 5; con una fila de Historial en cada una (precedente: 031 T091 con RS8.c y RS8.d) — docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md — hecho cuando: el validador no da errores de RS15 en esas dos specs y no cambia ningún criterio — cubre: CA10 — depende: T035
   - nota: añadida durante /implement (2026-10-25): al dividir RS15 en T035, el validador exige declarar RS15.c y RS15.d en las specs que ya citan RS15; aprobada por el usuario el 2026-10-25.
   - nota: Specs 030 y 013: RS15.c (→ spec 032, EX3) y RS15.d (→ objetivo 5) declaradas fuera en «Cobertura de riesgos», con su fila de Historial (2026-10-25, /implement 032 T038). Ningún criterio cambia; el validador no da errores de RS15 en ellas.
+- [x] T039 Que respaldar.sh no pise nunca una copia que ya existe: primero un caso en ConfiguracionProduccionTest que falle (si ya hay una copia con el nombre de ese segundo, espera al siguiente y recalcula el nombre), después el cambio mínimo en respaldar.sh — tests/Feature/ConfiguracionProduccionTest.php, deploy/respaldar.sh — hecho cuando: el caso falla antes del cambio y pasa después, bash -n limpio, y en la prueba local con el docker falso dos copias en el mismo segundo dan dos archivos distintos — cubre: CA7 — depende: T028
+  - nota: añadida durante /implement (2026-10-25): en el ensayo T041, dos respaldar.sh dentro del mismo segundo dieron el mismo nombre y la segunda copia sobrescribió a la primera; aprobada por el usuario el 2026-10-25.
+  - nota: test_respaldar_no_pisa_una_copia_existente falló antes del cambio (no había bucle) y pasa después, con los otros cuatro casos de respaldar.sh; bash -n limpio; pint limpio.
+  - nota: Prueba local en Git Bash con el docker falso (2026-10-25): tres respaldar.sh seguidos dan tres archivos (…172514, …172515, …172516); antes, dos en el mismo segundo daban uno.
 
 ## Preparativos y ensayos en el servidor
 - [x] T040 Preparativos del responsable (plan, Rollout; los hace el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge que cada paso está hecho, sin ningún secreto ni la frase: la huella de la clave pública, la salida de `gpg --show-keys` en el servidor sin `sec`, la frase con el mínimo cumplido, la frase pedida una sola vez y la cuenta de envío dedicada creada — cubre: CA8 — depende: T034
@@ -495,7 +499,7 @@ Formato:
 | CA4 | T012 | T024 |
 | CA5 | T013, T042, T050 | T021 |
 | CA6 | T013, T019, T042 | T025, T032, T034 |
-| CA7 | T015, T041 | T028, T033 |
+| CA7 | T015, T039, T041 | T028, T033, T039 |
 | CA8 | T014, T015, T016, T019, T040, T041, T050 | T026, T028, T029, T032 |
 | CA9 | T016, T017, T044 | T029, T030, T033, T037 |
 | CA10 | T018, T019, T041, T042 | T031, T032, T033, T035, T038 |
@@ -520,7 +524,7 @@ Formato:
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
-| deploy/respaldar.sh | T028 |
+| deploy/respaldar.sh | T028, T039 |
 | deploy/restaurar.sh | T029 |
 | deploy/volver.sh | T030 |
 | deploy/desplegar.sh | T037 |

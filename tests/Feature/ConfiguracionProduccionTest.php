@@ -813,4 +813,16 @@ class ConfiguracionProduccionTest extends TestCase
             $this->leer('deploy/verificar.sh'),
         );
     }
+
+    /**
+     * Spec 032 (CA7; T039, visto en el ensayo T041): dos copias en el mismo segundo no
+     * comparten nombre; si ya existe una copia con el de ese segundo, se espera al siguiente.
+     */
+    public function test_respaldar_no_pisa_una_copia_existente(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^copia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\nwhile \[\[ -e "\$\{copia\}" \]\]; do\nsleep 1\ncopia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\ndone$/m',
+            $this->ordenes('deploy/respaldar.sh'),
+        );
+    }
 }
