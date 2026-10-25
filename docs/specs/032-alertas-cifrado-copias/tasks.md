@@ -360,7 +360,7 @@ Formato:
     - el aviso de prueba (`dentissa:vigilar --prueba`);
     - cómo consultar el detalle y cómo pararlo;
     - el monitor de UptimeRobot sobre `https://<dominio>/up` cada 5 minutos, con el resultado de T002.
-- [ ] T035 Actualizar `docs/security.md` según el plan (Correcciones de riesgos e Impacto en arquitectura, /analyze A23) — docs/security.md — hecho cuando: el validador no avisa de RS15 y cada corrección tiene su estado — cubre: CA10
+- [x] T035 Actualizar `docs/security.md` según el plan (Correcciones de riesgos e Impacto en arquitectura, /analyze A23) — docs/security.md — hecho cuando: el validador no avisa de RS15 y cada corrección tiene su estado — cubre: CA10
   - **Riesgos conocidos**, RS15 dividida:
     - RS15.b «en curso (spec 032)»;
     - RS15.c (disco de producción) con la excepción **EX3**;
@@ -369,6 +369,10 @@ Formato:
   - **Excepciones aceptadas:** EX3, con motivo, aprobador (el responsable), vencimiento al cargar el primer dato real de pacientes y aprobación pendiente en T096.
   - **Superficie de ataque:** el temporizador del vigilante como tarea programada y la salida SMTP; desaparece «ni tareas programadas».
   - **Manejo de secretos:** la contraseña de aplicación de la cuenta de envío, la clave pública en el servidor, la secreta solo en el PC y su segunda copia, y la fila de copias.
+  - nota: RS15 dividida: RS15.a pendiente (013); RS15.b «en curso (spec 032)»; RS15.c «en curso (spec 032: se acepta como excepción EX3 en su liberación)»; RS15.d pendiente → objetivo 5. EX3 añadida con motivo, residuo de shred, vencimiento al cargar el primer dato real de pacientes y aprobación pendiente en T096. Superficie de ataque con el temporizador y la salida SMTP (desaparece «ni tareas programadas»); Manejo de secretos con la cuenta de envío, la clave pública, la secreta solo en el PC y su segunda copia, y la rotación. El validador no da errores de RS15 tras T038 y T051.
+
+- [ ] T038 Declarar en la cobertura de riesgos de las specs 030 y 013 las correcciones de RS15 que crea T035: RS15.c (disco de producción) → aceptada como EX3 por la 032, y RS15.d (staging) → fuera, objetivo 5; con una fila de Historial en cada una (precedente: 031 T091 con RS8.c y RS8.d) — docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md — hecho cuando: el validador no da errores de RS15 en esas dos specs y no cambia ningún criterio — cubre: CA10 — depende: T035
+  - nota: añadida durante /implement (2026-10-25): al dividir RS15 en T035, el validador exige declarar RS15.c y RS15.d en las specs que ya citan RS15; aprobada por el usuario el 2026-10-25.
 
 ## Preparativos y ensayos en el servidor
 - [ ] T040 Preparativos del responsable (plan, Rollout; los hace el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge que cada paso está hecho, sin ningún secreto ni la frase: la huella de la clave pública, la salida de `gpg --show-keys` en el servidor sin `sec`, la frase con el mínimo cumplido, la frase pedida una sola vez y la cuenta de envío dedicada creada — cubre: CA8 — depende: T034
@@ -479,7 +483,7 @@ Formato:
 | CA7 | T015, T041 | T028, T033 |
 | CA8 | T014, T015, T016, T019, T040, T041, T050 | T026, T028, T029, T032 |
 | CA9 | T016, T017, T044 | T029, T030, T033, T037 |
-| CA10 | T018, T019, T041, T042 | T031, T032, T033, T035 |
+| CA10 | T018, T019, T041, T042 | T031, T032, T033, T035, T038 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -520,6 +524,7 @@ Formato:
 | .gitignore, .dockerignore | T026 |
 | tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019 |
 | docs/security.md, docs/observability.md, docs/deployment.md, docs/architecture.md, docs/roadmap.md, docs/adr/0007 | T035, T051, T090, T091 (el ADR se creó y aceptó en `/plan`) |
+| docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md (cobertura de RS15) | T038 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
