@@ -261,12 +261,14 @@ Formato:
   - nota: Los dos casos de T014 pasan; docker compose -f docker-compose.prod.yml config válido (con archivos de entorno vacíos en una carpeta temporal fuera del repo): app monta nginx_logs en /var/log/nginx con read_only y web sigue con escritura. Ningún .asc ni .gpg en git ls-files.
   - nota: Comprobado rompiendo (2026-10-25): sin :ro falla test_app_monta_el_log_de_nginx_en_solo_lectura; con *.asc solo en la raíz del .dockerignore falla test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo.
   - nota: Ruta protegida docker-compose.prod.yml: cambio aprobado por el usuario el 2026-10-23 (plan D10).
-- [ ] T027 Crear `deploy/preparar-vigilancia.sh` (D11) (control de TM10) — deploy/preparar-vigilancia.sh — hecho cuando: el caso del temporizador de T018 pasa y `bash -n` limpio — cubre: CA1, CA2 — depende: T018, T025
+- [x] T027 Crear `deploy/preparar-vigilancia.sh` (D11) (control de TM10) — deploy/preparar-vigilancia.sh — hecho cuando: el caso del temporizador de T018 pasa y `bash -n` limpio — cubre: CA1, CA2 — depende: T018, T025
   - Exige root.
   - Comprueba antes que gpg y la clave pública están en su sitio.
   - Instala `dentissa-vigilar.service` y `.timer`, `systemctl daemon-reload` y `enable --now`.
   - Es idempotente.
   - Al final muestra `systemctl list-timers dentissa-vigilar.timer`.
+  - nota: test_preparar_vigilancia_instala_el_temporizador pasa; bash -n limpio en Git Bash y en el contenedor. La instalación real se ensaya en el servidor en T042.
+  - nota: Además de lo de la tarea, comprueba que la cuenta de SUDO_USER está en el grupo docker (sin él, el servicio no puede usar docker compose) y al final da la orden del aviso de prueba.
 
 ### Copias cifradas (CA7–CA10)
 - [ ] T028 Cifrar en `respaldar.sh` según D2 (control de TM1 y TM2) — deploy/respaldar.sh — hecho cuando: los casos de T015 pasan, `bash -n` limpio y se comprueba rompiendo (quitar `pipefail` o la comprobación previa hace fallar su caso), anotado — cubre: CA7, CA8 — depende: T015
