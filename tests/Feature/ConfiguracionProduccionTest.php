@@ -628,7 +628,8 @@ class ConfiguracionProduccionTest extends TestCase
         $rechazo = $this->posicion($volver, 'if [[ $# -gt 2 || ( -n "${opcion}" && "${opcion}" != "--sin-levantar" ) ]]; then', 'volver.sh rechaza cualquier otro argumento (A40).');
         $this->assertLessThan($checkout, $rechazo, 'El rechazo va antes de cambiar nada.');
         $this->assertMatchesRegularExpression('/^if \[\[ \$# -gt 2[^\n]*\nerror "[^"\n]*restaurar\.sh [^"\n]*--volver \$\{ref\}"$/m', $volver, 'El rechazo da la orden de restaurar.sh --volver.');
-        $this->assertStringNotContainsString('deploy/restaurar.sh', $volver, 'volver.sh ya no restaura.');
+        // El mensaje del rechazo nombra restaurar.sh; lo que no puede es ejecutarlo.
+        $this->assertDoesNotMatchRegularExpression('/^bash deploy\/restaurar\.sh\b/m', $volver, 'volver.sh ya no restaura.');
 
         $sinLevantar = $this->posicion($volver, 'if [[ "${opcion}" == "--sin-levantar" ]]; then', 'volver.sh admite --sin-levantar.');
         $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d db\nesperar_db\nreturn 0\nfi$/m', $volver);
