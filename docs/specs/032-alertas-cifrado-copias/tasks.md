@@ -336,7 +336,7 @@ Formato:
   - nota: A42 aplicado: «MAIL_HOST definido y MAIL_PORT=465 (TLS obligatorio)»; con el 587 da FALLO.
 
 ### Guía y riesgo aceptado (CA3, CA6, CA7, CA9, CA10)
-- [ ] T033 Actualizar la guía de las copias — deploy/README.md — hecho cuando: cada punto de CA7, CA9 y CA10 sobre la guía tiene su apartado y los comandos coinciden con los scripts de T028–T031 y T037 · verificación manual: el usuario revisa §7 y §8 — cubre: CA7, CA9, CA10 — depende: T028, T029, T030, T031, T037
+- [x] T033 Actualizar la guía de las copias — deploy/README.md — hecho cuando: cada punto de CA7, CA9 y CA10 sobre la guía tiene su apartado y los comandos coinciden con los scripts de T028–T031 y T037 · verificación manual: el usuario revisa §7 y §8 — cubre: CA7, CA9, CA10 — depende: T028, T029, T030, T031, T037
   - §7, la clave del responsable (D14):
     - se genera en el PC con una frase de al menos 5 palabras al azar o 20 caracteres, y sin caducidad (/analyze A19);
     - la pública se lleva al servidor con permisos 600;
@@ -349,7 +349,9 @@ Formato:
     - las copias en claro del PC se sustituyen y se borran.
   - §8: volver con copia desde el PC con `restaurar.sh --volver`.
   - Orden del primer despliegue de la 032 (D6), con el paso 0, `cifrar-copias-antiguas.sh` y `find / -xdev` de volcados en claro.
-- [ ] T034 Actualizar la guía de los avisos (control de TM13) — deploy/README.md — hecho cuando: cada punto de CA3 y CA6 sobre la guía tiene su apartado y ningún paso tiene coste · verificación manual: el usuario revisa §4 y la sección de avisos — cubre: CA3, CA6 — depende: T002, T025, T027, T032, T033
+  - nota: §7 (la clave: frase mínima, sin caducidad, segunda copia fuera del PC, qué pasa si se pierden; hacer, llevar y restaurar desde el PC; copias en claro del PC), §8 (volver con copia desde el PC con restaurar.sh --volver; la forma de la 030 ya no restaura; aviso del temporizador) y §9 «Primera liberación con copias cifradas» (paso 0, checkout a mano, cifrar-copias-antiguas.sh, verificar.sh completo y find / -xdev). Órdenes contrastadas con respaldar.sh, restaurar.sh, volver.sh, cifrar-copias-antiguas.sh y desplegar.sh.
+  - nota: verificación manual OK 2026-10-25 (usuario): revisó §7, §8 y §9 en el chat.
+- [x] T034 Actualizar la guía de los avisos (control de TM13) — deploy/README.md — hecho cuando: cada punto de CA3 y CA6 sobre la guía tiene su apartado y ningún paso tiene coste · verificación manual: el usuario revisa §4 y la sección de avisos — cubre: CA3, CA6 — depende: T002, T025, T027, T032, T033
   - §4 `app.env`, con las variables de correo de una cuenta de Gmail que solo sirve para enviar (D9, /analyze A6):
     - verificación en dos pasos;
     - contraseña de aplicación;
@@ -360,6 +362,8 @@ Formato:
     - el aviso de prueba (`dentissa:vigilar --prueba`);
     - cómo consultar el detalle y cómo pararlo;
     - el monitor de UptimeRobot sobre `https://<dominio>/up` cada 5 minutos, con el resultado de T002.
+  - nota: §4 con las variables de correo de la cuenta de Gmail solo para enviar (verificación en dos pasos, contraseña de aplicación sin espacios, puerto 465, marcadores que verificar.sh rechaza) y §12 nueva (tabla de avisos, silencio, instalar el temporizador, aviso de prueba, consultar el detalle, pararlo y UptimeRobot con el resultado de T002). Ningún paso tiene coste.
+  - nota: verificación manual OK 2026-10-25 (usuario): revisó §4 y §12 en el chat.
 - [x] T035 Actualizar `docs/security.md` según el plan (Correcciones de riesgos e Impacto en arquitectura, /analyze A23) — docs/security.md — hecho cuando: el validador no avisa de RS15 y cada corrección tiene su estado — cubre: CA10
   - **Riesgos conocidos**, RS15 dividida:
     - RS15.b «en curso (spec 032)»;
