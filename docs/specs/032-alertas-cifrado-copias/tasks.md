@@ -2,6 +2,7 @@
 spec: 032-alertas-cifrado-copias
 plan: plan.md
 status: approved
+impl_base: 853226f
 ---
 
 # Tareas · 032 Alertas y copias cifradas en producción
@@ -45,7 +46,8 @@ Formato:
 | P10 Rutas indexables descubribles | ➖ | Sin rutas nuevas ni cambiadas. | — |
 
 ## Preparación
-- [ ] T001 Registrar la línea base: commit de partida, recuento de `php artisan test`, `composer audit --locked`, `npm audit`, y `gpg --version` y `ssh -V` del Git Bash del PC — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota bajo esta tarea recoge los seis datos
+- [x] T001 Registrar la línea base: commit de partida, recuento de `php artisan test`, `composer audit --locked`, `npm audit`, y `gpg --version` y `ssh -V` del Git Bash del PC — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota bajo esta tarea recoge los seis datos
+  - nota: línea base 2026-10-25: commit de partida 853226f (impl_base); php artisan test 353 passed (6666 aserciones), en un contenedor efímero de dentissa-app:latest con el worktree montado y el vendor del Compose local; composer audit --locked sin avisos; npm audit 0 vulnerabilidades; Git Bash del PC con gpg (GnuPG) 2.4.9 y OpenSSH_10.3p1.
 - [ ] T002 Comprobar en la web de UptimeRobot (plan D13) que el plan gratuito permite un monitor HTTP(s) cada 5 minutos con avisos por correo al caer y al volver, y si pide confirmación o tarjeta — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge el intervalo mínimo, los tipos de aviso y que no hay coste, con la fecha de la consulta — cubre: CA3
 - [ ] T003 Crear `config/avisos.php` según el contrato del plan (D8, D9) — config/avisos.php, .env.example — hecho cuando: `php artisan config:show avisos` muestra los valores por defecto y `.env.example` no tiene valores
   - `config/avisos.php`:
