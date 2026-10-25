@@ -257,7 +257,10 @@ Formato:
   - nota: El aviso de prueba lo envía el propio comando (sin método nuevo en Vigilante), con el mismo Log::warning sin mensaje si falla.
 
 ### Compose, temporizador y archivos ignorados (CA1, CA8)
-- [ ] T026 Montar `nginx_logs:/var/log/nginx:ro` en `app` (D10; ruta protegida aprobada por el usuario el 2026-10-23) e ignorar `*.asc` y `*.gpg` en `.gitignore`, y `**/*.asc` y `**/*.gpg` en `.dockerignore` (control de TM1, TM9 y TM14) — docker-compose.prod.yml, .gitignore, .dockerignore — hecho cuando: los casos de T014 pasan y `docker compose -f docker-compose.prod.yml config` es válido, anotado — cubre: CA1, CA8 — depende: T014
+- [x] T026 Montar `nginx_logs:/var/log/nginx:ro` en `app` (D10; ruta protegida aprobada por el usuario el 2026-10-23) e ignorar `*.asc` y `*.gpg` en `.gitignore`, y `**/*.asc` y `**/*.gpg` en `.dockerignore` (control de TM1, TM9 y TM14) — docker-compose.prod.yml, .gitignore, .dockerignore — hecho cuando: los casos de T014 pasan y `docker compose -f docker-compose.prod.yml config` es válido, anotado — cubre: CA1, CA8 — depende: T014
+  - nota: Los dos casos de T014 pasan; docker compose -f docker-compose.prod.yml config válido (con archivos de entorno vacíos en una carpeta temporal fuera del repo): app monta nginx_logs en /var/log/nginx con read_only y web sigue con escritura. Ningún .asc ni .gpg en git ls-files.
+  - nota: Comprobado rompiendo (2026-10-25): sin :ro falla test_app_monta_el_log_de_nginx_en_solo_lectura; con *.asc solo en la raíz del .dockerignore falla test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo.
+  - nota: Ruta protegida docker-compose.prod.yml: cambio aprobado por el usuario el 2026-10-23 (plan D10).
 - [ ] T027 Crear `deploy/preparar-vigilancia.sh` (D11) (control de TM10) — deploy/preparar-vigilancia.sh — hecho cuando: el caso del temporizador de T018 pasa y `bash -n` limpio — cubre: CA1, CA2 — depende: T018, T025
   - Exige root.
   - Comprueba antes que gpg y la clave pública están en su sitio.
