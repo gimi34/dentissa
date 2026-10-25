@@ -8,7 +8,8 @@ status: draft
 
 > Versión 2 (2026-10-25), tras `/plan 032 --fix` por los hallazgos A1–A28 de `/analyze` r1. La
 > versión 1 está en `history/tasks.v1.md`. Ninguna tarea estaba empezada; se conservan los números
-> de las que siguen teniendo sentido, y T022 no se reutiliza.
+> de las que siguen teniendo sentido, y T022 no se reutiliza. Corregida en su lugar tras `/analyze`
+> r2 (A29, A32, A33, A34, A36, A37); los aceptados de r2 van como notas en sus tareas.
 
 Formato:
 `- [ ] T### [P] <verbo + qué> — <archivos> — hecho cuando: <criterio> — cubre: CA# — depende: T###`
@@ -38,7 +39,7 @@ Formato:
 | P4 Entrada validada y SQL con bindings | ✅ | T023 lee el log de acceso con una expresión anclada a la estructura de `combined` y descarta lo que no encaja (T011). T036 mantiene la consulta de Eloquent con bindings. Sin SQL nuevo. | test: T011 (`test_ignora_las_lineas_que_no_tienen_el_formato`, `test_no_se_engana_con_corchetes_ni_espacios`) · lint: semgrep `p/php` en T050 |
 | P5 Nada sensible en el repo | ✅ | Ningún secreto en scripts, tests ni `.env.example` (T003 solo añade nombres vacíos). T026 ignora `*.asc` y `*.gpg` en el repo y en el paquete, a cualquier profundidad. Los preparativos de T040 se hacen fuera del repo, y la clave de prueba de T029 queda fuera del clon. | test: T014 · lint: gitleaks en T050 |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Ninguna tarea añade dependencias de Composer ni de npm; gpg, `ssh` y `awk` son del sistema (Ubuntu y Git para Windows). | lint: `composer audit --locked` y `npm audit --audit-level=high` en T001 y T050; `trivy image` en `/release` |
-| P7 Auditoría de datos sensibles | ➖ | Ninguna tarea añade acciones auditables. T020 escribe en el canal `seguridad`, que alerta y no audita; los inicios de sesión fallidos siguen bajo la excepción P7 de la 030, que vence con la 021. | — |
+| P7 Auditoría de datos sensibles | ❌ aceptado | T036 toca el login y T020 escribe los fallos de acceso en un canal de alertas sin evento de auditoría. Se apoya en la excepción P7 de la 030 (aprobada por el usuario el 2026-10-03), que vence con la 021 (/analyze A37). Ninguna tarea añade acciones auditables. | `/review`: la excepción de la 030 sigue vigente |
 | P8 Correlación y logs limpios | ❌ aceptado | El canal `seguridad` (T020) no lleva `X-Request-Id`, que no existe hasta la 020. Excepción del plan aprobada por el usuario el 2026-10-25 (/analyze A4), que vence al liberar la 020. Logs limpios: T020 escribe solo tipo, método y huellas HMAC con clave derivada; T024 deja `Log::warning('aviso no enviado', ['tipo' => …])` sin el mensaje de la excepción. | test: T010 (`test_el_registro_no_contiene_ip_ni_correo`) · manual: revisión de cada `Log::` del diff en T050 |
 | P9 La interfaz usa solo el sistema de diseño | ➖ | Sin pantallas; el correo es texto plano. | — |
 | P10 Rutas indexables descubribles | ➖ | Sin rutas nuevas ni cambiadas. | — |
@@ -62,7 +63,8 @@ Formato:
   - Casos que escriben una línea en el canal `seguridad`:
     - el login con contraseña equivocada, contra una cuenta y contra un correo sin cuenta: `fallido`/`contrasena`;
     - la vuelta de Google fallida: `fallido`/`google` con `cuenta` `null`;
-    - un intento bloqueado (`Lockout`): `bloqueado`.
+    - un intento bloqueado (`Lockout`) del login: `bloqueado`/`contrasena`;
+    - un intento bloqueado en la vuelta de Google (limitador `google`): `bloqueado`/`google` con `cuenta` `null`, y la respuesta del limitador no cambia (/analyze A33).
   - El login correcto no escribe nada.
   - `test_el_registro_no_contiene_ip_ni_correo`: ni la IP, ni el correo, ni el id.
   - Huellas:
@@ -70,6 +72,7 @@ Formato:
     - una cuenta inactiva da la huella de su cuenta (`cuenta:<id>`);
     - el `Lockout` da la misma huella que el `Failed` de esa cuenta (/analyze A12).
   - La línea tiene la forma del contrato: `message` `acceso_fallido` y los cuatro campos en `context` (/analyze A11).
+  - nota: aceptado en /analyze r2 (2026-10-25), A45 — el canal declara `name` `seguridad`, o el test comprueba el valor real de `channel`.
 - [ ] T011 [P] Escribir en `VigilanteTest` los casos de errores (D8, con `Mail::fake()`, reloj fijo y logs en una carpeta temporal) — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada (no existe `App\Avisos\Vigilante`), anotado — cubre: CA1
   - `test_mas_del_1_por_ciento_de_5xx_avisa`, `test_el_1_por_ciento_no_avisa`.
   - `test_ventana_de_5_minutos`: los 5xx de hace 6 minutos no cuentan.
@@ -79,6 +82,7 @@ Formato:
   - `test_primera_ejecucion_empieza_al_final` (/analyze A10).
   - `test_lo_que_supera_el_tope_se_lee_despues` (/analyze A10).
   - `test_el_estado_no_guarda_peticiones` (TM14).
+  - `test_avisa_si_el_log_cambia_de_formato`: con al menos 20 líneas en la ventana y más de la mitad sin el formato, llega el aviso `formato` (/analyze A36).
 - [ ] T012 Añadir a `VigilanteTest` los casos de accesos y de silencio — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada, anotado — cubre: CA2, CA4 — depende: T011
   - Accesos, leyendo el canal `seguridad` de hoy y de ayer:
     - `test_mas_de_10_fallos_por_origen_avisa`, `test_mas_de_10_fallos_por_cuenta_avisa` y `test_10_fallos_no_avisa`;
@@ -89,6 +93,7 @@ Formato:
     - `test_los_tipos_tienen_silencio_propio`;
     - `test_cada_evento_se_cuenta_una_vez`: 11 fallos en un minuto y 10 ejecuciones dan un aviso con 11 (/analyze A9).
   - `test_un_envio_fallido_no_marca_el_aviso_como_enviado`: el transporte lanza una excepción, queda `Log::warning` con el tipo y sin el mensaje, y se reintenta al minuto siguiente.
+  - nota: aceptado en /analyze r2 (2026-10-25), A44 — la lectura del canal `seguridad` es incremental o con tope, con su caso en VigilanteTest.
 - [ ] T013 [P] Escribir `AvisoProduccionTest` — tests/Feature/AvisoProduccionTest.php — hecho cuando: falla por la razón esperada (no existen el correo ni el comando), anotado — cubre: CA5, CA6
   - `test_el_correo_no_lleva_datos_personales_ni_secretos`: con logs de entrada que contienen una IP y un correo, y con `APP_KEY` y `MAIL_PASSWORD` de prueba, ni el cuerpo ni el asunto contienen ninguno, ni las huellas.
   - `test_lleva_tipo_recuentos_horas_y_como_consultar`: asunto `[Dentissa] <tipo>`, recuento, inicio y fin en `CLINICA_ZONA_HORARIA`, acumulado desde el aviso anterior y las órdenes de consulta, en español.
@@ -108,19 +113,25 @@ Formato:
   - Conserva 14 copias `dentissa-*.sql.gz.gpg`.
 - [ ] T016 Añadir a `ConfiguracionProduccionTest` los casos de `restaurar.sh`, que se ejecuta en el PC (D3) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA8, CA9 — depende: T015
   - `test_restaurar_comprueba_antes_de_borrar`: la pasada de comprobación local (`gpg --decrypt`, `gzip -cd` y `-- Dump completed`) va antes de la confirmación y de cualquier `ssh` que pare servicios o haga `DROP DATABASE`; `--solo-comprobar` sale tras ella.
-  - `test_restaurar_distingue_los_rechazos`: los tres mensajes de Contratos, a partir de `--status-fd` y de `gzip` (/analyze A13).
+  - `test_restaurar_distingue_los_rechazos`: los cuatro mensajes de Contratos, con «no se pudo usar la clave» distinto de «alterada o cortada», a partir de `--status-fd` y de `gzip` (/analyze A13, A34).
+  - `test_restaurar_no_toca_la_base_sin_datos_descifrados` (/analyze A29):
+    - en la orden remota de la pasada 2, el `DROP`/`CREATE` va después de leer la primera línea del volcado y solo si la hay;
+    - `pipefail` en el PC y en la orden remota;
+    - el éxito exige el código 0 de gpg y de la orden remota, y `-- Dump completed` como última línea cargada.
   - `test_la_clave_nunca_llega_al_servidor`:
     - sin `--import`, `--export-secret-keys`, `--pinentry-mode` ni `scp` o `ssh` de archivos `.asc`;
     - la entrada del `ssh` de la carga es la salida de `gpg --decrypt`;
     - ningún script de `deploy/` que corre en el servidor llama a `gpg --decrypt` ni importa claves (/analyze A5).
   - Usa `DENTISSA_APP` (por defecto `/opt/dentissa/app`) y no `dirname "$0"` para las órdenes del servidor (/analyze A2).
+  - nota: aceptado en /analyze r2 (2026-10-25), A43 — `<ref>` y `DENTISSA_APP` se validan (tag, commit o ruta absoluta sin espacios) o se citan con `printf %q` en la orden remota, con su caso en el test.
 - [ ] T017 Añadir a `ConfiguracionProduccionTest` los casos de la vuelta atrás (D4) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los dos casos fallan por la razón esperada, anotado — cubre: CA9 — depende: T016
   - `test_volver_con_copia_no_depende_de_la_version_de_destino` (/analyze A1, A17):
     - `volver.sh` admite `--sin-levantar` (checkout, construcción, `app` y `web` parados, `db` sana, sin `up` de `app` ni `web`);
     - rechaza un segundo argumento de archivo con la orden de `restaurar.sh --volver`;
     - avisa de parar `dentissa-vigilar.timer` si el destino no tiene `app/Console/Commands/Vigilar.php`;
     - `restaurar.sh --volver` llama a `volver.sh <ref> --sin-levantar` y carga y levanta con sus propias órdenes de `docker compose`.
-  - `test_desplegar_imprime_la_vuelta_del_contrato`: si la verificación falla, `desplegar.sh` imprime `volver.sh <anterior>` sin copia, y la orden de `restaurar.sh … --volver <anterior>` cuando hubo migraciones.
+  - `test_desplegar_imprime_la_vuelta_del_contrato`: si la verificación falla, `desplegar.sh` imprime `volver.sh <anterior>` sin copia solo cuando `migrate:status --pending` contó 0 migraciones antes de `migrate --force`; en otro caso, o si no pudo contarlas, imprime la orden de `restaurar.sh … --volver <anterior>` (/analyze A32).
+  - nota: aceptado en /analyze r2 (2026-10-25), A40 — cualquier segundo argumento de `volver.sh` distinto de `--sin-levantar` se rechaza antes del checkout, con su caso en el test.
 - [ ] T018 Añadir a `ConfiguracionProduccionTest` los casos de los dos scripts nuevos — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan por la razón esperada, anotado — cubre: CA1, CA10 — depende: T017
   - `test_cifrar_copias_antiguas_cifra_antes_de_borrar` (D5):
     - `gzip -t` y `-- Dump completed` antes de cifrar;
@@ -137,6 +148,7 @@ Formato:
   - `test_verificar_no_imprime_valores_del_correo`.
   - La sección «Avisos y copias (spec 032)» está dentro del bloque que no corre con `--interna` (/analyze A3). Comprueba el temporizador activo, la clave pública sin `sec`, el llavero sin claves secretas y la lectura del log de acceso desde `app`.
   - `test_verificar_falla_con_copias_en_claro`: `dentissa-*.sql.gz` en `/var/backups/dentissa` o en la carpeta personal de la cuenta de despliegue.
+  - nota: aceptado en /analyze r2 (2026-10-25), A42 — `verificar.sh` exige TLS obligatorio en el envío (465 con TLS implícito, o 587 con el cifrado exigido en la configuración del mailer), con su caso en el test.
 
 ## Implementación
 ### Registro de fallos de acceso (CA2)
@@ -144,9 +156,12 @@ Formato:
 - [ ] T020 Añadir el canal `seguridad` (`daily`, 14 días, `JsonFormatter`) y crear `App\Listeners\RegistrarFalloAcceso` para `Failed` y `Lockout` según el contrato de la línea (control de TM5 y TM8) — config/logging.php, app/Listeners/RegistrarFalloAcceso.php — hecho cuando: T010 pasa dos veces, `LimiteIntentosTest` sigue en verde, y se comprueba rompiendo (escribir la IP en `origen` hace fallar `test_el_registro_no_contiene_ip_ni_correo`), anotado — cubre: CA2 — depende: T003, T010, T036
   - `message` `acceso_fallido`; `context` con `tipo`, `metodo`, `origen` y `cuenta`.
   - `origen` = HMAC de `AuthController::origenLimite()`.
-  - `cuenta` = HMAC de `AuthController::sujetoLimite()`: el correo sale de `Failed::$credentials` o del campo `email` de la petición en `Lockout`; es `null` en la vuelta de Google.
+  - `metodo`: `google` en un `Failed` con `proveedor` `google` o en un `Lockout` de la ruta de la vuelta de Google; `contrasena` en otro caso (/analyze A33).
+  - `cuenta` = HMAC de `AuthController::sujetoLimite()`: el correo sale de `Failed::$credentials` o del campo `email` de la petición en `Lockout`, y solo se usa si es un texto no vacío; es `null` en la vuelta de Google.
+  - El listener nunca cambia la respuesta del limitador.
   - Clave HMAC derivada: `hash_hmac('sha256', 'dentissa-seguridad', APP_KEY)` (/analyze A27).
   - Huellas recortadas a 16 hexadecimales.
+  - nota: aceptado en /analyze r2 (2026-10-25), A45 — `name` `seguridad` en el canal, o el contrato con el valor real.
 
 ### Correo y vigilante (CA1, CA2, CA4, CA5, CA6)
 - [ ] T021 Crear `App\Mail\AvisoProduccion` y su plantilla de texto en español según el contrato del correo (D9) (control de TM7) — app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php — hecho cuando: los casos de contenido de T013 pasan y se comprueba rompiendo (pasar una línea de log al cuerpo hace fallar `test_el_correo_no_lleva_datos_personales_ni_secretos`), anotado — cubre: CA5 — depende: T013
@@ -167,14 +182,16 @@ Formato:
     - sin estado, empieza al final del log;
     - expresión anclada a `combined`: el código es el número que sigue a la primera cadena entre comillas, y la hora es el último `[…]` antes de ella;
     - ventana de 5 minutos y umbral > 1 %;
+    - aviso `formato` si, con al menos 20 líneas en la ventana, más de la mitad no encajan (/analyze A36);
     - reloj y rutas inyectados.
 - [ ] T024 Añadir a `Vigilante` el aviso de accesos y el silencio (D8) (control de TM5, TM6 y TM10) — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T011 y T012 pasan dos veces y se comprueba rompiendo (quitar el silencio hace fallar `test_silencio_de_30_minutos_acumula`, y contar desde el inicio de la ventana hace fallar `test_cada_evento_se_cuenta_una_vez`), anotado — cubre: CA2, CA4 — depende: T012, T020, T023
   - Accesos: lee las líneas del canal `seguridad` de hoy y de ayer dentro de la ventana (`datetime` y `context`, ignorando `extra`) y las agrupa por origen y por cuenta; umbral > 10.
   - Silencio:
-    - 30 minutos por tipo (`errores`, `accesos`);
+    - 30 minutos por tipo (`errores`, `accesos`, `formato`);
     - cada aviso cuenta los eventos distintos desde el fin del intervalo del anterior;
     - lo pendiente se envía al acabar el silencio.
   - Envío fallido: no actualiza el último envío y deja `Log::warning('aviso no enviado', ['tipo' => …])`.
+  - nota: aceptado en /analyze r2 (2026-10-25), A44 — lectura incremental o con tope del canal `seguridad`.
 - [ ] T025 Crear el comando `dentissa:vigilar` y su opción `--prueba` (D8, CA6) (control de TM10) — app/Console/Commands/Vigilar.php — hecho cuando: T013 pasa completo dos veces, `php artisan list` muestra `dentissa:vigilar`, y en local `php artisan dentissa:vigilar --prueba` deja el correo en `laravel.log` (`MAIL_MAILER=log`), anotado — cubre: CA1, CA6 — depende: T013, T024
   - Sin opción, ejecuta el vigilante y sale con código distinto de 0 si un envío falla.
   - Con `--prueba`, envía un aviso de prueba a `AVISOS_CORREO`.
@@ -195,23 +212,26 @@ Formato:
   - Tras la tubería, comprueba `-- Dump completed` en la marca. Entonces hace `mv` y `chmod 600`; si algo falla, borra `.part` y la marca.
   - Conserva 14 copias `.sql.gz.gpg`.
   - La última línea sigue siendo la ruta de la copia.
-- [ ] T029 Reescribir `restaurar.sh` para el PC según D3 y el contrato del plan (control de TM3, TM4 y TM11) — deploy/restaurar.sh — hecho cuando: los casos de T016 pasan, `bash -n` limpio, y se comprueba rompiendo (mover la comprobación después del `ssh` del `DROP` hace fallar `test_restaurar_comprueba_antes_de_borrar`), anotado · verificación manual en el PC con Git Bash, con una clave de prueba y una copia de prueba fuera del clon: `--solo-comprobar` da OK con la copia buena, y la copia para otra clave, la copia con un byte cambiado y la copia cortada dan cada una su mensaje, anotado — cubre: CA8, CA9 — depende: T016
+- [ ] T029 Reescribir `restaurar.sh` para el PC según D3 y el contrato del plan (control de TM3, TM4 y TM11) — deploy/restaurar.sh — hecho cuando: los casos de T016 pasan, `bash -n` limpio, y se comprueba rompiendo (mover la comprobación después del `ssh` del `DROP` hace fallar `test_restaurar_comprueba_antes_de_borrar`), anotado · verificación manual en el PC con Git Bash, con una clave de prueba y una copia de prueba fuera del clon: `--solo-comprobar` da OK con la copia buena, y la copia para otra clave, la copia con un byte cambiado y la copia cortada dan cada una su mensaje; una frase incorrecta da «no se pudo usar la clave»; y con la caché del agente vaciada entre pasadas (`gpgconf --reload gpg-agent`) y la frase cancelada en la pasada 2, la orden remota no recibe datos y no toca nada (probado contra una orden remota de prueba que solo registra si llega la primera línea), anotado — cubre: CA8, CA9 — depende: T016
   - Uso: `restaurar.sh <copia.sql.gz.gpg> <cuenta@servidor> [--volver <ref>] [--solo-comprobar]`.
-  - Pasada 1, local, con `--status-fd` y los tres mensajes de Contratos.
+  - Pasada 1, local, con `--status-fd` y los cuatro mensajes de Contratos.
   - Confirmación con el nombre de la base, leído por SSH.
-  - Pasada 2:
+  - Pasada 2 (/analyze A29):
     - para `app` y `web`;
-    - `DROP`/`CREATE` por SSH;
-    - `gpg --decrypt` → `ssh` → `gzip -cd | docker compose … exec -T db mariadb`;
+    - `gpg --decrypt` → `ssh` → una orden remota que espera la primera línea descomprimida y solo entonces hace `DROP`/`CREATE` y carga esa línea y el resto en `docker compose … exec -T db mariadb`;
+    - sin datos, no toca la base y vuelve a levantar `app` y `web`;
+    - éxito solo con código 0 de gpg y de la orden remota, con `pipefail` en los dos lados y `-- Dump completed` como última línea cargada;
     - levanta `app` y `web`, rehace las cachés y ejecuta `verificar.sh --interna`.
   - Con `--volver <ref>`, antes de la pasada 2, `ssh … bash deploy/volver.sh <ref> --sin-levantar`.
   - En el servidor usa `DENTISSA_APP` (por defecto `/opt/dentissa/app`).
   - Si la carga se corta, da la orden para repetir.
+  - nota: aceptado en /analyze r2 (2026-10-25), A43 — validar o citar `<ref>` y `DENTISSA_APP` en la orden remota.
 - [ ] T030 Adaptar `volver.sh` según D4 (control de TM11) — deploy/volver.sh — hecho cuando: el caso de `volver.sh` de T017 pasa, `bash -n` limpio y se comprueba rompiendo (levantar `app` con `--sin-levantar` hace fallar el caso), anotado — cubre: CA9 — depende: T017, T029
   - `volver.sh <ref> [--sin-levantar]`.
   - Un segundo argumento de archivo se rechaza antes de cambiar nada, con la orden de `restaurar.sh --volver`.
   - Avisa de parar el temporizador si el destino no tiene `Vigilar.php`.
-- [ ] T037 Alinear con D4 la orden de vuelta que imprime `desplegar.sh` cuando falla la verificación: `volver.sh <anterior>` si no hubo migraciones y, si las hubo, `scp <servidor>:<copia> .` y `bash deploy/restaurar.sh <copia> <servidor> --volver <anterior>` desde el PC (/analyze A17) — deploy/desplegar.sh — hecho cuando: `test_desplegar_imprime_la_vuelta_del_contrato` de T017 pasa y `bash -n` limpio — cubre: CA9 — depende: T017, T030
+  - nota: aceptado en /analyze r2 (2026-10-25), A40 — rechazar cualquier segundo argumento distinto de `--sin-levantar` antes del checkout.
+- [ ] T037 Alinear con D4 la orden de vuelta que imprime `desplegar.sh` cuando falla la verificación: contar antes de `migrate --force` las migraciones pendientes con `php artisan migrate:status --pending`; `volver.sh <anterior>` solo si contó 0 y, en otro caso o si no pudo contarlas (/analyze A32), `scp <servidor>:<copia> .` y `bash deploy/restaurar.sh <copia> <servidor> --volver <anterior>` desde el PC (/analyze A17) — deploy/desplegar.sh — hecho cuando: `test_desplegar_imprime_la_vuelta_del_contrato` de T017 pasa y `bash -n` limpio — cubre: CA9 — depende: T017, T030
 - [ ] T031 Crear `deploy/cifrar-copias-antiguas.sh` según D5 — deploy/cifrar-copias-antiguas.sh — hecho cuando: el caso de T018 pasa y `bash -n` limpio — cubre: CA10 — depende: T018
   - Por cada `dentissa-*.sql.gz` de `/var/backups/dentissa`, comprueba `gzip -t` y `-- Dump completed`.
   - Las buenas se cifran hacia `.part` y luego `mv` a `.sql.gz.gpg`; las dañadas, como `.sql.gz.danada.gpg`.
@@ -221,6 +241,7 @@ Formato:
   - El bloque de configuración pasa de 12 a 16 comprobaciones de correo, con `MAIL_FROM_ADDRESS`.
   - Sección nueva «Avisos y copias (spec 032)», fuera de `--interna`. La búsqueda de copias en claro incluye la carpeta personal de la cuenta de despliegue.
   - Ninguna comprobación imprime valores.
+  - nota: aceptado en /analyze r2 (2026-10-25), A42 — comprobación de TLS obligatorio en el envío.
 
 ### Guía y riesgo aceptado (CA3, CA6, CA7, CA9, CA10)
 - [ ] T033 Actualizar la guía de las copias — deploy/README.md — hecho cuando: cada punto de CA7, CA9 y CA10 sobre la guía tiene su apartado y los comandos coinciden con los scripts de T028–T031 y T037 · verificación manual: el usuario revisa §7 y §8 — cubre: CA7, CA9, CA10 — depende: T028, T029, T030, T031, T037
@@ -260,7 +281,7 @@ Formato:
 ## Preparativos y ensayos en el servidor
 - [ ] T040 Preparativos del responsable (plan, Rollout; los hace el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge que cada paso está hecho, sin ningún secreto ni la frase: la huella de la clave pública, la salida de `gpg --show-keys` en el servidor sin `sec`, la frase con el mínimo cumplido, la frase pedida una sola vez y la cuenta de envío dedicada creada — cubre: CA8 — depende: T034
   - Par de claves en el PC (D14), con una frase que cumpla el mínimo de la guía, y segunda copia de la secreta fuera del PC.
-  - En el PC, dos descifrados seguidos de una prueba piden la frase una sola vez (D3).
+  - En el PC, dos descifrados seguidos de una prueba piden la frase una sola vez (D3), y la nota recoge el `default-cache-ttl` del agente (`gpgconf --list-options gpg-agent`).
   - `copias.pub.asc` en `/opt/dentissa/entorno` (600).
   - Cuenta de Gmail solo para enviar (TM13), con verificación en dos pasos y contraseña de aplicación, y las variables de correo en `app.env`.
   - Cuenta de UptimeRobot.
@@ -271,6 +292,7 @@ Formato:
   - El servidor no descifra la copia: `gpg --decrypt` falla.
   - Con la clave pública renombrada, `desplegar.sh <ref distinta del HEAD>` se detiene en «Copia de la base» y el `HEAD` no cambia (/analyze A15).
   - `cifrar-copias-antiguas.sh` y `verificar.sh` completo, sin copias en claro.
+  - nota: aceptado en /analyze r2 (2026-10-25), A30 — el `verificar.sh` completo de T041 anota como esperado el FALLO «temporizador activo» (el temporizador se instala en T042); el de T042 tiene que salir todo OK.
 - [ ] T042 Ensayo de los avisos (aprobación explícita antes; lo ejecuta el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, los tiempos de llegada y cada resultado — cubre: CA1, CA2, CA5, CA6, CA10 — depende: T041
   - `preparar-vigilancia.sh`, y `systemctl list-timers` con la siguiente ejecución en menos de un minuto.
   - El aviso de prueba llega en ≤ 5 minutos, desde la cuenta de envío, al correo de siempre.
@@ -282,6 +304,7 @@ Formato:
     - con el `<…>` de la guía en `MAIL_PASSWORD` y en `MAIL_FROM_ADDRESS`;
     - con una copia en claro;
     - con el temporizador parado.
+  - nota: aceptado en /analyze r2 (2026-10-25), A41 — «con una copia en claro» usa un señuelo sin datos, `dentissa-señuelo.sql.gz`, que se borra al terminar.
 - [ ] T043 Ensayo de la caída vista desde fuera (aprobación explícita antes; lo ejecuta el usuario): monitor de UptimeRobot sobre `https://dentissa.app/up` cada 5 minutos en verde; `cloudflared` parado ≥ 6 minutos → correo de caída en ≤ 10 minutos; al arrancarlo, correo de vuelta — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación y las horas de parada, de los dos correos y de la vuelta — cubre: CA3 — depende: T042
 - [ ] T044 Ensayo de la restauración y la vuelta desde el PC (aprobación explícita antes; lo ejecuta el usuario, con la segunda copia de la clave importada en un llavero temporal del PC con `GNUPGHOME`) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, la foto y la comparación, cada rechazo con su mensaje y el resultado de la vuelta — cubre: CA9 — depende: T043
   - Foto, con `app` y `web` parados: `CHECKSUM TABLE` y recuento de filas de cada tabla (/analyze A14).
@@ -289,13 +312,17 @@ Formato:
   - `restaurar.sh <copia> <servidor>` → mismos valores que la foto.
   - `gpg --list-secret-keys` y `/dev/shm` del servidor sin claves durante y después (/analyze A5).
   - La copia para otra clave, la copia con un byte cambiado y la copia cortada se detienen antes de confirmar, cada una con su mensaje (/analyze A13), y la foto de la base no cambia.
+  - Con la caché del agente vaciada entre pasadas y la frase cancelada en la pasada 2, la base no cambia y `app` y `web` vuelven a estar en marcha (/analyze A29).
   - `restaurar.sh <copia> <servidor> --volver v0.10.0`:
     - pide la frase una sola vez (/analyze A1);
     - deja la base igual que la foto;
     - avisa de parar el temporizador, que se para.
+  - nota: aceptado en /analyze r2 (2026-10-25), A31 — la comparación con la foto se hace antes de dar tráfico a la aplicación, o excluyendo las tablas volátiles (`cache`, `sessions`, `jobs`) declarándolo; la nota dice cómo.
+  - nota: aceptado en /analyze r2 (2026-10-25), A35 — la nota recoge la duración de `restaurar.sh --volver` frente a los 15 min de 030 CA7.
 
 ## Integración y documentación
 - [ ] T050 Ejecutar la puerta de calidad sobre el diff de la spec: suite completa, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks, semgrep `p/php`, `composer audit --locked`, `npm audit` y revisión de cada `Log::` nuevo — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: todo pasa sin hallazgos críticos ni altos, anotado con los recuentos — cubre: CA5, CA8 — depende: T020, T025, T026, T027, T028, T029, T030, T031, T032, T036, T037
+  - nota: aceptado en /analyze r2 (2026-10-25), A47 — registrar el coste de explorar los listeners al arrancar, o comprobar que `desplegar.sh` hace `event:cache`, y anotarlo en la verificación manual del RNF «no ralentiza».
 - [ ] T051 Actualizar el roadmap — docs/roadmap.md — hecho cuando: las entradas existen, citan la 032 y el validador no da errores
   - En el objetivo 5: OB6.c y RS15.d nuevas (staging), RS15.c como excepción EX3, y la 032 en curso.
   - En Pendientes:
@@ -303,6 +330,7 @@ Formato:
     - el umbral de 5xx sin mínimo de peticiones, riesgo aceptado por el usuario (A26);
     - pasar `dentissa:vigilar` al planificador de la 020 y retirar el temporizador (D11, A20);
     - la vuelta de la 038 a v0.11.0 al retomarla (D15, A25).
+  - nota: aceptado en /analyze r2 (2026-10-25), A39 — la entrada del roadmap dice que la 020 debe añadir el `scheduler` al Compose de producción, mover `dentissa:vigilar` a él y retirar el temporizador.
 - [ ] T090 Actualizar `docs/architecture.md` en sus secciones reales (/analyze A23), según el ADR 0007:
   - **Diagrama de componentes:** el temporizador → `dentissa:vigilar` en `app`, `nginx_logs` también en `app`, la salida SMTP a Gmail y UptimeRobot hacia `/up`.
   - **Módulos:** `App\Avisos` y `App\Listeners\RegistrarFalloAcceso`.
@@ -315,7 +343,8 @@ Formato:
     - canal `seguridad`;
     - OB6.b «en curso (spec 032)»;
     - OB6.c (staging), nueva → objetivo 5;
-    - OB6.a sigue en el objetivo 3.
+    - OB6.a sigue en el objetivo 3;
+    - junto a la brecha del registro de acceso (objetivo 3), que el vigilante depende del formato `combined` y que cambiarlo exige ajustar `App\Avisos\Vigilante` (el aviso `formato` lo detecta) (/analyze A36).
 - [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
@@ -343,6 +372,8 @@ Formato:
     - en «Fuera de alcance», «Envío de correos desde producción» → atendido por la 032;
     - en Cobertura, los destinos de RS15.b y OB6.b → 032.
   - Spec 001, CA9: el canal `seguridad` de la 032 registra los fallos para avisar, pero no es el registro de auditoría; sigue → 020/021.
+  - nota: aceptado en /analyze r2 (2026-10-25), A35 — anotar 030 CA7 como modificado por 032 CA9 (vuelta con copia desde el PC).
+  - nota: aceptado en /analyze r2 (2026-10-25), A48 — la 001 solo se anota porque su comportamiento no cambia; no entra en `extends`.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

@@ -1,6 +1,6 @@
 ---
 spec: 032-alertas-cifrado-copias
-status: approved
+status: draft
 constitution_version: 1.3.0
 created: 2026-10-23
 ---
@@ -58,8 +58,8 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
 | P4 Entrada validada y SQL con bindings | ✅ | La única entrada externa nueva son las líneas del log de acceso de nginx: se leen con una expresión anclada a la estructura del formato `combined` (D8) y se descarta lo que no encaja. Del registro solo se toman la hora y el código, nunca la petición. Sin SQL nuevo. | test: `VigilanteTest::test_ignora_las_lineas_que_no_tienen_el_formato`, `…_no_se_engana_con_corchetes_ni_espacios` · lint: semgrep `p/php` |
 | P5 Nada sensible en el repo | ✅ | La contraseña de aplicación de Gmail y el correo de destino van en `app.env`, fuera del clon. La clave pública está en `/opt/dentissa/entorno` y la secreta nunca llega al repositorio ni al paquete. `.env.example` solo lleva nombres vacíos. | lint: gitleaks · test: `ConfiguracionProduccionTest` (los `*.asc` y `*.env` quedan fuera del paquete y del repo) |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin dependencias nuevas de Composer ni de npm: el Mail de Laravel ya trae Symfony Mailer. GnuPG viene del sistema (Ubuntu y Git para Windows). Línea base limpia; EX2, vigente. | lint: `composer audit --locked`, `npm audit --audit-level=high`, `trivy image` en `/release` |
-| P7 Auditoría de datos sensibles | ➖ | No añade ni cambia acciones auditables (sección Auditoría de la spec). El canal `seguridad` sirve para alertar, no para auditar: no cumple ni sustituye el almacén solo anexado de la 021. Los inicios de sesión fallidos siguen bajo la excepción P7 de la 030, que vence con la 021. | — |
-| P8 Correlación y logs limpios | ❌ aceptado: el canal `seguridad` escribe una línea por petición fallida sin `X-Request-Id`, que no existe hasta la 020; la 020 lo añadirá también a este canal (su `Context` va en `extra`, A11) — aprobado por el usuario el 2026-10-25 (/analyze A4), vence al liberar la 020 | La parte de logs limpios sí se cumple. El canal `seguridad` guarda tipo, método y huellas HMAC-SHA256 recortadas del origen y de la cuenta, con una clave derivada de `APP_KEY` (D7). Nunca la IP ni el correo. El vigilante solo registra el tipo de un aviso que no se pudo enviar. El nivel `info` y `APP_DEBUG=false` no cambian. | test: `RegistroFallosAccesoTest::test_el_registro_no_contiene_ip_ni_correo` · manual: revisión de cada `Log::` del diff · `/review`: la excepción tiene fuente usuario |
+| P7 Auditoría de datos sensibles | ❌ aceptado: la 032 toca el login (T036) y escribe los fallos de acceso en un canal de alertas sin evento de auditoría; se apoya en la excepción P7 de la 030 (aprobada por el usuario el 2026-10-03), que vence con la 021 (/analyze A37) | No añade ni cambia acciones auditables (sección Auditoría de la spec). El canal `seguridad` sirve para alertar, no para auditar: no cumple ni sustituye el almacén solo anexado de la 021. | `/review`: la excepción de la 030 sigue vigente y tiene fuente usuario |
+| P8 Correlación y logs limpios | ❌ aceptado: el canal `seguridad` escribe una línea por petición fallida sin `X-Request-Id`, que no existe hasta la 020; la 020 lo añadirá también a este canal (su `Context` va en `extra`, A11) — aprobado por el usuario el 2026-10-25 (/analyze A4; fuente: `history/analysis.r1.md`, «Decisiones del usuario»), vence al liberar la 020 | La parte de logs limpios sí se cumple. El canal `seguridad` guarda tipo, método y huellas HMAC-SHA256 recortadas del origen y de la cuenta, con una clave derivada de `APP_KEY` (D7). Nunca la IP ni el correo. El vigilante solo registra el tipo de un aviso que no se pudo enviar. El nivel `info` y `APP_DEBUG=false` no cambian. | test: `RegistroFallosAccesoTest::test_el_registro_no_contiene_ip_ni_correo` · manual: revisión de cada `Log::` del diff · `/review`: la excepción tiene fuente usuario |
 | P9 La interfaz usa solo el sistema de diseño | ➖ | Sin pantallas. El correo es texto plano y no es interfaz de la aplicación. | — |
 | P10 Rutas indexables descubribles | ➖ | Sin rutas nuevas ni cambiadas. | — |
 
@@ -99,6 +99,8 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
     desde la 030 (/analyze A2).
   - Salida con código distinto de 0 y uno de estos mensajes:
     - «la copia no es para tu clave»;
+    - «no se pudo usar la clave (frase incorrecta o cancelada)», sin culpar a la copia
+      (/analyze A34);
     - «la copia está alterada o cortada (falla la comprobación de integridad)»;
     - «el volcado está incompleto (falta `-- Dump completed`)»;
     - «confirmación incorrecta».
@@ -121,6 +123,10 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
     - si no, `correo:<minúsculas>`;
     - `null` en la vuelta de Google.
     `Failed` trae el correo en `credentials`, y `Lockout` en el campo `email` de la petición.
+  - `metodo`: en `Failed`, `google` si `credentials` trae `proveedor` = `google`; en `Lockout`,
+    `google` si la petición es la de la vuelta de Google (ruta del callback), y `contrasena` en
+    otro caso. Solo se calcula la huella de cuenta con un correo de texto no vacío; si no, `cuenta`
+    es `null`, y el listener nunca cambia la respuesta del limitador (/analyze A33).
   - Clave del HMAC: `hash_hmac('sha256', 'dentissa-seguridad', APP_KEY)`, derivada y no la
     `APP_KEY` misma (/analyze A27).
 - **Estado del vigilante** (`storage/app/avisos/estado.json`, en el volumen `storage`):
@@ -153,7 +159,8 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
   - un intento bloqueado por el límite (`Lockout`).
   El login correcto no escribe nada. La línea no contiene la IP, el correo ni el id; con el mismo
   origen o la misma cuenta da la misma huella. Una cuenta inactiva da la huella de su cuenta, y un
-  `Lockout` la misma que el `Failed` de esa cuenta (/analyze A12). La línea tiene la forma del
+  `Lockout` la misma que el `Failed` de esa cuenta (/analyze A12). El `Lockout` de la vuelta de
+  Google escribe `bloqueado`/`google` con `cuenta` `null` y su respuesta no cambia (/analyze A33). La línea tiene la forma del
   contrato (/analyze A11). `LimiteIntentosTest` sigue igual (CA2: el límite no cambia).
 - **`VigilanteTest`** (Feature, con `Mail::fake()`, reloj fijo y logs de prueba en una carpeta
   temporal):
@@ -169,6 +176,7 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
   - recuento sin duplicados: 11 fallos en un minuto y 10 ejecuciones dan un aviso con 11 (/analyze
     A9);
   - líneas de `seguridad` con campos en `extra`;
+  - un log en otro formato da el aviso `formato` (/analyze A36);
   - ventana de 5 min.
 - **`AvisoProduccionTest`** (Feature):
   - el cuerpo no contiene IPs, correos, huellas, `APP_KEY` ni `MAIL_PASSWORD`, ni siquiera cuando
@@ -187,10 +195,13 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
     - no contiene `--import`, `--export-secret-keys` ni el envío de la clave;
     - por SSH solo viaja la salida de `gpg --decrypt`;
     - la pasada de comprobación va antes de la confirmación y de `DROP DATABASE`;
-    - tres mensajes de rechazo distintos;
+    - cuatro mensajes de rechazo distintos;
+    - la base no se toca hasta que la orden remota recibe la primera línea descifrada, y el éxito
+      exige código 0 de gpg y de la carga remota (/analyze A29);
     - no depende de `dirname "$0"` en el servidor (/analyze A2, A5, A13);
   - `volver.sh`: `--sin-levantar`, rechazo de la copia como argumento y aviso del temporizador;
-  - `desplegar.sh`: la orden de vuelta que imprime sigue el contrato (/analyze A17);
+  - `desplegar.sh`: la orden de vuelta que imprime sigue el contrato, y sin poder contar las
+    migraciones pendientes propone la vuelta con copia (/analyze A17, A32);
   - `verificar.sh`:
     - 16 comprobaciones de configuración, con `MAIL_FROM_ADDRESS` (/analyze A28);
     - la sección «Avisos y copias» solo fuera de `--interna` (/analyze A3);
@@ -226,9 +237,9 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
 | TM5 | Spoofing: alguien prueba contraseñas en ráfaga | A07:2025 Authentication Failures | `RegistrarFalloAcceso`, `Vigilante` | Aviso con más de 10 fallos en 5 min por origen o por cuenta; el limitador de la 030 no cambia (CA2) | `RegistroFallosAccesoTest`, `VigilanteTest::test_mas_de_10_fallos_por_origen_avisa`, `…_por_cuenta_avisa`, `LimiteIntentosTest` |
 | TM6 | Denial of service: un atacante inunda el buzón para que se ignoren los avisos | A09:2025 Security Logging and Alerting Failures | `Vigilante` | Como mucho un correo por tipo cada 30 min, con el acumulado. Nada se pierde: lo pendiente se envía al acabar el silencio (CA4) | `VigilanteTest::test_silencio_de_30_minutos_acumula`, `…_envia_lo_pendiente_al_acabar_el_silencio` |
 | TM7 | Information disclosure: el correo, en un buzón externo, lleva datos personales o secretos | A09:2025 | `AvisoProduccion` | Solo tipo, recuentos, horas y órdenes de consulta; las entradas del log nunca pasan al correo (CA5) | `AvisoProduccionTest::test_el_correo_no_lleva_datos_personales_ni_secretos` |
-| TM8 | Information disclosure: el registro de fallos guarda IPs y correos | A09:2025 | `RegistrarFalloAcceso` | Huellas HMAC recortadas, con una clave derivada de `APP_KEY`; sin IP, correo ni id. Es seudonimización: con la `APP_KEY`, que está en el mismo servidor, una IPv4 se recupera por fuerza bruta y una cuenta enumerando ids. Se acepta porque quien tiene la `APP_KEY` ya tiene la base (/analyze A27) | `RegistroFallosAccesoTest::test_el_registro_no_contiene_ip_ni_correo` |
+| TM8 | Information disclosure: el registro de fallos guarda IPs y correos | A09:2025 | `RegistrarFalloAcceso` | Huellas HMAC recortadas, con una clave derivada de `APP_KEY`; sin IP, correo ni id. Es seudonimización: con la `APP_KEY`, que está en el mismo servidor, una IPv4 se recupera por fuerza bruta y una cuenta enumerando ids. Riesgo aceptado por el usuario el 2026-10-25 (/analyze A27, A46): quien tiene la `APP_KEY` ya tiene la base | `RegistroFallosAccesoTest::test_el_registro_no_contiene_ip_ni_correo` |
 | TM9 | Information disclosure: secretos en la salida de `verificar.sh` o en el repo | A02:2025 Security Misconfiguration | `verificar.sh`, `.env.example` | Comprobaciones sin valores; `app.env` y `*.asc` fuera del clon (CA6, RNF) | `ConfiguracionProduccionTest::test_verificar_no_imprime_valores_del_correo` · gitleaks |
-| TM10 | Denial of service: los avisos dejan de funcionar sin que nadie lo note (temporizador parado, contraseña de Gmail revocada) | A09:2025 | `verificar.sh`, `Vigilar`, UptimeRobot | `verificar.sh` comprueba el temporizador y la configuración en cada despliegue. Un envío fallido sale con código distinto de 0 (journal) y deja `Log::warning`. El aviso de prueba está documentado y UptimeRobot es independiente del servidor | `VigilanteTest::test_un_envio_fallido_no_marca_el_aviso_como_enviado`, `AvisoProduccionTest::test_vigilar_sale_con_error_si_falla_el_envio` · ensayo de `verificar.sh` rompiendo |
+| TM10 | Denial of service: los avisos dejan de funcionar sin que nadie lo note (temporizador parado, contraseña de Gmail revocada, log de acceso con otro formato) | A09:2025 | `verificar.sh`, `Vigilar`, UptimeRobot | `verificar.sh` comprueba el temporizador y la configuración en cada despliegue. Un envío fallido sale con código distinto de 0 (journal) y deja `Log::warning`. El aviso de prueba está documentado y UptimeRobot es independiente del servidor | `VigilanteTest::test_un_envio_fallido_no_marca_el_aviso_como_enviado`, `…_avisa_si_el_log_cambia_de_formato`, `AvisoProduccionTest::test_vigilar_sale_con_error_si_falla_el_envio` · ensayo de `verificar.sh` rompiendo |
 | TM11 | Tampering / DoS: volver a una versión anterior a la 032 con una copia cifrada deja la base a medias | A08:2025 | `restaurar.sh --volver`, `volver.sh --sin-levantar` | La copia se comprueba entera en el PC antes de cambiar nada en el servidor. La carga usa órdenes que no dependen de la versión de destino (D3, D4) | `ConfiguracionProduccionTest::test_volver_con_copia_no_depende_de_la_version_de_destino` · ensayo de vuelta con copia |
 | TM12 | Denial of service: un log de acceso enorme hace que el vigilante tarde o falle | A09:2025 | `Vigilante` | Lectura incremental desde el desplazamiento guardado, con un tope de 50 MiB por ejecución. Sin estado empieza al final del log. Si el log se trunca o rota, vuelve a empezar (/analyze A10) | `VigilanteTest::test_solo_lee_lo_nuevo`, `…_detecta_log_truncado`, `…_primera_ejecucion_empieza_al_final`, `…_lo_que_supera_el_tope_se_lee_despues` |
 | TM13 | Information disclosure: la contraseña de aplicación de Gmail, en `app.env` y en el contenedor `app`, da acceso al buzón de su cuenta | A07:2025 Authentication Failures | `app.env`, guía (D9) | La cuenta es de Gmail, solo sirve para enviar y no tiene otros datos ni reenvíos. Los avisos llegan al correo de siempre del responsable. La contraseña de aplicación se revoca sin tocar nada más (decisión del usuario 2026-10-25, /analyze A6) | nota de T040 (cuenta dedicada creada, sin valores) · revisión de la guía |
@@ -238,15 +249,15 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: >1 % de 5xx en 5 min → correo en ≤ 10 min con tipo, recuento, intervalo y cómo consultar | `Vigilante`, `Vigilar`, temporizador, montaje de `nginx_logs`, `AvisoProduccion` | `VigilanteTest::test_mas_del_1_por_ciento_de_5xx_avisa`, `…_el_1_por_ciento_no_avisa`, `…_ventana_de_5_minutos`, `…_no_se_engana_con_corchetes_ni_espacios`, `…_primera_ejecucion_empieza_al_final`, `…_lo_que_supera_el_tope_se_lee_despues` · verificación manual: ensayo en el servidor con líneas 5xx inyectadas en el log de `web`; el correo llega en ≤ 10 min |
-| CA2 (abuso): >10 fallos en 5 min por origen o cuenta (contraseña o Google) → correo; el límite no cambia | `RegistrarFalloAcceso`, `AuthController::sujetoLimite`, canal `seguridad`, `Vigilante` | `RegistroFallosAccesoTest` (contraseña, Google, `Lockout`, cuenta inactiva, misma huella en `Failed` y `Lockout`; éxito sin línea), `VigilanteTest::test_mas_de_10_fallos_por_origen_avisa`, `…_por_cuenta_avisa`, `…_10_fallos_no_avisa`, `…_lee_lineas_con_extra`, `LimiteIntentosTest` (sin cambios) · verificación manual: 11 intentos contra una cuenta de prueba en producción; el correo llega en ≤ 10 min |
+| CA1: >1 % de 5xx en 5 min → correo en ≤ 10 min con tipo, recuento, intervalo y cómo consultar | `Vigilante`, `Vigilar`, temporizador, montaje de `nginx_logs`, `AvisoProduccion` | `VigilanteTest::test_mas_del_1_por_ciento_de_5xx_avisa`, `…_el_1_por_ciento_no_avisa`, `…_ventana_de_5_minutos`, `…_no_se_engana_con_corchetes_ni_espacios`, `…_primera_ejecucion_empieza_al_final`, `…_lo_que_supera_el_tope_se_lee_despues`, `…_avisa_si_el_log_cambia_de_formato` · verificación manual: ensayo en el servidor con líneas 5xx inyectadas en el log de `web`; el correo llega en ≤ 10 min |
+| CA2 (abuso): >10 fallos en 5 min por origen o cuenta (contraseña o Google) → correo; el límite no cambia | `RegistrarFalloAcceso`, `AuthController::sujetoLimite`, canal `seguridad`, `Vigilante` | `RegistroFallosAccesoTest` (contraseña, Google, `Lockout` del login y de la vuelta de Google, cuenta inactiva, misma huella en `Failed` y `Lockout`; éxito sin línea), `VigilanteTest::test_mas_de_10_fallos_por_origen_avisa`, `…_por_cuenta_avisa`, `…_10_fallos_no_avisa`, `…_lee_lineas_con_extra`, `LimiteIntentosTest` (sin cambios) · verificación manual: 11 intentos contra una cuenta de prueba en producción; el correo llega en ≤ 10 min |
 | CA3: caída de 5 min desde internet, también con el servidor apagado → correo en ≤ 10 min, y otro al volver | UptimeRobot (D13), `deploy/README.md` | verificación manual: monitor HTTPS de `/up` cada 5 min con avisos al caer y al volver; ensayo con `cloudflared` parado ≥ 6 min (con aprobación), los dos correos llegan |
 | CA4 (abuso): como mucho 1 correo por tipo cada 30 min, con el acumulado; nada se pierde | `Vigilante`, `Estado` | `VigilanteTest::test_silencio_de_30_minutos_acumula`, `…_envia_lo_pendiente_al_acabar_el_silencio`, `…_los_tipos_tienen_silencio_propio`, `…_cada_evento_se_cuenta_una_vez` |
 | CA5 (abuso): el correo no lleva datos personales, de salud, correos, contraseñas, IPs ni secretos | `AvisoProduccion`, plantilla de texto | `AvisoProduccionTest::test_el_correo_no_lleva_datos_personales_ni_secretos`, `…_lleva_tipo_recuentos_horas_y_como_consultar` |
 | CA6: `verificar.sh` falla sin envío configurado o con el texto de ejemplo, sin mostrar valores; aviso de prueba en ≤ 5 min | `verificar.sh` (D12), `Vigilar --prueba`, guía | `ConfiguracionProduccionTest::test_verificar_comprueba_el_envio_de_avisos` (con `MAIL_FROM_ADDRESS`), `…_no_imprime_valores_del_correo`, `AvisoProduccionTest::test_el_aviso_de_prueba_se_envia` · verificación manual: `verificar.sh` rompiendo (sin `MAIL_PASSWORD`, con el `<…>` de la guía en `MAIL_PASSWORD` y en `MAIL_FROM_ADDRESS`) da FALLO sin valores; el aviso de prueba llega en ≤ 5 min |
 | CA7: la copia previa al despliegue se cifra desde el primer momento (también la del PC); sin gpg o sin clave, el despliegue se detiene antes de cambiar nada | `respaldar.sh` (D2), primer despliegue de la 032 (D6) | `ConfiguracionProduccionTest::test_respaldar_cifra_con_la_clave_publica`, `…_no_escribe_en_claro`, `…_se_detiene_sin_gpg_o_sin_clave` · verificación manual: `desplegar.sh` deja `.sql.gz.gpg` y `find / -xdev` no encuentra volcados en claro; varias copias seguidas sin falsos «copia incompleta»; con la clave pública renombrada, `desplegar.sh <ref distinta del HEAD>` se detiene en «Copia de la base» y el `HEAD` no cambia; en el primer despliegue, el paso 0 del Rollout comprueba gpg y la clave antes del checkout |
 | CA8 (abuso): lo que abre las copias no está en el servidor, el repo ni el paquete | D1, D3, guía §7 | `ConfiguracionProduccionTest::test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo`, `…_la_clave_nunca_llega_al_servidor`, `verificar.sh` «el llavero del servidor no tiene clave secreta» · lint: gitleaks · verificación manual: con solo lo que hay en el servidor no se puede descifrar; tras restaurar, el servidor sigue sin claves secretas; la frase cumple el mínimo de la guía (nota de los preparativos, sin revelarla) |
-| CA9: con la clave, la base queda exactamente igual (filas y comprobación por tabla), ensayado, también con la vuelta atrás; clave ajena, copia alterada o incompleta → se detiene sin tocar la base y dice por qué (reemplaza 030 CA6) | `restaurar.sh` (D3), `volver.sh` (D4), `desplegar.sh` | `ConfiguracionProduccionTest::test_restaurar_comprueba_antes_de_borrar`, `…_restaurar_distingue_los_rechazos`, `…_volver_con_copia_no_depende_de_la_version_de_destino`, `…_desplegar_imprime_la_vuelta_del_contrato` · verificación manual: ensayo con foto de `CHECKSUM TABLE` y recuento de filas con `app` y `web` parados, copia justo después, restauración y comparación; los tres rechazos con su mensaje y la base intacta; `restaurar.sh --volver v0.10.0` con la copia y la frase pedida una sola vez |
+| CA9: con la clave, la base queda exactamente igual (filas y comprobación por tabla), ensayado, también con la vuelta atrás; clave ajena, copia alterada o incompleta → se detiene sin tocar la base y dice por qué (reemplaza 030 CA6) | `restaurar.sh` (D3), `volver.sh` (D4), `desplegar.sh` | `ConfiguracionProduccionTest::test_restaurar_comprueba_antes_de_borrar`, `…_restaurar_distingue_los_rechazos`, `…_restaurar_no_toca_la_base_sin_datos_descifrados`, `…_volver_con_copia_no_depende_de_la_version_de_destino`, `…_desplegar_imprime_la_vuelta_del_contrato` · verificación manual: con la caché del agente vaciada entre pasadas y la frase cancelada, la base no cambia; ensayo con foto de `CHECKSUM TABLE` y recuento de filas con `app` y `web` parados, copia justo después, restauración y comparación; los tres rechazos con su mensaje y la base intacta; `restaurar.sh --volver v0.10.0` con la copia y la frase pedida una sola vez |
 | CA10: sin copias en claro en el servidor al liberar; la guía cubre las del PC, la segunda copia de la clave y su pérdida; el disco, riesgo aceptado hasta el primer dato real | `cifrar-copias-antiguas.sh` (D5), `verificar.sh`, `deploy/README.md`, `docs/security.md` (EX3, RS15.c) | `ConfiguracionProduccionTest::test_cifrar_copias_antiguas_cifra_antes_de_borrar` (también las dañadas), `…_verificar_falla_con_copias_en_claro` · verificación manual: `verificar.sh` OK y `find / -xdev` sin volcados en claro tras el script en la liberación; revisión de la guía y de EX3 |
 | RNF: gratuito | UptimeRobot gratuito, cuenta de Gmail de envío, GnuPG del sistema, Mail de Laravel | verificación manual: sin planes de pago (revisión de la guía) |
 | RNF: correos en español y comprensibles sin abrir el servidor | `AvisoProduccion` | `AvisoProduccionTest::test_lleva_tipo_recuentos_horas_y_como_consultar` |
@@ -261,7 +272,7 @@ Línea base de dependencias (2026-10-23, rama con `main` `b60b4d3` fusionado): `
 | TM7: datos en el correo | `AvisoProduccion` | `AvisoProduccionTest::test_el_correo_no_lleva_datos_personales_ni_secretos` |
 | TM8: IPs y correos en el registro de fallos | `RegistrarFalloAcceso` | `RegistroFallosAccesoTest::test_el_registro_no_contiene_ip_ni_correo` |
 | TM9: secretos en la salida o en el repo | `verificar.sh`, `.gitignore` | `ConfiguracionProduccionTest::test_verificar_no_imprime_valores_del_correo` · gitleaks |
-| TM10: avisos caídos sin que se note | `verificar.sh`, `Vigilar` | `VigilanteTest::test_un_envio_fallido_no_marca_el_aviso_como_enviado`, `AvisoProduccionTest::test_vigilar_sale_con_error_si_falla_el_envio` · `verificar.sh` rompiendo |
+| TM10: avisos caídos sin que se note | `verificar.sh`, `Vigilar`, `Vigilante` | `VigilanteTest::test_un_envio_fallido_no_marca_el_aviso_como_enviado`, `…_avisa_si_el_log_cambia_de_formato`, `AvisoProduccionTest::test_vigilar_sale_con_error_si_falla_el_envio` · `verificar.sh` rompiendo |
 | TM11: vuelta atrás con copia cifrada a medias | `restaurar.sh --volver`, `volver.sh --sin-levantar` | `ConfiguracionProduccionTest::test_volver_con_copia_no_depende_de_la_version_de_destino` |
 | TM12: log de acceso enorme | `Vigilante` | `VigilanteTest::test_solo_lee_lo_nuevo`, `…_detecta_log_truncado`, `…_lo_que_supera_el_tope_se_lee_despues` |
 | TM13: contraseña de aplicación de Gmail filtrada | cuenta de envío dedicada (D9), guía | verificación manual: nota de los preparativos (cuenta dedicada, sin valores) y revisión de la guía |
@@ -364,15 +375,23 @@ No aplica: la spec no crea ni cambia rutas públicas.
     - `--solo-comprobar` termina aquí.
   - **Confirmación:** se escribe el nombre de la base, que se lee por SSH (`printenv
     MARIADB_DATABASE` en `db`).
-  - **Pasada 2:**
+  - **Pasada 2** (/analyze A29):
     - para `app` y `web`;
-    - por SSH, `DROP`/`CREATE`;
-    - `gpg --decrypt` del PC → `ssh` → `gzip -cd | docker compose … exec -T db mariadb` en el
-      servidor;
+    - `gpg --decrypt` del PC → `ssh` → en el servidor, una sola orden remota que primero espera la
+      primera línea del volcado ya descomprimido y solo entonces hace `DROP`/`CREATE` y carga esa
+      línea y el resto en `docker compose … exec -T db mariadb`;
+    - si gpg falla antes de dar datos (la caché del agente caducó y la frase se cancela o es
+      incorrecta), la orden remota no recibe ninguna línea y termina sin tocar la base; el script
+      vuelve a levantar `app` y `web` y lo dice;
+    - éxito solo si gpg sale con 0 en el PC (`pipefail`), la orden remota sale con 0 (`pipefail`
+      también allí) y la última línea cargada es `-- Dump completed`; si no, «la carga quedó
+      incompleta» con la orden para repetirla;
     - levanta `app` y `web`, rehace las cachés y ejecuta el `verificar.sh --interna` instalado.
     Las órdenes van dentro del script del PC y existen desde la 030, así que no dependen de la
-    versión instalada (/analyze A2). La frase se pide una sola vez: el `gpg-agent` del PC la guarda
-    entre las dos pasadas, y se comprueba en los preparativos.
+    versión instalada (/analyze A2). La frase se pide una sola vez si el `gpg-agent` del PC la
+    conserva entre las dos pasadas (caché por defecto de 600 s desde el último uso), y se comprueba
+    en los preparativos; si caduca, gpg la vuelve a pedir y la base sigue intacta hasta que llegan
+    datos.
   - **`--volver <ref>`:** antes de la pasada 2, `ssh … bash deploy/volver.sh <ref> --sin-levantar`
     con el `volver.sh` instalado, que es el de la 032 o uno posterior. Luego carga y levanta como
     arriba, con la versión `<ref>` ya construida (/analyze A1).
@@ -389,9 +408,12 @@ No aplica: la spec no crea ni cambia rutas públicas.
   - Si la versión de destino no tiene `app/Console/Commands/Vigilar.php`, avisa de parar el
     temporizador.
   - `desplegar.sh` imprime, si la verificación falla:
-    - `bash deploy/volver.sh <anterior>` si no hubo migraciones;
-    - si las hubo, la orden del PC: `scp <servidor>:<copia> .` y
+    - `bash deploy/volver.sh <anterior>` solo si sabe que no hubo migraciones;
+    - en otro caso, la orden del PC: `scp <servidor>:<copia> .` y
       `bash deploy/restaurar.sh <copia> <servidor> --volver <anterior>`.
+    Lo sabe contando, antes de `migrate --force`, las migraciones pendientes con
+    `php artisan migrate:status --pending`. Si la orden falla o no se puede contar, propone la vuelta
+    con copia, que es la segura (/analyze A32).
 - **D5 · Copias en claro existentes: cifrarlas y borrar las originales** (decisión del usuario,
   2026-10-23).
   - `cifrar-copias-antiguas.sh` comprueba cada `dentissa-*.sql.gz` (`gzip -t` y `-- Dump
@@ -426,7 +448,9 @@ No aplica: la spec no crea ni cambia rutas públicas.
     pública y estática como `origenLimite`. La usan el limitador y el listener.
     - El correo sale de `Failed::$credentials['email']` o, en `Lockout`, del campo `email` de la
       petición.
-    - En la vuelta de Google no hay correo y `cuenta` es `null`.
+    - En la vuelta de Google (`Failed` con `proveedor` y `Lockout` del limitador `google`, que solo
+      trae la petición, `AppServiceProvider`) no hay correo: `metodo` es `google` y `cuenta` es
+      `null`. `sujetoLimite` solo se llama con un correo de texto no vacío (/analyze A33).
     - La consulta busca la cuenta por correo sin mirar `activo`, como el limitador, así que una
       cuenta inactiva da su huella de cuenta.
   - Alternativas descartadas:
@@ -446,10 +470,14 @@ No aplica: la spec no crea ni cambia rutas públicas.
          escapa las comillas (`escape=default`), así que el código es el número que sigue a la
          primera cadena entre comillas y la hora es el último `[…]` antes de ella. Lo que no encaja
          se descarta (/analyze A7).
+       - Si en la ventana de 5 min hay al menos 20 líneas leídas y más de la mitad no encajan, se
+         envía el aviso `formato` («el log de acceso no tiene el formato esperado»), con su propio
+         silencio. Así un cambio de `log_format` (previsto en el objetivo 3 para no registrar las búsquedas) no apaga en silencio el aviso
+         de 5xx (/analyze A36).
     2. **Canal `seguridad`:** lee las líneas de hoy y de ayer dentro de los últimos 5 min (campos
        `datetime` y `context`, ignorando `extra`) y las agrupa por origen y por cuenta.
     3. **Umbrales:** evalúa los de la spec sobre la ventana deslizante de 5 min.
-    4. **Silencio:** 30 min por tipo de aviso (`errores`, `accesos`).
+    4. **Silencio:** 30 min por tipo de aviso (`errores`, `accesos`, `formato`).
        - Cada aviso informa los eventos distintos ocurridos desde el fin del intervalo del aviso
          anterior, cada uno contado una sola vez (/analyze A9).
        - Lo pendiente se envía al acabar el silencio, aunque la condición haya terminado.
