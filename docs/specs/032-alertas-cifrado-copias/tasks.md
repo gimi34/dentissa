@@ -1,7 +1,7 @@
 ---
 spec: 032-alertas-cifrado-copias
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 032 Alertas y copias cifradas en producción
