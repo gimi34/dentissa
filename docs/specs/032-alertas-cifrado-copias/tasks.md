@@ -316,11 +316,15 @@ Formato:
   - nota: test_desplegar_imprime_la_vuelta_del_contrato pasa (con la función ejecutada en bash sobre las cuatro salidas simuladas); los otros dos casos de desplegar.sh siguen en verde; bash -n limpio.
   - nota: Comprobado rompiendo (2026-10-25): aceptar el texto aunque el código de salida diga que hay pendientes, dar por hecho que no hay migraciones o contarlas después de migrar hacen fallar el caso.
   - nota: A50 aplicado: «0 pendientes» = migrate:status --pending --no-ansi dice «No pending migrations» y sale con 0 (salida real de Laravel 12, StatusCommand); un fallo del comando o cualquier otra salida → la vuelta con la copia. Sin copia (primer despliegue) sigue el mensaje de la 030, que no propone ninguna vuelta.
-- [ ] T031 Crear `deploy/cifrar-copias-antiguas.sh` según D5 — deploy/cifrar-copias-antiguas.sh — hecho cuando: el caso de T018 pasa y `bash -n` limpio — cubre: CA10 — depende: T018
+- [x] T031 Crear `deploy/cifrar-copias-antiguas.sh` según D5 — deploy/cifrar-copias-antiguas.sh — hecho cuando: el caso de T018 pasa y `bash -n` limpio — cubre: CA10 — depende: T018
   - Por cada `dentissa-*.sql.gz` de `/var/backups/dentissa`, comprueba `gzip -t` y `-- Dump completed`.
   - Las buenas se cifran hacia `.part` y luego `mv` a `.sql.gz.gpg`; las dañadas, como `.sql.gz.danada.gpg`.
   - Después: `touch -r`, `chmod 600` y `shred -u` de la original.
   - Al final, el recuento de cifradas y de dañadas, y la sugerencia de revisar las dañadas.
+  - nota: test_cifrar_copias_antiguas_cifra_antes_de_borrar pasa; bash -n limpio.
+  - nota: Prueba local en Git Bash (2026-10-25), con una clave de prueba y tres copias en claro (una buena, una sin la línea final, una con el gzip cortado): la buena queda como .sql.gz.gpg con su fecha original y se descifra hasta -- Dump completed; las dos dañadas quedan como .sql.gz.danada.gpg; ninguna en claro; una segunda ejecución no hace nada.
+  - nota: Comprobado rompiendo (2026-10-25): borrar antes de cifrar o borrar una dañada sin cifrarla hacen fallar el caso.
+  - nota: Si hay dañadas, el aviso final dice que no se pueden restaurar y que se borren cuando no se quieran (restaurar.sh solo acepta .sql.gz.gpg).
 - [ ] T032 Ampliar `verificar.sh` según D12 (control de TM1, TM4, TM9 y TM10) — deploy/verificar.sh — hecho cuando: los casos de T019 pasan, `bash -n` limpio y se comprueba rompiendo (imprimir `MAIL_USERNAME` hace fallar `test_verificar_no_imprime_valores_del_correo`), anotado — cubre: CA6, CA8, CA10 — depende: T019
   - El bloque de configuración pasa de 12 a 16 comprobaciones de correo, con `MAIL_FROM_ADDRESS`.
   - Sección nueva «Avisos y copias (spec 032)», fuera de `--interna`. La búsqueda de copias en claro incluye la carpeta personal de la cuenta de despliegue.
