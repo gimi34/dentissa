@@ -1,6 +1,6 @@
 ---
 spec: 032-alertas-cifrado-copias
-status: draft
+status: approved
 constitution_version: 1.3.0
 created: 2026-10-23
 ---
@@ -369,7 +369,7 @@ No aplica: la spec no crea ni cambia rutas públicas.
   - La pública va al servidor. La secreta se exporta, con su frase, a una segunda copia fuera del
     PC (memoria USB guardada aparte o gestor de contraseñas).
   - Si se pierde, las copias no se recuperan (guía, CA10).
-- **D15 · Orden con la 038 y versión** (supuesto, a confirmar al aprobar el plan).
+- **D15 · Orden con la 038 y versión** (decisión del usuario, 2026-10-24, al aprobar el plan).
   - La 038 está en pausa (decisión del usuario, 2026-10-22), así que la 032 sale antes, con la
     siguiente minor (v0.11.0).
   - La que salga después trae `main`: conflictos previstos en `deploy/verificar.sh`,
