@@ -63,7 +63,7 @@ Formato:
   - nota: php artisan config:show avisos muestra destino null, umbrales 0.01 y 10, ventana 5, silencio 30, log de acceso, ruta base del canal seguridad, estado y tope 52428800; pint limpio. En .env.example, AVISOS_CORREO= vacío, con una línea de comentario.
 
 ## Tests (antes de implementar)
-- [ ] T010 [P] Escribir `RegistroFallosAccesoTest` (D7, contrato de la línea) — tests/Feature/RegistroFallosAccesoTest.php — hecho cuando: falla por la razón esperada (no hay canal ni listener), anotado — cubre: CA2
+- [x] T010 [P] Escribir `RegistroFallosAccesoTest` (D7, contrato de la línea) — tests/Feature/RegistroFallosAccesoTest.php — hecho cuando: falla por la razón esperada (no hay canal ni listener), anotado — cubre: CA2
   - Casos que escriben una línea en el canal `seguridad`:
     - el login con contraseña equivocada, contra una cuenta y contra un correo sin cuenta: `fallido`/`contrasena`;
     - la vuelta de Google fallida: `fallido`/`google` con `cuenta` `null`;
@@ -77,6 +77,9 @@ Formato:
     - el `Lockout` da la misma huella que el `Failed` de esa cuenta (/analyze A12).
   - La línea tiene la forma del contrato: `message` `acceso_fallido` y los cuatro campos en `context` (/analyze A11).
   - nota: aceptado en /analyze r2 (2026-10-25), A45 — el canal declara `name` `seguridad`, o el test comprueba el valor real de `channel`.
+  - nota: falla por la razón esperada (2026-10-25): 9 de 10 casos fallan con «actual size 0» porque no hay canal seguridad ni listener; el canal se redirige a una carpeta temporal por test.
+  - nota: test_un_login_correcto_no_escribe_nada pasa desde el principio (todavía no se escribe nada): se comprueba rompiendo en T020, haciendo que el listener escriba también en el login correcto.
+  - nota: A45 aplicado: el test exige channel = seguridad, así que T020 declara name en el canal.
 - [ ] T011 [P] Escribir en `VigilanteTest` los casos de errores (D8, con `Mail::fake()`, reloj fijo y logs en una carpeta temporal) — tests/Feature/VigilanteTest.php — hecho cuando: falla por la razón esperada (no existe `App\Avisos\Vigilante`), anotado — cubre: CA1
   - `test_mas_del_1_por_ciento_de_5xx_avisa`, `test_el_1_por_ciento_no_avisa`.
   - `test_ventana_de_5_minutos`: los 5xx de hace 6 minutos no cuentan.
