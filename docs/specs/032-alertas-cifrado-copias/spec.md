@@ -1,7 +1,7 @@
 ---
 id: 032
 slug: alertas-cifrado-copias
-status: implemented
+status: approved
 created: 2026-10-07
 extends: [030]
 ---
@@ -119,3 +119,4 @@ Ninguna.
 | 2026-10-07 | Creación en borrador | `/specify 032` |
 | 2026-10-07 | Aprobada | Aprobación del usuario |
 | 2026-10-25 | Implementada: criterios con sus tests en verde (412 en la suite) y ensayados en el servidor (T041–T044); la excepción EX3 de CA10 la aprueba el responsable en la liberación (T096) | `/implement 032` |
+| 2026-10-26 | Vuelve a approved: `/review` r1 changes_requested (R1–R9, tareas T052–T062) | `/review 032` |

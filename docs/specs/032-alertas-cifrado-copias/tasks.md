@@ -375,13 +375,37 @@ Formato:
   - **Manejo de secretos:** la contraseña de aplicación de la cuenta de envío, la clave pública en el servidor, la secreta solo en el PC y su segunda copia, y la fila de copias.
   - nota: RS15 dividida: RS15.a pendiente (013); RS15.b «en curso (spec 032)»; RS15.c «en curso (spec 032: se acepta como excepción EX3 en su liberación)»; RS15.d pendiente → objetivo 5. EX3 añadida con motivo, residuo de shred, vencimiento al cargar el primer dato real de pacientes y aprobación pendiente en T096. Superficie de ataque con el temporizador y la salida SMTP (desaparece «ni tareas programadas»); Manejo de secretos con la cuenta de envío, la clave pública, la secreta solo en el PC y su segunda copia, y la rotación. El validador no da errores de RS15 tras T038 y T051.
 
-- [x] T038 Declarar en la cobertura de riesgos de las specs 030 y 013 las correcciones de RS15 que crea T035: RS15.c (disco de producción) → aceptada como EX3 por la 032, y RS15.d (staging) → fuera, objetivo 5; con una fila de Historial en cada una (precedente: 031 T091 con RS8.c y RS8.d) — docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md — hecho cuando: el validador no da errores de RS15 en esas dos specs y no cambia ningún criterio — cubre: CA10 — depende: T035
+- [x] T038 Declarar en la cobertura de riesgos de las specs 030 y 013 las correcciones de RS15 que crea T035: RS15.c (disco de producción) → aceptada como EX3 por la 032, y RS15.d (staging) → fuera, objetivo 5; con una fila de Historial en cada una (precedente: la 031 en su T091, al dividir un riesgo de cabeceras) — docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md — hecho cuando: el validador no da errores de RS15 en esas dos specs y no cambia ningún criterio — cubre: CA10 — depende: T035
   - nota: añadida durante /implement (2026-10-25): al dividir RS15 en T035, el validador exige declarar RS15.c y RS15.d en las specs que ya citan RS15; aprobada por el usuario el 2026-10-25.
   - nota: Specs 030 y 013: RS15.c (→ spec 032, EX3) y RS15.d (→ objetivo 5) declaradas fuera en «Cobertura de riesgos», con su fila de Historial (2026-10-25, /implement 032 T038). Ningún criterio cambia; el validador no da errores de RS15 en ellas.
 - [x] T039 Que respaldar.sh no pise nunca una copia que ya existe: primero un caso en ConfiguracionProduccionTest que falle (si ya hay una copia con el nombre de ese segundo, espera al siguiente y recalcula el nombre), después el cambio mínimo en respaldar.sh — tests/Feature/ConfiguracionProduccionTest.php, deploy/respaldar.sh — hecho cuando: el caso falla antes del cambio y pasa después, bash -n limpio, y en la prueba local con el docker falso dos copias en el mismo segundo dan dos archivos distintos — cubre: CA7 — depende: T028
   - nota: añadida durante /implement (2026-10-25): en el ensayo T041, dos respaldar.sh dentro del mismo segundo dieron el mismo nombre y la segunda copia sobrescribió a la primera; aprobada por el usuario el 2026-10-25.
   - nota: test_respaldar_no_pisa_una_copia_existente falló antes del cambio (no había bucle) y pasa después, con los otros cuatro casos de respaldar.sh; bash -n limpio; pint limpio.
   - nota: Prueba local en Git Bash con el docker falso (2026-10-25): tres respaldar.sh seguidos dan tres archivos (…172514, …172515, …172516); antes, dos en el mismo segundo daban uno.
+
+### Correcciones de /review (ronda 1)
+- [ ] T052 Añadir a `VigilanteTest` `test_una_hora_mal_formada_cuenta_como_linea_sin_formato`: con 25 líneas que encajan en la forma de `combined` pero con la hora en otro formato (`[2026-10-25T10:00:00+00:00] "GET / HTTP/1.1" 500 …` y `[abc] "GET / HTTP/1.1" 500 …`), `ejecutar()` no lanza excepción, llega el aviso `formato` y una segunda ejecución con líneas buenas nuevas solo cuenta las nuevas (el desplazamiento avanzó) — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy con `InvalidFormatException` (anotado) — cubre: CA1
+  - nota: añadida por /review: R1
+- [ ] T053 Hacer que una hora que no se puede interpretar cuente como línea sin formato en `Vigilante::interpretar` — app/Avisos/Vigilante.php — hecho cuando: T052 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (sin la captura, T052 vuelve a fallar), anotado — cubre: CA1 — depende: T052
+  - nota: añadida por /review: R1
+- [ ] T054 Añadir a `VigilanteTest` `test_un_primer_aviso_fallido_no_se_pierde`: 11 fallos de acceso; el envío falla (transporte que lanza); pasan 10 minutos sin eventos nuevos y con el SMTP aún caído; vuelve el SMTP y en la ejecución siguiente llega el aviso de accesos con recuento 11 — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy porque el aviso no llega (anotado) — cubre: CA4
+  - nota: añadida por /review: R2
+- [ ] T055 Que un envío fallido del primer aviso de una ráfaga lo deje pendiente con su recuento y el inicio de su intervalo, y que lo pendiente se envíe aunque no haya aviso anterior — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T054 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (sin guardar lo pendiente, T054 falla), anotado — cubre: CA4 — depende: T054
+  - nota: añadida por /review: R2
+- [ ] T056 Añadir a `VigilanteTest` `test_un_log_de_acceso_ilegible_no_tumba_el_aviso_de_accesos`: con el log de acceso en una ruta que existe pero no se puede abrir (envoltorio de flujo de prueba cuyo `stream_open` falla), y 11 fallos de acceso en el canal `seguridad`, `ejecutar()` devuelve false, llega el aviso de accesos, el estado se guarda y queda `Log::warning('lectura fallida', ['fuente' => 'acceso'])` — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy con la excepción de `fopen` (anotado) — cubre: CA1, CA2
+  - nota: añadida por /review: R3
+- [ ] T057 Aislar en `Vigilante::ejecutar` la lectura de cada fuente (log de acceso y canal `seguridad`): un fallo al leer una no impide la otra ni guardar el estado, deja `Log::warning('lectura fallida', ['fuente' => …])` sin el mensaje y hace que `ejecutar()` devuelva false — app/Avisos/Vigilante.php — hecho cuando: T056 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (sin el aislamiento, T056 falla), anotado — cubre: CA1, CA2 — depende: T056
+  - nota: añadida por /review: R3
+- [ ] T058 Anclar `test_verificar_comprueba_avisos_y_copias_fuera_de_la_interna` a las órdenes reales: sin comentarios ni `echo`, cada comprobación de la sección «Avisos y copias» con su orden en el `if` y su rama `ok` / `fallo` correcta (temporizador activo → ok; clave pública con `^pub:` y sin `^sec:` → ok; llavero con `^sec:` → fallo; `app` lee el log → ok) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: pasa, y se comprueba rompiendo (invertir la rama del llavero o pasar una orden a un comentario hace fallar el caso), anotado — cubre: CA6, CA8, CA10
+  - nota: añadida por /review: R4
+- [ ] T059 Añadir a `ConfiguracionProduccionTest` que `cifrar-copias-antiguas.sh` recorre también `dentissa-*.sql.gz` de la carpeta personal (`${HOME}`), y que `verificar.sh` da FALLO si la carpeta de copias no existe o no se puede leer (`[[ -d "${DESTINO}" && -r "${DESTINO}" ]]` antes de la búsqueda) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan hoy por la razón esperada (anotado) — cubre: CA10
+  - nota: añadida por /review: R5
+- [ ] T060 Cifrar también las copias en claro de la carpeta personal en `cifrar-copias-antiguas.sh` y dar FALLO en `verificar.sh` si la carpeta de copias no existe o no se puede leer — deploy/cifrar-copias-antiguas.sh, deploy/verificar.sh — hecho cuando: T059 pasa, `bash -n` limpio y, en una prueba local con una clave de prueba, una copia en claro en la carpeta personal queda cifrada y borrada, anotado — cubre: CA10 — depende: T059
+  - nota: añadida por /review: R5
+- [ ] T061 Añadir a `ConfiguracionProduccionTest` los casos de `restaurar.sh`: en la carga remota, `trap` que borra la marca justo después de su `mktemp` (R6); la pasada de comprobación no guarda la última línea del volcado, solo si es `-- Dump completed` (R7); la carga usa `mariadb --sandbox` (R8); la versión de `--volver` no puede empezar por `-` (R9) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan hoy por la razón esperada (anotado) — cubre: CA7, CA9
+  - nota: añadida por /review: R6, R7, R8, R9
+- [ ] T062 Aplicar en `restaurar.sh` lo de T061 — deploy/restaurar.sh — hecho cuando: T061 y los demás casos de `restaurar.sh` pasan, `bash -n` limpio, `mariadb --sandbox` funciona con el cliente de `mariadb:10.11.19`, y la prueba local con el servidor simulado (restauración completa, rechazos y frase cancelada) sigue dando lo mismo, anotado — cubre: CA7, CA9 — depende: T061
+  - nota: añadida por /review: R6, R7, R8, R9
 
 ## Preparativos y ensayos en el servidor
 - [x] T040 Preparativos del responsable (plan, Rollout; los hace el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge que cada paso está hecho, sin ningún secreto ni la frase: la huella de la clave pública, la salida de `gpg --show-keys` en el servidor sin `sec`, la frase con el mínimo cumplido, la frase pedida una sola vez y la cuenta de envío dedicada creada — cubre: CA8 — depende: T034
@@ -487,9 +511,10 @@ Formato:
     - OB6.a sigue en el objetivo 3;
     - junto a la brecha del registro de acceso (objetivo 3), que el vigilante depende del formato `combined` y que cambiarlo exige ajustar `App\Avisos\Vigilante` (el aviso `formato` lo detecta) (/analyze A36).
   - nota: docs/deployment.md: copias cifradas (respaldar.sh en tubería con gpg, clave pública en el servidor, secreta en el PC con su segunda copia, restaurar.sh desde el PC con sus mensajes y la carga que espera la primera línea, cifrar-copias-antiguas.sh, ensayos del 2026-10-25), rollback con la copia desde el PC (restaurar.sh --volver, volver.sh --sin-levantar, migrate:status --pending, temporizador; 4 min 44 s ensayado), variables nuevas (MAIL_*, AVISOS_CORREO, DENTISSA_CLAVE_PUBLICA, DENTISSA_APP) y verificación (16 comprobaciones, «Avisos y copias» sin --interna, aviso de prueba, UptimeRobot, logs del canal seguridad y del journal).
-  - nota: docs/observability.md: resumen (logs, eventos de autenticación y alertas en uso), tabla de métricas y alertas con canal y umbral (también el aviso de formato y UptimeRobot), OB6.b «en curso (spec 032)» y OB6.c nueva (staging → objetivo 5), OB6.a sigue pendiente (objetivo 3), y junto a OB8.a el acoplamiento del vigilante con el formato combined (A36).
+  - nota: docs/observability.md: resumen (logs, eventos de autenticación y alertas en uso), tabla de métricas y alertas con canal y umbral (también el aviso de formato y UptimeRobot), OB6.b «en curso (spec 032)» y OB6.c nueva (staging → objetivo 5), OB6.a sigue pendiente (objetivo 3), y junto a la brecha del log de acceso (objetivo 3) el acoplamiento del vigilante con el formato combined (A36).
   - nota: Al dividir OB6, el validador pidió declarar OB6.c en la spec 030: fila «fuera → objetivo 5» en su Cobertura de riesgos y su fila de Historial, como T038 con RS15. Validador sin errores.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
+  - nota: desmarcada por /review r1 (changes_requested, 2026-10-26)
   - nota: Spec en implemented el 2026-10-25, con CA1–CA10 marcados: cada uno con sus tests en verde (suite 412) y, donde la Trazabilidad lo pide, ensayado en el servidor (T041–T044). CA10: la aprobación de EX3 por el responsable queda en T096, como dice el plan. docs/specs/README.md con la 032 en implemented (y quitada de «previstas» y del texto antiguo de «en ramas»).
 
 ## Despliegue (lo ejecuta `/release`)
@@ -523,29 +548,29 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T011, T014, T018, T042 | T023, T025, T026, T027 |
-| CA2 | T010, T012, T042 | T020, T024, T027, T036 |
+| CA1 | T011, T014, T018, T042, T052, T056 | T023, T025, T026, T027, T053, T057 |
+| CA2 | T010, T012, T042, T056 | T020, T024, T027, T036, T057 |
 | CA3 | T002, T043 | T034 |
-| CA4 | T012 | T024 |
+| CA4 | T012, T054 | T024, T055 |
 | CA5 | T013, T042, T050 | T021 |
-| CA6 | T013, T019, T042 | T025, T032, T034 |
-| CA7 | T015, T039, T041 | T028, T033, T039 |
-| CA8 | T014, T015, T016, T019, T040, T041, T050 | T026, T028, T029, T032 |
-| CA9 | T016, T017, T044 | T029, T030, T033, T037 |
-| CA10 | T018, T019, T041, T042 | T031, T032, T033, T035, T038 |
+| CA6 | T013, T019, T042, T058 | T025, T032, T034 |
+| CA7 | T015, T039, T041, T061 | T028, T033, T039, T062 |
+| CA8 | T014, T015, T016, T019, T040, T041, T050, T058 | T026, T028, T029, T032 |
+| CA9 | T016, T017, T044, T061 | T029, T030, T033, T037, T062 |
+| CA10 | T018, T019, T041, T042, T058, T059 | T031, T032, T033, T035, T038, T060 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
 | TM1 | T026, T028, T032 | T015, T019, T041 |
 | TM2 | T028 | T015, T041 |
-| TM3 | T029 | T016, T044 |
+| TM3 | T029, T062 | T016, T044, T061 |
 | TM4 | T029, T032 | T016, T019, T044 |
 | TM5 | T020, T024 | T010, T012, T042 |
-| TM6 | T024 | T012 |
+| TM6 | T024, T055 | T012, T054 |
 | TM7 | T021 | T013 |
 | TM8 | T020 | T010 |
 | TM9 | T026, T032 | T014, T019, T050 |
-| TM10 | T024, T025, T027, T032 | T012, T013, T019, T042 |
+| TM10 | T024, T025, T027, T032, T053, T055, T057 | T012, T013, T019, T042, T052, T054, T056 |
 | TM11 | T029, T030 | T017, T044 |
 | TM12 | T023 | T011 |
 | TM13 | T034, T040 | T042 |
@@ -555,23 +580,23 @@ Formato:
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | deploy/respaldar.sh | T028, T039 |
-| deploy/restaurar.sh | T029 |
+| deploy/restaurar.sh | T029, T062 |
 | deploy/volver.sh | T030 |
 | deploy/desplegar.sh | T037 |
-| deploy/cifrar-copias-antiguas.sh | T031 |
+| deploy/cifrar-copias-antiguas.sh | T031, T060 |
 | deploy/preparar-vigilancia.sh | T027 |
-| deploy/verificar.sh | T032 |
+| deploy/verificar.sh | T032, T060 |
 | deploy/README.md | T033, T034 |
 | docker-compose.prod.yml | T026 |
 | app/Listeners/RegistrarFalloAcceso.php | T020 |
 | app/Http/Controllers/AuthController.php | T036 |
-| app/Avisos/Vigilante.php, app/Avisos/Estado.php | T023, T024 |
+| app/Avisos/Vigilante.php, app/Avisos/Estado.php | T023, T024, T053, T055, T057 |
 | app/Console/Commands/Vigilar.php | T025 |
 | app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php | T021 |
 | config/avisos.php, config/logging.php | T003, T020 |
 | .env.example | T003 |
 | .gitignore, .dockerignore | T026 |
-| tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019 |
+| tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019, T052, T054, T056, T058, T059, T061 |
 | docs/security.md, docs/observability.md, docs/deployment.md, docs/architecture.md, docs/roadmap.md, docs/adr/0007 | T035, T051, T090, T091 (el ADR se creó y aceptó en `/plan`) |
 | docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md (cobertura de RS15) | T038 |
 
