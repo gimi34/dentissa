@@ -320,6 +320,27 @@ class VigilanteTest extends TestCase
         $this->assertStringNotContainsString('Mozilla', $estado);
     }
 
+    /**
+     * /review R1: una línea con la forma de `combined` pero con la hora en otro formato cuenta
+     * como línea sin formato; no tumba la ejecución ni deja el desplazamiento atrás.
+     */
+    public function test_una_hora_mal_formada_cuenta_como_linea_sin_formato(): void
+    {
+        $this->iniciar();
+        $this->escribirLineas(array_merge(
+            array_fill(0, 13, '203.0.113.5 - - [2026-10-25T10:00:00+00:00] "GET / HTTP/1.1" 500 512 "-" "Mozilla/5.0"'),
+            array_fill(0, 12, '203.0.113.5 - - [abc] "GET / HTTP/1.1" 500 512 "-" "Mozilla/5.0"'),
+        ));
+
+        $this->assertTrue($this->vigilar());
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'formato');
+
+        // Lo ya leído no se vuelve a leer: solo cuentan las líneas nuevas.
+        $this->escribirAcceso(200, 10);
+        $this->vigilar();
+        $this->assertSame(['peticiones' => 10, 'errores' => 0], app(Vigilante::class)->ventanaDeErrores());
+    }
+
     /** /analyze A36: un log en otro formato no apaga el aviso en silencio. */
     public function test_avisa_si_el_log_cambia_de_formato(): void
     {
