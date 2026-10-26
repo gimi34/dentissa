@@ -471,11 +471,12 @@ Formato:
   - nota: aceptado en /analyze r2 (2026-10-25), A39 — la entrada del roadmap dice que la 020 debe añadir el `scheduler` al Compose de producción, mover `dentissa:vigilar` a él y retirar el temporizador.
   - nota: Objetivo 3: OB6.b y OB6.c → objetivo 5. Objetivo 4: RS15.b, RS15.c y RS15.d → objetivo 5. Objetivo 5: RS15.c, RS15.d y OB6.c en su lista; la 032 en curso (OB6.b, RS15.b; RS15.c como EX3; OB6.c y RS15.d pendientes). En Pendientes, los cuatro puntos de la 032: desplegar.sh de la versión instalada (D6), umbral de 5xx sin mínimo (A26), la 020 y el temporizador (A20), la vuelta de la 038 (A25). Validador sin errores.
   - nota: A39 aplicado: la entrada dice que la 020 tiene que llevar su scheduler también al Compose de producción, mover dentissa:vigilar a él y retirar el temporizador.
-- [ ] T090 Actualizar `docs/architecture.md` en sus secciones reales (/analyze A23), según el ADR 0007:
+- [x] T090 Actualizar `docs/architecture.md` en sus secciones reales (/analyze A23), según el ADR 0007:
   - **Diagrama de componentes:** el temporizador → `dentissa:vigilar` en `app`, `nginx_logs` también en `app`, la salida SMTP a Gmail y UptimeRobot hacia `/up`.
   - **Módulos:** `App\Avisos` y `App\Listeners\RegistrarFalloAcceso`.
   - **Integraciones externas:** Gmail SMTP con la cuenta de envío y UptimeRobot; desaparece «No hay correo…».
   - **Despliegue:** copias `.sql.gz.gpg`, restauración y vuelta con copia desde el PC, `preparar-vigilancia.sh` y `cifrar-copias-antiguas.sh`.
+  - nota: docs/architecture.md: Módulos (Comandos con dentissa:vigilar; Registro de fallos de acceso; Avisos de producción) y la nota de acoplamiento con AuthController::origenLimite y sujetoLimite; Integraciones externas (Gmail SMTP 465 con la cuenta de envío y UptimeRobot; desaparece «No hay correo»); Despliegue (diagrama con el temporizador, el log de acceso :ro en app, las copias cifradas, Gmail, UptimeRobot y la restauración desde el PC; copias y avisos, ADR 0007; restaurar.sh en el PC).
 - [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md`:
   - **deployment.md:** copias cifradas, restauración y vuelta desde el PC, avisos y la nueva verificación.
   - **observability.md:**

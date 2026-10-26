@@ -71,11 +71,14 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php` | Rol por grupo de rutas; cabeceras no-cache | `usuarios.rol` |
 | Límites de intentos | `app/Providers/AppServiceProvider.php` (limitadores `registro` y `google`), `AuthController::login`, `routes/web.php` (`throttle:`) | 5 intentos por minuto; mismo mensaje en los tres casos, que no revela si la cuenta existe (spec 030, CA8) | caché (`CACHE_STORE=database` en producción) |
 | Proxy | `bootstrap/app.php` (`trustProxies`) | Detrás de nginx y el túnel, Laravel solo confía en `X-Forwarded-Proto` (URL y redirecciones en https); la IP real la pone nginx en `REMOTE_ADDR` (spec 030, D3) | — |
-| Comandos | `app/Console/Commands/RotarCredencialesVolcado.php` | `dentissa:rotar-credenciales --confirmar`: contraseña aleatoria para cada cuenta del volcado con contraseña, mostrada una sola vez (spec 030, CA5) | `usuarios` |
+| Comandos | `app/Console/Commands/RotarCredencialesVolcado.php`, `app/Console/Commands/Vigilar.php` | `dentissa:rotar-credenciales --confirmar`: contraseña aleatoria para cada cuenta del volcado con contraseña, mostrada una sola vez (spec 030, CA5). `dentissa:vigilar` (y `--prueba`): una vuelta del vigilante de avisos; sale con código distinto de 0 si un aviso no se pudo enviar (spec 032) | `usuarios`; `app/Avisos`, correo |
+| Registro de fallos de acceso | `app/Listeners/RegistrarFalloAcceso.php`, canal `seguridad` de `config/logging.php` | Escucha `Failed` y `Lockout` (descubierto automáticamente) y escribe una línea JSON por intento fallido o bloqueado, con huellas HMAC del origen y de la cuenta (`AuthController::origenLimite` y `sujetoLimite`, las mismas reglas que el limitador), sin IP ni correo. Alerta, no audita (spec 032, ADR 0007) | `AuthController`, `usuarios` |
+| Avisos de producción | `app/Avisos/Vigilante.php`, `app/Avisos/Estado.php`, `app/Mail/AvisoProduccion.php`, `config/avisos.php` | Lee lo nuevo del log de acceso de nginx y del canal `seguridad` (desplazamientos e inodo en `storage/app/avisos/estado.json`, con tope por ejecución), cuenta en una ventana de 5 minutos y avisa por correo de errores del servidor (> 1 %), inicios de sesión fallidos (> 10 por origen o cuenta) y log con otro formato; un correo por tipo cada 30 minutos con el acumulado, sin datos de los logs (spec 032, ADR 0007) | log de acceso (volumen `nginx_logs`), canal `seguridad`, Mail de Laravel |
 
 Los controladores no se llaman entre sí, salvo dos excepciones: `DashboardController` usa el aviso de
 plazo de `ClienteCitasController` y `AppServiceProvider` usa `AuthController::origenLimite` y su
-mensaje de demasiados intentos. El resto se acopla a través del esquema compartido. Los mismos
+mensaje de demasiados intentos. Fuera de los controladores, `RegistrarFalloAcceso` usa
+`AuthController::origenLimite` y `sujetoLimite` (spec 032). El resto se acopla a través del esquema compartido. Los mismos
 controladores sirven a varios roles bajo prefijos `/admin`, `/dentista`, `/asistente`; `/cliente`
 tiene su propio grupo, que solo exige `auth` (`role:cliente` va ruta a ruta en cancelar y
 reprogramar; RS2.a). Otras rutas: `/` redirige según el rol, `/admin/reportes` sirve
@@ -118,7 +121,12 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 - Google OAuth mediante `laravel/socialite` (`/auth/google`, `/auth/google/callback`); variables
   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
 - Google Fonts (Roboto) desde el navegador.
-- No hay correo, colas, almacenamiento de archivos ni APIs HTTP salientes en uso.
+- Correo saliente (spec 032): avisos de producción por el SMTP de Gmail (`smtp.gmail.com:465`, TLS
+  implícito) con una cuenta que solo sirve para enviar, hacia `AVISOS_CORREO`; variables `MAIL_*` y
+  `AVISOS_CORREO` en `app.env`. Local usa `MAIL_MAILER=log`.
+- UptimeRobot (spec 032, plan gratuito): comprueba `https://<dominio>/up` cada 5 minutos desde fuera
+  y avisa por correo al caer y al volver, también con el servidor apagado. No recibe datos.
+- No hay colas, almacenamiento de archivos ni APIs HTTP salientes en uso.
 
 ## Frontend
 - Componentes y organización: vistas Blade por módulo en `resources/views/<modulo>/`, archivos en
@@ -188,9 +196,16 @@ flowchart LR
     CFD -->|HTTP| WEB[web · nginx<br/>real_ip de CF-Connecting-IP<br/>http → 301 https<br/>cabeceras de seguridad y HSTS]
     WEB -->|FastCGI :9000| APPP[app · php-fpm<br/>código en la imagen]
     APPP --> DBP[(db · MariaDB<br/>usuario dentissa_app)]
+    WEB -.->|log de acceso, volumen nginx_logs :ro| APPP
+    TMR[systemd · dentissa-vigilar.timer<br/>cada minuto] -->|php artisan dentissa:vigilar| APPP
+    BK[("copias .sql.gz.gpg<br/>/var/backups/dentissa<br/>solo la clave pública")]
+    APPP ~~~ BK
   end
   APPP -->|Socialite| GO[Google OAuth]
-  ADM[Responsable por SSH<br/>red local o red privada Tailscale, solo clave] -->|deploy/*.sh: copia, migrate --force| SRV
+  APPP -->|SMTP 465 TLS · cuenta de envío| GM[Gmail → AVISOS_CORREO]
+  UR[UptimeRobot] -->|HTTPS /up cada 5 min| CF
+  ADM[Responsable por SSH<br/>red local o red privada Tailscale, solo clave] -->|deploy/*.sh: copia cifrada, migrate --force| SRV
+  PC[PC del responsable<br/>clave secreta + frase] -->|restaurar.sh: solo el volcado descifrado, por SSH| SRV
 ```
 
 - `docker/prod/Dockerfile`: imágenes multietapa `app` (sin dependencias de desarrollo, secretos ni
@@ -209,9 +224,20 @@ flowchart LR
   recrea el contenedor; `verificar.sh` avisa si un servicio usa una configuración distinta de la
   guardada (spec 031).
 - `deploy/`: scripts que el responsable ejecuta por SSH (preparar el servidor, desplegar, copia,
-  restauración, vuelta atrás y verificación) y la guía `deploy/README.md`.
-- Secretos en `app.env`, `db.env` y `tunnel.env` fuera del clon; volúmenes `db_data`, `storage` y
-  `nginx_logs`. El volcado se carga una sola vez en `db`; `desplegar.sh` aplica las migraciones.
+  vuelta atrás, verificación, `preparar-vigilancia.sh` y `cifrar-copias-antiguas.sh`) y la guía
+  `deploy/README.md`. `restaurar.sh` se ejecuta en el PC del responsable (spec 032).
+- Copias (spec 032, [ADR 0007](adr/0007-copias-cifradas-y-avisos.md)): `respaldar.sh` cifra el
+  volcado en la misma tubería (`mariadb-dump | awk | gzip | gpg --recipient-file`) para la clave
+  pública del responsable (`/opt/dentissa/entorno/copias.pub.asc`); el servidor no puede abrirlas.
+  Se restauran desde el PC (`restaurar.sh <copia> <cuenta@servidor> [--volver <ref>]`), que comprueba
+  la copia entera en local y envía por SSH solo el volcado descifrado; la vuelta con copia usa
+  `volver.sh <ref> --sin-levantar` y órdenes que existen desde la 030.
+- Avisos (spec 032): el temporizador `dentissa-vigilar` (systemd, cada minuto, instalado por
+  `preparar-vigilancia.sh`) ejecuta `dentissa:vigilar` en `app`, que lee el log de acceso de `web`
+  (montado en solo lectura) y el canal `seguridad`.
+- Secretos en `app.env`, `db.env` y `tunnel.env` fuera del clon (y la clave pública de las copias,
+  `copias.pub.asc`); volúmenes `db_data`, `storage` y `nginx_logs` (este también en `app`, en solo
+  lectura). El volcado se carga una sola vez en `db`; `desplegar.sh` aplica las migraciones.
 - CI: `.github/workflows/ai-dd.yml` valida los artefactos del flujo y corre tests (contra un MariaDB
   efímero con el volcado y las migraciones), Pint y los escáneres en cada PR; no despliega.
 
