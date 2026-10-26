@@ -588,6 +588,34 @@ class VigilanteTest extends TestCase
     }
 
     /**
+     * /review R25 (CA4): el reintento de un aviso cuyo primer envío falló no dice que su recuento
+     * viene del aviso anterior, de hace días: el intervalo empieza en la ventana del intento fallido.
+     */
+    public function test_el_reintento_de_un_aviso_fallido_no_cita_el_aviso_anterior(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $this->assertTrue($this->vigilar());
+
+        $this->travel(3)->days();
+        $this->escribirFallos(11);
+        $intento = CarbonImmutable::now();
+        $falso = Mail::getFacadeRoot();
+        Mail::shouldReceive('to')->andThrow(new TransportException('421 servicio no disponible'));
+        $this->assertFalse($this->vigilar());
+
+        Mail::swap($falso);
+        $this->travel(1)->minutes();
+        $this->assertTrue($this->vigilar());
+
+        Mail::assertSentCount(2);
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'accesos'
+            && $aviso->recuento === 11
+            && $aviso->desde->equalTo($intento->subMinutes(5))
+            && $aviso->anterior === null);
+    }
+
+    /**
      * /review R3: un log de acceso que existe pero no se puede abrir (un envoltorio de flujo de
      * prueba cuyo `stream_open` falla) no tumba el aviso de accesos ni deja el estado sin guardar.
      */
