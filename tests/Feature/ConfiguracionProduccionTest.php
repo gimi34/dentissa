@@ -511,7 +511,8 @@ class ConfiguracionProduccionTest extends TestCase
         $ordenes = $this->ordenes('deploy/restaurar.sh');
 
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{copia\}" == \*\.sql\.gz\.gpg \]\] \|\| error /m', $ordenes, 'Solo acepta copias cifradas.');
-        $this->assertMatchesRegularExpression('/^gpg --status-fd 3 --decrypt -- "\$\{copia\}" 3> "\$\{estado\}" 2> \/dev\/null \| gzip -cd 2> \/dev\/null \| tail -n 1 > "\$\{final\}"$/m', $ordenes, 'La pasada de comprobación descifra y descomprime entera.');
+        // /review R7: del volcado solo se guarda si termina bien, nunca su última línea.
+        $this->assertMatchesRegularExpression('/^gpg --status-fd 3 --decrypt -- "\$\{copia\}" 3> "\$\{estado\}" 2> \/dev\/null \| gzip -cd 2> \/dev\/null \| awk \'END \{ print \(index\(\$0, "-- Dump completed"\) == 1 \? "completo" : "incompleto"\) \}\' > "\$\{final\}"$/m', $ordenes, 'La pasada de comprobación descifra y descomprime entera.');
         $this->assertMatchesRegularExpression('/^comprobar\n\[\[ -n "\$\{solo\}" \]\] && return 0$/m', $ordenes, '--solo-comprobar termina tras la comprobación.');
 
         $main = $this->posicion($ordenes, "\nmain() {", 'Falta main().');
@@ -610,7 +611,8 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^APP="\$\{DENTISSA_APP:-\/opt\/dentissa\/app\}"$/m', $ordenes);
         $this->assertStringNotContainsString('dirname', $ordenes);
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{APP\}" =~ \^\/\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'DENTISSA_APP es una ruta absoluta sin espacios.');
-        $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ;.');
+        // /review R9: tampoco puede empezar por «-», que git tomaría como una opción.
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/\]\[A-Za-z0-9\._\/-\]\*\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ; ni empieza por -.');
         $this->assertMatchesRegularExpression('/^orden="cd \$\(printf \'%q\' "\$\{APP\}"\) && \$\(printf \'%q \' "\$@"\)"$/m', $ordenes, 'Cada argumento de la orden remota va citado.');
     }
 
@@ -842,5 +844,22 @@ class ConfiguracionProduccionTest extends TestCase
             '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n\s*fallo [^\n]*\n\s*fi\n\s*claras="\$\(find /m',
             $this->leer('deploy/verificar.sh'),
         );
+    }
+
+    /**
+     * Spec 032 (CA7, CA9; /review R6, R7, R8): en la carga remota, la marca de /dev/shm se borra
+     * también si la carga falla; la pasada 1 del PC solo guarda si el volcado termina bien; y la
+     * carga va en el modo sandbox del cliente de MariaDB, que no ejecuta órdenes del sistema que
+     * viniesen en una copia fabricada.
+     */
+    public function test_restaurar_no_deja_restos_y_carga_en_sandbox(): void
+    {
+        $carga = $this->cargaRemota();
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^\s*marca="\$\(mktemp -p \/dev\/shm dentissa-marca\.XXXXXX\)"\n\s*trap \'rm -f -- "\$\{marca\}"\' EXIT$/m', $carga, 'La marca se borra al salir, también si la carga falla (R6).');
+        $this->assertMatchesRegularExpression('/\| "\$\{compose\[@\]\}" exec -T db sh -c \'MYSQL_PWD="\$MARIADB_ROOT_PASSWORD" exec mariadb --sandbox -uroot "\$MARIADB_DATABASE"\'$/m', $carga, 'La carga usa el modo sandbox (R8).');
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{resultado\[1\]\}" -eq 0 \]\] && grep -qx completo "\$\{final\}" \|\| rechazar "el volcado está incompleto/m', $ordenes, 'Solo se comprueba la marca completo / incompleto (R7).');
+        $this->assertStringNotContainsString('tail -n 1 > "${final}"', $ordenes, 'La última línea del volcado no se escribe en el PC (R7).');
     }
 }
