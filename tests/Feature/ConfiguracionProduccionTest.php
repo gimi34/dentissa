@@ -835,13 +835,23 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
-     * Spec 032 (CA10; /review R5): si la carpeta de copias no existe o no se puede leer, la
-     * búsqueda de copias en claro no puede dar OK.
+     * Spec 032 (CA10; /review R5, R27, R28): si la carpeta de copias no existe o no se puede leer,
+     * es un FALLO y la búsqueda de copias en claro no se hace (daría 0 y un OK falso); si se puede,
+     * cero copias en claro es OK y alguna es FALLO.
      */
     public function test_verificar_falla_si_no_puede_leer_las_copias(): void
     {
         $this->assertMatchesRegularExpression(
-            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n\s*fallo [^\n]*\n\s*fi\n\s*claras="\$\(find /m',
+            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n'
+            .'\s*fallo "[^"\n]*"\n'
+            .'\s*else\n'
+            .'\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n'
+            .'\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then\n'
+            .'\s*ok "[^"\n]*"\n'
+            .'\s*else\n'
+            .'\s*fallo "[^"\n]*"\n'
+            .'\s*fi\n'
+            .'\s*fi$/m',
             $this->leer('deploy/verificar.sh'),
         );
     }
