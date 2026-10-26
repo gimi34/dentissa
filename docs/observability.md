@@ -12,14 +12,14 @@ cubierta.
 ## Resumen
 | Capacidad | Herramienta | Estado | Evidencia |
 |---|---|---|---|
-| Logs de aplicación | Monolog (Laravel), canal `stack` → `single` | presente (config de fábrica); el código no escribe ni un log: 0 llamadas a `Log::`/`logger()`/`report()` | `config/logging.php`, grep en `app/` |
+| Logs de aplicación | Monolog (Laravel), canal `stack` → `single`, y canal `seguridad` (`daily`, JSON, 14 días; spec 032) | en uso solo para los avisos (spec 032): el canal `seguridad` con los fallos de acceso y `Log::warning('aviso no enviado')`; el resto del código no escribe logs | `config/logging.php`, `app/Listeners/RegistrarFalloAcceso.php`, `app/Avisos/Vigilante.php` |
 | Agregación de logs | ninguna | — | local: `laravel.log` en el directorio del proyecto montado. Producción (spec 030): `laravel.log` en el volumen `storage` y `dentissa-access.log`/`dentissa-error.log` de nginx en el volumen `nginx_logs`, que sobreviven a reinicios y a recrear los contenedores |
 | Correlación por petición | ninguna | — | `bootstrap/app.php` sin middleware ni `Context::add` |
 | Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados y reprogramaciones de cita, con autor, sin IP ni request_id) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026), `app/Agenda/ReprogramacionCitas.php` (fecha anterior y nueva, spec 028) |
-| Eventos de autenticación | `Login`, `Failed`, `Logout` y `Lockout` de Laravel | presente, sin uso: se disparan, pero ningún listener los registra | `app/Http/Controllers/AuthController.php`, `app/Providers/AppServiceProvider.php` (limitadores) |
+| Eventos de autenticación | `Login`, `Failed`, `Logout` y `Lockout` de Laravel | `Failed` y `Lockout`, en uso para alertar (spec 032): `RegistrarFalloAcceso` escribe una línea con huellas en el canal `seguridad`; no es auditoría (`Login` y `Logout` siguen sin registrarse) | `app/Http/Controllers/AuthController.php`, `app/Providers/AppServiceProvider.php` (limitadores), `app/Listeners/RegistrarFalloAcceso.php` |
 | Métricas | ninguna | — | `composer.json` sin Pulse/Telescope/Prometheus |
 | Trazas distribuidas | ninguna | — | — |
-| Alertas | ninguna (canal `slack` definido sin webhook) | presente | `config/logging.php` |
+| Alertas | vigilante propio por correo (`dentissa:vigilar`, cada minuto) y UptimeRobot (spec 032, ADR 0007) | en uso en producción | `app/Avisos/`, `deploy/preparar-vigilancia.sh`, `deploy/README.md` §12 |
 | Health check | `/up` de Laravel (no comprueba BD) | en uso | `bootstrap/app.php`; `deploy/verificar.sh` lo comprueba tras cada despliegue, junto a la configuración aplicada, las cabeceras y la red privada (spec 031) |
 | Visor de logs en local | `laravel/pail` | presente (require-dev), no se usa | `composer.json` |
 
@@ -69,15 +69,21 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
   registro también se audita.
 
 ## Métricas y alertas
-Producción existe desde v0.5.0 (spec 030) sin métricas ni alertas (OB6.b); staging no existe.
-Umbrales propuestos:
+Producción tiene alertas por correo desde la spec 032 (OB6.b); sin métricas ni paneles. Staging no
+existe (OB6.c). Como mucho un correo por tipo de aviso cada 30 minutos, con lo acumulado; los correos
+no llevan datos personales, IPs, correos de cuentas ni secretos.
 
 | Métrica / alerta | Umbral | Canal |
 |---|---|---|
-| Tasa de errores 5xx | > 1 % en 5 min | TODO(init) (correo del equipo, gratuito) |
-| Logins fallidos por IP o cuenta | > 10 en 5 min | TODO(init) |
-| Latencia p95 | > 1 s en 10 min | TODO(init) |
+| Tasa de errores 5xx (log de acceso de nginx) | > 1 % en 5 min | correo a `AVISOS_CORREO` desde la cuenta de envío (spec 032) |
+| Logins fallidos por origen o cuenta (canal `seguridad`) | > 10 en 5 min | correo (spec 032) |
+| Log de acceso con otro formato | ≥ 20 líneas en 5 min con más de la mitad sin el formato, o 5 seguidas sin ninguna buena | correo (spec 032) |
+| Caída vista desde fuera (`/up`) | 5 min sin responder, también con el servidor apagado; y la vuelta | correo de UptimeRobot (spec 032) |
+| Latencia p95 | > 1 s en 10 min | pendiente (roadmap) |
 | Cola de trabajos atascada | no aplica (no hay jobs) | — |
+
+El vigilante lee el log de acceso en formato `combined`: si un cambio de `log_format` (OB8.a) lo
+cambia, hay que ajustar `App\Avisos\Vigilante`; mientras tanto, el aviso de formato lo detecta.
 
 ## Brechas
 <!-- Cada brecha con ID `OB<n>`, prioridad, correcciones `OB<n>.<letra>` y enlace al roadmap. -->
@@ -141,7 +147,8 @@ roadmap objetivos 3 y 5.
 
 Correcciones:
 - OB6.a Health check que compruebe la conexión a MariaDB — estado: pendiente
-- OB6.b Alertas mínimas gratuitas (5xx, logins fallidos) en staging y prod — estado: pendiente
+- OB6.b Alertas mínimas gratuitas (5xx, logins fallidos) en producción — estado: en curso (spec 032)
+- OB6.c Alertas mínimas gratuitas en staging (creada por la 032 al dividir OB6.b) — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### OB7 · Baja — Logs de nginx se pierden al recrear el contenedor
 nginx escribe en `/var/log/nginx/` dentro del contenedor, sin volumen ni stdout. → roadmap objetivo 5.
@@ -161,7 +168,7 @@ registra». Evidencia: `docker/nginx/dentissa.prod.conf` (`access_log` sin `log_
 `PacientesController.php` y `ExpedientesController.php` (`index`).
 
 Correcciones:
-- OB8.a El log de acceso de producción no guarda el query string (o lo enmascara) — estado: pendiente (→ objetivo 3)
+- OB8.a El log de acceso de producción no guarda el query string (o lo enmascara) — estado: pendiente (→ objetivo 3). Al hacerlo, ajustar `App\Avisos\Vigilante`, que lee el formato `combined` (spec 032, /analyze A36)
 - OB8.b Rotación con retención definida de `dentissa-access.log`, `dentissa-error.log` y `laravel.log` en producción — estado: pendiente (→ objetivo 3)
 - OB8.c Revisar en el servidor los registros ya guardados y purgar los que contengan búsquedas — estado: pendiente (la ejecuta el responsable en el servidor)
 

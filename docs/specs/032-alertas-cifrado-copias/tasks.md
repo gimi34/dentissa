@@ -477,7 +477,7 @@ Formato:
   - **Integraciones externas:** Gmail SMTP con la cuenta de envío y UptimeRobot; desaparece «No hay correo…».
   - **Despliegue:** copias `.sql.gz.gpg`, restauración y vuelta con copia desde el PC, `preparar-vigilancia.sh` y `cifrar-copias-antiguas.sh`.
   - nota: docs/architecture.md: Módulos (Comandos con dentissa:vigilar; Registro de fallos de acceso; Avisos de producción) y la nota de acoplamiento con AuthController::origenLimite y sujetoLimite; Integraciones externas (Gmail SMTP 465 con la cuenta de envío y UptimeRobot; desaparece «No hay correo»); Despliegue (diagrama con el temporizador, el log de acceso :ro en app, las copias cifradas, Gmail, UptimeRobot y la restauración desde el PC; copias y avisos, ADR 0007; restaurar.sh en el PC).
-- [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md`:
+- [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md`:
   - **deployment.md:** copias cifradas, restauración y vuelta desde el PC, avisos y la nueva verificación.
   - **observability.md:**
     - alertas de 5xx, fallos de acceso y caída, en uso;
@@ -486,6 +486,9 @@ Formato:
     - OB6.c (staging), nueva → objetivo 5;
     - OB6.a sigue en el objetivo 3;
     - junto a la brecha del registro de acceso (objetivo 3), que el vigilante depende del formato `combined` y que cambiarlo exige ajustar `App\Avisos\Vigilante` (el aviso `formato` lo detecta) (/analyze A36).
+  - nota: docs/deployment.md: copias cifradas (respaldar.sh en tubería con gpg, clave pública en el servidor, secreta en el PC con su segunda copia, restaurar.sh desde el PC con sus mensajes y la carga que espera la primera línea, cifrar-copias-antiguas.sh, ensayos del 2026-10-25), rollback con la copia desde el PC (restaurar.sh --volver, volver.sh --sin-levantar, migrate:status --pending, temporizador; 4 min 44 s ensayado), variables nuevas (MAIL_*, AVISOS_CORREO, DENTISSA_CLAVE_PUBLICA, DENTISSA_APP) y verificación (16 comprobaciones, «Avisos y copias» sin --interna, aviso de prueba, UptimeRobot, logs del canal seguridad y del journal).
+  - nota: docs/observability.md: resumen (logs, eventos de autenticación y alertas en uso), tabla de métricas y alertas con canal y umbral (también el aviso de formato y UptimeRobot), OB6.b «en curso (spec 032)» y OB6.c nueva (staging → objetivo 5), OB6.a sigue pendiente (objetivo 3), y junto a OB8.a el acoplamiento del vigilante con el formato combined (A36).
+  - nota: Al dividir OB6, el validador pidió declarar OB6.c en la spec 030: fila «fuera → objetivo 5» en su Cobertura de riesgos y su fila de Historial, como T038 con RS15. Validador sin errores.
 - [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
