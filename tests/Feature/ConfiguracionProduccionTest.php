@@ -703,7 +703,8 @@ class ConfiguracionProduccionTest extends TestCase
         $ordenes = $this->ordenes('deploy/cifrar-copias-antiguas.sh');
 
         $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
-        $this->assertMatchesRegularExpression('/^for original in "\$\{DESTINO\}"\/dentissa-\*\.sql\.gz; do$/m', $ordenes);
+        // También la carpeta personal, que verificar.sh revisa (/review R5).
+        $this->assertMatchesRegularExpression('/^for original in "\$\{DESTINO\}"\/dentissa-\*\.sql\.gz "\$\{HOME\}"\/dentissa-\*\.sql\.gz; do$/m', $ordenes);
         $this->assertMatchesRegularExpression('/^destino="\$\{original\}\.gpg"$/m', $ordenes, 'Una copia buena pasa a .sql.gz.gpg.');
         $this->assertMatchesRegularExpression('/^destino="\$\{original%\.sql\.gz\}\.sql\.gz\.danada\.gpg"$/m', $ordenes, 'Una dañada pasa a .sql.gz.danada.gpg.');
 
@@ -828,6 +829,18 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression(
             '/^copia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\nwhile \[\[ -e "\$\{copia\}" \]\]; do\nsleep 1\ncopia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\ndone$/m',
             $this->ordenes('deploy/respaldar.sh'),
+        );
+    }
+
+    /**
+     * Spec 032 (CA10; /review R5): si la carpeta de copias no existe o no se puede leer, la
+     * búsqueda de copias en claro no puede dar OK.
+     */
+    public function test_verificar_falla_si_no_puede_leer_las_copias(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n\s*fallo [^\n]*\n\s*fi\n\s*claras="\$\(find /m',
+            $this->leer('deploy/verificar.sh'),
         );
     }
 }
