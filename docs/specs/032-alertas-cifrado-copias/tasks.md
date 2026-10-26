@@ -489,7 +489,8 @@ Formato:
   - nota: docs/deployment.md: copias cifradas (respaldar.sh en tubería con gpg, clave pública en el servidor, secreta en el PC con su segunda copia, restaurar.sh desde el PC con sus mensajes y la carga que espera la primera línea, cifrar-copias-antiguas.sh, ensayos del 2026-10-25), rollback con la copia desde el PC (restaurar.sh --volver, volver.sh --sin-levantar, migrate:status --pending, temporizador; 4 min 44 s ensayado), variables nuevas (MAIL_*, AVISOS_CORREO, DENTISSA_CLAVE_PUBLICA, DENTISSA_APP) y verificación (16 comprobaciones, «Avisos y copias» sin --interna, aviso de prueba, UptimeRobot, logs del canal seguridad y del journal).
   - nota: docs/observability.md: resumen (logs, eventos de autenticación y alertas en uso), tabla de métricas y alertas con canal y umbral (también el aviso de formato y UptimeRobot), OB6.b «en curso (spec 032)» y OB6.c nueva (staging → objetivo 5), OB6.a sigue pendiente (objetivo 3), y junto a OB8.a el acoplamiento del vigilante con el formato combined (A36).
   - nota: Al dividir OB6, el validador pidió declarar OB6.c en la spec 030: fila «fuera → objetivo 5» en su Cobertura de riesgos y su fila de Historial, como T038 con RS15. Validador sin errores.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: Spec en implemented el 2026-10-25, con CA1–CA10 marcados: cada uno con sus tests en verde (suite 412) y, donde la Trazabilidad lo pide, ensayado en el servidor (T041–T044). CA10: la aprobación de EX3 por el responsable queda en T096, como dice el plan. docs/specs/README.md con la 032 en implemented (y quitada de «previstas» y del texto antiguo de «en ramas»).
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5)
