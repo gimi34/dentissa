@@ -423,6 +423,28 @@ Formato:
   - nota: R6: trap de borrado de la marca justo después de su mktemp en la carga remota. R7: la pasada 1 guarda solo «completo» o «incompleto» (awk END sobre la última línea), nunca la línea. R8: la carga usa mariadb --sandbox; comprobado con el cliente de mariadb:10.11.19 de la base local: SELECT pasa, una orden system da «Not allowed in the sandbox mode», y mariadb-dump 10.11.19 ya abre el volcado con la línea que activa el sandbox. R9: la versión de --volver no puede empezar por «-».
   - nota: Prueba local en Git Bash con el servidor simulado (2026-10-25), igual que en T029: los cuatro rechazos con su mensaje, la restauración completa y la vuelta con --volver con las mismas órdenes, sin marcas sobrantes, la confirmación incorrecta sin órdenes, la frase cancelada en la pasada 2 sin DROP ni carga, y «v1;reboot» y «--orphan» rechazados.
 
+### Correcciones de /review (ronda 2)
+- [ ] T063 Añadir a `VigilanteTest` dos casos con un envoltorio de prueba que deja ilegible solo uno de los dos archivos diarios del canal `seguridad`: `test_un_archivo_de_seguridad_ilegible_no_duplica_fallos` (pasada la medianoche, 3 fallos de un mismo origen en el archivo de ayer y el de hoy ilegible: cuatro ejecuciones seguidas no envían ningún aviso de accesos) y `test_el_archivo_de_ayer_ilegible_no_impide_leer_el_de_hoy` (el de ayer ilegible y 11 fallos de un mismo origen en el de hoy: llega el aviso de accesos con 11); en los dos, `ejecutar()` devuelve false y queda `Log::warning('lectura fallida', ['fuente' => 'seguridad'])` — tests/Feature/VigilanteTest.php — hecho cuando: los dos casos fallan hoy por la razón esperada (el primero con un aviso de 12, el segundo sin aviso), anotado — cubre: CA2, CA4
+  - nota: añadida por /review: R23, R24
+- [ ] T064 Leer por separado cada archivo diario del canal `seguridad` en `Vigilante::leerSeguridad`: los fallos y el desplazamiento de un archivo leído se guardan juntos; uno que no se puede leer conserva su desplazamiento anterior, deja `lectura fallida` con la fuente `seguridad`, no impide leer el otro y la ejecución devuelve false — app/Avisos/Vigilante.php — hecho cuando: T063 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (con una sola captura para los dos archivos, T063 vuelve a fallar), anotado — cubre: CA2, CA4 — depende: T063
+  - nota: añadida por /review: R23, R24
+- [ ] T065 Añadir a `VigilanteTest` `test_el_reintento_de_un_aviso_fallido_no_cita_el_aviso_anterior`: con un aviso de accesos enviado hace 3 días, una ráfaga nueva cuyo primer envío falla y un reintento que funciona, el correo del reintento no cita aviso anterior (`$aviso->anterior === null`) y su intervalo empieza en la ventana del intento fallido — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy por la razón esperada (el correo cita el aviso de hace 3 días), anotado — cubre: CA4 — depende: T064
+  - nota: añadida por /review: R25
+- [ ] T066 En `Vigilante::avisar`, el correo de lo pendiente cita el aviso anterior solo si lo pendiente nació en su silencio (`desde` igual a `ultimo_envio`) — app/Avisos/Vigilante.php — hecho cuando: T065 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (con `$anterior` siempre, T065 vuelve a fallar), anotado — cubre: CA4 — depende: T065
+  - nota: añadida por /review: R25
+- [ ] T067 Añadir a `VigilanteTest` `test_el_comando_dice_si_fallo_una_lectura`: con el log de acceso ilegible (el envoltorio de T056), `php artisan dentissa:vigilar` sale con código 1 y su mensaje dice «no se pudo leer» — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy por la razón esperada (el mensaje solo habla del envío), anotado — cubre: CA1 — depende: T066
+  - nota: añadida por /review: R26
+- [ ] T068 Cambiar el mensaje de error de `dentissa:vigilar` a «Algún log no se pudo leer o algún aviso no se pudo enviar; se reintenta en la próxima ejecución (storage/logs/laravel.log).», los docblocks de `Vigilar` y de `Vigilante::ejecutar` (false si falló una lectura o un envío) y añadir `Log::warning('lectura fallida')` (campo `fuente`) a la fila de logs de `docs/observability.md` — app/Console/Commands/Vigilar.php, app/Avisos/Vigilante.php, docs/observability.md — hecho cuando: T067 y el resto de `VigilanteTest` pasan y pint limpio, anotado — cubre: CA1 — depende: T067
+  - nota: añadida por /review: R26
+- [ ] T069 En `ConfiguracionProduccionTest`, rehacer `test_verificar_falla_si_no_puede_leer_las_copias` para que exija la forma `if [[ ! -d "${DESTINO}" || ! -r "${DESTINO}" ]]; then` + `fallo …` + `else` + `claras="$(find …)"` + `if [[ "${claras}" -eq 0 ]]; then ok …; else fallo …; fi` + `fi`, anclando la comprobación de copias en claro a su rama ok / fallo — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: falla hoy por la razón esperada (la búsqueda no está en la rama `else`), anotado — cubre: CA10
+  - nota: añadida por /review: R27, R28
+- [ ] T070 Pasar la búsqueda de copias en claro de `verificar.sh` a la rama `else` de la comprobación de la carpeta — deploy/verificar.sh — hecho cuando: T069 pasa, `bash -n` limpio y se comprueba rompiendo (cambiar `-eq` por `-ne` o intercambiar ok y fallo hace fallar T069), anotado — cubre: CA10 — depende: T069
+  - nota: añadida por /review: R27, R28
+- [ ] T071 Añadir a `ConfiguracionProduccionTest` que `volver.sh` rechaza, antes de `git fetch`, una versión que no cumpla `^[A-Za-z0-9._/][A-Za-z0-9._/-]*$` (la misma expresión que `restaurar.sh`) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: falla hoy por la razón esperada, anotado — cubre: CA9 — depende: T070
+  - nota: añadida por /review: R29
+- [ ] T072 Validar la versión en `volver.sh` con la expresión de T071, antes de `git fetch` — deploy/volver.sh — hecho cuando: T071 y los demás casos de `volver.sh` pasan, `bash -n` limpio y, en Git Bash con un `git` falso en el PATH que deja constancia, `bash deploy/volver.sh -f` y `bash deploy/volver.sh 'v1;reboot'` terminan con el error sin llamar a git, anotado — cubre: CA9 — depende: T071
+  - nota: añadida por /review: R29
+
 ## Preparativos y ensayos en el servidor
 - [x] T040 Preparativos del responsable (plan, Rollout; los hace el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge que cada paso está hecho, sin ningún secreto ni la frase: la huella de la clave pública, la salida de `gpg --show-keys` en el servidor sin `sec`, la frase con el mínimo cumplido, la frase pedida una sola vez y la cuenta de envío dedicada creada — cubre: CA8 — depende: T034
   - Par de claves en el PC (D14), con una frase que cumpla el mínimo de la guía, y segunda copia de la secreta fuera del PC.
@@ -529,7 +551,8 @@ Formato:
   - nota: docs/deployment.md: copias cifradas (respaldar.sh en tubería con gpg, clave pública en el servidor, secreta en el PC con su segunda copia, restaurar.sh desde el PC con sus mensajes y la carga que espera la primera línea, cifrar-copias-antiguas.sh, ensayos del 2026-10-25), rollback con la copia desde el PC (restaurar.sh --volver, volver.sh --sin-levantar, migrate:status --pending, temporizador; 4 min 44 s ensayado), variables nuevas (MAIL_*, AVISOS_CORREO, DENTISSA_CLAVE_PUBLICA, DENTISSA_APP) y verificación (16 comprobaciones, «Avisos y copias» sin --interna, aviso de prueba, UptimeRobot, logs del canal seguridad y del journal).
   - nota: docs/observability.md: resumen (logs, eventos de autenticación y alertas en uso), tabla de métricas y alertas con canal y umbral (también el aviso de formato y UptimeRobot), OB6.b «en curso (spec 032)» y OB6.c nueva (staging → objetivo 5), OB6.a sigue pendiente (objetivo 3), y junto a la brecha del log de acceso (objetivo 3) el acoplamiento del vigilante con el formato combined (A36).
   - nota: Al dividir OB6, el validador pidió declarar OB6.c en la spec 030: fila «fuera → objetivo 5» en su Cobertura de riesgos y su fila de Historial, como T038 con RS15. Validador sin errores.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
+  - nota: desmarcada por /review r2 (changes_requested, 2026-10-25)
   - nota: desmarcada por /review r1 (changes_requested, 2026-10-25)
   - nota: Spec en implemented el 2026-10-25, con CA1–CA10 marcados: cada uno con sus tests en verde (suite 412) y, donde la Trazabilidad lo pide, ensayado en el servidor (T041–T044). CA10: la aprobación de EX3 por el responsable queda en T096, como dice el plan. docs/specs/README.md con la 032 en implemented (y quitada de «previstas» y del texto antiguo de «en ramas»).
   - nota: Vuelve a implemented el 2026-10-25 tras las correcciones de /review r1 (T052–T062, R1–R9): suite 417 en verde, pint limpio, gitleaks y semgrep sin hallazgos en los archivos tocados. CA1–CA10 siguen marcados; docs/specs/README.md con la 032 en implemented.
@@ -565,16 +588,16 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T011, T014, T018, T042, T052, T056 | T023, T025, T026, T027, T053, T057 |
-| CA2 | T010, T012, T042, T056 | T020, T024, T027, T036, T057 |
+| CA1 | T011, T014, T018, T042, T052, T056, T067 | T023, T025, T026, T027, T053, T057, T068 |
+| CA2 | T010, T012, T042, T056, T063 | T020, T024, T027, T036, T057, T064 |
 | CA3 | T002, T043 | T034 |
-| CA4 | T012, T054 | T024, T055 |
+| CA4 | T012, T054, T063, T065 | T024, T055, T064, T066 |
 | CA5 | T013, T042, T050 | T021 |
 | CA6 | T013, T019, T042, T058 | T025, T032, T034 |
 | CA7 | T015, T039, T041, T061 | T028, T033, T039, T062 |
 | CA8 | T014, T015, T016, T019, T040, T041, T050, T058 | T026, T028, T029, T032 |
-| CA9 | T016, T017, T044, T061 | T029, T030, T033, T037, T062 |
-| CA10 | T018, T019, T041, T042, T058, T059 | T031, T032, T033, T035, T038, T060 |
+| CA9 | T016, T017, T044, T061, T071 | T029, T030, T033, T037, T062, T072 |
+| CA10 | T018, T019, T041, T042, T058, T059, T069 | T031, T032, T033, T035, T038, T060, T070 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -583,12 +606,12 @@ Formato:
 | TM3 | T029, T062 | T016, T044, T061 |
 | TM4 | T029, T032 | T016, T019, T044 |
 | TM5 | T020, T024 | T010, T012, T042 |
-| TM6 | T024, T055 | T012, T054 |
+| TM6 | T024, T055, T066 | T012, T054, T065 |
 | TM7 | T021 | T013 |
 | TM8 | T020 | T010 |
 | TM9 | T026, T032 | T014, T019, T050 |
-| TM10 | T024, T025, T027, T032, T053, T055, T057 | T012, T013, T019, T042, T052, T054, T056 |
-| TM11 | T029, T030 | T017, T044 |
+| TM10 | T024, T025, T027, T032, T053, T055, T057, T064, T068, T070 | T012, T013, T019, T042, T052, T054, T056, T063, T067, T069 |
+| TM11 | T029, T030, T072 | T017, T044, T071 |
 | TM12 | T023 | T011 |
 | TM13 | T034, T040 | T042 |
 | TM14 | T023, T026 | T011, T013 |
@@ -598,23 +621,23 @@ Formato:
 |---|---|
 | deploy/respaldar.sh | T028, T039 |
 | deploy/restaurar.sh | T029, T062 |
-| deploy/volver.sh | T030 |
+| deploy/volver.sh | T030, T072 |
 | deploy/desplegar.sh | T037 |
 | deploy/cifrar-copias-antiguas.sh | T031, T060 |
 | deploy/preparar-vigilancia.sh | T027 |
-| deploy/verificar.sh | T032, T060 |
+| deploy/verificar.sh | T032, T060, T070 |
 | deploy/README.md | T033, T034 |
 | docker-compose.prod.yml | T026 |
 | app/Listeners/RegistrarFalloAcceso.php | T020 |
 | app/Http/Controllers/AuthController.php | T036 |
-| app/Avisos/Vigilante.php, app/Avisos/Estado.php | T023, T024, T053, T055, T057 |
-| app/Console/Commands/Vigilar.php | T025 |
+| app/Avisos/Vigilante.php, app/Avisos/Estado.php | T023, T024, T053, T055, T057, T064, T066, T068 |
+| app/Console/Commands/Vigilar.php | T025, T068 |
 | app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php | T021 |
 | config/avisos.php, config/logging.php | T003, T020 |
 | .env.example | T003 |
 | .gitignore, .dockerignore | T026 |
-| tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019, T052, T054, T056, T058, T059, T061 |
-| docs/security.md, docs/observability.md, docs/deployment.md, docs/architecture.md, docs/roadmap.md, docs/adr/0007 | T035, T051, T090, T091 (el ADR se creó y aceptó en `/plan`) |
+| tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019, T052, T054, T056, T058, T059, T061, T063, T065, T067, T069, T071 |
+| docs/security.md, docs/observability.md, docs/deployment.md, docs/architecture.md, docs/roadmap.md, docs/adr/0007 | T035, T051, T068, T090, T091 (el ADR se creó y aceptó en `/plan`) |
 | docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md (cobertura de RS15) | T038 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
