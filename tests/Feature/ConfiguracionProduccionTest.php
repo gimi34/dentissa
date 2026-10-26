@@ -794,14 +794,19 @@ class ConfiguracionProduccionTest extends TestCase
         $script = $this->leer('deploy/verificar.sh');
 
         $this->assertSame(1, preg_match('/^    if \[\[ "\$\{modo\}" != "--interna" \]\]; then\n        echo "== Avisos y copias \(spec 032\)"\n(.*?)^    fi$/ms', $script, $seccion), 'La sección es un bloque que no corre con --interna.');
+
+        // Órdenes de la sección sin comentarios ni echo (/review R4): una orden en un comentario
+        // no cuenta, y cada comprobación lleva su rama ok / fallo correcta.
+        $lineas = array_map('trim', explode("\n", $seccion[1]));
+        $ordenes = implode("\n", array_filter($lineas, fn (string $l) => $l !== '' && ! str_starts_with($l, '#') && ! str_starts_with($l, 'echo ')));
+
         foreach ([
-            'systemctl is-active --quiet dentissa-vigilar.timer' => 'temporizador activo',
-            'gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"' => 'clave pública válida',
-            "grep -q '^sec:'" => 'sin clave secreta en el archivo',
-            'gpg --list-secret-keys --with-colons' => 'llavero sin claves secretas',
-            '"${compose[@]}" exec -T -u www-data app test -r /var/log/nginx/dentissa-access.log' => 'app lee el log de acceso',
-        ] as $orden => $que) {
-            $this->assertStringContainsString($orden, $seccion[1], "La sección comprueba: {$que}.");
+            'temporizador activo → ok' => '/^if systemctl is-active --quiet dentissa-vigilar\.timer; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+            'clave pública con pub y sin sec → ok' => '/^claves_publicas="\$\(gpg --show-keys --with-colons -- "\$\{CLAVE_PUBLICA\}" 2> \/dev\/null \|\| true\)"\nif grep -q \'\^pub:\' <<< "\$\{claves_publicas\}" && ! grep -q \'\^sec:\' <<< "\$\{claves_publicas\}"; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+            'llavero con una clave secreta → fallo' => '/^if gpg --list-secret-keys --with-colons 2> \/dev\/null \| grep -q \'\^sec:\'; then\nfallo "[^"\n]*"\nelse\nok "[^"\n]*"\nfi$/m',
+            'app lee el log de acceso → ok' => '/^if "\$\{compose\[@\]\}" exec -T -u www-data app test -r \/var\/log\/nginx\/dentissa-access\.log; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+        ] as $que => $patron) {
+            $this->assertMatchesRegularExpression($patron, $ordenes, "La sección comprueba: {$que}.");
         }
     }
 
