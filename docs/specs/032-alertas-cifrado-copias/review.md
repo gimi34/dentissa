@@ -2,7 +2,7 @@
 spec: 032-alertas-cifrado-copias
 verdict: changes_requested
 round: 1
-date: 2026-10-26
+date: 2026-10-25
 base: 853226f
 head: a1ab8c4
 human_signoff: no requerido
@@ -13,7 +13,7 @@ human_signoff: no requerido
 ## Resumen
 **changes_requested.** No hay bloqueantes: los criterios tienen sus tests en verde y están
 ensayados en el servidor. Pero hay cinco importantes que el usuario decide corregir antes de liberar
-(2026-10-26):
+(2026-10-25):
 - **R1–R3, el vigilante:**
   - una hora mal formada lo tumba de forma persistente;
   - un primer aviso que no se pudo enviar se pierde (CA4);
@@ -160,7 +160,7 @@ el 2026-10-23 (T026). No hay instrucciones dirigidas a agentes en el diff.
 | T061, T062 | R6, R7, R8, R9 |
 
 ## Aceptados sin tarea
-Aceptados por el usuario el 2026-10-26 (menores, a la deuda del roadmap):
+Aceptados por el usuario el 2026-10-25 (menores, a la deuda del roadmap):
 - **R10** → roadmap: el vigilante no avisa si se queda atrás con más de 50 MiB/min de log de acceso.
 - **R11** → roadmap: texto de `verificar.sh` «el llavero de la cuenta de despliegue» (no mira el de root).
 - **R12** → roadmap: lo pendiente del silencio puede nacer con un evento que no es el que cumple la condición.
