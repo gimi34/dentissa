@@ -50,8 +50,9 @@ class Vigilante
         }
 
         $ahora = CarbonImmutable::now();
-        $nuevas = $this->leerAcceso($estado);
-        $fallos = $this->leerSeguridad($estado, $ahora);
+        $leido = true;
+        $nuevas = $this->leer('acceso', fn () => $this->leerAcceso($estado), ['errores' => 0, 'malas' => 0], $leido);
+        $fallos = $this->leer('seguridad', fn () => $this->leerSeguridad($estado, $ahora), 0, $leido);
         $this->podar($estado, $ahora);
 
         $enviados = $this->avisoDeErrores($estado, $ahora, $nuevas['errores'])
@@ -60,7 +61,23 @@ class Vigilante
 
         $estado->guardar();
 
-        return (bool) $enviados;
+        return $leido && (bool) $enviados;
+    }
+
+    /**
+     * Lee una fuente sin que su fallo impida leer la otra ni guardar el estado: queda un aviso en
+     * el log, sin el mensaje, y la ejecución termina con error (/review R3).
+     */
+    private function leer(string $fuente, callable $lectura, mixed $sinDatos, bool &$leido): mixed
+    {
+        try {
+            return $lectura();
+        } catch (Throwable) {
+            Log::warning('lectura fallida', ['fuente' => $fuente]);
+            $leido = false;
+
+            return $sinDatos;
+        }
     }
 
     /**
@@ -259,9 +276,15 @@ class Vigilante
             return null;
         }
 
-        $momento = CarbonImmutable::createFromFormat('d/M/Y:H:i:s O', $m[1]);
+        // Carbon lanza una excepción si la hora no tiene el formato de nginx: la línea cuenta como
+        // sin formato y no tumba la ejecución (/review R1).
+        try {
+            $momento = CarbonImmutable::createFromFormat('d/M/Y:H:i:s O', $m[1]);
+        } catch (Throwable) {
+            return null;
+        }
 
-        return $momento === null ? null : [$momento->startOfMinute()->getTimestamp(), (int) $m[2]];
+        return $momento ? [$momento->startOfMinute()->getTimestamp(), (int) $m[2]] : null;
     }
 
     private function sumar(Estado $estado, int $minuto, string $campo): void
@@ -350,19 +373,27 @@ class Vigilante
 
         if ($anterior !== null && $ahora->lt($anterior->addMinutes((int) config('avisos.silencio_minutos')))) {
             $aviso['acumulado'] += $nuevos;
-            $aviso['pendiente'] = $aviso['pendiente'] || ($condicion && $nuevos > 0);
+            if (! $aviso['pendiente'] && $condicion && $nuevos > 0) {
+                $aviso['pendiente'] = true;
+                $aviso['desde'] = $aviso['ultimo_envio'];
+            }
             $estado->guardarAviso($tipo, $aviso);
 
             return true;
         }
 
-        if ($anterior !== null && $aviso['pendiente']) {
+        if ($aviso['pendiente']) {
+            // Lo retenido en el silencio, o un aviso cuyo envío falló (/review R2).
             $aviso['acumulado'] += $nuevos;
-            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $anterior, $ahora, $anterior);
+            $desde = CarbonImmutable::createFromTimestamp($aviso['desde'] ?? $aviso['ultimo_envio'] ?? $ahora->getTimestamp());
+            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $desde, $ahora, $anterior);
         } elseif ($condicion) {
             $correo = new AvisoProduccion($tipo, $enVentana, $this->inicioDeVentana($ahora), $ahora);
+            // Si el envío falla, el aviso queda pendiente con su recuento: ningún aviso se pierde
+            // aunque la ráfaga salga de la ventana antes de que vuelva el envío (CA4, /review R2).
+            $aviso = ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => true, 'acumulado' => $enVentana, 'desde' => $this->inicioDeVentana($ahora)->getTimestamp()];
         } else {
-            $estado->guardarAviso($tipo, ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => false, 'acumulado' => 0]);
+            $estado->guardarAviso($tipo, ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => false, 'acumulado' => 0, 'desde' => null]);
 
             return true;
         }
@@ -373,7 +404,7 @@ class Vigilante
             return false;
         }
 
-        $estado->guardarAviso($tipo, ['ultimo_envio' => $ahora->getTimestamp(), 'pendiente' => false, 'acumulado' => 0]);
+        $estado->guardarAviso($tipo, ['ultimo_envio' => $ahora->getTimestamp(), 'pendiente' => false, 'acumulado' => 0, 'desde' => null]);
 
         return true;
     }

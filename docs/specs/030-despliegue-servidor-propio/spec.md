@@ -107,6 +107,7 @@ aplicación quedará abierta a todo internet.
 | OB4.c — lo mismo en la lista de despliegue de staging (nueva al dividir OB4.b) | fuera | No hay staging → roadmap, objetivo 5 |
 | OB6.a — comprobación de salud que incluya la base de datos | fuera | → objetivo 3 |
 | OB6.b — alertas mínimas | fuera | → spec 031 |
+| OB6.c — alertas mínimas en staging (creada por la 032 al dividir OB6.b) | fuera | → objetivo 5, cuando exista staging |
 | OB7.a — conservar los registros del servidor web en producción (corrección dividida, /analyze A1) | dentro | CA9 |
 | OB7.b — lo mismo en staging (nueva al dividir OB7.a) | fuera | No hay staging → roadmap, objetivo 5 |
 | RS13.a — límite de intentos en el alta (corrección dividida, /analyze A34) | dentro | CA8 |
@@ -181,3 +182,4 @@ inicio de sesión.
 | 2026-10-20 | Comportamiento modificado por 031 en v0.10.0 (cabeceras, administración remota por la red privada; CA3 reemplazado en parte por 031 CA8) | /release |
 | 2026-10-20 | CA7 modificado por 031 CA8; la excepción P7 (inicios de sesión fallidos sin evento de auditoría) vence con la spec 021, no con la 020 (031 /analyze A25) | /release |
 | 2026-10-25 | Cobertura de riesgos: RS15.c y RS15.d, creadas por la 032 al dividir RS15.b, declaradas fuera (RS15.c aceptada como EX3 por la 032; RS15.d → objetivo 5) | /implement 032 (T038) |
+| 2026-10-25 | Cobertura de riesgos: OB6.c, creada por la 032 al dividir OB6.b, declarada fuera (→ objetivo 5) | /implement 032 (T091) |

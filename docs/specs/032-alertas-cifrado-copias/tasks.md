@@ -375,9 +375,53 @@ Formato:
   - **Manejo de secretos:** la contraseña de aplicación de la cuenta de envío, la clave pública en el servidor, la secreta solo en el PC y su segunda copia, y la fila de copias.
   - nota: RS15 dividida: RS15.a pendiente (013); RS15.b «en curso (spec 032)»; RS15.c «en curso (spec 032: se acepta como excepción EX3 en su liberación)»; RS15.d pendiente → objetivo 5. EX3 añadida con motivo, residuo de shred, vencimiento al cargar el primer dato real de pacientes y aprobación pendiente en T096. Superficie de ataque con el temporizador y la salida SMTP (desaparece «ni tareas programadas»); Manejo de secretos con la cuenta de envío, la clave pública, la secreta solo en el PC y su segunda copia, y la rotación. El validador no da errores de RS15 tras T038 y T051.
 
-- [x] T038 Declarar en la cobertura de riesgos de las specs 030 y 013 las correcciones de RS15 que crea T035: RS15.c (disco de producción) → aceptada como EX3 por la 032, y RS15.d (staging) → fuera, objetivo 5; con una fila de Historial en cada una (precedente: 031 T091 con RS8.c y RS8.d) — docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md — hecho cuando: el validador no da errores de RS15 en esas dos specs y no cambia ningún criterio — cubre: CA10 — depende: T035
+- [x] T038 Declarar en la cobertura de riesgos de las specs 030 y 013 las correcciones de RS15 que crea T035: RS15.c (disco de producción) → aceptada como EX3 por la 032, y RS15.d (staging) → fuera, objetivo 5; con una fila de Historial en cada una (precedente: la 031 en su T091, al dividir un riesgo de cabeceras) — docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md — hecho cuando: el validador no da errores de RS15 en esas dos specs y no cambia ningún criterio — cubre: CA10 — depende: T035
   - nota: añadida durante /implement (2026-10-25): al dividir RS15 en T035, el validador exige declarar RS15.c y RS15.d en las specs que ya citan RS15; aprobada por el usuario el 2026-10-25.
   - nota: Specs 030 y 013: RS15.c (→ spec 032, EX3) y RS15.d (→ objetivo 5) declaradas fuera en «Cobertura de riesgos», con su fila de Historial (2026-10-25, /implement 032 T038). Ningún criterio cambia; el validador no da errores de RS15 en ellas.
+- [x] T039 Que respaldar.sh no pise nunca una copia que ya existe: primero un caso en ConfiguracionProduccionTest que falle (si ya hay una copia con el nombre de ese segundo, espera al siguiente y recalcula el nombre), después el cambio mínimo en respaldar.sh — tests/Feature/ConfiguracionProduccionTest.php, deploy/respaldar.sh — hecho cuando: el caso falla antes del cambio y pasa después, bash -n limpio, y en la prueba local con el docker falso dos copias en el mismo segundo dan dos archivos distintos — cubre: CA7 — depende: T028
+  - nota: añadida durante /implement (2026-10-25): en el ensayo T041, dos respaldar.sh dentro del mismo segundo dieron el mismo nombre y la segunda copia sobrescribió a la primera; aprobada por el usuario el 2026-10-25.
+  - nota: test_respaldar_no_pisa_una_copia_existente falló antes del cambio (no había bucle) y pasa después, con los otros cuatro casos de respaldar.sh; bash -n limpio; pint limpio.
+  - nota: Prueba local en Git Bash con el docker falso (2026-10-25): tres respaldar.sh seguidos dan tres archivos (…172514, …172515, …172516); antes, dos en el mismo segundo daban uno.
+
+### Correcciones de /review (ronda 1)
+- [x] T052 Añadir a `VigilanteTest` `test_una_hora_mal_formada_cuenta_como_linea_sin_formato`: con 25 líneas que encajan en la forma de `combined` pero con la hora en otro formato (`[2026-10-25T10:00:00+00:00] "GET / HTTP/1.1" 500 …` y `[abc] "GET / HTTP/1.1" 500 …`), `ejecutar()` no lanza excepción, llega el aviso `formato` y una segunda ejecución con líneas buenas nuevas solo cuenta las nuevas (el desplazamiento avanzó) — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy con `InvalidFormatException` (anotado) — cubre: CA1
+  - nota: añadida por /review: R1
+  - nota: falla por la razón esperada (2026-10-25): InvalidFormatException de Carbon desde Vigilante::interpretar, con 13 líneas [2026-10-25T10:00:00+00:00] y 12 [abc] con la forma de combined; pint limpio.
+- [x] T053 Hacer que una hora que no se puede interpretar cuente como línea sin formato en `Vigilante::interpretar` — app/Avisos/Vigilante.php — hecho cuando: T052 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (sin la captura, T052 vuelve a fallar), anotado — cubre: CA1 — depende: T052
+  - nota: añadida por /review: R1
+  - nota: VigilanteTest completo (26) pasa dos veces; pint limpio. Comprobado rompiendo (2026-10-25): sin la captura, T052 vuelve a fallar con InvalidFormatException.
+- [x] T054 Añadir a `VigilanteTest` `test_un_primer_aviso_fallido_no_se_pierde`: 11 fallos de acceso; el envío falla (transporte que lanza); pasan 10 minutos sin eventos nuevos y con el SMTP aún caído; vuelve el SMTP y en la ejecución siguiente llega el aviso de accesos con recuento 11 — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy porque el aviso no llega (anotado) — cubre: CA4
+  - nota: añadida por /review: R2
+  - nota: falla por la razón esperada (2026-10-25): «The total number of mailables sent was 0 instead of 1»: tras un primer envío fallido y diez minutos sin eventos, el aviso no llega al volver el SMTP. pint limpio.
+- [x] T055 Que un envío fallido del primer aviso de una ráfaga lo deje pendiente con su recuento y el inicio de su intervalo, y que lo pendiente se envíe aunque no haya aviso anterior — app/Avisos/Vigilante.php, app/Avisos/Estado.php — hecho cuando: T054 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (sin guardar lo pendiente, T054 falla), anotado — cubre: CA4 — depende: T054
+  - nota: añadida por /review: R2
+  - nota: VigilanteTest (27) y AvisoProduccionTest pasan dos veces; pint limpio. Un envío fallido de la rama de la condición deja el aviso pendiente con el recuento de la ventana y el inicio de su intervalo (campo desde del estado); lo pendiente se envía aunque no haya aviso anterior, y en el silencio desde = el último envío.
+  - nota: Comprobado rompiendo (2026-10-25): sin guardar lo pendiente al fallar el primer envío, T054 vuelve a fallar.
+- [x] T056 Añadir a `VigilanteTest` `test_un_log_de_acceso_ilegible_no_tumba_el_aviso_de_accesos`: con el log de acceso en una ruta que existe pero no se puede abrir (envoltorio de flujo de prueba cuyo `stream_open` falla), y 11 fallos de acceso en el canal `seguridad`, `ejecutar()` devuelve false, llega el aviso de accesos, el estado se guarda y queda `Log::warning('lectura fallida', ['fuente' => 'acceso'])` — tests/Feature/VigilanteTest.php — hecho cuando: falla hoy con la excepción de `fopen` (anotado) — cubre: CA1, CA2
+  - nota: añadida por /review: R3
+  - nota: falla por la razón esperada (2026-10-25): ErrorException «fopen(ilegible://dentissa-access.log): Failed to open stream» desde leerAcceso, que tumba la ejecución entera. El envoltorio FlujoIlegible (en el mismo archivo de test) simula un archivo que existe y no se puede abrir; los permisos no sirven porque el contenedor de tests corre como root. Formato con pint.
+- [x] T057 Aislar en `Vigilante::ejecutar` la lectura de cada fuente (log de acceso y canal `seguridad`): un fallo al leer una no impide la otra ni guardar el estado, deja `Log::warning('lectura fallida', ['fuente' => …])` sin el mensaje y hace que `ejecutar()` devuelva false — app/Avisos/Vigilante.php — hecho cuando: T056 y el resto de `VigilanteTest` pasan dos veces y se comprueba rompiendo (sin el aislamiento, T056 falla), anotado — cubre: CA1, CA2 — depende: T056
+  - nota: añadida por /review: R3
+  - nota: VigilanteTest (28) y AvisoProduccionTest pasan dos veces; pint limpio. ejecutar() lee cada fuente con Vigilante::leer, que ante una excepción deja Log::warning('lectura fallida', ['fuente' => …]) sin el mensaje, sigue con la otra fuente, guarda el estado y hace que ejecutar() devuelva false (el comando sale con error, visible en el journal).
+  - nota: Comprobado rompiendo (2026-10-25): sin el aislamiento, T056 vuelve a fallar con la excepción de fopen.
+- [x] T058 Anclar `test_verificar_comprueba_avisos_y_copias_fuera_de_la_interna` a las órdenes reales: sin comentarios ni `echo`, cada comprobación de la sección «Avisos y copias» con su orden en el `if` y su rama `ok` / `fallo` correcta (temporizador activo → ok; clave pública con `^pub:` y sin `^sec:` → ok; llavero con `^sec:` → fallo; `app` lee el log → ok) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: pasa, y se comprueba rompiendo (invertir la rama del llavero o pasar una orden a un comentario hace fallar el caso), anotado — cubre: CA6, CA8, CA10
+  - nota: añadida por /review: R4
+  - nota: El caso pasa con el verificar.sh actual (es de caracterización: la sección ya era correcta) y ahora filtra comentarios y echo y ancla cada comprobación a su if con la rama ok / fallo correcta; pint limpio.
+  - nota: Comprobado rompiendo (2026-10-25): invertir la rama del llavero y pasar la orden del temporizador a un comentario hacen fallar el caso; con la versión anterior del test los dos pasaban.
+- [x] T059 Añadir a `ConfiguracionProduccionTest` que `cifrar-copias-antiguas.sh` recorre también `dentissa-*.sql.gz` de la carpeta personal (`${HOME}`), y que `verificar.sh` da FALLO si la carpeta de copias no existe o no se puede leer (`[[ -d "${DESTINO}" && -r "${DESTINO}" ]]` antes de la búsqueda) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan hoy por la razón esperada (anotado) — cubre: CA10
+  - nota: añadida por /review: R5
+  - nota: fallan por la razón esperada (2026-10-25): el bucle de cifrar-copias-antiguas.sh solo recorre `${DESTINO}`, y verificar.sh busca sin comprobar que la carpeta de copias existe y se puede leer. La aserción del bucle de T018 pasa a exigir también `${HOME}`. pint limpio.
+- [x] T060 Cifrar también las copias en claro de la carpeta personal en `cifrar-copias-antiguas.sh` y dar FALLO en `verificar.sh` si la carpeta de copias no existe o no se puede leer — deploy/cifrar-copias-antiguas.sh, deploy/verificar.sh — hecho cuando: T059 pasa, `bash -n` limpio y, en una prueba local con una clave de prueba, una copia en claro en la carpeta personal queda cifrada y borrada, anotado — cubre: CA10 — depende: T059
+  - nota: añadida por /review: R5
+  - nota: T059 pasa (ConfiguracionProduccionTest 38/38); bash -n limpio en los dos scripts. Prueba local en Git Bash (2026-10-25) con una clave de prueba y HOME en una carpeta temporal: una copia en claro de la carpeta personal queda cifrada como .sql.gz.gpg y la original borrada; ninguna en claro.
+- [x] T061 Añadir a `ConfiguracionProduccionTest` los casos de `restaurar.sh`: en la carga remota, `trap` que borra la marca justo después de su `mktemp` (R6); la pasada de comprobación no guarda la última línea del volcado, solo si es `-- Dump completed` (R7); la carga usa `mariadb --sandbox` (R8); la versión de `--volver` no puede empezar por `-` (R9) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos fallan hoy por la razón esperada (anotado) — cubre: CA7, CA9
+  - nota: añadida por /review: R6, R7, R8, R9
+  - nota: fallan por la razón esperada (2026-10-25): la pasada 1 guarda la última línea (tail -n 1 > final), la versión de --volver admite un «-» inicial, la marca remota no tiene trap y la carga no usa --sandbox. Las aserciones de T016 de la pasada 1 y de la versión se ajustan a la forma nueva; el caso nuevo cubre R6, R7 y R8. pint limpio.
+- [x] T062 Aplicar en `restaurar.sh` lo de T061 — deploy/restaurar.sh — hecho cuando: T061 y los demás casos de `restaurar.sh` pasan, `bash -n` limpio, `mariadb --sandbox` funciona con el cliente de `mariadb:10.11.19`, y la prueba local con el servidor simulado (restauración completa, rechazos y frase cancelada) sigue dando lo mismo, anotado — cubre: CA7, CA9 — depende: T061
+  - nota: añadida por /review: R6, R7, R8, R9
+  - nota: T061 y los demás casos de restaurar.sh pasan (ConfiguracionProduccionTest 39/39); bash -n limpio.
+  - nota: R6: trap de borrado de la marca justo después de su mktemp en la carga remota. R7: la pasada 1 guarda solo «completo» o «incompleto» (awk END sobre la última línea), nunca la línea. R8: la carga usa mariadb --sandbox; comprobado con el cliente de mariadb:10.11.19 de la base local: SELECT pasa, una orden system da «Not allowed in the sandbox mode», y mariadb-dump 10.11.19 ya abre el volcado con la línea que activa el sandbox. R9: la versión de --volver no puede empezar por «-».
+  - nota: Prueba local en Git Bash con el servidor simulado (2026-10-25), igual que en T029: los cuatro rechazos con su mensaje, la restauración completa y la vuelta con --volver con las mismas órdenes, sin marcas sobrantes, la confirmación incorrecta sin órdenes, la frase cancelada en la pasada 2 sin DROP ni carga, y «v1;reboot» y «--orphan» rechazados.
 
 ## Preparativos y ensayos en el servidor
 - [x] T040 Preparativos del responsable (plan, Rollout; los hace el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge que cada paso está hecho, sin ningún secreto ni la frase: la huella de la clave pública, la salida de `gpg --show-keys` en el servidor sin `sec`, la frase con el mínimo cumplido, la frase pedida una sola vez y la cuenta de envío dedicada creada — cubre: CA8 — depende: T034
@@ -387,7 +431,7 @@ Formato:
   - Cuenta de Gmail solo para enviar (TM13), con verificación en dos pasos y contraseña de aplicación, y las variables de correo en `app.env`.
   - Cuenta de UptimeRobot.
   - nota: Preparativos hechos por el usuario el 2026-10-25 (sin ningún secreto en esta nota). Clave «Dentissa copias» creada en el PC (Git Bash, ed25519 + cv25519, sin caducidad); huella 7832 1958 9865 BD41 2A0B CA65 192E 7DCC AFA1 C74C, la misma en el PC y en el servidor. gpg --show-keys /opt/dentissa/entorno/copias.pub.asc (600) en el servidor: pub y sub, ningún sec (el servidor creó /home/gimi/.gnupg vacío al hacerlo). En el PC, con la caché vaciada (gpgconf --reload), dos descifrados seguidos piden la frase solo en el primero; default-cache-ttl 600 s. El usuario confirma: frase con el mínimo de la guía (5 palabras al azar o 20 caracteres), segunda copia de la secreta fuera del PC y borrada del PC, cuenta de Gmail solo para enviar con verificación en dos pasos y contraseña de aplicación (TM13), y cuenta de UptimeRobot. app.env tiene MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS, MAIL_FROM_NAME y AVISOS_CORREO (cut -d= -f1), y todas sus líneas tienen la forma NOMBRE=valor (grep -vnE sin salida).
-- [ ] T041 Ensayo de las copias (aprobación explícita antes; lo ejecuta el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación y cada resultado — cubre: CA7, CA8, CA10 — depende: T040
+- [x] T041 Ensayo de las copias (aprobación explícita antes; lo ejecuta el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación y cada resultado — cubre: CA7, CA8, CA10 — depende: T040
   - Paso 0 del Rollout. Después, `git fetch && git checkout <commit>` y `desplegar.sh <commit>` (orden de D6): deja `.sql.gz.gpg` y `desplegar.sh` sale con 0 (/analyze A3).
   - Dos `respaldar.sh` seguidos más, sin falsos «copia incompleta» (/analyze A8).
   - `find / -xdev` sin volcados en claro durante y después.
@@ -395,7 +439,14 @@ Formato:
   - Con la clave pública renombrada, `desplegar.sh <ref distinta del HEAD>` se detiene en «Copia de la base» y el `HEAD` no cambia (/analyze A15).
   - `cifrar-copias-antiguas.sh` y `verificar.sh` completo, sin copias en claro.
   - nota: aceptado en /analyze r2 (2026-10-25), A30 — el `verificar.sh` completo de T041 anota como esperado el FALLO «temporizador activo» (el temporizador se instala en T042); el de T042 tiene que salir todo OK.
-- [ ] T042 Ensayo de los avisos (aprobación explícita antes; lo ejecuta el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, los tiempos de llegada y cada resultado — cubre: CA1, CA2, CA5, CA6, CA10 — depende: T041
+  - nota: Aprobado por el usuario el 2026-10-25 («si apruebo»); lo ejecutó él por SSH. Resultados sin secretos:
+  - nota: Paso 0: /usr/bin/gpg y la clave pública con pub (huella 7832…C74C). Estado previo: v0.10.0, árbol limpio, 9 copias en claro .sql.gz en /var/backups/dentissa. Checkout a mano de 517ac93 y desplegar.sh 517ac93: la copia previa salió cifrada (dentissa-20261025-231112.sql.gz.gpg, 600), «Nothing to migrate»; la verificación interna dio un FALLO real de configuración (MAIL_FROM_ADDRESS con dos @: el usuario pegó la dirección completa delante del @gmail.com del ejemplo); corregido en app.env junto a MAIL_USERNAME, aplicado con aplicar-entorno.sh app y verificación interna todo OK. desplegar.sh propuso «volver.sh 517ac93»: es el aviso de D6 (tras el checkout a mano, la «versión anterior» es el propio tag) y la detección de migraciones funcionó («no había migraciones»).
+  - nota: Dos respaldar.sh seguidos sin falsos «incompleta» (A8), pero en el mismo segundo y con el mismo nombre: la segunda copia sobrescribió a la primera (defecto de respaldar.sh, se propone una tarea nueva). /dev/shm sin marcas. El servidor no descifra: gpg --decrypt da «No secret key» y rc=2; gpg --list-secret-keys vacío.
+  - nota: Con la clave pública apartada, desplegar.sh d84f8c5 se detiene en «Copia de la base» (ERROR: no se puede leer la clave pública… no se hace en claro; rc=1) y el HEAD sigue en 517ac93 (A15). cifrar-copias-antiguas.sh: 9 cifradas, 0 dañadas, cada .sql.gz.gpg con su fecha de octubre; sudo find / -xdev de *.sql y *.sql.gz bajo backups no lista nada.
+  - nota: find de todo el disco con dentissa: solo el volcado ficticio del repositorio (database/dentissa.sql en /opt/dentissa/app, en el clon antiguo /opt/dentissa/rama-031 y en la imagen de db); ninguna copia de producción en claro.
+  - nota: verificar.sh completo: todo OK (también la dirección pública y «Avisos y copias») salvo el FALLO esperado «temporizador dentissa-vigilar activo».
+  - nota: A30 aplicado: ese FALLO es el esperado de T041, porque el temporizador se instala en T042; el verificar.sh de T042 tiene que salir todo OK.
+- [x] T042 Ensayo de los avisos (aprobación explícita antes; lo ejecuta el usuario) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, los tiempos de llegada y cada resultado — cubre: CA1, CA2, CA5, CA6, CA10 — depende: T041
   - `preparar-vigilancia.sh`, y `systemctl list-timers` con la siguiente ejecución en menos de un minuto.
   - El aviso de prueba llega en ≤ 5 minutos, desde la cuenta de envío, al correo de siempre.
   - Líneas 5xx inyectadas en el log de acceso de `web` → correo de errores en ≤ 10 minutos.
@@ -407,8 +458,20 @@ Formato:
     - con una copia en claro;
     - con el temporizador parado.
   - nota: aceptado en /analyze r2 (2026-10-25), A41 — «con una copia en claro» usa un señuelo sin datos, `dentissa-señuelo.sql.gz`, que se borra al terminar.
-- [ ] T043 Ensayo de la caída vista desde fuera (aprobación explícita antes; lo ejecuta el usuario): monitor de UptimeRobot sobre `https://dentissa.app/up` cada 5 minutos en verde; `cloudflared` parado ≥ 6 minutos → correo de caída en ≤ 10 minutos; al arrancarlo, correo de vuelta — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación y las horas de parada, de los dos correos y de la vuelta — cubre: CA3 — depende: T042
-- [ ] T044 Ensayo de la restauración y la vuelta desde el PC (aprobación explícita antes; lo ejecuta el usuario, con la segunda copia de la clave importada en un llavero temporal del PC con `GNUPGHOME`) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, la foto y la comparación, cada rechazo con su mensaje y el resultado de la vuelta — cubre: CA9 — depende: T043
+  - nota: Aprobado por el usuario el 2026-10-25 («Apruebo T042»); lo ejecutó él por SSH, con producción en 517ac93. Resultados sin secretos:
+  - nota: preparar-vigilancia.sh con la cuenta gimi: timer activo, próxima ejecución a los 41 s; la primera ejecución (23:27:02 UTC) terminó bien. dentissa:vigilar --prueba a las 23:27:31 UTC: «[Dentissa] Aviso de prueba» llegó a las 17:27 (hora de la clínica), en menos de un minuto (CA6), al correo de siempre desde la cuenta de envío.
+  - nota: 5 líneas 500 inyectadas en el log de acceso de web a las 23:30:18 UTC: en la ejecución de las 23:30:32 llegó «[Dentissa] Errores del servidor» con «5 errores del servidor (respuestas 5xx) entre las 17:25 y las 17:30», en menos de un minuto (CA1).
+  - nota: 11 inicios de sesión fallidos por la dirección pública contra ensayo-032@example.com (todas las respuestas 302), terminados a las 23:34:47 UTC: llegó «[Dentissa] Inicios de sesión fallidos» con «12 inicios de sesión fallidos entre las 17:30 y las 17:35» (11 más un intento de la primera comprobación del límite), en la ejecución siguiente (CA2). El límite sigue igual: con 6 intentos seguidos la página muestra «Demasiados intentos. Vuelve a intentarlo en 56 segundos.» (la primera comprobación no lo enseñaba por un error del comando: -X POST con -L repetía el POST).
+  - nota: Revisión del usuario de los dos correos: solo recuentos, horas de la clínica y cómo consultar; ni IPs, ni el correo de prueba, ni rutas (CA5).
+  - nota: verificar.sh rompiendo, sin mostrar valores: sin MAIL_PASSWORD → FALLO «MAIL_USERNAME y MAIL_PASSWORD…»; con los <…> de la guía en MAIL_PASSWORD y MAIL_FROM_ADDRESS → esos dos FALLO; con un señuelo en claro → FALLO «hay 1 copias en claro»; con el temporizador parado → FALLO «temporizador dentissa-vigilar activo». Restaurado todo: «Verificación: todo OK» (CA6, CA10, TM9, TM10).
+  - nota: A41 aplicado: la copia en claro del ensayo fue un señuelo sin datos (dentissa-senuelo.sql.gz con el texto «senuelo sin datos»), borrado al terminar.
+  - nota: Colateral: en /opt/dentissa/entorno apareció app.env.save (lo deja nano al cortarse una edición; probable versión anterior de app.env con secretos); se pidió al usuario comprobarlo y borrarlo con shred -u.
+- [x] T043 Ensayo de la caída vista desde fuera (aprobación explícita antes; lo ejecuta el usuario): monitor de UptimeRobot sobre `https://dentissa.app/up` cada 5 minutos en verde; `cloudflared` parado ≥ 6 minutos → correo de caída en ≤ 10 minutos; al arrancarlo, correo de vuelta — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación y las horas de parada, de los dos correos y de la vuelta — cubre: CA3 — depende: T042
+  - nota: Hecho por el usuario el 2026-10-25, por su cuenta y de forma más exigente que lo previsto: en vez de parar cloudflared, apagó el servidor entero y lo volvió a encender (CA3: «aunque el servidor esté apagado»). Monitor de UptimeRobot HTTP(s) sobre https://dentissa.app/up cada 5 minutos, con su correo de siempre, en verde después (confirmación del usuario).
+  - nota: El correo de caída de UptimeRobot llegó unos 2 minutos después de apagar (≤ 10 min, CA3) y el de vuelta al volver; unos 6 minutos entre los dos correos.
+  - nota: Tras el arranque (23:54:26 UTC) todo volvió solo: app, web, db (healthy) y cloudflared en marcha; dentissa-vigilar.timer activo (ejecutado a las 00:00:11); verificar.sh completo «todo OK», también por la dirección pública.
+  - nota: Nota de T042: el usuario comprobó y borró con shred -u /opt/dentissa/entorno/app.env.save (versión del 2026-10-05, sin las variables de correo); quedan solo app.env, copias.pub.asc, db.env y tunnel.env, todos 600.
+- [x] T044 Ensayo de la restauración y la vuelta desde el PC (aprobación explícita antes; lo ejecuta el usuario, con la segunda copia de la clave importada en un llavero temporal del PC con `GNUPGHOME`) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, la foto y la comparación, cada rechazo con su mensaje y el resultado de la vuelta — cubre: CA9 — depende: T043
   - Foto, con `app` y `web` parados: `CHECKSUM TABLE` y recuento de filas de cada tabla (/analyze A14).
   - `respaldar.sh` justo después; `scp` de la copia al PC.
   - `restaurar.sh <copia> <servidor>` → mismos valores que la foto.
@@ -421,10 +484,23 @@ Formato:
     - avisa de parar el temporizador, que se para.
   - nota: aceptado en /analyze r2 (2026-10-25), A31 — la comparación con la foto se hace antes de dar tráfico a la aplicación, o excluyendo las tablas volátiles (`cache`, `sessions`, `jobs`) declarándolo; la nota dice cómo.
   - nota: aceptado en /analyze r2 (2026-10-25), A35 — la nota recoge la duración de `restaurar.sh --volver` frente a los 15 min de 030 CA7.
+  - nota: Aprobado por el usuario el 2026-10-25 («apruebo el ensayo»); lo ejecutó él, en el servidor y en su PC (Git Bash, con el restaurar.sh del worktree de la rama). Resultados sin secretos:
+  - nota: Foto con app y web parados: 14 tablas, con filas y CHECKSUM TABLE de cada una, sin las volátiles (cache, cache_locks, sessions, jobs, job_batches, failed_jobs); copia justo después, dentissa-20261026-000557.sql.gz.gpg, llevada al PC con scp.
+  - nota: Segunda copia de la clave (archivo en D:) importada en un llavero temporal (GNUPGHOME): entró la subclave de cifrado (ssb) y no la principal (sec#; probablemente una frase mal tecleada en el import), y abre las copias: el descifrado de prueba acabó en -- Dump completed.
+  - nota: restaurar.sh <copia> gimi@192.168.0.132: comprobación local, confirmación, stop app web, carga, up, cachés y verificar --interna todo OK; la base, IGUAL QUE LA FOTO; en el servidor, 0 claves secretas y /dev/shm vacío (A5).
+  - nota: Rechazos, cada uno antes de la confirmación y con su mensaje (A13): copia para otra clave → «la copia no es para tu clave»; con un byte cambiado y cortada → «la copia está alterada o cortada (falla la comprobación de integridad)»; base IGUAL QUE LA FOTO.
+  - nota: Caché vaciada desde otra ventana mientras el script esperaba la confirmación y frase cancelada en la pasada 2 (A29): «no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado y app y web vuelven a estar en marcha»; sin DROP; base IGUAL QUE LA FOTO; los cuatro servicios en marcha.
+  - nota: restaurar.sh <copia> … --volver v0.10.0, con la caché vaciada antes: la frase se pidió una sola vez (A1); volver.sh v0.10.0 --sin-levantar, carga y verificar --interna de v0.10.0 todo OK; base IGUAL QUE LA FOTO; git describe → v0.10.0; temporizador parado con systemctl disable --now (inactive).
+  - nota: A31 aplicado: la comparación excluye, declaradas, las tablas volátiles (la app vuelve a recibir tráfico entre la foto y cada comparación).
+  - nota: A35 aplicado: la vuelta con copia desde el PC tardó real 4m44s (time), dentro de los 15 minutos de 030 CA7; T098 anota 030 CA7 como modificado por 032 CA9.
+  - nota: Producción queda en v0.10.0, con las copias cifradas y el temporizador parado, hasta la liberación de la 032 (T097).
 
 ## Integración y documentación
-- [ ] T050 Ejecutar la puerta de calidad sobre el diff de la spec: suite completa, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks, semgrep `p/php`, `composer audit --locked`, `npm audit` y revisión de cada `Log::` nuevo — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: todo pasa sin hallazgos críticos ni altos, anotado con los recuentos — cubre: CA5, CA8 — depende: T020, T025, T026, T027, T028, T029, T030, T031, T032, T036, T037
+- [x] T050 Ejecutar la puerta de calidad sobre el diff de la spec: suite completa, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks, semgrep `p/php`, `composer audit --locked`, `npm audit` y revisión de cada `Log::` nuevo — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: todo pasa sin hallazgos críticos ni altos, anotado con los recuentos — cubre: CA5, CA8 — depende: T020, T025, T026, T027, T028, T029, T030, T031, T032, T036, T037
   - nota: aceptado en /analyze r2 (2026-10-25), A47 — registrar el coste de explorar los listeners al arrancar, o comprobar que `desplegar.sh` hace `event:cache`, y anotarlo en la verificación manual del RNF «no ralentiza».
+  - nota: Puerta de calidad del 2026-10-25 sobre el diff 853226f..HEAD: php artisan test 412 passed (7069 aserciones; línea base 353); pint --test limpio en los 13 PHP tocados; bash -n limpio en los 7 scripts de deploy/ tocados; composer audit --locked sin avisos; npm audit 0 vulnerabilidades; gitleaks (v8.21.2, --no-git sobre el diff completo y los archivos tocados, porque el .git del worktree apunta a una ruta de Windows que el contenedor no ve) sin fugas; semgrep p/php (1.99.0, --no-git-ignore) 0 hallazgos en 8 archivos.
+  - nota: Revisión de cada Log:: nuevo (P8): canal seguridad con solo tipo, método y huellas (RegistrarFalloAcceso); Log::warning('aviso no enviado', ['tipo' => …]) sin el mensaje de la excepción (Vigilante y Vigilar); report(\) solo si falla escribir el log de seguridad, sin datos de la petición.
+  - nota: A47 aplicado: desplegar.sh no hace event:cache, así que Laravel descubre los listeners al arrancar cada petición; app/Listeners tiene un solo archivo, de modo que el coste es una reflexión de una clase, inapreciable. El listener solo actúa en los fallos (RNF «no ralentiza», verificación manual).
 - [x] T051 Actualizar el roadmap — docs/roadmap.md — hecho cuando: las entradas existen, citan la 032 y el validador no da errores
   - En el objetivo 5: OB6.c y RS15.d nuevas (staging), RS15.c como excepción EX3, y la 032 en curso.
   - En Pendientes:
@@ -435,12 +511,13 @@ Formato:
   - nota: aceptado en /analyze r2 (2026-10-25), A39 — la entrada del roadmap dice que la 020 debe añadir el `scheduler` al Compose de producción, mover `dentissa:vigilar` a él y retirar el temporizador.
   - nota: Objetivo 3: OB6.b y OB6.c → objetivo 5. Objetivo 4: RS15.b, RS15.c y RS15.d → objetivo 5. Objetivo 5: RS15.c, RS15.d y OB6.c en su lista; la 032 en curso (OB6.b, RS15.b; RS15.c como EX3; OB6.c y RS15.d pendientes). En Pendientes, los cuatro puntos de la 032: desplegar.sh de la versión instalada (D6), umbral de 5xx sin mínimo (A26), la 020 y el temporizador (A20), la vuelta de la 038 (A25). Validador sin errores.
   - nota: A39 aplicado: la entrada dice que la 020 tiene que llevar su scheduler también al Compose de producción, mover dentissa:vigilar a él y retirar el temporizador.
-- [ ] T090 Actualizar `docs/architecture.md` en sus secciones reales (/analyze A23), según el ADR 0007:
+- [x] T090 Actualizar `docs/architecture.md` en sus secciones reales (/analyze A23), según el ADR 0007:
   - **Diagrama de componentes:** el temporizador → `dentissa:vigilar` en `app`, `nginx_logs` también en `app`, la salida SMTP a Gmail y UptimeRobot hacia `/up`.
   - **Módulos:** `App\Avisos` y `App\Listeners\RegistrarFalloAcceso`.
   - **Integraciones externas:** Gmail SMTP con la cuenta de envío y UptimeRobot; desaparece «No hay correo…».
   - **Despliegue:** copias `.sql.gz.gpg`, restauración y vuelta con copia desde el PC, `preparar-vigilancia.sh` y `cifrar-copias-antiguas.sh`.
-- [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md`:
+  - nota: docs/architecture.md: Módulos (Comandos con dentissa:vigilar; Registro de fallos de acceso; Avisos de producción) y la nota de acoplamiento con AuthController::origenLimite y sujetoLimite; Integraciones externas (Gmail SMTP 465 con la cuenta de envío y UptimeRobot; desaparece «No hay correo»); Despliegue (diagrama con el temporizador, el log de acceso :ro en app, las copias cifradas, Gmail, UptimeRobot y la restauración desde el PC; copias y avisos, ADR 0007; restaurar.sh en el PC).
+- [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md`:
   - **deployment.md:** copias cifradas, restauración y vuelta desde el PC, avisos y la nueva verificación.
   - **observability.md:**
     - alertas de 5xx, fallos de acceso y caída, en uso;
@@ -449,7 +526,13 @@ Formato:
     - OB6.c (staging), nueva → objetivo 5;
     - OB6.a sigue en el objetivo 3;
     - junto a la brecha del registro de acceso (objetivo 3), que el vigilante depende del formato `combined` y que cambiarlo exige ajustar `App\Avisos\Vigilante` (el aviso `formato` lo detecta) (/analyze A36).
-- [ ] T092 Marcar spec como `implemented`
+  - nota: docs/deployment.md: copias cifradas (respaldar.sh en tubería con gpg, clave pública en el servidor, secreta en el PC con su segunda copia, restaurar.sh desde el PC con sus mensajes y la carga que espera la primera línea, cifrar-copias-antiguas.sh, ensayos del 2026-10-25), rollback con la copia desde el PC (restaurar.sh --volver, volver.sh --sin-levantar, migrate:status --pending, temporizador; 4 min 44 s ensayado), variables nuevas (MAIL_*, AVISOS_CORREO, DENTISSA_CLAVE_PUBLICA, DENTISSA_APP) y verificación (16 comprobaciones, «Avisos y copias» sin --interna, aviso de prueba, UptimeRobot, logs del canal seguridad y del journal).
+  - nota: docs/observability.md: resumen (logs, eventos de autenticación y alertas en uso), tabla de métricas y alertas con canal y umbral (también el aviso de formato y UptimeRobot), OB6.b «en curso (spec 032)» y OB6.c nueva (staging → objetivo 5), OB6.a sigue pendiente (objetivo 3), y junto a la brecha del log de acceso (objetivo 3) el acoplamiento del vigilante con el formato combined (A36).
+  - nota: Al dividir OB6, el validador pidió declarar OB6.c en la spec 030: fila «fuera → objetivo 5» en su Cobertura de riesgos y su fila de Historial, como T038 con RS15. Validador sin errores.
+- [x] T092 Marcar spec como `implemented`
+  - nota: desmarcada por /review r1 (changes_requested, 2026-10-25)
+  - nota: Spec en implemented el 2026-10-25, con CA1–CA10 marcados: cada uno con sus tests en verde (suite 412) y, donde la Trazabilidad lo pide, ensayado en el servidor (T041–T044). CA10: la aprobación de EX3 por el responsable queda en T096, como dice el plan. docs/specs/README.md con la 032 en implemented (y quitada de «previstas» y del texto antiguo de «en ramas»).
+  - nota: Vuelve a implemented el 2026-10-25 tras las correcciones de /review r1 (T052–T062, R1–R9): suite 417 en verde, pint limpio, gitleaks y semgrep sin hallazgos en los archivos tocados. CA1–CA10 siguen marcados; docs/specs/README.md con la 032 en implemented.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5)
@@ -482,29 +565,29 @@ Formato:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T011, T014, T018, T042 | T023, T025, T026, T027 |
-| CA2 | T010, T012, T042 | T020, T024, T027, T036 |
+| CA1 | T011, T014, T018, T042, T052, T056 | T023, T025, T026, T027, T053, T057 |
+| CA2 | T010, T012, T042, T056 | T020, T024, T027, T036, T057 |
 | CA3 | T002, T043 | T034 |
-| CA4 | T012 | T024 |
+| CA4 | T012, T054 | T024, T055 |
 | CA5 | T013, T042, T050 | T021 |
-| CA6 | T013, T019, T042 | T025, T032, T034 |
-| CA7 | T015, T041 | T028, T033 |
-| CA8 | T014, T015, T016, T019, T040, T041, T050 | T026, T028, T029, T032 |
-| CA9 | T016, T017, T044 | T029, T030, T033, T037 |
-| CA10 | T018, T019, T041, T042 | T031, T032, T033, T035, T038 |
+| CA6 | T013, T019, T042, T058 | T025, T032, T034 |
+| CA7 | T015, T039, T041, T061 | T028, T033, T039, T062 |
+| CA8 | T014, T015, T016, T019, T040, T041, T050, T058 | T026, T028, T029, T032 |
+| CA9 | T016, T017, T044, T061 | T029, T030, T033, T037, T062 |
+| CA10 | T018, T019, T041, T042, T058, T059 | T031, T032, T033, T035, T038, T060 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
 | TM1 | T026, T028, T032 | T015, T019, T041 |
 | TM2 | T028 | T015, T041 |
-| TM3 | T029 | T016, T044 |
+| TM3 | T029, T062 | T016, T044, T061 |
 | TM4 | T029, T032 | T016, T019, T044 |
 | TM5 | T020, T024 | T010, T012, T042 |
-| TM6 | T024 | T012 |
+| TM6 | T024, T055 | T012, T054 |
 | TM7 | T021 | T013 |
 | TM8 | T020 | T010 |
 | TM9 | T026, T032 | T014, T019, T050 |
-| TM10 | T024, T025, T027, T032 | T012, T013, T019, T042 |
+| TM10 | T024, T025, T027, T032, T053, T055, T057 | T012, T013, T019, T042, T052, T054, T056 |
 | TM11 | T029, T030 | T017, T044 |
 | TM12 | T023 | T011 |
 | TM13 | T034, T040 | T042 |
@@ -513,24 +596,24 @@ Formato:
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
-| deploy/respaldar.sh | T028 |
-| deploy/restaurar.sh | T029 |
+| deploy/respaldar.sh | T028, T039 |
+| deploy/restaurar.sh | T029, T062 |
 | deploy/volver.sh | T030 |
 | deploy/desplegar.sh | T037 |
-| deploy/cifrar-copias-antiguas.sh | T031 |
+| deploy/cifrar-copias-antiguas.sh | T031, T060 |
 | deploy/preparar-vigilancia.sh | T027 |
-| deploy/verificar.sh | T032 |
+| deploy/verificar.sh | T032, T060 |
 | deploy/README.md | T033, T034 |
 | docker-compose.prod.yml | T026 |
 | app/Listeners/RegistrarFalloAcceso.php | T020 |
 | app/Http/Controllers/AuthController.php | T036 |
-| app/Avisos/Vigilante.php, app/Avisos/Estado.php | T023, T024 |
+| app/Avisos/Vigilante.php, app/Avisos/Estado.php | T023, T024, T053, T055, T057 |
 | app/Console/Commands/Vigilar.php | T025 |
 | app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php | T021 |
 | config/avisos.php, config/logging.php | T003, T020 |
 | .env.example | T003 |
 | .gitignore, .dockerignore | T026 |
-| tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019 |
+| tests/Feature/RegistroFallosAccesoTest.php, VigilanteTest.php, AvisoProduccionTest.php, ConfiguracionProduccionTest.php | T010, T011, T012, T013, T014, T015, T016, T017, T018, T019, T052, T054, T056, T058, T059, T061 |
 | docs/security.md, docs/observability.md, docs/deployment.md, docs/architecture.md, docs/roadmap.md, docs/adr/0007 | T035, T051, T090, T091 (el ADR se creó y aceptó en `/plan`) |
 | docs/specs/030-despliegue-servidor-propio/spec.md, docs/specs/013-monolito-modular/spec.md (cobertura de RS15) | T038 |
 

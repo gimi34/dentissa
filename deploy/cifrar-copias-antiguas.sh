@@ -6,7 +6,8 @@
 #
 #     bash deploy/cifrar-copias-antiguas.sh
 #
-# Cada dentissa-*.sql.gz de /var/backups/dentissa se comprueba (gzip válido y
+# Cada dentissa-*.sql.gz de /var/backups/dentissa y de la carpeta personal (que
+# también revisa verificar.sh; /review R5) se comprueba (gzip válido y
 # línea final del volcado) y se cifra para la clave pública del responsable:
 #   - la buena pasa a dentissa-…sql.gz.gpg, con su fecha;
 #   - una dañada también se cifra, como dentissa-…sql.gz.danada.gpg, para que no
@@ -37,7 +38,7 @@ main() {
     umask 077
     shopt -s nullglob
     local cifradas=0 danadas=0 original destino
-    for original in "${DESTINO}"/dentissa-*.sql.gz; do
+    for original in "${DESTINO}"/dentissa-*.sql.gz "${HOME}"/dentissa-*.sql.gz; do
         if gzip -t -- "${original}" 2> /dev/null && gzip -cd -- "${original}" | tail -n 1 | grep -q -- '-- Dump completed'; then
             destino="${original}.gpg"
             cifradas=$((cifradas + 1))

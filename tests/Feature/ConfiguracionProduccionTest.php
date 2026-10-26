@@ -511,7 +511,8 @@ class ConfiguracionProduccionTest extends TestCase
         $ordenes = $this->ordenes('deploy/restaurar.sh');
 
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{copia\}" == \*\.sql\.gz\.gpg \]\] \|\| error /m', $ordenes, 'Solo acepta copias cifradas.');
-        $this->assertMatchesRegularExpression('/^gpg --status-fd 3 --decrypt -- "\$\{copia\}" 3> "\$\{estado\}" 2> \/dev\/null \| gzip -cd 2> \/dev\/null \| tail -n 1 > "\$\{final\}"$/m', $ordenes, 'La pasada de comprobación descifra y descomprime entera.');
+        // /review R7: del volcado solo se guarda si termina bien, nunca su última línea.
+        $this->assertMatchesRegularExpression('/^gpg --status-fd 3 --decrypt -- "\$\{copia\}" 3> "\$\{estado\}" 2> \/dev\/null \| gzip -cd 2> \/dev\/null \| awk \'END \{ print \(index\(\$0, "-- Dump completed"\) == 1 \? "completo" : "incompleto"\) \}\' > "\$\{final\}"$/m', $ordenes, 'La pasada de comprobación descifra y descomprime entera.');
         $this->assertMatchesRegularExpression('/^comprobar\n\[\[ -n "\$\{solo\}" \]\] && return 0$/m', $ordenes, '--solo-comprobar termina tras la comprobación.');
 
         $main = $this->posicion($ordenes, "\nmain() {", 'Falta main().');
@@ -610,7 +611,8 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^APP="\$\{DENTISSA_APP:-\/opt\/dentissa\/app\}"$/m', $ordenes);
         $this->assertStringNotContainsString('dirname', $ordenes);
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{APP\}" =~ \^\/\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'DENTISSA_APP es una ruta absoluta sin espacios.');
-        $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ;.');
+        // /review R9: tampoco puede empezar por «-», que git tomaría como una opción.
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/\]\[A-Za-z0-9\._\/-\]\*\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ; ni empieza por -.');
         $this->assertMatchesRegularExpression('/^orden="cd \$\(printf \'%q\' "\$\{APP\}"\) && \$\(printf \'%q \' "\$@"\)"$/m', $ordenes, 'Cada argumento de la orden remota va citado.');
     }
 
@@ -703,7 +705,8 @@ class ConfiguracionProduccionTest extends TestCase
         $ordenes = $this->ordenes('deploy/cifrar-copias-antiguas.sh');
 
         $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
-        $this->assertMatchesRegularExpression('/^for original in "\$\{DESTINO\}"\/dentissa-\*\.sql\.gz; do$/m', $ordenes);
+        // También la carpeta personal, que verificar.sh revisa (/review R5).
+        $this->assertMatchesRegularExpression('/^for original in "\$\{DESTINO\}"\/dentissa-\*\.sql\.gz "\$\{HOME\}"\/dentissa-\*\.sql\.gz; do$/m', $ordenes);
         $this->assertMatchesRegularExpression('/^destino="\$\{original\}\.gpg"$/m', $ordenes, 'Una copia buena pasa a .sql.gz.gpg.');
         $this->assertMatchesRegularExpression('/^destino="\$\{original%\.sql\.gz\}\.sql\.gz\.danada\.gpg"$/m', $ordenes, 'Una dañada pasa a .sql.gz.danada.gpg.');
 
@@ -794,14 +797,19 @@ class ConfiguracionProduccionTest extends TestCase
         $script = $this->leer('deploy/verificar.sh');
 
         $this->assertSame(1, preg_match('/^    if \[\[ "\$\{modo\}" != "--interna" \]\]; then\n        echo "== Avisos y copias \(spec 032\)"\n(.*?)^    fi$/ms', $script, $seccion), 'La sección es un bloque que no corre con --interna.');
+
+        // Órdenes de la sección sin comentarios ni echo (/review R4): una orden en un comentario
+        // no cuenta, y cada comprobación lleva su rama ok / fallo correcta.
+        $lineas = array_map('trim', explode("\n", $seccion[1]));
+        $ordenes = implode("\n", array_filter($lineas, fn (string $l) => $l !== '' && ! str_starts_with($l, '#') && ! str_starts_with($l, 'echo ')));
+
         foreach ([
-            'systemctl is-active --quiet dentissa-vigilar.timer' => 'temporizador activo',
-            'gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"' => 'clave pública válida',
-            "grep -q '^sec:'" => 'sin clave secreta en el archivo',
-            'gpg --list-secret-keys --with-colons' => 'llavero sin claves secretas',
-            '"${compose[@]}" exec -T -u www-data app test -r /var/log/nginx/dentissa-access.log' => 'app lee el log de acceso',
-        ] as $orden => $que) {
-            $this->assertStringContainsString($orden, $seccion[1], "La sección comprueba: {$que}.");
+            'temporizador activo → ok' => '/^if systemctl is-active --quiet dentissa-vigilar\.timer; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+            'clave pública con pub y sin sec → ok' => '/^claves_publicas="\$\(gpg --show-keys --with-colons -- "\$\{CLAVE_PUBLICA\}" 2> \/dev\/null \|\| true\)"\nif grep -q \'\^pub:\' <<< "\$\{claves_publicas\}" && ! grep -q \'\^sec:\' <<< "\$\{claves_publicas\}"; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+            'llavero con una clave secreta → fallo' => '/^if gpg --list-secret-keys --with-colons 2> \/dev\/null \| grep -q \'\^sec:\'; then\nfallo "[^"\n]*"\nelse\nok "[^"\n]*"\nfi$/m',
+            'app lee el log de acceso → ok' => '/^if "\$\{compose\[@\]\}" exec -T -u www-data app test -r \/var\/log\/nginx\/dentissa-access\.log; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+        ] as $que => $patron) {
+            $this->assertMatchesRegularExpression($patron, $ordenes, "La sección comprueba: {$que}.");
         }
     }
 
@@ -812,5 +820,46 @@ class ConfiguracionProduccionTest extends TestCase
             '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then ok [^\n]*\n\s*else fallo [^\n]*copias en claro[^\n]*$/m',
             $this->leer('deploy/verificar.sh'),
         );
+    }
+
+    /**
+     * Spec 032 (CA7; T039, visto en el ensayo T041): dos copias en el mismo segundo no
+     * comparten nombre; si ya existe una copia con el de ese segundo, se espera al siguiente.
+     */
+    public function test_respaldar_no_pisa_una_copia_existente(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^copia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\nwhile \[\[ -e "\$\{copia\}" \]\]; do\nsleep 1\ncopia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\ndone$/m',
+            $this->ordenes('deploy/respaldar.sh'),
+        );
+    }
+
+    /**
+     * Spec 032 (CA10; /review R5): si la carpeta de copias no existe o no se puede leer, la
+     * búsqueda de copias en claro no puede dar OK.
+     */
+    public function test_verificar_falla_si_no_puede_leer_las_copias(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n\s*fallo [^\n]*\n\s*fi\n\s*claras="\$\(find /m',
+            $this->leer('deploy/verificar.sh'),
+        );
+    }
+
+    /**
+     * Spec 032 (CA7, CA9; /review R6, R7, R8): en la carga remota, la marca de /dev/shm se borra
+     * también si la carga falla; la pasada 1 del PC solo guarda si el volcado termina bien; y la
+     * carga va en el modo sandbox del cliente de MariaDB, que no ejecuta órdenes del sistema que
+     * viniesen en una copia fabricada.
+     */
+    public function test_restaurar_no_deja_restos_y_carga_en_sandbox(): void
+    {
+        $carga = $this->cargaRemota();
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^\s*marca="\$\(mktemp -p \/dev\/shm dentissa-marca\.XXXXXX\)"\n\s*trap \'rm -f -- "\$\{marca\}"\' EXIT$/m', $carga, 'La marca se borra al salir, también si la carga falla (R6).');
+        $this->assertMatchesRegularExpression('/\| "\$\{compose\[@\]\}" exec -T db sh -c \'MYSQL_PWD="\$MARIADB_ROOT_PASSWORD" exec mariadb --sandbox -uroot "\$MARIADB_DATABASE"\'$/m', $carga, 'La carga usa el modo sandbox (R8).');
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{resultado\[1\]\}" -eq 0 \]\] && grep -qx completo "\$\{final\}" \|\| rechazar "el volcado está incompleto/m', $ordenes, 'Solo se comprueba la marca completo / incompleto (R7).');
+        $this->assertStringNotContainsString('tail -n 1 > "${final}"', $ordenes, 'La última línea del volcado no se escribe en el PC (R7).');
     }
 }
