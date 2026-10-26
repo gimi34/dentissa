@@ -401,7 +401,10 @@ class Vigilante
             // Lo retenido en el silencio, o un aviso cuyo envío falló (/review R2).
             $aviso['acumulado'] += $nuevos;
             $desde = CarbonImmutable::createFromTimestamp($aviso['desde'] ?? $aviso['ultimo_envio'] ?? $ahora->getTimestamp());
-            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $desde, $ahora, $anterior);
+            // El correo cita el aviso anterior solo si lo pendiente nació en su silencio: el
+            // de un envío fallido cuenta desde su ventana, no desde ese aviso (/review R25).
+            $enSilencio = $aviso['desde'] === null || $aviso['desde'] === $aviso['ultimo_envio'];
+            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $desde, $ahora, $enSilencio ? $anterior : null);
         } elseif ($condicion) {
             $correo = new AvisoProduccion($tipo, $enVentana, $this->inicioDeVentana($ahora), $ahora);
             // Si el envío falla, el aviso queda pendiente con su recuento: ningún aviso se pierde
