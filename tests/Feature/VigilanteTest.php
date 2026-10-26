@@ -559,4 +559,31 @@ class VigilanteTest extends TestCase
         $this->assertTrue($this->vigilar());
         $this->assertAvisoDeAccesos(11);
     }
+
+    /**
+     * /review R2 (CA4, TM10): si el primer aviso de una ráfaga no se puede enviar y el SMTP
+     * sigue caído hasta que la ráfaga sale de la ventana, el aviso no se pierde: sale cuando
+     * vuelve el envío, con su recuento.
+     */
+    public function test_un_primer_aviso_fallido_no_se_pierde(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+
+        $falso = Mail::getFacadeRoot();
+        Mail::shouldReceive('to')->andThrow(new TransportException('421 servicio no disponible'));
+        $this->assertFalse($this->vigilar());
+
+        // Diez minutos sin eventos nuevos y con el SMTP aún caído: la ráfaga ya no está en la ventana.
+        $this->travel(10)->minutes();
+        $this->vigilar();
+
+        // Vuelve el envío.
+        Mail::swap($falso);
+        $this->travel(1)->minutes();
+        $this->assertTrue($this->vigilar());
+
+        Mail::assertSentCount(1);
+        $this->assertAvisoDeAccesos(11);
+    }
 }
