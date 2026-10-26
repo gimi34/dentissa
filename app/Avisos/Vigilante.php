@@ -259,9 +259,15 @@ class Vigilante
             return null;
         }
 
-        $momento = CarbonImmutable::createFromFormat('d/M/Y:H:i:s O', $m[1]);
+        // Carbon lanza una excepción si la hora no tiene el formato de nginx: la línea cuenta como
+        // sin formato y no tumba la ejecución (/review R1).
+        try {
+            $momento = CarbonImmutable::createFromFormat('d/M/Y:H:i:s O', $m[1]);
+        } catch (Throwable) {
+            return null;
+        }
 
-        return $momento === null ? null : [$momento->startOfMinute()->getTimestamp(), (int) $m[2]];
+        return $momento ? [$momento->startOfMinute()->getTimestamp(), (int) $m[2]] : null;
     }
 
     private function sumar(Estado $estado, int $minuto, string $campo): void
