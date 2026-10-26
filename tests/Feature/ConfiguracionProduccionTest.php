@@ -817,7 +817,7 @@ class ConfiguracionProduccionTest extends TestCase
     public function test_verificar_falla_con_copias_en_claro(): void
     {
         $this->assertMatchesRegularExpression(
-            '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then ok [^\n]*\n\s*else fallo [^\n]*copias en claro[^\n]*$/m',
+            '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then\n\s*ok [^\n]*\n\s*else\n\s*fallo [^\n]*copias en claro[^\n]*$/m',
             $this->leer('deploy/verificar.sh'),
         );
     }
