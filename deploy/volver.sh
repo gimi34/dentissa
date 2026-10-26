@@ -40,6 +40,8 @@ esperar_db() {
 main() {
     local ref="${1:-}" opcion="${2:-}"
     [[ -n "${ref}" ]] || error "indica la versión anterior: bash deploy/volver.sh <tag o commit> [--sin-levantar]"
+    # También se ejecuta a mano: la versión no puede llegar a git como una opción (/review R29).
+    [[ "${ref}" =~ ^[A-Za-z0-9._/][A-Za-z0-9._/-]*$ ]] || error "la versión solo admite letras, números, . _ / y -, y no puede empezar por -"
     # La forma de la 030 (volver.sh <ref> <copia>) ya no restaura: la copia está
     # cifrada y su clave no está en el servidor (/analyze A17, A40).
     if [[ $# -gt 2 || ( -n "${opcion}" && "${opcion}" != "--sin-levantar" ) ]]; then
