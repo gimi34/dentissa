@@ -36,7 +36,9 @@ APP="${DENTISSA_APP:-/opt/dentissa/app}"
 # Carga en el servidor (bash -c, con el clon como $1). Lee el volcado
 # descomprimido de la entrada y no hace DROP hasta recibir su primera línea
 # (/analyze A29). Sale con 3 si no llegó nada y con 4 si lo cargado no termina
-# en la línea final del volcado (/analyze A51).
+# en la línea final del volcado (/analyze A51). La marca se borra también si la
+# carga falla (/review R6) y mariadb carga en modo sandbox, sin órdenes del
+# sistema aunque vinieran en una copia fabricada con la clave pública (R8).
 read -r -d '' CARGA <<'REMOTO' || true
 set -euo pipefail
 cd "$1"
@@ -45,9 +47,10 @@ gzip -cd | {
     IFS= read -r primera || exit 3
     "${compose[@]}" exec -T db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -uroot -e "DROP DATABASE \`$MARIADB_DATABASE\`; CREATE DATABASE \`$MARIADB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"' < /dev/null
     marca="$(mktemp -p /dev/shm dentissa-marca.XXXXXX)"
+    trap 'rm -f -- "${marca}"' EXIT
     { printf '%s\n' "${primera}"; cat; } \
         | awk -v marca="${marca}" '{ print } END { print > marca }' \
-        | "${compose[@]}" exec -T db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -uroot "$MARIADB_DATABASE"'
+        | "${compose[@]}" exec -T db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb --sandbox -uroot "$MARIADB_DATABASE"'
     grep -q -- '-- Dump completed' "${marca}" || { rm -f "${marca}"; exit 4; }
     rm -f "${marca}"
 }
@@ -88,7 +91,8 @@ comprobar() {
     estado="$(mktemp)"
     final="$(mktemp)"
     set +e
-    gpg --status-fd 3 --decrypt -- "${copia}" 3> "${estado}" 2> /dev/null | gzip -cd 2> /dev/null | tail -n 1 > "${final}"
+    # Del volcado solo se guarda si termina bien, nunca su última línea (/review R7).
+    gpg --status-fd 3 --decrypt -- "${copia}" 3> "${estado}" 2> /dev/null | gzip -cd 2> /dev/null | awk 'END { print (index($0, "-- Dump completed") == 1 ? "completo" : "incompleto") }' > "${final}"
     local resultado=("${PIPESTATUS[@]}")
     set -e
 
@@ -101,7 +105,7 @@ comprobar() {
         fi
         rechazar "la copia está alterada o cortada (falla la comprobación de integridad)"
     fi
-    [[ "${resultado[1]}" -eq 0 ]] && grep -q -- '-- Dump completed' "${final}" || rechazar "el volcado está incompleto (falta -- Dump completed)"
+    [[ "${resultado[1]}" -eq 0 ]] && grep -qx completo "${final}" || rechazar "el volcado está incompleto (falta -- Dump completed)"
 }
 
 main() {
@@ -137,7 +141,7 @@ main() {
     [[ -f "${copia}" ]] || error "no existe la copia ${copia}"
     [[ "${APP}" =~ ^/[A-Za-z0-9._/-]+$ ]] || error "DENTISSA_APP tiene que ser una ruta absoluta sin espacios"
     if [[ -n "${ref}" ]]; then
-        [[ "${ref}" =~ ^[A-Za-z0-9._/-]+$ ]] || error "la versión de --volver solo admite letras, números, . _ / y -"
+        [[ "${ref}" =~ ^[A-Za-z0-9._/][A-Za-z0-9._/-]*$ ]] || error "la versión de --volver solo admite letras, números, . _ / y -, y no puede empezar por -"
     fi
     command -v gpg > /dev/null || error "falta gpg (viene con Git para Windows)"
     trap limpiar EXIT
