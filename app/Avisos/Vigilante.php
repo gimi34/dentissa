@@ -52,7 +52,7 @@ class Vigilante
         $ahora = CarbonImmutable::now();
         $leido = true;
         $nuevas = $this->leer('acceso', fn () => $this->leerAcceso($estado), ['errores' => 0, 'malas' => 0], $leido);
-        $fallos = $this->leer('seguridad', fn () => $this->leerSeguridad($estado, $ahora), 0, $leido);
+        $fallos = $this->leerSeguridad($estado, $ahora, $leido);
         $this->podar($estado, $ahora);
 
         $enviados = $this->avisoDeErrores($estado, $ahora, $nuevas['errores'])
@@ -135,9 +135,13 @@ class Vigilante
      * Lee lo nuevo del canal `seguridad`, con el mismo tope que el log de acceso
      * (/analyze A44). De cada línea solo se guardan el momento y las huellas.
      *
+     * Cada archivo diario se lee por separado: uno que no se puede leer conserva su
+     * desplazamiento y no impide leer el otro, y los fallos de un archivo se guardan
+     * junto con su desplazamiento (/review R23, R24).
+     *
      * @return int fallos leídos ahora
      */
-    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora): int
+    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora, bool &$leido): int
     {
         $seguridad = &$estado->datos['seguridad'];
         $desplazamientos = [];
@@ -145,15 +149,26 @@ class Vigilante
 
         clearstatcache();
         foreach ($this->archivosDeSeguridad($ahora) as $nombre => $archivo) {
-            $desplazamiento = $seguridad['desplazamientos'][$nombre] ?? 0;
+            $anterior = $seguridad['desplazamientos'][$nombre] ?? 0;
             if (! is_file($archivo)) {
                 continue;
             }
-            if (filesize($archivo) < $desplazamiento) {
-                $desplazamiento = 0;
+
+            $desplazamiento = $anterior;
+            $lineas = $this->leer('seguridad', function () use ($archivo, &$desplazamiento) {
+                if (filesize($archivo) < $desplazamiento) {
+                    $desplazamiento = 0;
+                }
+
+                return $this->lineasNuevas($archivo, $desplazamiento);
+            }, null, $leido);
+            if ($lineas === null) {
+                $desplazamientos[$nombre] = $anterior;
+
+                continue;
             }
 
-            foreach ($this->lineasNuevas($archivo, $desplazamiento) as $linea) {
+            foreach ($lineas as $linea) {
                 $fallo = $this->interpretarFallo($linea);
                 if ($fallo !== null) {
                     $seguridad['fallos'][] = $fallo;
