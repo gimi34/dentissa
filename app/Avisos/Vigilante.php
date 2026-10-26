@@ -356,19 +356,27 @@ class Vigilante
 
         if ($anterior !== null && $ahora->lt($anterior->addMinutes((int) config('avisos.silencio_minutos')))) {
             $aviso['acumulado'] += $nuevos;
-            $aviso['pendiente'] = $aviso['pendiente'] || ($condicion && $nuevos > 0);
+            if (! $aviso['pendiente'] && $condicion && $nuevos > 0) {
+                $aviso['pendiente'] = true;
+                $aviso['desde'] = $aviso['ultimo_envio'];
+            }
             $estado->guardarAviso($tipo, $aviso);
 
             return true;
         }
 
-        if ($anterior !== null && $aviso['pendiente']) {
+        if ($aviso['pendiente']) {
+            // Lo retenido en el silencio, o un aviso cuyo envío falló (/review R2).
             $aviso['acumulado'] += $nuevos;
-            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $anterior, $ahora, $anterior);
+            $desde = CarbonImmutable::createFromTimestamp($aviso['desde'] ?? $aviso['ultimo_envio'] ?? $ahora->getTimestamp());
+            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $desde, $ahora, $anterior);
         } elseif ($condicion) {
             $correo = new AvisoProduccion($tipo, $enVentana, $this->inicioDeVentana($ahora), $ahora);
+            // Si el envío falla, el aviso queda pendiente con su recuento: ningún aviso se pierde
+            // aunque la ráfaga salga de la ventana antes de que vuelva el envío (CA4, /review R2).
+            $aviso = ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => true, 'acumulado' => $enVentana, 'desde' => $this->inicioDeVentana($ahora)->getTimestamp()];
         } else {
-            $estado->guardarAviso($tipo, ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => false, 'acumulado' => 0]);
+            $estado->guardarAviso($tipo, ['ultimo_envio' => $aviso['ultimo_envio'], 'pendiente' => false, 'acumulado' => 0, 'desde' => null]);
 
             return true;
         }
@@ -379,7 +387,7 @@ class Vigilante
             return false;
         }
 
-        $estado->guardarAviso($tipo, ['ultimo_envio' => $ahora->getTimestamp(), 'pendiente' => false, 'acumulado' => 0]);
+        $estado->guardarAviso($tipo, ['ultimo_envio' => $ahora->getTimestamp(), 'pendiente' => false, 'acumulado' => 0, 'desde' => null]);
 
         return true;
     }

@@ -19,7 +19,7 @@ class Estado
      *     acceso: array{inodo: int|null, desplazamiento: int, malas_seguidas: int},
      *     minutos: array<int, array{peticiones: int, errores: int, malas: int}>,
      *     seguridad: array{desplazamientos: array<string, int>, fallos: list<array{0: int, 1: string|null, 2: string|null}>},
-     *     avisos: array<string, array{ultimo_envio: int|null, pendiente: bool, acumulado: int}>
+     *     avisos: array<string, array{ultimo_envio: int|null, pendiente: bool, acumulado: int, desde: int|null}>
      * }  $datos
      */
     private function __construct(private readonly string $ruta, public array $datos) {}
@@ -56,7 +56,7 @@ class Estado
     /** Estado de un tipo de aviso. */
     public function aviso(string $tipo): array
     {
-        return $this->datos['avisos'][$tipo] ?? ['ultimo_envio' => null, 'pendiente' => false, 'acumulado' => 0];
+        return ($this->datos['avisos'][$tipo] ?? []) + ['ultimo_envio' => null, 'pendiente' => false, 'acumulado' => 0, 'desde' => null];
     }
 
     public function guardarAviso(string $tipo, array $aviso): void
