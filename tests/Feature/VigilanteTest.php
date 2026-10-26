@@ -586,4 +586,50 @@ class VigilanteTest extends TestCase
         Mail::assertSentCount(1);
         $this->assertAvisoDeAccesos(11);
     }
+
+    /**
+     * /review R3: un log de acceso que existe pero no se puede abrir (un envoltorio de flujo de
+     * prueba cuyo `stream_open` falla) no tumba el aviso de accesos ni deja el estado sin guardar.
+     */
+    public function test_un_log_de_acceso_ilegible_no_tumba_el_aviso_de_accesos(): void
+    {
+        stream_wrapper_register('ilegible', FlujoIlegible::class);
+
+        try {
+            config(['avisos.log_acceso' => 'ilegible://dentissa-access.log']);
+            $this->iniciar();
+            $this->escribirFallos(11);
+            Log::spy();
+
+            $this->assertFalse($this->vigilar());
+
+            $this->assertAvisoDeAccesos(11);
+            Log::shouldHaveReceived('warning')->with('lectura fallida', ['fuente' => 'acceso'])->once();
+            $this->assertStringContainsString('"accesos"', File::get(config('avisos.estado')));
+        } finally {
+            stream_wrapper_unregister('ilegible');
+        }
+    }
+}
+
+/**
+ * Flujo de prueba: el archivo «existe» (stat de un archivo normal de 100 bytes) pero no se puede
+ * abrir, como un log sin permiso de lectura.
+ */
+final class FlujoIlegible
+{
+    /** @var resource|null */
+    public $context;
+
+    public function stream_open(string $ruta, string $modo, int $opciones, ?string &$abierta): bool
+    {
+        return false;
+    }
+
+    /** @return array<string, int> */
+    public function url_stat(string $ruta, int $opciones): array
+    {
+        return ['dev' => 0, 'ino' => 7, 'mode' => 0100644, 'nlink' => 1, 'uid' => 0, 'gid' => 0, 'rdev' => 0,
+            'size' => 100, 'atime' => 0, 'mtime' => 0, 'ctime' => 0, 'blksize' => -1, 'blocks' => -1];
+    }
 }
