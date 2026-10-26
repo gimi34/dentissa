@@ -872,4 +872,20 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{resultado\[1\]\}" -eq 0 \]\] && grep -qx completo "\$\{final\}" \|\| rechazar "el volcado está incompleto/m', $ordenes, 'Solo se comprueba la marca completo / incompleto (R7).');
         $this->assertStringNotContainsString('tail -n 1 > "${final}"', $ordenes, 'La última línea del volcado no se escribe en el PC (R7).');
     }
+
+    /**
+     * Spec 032 (CA9, TM11; /review R29): `volver.sh` también se ejecuta a mano (guía y vuelta que
+     * imprime `desplegar.sh`), así que comprueba la versión antes de pasarla a git, con la misma
+     * expresión que `restaurar.sh`: sin espacios ni `;` y sin un «-» inicial que git tomaría como
+     * una opción.
+     */
+    public function test_volver_comprueba_la_version_antes_de_git(): void
+    {
+        $comprobacion = '[[ "${ref}" =~ ^[A-Za-z0-9._/][A-Za-z0-9._/-]*$ ]] || error ';
+        $volver = $this->ordenes('deploy/volver.sh');
+
+        $antes = $this->posicion($volver, $comprobacion, 'volver.sh comprueba la versión.');
+        $this->assertLessThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh obtiene las versiones.'), $antes, 'La comprobación va antes de git.');
+        $this->assertStringContainsString($comprobacion, $this->ordenes('deploy/restaurar.sh'), 'La misma expresión que restaurar.sh.');
+    }
 }

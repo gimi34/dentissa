@@ -450,8 +450,9 @@ Formato:
   - nota: añadida por /review: R27, R28
   - nota: T069 pasa (ConfiguracionProduccionTest 39/39); bash -n limpio. Comprobado rompiendo (2026-10-25): cambiar -eq por -ne, intercambiar ok y fallo, y volver a sacar la búsqueda del else hacen fallar T069.
   - nota: Archivo extra justificado: tests/Feature/ConfiguracionProduccionTest.php, porque test_verificar_falla_con_copias_en_claro (T018) fijaba la comprobación en una sola línea. Se ajusta a la forma en varias líneas sin perder ninguna exigencia: la búsqueda, -eq 0 con ok y el fallo que nombra las copias en claro.
-- [ ] T071 Añadir a `ConfiguracionProduccionTest` que `volver.sh` rechaza, antes de `git fetch`, una versión que no cumpla `^[A-Za-z0-9._/][A-Za-z0-9._/-]*$` (la misma expresión que `restaurar.sh`) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: falla hoy por la razón esperada, anotado — cubre: CA9 — depende: T070
+- [x] T071 Añadir a `ConfiguracionProduccionTest` que `volver.sh` rechaza, antes de `git fetch`, una versión que no cumpla `^[A-Za-z0-9._/][A-Za-z0-9._/-]*$` (la misma expresión que `restaurar.sh`) — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: falla hoy por la razón esperada, anotado — cubre: CA9 — depende: T070
   - nota: añadida por /review: R29
+  - nota: Falla por la razón esperada (2026-10-25): «volver.sh comprueba la versión», que hoy no tiene esa comprobación. El caso exige además que vaya antes de git fetch y que sea la misma línea que en restaurar.sh. pint limpio.
 - [ ] T072 Validar la versión en `volver.sh` con la expresión de T071, antes de `git fetch` — deploy/volver.sh — hecho cuando: T071 y los demás casos de `volver.sh` pasan, `bash -n` limpio y, en Git Bash con un `git` falso en el PATH que deja constancia, `bash deploy/volver.sh -f` y `bash deploy/volver.sh 'v1;reboot'` terminan con el error sin llamar a git, anotado — cubre: CA9 — depende: T071
   - nota: añadida por /review: R29
 
