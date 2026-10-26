@@ -679,6 +679,26 @@ class VigilanteTest extends TestCase
         });
     }
 
+    /**
+     * /review R26: si lo que falla es una lectura, el comando lo dice, y no solo que algún aviso
+     * no se pudo enviar.
+     */
+    public function test_el_comando_dice_si_fallo_una_lectura(): void
+    {
+        stream_wrapper_register('ilegible', FlujoIlegible::class);
+
+        try {
+            config(['avisos.log_acceso' => 'ilegible://dentissa-access.log']);
+            $this->iniciar();
+
+            $this->artisan('dentissa:vigilar')
+                ->expectsOutputToContain('no se pudo leer')
+                ->assertExitCode(1);
+        } finally {
+            stream_wrapper_unregister('ilegible');
+        }
+    }
+
     /** Ejecuta `$prueba` con el canal `seguridad` leído a través de {@see FlujoParcial}. */
     private function conSeguridadIlegible(string $archivo, callable $prueba): void
     {
