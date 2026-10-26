@@ -431,7 +431,7 @@ Formato:
   - nota: El correo de caída de UptimeRobot llegó unos 2 minutos después de apagar (≤ 10 min, CA3) y el de vuelta al volver; unos 6 minutos entre los dos correos.
   - nota: Tras el arranque (23:54:26 UTC) todo volvió solo: app, web, db (healthy) y cloudflared en marcha; dentissa-vigilar.timer activo (ejecutado a las 00:00:11); verificar.sh completo «todo OK», también por la dirección pública.
   - nota: Nota de T042: el usuario comprobó y borró con shred -u /opt/dentissa/entorno/app.env.save (versión del 2026-10-05, sin las variables de correo); quedan solo app.env, copias.pub.asc, db.env y tunnel.env, todos 600.
-- [ ] T044 Ensayo de la restauración y la vuelta desde el PC (aprobación explícita antes; lo ejecuta el usuario, con la segunda copia de la clave importada en un llavero temporal del PC con `GNUPGHOME`) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, la foto y la comparación, cada rechazo con su mensaje y el resultado de la vuelta — cubre: CA9 — depende: T043
+- [x] T044 Ensayo de la restauración y la vuelta desde el PC (aprobación explícita antes; lo ejecuta el usuario, con la segunda copia de la clave importada en un llavero temporal del PC con `GNUPGHOME`) — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: la nota recoge la aprobación, la foto y la comparación, cada rechazo con su mensaje y el resultado de la vuelta — cubre: CA9 — depende: T043
   - Foto, con `app` y `web` parados: `CHECKSUM TABLE` y recuento de filas de cada tabla (/analyze A14).
   - `respaldar.sh` justo después; `scp` de la copia al PC.
   - `restaurar.sh <copia> <servidor>` → mismos valores que la foto.
@@ -444,6 +444,16 @@ Formato:
     - avisa de parar el temporizador, que se para.
   - nota: aceptado en /analyze r2 (2026-10-25), A31 — la comparación con la foto se hace antes de dar tráfico a la aplicación, o excluyendo las tablas volátiles (`cache`, `sessions`, `jobs`) declarándolo; la nota dice cómo.
   - nota: aceptado en /analyze r2 (2026-10-25), A35 — la nota recoge la duración de `restaurar.sh --volver` frente a los 15 min de 030 CA7.
+  - nota: Aprobado por el usuario el 2026-10-25 («apruebo el ensayo»); lo ejecutó él, en el servidor y en su PC (Git Bash, con el restaurar.sh del worktree de la rama). Resultados sin secretos:
+  - nota: Foto con app y web parados: 14 tablas, con filas y CHECKSUM TABLE de cada una, sin las volátiles (cache, cache_locks, sessions, jobs, job_batches, failed_jobs); copia justo después, dentissa-20261026-000557.sql.gz.gpg, llevada al PC con scp.
+  - nota: Segunda copia de la clave (archivo en D:) importada en un llavero temporal (GNUPGHOME): entró la subclave de cifrado (ssb) y no la principal (sec#; probablemente una frase mal tecleada en el import), y abre las copias: el descifrado de prueba acabó en -- Dump completed.
+  - nota: restaurar.sh <copia> gimi@192.168.0.132: comprobación local, confirmación, stop app web, carga, up, cachés y verificar --interna todo OK; la base, IGUAL QUE LA FOTO; en el servidor, 0 claves secretas y /dev/shm vacío (A5).
+  - nota: Rechazos, cada uno antes de la confirmación y con su mensaje (A13): copia para otra clave → «la copia no es para tu clave»; con un byte cambiado y cortada → «la copia está alterada o cortada (falla la comprobación de integridad)»; base IGUAL QUE LA FOTO.
+  - nota: Caché vaciada desde otra ventana mientras el script esperaba la confirmación y frase cancelada en la pasada 2 (A29): «no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado y app y web vuelven a estar en marcha»; sin DROP; base IGUAL QUE LA FOTO; los cuatro servicios en marcha.
+  - nota: restaurar.sh <copia> … --volver v0.10.0, con la caché vaciada antes: la frase se pidió una sola vez (A1); volver.sh v0.10.0 --sin-levantar, carga y verificar --interna de v0.10.0 todo OK; base IGUAL QUE LA FOTO; git describe → v0.10.0; temporizador parado con systemctl disable --now (inactive).
+  - nota: A31 aplicado: la comparación excluye, declaradas, las tablas volátiles (la app vuelve a recibir tráfico entre la foto y cada comparación).
+  - nota: A35 aplicado: la vuelta con copia desde el PC tardó real 4m44s (time), dentro de los 15 minutos de 030 CA7; T098 anota 030 CA7 como modificado por 032 CA9.
+  - nota: Producción queda en v0.10.0, con las copias cifradas y el temporizador parado, hasta la liberación de la 032 (T097).
 
 ## Integración y documentación
 - [ ] T050 Ejecutar la puerta de calidad sobre el diff de la spec: suite completa, `pint --test` en los PHP tocados, `bash -n` en los scripts tocados, gitleaks, semgrep `p/php`, `composer audit --locked`, `npm audit` y revisión de cada `Log::` nuevo — docs/specs/032-alertas-cifrado-copias/tasks.md — hecho cuando: todo pasa sin hallazgos críticos ni altos, anotado con los recuentos — cubre: CA5, CA8 — depende: T020, T025, T026, T027, T028, T029, T030, T031, T032, T036, T037
