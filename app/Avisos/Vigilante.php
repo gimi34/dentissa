@@ -35,7 +35,7 @@ class Vigilante
     /** Estas líneas seguidas sin el formato, sin ninguna buena en medio, también lo son (/analyze A49). */
     private const MALAS_SEGUIDAS = 5;
 
-    /** Ejecuta una vuelta. Devuelve false si algún aviso no se pudo enviar. */
+    /** Ejecuta una vuelta. Devuelve false si algún log no se pudo leer o algún aviso no se pudo enviar. */
     public function ejecutar(): bool
     {
         $estado = Estado::cargar(config('avisos.estado'));
