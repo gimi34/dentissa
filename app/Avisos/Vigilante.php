@@ -50,8 +50,9 @@ class Vigilante
         }
 
         $ahora = CarbonImmutable::now();
-        $nuevas = $this->leerAcceso($estado);
-        $fallos = $this->leerSeguridad($estado, $ahora);
+        $leido = true;
+        $nuevas = $this->leer('acceso', fn () => $this->leerAcceso($estado), ['errores' => 0, 'malas' => 0], $leido);
+        $fallos = $this->leer('seguridad', fn () => $this->leerSeguridad($estado, $ahora), 0, $leido);
         $this->podar($estado, $ahora);
 
         $enviados = $this->avisoDeErrores($estado, $ahora, $nuevas['errores'])
@@ -60,7 +61,23 @@ class Vigilante
 
         $estado->guardar();
 
-        return (bool) $enviados;
+        return $leido && (bool) $enviados;
+    }
+
+    /**
+     * Lee una fuente sin que su fallo impida leer la otra ni guardar el estado: queda un aviso en
+     * el log, sin el mensaje, y la ejecución termina con error (/review R3).
+     */
+    private function leer(string $fuente, callable $lectura, mixed $sinDatos, bool &$leido): mixed
+    {
+        try {
+            return $lectura();
+        } catch (Throwable) {
+            Log::warning('lectura fallida', ['fuente' => $fuente]);
+            $leido = false;
+
+            return $sinDatos;
+        }
     }
 
     /**
