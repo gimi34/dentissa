@@ -246,7 +246,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   en v0.9.0 (2026-10-19) antes que la 031, que pasa a v0.10.0 (anotarlo en su plan y fusionar
   `main` en su rama al retomarla).
 - Deuda de la spec 031 (liberada en v0.10.0; /review, aceptada sin tarea, y condiciones del release):
-  - 031/R4: refrescar `cloudflare/cloudflared` a 2026.10.1 (7 días desde el 2026-10-22) y la `mariadb:10.11.19` reconstruida (desde el 2026-10-24), volver a escanear con `trivy image` y renovar o retirar EX2 antes del 2026-11-30 (RS18.a, mitigada en v0.10.0 con este residuo).
+  - 031/R4: hecho el 2026-10-27 (ficha 2026-10-27-chore-imagenes-031-r4): `cloudflared` 2026.10.2, `mariadb:10.11.19` sin cambios (los avisos de `gosu` no tienen imagen corregida), escaneo de todas y EX2 renovada hasta el 2026-12-31. Pendiente antes de ese vencimiento: subir `cloudflared` a la 2026.10.4 o posterior (7 días el 2026-11-02; corrige `klauspost/compress`), refrescar las demás imágenes a las más nuevas con 7 días, volver a escanear con `trivy image` y renovar o retirar EX2 (RS18.a).
   - 031/R12: aserción sobre el registro de `Failed` cuando exista la auditoría (spec 021).
   - 031/R13: decidir si la vuelta de Google captura cualquier excepción de Socialite.
   - 031/R14: comprobar la huella de la clave del repositorio de Tailscale.

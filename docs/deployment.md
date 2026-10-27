@@ -25,22 +25,22 @@ reinicio. Cada ensayo exige antes la aprobación explícita del responsable, ano
 Nadie de fuera llega a la aplicación mientras `cloudflared` está parado.
 
 ## Plataforma e infraestructura
-- **Local:** `Dockerfile` (`php:8.4.25-fpm` + extensiones pdo_mysql, mbstring, exif, pcntl, bcmath,
-  gd, zip; Composer desde `composer:2.10.2`), `docker-compose.yml` con `app`, `nginx`
-  (`nginx:1.30.5-alpine`, `127.0.0.1:8000`), `db` (`mariadb:10.11.18`, `127.0.0.1:3306`, colación
+- **Local:** `Dockerfile` (`php:8.4.26-fpm` + extensiones pdo_mysql, mbstring, exif, pcntl, bcmath,
+  gd, zip; Composer desde `composer:2.10.3`), `docker-compose.yml` con `app`, `nginx`
+  (`nginx:1.30.5-alpine`, `127.0.0.1:8000`), `db` (`mariadb:10.11.19`, `127.0.0.1:3306`, colación
   `utf8mb4_unicode_ci`, volumen `dentissa_db_data`, carga el volcado solo la primera vez) y
-  `phpmyadmin` (`phpmyadmin:5.2.2`, `127.0.0.1:8080`). PHP lee `docker/nginx/php/local.ini`.
+  `phpmyadmin` (`phpmyadmin:5.2.3`, `127.0.0.1:8080`). PHP lee `docker/nginx/php/local.ini`.
   Configuración nginx en `docker/nginx/dentissa.conf`. Todas las imágenes con versión exacta.
 - **Producción** (ADR 0005): servidor propio con Ubuntu Server 24.04, Docker Engine y
   `docker-compose.prod.yml` (proyecto `dentissa-prod`):
-  - `cloudflared` (`cloudflare/cloudflared:2026.9.3`): túnel saliente hacia Cloudflare, única
+  - `cloudflared` (`cloudflare/cloudflared:2026.10.2`): túnel saliente hacia Cloudflare, única
     entrada; HTTPS en el borde de Cloudflare.
   - `web` (nginx de `docker/prod/Dockerfile`, etapa `web`): `public/` y
     `docker/nginx/dentissa.prod.conf`; toma la IP real de `CF-Connecting-IP` solo desde la red
     `172.28.0.0/24` y redirige con 301 a `https://` lo que llega por `http://`.
   - `app` (php-fpm de `docker/prod/Dockerfile`, etapa `app`): el código dentro de la imagen, sin
     dependencias de desarrollo ni secretos, con los paquetes del sistema actualizados al construir.
-  - `db` (`mariadb:10.11.18`): usuario propio `dentissa_app` (no root), colación
+  - `db` (`mariadb:10.11.19`): usuario propio `dentissa_app` (no root), colación
     `utf8mb4_unicode_ci`, volumen `db_data`; el volcado solo en la primera carga.
   - Ningún servicio publica puertos; `restart: unless-stopped`; volúmenes `db_data`, `storage`
     (logs de Laravel y sesiones) y `nginx_logs`.
