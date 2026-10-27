@@ -817,7 +817,7 @@ class ConfiguracionProduccionTest extends TestCase
     public function test_verificar_falla_con_copias_en_claro(): void
     {
         $this->assertMatchesRegularExpression(
-            '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then ok [^\n]*\n\s*else fallo [^\n]*copias en claro[^\n]*$/m',
+            '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then\n\s*ok [^\n]*\n\s*else\n\s*fallo [^\n]*copias en claro[^\n]*$/m',
             $this->leer('deploy/verificar.sh'),
         );
     }
@@ -835,13 +835,23 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
-     * Spec 032 (CA10; /review R5): si la carpeta de copias no existe o no se puede leer, la
-     * búsqueda de copias en claro no puede dar OK.
+     * Spec 032 (CA10; /review R5, R27, R28): si la carpeta de copias no existe o no se puede leer,
+     * es un FALLO y la búsqueda de copias en claro no se hace (daría 0 y un OK falso); si se puede,
+     * cero copias en claro es OK y alguna es FALLO.
      */
     public function test_verificar_falla_si_no_puede_leer_las_copias(): void
     {
         $this->assertMatchesRegularExpression(
-            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n\s*fallo [^\n]*\n\s*fi\n\s*claras="\$\(find /m',
+            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n'
+            .'\s*fallo "[^"\n]*"\n'
+            .'\s*else\n'
+            .'\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n'
+            .'\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then\n'
+            .'\s*ok "[^"\n]*"\n'
+            .'\s*else\n'
+            .'\s*fallo "[^"\n]*"\n'
+            .'\s*fi\n'
+            .'\s*fi$/m',
             $this->leer('deploy/verificar.sh'),
         );
     }
@@ -861,5 +871,21 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/\| "\$\{compose\[@\]\}" exec -T db sh -c \'MYSQL_PWD="\$MARIADB_ROOT_PASSWORD" exec mariadb --sandbox -uroot "\$MARIADB_DATABASE"\'$/m', $carga, 'La carga usa el modo sandbox (R8).');
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{resultado\[1\]\}" -eq 0 \]\] && grep -qx completo "\$\{final\}" \|\| rechazar "el volcado está incompleto/m', $ordenes, 'Solo se comprueba la marca completo / incompleto (R7).');
         $this->assertStringNotContainsString('tail -n 1 > "${final}"', $ordenes, 'La última línea del volcado no se escribe en el PC (R7).');
+    }
+
+    /**
+     * Spec 032 (CA9, TM11; /review R29): `volver.sh` también se ejecuta a mano (guía y vuelta que
+     * imprime `desplegar.sh`), así que comprueba la versión antes de pasarla a git, con la misma
+     * expresión que `restaurar.sh`: sin espacios ni `;` y sin un «-» inicial que git tomaría como
+     * una opción.
+     */
+    public function test_volver_comprueba_la_version_antes_de_git(): void
+    {
+        $comprobacion = '[[ "${ref}" =~ ^[A-Za-z0-9._/][A-Za-z0-9._/-]*$ ]] || error ';
+        $volver = $this->ordenes('deploy/volver.sh');
+
+        $antes = $this->posicion($volver, $comprobacion, 'volver.sh comprueba la versión.');
+        $this->assertLessThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh obtiene las versiones.'), $antes, 'La comprobación va antes de git.');
+        $this->assertStringContainsString($comprobacion, $this->ordenes('deploy/restaurar.sh'), 'La misma expresión que restaurar.sh.');
     }
 }

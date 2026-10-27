@@ -588,6 +588,34 @@ class VigilanteTest extends TestCase
     }
 
     /**
+     * /review R25 (CA4): el reintento de un aviso cuyo primer envío falló no dice que su recuento
+     * viene del aviso anterior, de hace días: el intervalo empieza en la ventana del intento fallido.
+     */
+    public function test_el_reintento_de_un_aviso_fallido_no_cita_el_aviso_anterior(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $this->assertTrue($this->vigilar());
+
+        $this->travel(3)->days();
+        $this->escribirFallos(11);
+        $intento = CarbonImmutable::now();
+        $falso = Mail::getFacadeRoot();
+        Mail::shouldReceive('to')->andThrow(new TransportException('421 servicio no disponible'));
+        $this->assertFalse($this->vigilar());
+
+        Mail::swap($falso);
+        $this->travel(1)->minutes();
+        $this->assertTrue($this->vigilar());
+
+        Mail::assertSentCount(2);
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'accesos'
+            && $aviso->recuento === 11
+            && $aviso->desde->equalTo($intento->subMinutes(5))
+            && $aviso->anterior === null);
+    }
+
+    /**
      * /review R3: un log de acceso que existe pero no se puede abrir (un envoltorio de flujo de
      * prueba cuyo `stream_open` falla) no tumba el aviso de accesos ni deja el estado sin guardar.
      */
@@ -609,6 +637,153 @@ class VigilanteTest extends TestCase
         } finally {
             stream_wrapper_unregister('ilegible');
         }
+    }
+
+    /**
+     * /review R23: con el archivo de hoy del canal `seguridad` ilegible, los fallos del de ayer se
+     * cuentan una vez, aunque el vigilante se ejecute varias veces (CA4, /analyze A9).
+     */
+    public function test_un_archivo_de_seguridad_ilegible_no_duplica_fallos(): void
+    {
+        $this->conSeguridadIlegible('seguridad-2026-10-26.log', function () {
+            $this->travelTo(CarbonImmutable::parse('2026-10-26 00:01:00', 'UTC'));
+            File::put($this->carpeta.'/seguridad-2026-10-26.log', "{}\n");
+            $this->iniciar();
+            for ($i = 0; $i < 3; $i++) {
+                $this->escribirFallo('aaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbb', momento: CarbonImmutable::parse('2026-10-25 23:58:00', 'UTC'));
+            }
+            Log::spy();
+
+            for ($i = 0; $i < 4; $i++) {
+                $this->assertFalse($this->vigilar());
+            }
+
+            Mail::assertNotSent(AvisoProduccion::class);
+            Log::shouldHaveReceived('warning')->with('lectura fallida', ['fuente' => 'seguridad'])->times(4);
+        });
+    }
+
+    /** /review R24: el archivo de ayer ilegible no impide leer el de hoy (CA2). */
+    public function test_el_archivo_de_ayer_ilegible_no_impide_leer_el_de_hoy(): void
+    {
+        $this->conSeguridadIlegible('seguridad-2026-10-24.log', function () {
+            File::put($this->carpeta.'/seguridad-2026-10-24.log', "{}\n");
+            $this->iniciar();
+            $this->escribirFallos(11);
+            Log::spy();
+
+            $this->assertFalse($this->vigilar());
+
+            $this->assertAvisoDeAccesos(11);
+            Log::shouldHaveReceived('warning')->with('lectura fallida', ['fuente' => 'seguridad'])->once();
+        });
+    }
+
+    /**
+     * /review R26: si lo que falla es una lectura, el comando lo dice, y no solo que algún aviso
+     * no se pudo enviar.
+     */
+    public function test_el_comando_dice_si_fallo_una_lectura(): void
+    {
+        stream_wrapper_register('ilegible', FlujoIlegible::class);
+
+        try {
+            config(['avisos.log_acceso' => 'ilegible://dentissa-access.log']);
+            $this->iniciar();
+
+            $this->artisan('dentissa:vigilar')
+                ->expectsOutputToContain('no se pudo leer')
+                ->assertExitCode(1);
+        } finally {
+            stream_wrapper_unregister('ilegible');
+        }
+    }
+
+    /** Ejecuta `$prueba` con el canal `seguridad` leído a través de {@see FlujoParcial}. */
+    private function conSeguridadIlegible(string $archivo, callable $prueba): void
+    {
+        stream_wrapper_register('parcial', FlujoParcial::class);
+        FlujoParcial::$ilegible = $archivo;
+
+        try {
+            config(['avisos.log_seguridad' => 'parcial://'.$this->carpeta.'/seguridad.log']);
+            $prueba();
+        } finally {
+            stream_wrapper_unregister('parcial');
+        }
+    }
+}
+
+/**
+ * Flujo de prueba: `parcial://<ruta>` es el archivo real `<ruta>`, salvo el de nombre
+ * `$ilegible`, que existe pero no se puede abrir (como un log sin permiso de lectura).
+ */
+final class FlujoParcial
+{
+    public static string $ilegible = '';
+
+    /** @var resource|null */
+    public $context;
+
+    /** @var resource */
+    private $manejador;
+
+    public function stream_open(string $ruta, string $modo, int $opciones, ?string &$abierta): bool
+    {
+        if (basename($ruta) === self::$ilegible) {
+            return false;
+        }
+        $manejador = fopen(self::real($ruta), $modo);
+        if ($manejador === false) {
+            return false;
+        }
+        $this->manejador = $manejador;
+
+        return true;
+    }
+
+    public function stream_read(int $cuantos): string|false
+    {
+        return fread($this->manejador, $cuantos);
+    }
+
+    public function stream_seek(int $posicion, int $desde = SEEK_SET): bool
+    {
+        return fseek($this->manejador, $posicion, $desde) === 0;
+    }
+
+    public function stream_tell(): int
+    {
+        return (int) ftell($this->manejador);
+    }
+
+    public function stream_eof(): bool
+    {
+        return feof($this->manejador);
+    }
+
+    public function stream_close(): void
+    {
+        fclose($this->manejador);
+    }
+
+    /** @return array<int|string, int>|false */
+    public function stream_stat(): array|false
+    {
+        return fstat($this->manejador);
+    }
+
+    /** @return array<int|string, int>|false */
+    public function url_stat(string $ruta, int $opciones): array|false
+    {
+        $real = self::real($ruta);
+
+        return file_exists($real) ? stat($real) : false;
+    }
+
+    private static function real(string $ruta): string
+    {
+        return substr($ruta, strlen('parcial://'));
     }
 }
 

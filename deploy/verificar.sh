@@ -296,13 +296,17 @@ PY
             ok "el llavero del servidor no tiene claves secretas"
         fi
         local claras
-        # Sin poder leer la carpeta, la búsqueda daría 0 y un OK falso (/review R5).
+        # Sin poder leer la carpeta, la búsqueda daría 0 y un OK falso: no se hace (/review R5, R28).
         if [[ ! -d "${DESTINO}" || ! -r "${DESTINO}" ]]; then
             fallo "la carpeta de copias ${DESTINO} no existe o no se puede leer"
+        else
+            claras="$(find "${DESTINO}" "${HOME}" -maxdepth 1 -name 'dentissa-*.sql.gz' 2> /dev/null | wc -l)"
+            if [[ "${claras}" -eq 0 ]]; then
+                ok "ninguna copia en claro en ${DESTINO} ni en la carpeta personal"
+            else
+                fallo "hay ${claras} copias en claro en ${DESTINO} o en la carpeta personal (bash deploy/cifrar-copias-antiguas.sh)"
+            fi
         fi
-        claras="$(find "${DESTINO}" "${HOME}" -maxdepth 1 -name 'dentissa-*.sql.gz' 2> /dev/null | wc -l)"
-        if [[ "${claras}" -eq 0 ]]; then ok "ninguna copia en claro en ${DESTINO} ni en la carpeta personal"
-        else fallo "hay ${claras} copias en claro en ${DESTINO} o en la carpeta personal (bash deploy/cifrar-copias-antiguas.sh)"; fi
         if "${compose[@]}" exec -T -u www-data app test -r /var/log/nginx/dentissa-access.log; then
             ok "app lee el log de acceso de nginx"
         else

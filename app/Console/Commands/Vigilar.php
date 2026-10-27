@@ -14,7 +14,8 @@ use Throwable;
  * Spec 032 (CA1, CA2, CA4, CA6; TM10; plan D8, D11): avisos de producción.
  *
  * El temporizador dentissa-vigilar.timer lo lanza cada minuto. Sale con código
- * distinto de 0 si algún aviso no se pudo enviar, para que el fallo quede en el
+ * distinto de 0 si algún log no se pudo leer o algún aviso no se pudo enviar
+ * (/review R26), para que el fallo quede en el
  * journal del temporizador. Con --prueba envía un aviso de prueba a
  * AVISOS_CORREO y termina (procedimiento de la guía, CA6).
  */
@@ -32,7 +33,7 @@ class Vigilar extends Command
         }
 
         if (! $vigilante->ejecutar()) {
-            $this->error('Algún aviso no se pudo enviar; se reintenta en la próxima ejecución (storage/logs/laravel.log).');
+            $this->error('Algún log no se pudo leer o algún aviso no se pudo enviar; se reintenta en la próxima ejecución (storage/logs/laravel.log).');
 
             return self::FAILURE;
         }

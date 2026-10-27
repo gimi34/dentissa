@@ -12,7 +12,7 @@ cubierta.
 ## Resumen
 | Capacidad | Herramienta | Estado | Evidencia |
 |---|---|---|---|
-| Logs de aplicación | Monolog (Laravel), canal `stack` → `single`, y canal `seguridad` (`daily`, JSON, 14 días; spec 032) | en uso solo para los avisos (spec 032): el canal `seguridad` con los fallos de acceso y `Log::warning('aviso no enviado')`; el resto del código no escribe logs | `config/logging.php`, `app/Listeners/RegistrarFalloAcceso.php`, `app/Avisos/Vigilante.php` |
+| Logs de aplicación | Monolog (Laravel), canal `stack` → `single`, y canal `seguridad` (`daily`, JSON, 14 días; spec 032) | en uso solo para los avisos (spec 032): el canal `seguridad` con los fallos de acceso, `Log::warning('aviso no enviado')` (campo `tipo`) y `Log::warning('lectura fallida')` (campo `fuente`: `acceso` o `seguridad`, sin el mensaje de la excepción); el resto del código no escribe logs | `config/logging.php`, `app/Listeners/RegistrarFalloAcceso.php`, `app/Avisos/Vigilante.php` |
 | Agregación de logs | ninguna | — | local: `laravel.log` en el directorio del proyecto montado. Producción (spec 030): `laravel.log` en el volumen `storage` y `dentissa-access.log`/`dentissa-error.log` de nginx en el volumen `nginx_logs`, que sobreviven a reinicios y a recrear los contenedores |
 | Correlación por petición | ninguna | — | `bootstrap/app.php` sin middleware ni `Context::add` |
 | Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados y reprogramaciones de cita, con autor, sin IP ni request_id) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026), `app/Agenda/ReprogramacionCitas.php` (fecha anterior y nueva, spec 028) |

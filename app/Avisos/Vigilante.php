@@ -35,7 +35,7 @@ class Vigilante
     /** Estas líneas seguidas sin el formato, sin ninguna buena en medio, también lo son (/analyze A49). */
     private const MALAS_SEGUIDAS = 5;
 
-    /** Ejecuta una vuelta. Devuelve false si algún aviso no se pudo enviar. */
+    /** Ejecuta una vuelta. Devuelve false si algún log no se pudo leer o algún aviso no se pudo enviar. */
     public function ejecutar(): bool
     {
         $estado = Estado::cargar(config('avisos.estado'));
@@ -52,7 +52,7 @@ class Vigilante
         $ahora = CarbonImmutable::now();
         $leido = true;
         $nuevas = $this->leer('acceso', fn () => $this->leerAcceso($estado), ['errores' => 0, 'malas' => 0], $leido);
-        $fallos = $this->leer('seguridad', fn () => $this->leerSeguridad($estado, $ahora), 0, $leido);
+        $fallos = $this->leerSeguridad($estado, $ahora, $leido);
         $this->podar($estado, $ahora);
 
         $enviados = $this->avisoDeErrores($estado, $ahora, $nuevas['errores'])
@@ -135,9 +135,13 @@ class Vigilante
      * Lee lo nuevo del canal `seguridad`, con el mismo tope que el log de acceso
      * (/analyze A44). De cada línea solo se guardan el momento y las huellas.
      *
+     * Cada archivo diario se lee por separado: uno que no se puede leer conserva su
+     * desplazamiento y no impide leer el otro, y los fallos de un archivo se guardan
+     * junto con su desplazamiento (/review R23, R24).
+     *
      * @return int fallos leídos ahora
      */
-    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora): int
+    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora, bool &$leido): int
     {
         $seguridad = &$estado->datos['seguridad'];
         $desplazamientos = [];
@@ -145,15 +149,26 @@ class Vigilante
 
         clearstatcache();
         foreach ($this->archivosDeSeguridad($ahora) as $nombre => $archivo) {
-            $desplazamiento = $seguridad['desplazamientos'][$nombre] ?? 0;
+            $anterior = $seguridad['desplazamientos'][$nombre] ?? 0;
             if (! is_file($archivo)) {
                 continue;
             }
-            if (filesize($archivo) < $desplazamiento) {
-                $desplazamiento = 0;
+
+            $desplazamiento = $anterior;
+            $lineas = $this->leer('seguridad', function () use ($archivo, &$desplazamiento) {
+                if (filesize($archivo) < $desplazamiento) {
+                    $desplazamiento = 0;
+                }
+
+                return $this->lineasNuevas($archivo, $desplazamiento);
+            }, null, $leido);
+            if ($lineas === null) {
+                $desplazamientos[$nombre] = $anterior;
+
+                continue;
             }
 
-            foreach ($this->lineasNuevas($archivo, $desplazamiento) as $linea) {
+            foreach ($lineas as $linea) {
                 $fallo = $this->interpretarFallo($linea);
                 if ($fallo !== null) {
                     $seguridad['fallos'][] = $fallo;
@@ -386,7 +401,10 @@ class Vigilante
             // Lo retenido en el silencio, o un aviso cuyo envío falló (/review R2).
             $aviso['acumulado'] += $nuevos;
             $desde = CarbonImmutable::createFromTimestamp($aviso['desde'] ?? $aviso['ultimo_envio'] ?? $ahora->getTimestamp());
-            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $desde, $ahora, $anterior);
+            // El correo cita el aviso anterior solo si lo pendiente nació en su silencio: el
+            // de un envío fallido cuenta desde su ventana, no desde ese aviso (/review R25).
+            $enSilencio = $aviso['desde'] === null || $aviso['desde'] === $aviso['ultimo_envio'];
+            $correo = new AvisoProduccion($tipo, $aviso['acumulado'], $desde, $ahora, $enSilencio ? $anterior : null);
         } elseif ($condicion) {
             $correo = new AvisoProduccion($tipo, $enVentana, $this->inicioDeVentana($ahora), $ahora);
             // Si el envío falla, el aviso queda pendiente con su recuento: ningún aviso se pierde
