@@ -1,6 +1,7 @@
 ---
 lane: chore
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released             # open → done → released · escalated (→ escalated_to)
+released: v0.11.1 (2026-10-27)
 base: 9fad2af                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: []                  # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir
@@ -69,6 +70,12 @@ Al empezar (2026-10-27), en Docker Hub:
   y `web`; `up -d db` usa la imagen local, así que no la cambia por la de 0 días.
 - `docker compose -f docker-compose.prod.yml config` no se puede resolver en el PC (los archivos de
   entorno viven en `/opt/dentissa/entorno`); la comprobación real es el despliegue en el servidor.
+- Liberación v0.11.1 (2026-10-27, aprobada por el usuario con «desplegar v0.11.1 a producción»
+  tras el CI en verde del PR #48; el usuario en el servidor): `desplegar.sh v0.11.1` en 355 s, copia
+  cifrada `dentissa-20261027-162637.sql.gz.gpg`, sin migraciones y verificación interna en OK;
+  `cloudflared` recreado a mano (`up -d cloudflared`) con la 2026.10.2 y `verificar.sh` en OK. A
+  los 15 minutos: 0 líneas `ERR` en los logs de `cloudflared` y ningún aviso en el journal de
+  `dentissa-vigilar`.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
