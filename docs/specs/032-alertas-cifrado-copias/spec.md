@@ -1,7 +1,8 @@
 ---
 id: 032
 slug: alertas-cifrado-copias
-status: implemented
+status: released
+released: v0.11.0 (2026-10-27)
 created: 2026-10-07
 extends: [030]
 ---
@@ -123,3 +124,4 @@ Ninguna.
 | 2026-10-25 | Implementada de nuevo: correcciones de /review r1 (T052–T062) con sus tests en verde (417 en la suite) | `/implement 032` |
 | 2026-10-25 | Vuelve a approved: `/review` r2 changes_requested (R23–R29, tareas T063–T072) | `/review 032 --rerun` |
 | 2026-10-25 | Implementada de nuevo: correcciones de /review r2 (T063–T072) con sus tests en verde (422 en la suite) | `/implement 032` |
+| 2026-10-27 | Liberada en v0.11.0 (review r3 approved; EX3 aprobada por el responsable) | `/release 032` |

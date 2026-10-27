@@ -572,9 +572,11 @@ Formato:
   - nota: Vuelve a implemented el 2026-10-25 tras las correcciones de /review r2 (T063–T072, R23–R29): suite 422 en verde, pint limpio, bash -n limpio, gitleaks y semgrep sin hallazgos. CA1–CA10 siguen marcados; docs/specs/README.md con la 032 en implemented.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5)
-- [ ] T096 Aprobación humana para producción y aprobación de la excepción EX3 por el responsable
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout), en el orden de D6:
+- [x] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5)
+  - nota: no hay staging (objetivo 5; 030, plan D2): las comprobaciones de los criterios se ensayaron en producción en T041–T044 y las públicas van en T097.
+- [x] T096 Aprobación humana para producción y aprobación de la excepción EX3 por el responsable
+  - nota: aprobado por gimi34 (responsable) el 2026-10-27 08:02 para v0.11.0, con el CI del PR #45 en verde (confirmado por el usuario); EX3 (disco del servidor sin cifrar, RS15.c) aprobada por el responsable en la misma confirmación, vence al cargar el primer dato real de pacientes.
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout), en el orden de D6:
   - en el servidor:
     1. paso 0: `command -v gpg` y `gpg --show-keys` sin `sec`;
     2. `git fetch --tags && git checkout vX.Y.Z`;
@@ -588,7 +590,11 @@ Formato:
   - durante la primera hora: ningún correo inesperado, `journalctl -u dentissa-vigilar` sin errores y 0 5xx nuevos.
   - verificación manual (CA7, CA10): `find / -xdev` sin volcados en claro tras el despliegue.
   - verificación manual (D6): el comando de vuelta que da `/release` usa la versión anterior real (`v0.10.0`), no el tag desplegado.
-- [ ] T098 Marcar spec como `released` (/analyze A24):
+  - nota: 2026-10-27, en el orden de D6 (deploy/README.md §9), lo hizo el responsable en el servidor: paso 0 con /usr/bin/gpg y la clave pública ed25519 7832…C74C con subclave [E], sin sec; checkout a mano de v0.11.0 (git describe v0.11.0); desplegar.sh v0.11.0 en 278 s con la copia previa ya cifrada (/var/backups/dentissa/dentissa-20261027-140710.sql.gz.gpg) y verificación interna todo OK. Informa «Anterior: v0.11.0» por el checkout a mano: la vuelta real es a v0.10.0 (verificación manual D6 hecha).
+  - nota: preparar-vigilancia.sh: temporizador activo, primera ejecución a las 14:15 UTC; cifrar-copias-antiguas.sh: 0 copias en claro (las de antes se cifraron en el ensayo T041); verificar.sh completo todo OK, también «Avisos y copias» y la dirección pública (https://dentissa.app/up 200); aviso de prueba recibido a las 8:15 (hora local); UptimeRobot en Up; en el PC, ninguna copia en claro (find en ~ y D:).
+  - nota: Verificación manual (CA7, CA10): find / -xdev solo encuentra el volcado ficticio del repositorio (database/dentissa.sql en /opt/dentissa/app, en el clon antiguo /opt/dentissa/rama-031 y en la imagen de db), como en T044; ninguna copia de producción en claro.
+  - nota: Primera hora: journalctl -u dentissa-vigilar sin errores; 0 5xx nuevos (los últimos son las peticiones sintéticas /ensayo-032 del 2026-10-25, T042); un único aviso de inicios de sesión fallidos, provocado por el responsable al teclear mal la contraseña: aviso real, no falso.
+- [x] T098 Marcar spec como `released` (/analyze A24):
   - Correcciones → mitigada (vX.Y.Z): OB6.b y RS15.b. RS15.c → aceptada (EX3).
   - Siguen abiertos OB6 (OB6.a → objetivo 3, OB6.c → objetivo 5) y RS15 (RS15.a → 013, RS15.d → objetivo 5).
   - Spec extendida 030, con fila de Historial:
@@ -598,6 +604,9 @@ Formato:
   - Spec 001, CA9: el canal `seguridad` de la 032 registra los fallos para avisar, pero no es el registro de auditoría; sigue → 020/021.
   - nota: aceptado en /analyze r2 (2026-10-25), A35 — anotar 030 CA7 como modificado por 032 CA9 (vuelta con copia desde el PC).
   - nota: aceptado en /analyze r2 (2026-10-25), A48 — la 001 solo se anota porque su comportamiento no cambia; no entra en `extends`.
+  - nota: 2026-10-27: spec released (v0.11.0), README actualizado. OB6.b y RS15.b mitigadas (v0.11.0); RS15.c aceptada como EX3, aprobada por el responsable (T096). Siguen abiertos OB6 (OB6.a → objetivo 3, OB6.c → objetivo 5) y RS15 (RS15.a → 013, RS15.d → objetivo 5).
+  - nota: Spec 030: CA6 → reemplazado por 032 CA9; CA7 modificado por 032 CA9 (A35); «Envío de correos desde producción» atendido por la 032; destinos de RS15.b y OB6.b → 032; fila de Historial. Spec 001: CA9 anotado (el canal seguridad no es el registro de auditoría, sigue → 020/021) y fila de Historial, sin entrar en extends (A48).
+  - nota: Roadmap: 032/R10–R22, R30 y R31 en Pendientes y deuda (decisión del usuario, 2026-10-27). Ficha 2026-10-20-chore-vite-8.3.4 released en v0.11.0. Historial: 3 rondas de /analyze y 3 de /review.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

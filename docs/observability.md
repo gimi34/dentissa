@@ -147,7 +147,7 @@ roadmap objetivos 3 y 5.
 
 Correcciones:
 - OB6.a Health check que compruebe la conexión a MariaDB — estado: pendiente
-- OB6.b Alertas mínimas gratuitas (5xx, logins fallidos) en producción — estado: en curso (spec 032)
+- OB6.b Alertas mínimas gratuitas (5xx, logins fallidos) en producción — estado: mitigada (v0.11.0)
 - OB6.c Alertas mínimas gratuitas en staging (creada por la 032 al dividir OB6.b) — estado: pendiente (→ objetivo 5, cuando exista staging)
 
 ### OB7 · Baja — Logs de nginx se pierden al recrear el contenedor

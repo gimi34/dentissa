@@ -37,6 +37,21 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     `dentissa-vigilar`, para no tener dos mecanismos (032 D11, /analyze A20 y A39);
   - al retomar la 038, su vuelta atrás es a la versión de la 032 (v0.11.0) y no a v0.10.0 (032 D15,
     /analyze A25).
+  - aceptados sin tarea de `/review` (deuda menor, liberada en v0.11.0):
+    - vigilante: 032/R10 se queda atrás sin avisar con más de 50 MiB/min de log de acceso; 032/R12 lo
+      pendiente del silencio puede nacer con un evento que no cumple la condición; 032/R16 `&` entre
+      booleanos en `Vigilante::ejecutar` sin comentario; 032/R17 envío con `Log::warning` duplicado
+      entre `Vigilar` y `Vigilante`; 032/R18 `ventanaDeErrores()` público solo para los tests;
+      032/R19 `Estado::$datos` público y mutado por referencia; 032/R31 `minutosEnVentana()` dos
+      veces tras `podar()`;
+    - scripts: 032/R11 texto «el llavero de la cuenta de despliegue» en `verificar.sh`; 032/R20 la
+      carga remota de `restaurar.sh` exige bash como shell remoto; 032/R21 `cifrar-copias-antiguas.sh`
+      sin `trap` de `.part` ni comprobación del `.gpg` antes de `shred`; 032/R30 las copias de la
+      carpeta personal quedan cifradas allí, fuera de la poda y de la ruta de la guía;
+    - tests: 032/R13 anclar cada mensaje de rechazo de `restaurar.sh` a su condición; 032/R14 el test
+      de `preparar-vigilancia.sh` sin `set -euo pipefail` ni `Requires=docker.service`; 032/R15 nota
+      de que `test_desplegar_imprime_la_vuelta_del_contrato` necesita bash; 032/R22 un test con un
+      gpg falso para `comprobar()`.
 - Re-sincronización del 2026-10-18 (riesgos nuevos, con decisión del usuario de registrarlos): RS10.c
   sesiones cifradas en producción y RS19.a–c salvaguardas de la cuenta de admin (objetivo 2); OB8.a
   y OB8.b búsquedas fuera del log de acceso de nginx y rotación de logs (objetivo 3), OB8.c purga de
