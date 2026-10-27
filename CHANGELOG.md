@@ -5,6 +5,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-10-27
+
+### Security
+- El túnel hacia internet (`cloudflared`) pasa a la versión 2026.10.2, que corrige seis avisos
+  altos de seguridad de la anterior (chore 2026-10-27-chore-imagenes-031-r4).
+
 ## [0.11.0] - 2026-10-27
 
 ### Added
