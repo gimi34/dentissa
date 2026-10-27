@@ -5,6 +5,32 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-27
+
+### Added
+- Avisos por correo al responsable: si en 5 minutos más del 1 % de las respuestas son errores del
+  servidor, si hay más de 10 inicios de sesión fallidos desde una misma dirección o contra una
+  misma cuenta, o si el registro de acceso cambia de formato. Como mucho un correo por tipo cada
+  30 minutos, con el recuento acumulado, y sin datos personales ni secretos (spec 032).
+- Aviso de caída desde fuera del servidor (UptimeRobot), también con el servidor apagado, y otro
+  cuando vuelve a responder (spec 032).
+- Aviso de prueba y comprobación del envío de avisos en la verificación posterior al despliegue
+  (spec 032).
+
+### Changed
+- Las copias de seguridad de la base se cifran desde el primer momento con la clave pública del
+  responsable: nunca existen en claro en el servidor, y la clave que las abre solo está en su PC.
+  La restauración, también la vuelta atrás con copia, se hace desde el PC y se detiene sin tocar
+  la base si la copia es de otra clave, está alterada o incompleta (spec 032).
+- La vuelta atrás sin copia (`volver.sh <versión>`) ya no restaura copias; la guía explica la
+  vuelta con copia desde el PC (spec 032).
+
+### Security
+- Las copias en claro de antes se cifran al liberar y la verificación falla si queda alguna; la
+  guía explica cómo sustituir las del PC y guardar una segunda copia de la clave (spec 032).
+- `vite` 8.3.4, que corrige avisos altos de `launch-editor` en el entorno de desarrollo
+  (chore 2026-10-20-chore-vite-8.3.4).
+
 ### Changed — flujo AI-DD actualizado a 1.16.0
 - Validador 1.16.0 (`aidd.py deal` para repartir jugadas y escenas entre composiciones).
 - `/design-spec` con motor creativo: modo y registro de cada pantalla (al menos una opción audaz),
