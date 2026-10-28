@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-27
+updated: 2026-10-28
 ---
 
 # Despliegue de Dentissa
@@ -21,6 +21,17 @@ de quien la presenta, con `docker compose up -d`. En esta rama:
 - Para traer arreglos de producción: `git merge origin/main` dentro de `maqueta`.
 - Para llevar algo de la maqueta a producción: rama desde `main`, `git cherry-pick` de los commits,
   PR a `main` y el flujo normal hasta `/release` con aprobación humana.
+- **Entorno local propio** (`docker-compose.override.yml`, solo en esta rama; Compose lo carga
+  solo encima de `docker-compose.yml`): para que un clon de `main` y uno de `maqueta` convivan en
+  el mismo equipo, los contenedores son `maqueta_app`, `maqueta_nginx`, `maqueta_db` y
+  `maqueta_phpmyadmin`, y los puertos, todos en `127.0.0.1`, son 8001 (app), 3307 (MariaDB) y
+  8081 (phpMyAdmin). Volúmenes y red ya son de cada clon (Compose les antepone el nombre de la
+  carpeta). La cookie de sesión se llama `maqueta-session`, porque el navegador no separa las
+  cookies por puerto y, con el mismo nombre, iniciar sesión en un clon cerraba la del otro. En el
+  `.env` del clon, `APP_URL=http://localhost:8001`. El acceso con Google llega a la maqueta solo si
+  `http://localhost:8001/auth/google/callback` está registrado en el cliente OAuth. Un servicio
+  nuevo de `docker-compose.yml` con `container_name` o `ports` (p. ej. el `scheduler` de la 020)
+  necesita también su entrada en el override.
 
 El resto de este documento describe el despliegue de `main` a producción.
 
