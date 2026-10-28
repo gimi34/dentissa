@@ -5,6 +5,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.19.0
+- `/design-spec` por criterios: puertas, KPIs y rúbrica con umbral (80), mínimo por punto (3) y
+  presupuesto (5 candidatos) en lugar de opciones para elegir; plantilla de spec con la sección
+  "Criterios de diseño" y validador 1.19.0 (rama `maqueta`).
+
 ## [0.11.1] - 2026-10-27
 
 ### Security
