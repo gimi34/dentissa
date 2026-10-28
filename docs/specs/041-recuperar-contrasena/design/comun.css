@@ -1,0 +1,85 @@
+/* Común a las composiciones de la 041 (tokens de docs/design/system.md 1.8.0 = public/css/app.css,
+   auth.css y publico.css). Los tokens nuevos llevan «041» y van a "Cambios a incorporar al sistema". */
+:root {
+  --p50:#FDF5F8; --p100:#FBEAF0; --p200:#F4C0D1; --p300:#ED93B1; --p400:#D4537E; --p500:#B83C65; --p600:#993556; --p800:#72243E;
+  --text:#000000; --border:#F0DCE4; --bg:#FDF5F8; --white:#FFFFFF;
+  --red:#A32D2D; --red-bg:#FCEBEB; --green-texto:#137A5A; --green-bg:#E1F5EE; --amber:#854F0B; --amber-bg:#FAEEDA;
+  --border-control:var(--p400); --focus-ring:var(--p600); --focus-ring-inverso:var(--white);
+  --focus-ring-width:2px; --focus-ring-offset:2px; --border-width:1px; --border-width-strong:2px;
+  --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
+  --space-1:4px; --space-2:6px; --space-3:8px; --space-4:10px; --space-5:14px; --space-6:16px; --space-7:20px; --space-8:28px;
+  --space-seccion:clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px);
+  --touch-min:44px; --icon-md:18px;
+  --text-meta:13px; --text-publico:17px; --text-publico-small:15px;
+  --text-portada:clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px);
+  --leading-portada:0.98; --tracking-portada:-0.03em; --leading-publico:1.5;
+  --font-publica:"Lexend", system-ui, sans-serif;
+  --sombra-tarjeta:0 1px 2px rgba(114, 36, 62, 0.08); --sombra-tarjeta-alta:0 14px 32px rgba(114, 36, 62, 0.16);
+  --weight-regular:400; --weight-strong:500; --weight-bold:600;
+  /* Nuevos (041): el acceso tiene hoy estos tamaños como literales en auth.css (DS4). */
+  --font-acceso:Roboto, system-ui, sans-serif;
+  --text-acceso-titulo:28px; --text-acceso:14px; --text-acceso-small:12px;
+  --acceso-form-max:400px;
+  --duration-respuesta:150ms; --duration-exito:600ms; --ease-clinico:cubic-bezier(.2, .7, .2, 1);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+
+/* ── Visor (neutro, fuera del sistema) ── */
+body { font-family:system-ui, sans-serif; background:#eef0f2; color:#1d2125; padding:24px 16px; }
+.visor { max-width:1700px; margin:0 auto; }
+.visor > h1 { font-size:20px; margin-bottom:6px; }
+.intro { font-size:14px; color:#3f474d; max-width:85ch; margin-bottom:18px; line-height:1.5; }
+.idea { font-size:13.5px; line-height:1.55; color:#262c31; max-width:95ch; margin:0 0 22px; background:#fff; border:1px solid #c9ced3; border-radius:10px; padding:14px 18px; }
+.idea h2, .notas h2 { font-size:15px; margin:4px 0 6px; }
+.idea ul, .notas ul { margin:4px 0 8px 18px; }
+.marcos { display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; }
+.marco { max-width:100%; overflow-x:auto; }
+.marco > h2 { font-size:13px; font-weight:600; color:#3f474d; margin-bottom:8px; }
+.tel { width:390px; height:780px; border:1px solid #c9ced3; border-radius:18px; overflow:hidden auto; position:relative; background:var(--white); color:var(--text); font-family:var(--font-acceso); }
+.tel.t320 { width:320px; }
+.esc { width:1440px; height:900px; zoom:.5; border:2px solid #c9ced3; border-radius:12px; overflow:hidden; position:relative; background:var(--white); color:var(--text); font-family:var(--font-acceso); }
+.notas { font-size:13.5px; line-height:1.55; color:#262c31; max-width:95ch; margin-top:26px; }
+.notas table { border-collapse:collapse; margin:8px 0 14px; }
+.notas td, .notas th { border:1px solid #c9ced3; padding:4px 8px; text-align:left; vertical-align:top; }
+
+/* ── Piezas del acceso, en su versión accesible (P9) ── */
+.form { width:100%; max-width:var(--acceso-form-max); display:flex; flex-direction:column; gap:var(--space-6); }
+.titulo { font-size:var(--text-acceso-titulo); font-weight:var(--weight-bold); letter-spacing:-0.01em; line-height:1.15; }
+.sub { font-size:var(--text-acceso); line-height:var(--leading-publico); }
+.campo { display:flex; flex-direction:column; gap:var(--space-2); }
+.campo label { font-size:var(--text-acceso-small); font-weight:var(--weight-strong); }
+.campo input { width:100%; min-height:var(--touch-min); padding:0 var(--space-5); border:var(--border-width) solid var(--border-control); border-radius:var(--radius-sm); font:inherit; font-size:var(--text-acceso); background:var(--white); color:var(--text); }
+.campo input:focus-visible { outline:var(--focus-ring-width) solid var(--focus-ring); outline-offset:var(--focus-ring-offset); }
+.campo .ayuda { font-size:var(--text-acceso-small); }
+.campo.error input { border-color:var(--red); border-width:var(--border-width-strong); }
+.campo .msg-error { font-size:var(--text-acceso-small); color:var(--red); font-weight:var(--weight-strong); display:flex; gap:var(--space-1); align-items:flex-start; }
+.btn { min-height:var(--touch-min); display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); padding:0 var(--space-7); border-radius:var(--radius-sm); font:inherit; font-size:var(--text-acceso); font-weight:var(--weight-strong); text-decoration:none; cursor:pointer; border:var(--border-width) solid transparent; transition:background var(--duration-respuesta) var(--ease-clinico), transform var(--duration-respuesta) var(--ease-clinico); }
+.btn:active { transform:scale(.98); }
+/* El botón principal pasa a --p500: blanco sobre --p400 es 3.93:1 (DS1). */
+.btn-primario { background:var(--p500); color:var(--white); width:100%; }
+.btn-primario:hover { background:var(--p600); }
+.btn-secundario { background:var(--white); color:var(--p600); border-color:var(--border-control); }
+.enlace { color:var(--p600); font-weight:var(--weight-strong); font-size:var(--text-acceso); text-decoration:underline; text-underline-offset:3px; min-height:var(--touch-min); display:inline-flex; align-items:center; gap:var(--space-2); }
+a:focus-visible, button:focus-visible { outline:var(--focus-ring-width) solid var(--focus-ring); outline-offset:var(--focus-ring-offset); }
+.aviso { display:flex; gap:var(--space-3); align-items:flex-start; padding:var(--space-5) var(--space-6); border-radius:var(--radius-sm); font-size:var(--text-acceso); line-height:var(--leading-publico); border:var(--border-width) solid currentColor; }
+.aviso-error { background:var(--red-bg); color:var(--red); }
+.aviso-exito { background:var(--green-bg); color:var(--green-texto); }
+.aviso-espera { background:var(--amber-bg); color:var(--amber); }
+.aviso strong { display:block; }
+.ico { width:var(--icon-md); height:var(--icon-md); flex-shrink:0; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* ── Correo (cliente de correo simulado, neutro) ── */
+.buzon { background:#f4f5f6; height:100%; overflow:auto; font-family:var(--font-acceso); }
+.buzon-cab { background:#fff; border-bottom:1px solid #dde1e4; padding:12px 16px; font-size:12px; color:#3f474d; line-height:1.5; }
+.buzon-cab b { color:#1d2125; }
+.correo { margin:16px; background:var(--white); border-radius:var(--radius); overflow:hidden; color:var(--text); }
+.correo-cuerpo { padding:var(--space-8) var(--space-7); display:flex; flex-direction:column; gap:var(--space-6); font-size:var(--text-acceso); line-height:var(--leading-publico); }
+.correo-cuerpo h3 { font-size:20px; font-weight:var(--weight-bold); line-height:1.25; }
+.correo-pie { padding:var(--space-6) var(--space-7); background:var(--p50); font-size:var(--text-acceso-small); line-height:var(--leading-publico); }
+.correo .btn-primario { width:auto; align-self:flex-start; }
+.url { font-size:var(--text-acceso-small); overflow-wrap:anywhere; color:var(--p600); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration:0ms !important; animation-duration:0ms !important; animation-iteration-count:1 !important; }
+}

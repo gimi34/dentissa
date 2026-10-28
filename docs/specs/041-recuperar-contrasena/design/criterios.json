@@ -1,0 +1,231 @@
+{
+  "spec": "041-recuperar-contrasena",
+  "mode": "operar",
+  "widths": [
+    320,
+    390,
+    1440
+  ],
+  "threshold": 80,
+  "floor": 3,
+  "budget": 5,
+  "tokens": {
+    "colors": [
+      "#000000",
+      "#137A5A",
+      "#185FA5",
+      "#1D9E75",
+      "#72243E",
+      "#854F0B",
+      "#8B4B61",
+      "#993556",
+      "#9B8290",
+      "#A32D2D",
+      "#B83C65",
+      "#C75078",
+      "#D4537E",
+      "#E1F5EE",
+      "#E6F1FB",
+      "#ED93B1",
+      "#F0DCE4",
+      "#F4C0D1",
+      "#FAEEDA",
+      "#FBEAF0",
+      "#FCEBEB",
+      "#FDF5F8",
+      "#FFFFFF"
+    ]
+  },
+  "gates": {
+    "contrast": 4.5,
+    "touch": 44,
+    "external_hosts": []
+  },
+  "pantallas": {
+    "pedir": {
+      "file": "pedir.html"
+    },
+    "enviado": {
+      "file": "enviado.html"
+    },
+    "nueva": {
+      "file": "nueva.html"
+    },
+    "caducado": {
+      "file": "caducado.html"
+    },
+    "espera": {
+      "file": "espera.html"
+    },
+    "exito": {
+      "file": "exito.html"
+    },
+    "correo-enlace": {
+      "file": "correo-enlace.html",
+      "widths": [
+        320,
+        390
+      ]
+    },
+    "correo-aviso": {
+      "file": "correo-aviso.html",
+      "widths": [
+        320,
+        390
+      ]
+    }
+  },
+  "kpis": [
+    {
+      "id": "K1",
+      "pantalla": "pedir",
+      "name": "Pedir el enlace y volver, sin desplazarse",
+      "type": "above_fold_all",
+      "texts": [
+        "Enviar enlace",
+        "Volver a iniciar sesión"
+      ],
+      "ca": "CA1"
+    },
+    {
+      "id": "K2",
+      "pantalla": "enviado",
+      "name": "Revisa tu correo con el mensaje genérico",
+      "type": "above_fold_all",
+      "texts": [
+        "Revisa tu correo",
+        "es de una cuenta activa"
+      ],
+      "ca": "CA2, CA8"
+    },
+    {
+      "id": "K3",
+      "pantalla": "correo-enlace",
+      "name": "Correo del enlace: botón, caducidad y aviso",
+      "type": "visible",
+      "texts": [
+        "Elegir contraseña nueva",
+        "60 minutos",
+        "Si no lo pediste, ignora este correo"
+      ],
+      "ca": "CA2"
+    },
+    {
+      "id": "K4",
+      "pantalla": "nueva",
+      "name": "Contraseña nueva: campos y acción sin desplazarse",
+      "type": "above_fold_all",
+      "texts": [
+        "Contraseña nueva",
+        "Repite la contraseña",
+        "Guardar contraseña"
+      ],
+      "ca": "CA3"
+    },
+    {
+      "id": "K4b",
+      "pantalla": "nueva",
+      "name": "Regla y error junto al campo",
+      "type": "visible",
+      "texts": [
+        "Al menos 8 caracteres",
+        "Las dos contraseñas no coinciden"
+      ],
+      "ca": "CA4"
+    },
+    {
+      "id": "K5",
+      "pantalla": "caducado",
+      "name": "Pedir uno nuevo sin desplazarse",
+      "type": "above_fold",
+      "text": "Pedir un enlace nuevo",
+      "ca": "CA5"
+    },
+    {
+      "id": "K5b",
+      "pantalla": "caducado",
+      "name": "La contraseña no cambió",
+      "type": "visible",
+      "texts": [
+        "Tu contraseña no cambió"
+      ],
+      "ca": "CA5"
+    },
+    {
+      "id": "K6",
+      "pantalla": "espera",
+      "name": "Pide esperar, a 320 px",
+      "type": "above_fold",
+      "text": "Espera un minuto",
+      "widths": [
+        320
+      ],
+      "ca": "CA9"
+    },
+    {
+      "id": "K7",
+      "pantalla": "exito",
+      "name": "Éxito e iniciar sesión sin desplazarse",
+      "type": "above_fold_all",
+      "texts": [
+        "Tu contraseña cambió",
+        "Iniciar sesión"
+      ],
+      "ca": "CA3"
+    },
+    {
+      "id": "K8",
+      "pantalla": "correo-aviso",
+      "name": "Aviso con el contacto de la clínica",
+      "type": "visible",
+      "texts": [
+        "¿No fuiste tú?",
+        "753 000 0000"
+      ],
+      "ca": "CA7"
+    },
+    {
+      "id": "K9",
+      "pantalla": "*",
+      "name": "JavaScript por página",
+      "type": "max_js_bytes",
+      "value": 102400,
+      "ca": "P10"
+    },
+    {
+      "id": "K10",
+      "pantalla": "*",
+      "name": "Estabilidad visual",
+      "type": "max_cls",
+      "value": 0.1,
+      "ca": "modo operar"
+    },
+    {
+      "id": "K11",
+      "pantalla": "*",
+      "name": "Titulares en dos líneas como mucho",
+      "type": "max_heading_lines",
+      "value": 2,
+      "ca": "modo operar"
+    },
+    {
+      "id": "K12",
+      "pantalla": "*",
+      "name": "La letra del acceso carga de verdad",
+      "type": "fonts_loaded",
+      "families": [
+        "Roboto"
+      ],
+      "ca": "constitución P9"
+    }
+  ],
+  "rubric": {
+    "weights": {
+      "jerarquia": 25,
+      "primera_pantalla": 25,
+      "sistema": 25,
+      "lectura": 15,
+      "plantilla": 10
+    }
+  }
+}

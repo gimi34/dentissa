@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — 041 · Opción B · El carnet de citas</title>
+<link rel="stylesheet" href="comun.css">
+<style>
+  /* ── Opción B · firme: cada paso es un carnet de citas de la consulta, con su talón troquelado.
+     Una franja vino arriba (color comprometido) y el carnet blanco montado encima. ── */
+  .lienzo { min-height:100%; background:var(--bg); position:relative; }
+  .franja { background:var(--p800); color:var(--white); padding:var(--space-7) var(--space-6) calc(var(--space-8) * 3); display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-8); }
+  .franja img { width:132px; display:block; }
+  .franja .contacto { font-size:var(--text-acceso); line-height:var(--leading-publico); color:var(--p200); text-align:right; display:none; }
+  .franja .contacto b { color:var(--white); display:block; font-size:var(--text-publico); }
+  .esc .franja { height:50%; padding:var(--space-8) calc(var(--space-8) * 2); }
+  .esc .franja img { width:220px; }
+  .esc .franja .contacto { display:block; }
+  .carnet { position:relative; margin:calc(var(--space-8) * -2) var(--space-6) var(--space-8); background:var(--white); border-radius:var(--radius); box-shadow:var(--sombra-tarjeta-alta); }
+  .esc .carnet { width:460px; margin:0; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); }
+  .carnet-cuerpo { padding:var(--space-8) var(--space-7); display:flex; flex-direction:column; gap:var(--space-6); }
+  .etiqueta { font-size:var(--text-acceso-small); font-weight:var(--weight-bold); color:var(--p600); text-transform:uppercase; letter-spacing:0.08em; }
+  /* Troquel: línea discontinua con dos muescas del color del fondo, como el carnet impreso. */
+  .troquel { position:relative; border-top:var(--border-width-strong) dashed var(--p200); margin:0 var(--space-6); }
+  .troquel::before, .troquel::after { content:""; position:absolute; top:calc(var(--space-6) * -0.5 - 1px); width:var(--space-6); height:var(--space-6); border-radius:var(--radius-pill); background:var(--bg); }
+  .troquel::before { left:calc(var(--space-6) * -1.5); }
+  .troquel::after { right:calc(var(--space-6) * -1.5); }
+  .esc .troquel::before, .esc .troquel::after { background:var(--bg); }
+  .talon { padding:var(--space-6) var(--space-7) var(--space-7); display:grid; grid-template-columns:auto 1fr; gap:var(--space-2) var(--space-6); font-size:var(--text-meta); line-height:var(--leading-publico); }
+  .talon dt { font-weight:var(--weight-bold); color:var(--p600); }
+  /* Vacío que orienta (M-1): el talón crece y lleva la siguiente acción. */
+  .hora { font-size:calc(var(--text-acceso-titulo) * 1.5); font-weight:var(--weight-bold); color:var(--p800); line-height:1; letter-spacing:-0.02em; }
+  .pasos { list-style:none; display:flex; flex-direction:column; gap:var(--space-3); counter-reset:paso; }
+  .pasos li { counter-increment:paso; display:grid; grid-template-columns:var(--touch-min) 1fr; gap:var(--space-4); align-items:center; padding:var(--space-3) 0; border-bottom:var(--border-width) solid var(--border); font-size:var(--text-acceso); line-height:var(--leading-publico); }
+  .pasos li::before { content:counter(paso); width:var(--touch-min); height:var(--touch-min); border-radius:var(--radius-pill); background:var(--p100); color:var(--p800); font-weight:var(--weight-bold); display:flex; align-items:center; justify-content:center; }
+  .pasos li:last-child { border-bottom:0; }
+  .entra { animation:entra var(--duration-exito) var(--ease-clinico) both; }
+  .pasos li:nth-child(2) { animation-delay:80ms; } .pasos li:nth-child(3) { animation-delay:160ms; }
+  @keyframes entra { from { transform:translateY(8px); } to { transform:none; } }
+  .correo-cab { background:var(--p800); padding:var(--space-6) var(--space-7) var(--space-8); }
+  .correo-cab img { width:120px; display:block; }
+  .correo .talon { background:var(--p50); }
+  .carnet.carnet-solo { margin-top:var(--space-8); }
+</style>
+</head>
+<body>
+<div class="visor">
+  <h1>041 · Opción B · «El carnet de citas» · firme</h1>
+  <p class="intro">Cada paso es un carnet de citas de la consulta: el formulario arriba y, tras el troquel, el talón con los datos que te llevas, como el carnet impreso que se da en recepción. Una franja vino sostiene el carnet y, en el escritorio, deja a la vista el teléfono y el horario para quien no puede usar su correo. Al enviar, el talón crece y te dice qué hacer después.</p>
+
+  <section class="idea" aria-labelledby="idea-b">
+    <h2 id="idea-b">Idea</h2>
+    <p>En esta pantalla, <b>el carnet de citas que la consulta entrega en recepción, con su talón troquelado</b> se convierte en <b>la tarjeta de cada paso: formulario arriba, talón con la hora, el correo y el teléfono abajo</b>.</p>
+    <ul>
+      <li><b>Modo y registro:</b> operar · firme. Color comprometido: la franja vino ocupa casi la mitad del escritorio y la cabecera del teléfono.</li>
+      <li><b>Prueba del competidor:</b> con una app de citas genérica, la frase pierde el talón con el teléfono y el horario reales de la consulta y la hora de vencimiento que se lleva la persona; con otra clínica, el carnet y la franja de su marca no serían el vino de Dentissa.</li>
+      <li><b>Reparto (semilla 656724):</b> <code>vacio-que-orienta</code> (M-1): «Revisa tu correo» no es un mensaje suelto: el talón crece con la hora de vencimiento y tres pasos numerados. <code>fila-a-detalle</code> no se usa: no hay listas.</li>
+      <li><b>Vecino más parecido:</b> el inicio de sesión. <b>Diferencia:</b> una tarjeta centrada sobre una franja, y no un panel partido; el talón troquelado es exclusivo de estas pantallas.</li>
+      <li><b>Riesgo asumido:</b> el carnet es una metáfora que hay que mantener en las cinco pantallas y en los correos; si una pantalla no tiene datos para el talón, queda forzada. Se compensa con datos reales en todos (hora, correo, teléfono, horario).</li>
+      <li><b>Pruebas:</b> esqueleto: tarjeta con troquel = «comprobante de algo que pediste» · retirada: sin el talón, el «revisa tu correo» queda vacío · cinco segundos: título y un campo.</li>
+    </ul>
+  </section>
+
+  <div class="marcos">
+    <section class="marco" id="pedir-d">
+      <h2>Pedir el enlace · 1440 px (al 50 %)</h2>
+      <div class="esc"><div class="lienzo">
+        <div class="franja">
+          <img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral">
+          <p class="contacto"><b>¿No puedes usar tu correo?</b>Llama a la consulta: 753 000 0000<br>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</p>
+        </div>
+        <div class="carnet">
+          <form class="carnet-cuerpo" onsubmit="return false">
+            <span class="etiqueta">Recuperar acceso</span>
+            <div class="titulo" role="heading" aria-level="3">¿Olvidaste tu contraseña?</div>
+            <p class="sub">Escribe el correo de tu cuenta y te enviamos un enlace para elegir una nueva.</p>
+            <div class="campo"><label for="b-d-correo">Correo electrónico de tu cuenta</label><input id="b-d-correo" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
+            <button class="btn btn-primario">Enviar enlace</button>
+            <a class="enlace" href="#">Volver a iniciar sesión</a>
+          </form>
+          <div class="troquel" aria-hidden="true"></div>
+          <dl class="talon"><dt>Vale</dt><dd>60 minutos desde que lo pidas, una sola vez</dd><dt>Llega a</dt><dd>el correo que escribas, si es de una cuenta activa</dd></dl>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="pedir-m">
+      <h2>Pedir el enlace · 390 px</h2>
+      <div class="tel"><div class="lienzo">
+        <div class="franja"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+        <div class="carnet">
+          <form class="carnet-cuerpo" onsubmit="return false">
+            <span class="etiqueta">Recuperar acceso</span>
+            <div class="titulo" role="heading" aria-level="3">¿Olvidaste tu contraseña?</div>
+            <p class="sub">Escribe el correo de tu cuenta y te enviamos un enlace para elegir una nueva.</p>
+            <div class="campo"><label for="b-m-correo">Correo electrónico de tu cuenta</label><input id="b-m-correo" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
+            <button class="btn btn-primario">Enviar enlace</button>
+            <a class="enlace" href="#">Volver a iniciar sesión</a>
+          </form>
+          <div class="troquel" aria-hidden="true"></div>
+          <dl class="talon"><dt>Vale</dt><dd>60 minutos, una sola vez</dd><dt>¿Sin correo?</dt><dd>Llama a la consulta: 753 000 0000</dd></dl>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="enviado-m">
+      <h2>Revisa tu correo (M-1) · 390 px</h2>
+      <div class="tel"><div class="lienzo">
+        <div class="franja"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+        <div class="carnet">
+          <div class="carnet-cuerpo">
+            <span class="etiqueta">Enlace pedido</span>
+            <div class="titulo" role="heading" aria-level="3">Revisa tu correo</div>
+            <p class="sub" role="status">Si <b>paciente@correo.com</b> es de una cuenta activa, te llegará un enlace en unos minutos.</p>
+          </div>
+          <div class="troquel" aria-hidden="true"></div>
+          <div class="carnet-cuerpo">
+            <p><span class="etiqueta">Vale hasta las</span><br><span class="hora">15:35</span></p>
+            <ol class="pasos">
+              <li class="entra">Abre el correo de Dentissa y pulsa «Elegir contraseña nueva».</li>
+              <li class="entra">¿No está? Revisa la carpeta de spam.</li>
+              <li class="entra"><span>Podrás pedir otro en un minuto. <a class="enlace" href="#">Pedir otro enlace</a></span></li>
+            </ol>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="nueva-m">
+      <h2>Contraseña nueva, con error · 390 px</h2>
+      <div class="tel"><div class="lienzo">
+        <div class="franja"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+        <div class="carnet">
+          <form class="carnet-cuerpo" onsubmit="return false">
+            <span class="etiqueta">Contraseña nueva</span>
+            <div class="titulo" role="heading" aria-level="3">Elige tu contraseña nueva</div>
+            <div class="campo"><label for="b-n-1">Contraseña nueva</label><input id="b-n-1" type="password" autocomplete="new-password" aria-describedby="b-n-1-ayuda" value="sonrisa2026"><span class="ayuda" id="b-n-1-ayuda">Al menos 8 caracteres.</span></div>
+            <div class="campo error"><label for="b-n-2">Repite la contraseña</label><input id="b-n-2" type="password" autocomplete="new-password" aria-invalid="true" aria-describedby="b-n-2-error" value="sonrisa2025"><span class="msg-error" id="b-n-2-error" role="alert"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Las dos contraseñas no coinciden.</span></div>
+            <button class="btn btn-primario">Guardar contraseña</button>
+          </form>
+          <div class="troquel" aria-hidden="true"></div>
+          <dl class="talon"><dt>Cuenta</dt><dd>paciente@correo.com</dd><dt>Vale hasta</dt><dd>las 15:35</dd><dt>Después</dt><dd>cerramos tus sesiones abiertas y te avisamos por correo</dd></dl>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="caducado-m">
+      <h2>Enlace que ya no sirve · 390 px</h2>
+      <div class="tel"><div class="lienzo">
+        <div class="franja"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+        <div class="carnet">
+          <div class="carnet-cuerpo">
+            <span class="etiqueta">Enlace vencido</span>
+            <div class="titulo" role="heading" aria-level="3">Este enlace ya no sirve</div>
+            <div class="aviso aviso-error" role="alert"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Pasaron más de 60 minutos, ya se usó o pediste uno más nuevo. Tu contraseña no cambió.</span></div>
+            <a class="btn btn-primario" href="#">Pedir un enlace nuevo</a>
+            <a class="enlace" href="#">Volver a iniciar sesión</a>
+          </div>
+          <div class="troquel" aria-hidden="true"></div>
+          <dl class="talon"><dt>¿Sin correo?</dt><dd>Llama a la consulta: 753 000 0000</dd></dl>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="espera-m">
+      <h2>Demasiados intentos · 320 px</h2>
+      <div class="tel t320"><div class="lienzo">
+        <div class="franja"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+        <div class="carnet">
+          <form class="carnet-cuerpo" onsubmit="return false">
+            <span class="etiqueta">Recuperar acceso</span>
+            <div class="titulo" role="heading" aria-level="3">¿Olvidaste tu contraseña?</div>
+            <div class="aviso aviso-espera" role="alert"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg><span><strong>Demasiados intentos.</strong>Espera un minuto y vuelve a intentarlo.</span></div>
+            <div class="campo"><label for="b-e-correo">Correo electrónico de tu cuenta</label><input id="b-e-correo" type="email" value="paciente@correo.com"></div>
+            <button class="btn btn-primario">Enviar enlace</button>
+          </form>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="exito-m">
+      <h2>De vuelta en el inicio de sesión · 390 px</h2>
+      <div class="tel"><div class="lienzo">
+        <div class="carnet carnet-solo">
+          <form class="carnet-cuerpo" onsubmit="return false">
+            <div class="aviso aviso-exito" role="status"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span><strong>Tu contraseña cambió.</strong>Inicia sesión con la nueva. Cerramos tus otras sesiones abiertas.</span></div>
+            <div class="titulo" role="heading" aria-level="3">Bienvenido de vuelta</div>
+            <div class="campo"><label for="b-x-c">Correo electrónico</label><input id="b-x-c" type="email" value="paciente@correo.com"></div>
+            <div class="campo"><label for="b-x-p">Contraseña</label><input id="b-x-p" type="password"></div>
+            <button class="btn btn-primario">Iniciar sesión</button>
+          </form>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="correo-enlace">
+      <h2>Correo con el enlace · 390 px</h2>
+      <div class="tel"><div class="buzon">
+        <div class="buzon-cab"><b>Dentissa</b> &lt;no-responder@dentissa.app&gt;<br>Asunto: <b>Elige tu contraseña nueva de Dentissa</b></div>
+        <div class="correo">
+          <div class="correo-cab"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+          <div class="correo-cuerpo">
+            <h3>Elige tu contraseña nueva</h3>
+            <p>Pediste entrar de nuevo a tu cuenta de Dentissa. Pulsa el botón y escribe tu contraseña nueva.</p>
+            <a class="btn btn-primario" href="#">Elegir contraseña nueva</a>
+            <p class="url">Si el botón no funciona, copia esta dirección: https://dentissa.app/contrasena/nueva/…</p>
+            <p>Si no lo pediste, ignora este correo: tu contraseña no cambia.</p>
+          </div>
+          <div class="troquel" aria-hidden="true"></div>
+          <dl class="talon"><dt>Vale hasta</dt><dd>las 15:35 (60 minutos), una sola vez</dd><dt>Consulta</dt><dd>Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas · 753 000 0000</dd></dl>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="marco" id="correo-aviso">
+      <h2>Aviso de contraseña cambiada · 390 px</h2>
+      <div class="tel"><div class="buzon">
+        <div class="buzon-cab"><b>Dentissa</b> &lt;no-responder@dentissa.app&gt;<br>Asunto: <b>Tu contraseña de Dentissa cambió</b></div>
+        <div class="correo">
+          <div class="correo-cab"><img src="../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral"></div>
+          <div class="correo-cuerpo">
+            <h3>Tu contraseña cambió</h3>
+            <p>El 27 de octubre a las 15:12 se eligió una contraseña nueva para tu cuenta y cerramos todas tus sesiones abiertas.</p>
+            <p>Si fuiste tú, no tienes que hacer nada.</p>
+          </div>
+          <div class="troquel" aria-hidden="true"></div>
+          <dl class="talon"><dt>¿No fuiste tú?</dt><dd>Llama a la consulta: 753 000 0000</dd><dt>Horario</dt><dd>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</dd></dl>
+        </div>
+      </div></div>
+    </section>
+  </div>
+
+  <section class="notas" aria-labelledby="mov-b">
+    <h2 id="mov-b">Movimiento</h2>
+    <ul>
+      <li><b>M-1 · vacío que orienta (jugada):</b> al llegar a «Revisa tu correo», los tres pasos del talón suben 8 px a su sitio uno tras otro (600 ms, 80 ms entre filas), siempre visibles. Una vez, al cargar. Con movimiento reducido o sin JavaScript, los pasos ya están en su sitio (es CSS: no depende de un script).</li>
+      <li><b>Respuesta:</b> botones con cambio de fondo y leve presión.</li>
+    </ul>
+    <h2>Contenido de muestra para confirmar</h2>
+    <ul><li><code>paciente@correo.com</code>, las 15:35 y el 27 de octubre a las 15:12 son ejemplos. El remitente lo decide /plan.</li></ul>
+  </section>
+</div>
+</body>
+</html>

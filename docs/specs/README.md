@@ -39,6 +39,8 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
 | 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
 | 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | released (v0.9.0) | — | — (2026-10-19) |
+| 041 | [recuperar-contrasena](041-recuperar-contrasena/spec.md) | Identidad | approved | — | — (2026-10-27) |
+| 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
@@ -54,7 +56,6 @@ Specs previstas (números reservados; se crean con `/specify` una por una):
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida
 construirlas:
 - **Reportes** (`/admin/reportes`): vista "en construcción".
-- **Recuperar contraseña**: enlace `href="#"` en el login; la tabla `password_reset_tokens` existe sin rutas.
 - **Recordatorios de cita**: `citas.recordatorio_enviado` se lee pero nunca se escribe.
 - **Adjuntos del expediente**: `expedientes.archivos_url` siempre se guarda como `null`.
 - `welcome.blade.php`: código muerto del esqueleto de Laravel.
