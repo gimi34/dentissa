@@ -5,6 +5,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+### Changed — flujo AI-DD actualizado a 1.19.0
+- Validador 1.19.0: acta de diseño por criterios (`exploration: loop`), `criterios.json` y aviso a
+  las specs abiertas con interfaz sin "Criterios de diseño". Desaparece `aidd.py deal`.
+- `/design-spec` deja de generar 2–3 opciones para elegir: define puertas, KPIs y una rúbrica,
+  genera un candidato tras otro, los mide con `evaluate.mjs` (sustituye a `inspect.mjs`) y acepta
+  el primero que supera el umbral. Las actas aprobadas con `exploration: options` siguen valiendo.
+- Plantilla `docs/templates/spec.md` con la sección "Criterios de diseño".
+- `.ai/project.yaml → design`: `threshold: 80`, `floor: 3` y `budget: 5`.
+- Sin cambios en la constitución ni en la CI.
+
 ## [0.11.1] - 2026-10-27
 
 ### Security
