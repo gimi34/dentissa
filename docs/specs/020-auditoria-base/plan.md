@@ -36,7 +36,7 @@ consulta del registro, que el admin hace en una pantalla nueva `/admin/auditoria
 | Módulo | Cambio | Riesgo |
 |---|---|---|
 | `database/migrations/2026_09_28_000000_create_auditoria_table.php` (nuevo) | Tabla `auditoria` + triggers `auditoria_sin_update` y `auditoria_sin_delete`; `down()` los elimina (solo para desarrollo) | Medio: permisos para crear triggers en otros entornos |
-| `app/Auditoria/Auditoria.php` (nuevo) | `registrar(accion, resultado, recursoTipo, recursoId, campos, detalle, critico, identificadorIntentado)` y `denegar(...)` (registra la denegación y lanza `AccesoDenegadoAuditado`); valida formatos y vocabulario (ver Contratos); actor y rol de `Auth::user()` en el momento de la llamada; genera `request_id` si el `Context` no lo tiene; captura los fallos del almacén sin encadenarlos ni registrar su mensaje | Medio: es el contrato que usan 014, 021 y 022 |
+| `app/Auditoria/Auditoria.php` (nuevo) | `registrar(accion, resultado, recursoTipo, recursoId, campos, detalle, critico, identificadorIntentado)` y `denegar(...)` (registra la denegación y lanza `AccesoDenegadoAuditado`); valida formatos y vocabulario (ver Contratos); actor y rol del `Usuario` que se pasa en `actor:` o, si no se pasa, de `Auth::user()` en el momento de la llamada (D15); genera `request_id` si el `Context` no lo tiene; captura los fallos del almacén sin encadenarlos ni registrar su mensaje | Medio: es el contrato que usan 014, 021, 022 y 041 |
 | `app/Auditoria/AlmacenAuditoria.php` (interfaz, nuevo) y `AlmacenAuditoriaBaseDatos.php` (nuevo) | Escritura, consulta paginada con filtros y `purgar(corte): int` (activa `@auditoria_purga`, borra lo anterior al corte, devuelve el recuento y desactiva el indicador en `finally`); es el único responsable del borrado y del indicador. La interfaz permite sustituir el almacén en tests (simular fallos) | Bajo |
 | `app/Auditoria/AuditoriaNoDisponible.php` (nuevo) | Excepción del modo crítico, sin excepción previa | Bajo |
 | `app/Auditoria/AccesoDenegadoAuditado.php` (nuevo) | `HttpException` (403 o 404) que lanza `denegar()`; el registro central de 403 la omite porque ya está registrada | Bajo |
@@ -85,7 +85,7 @@ CREATE TRIGGER auditoria_sin_delete BEFORE DELETE ON auditoria FOR EACH ROW
   END IF;
 ```
 
-**API de registro** (contrato para 014, 021 y 022):
+**API de registro** (contrato para 014, 021, 022 y 041):
 ```php
 // App\Auditoria\Auditoria
 public function registrar(
@@ -97,6 +97,7 @@ public function registrar(
     array $detalle = [],         // array<string, int|bool|string>; cadenas ^[A-Za-z0-9_.:-]{1,64}$
     bool $critico = false,       // true → lanza AuditoriaNoDisponible si no puede escribir
     ?string $identificadorIntentado = null,
+    ?Usuario $actor = null,      // usuario guardado y comprobado en el servidor (D15); null → Auth::user()
 ): void;
 /** Registra `acceso_denegado` (modo no crítico) y lanza AccesoDenegadoAuditado (403, o 404 con denegado_404). */
 public function denegar(string $accionSolicitada, ?string $recursoTipo, ?string $recursoId, string $resultado = 'denegado'): never;
@@ -104,7 +105,13 @@ public function denegar(string $accionSolicitada, ?string $recursoTipo, ?string 
 - **Cómo se obtiene:** por inyección del contenedor (constructor o método) o `app(Auditoria::class)`;
   no hay fachada. En otros planes, `Auditoria::registrar(...)` denota una llamada al servicio
   inyectado.
-- **Actor, rol, IP y `request_id`:** el actor y su rol salen de `Auth::user()` en el momento de la
+- **Actor explícito (`actor:`, D15):** quien llama puede pasar el `Usuario` que actúa cuando no hay
+  sesión (la spec 041 lo usa al restablecer una contraseña: el usuario que el broker entrega tras
+  validar el token). Entonces `actor_id` y `actor_rol` salen de ese `Usuario`, no de la sesión, y el
+  identificador intentado no se guarda. Solo se admite un `Usuario` guardado (`exists`); uno sin
+  guardar lanza `InvalidArgumentException`, sin registrar nada. El tipo impide pasar un
+  identificador: el actor nunca sale de la petición sin validar. El `Context` de los logs no cambia.
+- **Actor, rol, IP y `request_id`:** sin `actor:`, el actor y su rol salen de `Auth::user()` en el momento de la
   llamada, no del `Context`: un evento registrado tras autenticarse en la misma petición lleva el
   nuevo actor. El `actor_id` de los logs sigue al mismo usuario: `ContextoActor` lo fija (o lo
   quita) al empezar cada petición, y los eventos `Login` y `Logout` lo actualizan dentro de ella.
@@ -190,7 +197,7 @@ Revisar con la skill `design` antes de `/implement` (pantalla de auditoría y p�
 | TM7 | Information disclosure: la página de error revela detalles internos | A10:2025 | `withExceptions` | vista 503 genérica aunque `APP_DEBUG=true` | `ConsultaAuditoriaTest::test_la_consulta_falla_cerrada_con_error_generico` |
 | TM8 | DoS: filtros de consulta costosos o malformados | A06:2025 | `AuditoriaController@index` | validación (fechas solo `AAAA-MM-DD`), índices, paginación fija de 50 | `test_filtros_invalidos_se_rechazan`, `test_una_fecha_con_hora_o_zona_se_rechaza_sin_registrar` |
 | TM9 | Repudiation: purga sin rastro | A09:2025 | `auditoria:purgar` | evento `auditoria_purgada` con recuento y fecha de corte, en la misma transacción que el borrado y en modo crítico | `InmutabilidadAuditoriaTest::test_la_purga_queda_registrada`, `test_si_no_se_puede_registrar_la_purga_no_se_borra_nada` (con eventos de más de 5 años y el doble envolviendo al almacén real: el `DELETE` real se ejecuta, el comando termina con error y el recuento de eventos antiguos no cambia; debe fallar contra una purga que borre y registre en modo no crítico) |
-| TM10 | Spoofing: un evento atribuido a otro actor | A09:2025 | `Auditoria` | actor tomado de `Auth::user()` en el momento del registro, nunca de la petición | `RegistroAuditoriaTest::test_el_actor_es_el_usuario_autenticado`, `test_un_evento_tras_autenticarse_en_la_misma_peticion_lleva_ese_actor` |
+| TM10 | Spoofing: un evento atribuido a otro actor | A09:2025 | `Auditoria` | actor tomado de `Auth::user()` en el momento del registro o, si el código del servidor lo pasa en `actor:`, de un `Usuario` guardado que el servidor ha comprobado con una credencial (D15); nunca un identificador de la petición. `actor_id` y `actor_rol` salen del mismo usuario | `RegistroAuditoriaTest::test_el_actor_es_el_usuario_autenticado`, `test_un_evento_tras_autenticarse_en_la_misma_peticion_lleva_ese_actor`, `test_el_actor_explicito_guarda_su_id_y_su_rol`, `test_el_actor_explicito_prevalece_sobre_la_sesion`, `test_un_actor_sin_guardar_se_rechaza_sin_registrar` |
 | TM11 | Spoofing / Repudiation: reenviar un `X-Request-Id` válido (copiado de otra respuesta) para confundir la trazabilidad o heredar el actor o el acceso de otra petición | A09:2025 | `IdentificadorPeticion`, `Auditoria` | el `request_id` solo correlaciona: el actor sale de `Auth::user()`, el acceso de `auth` y `role`, y cada evento tiene su propio `id`, fecha e IP | `IdentificadorPeticionTest::test_un_identificador_repetido_no_transfiere_el_actor`, `test_un_identificador_de_admin_reutilizado_no_da_acceso` |
 | TM12 | Information disclosure: texto libre controlado por el usuario (filtros, segmentos de URL) guardado en el registro | A09:2025 | `AuditoriaController`, registro central de 403, `Auditoria` | solo valores con formato de identificador o fecha llegan a `recurso_id` y `detalle`; los filtros inválidos se rechazan | `ConsultaAuditoriaTest::test_un_filtro_con_texto_libre_se_rechaza_y_no_se_registra`, `test_una_fecha_con_hora_o_zona_se_rechaza_sin_registrar`, `DenegacionesAuditadasTest::test_un_id_de_ruta_con_formato_invalido_no_se_guarda`, `RegistroAuditoriaTest::test_el_detalle_rechaza_texto_libre` |
 | TM13 | Information disclosure: SQL, bindings o valores del evento (IP, identificador intentado) en el log cuando falla una escritura de auditoría | A09:2025 | `Auditoria` | la excepción del almacén nunca se encadena ni se registra; `auditoria.fallo` con claves fijas | `RegistroAuditoriaTest::test_un_fallo_del_almacen_no_deja_sql_ni_valores_en_el_log`, `test_el_log_de_fallo_solo_lleva_las_claves_previstas` |
@@ -222,7 +229,7 @@ Casos de abuso de la spec → amenazas: CA2 → TM1, TM2; CA7 → TM4; CA9 → T
 | TM7 | vista 503 genérica | `test_la_consulta_falla_cerrada_con_error_generico` |
 | TM8 | validación de filtros | `test_filtros_invalidos_se_rechazan`, `test_una_fecha_con_hora_o_zona_se_rechaza_sin_registrar` |
 | TM9 | evento de purga en la transacción del borrado (el borrado lo hace el almacén; la transacción, el comando) | `test_la_purga_queda_registrada`, `test_si_no_se_puede_registrar_la_purga_no_se_borra_nada` |
-| TM10 | actor de `Auth::user()` al registrar | `test_el_actor_es_el_usuario_autenticado`, `test_un_evento_tras_autenticarse_en_la_misma_peticion_lleva_ese_actor` |
+| TM10 | actor de `Auth::user()` al registrar o `Usuario` explícito comprobado en el servidor (D15) | `test_el_actor_es_el_usuario_autenticado`, `test_un_evento_tras_autenticarse_en_la_misma_peticion_lleva_ese_actor`, `test_el_actor_explicito_guarda_su_id_y_su_rol`, `test_el_actor_explicito_prevalece_sobre_la_sesion`, `test_un_actor_sin_guardar_se_rechaza_sin_registrar` |
 | TM11 | `request_id` solo para correlación | `test_un_identificador_repetido_no_transfiere_el_actor`, `test_un_identificador_de_admin_reutilizado_no_da_acceso` |
 | TM12 | solo valores con formato de identificador o fecha | `test_un_filtro_con_texto_libre_se_rechaza_y_no_se_registra`, `test_una_fecha_con_hora_o_zona_se_rechaza_sin_registrar`, `test_un_id_de_ruta_con_formato_invalido_no_se_guarda`, `test_el_detalle_rechaza_texto_libre` |
 | TM13 | fallos del almacén saneados | `test_un_fallo_del_almacen_no_deja_sql_ni_valores_en_el_log`, `test_el_log_de_fallo_solo_lleva_las_claves_previstas` |
@@ -262,7 +269,7 @@ No aplica: la spec solo cambia rutas tras inicio de sesión; ninguna ruta indexa
 - D2 · Purga: comando `auditoria:purgar` programado cada mes; en Docker, nuevo servicio `scheduler`
   con `schedule:work` (decisión del usuario, 2026-09-28). Cubre OB1.g.
 - D3 · API única `Auditoria::registrar` con modo crítico (fallo cerrado) y no crítico. Se obtiene
-  por inyección, sin fachada; el actor y el rol salen de `Auth::user()` al registrar; fuera de
+  por inyección, sin fachada; el actor y el rol salen de `Auth::user()` al registrar, o del `Usuario` que se pasa en `actor:` (D15); fuera de
   HTTP se genera un `request_id` por ejecución; los fallos del almacén nunca se encadenan ni se
   registran con su mensaje; en escrituras críticas el evento va en la misma transacción que el
   cambio. La 014 deberá usar modo crítico en sus lecturas (CA12 de la 014).
@@ -297,6 +304,19 @@ No aplica: la spec solo cambia rutas tras inicio de sesión; ninguna ruta indexa
   El corte se mide en UTC, igual que `ocurrido_en` y el trigger (`UTC_TIMESTAMP()`).
 - D14 · Requisitos no funcionales medidos con un test del grupo `rnf`, fuera de la suite por
   defecto, con datos sintéticos dentro de una transacción que se revierte.
+- D15 · Actor explícito sin sesión (decisión del usuario, 2026-10-27; plan 041, D2): `registrar()` gana el
+  parámetro opcional `?Usuario $actor`. Lo necesita la 041 para registrar `contrasena_restablecida`,
+  que ocurre sin sesión y con la cuenta como actor y sujeto (CA12 de la 041). Reglas, que cambian el
+  control de TM10:
+  - el actor que se pasa es un `Usuario` cargado y comprobado en el servidor (en la 041, el que el
+    broker entrega tras validar el token), nunca un identificador que llega en la petición; el tipo
+    `?Usuario` impide pasar un identificador, y un `Usuario` sin guardar se rechaza;
+  - `actor_id` y `actor_rol` salen de ese `Usuario`, no de la sesión, aunque haya otra sesión
+    iniciada;
+  - sin `actor:`, todo sigue igual (`Auth::user()`), y el `Context` de los logs no cambia.
+
+  Alternativas descartadas: una sesión solo en memoria (frágil) o un actor vacío (no cumple el CA12
+  de la 041).
 - D10 · Cobertura de riesgos: OB1.a, OB1.c, OB1.g, OB1.h, OB2.a y OB2.b quedan dentro; OB1.b,
   OB1.d, OB1.e y OB1.f siguen pendientes (specs 021, 022 y 014). Esta spec atiende OB1
   parcialmente y OB2 por completo; los estados se actualizan por corrección tras `/release`.
