@@ -28,9 +28,11 @@ sync:
   last: ae820ba                # commit hasta el que /sync concilió la deriva
 skills_version: 1.16.0         # versión del paquete de skills (upgrade desde 1.15.0 el 2026-10-21)
 deploy:
-  strategy: manual             # none | manual | ci-on-merge | ci-on-tag
+  strategy: none               # none | manual | ci-on-merge | ci-on-tag — rama `maqueta`: nunca a producción,
+                               # /release solo versiona y etiqueta `maqueta-vX.Y.Z` (decisión del usuario, 2026-10-27;
+                               # en `main` es `manual`; ver AGENTS.md → "Rama maqueta" y docs/deployment.md)
   platform: servidor propio (Ubuntu Server 24.04) con Docker Compose y Cloudflare Tunnel (ADR 0005, spec 030)
-  environments: [dev, prod]   # staging pendiente (RD1.d, RD3.d)
+  environments: [dev]          # rama `maqueta`: solo local; prod (dentissa.app) se despliega solo desde tags vX.Y.Z de `main`
   prod_approval: human         # innegociable
   rollback: deploy/volver.sh <tag anterior> [copia de la base] (docs/deployment.md, ensayado en la spec 030)
 security:

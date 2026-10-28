@@ -1,11 +1,28 @@
 ---
 status: inferred
-updated: 2026-10-18
+updated: 2026-10-27
 ---
 
 # Despliegue de Dentissa
 
 > Regla innegociable: ningún deploy a producción sin aprobación humana explícita.
+
+## Rama `maqueta`: nunca a producción
+La rama larga `maqueta` (creada desde `main` en `835caaf`, 2026-10-27) aloja la maqueta física del
+consultorio con dispositivos (ESP32, MQTT, app Ionic). **No se despliega nunca** a
+https://dentissa.app (decisión del usuario, 2026-10-27); corre solo en el entorno dev, en el equipo
+de quien la presenta, con `docker compose up -d`. En esta rama:
+- `.ai/project.yaml → deploy.strategy` es `none`: `/release` solo pone versión, CHANGELOG y tag,
+  sin despliegue.
+- Los tags son `maqueta-vX.Y.Z`, **nunca** `vX.Y.Z`: `deploy/desplegar.sh` despliega cualquier tag
+  o commit que se le pase. Nunca se ejecuta `deploy/desplegar.sh` con un tag o commit de `maqueta`.
+- `maqueta` nunca se fusiona a `main`. Ramas de trabajo desde `maqueta`, con PR **a `maqueta`**
+  (GitHub propone `main` por defecto: cambiar la base al abrir el PR).
+- Para traer arreglos de producción: `git merge origin/main` dentro de `maqueta`.
+- Para llevar algo de la maqueta a producción: rama desde `main`, `git cherry-pick` de los commits,
+  PR a `main` y el flujo normal hasta `/release` con aprobación humana.
+
+El resto de este documento describe el despliegue de `main` a producción.
 
 Hay dos entornos: el local de cada integrante, con Docker Compose, y producción, en el servidor
 propio del responsable del proyecto (Ubuntu Server 24.04), expuesto a internet solo por un túnel de
