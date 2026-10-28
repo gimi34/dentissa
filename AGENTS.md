@@ -19,6 +19,11 @@ MQTT, un teléfono Android como lector QR y una app Android con Ionic. Reglas de
 - `deploy.strategy: none`: `/release` solo versiona y etiqueta `maqueta-vX.Y.Z`, **nunca**
   `vX.Y.Z`, y nunca se ejecuta `deploy/desplegar.sh` (despliega cualquier tag o commit). Solo
   entorno dev, con `docker compose up -d`.
+- Entorno propio para convivir con un clon de `main` en el mismo equipo: `docker-compose.override.yml`
+  (solo en esta rama; Compose lo carga solo) pone los contenedores `maqueta_*` y los puertos
+  locales app http://localhost:8001, phpMyAdmin http://localhost:8081 y MariaDB 3307. Los
+  comandos de arriba no cambian. Un servicio nuevo de `docker-compose.yml` con `container_name` o
+  `ports` necesita también su entrada en el override.
 - `git merge origin/main` periódico para traer arreglos de producción. Para llevar algo a
   producción: rama desde `main`, `git cherry-pick` y PR a `main` con el flujo normal; por eso, lo
   que sirva a la app real (API, estados) va en commits separados de lo exclusivo de la maqueta

@@ -1,0 +1,34 @@
+# Entorno local de la maqueta (rama `maqueta`, nunca a producción).
+#
+# Docker Compose lo carga solo, encima de docker-compose.yml, en cualquier
+# `docker compose …` de este clon. Deja convivir en el mismo equipo este clon y
+# el de `main`: contenedores `maqueta_*` en lugar de `dentissa_*` y otros
+# puertos, todos en 127.0.0.1 (nada queda expuesto a la red). Los volúmenes y la
+# red ya son de cada clon: Compose les antepone el nombre del proyecto, que es
+# el de la carpeta.
+#
+# Un servicio nuevo de docker-compose.yml con `container_name` o `ports` (p. ej.
+# el `scheduler` de la spec 020) necesita aquí también su entrada.
+
+services:
+  app:
+    container_name: maqueta_app
+    environment:
+      # El navegador no separa las cookies por puerto: con el mismo nombre,
+      # iniciar sesión en un clon cierra la sesión del otro.
+      SESSION_COOKIE: maqueta-session
+
+  nginx:
+    container_name: maqueta_nginx
+    ports: !override
+      - "127.0.0.1:8001:80"
+
+  db:
+    container_name: maqueta_db
+    ports: !override
+      - "127.0.0.1:3307:3306"
+
+  phpmyadmin:
+    container_name: maqueta_phpmyadmin
+    ports: !override
+      - "127.0.0.1:8081:80"
