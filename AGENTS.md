@@ -7,6 +7,24 @@ Proyecto académico en etapa MVP, con datos ficticios; entrega prevista a fin de
 > Antes de cualquier cambio lee [docs/constitution.md](docs/constitution.md). Si algo aquí
 > contradice la constitución, prevalece la constitución.
 
+## Rama `maqueta` (proyecto aparte, nunca a producción)
+Esta rama aloja una maqueta física de consultorio construida sobre Dentissa, que **no llega nunca a
+producción** (decisión del usuario, 2026-10-27). Alcance previsto, aún sin specs: QR de la cita que
+abre la puerta, estado de cita `llego` (el paciente está en la sala de espera), un LED por silla de
+la sala de espera con sensor TCRT5000 y figuras, control de luces, ventiladores y puertas, ESP32 +
+MQTT, un teléfono Android como lector QR y una app Android con Ionic. Reglas de la rama:
+- `maqueta` nunca se fusiona a `main`. Ramas de trabajo `feature/NNN-slug` y `chore/<tema>` desde
+  `maqueta`, con PR **a `maqueta`** (GitHub propone `main` por defecto: cambia la base).
+- Specs de la maqueta numeradas desde la **101** (036–038 están ocupadas o reservadas en `main`).
+- `deploy.strategy: none`: `/release` solo versiona y etiqueta `maqueta-vX.Y.Z`, **nunca**
+  `vX.Y.Z`, y nunca se ejecuta `deploy/desplegar.sh` (despliega cualquier tag o commit). Solo
+  entorno dev, con `docker compose up -d`.
+- `git merge origin/main` periódico para traer arreglos de producción. Para llevar algo a
+  producción: rama desde `main`, `git cherry-pick` y PR a `main` con el flujo normal; por eso, lo
+  que sirva a la app real (API, estados) va en commits separados de lo exclusivo de la maqueta
+  (MQTT, firmware).
+- Detalle en [docs/deployment.md → Rama `maqueta`](docs/deployment.md).
+
 ## Stack
 PHP ^8.2 (Docker: 8.4-fpm) · Laravel 12 + Socialite (Google OAuth) · Blade renderizado en servidor
 con CSS propio en `public/css/` · MariaDB 10.11 · Composer (+ npm/Vite, casi sin uso) · Docker
@@ -72,6 +90,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
   (`feat(034): T037 …`, `fix(034): T045 … — R1`); versiones con `chore(release): vX.Y.Z`.
 - Ramas: `feature/NNN-slug` para cada spec y `chore/<tema>` para cierres (`chore/cierre-NNN`),
   actualizaciones del flujo (`chore/ai-dd-X.Y.Z`) y mantenimiento; todas con PR a `main` (decisión del usuario, 2026-10-18).
+  En la rama `maqueta`, con PR a `maqueta` (ver "Rama `maqueta`" arriba).
 
 ## Mapa del repositorio
 | Ruta | Contenido |
