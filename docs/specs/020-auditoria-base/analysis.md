@@ -1,98 +1,104 @@
 ---
 result: fail
-round: 5
+round: 6
 mode: full
 constitution_version: 1.3.0
 date: 2026-10-28
-spec_sha: d0b4451c216c
-plan_sha: d196df033b14
-tasks_sha: 81cb936ea640
+spec_sha: f1ac9373d74b
+plan_sha: 6b8581f01a74
+tasks_sha: cd972ca92240
 ---
 
 # Análisis · 020 Registro de auditoría base y correlación por petición
 
 ## Resumen
-Resultado **fail**, con recomendación de rehacer el plan (`--redo`).
-- **Motivo del análisis completo:** el plan y las tareas se evaluaron con la constitución 1.0.0
-  (2026-09-28), y hoy rige la 1.3.0. Además, `main` ha cambiado mucho desde entonces: producción
-  (030–032), vigilante, Gates de la 026–028, menú del móvil (033–035) y la 041, que depende de la
-  020.
-- **Hallazgos:** 1 crítico (A44: el residuo de OB4.a se aceptó con una condición que ya no se
-  cumple) y 6 altos. Varios no caben en una corrección localizada y exigen editar la spec, pasar por
-  `/design-spec 020` y rehacer el plan:
-  - el `scheduler` y el vigilante en producción (A45);
-  - el diseño de la pantalla de consulta (A48);
-  - el actor explícito frente a CA1 y CA10 (A50);
-  - el Constitution Check contra la 1.3.0 (A47).
-- **Actor explícito:** la D15 (añadida hoy para la 041) cumple la D2 de la 041 y se puede usar. Solo
-  pide declarar la obligación de quien llama (A51) y alinear CA10 en la spec (A50).
+Resultado **fail**: queda 1 hallazgo crítico (A66) y 3 altos (A67–A69). Ninguno exige rehacer el plan:
+bastan `/specify --edit 020` (A72), `/plan 020 --fix` y `/tasks 020 --fix`.
+- **Motivo del análisis completo:** el plan y las tareas se rehicieron enteros (`--redo`, 916
+  líneas cambiadas) y la spec ganó CA14.
+- **Ronda 5:** el `--redo` resuelve casi todo (A44, A47, A50–A65 y las notas A40–A43). A45, A46, A48
+  y A49 quedan resueltos con efecto nuevo (A66–A70).
+- **A66 (crítico):** CA4 se cubre con un test que el código no deja pasar. Los intentos de un paciente
+  sobre una cita ajena se responden con `abort(404)` antes de llegar al Gate, así que no dejan
+  evento.
 - **Método:** subagente independiente (perfil `critical`, `opus`), con los hallazgos principales
-  comprobados contra el código.
-- **Validador:** 0 errores. Avisos: el plan cita OB4 y RS16 y las tareas citan RS16, que la spec no
-  cita.
+  comprobados contra el código: `ClienteCitasController::citaDelPaciente`,
+  `ConfiguracionProduccionTest`, `deploy/volver.sh`, `deploy/restaurar.sh` y `capturar.mjs`.
+- **Validador:** 0 errores. Avisos: spec grande (decisión del usuario D0) y análisis desactualizado
+  (antes de esta ronda).
 
-Ronda anterior: [history/analysis.r4.md](history/analysis.r4.md).
+Ronda anterior: [history/analysis.r5.md](history/analysis.r5.md).
 
-Conteo: CRÍTICA 1 · ALTA 6 · MEDIA 7 · BAJA 8
+Conteo: CRÍTICA 1 · ALTA 3 · MEDIA 5 · BAJA 5
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 13 / 13 sobre el papel; 11 / 13 en la práctica (CA4 sin las denegaciones 404 de los Gates de `main`, A46; CA5 sin purga en producción, A45) |
-| Amenazas con control y test | 13 / 13 sobre el papel; el control de TM10 promete más de lo que la 020 puede probar (A51); el `scheduler` de producción será una superficie nueva sin amenaza (A45) |
-| Principios de la constitución evaluados | 10 / 10 en esta revisión (el plan evalúa 8: P9 «pendiente» y sin P10). P8 ❌ (A44), P9 ❌ (A48); el resto ✅ con las observaciones de A47 y A55 |
+| Criterios con tarea de test e implementación | 14 / 14 sobre el papel; 13 / 14 en la práctica (CA4, A66). CA5 en producción depende de A67 y A68 |
+| Amenazas con control y test | 16 / 16; faltan dos amenazas en el modelo (A78) |
+| Principios de la constitución evaluados | 10 / 10. P3 con una exención sin registrar (A73); P2 con tests sin marcar (A75); P8 ❌ con la excepción aceptada (A44), que el `scheduler` sin `local.ini` ampliaría (A67) |
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A40 | BAJA (aceptado) | abierto como nota, sin trasladar (→ A56) | `tasks.md` T028 y T011 no recogen la nota |
-| A41 | BAJA (aceptado) | abierto como nota, sin trasladar (→ A56) | T011 sin la nota |
-| A42 | BAJA (aceptado) | abierto como nota, sin trasladar (→ A56) | T023 sin la nota ni la dependencia de T012 |
-| A43 | BAJA (aceptado) | pendiente en la spec (→ A50) | `spec.md` → Supuestos sin la frase única |
+| A40 | BAJA (aceptado) | resuelto | T011 (`test_el_corte_no_desborda_los_anios_bisiestos`), D13 |
+| A41 | BAJA (aceptado) | resuelto | T011 (`SET time_zone = '-06:00'`) |
+| A42 | BAJA (aceptado) | resuelto | T034 (listener por descubrimiento, depende de T012, `event:list`) |
+| A43 | BAJA (aceptado) | resuelto | `spec.md` → Supuestos, limitación de CA2 en una frase |
+| A44 | CRÍTICA | resuelto | `plan.md` P8 «❌ aceptado» con la condición de la 030 (usuario, 2026-10-28) |
+| A45 | ALTA | resuelto con efecto nuevo (→ A67, A68) | `scheduler` de producción, T043–T045 |
+| A46 | ALTA | resuelto con efecto nuevo (→ A66) | D4 detecta los 404 de los Gates (comprobado en `Handler::prepareException`) |
+| A47 | ALTA | resuelto | Constitution Check contra la 1.3.0, con «Cómo se verifica», en el plan y en las tareas |
+| A48 | ALTA | resuelto con efecto nuevo (→ A70) | `design.md` aprobado, T017, medición |
+| A49 | ALTA | resuelto con efecto nuevo (→ A69) | T033, `aria-current` (T014, T030), T046 |
+| A50 | ALTA | resuelto | `spec.md` CA1 y CA10 |
+| A51 | MEDIA | resuelto | plan → Contratos, obligación de quien llama; TM10 con residuo |
+| A52 | MEDIA | resuelto | D18; T016 (`test_un_fallo_critico_sin_sesion_muestra_el_503`) |
+| A53 | MEDIA | resuelto (salvo el camino con copia, → A68) | Rollout → Vuelta atrás; T091 |
+| A54 | MEDIA | resuelto | T047 |
+| A55 | MEDIA | resuelto (quedan casos sin marcar, → A75) | T012, T013, T014 |
+| A56 | MEDIA | resuelto | T011, T034 |
+| A57 | MEDIA | resuelto | T095; Rollout → Antes de `/release 020` |
+| A58 | BAJA | resuelto (destino) | T048 apunta `/plan 014 --fix` |
+| A59 | BAJA | resuelto | T002 retirada |
+| A60 | BAJA | resuelto | D16, T018, T038, T039 |
+| A61 | BAJA | resuelto | TM11 cita D15; P6 sin RS16 |
+| A62 | BAJA | resuelto | D20, T034 |
+| A63 | BAJA | resuelto | T001 |
+| A64 | BAJA | resuelto | Contratos; T010 |
+| A65 | BAJA | resuelto | T048, T049, T091 |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A44 | Cobertura de riesgos / Constitución (P8) | CRÍTICA | `plan.md` → Constitution Check P8 y Riesgos (residuo de OB4.a); `docs/observability.md` → OB4 | El plan acepta que la consulta o la purga fallidas dejen el SQL con sus bindings en el log porque «la 023 debe liberarse antes de producción». Esa condición ya no se cumple: hay producción desde v0.5.0 sin la 023, y la 030 aceptó OB4.a con otra condición («la 023 antes de tener datos reales»). | Decisión del usuario: aceptar de nuevo el residuo con la condición vigente (antes de datos reales, OB4.a), o que la consulta y la purga fallidas no dejen bindings en el log (test con captura del log en esos dos fallos). Va en el `--redo` |
-| A45 | Inconsistencia (deriva) / Cobertura CA5, OB1.g | ALTA | `plan.md` → Cambios por módulo (`docker-compose.yml`, servicio `scheduler`), D2, Rollout; T040; `docs/roadmap.md` (notas de la 032) | El `scheduler` solo se planifica en el Compose local: la purga mensual nunca correría en producción y CA5 y OB1.g no se cumplirían allí. El roadmap pide además: el `scheduler` en `docker-compose.prod.yml`, mover `dentissa:vigilar` a él (cada minuto, sin solaparse) y retirar el temporizador `dentissa-vigilar`. El plan no considera lo que eso toca: `deploy/preparar-vigilancia.sh`, `verificar.sh`, `volver.sh`, los tests de la 030–032 y `docs/deployment.md`. Falta también la vuelta a una versión anterior a la 020, que dejaría producción sin vigilante. | Debe cumplirse en producción: un test del Compose de producción comprueba que hay un `scheduler` que lee solo `app.env` y monta los logs del vigilante; `schedule:list` da `auditoria:purgar` mensual y `dentissa:vigilar` cada minuto sin solaparse; `verificar.sh` comprueba el `scheduler`. Los tests de la 030–032 se actualizan sin debilitarse, y el Rollout dice cómo volver atrás sin perder los avisos. **Redo** (o una spec propia para el traslado del vigilante, decisión del usuario) |
-| A46 | Inconsistencia (deriva) / Cobertura CA4, P7 | ALTA | `plan.md` → registro central de denegaciones, D4; `app/Autorizacion/CambiarEstadoCita.php:46`, `GestionPersonal.php:25` (`denyAsNotFound`) | Los Gates de `main` (026–028) deniegan con 404. El registro central solo registra los 403, y `denegado_404` solo sale de `denegar()`, así que el intento horizontal más grave (un paciente sobre la cita de otro) queda sin evento. CA4 no se cumple, aunque el roadmap asigna a la 020 las excepciones P7 de la 025, la 026 y la 028. | CA4 con los Gates existentes, también cuando deniegan con 404, distinguiéndolos de un 404 real. Tests sobre rutas reales: cita ajena → `denegado_404`; dentista fuera de alcance → `denegado`; ruta inexistente → sin evento. T090 y T091 cierran esas excepciones en el roadmap |
-| A47 | Constitución (formato y versión) | ALTA | `plan.md` frontmatter (`constitution_version: 1.0.0`) y Constitution Check; `tasks.md` → Constitution Check | El Check está evaluado contra la 1.0.0. No tiene la columna «Cómo se verifica» que exige el contrato, deja P9 «➖ pendiente», no tiene fila P10 y no aplica P2 1.2.x. P4, P5 y P6 no citan semgrep, gitleaks ni los audit del CI. | Volver a evaluar los diez principios contra la 1.3.0, con `test:`, `lint:` o `manual:` por fila, en el plan y en las tareas. **Redo** |
-| A48 | Constitución (P9) / contrato de diseño | ALTA | carpeta de la spec sin `design.md`; `.ai/project.yaml` (`design.status: approved`); `plan.md` (delega en la skill `design`, que no está instalada) | La spec tiene interfaz: `/admin/auditoria`, la página 503 y la entrada del menú. No hay acta de diseño, ni CSS en «Cambios por módulo», ni tokens, WCAG o el móvil (320, 390 y 1440 px), ni un test sin literales ni `style=""`. Tampoco se recoge RS8.d (sin estilos ni scripts en línea nuevos). | `/specify --edit 020` con «Diseño» y «Criterios de diseño», y `/design-spec 020` antes de planificar. P9 ✅ verificado con test (solo tokens, sin `style=""`, contraste) y `capturar.mjs --medir` a 320 px. **Redo** |
-| A49 | Inconsistencia (deriva del menú, 033–035) | ALTA | `plan.md` → layout (entrada «Auditoría»); T030; `tests/Feature/MovilPacienteTest.php:37-38` (`SECCIONES['admin']`, lista exacta); `AGENTS.md` (regla de `capturar.mjs`) | Añadir «Auditoría» rompe `test_el_menu_del_movil_tiene_las_mismas_secciones`. Ninguna tarea sigue el patrón `.active` + `aria-current="page"` ni ejecuta `capturar.mjs --medir`, obligatorio al tocar `layouts/app.blade.php`. | Test: en `/admin/auditoria`, la entrada está activa y lleva `aria-current`; `SECCIONES` se actualiza; la verificación final ejecuta `capturar.mjs --medir` |
-| A50 | Inconsistencia plan vs spec (D15) | ALTA | `plan.md` → actor explícito y D15; `spec.md` CA1 y CA10 | D15 cambia el comportamiento sin editar la spec. Con sesión y actor explícito, el evento lleva otro usuario mientras los logs conservan el de la sesión, en contra de CA10. Sin sesión, guarda un actor y descarta el identificador intentado que CA1 prevé. | `/specify --edit 020`: cuándo se registra un actor comprobado por otra credencial y cómo aplica CA10 en ese caso, e incluir A43. Después se ajusta `test_el_actor_explicito_prevalece_sobre_la_sesion` |
-| A51 | Seguridad (D15 frente a la D2 de la 041) | MEDIA | `plan.md` → actor explícito y TM10; plan de la 041, D2 | La regla «nunca un identificador de la petición sin validar» no la puede garantizar la 020: `Usuario::find($request->input('cuenta'))` es un `Usuario` guardado y pasaría. El control de TM10 («comprobado con una credencial») no tiene test en la 020. | Declararlo como obligación de quien llama y residuo de TM10. Cada spec que use `actor:` (041, y después 021 y 022) lleva un test con el identificador de otra cuenta en la petición, y el evento lleva el usuario verificado. `/review` revisa cada llamada |
-| A52 | Ambigüedad | MEDIA | `plan.md` → página 503 del modo crítico; plan de la 041 (D5, `POST /contrasena/nueva`) | La 041 mostrará el 503 de la 020 en una ruta pública sin sesión, y el plan no dice si la página depende del layout autenticado. | La página 503 se muestra sin sesión, con el `request_id` y sin recursos externos. Test: fallo en modo crítico en una ruta anónima → 503 genérico, nunca 500 |
-| A53 | Inconsistencia (deriva de la vuelta atrás) | MEDIA | `plan.md` → Rollout; T091; `deploy/desplegar.sh`, `deploy/restaurar.sh`; `docs/deployment.md` | Con una migración pendiente, `desplegar.sh` propondrá volver con la copia, y `restaurar.sh` borra la base: se perderían los eventos escritos desde el despliegue. | Rollout y `deployment.md`: la vuelta atrás de la 020 es `volver.sh` sin copia (migración solo de expansión), y se declara la pérdida de eventos si la copia es inevitable |
-| A54 | Deriva / Seguridad | MEDIA | `docs/roadmap.md` (triggers con `dentissa_app`); `phpunit.xml`; CI; `plan.md` → Riesgos («al elegir plataforma, objetivo 5») | Los tests y la CI crean los triggers con root, pero el roadmap pide probarlos con `dentissa_app`. La plataforma ya se eligió en la 030. | Comprobar que la migración crea los triggers con `dentissa_app` y que ese usuario recibe el rechazo de `UPDATE` y `DELETE`, en un entorno con el Compose de producción; anotarlo en la tarea de verificación |
-| A55 | Constitución (P2 1.2.x) | MEDIA | `plan.md` → Trazabilidad; T012–T014 | Tres tests pasan desde el principio y no están marcados como de caracterización: `test_no_existen_rutas_de_modificacion`, `test_un_visitante_sin_sesion_no_genera_evento` y `test_un_identificador_de_admin_reutilizado_no_da_acceso`. | Marcarlos y exigir «comprobado rompiendo <qué>» |
-| A56 | Cobertura (seguimiento) | MEDIA | `tasks.md` T011, T023, T028; ronda 4 (A40–A42) | Las notas aceptadas en la ronda 4 no están en las tareas, y A40 es un fallo funcional de la purga. | Pasarlas al «hecho cuando»: corte con `setTestNow('2028-02-29 00:00:00.500')` → `2023-02-28 00:00:00`; `time_zone '-06:00'` en el test del corte; T023 depende de T012 |
-| A57 | Cobertura (Rollout) | MEDIA | `docs/roadmap.md` (comprobaciones previas a `/release 020`); T095–T098; ramas `feature/020-auditoria-base` (vieja) y `feature/020-auditoria` | Las comprobaciones que pide el roadmap antes de `/release 020` no están en las tareas: el merge de la 024 como ancestro, y `composer audit` y `npm audit` con 0 críticas y 0 altas. La rama vieja con copias de la 024 sigue existiendo. | Una tarea de liberación con esos comandos y su resultado. Declarar que la rama vieja no se usa (la 020 se reconstruye en `feature/020-auditoria` desde `main`, decisión del usuario, 2026-10-28) |
-| A58 | Duplicación / conflicto con la 014 | BAJA | plan de la 014 (A06, A09, A26 abiertos) | La 014 sigue con `Auditoria::denegacion`, `denegado_403`, `Gate::after` y la marca en el `Context`, y no conoce los Gates de la 026–028 ni el actor explícito. No bloquea la 020. | → roadmap: `/plan 014 --fix` antes de `/tasks 014`, con el contrato final de la 020 |
-| A59 | Deriva (arnés de tests) | BAJA | T002; D8; `docs/deployment.md`; CI | T002 hace que `bootstrap-test-db.sh` migre, pero hoy la migración es un paso aparte documentado y la CI ya migra. | Quitar T002 o actualizar la documentación de forma coherente |
-| A60 | Observabilidad | BAJA | `plan.md` → Observabilidad («`auditoria.fallo` es la señal a vigilar»); `docs/observability.md` (OB6.b mitigada) | En producción nadie lee `laravel.log`, y el vigilante ya avisa por correo: los fallos no críticos pasarían inadvertidos. | Decidir si el vigilante avisa de `auditoria.fallo` o aceptarlo de forma explícita |
-| A61 | Inconsistencia (terminología) | BAJA | `plan.md` → TM11; Constitution Check P6 | TM11 sigue diciendo «el actor sale de `Auth::user()`», sin D15. P6 dice que RS16 «se atiende antes de cualquier release», pero RS16 está mitigado desde v0.1.0. | Alinear el texto (audit de la CI y EX2) |
-| A62 | Inconsistencia (convención) | BAJA | `plan.md` → `AppServiceProvider` (listeners de `Login` y `Logout`); T023; `app/Listeners/RegistrarFalloAcceso.php`; plan de la 041 (D4) | Los listeners van en `AppServiceProvider`, mientras que `main` usa clases en `app/Listeners` con descubrimiento automático; la 041 añade otro listener de `Login`. Mezclar los dos mecanismos puede registrar uno dos veces. | Un solo mecanismo, con un test de que cada listener se ejecuta una vez |
-| A63 | Inconsistencia | BAJA | `plan.md` → migración `2026_09_28_000000` | Su fecha es anterior a migraciones ya aplicadas en producción (2026-10-02 y 2026-10-07). | Darle la fecha de la implementación |
-| A64 | Ambigüedad | BAJA | `plan.md` → actor explícito | Si se pasan a la vez `actor:` e `identificadorIntentado`, el identificador se descarta en silencio. | Definir si es un error de programación (`InvalidArgumentException`), con test |
-| A65 | Cobertura (documentación) | BAJA | T090, T091; `docs/roadmap.md`; `docs/observability.md` → Resumen; `AGENTS.md` | Las tareas de documentación no cierran en el roadmap las excepciones P7 de la 025, la 026 y la 028, no actualizan el resumen de `observability.md` ni el mapa de `AGENTS.md` (ruta protegida, con aprobación). | Añadirlo a las tareas de documentación |
+| A66 | Cobertura CA4 / contradicción con el código | CRÍTICA | `plan.md` → D4, Estrategia de pruebas, Trazabilidad CA4; T013, T027; `app/Http/Controllers/ClienteCitasController.php` (`citaDelPaciente`, `show`) | `test_una_cita_ajena_denegada_como_no_encontrada_queda_registrada` usa `reprogramar-cita` con un paciente, pero ese camino no llega al Gate: `citaDelPaciente` filtra por `paciente_id` y hace `abort_unless($cita, 404)` antes (`ReprogramarCitaRolesTest` da 404 sin `AuthorizationException`). El detalle y reprogramar (GET y PATCH) ocultan una cita ajena que existe con un `abort(404)`, que D4 trata como un 404 real: no dejan evento, en contra de CA4. Solo `PATCH …/cancelar` pasa por `denyAsNotFound` | Debe cumplirse: un paciente sobre una cita ajena que existe (detalle, reprogramar GET y PATCH, cancelar) recibe 404 y queda un `denegado_404`; el mismo id inexistente da 404 sin evento. Test: `DenegacionesAuditadasTest` con esas cuatro rutas reales; `ReprogramarCitaRolesTest` y `EstadosCitaRolesTest` en verde. `/plan 020 --fix` (D4, `ClienteCitasController` en Cambios por módulo) y `/tasks 020 --fix` (T013 y una tarea de implementación) |
+| A67 | Cobertura CA5 / inconsistencia con la 030 y la 031 | ALTA | `plan.md` → `docker-compose.prod.yml`, `docker-compose.yml`, D2; T019, T040, T043; `ConfiguracionProduccionTest` (`assertVersionExacta`, `assertMontaLocalIni`) | Al `scheduler` le falta `restart: unless-stopped` (030 CA9: tras reiniciar el servidor no vuelve y la purga deja de correr sin aviso). No monta `local.ini` (pierde `zend.exception_ignore_args`, `expose_php`, la zona y los límites de PHP: 030 CA10, 031). Y el `image:` explícito rompe `test_las_imagenes_de_produccion_tienen_version_exacta_e_iguales_a_local` y, con un segundo montaje, `test_el_compose_de_produccion_monta_un_local_ini_que_existe`. Ninguna tarea ajusta estos tests | Debe cumplirse, con test del Compose: el `scheduler` (local y producción) se reinicia solo y aplica la misma configuración de PHP que `app`; los tests de imágenes y de `local.ini` siguen protegiendo lo mismo, ajustados por servicio y sin debilitarse. `/plan 020 --fix` y `/tasks 020 --fix` (T019, T040, T043) |
+| A68 | Inconsistencia (vuelta atrás) | ALTA | `plan.md` → `deploy/*.sh`, Rollout; T044; `deploy/volver.sh` (`--sin-levantar`), `deploy/restaurar.sh`; tests de la 032 que fijan `stop app web` y `up -d app web < /dev/null` | Al volver con copia a una versión anterior a la 020, el Compose del checkout no tiene `scheduler`: nombrarlo falla («no such service») y, si no se nombra, el `scheduler` de la 020 sigue en marcha durante el borrado y la carga de la base. `--remove-orphans` solo está en el modo que levanta. El «hecho cuando» de T044 (los tests de la 032 en verde) contradice sus propios cambios, y T019 no actualiza esos tests | Debe cumplirse: con un destino con o sin `scheduler`, `volver.sh --sin-levantar` y `restaurar.sh` paran todo lo que escribe en la base antes de cargar, y al terminar no queda ningún `scheduler` de otra versión. Test: los de la 032, actualizados con ese contrato, con un caso de destino sin `scheduler`. `/plan 020 --fix` y `/tasks 020 --fix` (T019, T044) |
+| A69 | Inconsistencia (033–035, `capturar.mjs`) | ALTA | T046; `docs/design/capturar.mjs` (`COMPARADAS` con las pantallas de admin) | `--medir` compara el escritorio a 1024 y 1440 px con la línea base del tag de producción, y con «Auditoría» en la barra lateral todas las pantallas de admin difieren: T046 («sale con código 0») no se puede cumplir | Decidido: excluir de la comparación solo la entrada nueva, como ya se excluyen los campos del filtro. Debe cumplirse: `--medir` sale con 0 y el resto de cada pantalla se sigue comparando. `/plan 020 --fix` (`capturar.mjs` en Cambios por módulo) y `/tasks 020 --fix` (T046 y una tarea que cambia el script) |
+| A70 | Ambigüedad (D19) | MEDIA | D19; T037; `layouts/app.blade.php` (`request()->is('admin/…*')`); `medir.mjs` (sin excepción DS1 sobre una URL); `criterios.json` (`menu`, `menu-escritorio`) | En `/_disenio/020/…` ninguna entrada del menú queda `.active`, así que K7 y K7b fallan; la pantalla `menu` necesita el menú abierto, que solo abre `menu.js`; y sobre una URL `medir.mjs` sale con 1 por la barra lateral, así que T037 pide a la vez «pasa» y «los únicos fallos son de la barra» | Debe cumplirse: K7 y K7b se miden sobre el menú real con «Auditoría» marcada y el menú del teléfono abierto, y T037 dice qué salida de `medir.mjs` se acepta. `/plan 020 --fix` (D19) y `/tasks 020 --fix` (T037) |
+| A71 | Tareas (dependencias) | MEDIA | T006, T028, T029, T036 | T029 exige tests de T014 que renderizan `auditoria.index`, que no existe hasta T030; T036 exige `test_la_consulta_falla_cerrada…` (T016), que necesita el controlador de T029, y no depende de T029; T006 se verifica con `ReglasCss` de T017, que va después; T028 exige un test de purga que necesita el trigger de T031 | Cada «hecho cuando» se cumple con sus dependencias declaradas. `/tasks 020 --fix` |
+| A72 | Inconsistencia (`extends`) | MEDIA | `spec.md` frontmatter | La 020 cambia el despliegue y la vuelta atrás de la 030 (servicios que se levantan y paran) y `verificar.sh` de la 031, que no están en `extends` | Decidido: `extends: [030, 031, 032]`; T098 añade la fila al Historial de cada una. `/specify --edit 020` y `/tasks 020 --fix` (T098) |
+| A73 | Constitución (P3) | MEDIA | `plan.md` P3, D19; TM15 | `/_disenio/020/*` es un endpoint sin `auth` ni `role` que pinta el layout de admin; solo existe con `APP_ENV=local`, pero la exención no tiene al usuario como fuente | Decidido: exención de P3 registrada (solo local, datos inventados, sin leer la base). Test: `test_la_vista_previa_no_existe_fuera_de_local` y uno que compruebe que no consulta la base. `/plan 020 --fix` y `/tasks 020 --fix` (T017, T037) |
+| A74 | Seguridad / operación | MEDIA | `deploy/aplicar-entorno.sh` (recrea un solo servicio); `deploy/README.md` | Con dos servicios que leen `app.env`, `aplicar-entorno.sh app` deja el `scheduler` con el entorno anterior (p. ej. la contraseña de la base sin rotar). `verificar.sh` lo detecta, pero ni el plan ni la guía lo dicen | Debe cumplirse: tras cambiar `app.env`, «Entorno aplicado» da OK también en el `scheduler` (que el script recree los dos, o que la guía lo diga). `/plan 020 --fix` y `/tasks 020 --fix` (T045) |
+| A75 | Constitución (P2) | BAJA | T013 (`test_un_recurso_que_no_existe_no_genera_evento`, `test_una_ruta_inexistente_no_genera_evento`); T018 (`test_un_fallo_de_auditoria_no_cuenta_como_fallo_de_acceso`) | Pasan desde el principio y no están marcados como de caracterización | Marcarlos con «comprobado rompiendo <qué>». `/tasks 020 --fix` |
+| A76 | Inconsistencia (Rollout frente a tareas) | BAJA | `plan.md` → Rollout («`desplegar.sh` de la versión instalada»); T097 (checkout antes de `desplegar.sh`) | Con el checkout primero corre el script nuevo, que ya levanta el `scheduler`, y el script informa como «anterior» el propio tag (lo advierte `deploy/README.md` desde la 032) | Alinear el Rollout y T097, y anotar en T097 la versión real a la que volver. `/plan 020 --fix` y `/tasks 020 --fix` |
+| A77 | Ambigüedad / conflicto con la 041 | BAJA | `plan.md` → vista 503 («el teléfono de la consulta»); D16 de la 041 (`config/clinica.php → contacto`) | No dice de dónde sale el teléfono; puede chocar con la clave `contacto` de la 041 | Fijar el origen (la misma clave que la 041). Test: el 503 muestra el teléfono configurado. `/plan 020 --fix` y `/tasks 020 --fix` (T016, T036) |
+| A78 | Seguridad (modelo de amenazas) | BAJA | `plan.md` → Modelo de amenazas | Faltan dos amenazas: un usuario autenticado que provoca 403 y 404 en masa hace crecer la tabla sin límite; con las credenciales de la app se pueden insertar eventos falsos (CA2 solo cubre modificar y borrar) | Decidido: dos residuos aceptados con su motivo en el modelo de amenazas. `/plan 020 --fix` |
+| A79 | Formato de tareas | BAJA | T090, T091 | No tienen archivos ni «hecho cuando» | Añadirlos. `/tasks 020 --fix` |
 
 ## Decisiones del usuario
 Decididas el 2026-10-28:
-- **Camino** → rehacer la 020: `/specify --edit 020` (A50, A43, «Diseño» y «Criterios de
-  diseño»), `/design-spec 020` (A48), `/plan 020 --redo` con la constitución 1.3.0 (resto de
-  hallazgos), `/tasks 020 --redo` y `/analyze 020`. El traslado de `dentissa:vigilar` al `scheduler`
-  de producción y la retirada del temporizador van en una **spec propia**. La 020 solo lleva el
-  `scheduler` a producción con la purga mensual (A45), y el Rollout dice cómo conviven el
-  `scheduler` y el temporizador hasta esa spec.
-- **A44** → se acepta de nuevo el residuo de OB4.a con la condición vigente (la de la 030: datos
-  ficticios, logs solo en el servidor y la 023 antes de tener datos reales). El `--redo` lo registra
-  en el plan con esta fecha.
-- **A60** → el vigilante de la 032 avisa por correo de `auditoria.fallo`, con su mismo límite de un
-  correo por tipo cada 30 minutos. Va en el `--redo` (cambia `App\Avisos\Vigilante`).
+- **A66** → corregirlo en la 020: `ClienteCitasController` registra como `denegado_404` la cita ajena
+  que existe, con la misma respuesta 404; un id inexistente sigue sin evento.
+- **A69** → `capturar.mjs --medir` excluye de la comparación solo el enlace «Auditoría» del menú.
+- **A72** → `extends: [030, 031, 032]`.
+- **A73 y A78** → se aceptan: la exención de P3 para la vista previa local (solo local, datos
+  inventados, sin leer la base) y, como residuos del modelo de amenazas, las denegaciones en masa
+  (volumen académico) y la inserción de eventos falsos con las credenciales de la app (mismo límite
+  que la limitación aceptada de CA2).
 
-## Aceptados
-De la ronda 4 (aceptados por el usuario el 2026-09-28), aún sin trasladar a las tareas (A56):
-- **A40** → nota de T028, T011: calcular el corte sin desbordamiento de años y truncado al segundo (o leerlo de la BD con `UTC_TIMESTAMP() - INTERVAL 5 YEAR`), de modo que nunca sea posterior al umbral del trigger. Test en `InmutabilidadAuditoriaTest`: con `Carbon::setTestNow('2028-02-29 00:00:00.500')`, el corte es `2023-02-28 00:00:00`.
-- **A41** → nota de T011: `test_la_purga_respeta_el_corte_al_segundo` fija en su sesión una zona distinta de UTC (p. ej. `SET time_zone = '-06:00'`) antes de purgar, y así falla contra un trigger que use `NOW()`.
-- **A42** → nota de T023: tratar T012 como dependencia (su test cubre los listeners) y comprobar al cerrar T023 que hay listeners registrados para `Login` y `Logout`.
-- **A43** → spec: en la próxima edición de la spec 020, enumerar las tres exclusiones de CA2 en una sola frase de Supuestos (vaciar el almacén, desactivar su protección y cambiar su estructura). CA2 ya es correcto y manda.
+## Correcciones
+1. `/specify --edit 020`: A72.
+2. `/plan 020 --fix A66,A67,A68,A69,A70,A73,A74,A76,A77,A78`.
+3. `/tasks 020 --fix A66,A67,A68,A69,A70,A71,A72,A73,A74,A75,A76,A77,A79`.
+4. `/analyze 020` (delta).
