@@ -99,6 +99,7 @@ Recursos de marca: los del sistema; sin imágenes propias.
 Qué debe diseñarse (`/design-spec 020`): la consulta con sus estados (con eventos, vacía, filtro no
 válido y varias páginas), el error genérico y la entrada del menú.
 Sistema: [docs/design/system.md](../../design/system.md).
+Diseño por criterios: [design.md](design.md) (`approved`; `c4` aceptado con 80/100 en el cuarto de cinco candidatos).
 
 ## Criterios de diseño
 Modo: operar · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos (propuesta; ver Supuestos).
@@ -145,6 +146,12 @@ primera pantalla 25, sistema 30, lectura 20, plantilla 0 (ver Supuestos).
 - El objetivo 3 se divide en las specs 020–023 y esta se crea primero (decisión del usuario, 2026-09-28).
 - La spec se mantiene junta con sus 14 criterios; solo el traslado de la vigilancia al `scheduler` de producción sale a una spec propia (decisión del usuario, 2026-10-28).
 
+## Decisiones
+| Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
+|---|---|---|---|---|
+| 2026-10-28 | contradicción | La barra lateral del escritorio (#C75078) no cumple el contraste AA (DS1) y la puerta de contraste mide la página entera | La barra se queda como está, como en la 034: deuda DS1 del objetivo 6; la puerta se aplica al resto de la pantalla ([design.md](design.md)) | usuario |
+| 2026-10-28 | diseño | Resultado del ciclo de /design-spec | `c4` aceptado con 80/100; 25 eventos por página y selectores para acción y tipo de recurso; acta en [design.md](design.md) | /design-spec |
+
 ## Notas para /plan
 - La spec 014 consume este registro para CA11 (accesos denegados desde sus Gates, vía `Gate::after`) y CA12 (lecturas en `PacientesController@show` y `ExpedientesController@show`); su plan asume un punto de registro único, algo como `Auditoria::registrar(accion, recurso_tipo, recurso_id, resultado, contexto)`. Si la API difiere, corregir con `/plan 014 --fix`.
 - Almacén propuesto en `docs/observability.md`: tabla propia en MariaDB (`auditoria`), sin claves foráneas en cascada hacia tablas de negocio. Inmutabilidad en la base: trigger que rechace `UPDATE`/`DELETE` salvo la purga, o un usuario de BD sin esos permisos; decidir en el plan.
@@ -176,3 +183,4 @@ primera pantalla 25, sistema 30, lectura 20, plantilla 0 (ver Supuestos).
 | 2026-09-28 | Aprobada de nuevo por el usuario | /specify --edit |
 | 2026-10-28 | CA1 y CA10 admiten como actor una cuenta comprobada por otra credencial (spec 041) y prohíben tomarlo de un identificador enviado; CA4 cubre las denegaciones que responden «no encontrado»; CA14 nuevo (aviso del fallo al escribir un evento en producción) y `extends: [032]`; la limitación de CA2 en una sola frase; «Fuera de alcance» separa el traslado del vigilante; secciones «Diseño» y «Criterios de diseño»; accesibilidad y descubribilidad en los RNF; notas para el `--redo`. Vuelve a `draft`. | /analyze 020 ronda 5: A43, A45, A46, A48, A50, A51, A60 (decisiones del usuario, 2026-10-27 y 2026-10-28) |
 | 2026-10-28 | Aprobada de nuevo por el usuario; se mantiene junta | /specify --edit |
+| 2026-10-28 | Diseño aprobado (`design.md`, `c4` con 80/100) | /design-spec 020 (aprobación del usuario) |

@@ -1,0 +1,234 @@
+{
+  "spec": "020-auditoria-base",
+  "mode": "operar",
+  "widths": [
+    320,
+    390,
+    1440
+  ],
+  "threshold": 80,
+  "floor": 3,
+  "budget": 5,
+  "tokens": {
+    "colors": [
+      "#000000",
+      "#185FA5",
+      "#1D9E75",
+      "#72243E",
+      "#854F0B",
+      "#993556",
+      "#9B8290",
+      "#A32D2D",
+      "#B83C65",
+      "#C75078",
+      "#D4537E",
+      "#E1F5EE",
+      "#E6F1FB",
+      "#ED93B1",
+      "#F0DCE4",
+      "#F4C0D1",
+      "#FAEEDA",
+      "#FBEAF0",
+      "#FCEBEB",
+      "#FDF5F8",
+      "#FFFFFF"
+    ]
+  },
+  "gates": {
+    "contrast": 4.5,
+    "touch": 44,
+    "external_hosts": []
+  },
+  "pantallas": {
+    "consulta": {
+      "file": "consulta.html",
+      "barra_lateral": true
+    },
+    "vacia": {
+      "file": "vacia.html",
+      "barra_lateral": true
+    },
+    "filtro": {
+      "file": "filtro.html",
+      "barra_lateral": true
+    },
+    "menu": {
+      "file": "menu.html",
+      "widths": [
+        320,
+        390
+      ],
+      "text_scope": "[aria-current=\"page\"]"
+    },
+    "menu-escritorio": {
+      "file": "consulta.html",
+      "widths": [
+        1440
+      ],
+      "text_scope": "[aria-current=\"page\"]",
+      "barra_lateral": true
+    },
+    "error": {
+      "file": "error.html"
+    }
+  },
+  "kpis": [
+    {
+      "id": "K1",
+      "pantalla": "consulta",
+      "name": "Filtros y primer evento en la primera pantalla (teléfono)",
+      "type": "above_fold_all",
+      "texts": [
+        "Filtros",
+        "c963cfe0-afae-4a3b-b909-6a04e7d80068"
+      ],
+      "widths": [
+        390
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K1b",
+      "pantalla": "consulta",
+      "name": "Filtros y primer evento en la primera pantalla (escritorio)",
+      "type": "above_fold_all",
+      "texts": [
+        "Actor",
+        "Filtrar",
+        "c963cfe0-afae-4a3b-b909-6a04e7d80068"
+      ],
+      "widths": [
+        1440
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K2",
+      "pantalla": "consulta",
+      "name": "Cada evento completo (sin desplazamiento horizontal: G-desborde a 320 px)",
+      "type": "visible",
+      "texts": [
+        "14:32:07",
+        "auditoria_consultada",
+        "admin",
+        "3800c172-24e3-11f1-8967-0045e2e7d554",
+        "auditoria",
+        "Éxito",
+        "192.168.1.24",
+        "c963cfe0-afae-4a3b-b909-6a04e7d80068"
+      ],
+      "ca": "CA1, CA6"
+    },
+    {
+      "id": "K3",
+      "pantalla": "vacia",
+      "name": "Estado vacío",
+      "type": "visible",
+      "texts": [
+        "No hay eventos con estos filtros"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K4",
+      "pantalla": "filtro",
+      "name": "El error junto a su campo (bajo él y antes de «Filtrar»)",
+      "type": "order",
+      "texts": [
+        "Actor",
+        "Escribe el identificador del usuario",
+        "Filtrar"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K5",
+      "pantalla": "consulta",
+      "name": "Paginación tras la lista",
+      "type": "order",
+      "texts": [
+        "e454625d-2297-4e54-a570-d89a86fd07ef",
+        "Mostrando 1–25 de 1.284"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K5b",
+      "pantalla": "consulta",
+      "name": "Paginación: ir a la página siguiente",
+      "type": "visible",
+      "texts": [
+        "Siguiente",
+        "página 1 de 52"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K6",
+      "pantalla": "error",
+      "name": "Error genérico: «No se realizó» y el identificador de petición a 320 px (misma vista con y sin sesión)",
+      "type": "above_fold_all",
+      "texts": [
+        "No se realizó",
+        "7c1e5b0a-3f2d-4e8b-9a61-0d4c2b7e9f13"
+      ],
+      "widths": [
+        320
+      ],
+      "ca": "CA11"
+    },
+    {
+      "id": "K7",
+      "pantalla": "menu",
+      "name": "«Auditoría» es la sección actual en el menú del teléfono",
+      "type": "visible",
+      "texts": [
+        "Auditoría"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K7b",
+      "pantalla": "menu-escritorio",
+      "name": "«Auditoría» es la sección actual en el menú del escritorio",
+      "type": "visible",
+      "texts": [
+        "Auditoría"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K8",
+      "pantalla": "*",
+      "name": "JavaScript por página",
+      "type": "max_js_bytes",
+      "value": 102400,
+      "ca": "constitución P10"
+    },
+    {
+      "id": "K9",
+      "pantalla": "*",
+      "name": "Estabilidad visual",
+      "type": "max_cls",
+      "value": 0.1,
+      "ca": "modo operar"
+    },
+    {
+      "id": "K10",
+      "pantalla": "*",
+      "name": "Titulares en dos líneas como mucho",
+      "type": "max_heading_lines",
+      "value": 2,
+      "ca": "modo operar"
+    }
+  ],
+  "rubric": {
+    "weights": {
+      "jerarquia": 25,
+      "primera_pantalla": 25,
+      "sistema": 30,
+      "lectura": 20,
+      "plantilla": 0
+    }
+  }
+}
