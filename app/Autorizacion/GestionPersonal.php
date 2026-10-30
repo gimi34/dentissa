@@ -2,6 +2,7 @@
 
 namespace App\Autorizacion;
 
+use App\Auditoria\RegistroCentralDenegaciones;
 use App\Models\Usuario;
 use Illuminate\Auth\Access\Response;
 
@@ -20,8 +21,10 @@ class GestionPersonal
             return Response::deny('No tienes permiso para definir horarios.');
         }
 
+        // Para quien no es dentista el horario no existe: el mismo 404, que no es una denegación
+        // y no deja evento de auditoría (spec 020, D4).
         return $personal->tipo === 'dentista'
             ? Response::allow()
-            : Response::denyAsNotFound();
+            : Response::denyAsNotFound(code: RegistroCentralDenegaciones::RECURSO_INEXISTENTE);
     }
 }
