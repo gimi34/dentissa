@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitasController;
 use App\Http\Controllers\ClienteCitasController;
@@ -87,6 +88,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Placeholders
     Route::get('/reportes', fn () => view('placeholder', ['titulo' => 'Reportes']))->name('reportes');
+
+    // Registro de auditoría (spec 020): solo consulta, sin rutas de modificación (CA2).
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
 
     // Usuarios
     // El orden importa: Laravel resuelve por orden de registro, así que
