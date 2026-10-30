@@ -1,6 +1,6 @@
 ---
 spec: 020-auditoria-base
-status: draft   # draft | approved | blocked — vuelve a draft con /plan 020 --fix A66–A78 (2026-10-29)
+status: approved   # draft | approved | blocked — aprobado por el usuario el 2026-10-29 (tras /plan 020 --fix A66–A78)
 constitution_version: 1.3.0   # versión con la que se evaluó el Constitution Check (/plan 020 --redo)
 created: 2026-10-28
 ---
