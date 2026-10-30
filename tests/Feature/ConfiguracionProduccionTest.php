@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -64,8 +65,12 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
-     * Imágenes de un Compose (`image:`) o de un Dockerfile (`FROM` y
+     * Imágenes que se descargan de un Compose (`image:`) o de un Dockerfile (`FROM` y
      * `COPY --from=` que no son etapas propias).
+     *
+     * Spec 020 (A67, A81): no cuenta la imagen que construye el propio Compose (el `image:` de
+     * un servicio con `build:`) ni ninguna otra aparición de ese mismo valor, como el `scheduler`,
+     * que la reutiliza sin descargarla (`pull_policy: never`). Cualquier otra sigue contando.
      *
      * @return list<string>
      */
@@ -77,8 +82,27 @@ class ConfiguracionProduccionTest extends TestCase
 
         $etapas = array_filter($from[2]);
         $copiasDeImagen = array_filter($copias[1], fn ($origen) => ! in_array($origen, $etapas, true));
+        $construidas = $this->imagenesConstruidas($texto);
+        $descargadas = array_filter($compose[1], fn ($imagen) => ! in_array($imagen, $construidas, true));
 
-        return array_values(array_merge($compose[1], $from[1], $copiasDeImagen));
+        return array_values(array_merge($descargadas, $from[1], $copiasDeImagen));
+    }
+
+    /** @return list<string> `image:` de los servicios de un Compose que también tienen `build:` */
+    private function imagenesConstruidas(string $texto): array
+    {
+        if (! preg_match('/^services:$/m', $texto)) {
+            return [];
+        }
+
+        $construidas = [];
+        foreach ($this->servicios($texto) as $bloque) {
+            if (preg_match('/^    build:/m', $bloque) && preg_match('/^    image:\s*["\']?([^"\'\s]+)/m', $bloque, $m)) {
+                $construidas[] = $m[1];
+            }
+        }
+
+        return $construidas;
     }
 
     /** @return array<string, string> repositorio → etiqueta */
@@ -122,7 +146,7 @@ class ConfiguracionProduccionTest extends TestCase
     public function test_cada_servicio_de_produccion_lee_solo_su_archivo_de_entorno(): void
     {
         $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
-        $esperado = ['app' => 'app.env', 'db' => 'db.env', 'cloudflared' => 'tunnel.env', 'web' => null];
+        $esperado = ['app' => 'app.env', 'scheduler' => 'app.env', 'db' => 'db.env', 'cloudflared' => 'tunnel.env', 'web' => null];
 
         foreach ($esperado as $nombre => $propio) {
             $this->assertArrayHasKey($nombre, $servicios, "Falta el servicio {$nombre}.");
@@ -192,12 +216,26 @@ class ConfiguracionProduccionTest extends TestCase
         );
     }
 
+    /**
+     * Cada servicio PHP (`app` y, desde la spec 020, el `scheduler`) monta `local.ini` una vez,
+     * desde el mismo origen, que es un archivo; ningún otro servicio lo monta (A67).
+     */
     private function assertMontaLocalIni(string $archivo): void
     {
+        $patron = '/-\s*["\']?\.\/([^:"\'\s]+):[^"\'\s]*local\.ini/';
         $compose = $this->leer($archivo);
-        $this->assertSame(1, preg_match_all('/-\s*["\']?\.\/([^:"\'\s]+):[^"\'\s]*local\.ini/', $compose, $m), "{$archivo} no monta local.ini una vez.");
-        // is_file y no file_exists: si el origen no existe, Docker crea en su lugar una carpeta vacía.
-        $this->assertTrue(is_file(base_path($m[1][0])), "{$archivo} monta {$m[1][0]}, que no es un archivo.");
+        $php = array_intersect_key($this->servicios($compose), array_flip(['app', 'scheduler']));
+        $this->assertArrayHasKey('app', $php, "{$archivo} no tiene app.");
+
+        $origenes = [];
+        foreach ($php as $nombre => $bloque) {
+            $this->assertSame(1, preg_match_all($patron, $bloque, $m), "{$nombre} de {$archivo} no monta local.ini una vez.");
+            // is_file y no file_exists: si el origen no existe, Docker crea en su lugar una carpeta vacía.
+            $this->assertTrue(is_file(base_path($m[1][0])), "{$archivo} monta {$m[1][0]}, que no es un archivo.");
+            $origenes[$nombre] = $m[1][0];
+        }
+        $this->assertCount(1, array_unique($origenes), "Los servicios PHP de {$archivo} montan el mismo local.ini.");
+        $this->assertSame(count($php), preg_match_all($patron, $compose), "En {$archivo}, solo los servicios PHP montan local.ini.");
     }
 
     public function test_las_imagenes_de_local_tienen_version_exacta(): void
@@ -220,6 +258,52 @@ class ConfiguracionProduccionTest extends TestCase
         foreach ($compartidas as $repositorio => $etiqueta) {
             $this->assertSame($etiqueta, $etiquetasProduccion[$repositorio], "{$repositorio} tiene otra versión en producción.");
         }
+    }
+
+    /**
+     * Spec 020 (D2, TM14): el `scheduler` de producción ejecuta la imagen que construye `app`, sin
+     * construir otra ni descargarla, con el usuario sin privilegios, solo `app.env`, en la red de
+     * producción, sin puertos y cuando la base está sana.
+     */
+    public function test_el_scheduler_de_produccion_usa_la_imagen_de_app_y_solo_app_env(): void
+    {
+        $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
+        $this->assertArrayHasKey('scheduler', $servicios, 'Falta el servicio scheduler.');
+        [$app, $scheduler] = [$servicios['app'], $servicios['scheduler']];
+
+        $this->assertMatchesRegularExpression('/^    build:/m', $app, 'app construye su imagen.');
+        $this->assertSame(1, preg_match('/^    image:\s*["\']?([^"\'\s]+)/m', $app, $imagen), 'app nombra la imagen que construye.');
+        $this->assertMatchesRegularExpression('/^    image:\s*["\']?'.preg_quote($imagen[1], '/').'["\']?$/m', $scheduler, 'El scheduler usa la imagen de app.');
+        $this->assertDoesNotMatchRegularExpression('/^    build:/m', $scheduler, 'El scheduler no construye otra imagen.');
+        $this->assertMatchesRegularExpression('/^    pull_policy:\s*never$/m', $scheduler, 'Nunca se descarga.');
+        $this->assertMatchesRegularExpression('/^    user:\s*["\']?www-data["\']?$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    command:.*php.*artisan.*schedule:work/m', $scheduler);
+        $this->assertSame([], $this->puertos($scheduler));
+        $this->assertMatchesRegularExpression('/^    networks:\n      - produccion$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    depends_on:\n      db:\n        condition: service_healthy$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^      - storage:\/var\/www\/storage$/m', $scheduler, 'Escribe sus logs en el mismo storage que app.');
+    }
+
+    /** @return array<string, array{0: string}> */
+    public static function composeConScheduler(): array
+    {
+        return ['local' => ['docker-compose.yml'], 'producción' => ['docker-compose.prod.yml']];
+    }
+
+    /**
+     * Spec 020 (A67; 030 CA9 y CA10): el `scheduler` vuelve solo tras reiniciar el servidor y
+     * corre con la misma configuración de PHP que `app`. Un caso por Compose (A80): el local lo
+     * cierra T040 y el de producción, T043.
+     */
+    #[DataProvider('composeConScheduler')]
+    public function test_el_scheduler_se_reinicia_solo_y_monta_el_local_ini_de_app(string $archivo): void
+    {
+        $servicios = $this->servicios($this->leer($archivo));
+        $this->assertArrayHasKey('scheduler', $servicios, "{$archivo} no tiene scheduler.");
+
+        $this->assertMatchesRegularExpression('/^    restart:\s*unless-stopped$/m', $servicios['scheduler'], 'Se reinicia solo.');
+        $this->assertSame(1, preg_match('/^      - .*local\.ini.*$/m', $servicios['app'], $deApp), 'app monta local.ini.');
+        $this->assertStringContainsString($deApp[0]."\n", $servicios['scheduler']."\n", 'El scheduler monta el mismo local.ini, igual que app.');
     }
 
     public function test_el_compose_de_local_monta_un_local_ini_que_existe(): void
