@@ -417,6 +417,12 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^servicios="\$\('.$compose.' config --services\)"/m', $ordenes, 'Lee los servicios del Compose de producción.');
         $this->assertMatchesRegularExpression('/^grep -qxF -- "\$\{servicio\}" <<< "\$\{servicios\}" \|\| error /m', $ordenes, 'El servicio se compara como texto fijo y nunca como opción (R5).');
         $this->assertMatchesRegularExpression('/^'.$compose.' up -d --force-recreate --no-deps "\$\{servicio\}"$/m', $ordenes, 'Recrea solo ese servicio para que relea su archivo de entorno.');
+        // Spec 020 (A74): el scheduler lee el mismo app.env, así que con app se recrea también.
+        $this->assertMatchesRegularExpression(
+            '/^if \[\[ "\$\{servicio\}" == "app" \]\] && grep -qxF scheduler <<< "\$\{servicios\}"; then\n(?:paso "[^"\n]*"\n)?'.$compose.' up -d --force-recreate --no-deps scheduler\nfi$/m',
+            $ordenes,
+            'Con app recrea también el scheduler, si el Compose lo tiene.',
+        );
         $this->assertMatchesRegularExpression(
             '/^if \[\[ "\$\{servicio\}" == "app" \]\]; then\n(?:paso "[^"\n]*"\n)?'.$compose.' exec -T -u www-data app php artisan config:cache\n'.$compose.' exec -T -u www-data app php artisan route:cache\nfi$/m',
             $ordenes,
@@ -603,7 +609,7 @@ class ConfiguracionProduccionTest extends TestCase
         $comprobar = $this->posicion(substr($ordenes, $main), "\ncomprobar\n", 'main() no llama a comprobar.');
         $confirmar = $this->posicion(substr($ordenes, $main), 'read -r -p ', 'main() no pide la confirmación.');
         $this->assertLessThan($confirmar, $comprobar, 'Comprueba antes de pedir la confirmación.');
-        foreach (['bash deploy/volver.sh', 'stop app web', '| ssh '] as $cambio) {
+        foreach (['bash deploy/volver.sh', 'stop app web', 'stop scheduler', '| ssh '] as $cambio) {
             $this->assertGreaterThan($confirmar, $this->posicion(substr($ordenes, $main), $cambio, "main() no hace «{$cambio}»."), "«{$cambio}» va después de la confirmación.");
         }
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{respuesta\}" == "\$\{base\}" \]\] \|\| error "confirmación incorrecta; no se ha tocado nada"$/m', $ordenes);
@@ -718,8 +724,13 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/^bash deploy\/restaurar\.sh\b/m', $volver, 'volver.sh ya no restaura.');
 
         $sinLevantar = $this->posicion($volver, 'if [[ "${opcion}" == "--sin-levantar" ]]; then', 'volver.sh admite --sin-levantar.');
-        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d db\nesperar_db\nreturn 0\nfi$/m', $volver);
-        $this->assertLessThan($this->posicion($volver, '"${compose[@]}" up -d app web', 'volver.sh levanta app y web.'), $sinLevantar, '--sin-levantar sale antes de levantar app y web.');
+        // Spec 020 (D22, A68): db se levanta con --remove-orphans, que quita el scheduler de la 020
+        // si la versión de destino no lo tiene; si lo tiene, sigue parado desde antes del checkout.
+        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d --remove-orphans db\nesperar_db\nreturn 0\nfi$/m', $volver);
+        $this->assertLessThan($this->posicion($volver, '"${compose[@]}" up -d --remove-orphans app web', 'volver.sh levanta app y web.'), $sinLevantar, '--sin-levantar sale antes de levantar app y web.');
+        $parar = $this->posicion($volver, '"${compose[@]}" stop scheduler', 'volver.sh para el scheduler.');
+        $this->assertLessThan($checkout, $parar, 'El scheduler se para antes del checkout, con el Compose de la versión instalada.');
+        $this->assertLessThan($sinLevantar, $parar, 'También con --sin-levantar.');
 
         $aviso = $this->posicion($volver, 'if [[ ! -f app/Console/Commands/Vigilar.php ]]; then', 'volver.sh avisa del temporizador.');
         $this->assertGreaterThan($checkout, $aviso, 'El aviso mira la versión de destino.');
@@ -737,6 +748,101 @@ class ConfiguracionProduccionTest extends TestCase
         ] as $orden) {
             $this->assertGreaterThan($cargar, $this->posicion($restaurar, $orden, "restaurar.sh no hace «{$orden}»."), "«{$orden}» va después de la carga.");
         }
+    }
+
+    /**
+     * Spec 020 (D22): líneas de un script que nombran el `scheduler` fuera de un `if` que
+     * comprueba que el Compose de destino lo tiene (`config --services | grep -qxF scheduler`).
+     *
+     * @return list<string>
+     */
+    private function schedulerSinComprobar(string $ordenes): array
+    {
+        $sueltas = [];
+        $dentro = 0;
+        foreach (explode("\n", $ordenes) as $linea) {
+            if (preg_match('/^if .*config --services.*\| grep -qxF scheduler; then$/', $linea)) {
+                $dentro++;
+
+                continue;
+            }
+            if ($dentro > 0 && $linea === 'fi') {
+                $dentro--;
+
+                continue;
+            }
+            if ($dentro === 0 && preg_match('/\bscheduler\b/', $linea) && ! str_starts_with($linea, 'paso ')) {
+                $sueltas[] = $linea;
+            }
+        }
+
+        return $sueltas;
+    }
+
+    /**
+     * Spec 020 (CA5, D22, A68): desplegar.sh, volver.sh y restaurar.sh levantan y paran el
+     * scheduler con app y web, y solo lo nombran si la versión de destino lo tiene: hacia una
+     * versión anterior a la 020, nombrarlo fallaría («no such service»).
+     */
+    public function test_los_scripts_levantan_y_paran_el_scheduler_con_app(): void
+    {
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertMatchesRegularExpression('/\bup -d scheduler\b/', $ordenes, "{$script} levanta el scheduler.");
+            $this->assertSame([], $this->schedulerSinComprobar($ordenes), "{$script} nombra el scheduler sin comprobar que existe.");
+        }
+        $this->assertCount(1, $this->schedulerSinComprobar("if x; then\nfi\n\"\${compose[@]}\" up -d scheduler"), 'Control positivo.');
+
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertMatchesRegularExpression('/^"\$\{compose\[@\]\}" up -d --remove-orphans app web$/m', $ordenes, "{$script} levanta con --remove-orphans.");
+            $this->assertDoesNotMatchRegularExpression('/^"\$\{compose\[@\]\}" up -d app web$/m', $ordenes, "{$script} no deja huérfanos.");
+            $levantar = $this->posicion($ordenes, '"${compose[@]}" up -d --remove-orphans app web', "{$script} levanta app y web.");
+            $this->assertGreaterThan($levantar, $this->posicion($ordenes, '"${compose[@]}" up -d scheduler', "{$script} levanta el scheduler."), 'El scheduler, tras app y web.');
+        }
+    }
+
+    /**
+     * Spec 020 (D22; A68, A83): con y sin --volver, restaurar.sh para todo lo que escribe en la
+     * base antes de cargar la copia, y cada salida que vuelve a levantar app y web levanta también
+     * el scheduler si la versión lo tiene, también la de «ningún dato descifrado».
+     */
+    public function test_restaurar_para_todo_lo_que_escribe_antes_de_cargar(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+        $main = substr($ordenes, $this->posicion($ordenes, "\nmain() {", 'Falta main().'));
+        $servidor = 'en_servidor docker compose -f docker-compose.prod.yml';
+        $carga = $this->posicion($main, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.');
+
+        $sinVolver = $this->posicion($main, "{$servidor} stop app web < /dev/null", 'Sin --volver para app y web.');
+        $paraScheduler = $this->posicion($main, "{$servidor} stop scheduler < /dev/null", 'Para el scheduler.');
+        $this->assertLessThan($carga, $sinVolver);
+        $this->assertLessThan($carga, $paraScheduler, 'El scheduler está parado antes de cargar.');
+        $this->assertLessThan($carga, $this->posicion($main, 'en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null', 'Con --volver, volver.sh --sin-levantar.'));
+
+        $tras = substr($main, $carga);
+        $this->assertSame(
+            substr_count($tras, "{$servidor} up -d app web < /dev/null"),
+            substr_count($tras, "{$servidor} up -d scheduler < /dev/null"),
+            'Cada vez que levanta app y web, levanta también el scheduler (A83).',
+        );
+        $this->assertSame(2, substr_count($tras, "{$servidor} up -d scheduler < /dev/null"), 'La salida sin datos descifrados y el final.');
+        $sinDatos = substr($tras, 0, $this->posicion($tras, 'la base no se ha tocado y app y web vuelven a estar en marcha', 'Salida sin datos descifrados.'));
+        $this->assertStringContainsString("{$servidor} up -d scheduler < /dev/null", $sinDatos, 'La salida sin datos descifrados levanta el scheduler.');
+    }
+
+    /** Spec 020 (CA5): verificar.sh comprueba que el scheduler está en marcha y programa la purga. */
+    public function test_verificar_comprueba_el_scheduler(): void
+    {
+        $ordenes = $this->ordenes('deploy/verificar.sh');
+
+        $this->assertMatchesRegularExpression('/^for servicio in db app web scheduler; do$/m', $ordenes, 'El scheduler en «Servicios».');
+        $this->assertMatchesRegularExpression(
+            '/^if "\$\{compose\[@\]\}" exec -T -u www-data scheduler php artisan schedule:list 2> ?\/dev\/null \| grep -q \'auditoria:purgar\'; then\nok "[^"\n]*auditoria:purgar[^"\n]*"\nelse\nfallo "[^"\n]*auditoria:purgar[^"\n]*"\nfi$/m',
+            $ordenes,
+            'Comprueba que el scheduler programa auditoria:purgar.',
+        );
+        $this->assertStringContainsString('echo "== Tareas programadas', $this->leer('deploy/verificar.sh'));
     }
 
     /**
