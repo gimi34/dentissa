@@ -16,6 +16,25 @@ services:
     depends_on:
       - db
 
+  # Spec 020 (D2): la purga mensual del registro de auditoría (schedule:work). El mismo build y los
+  # mismos montajes que app, local.ini incluido, y se reinicia solo (030 CA9 y CA10).
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dentissa_scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - ./docker/nginx/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - dentissa_network
+    depends_on:
+      - db
+
   nginx:
     image: nginx:1.30.5-alpine
     container_name: dentissa_nginx
