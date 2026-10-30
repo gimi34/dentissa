@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\ContextoActor;
+use App\Http\Middleware\IdentificadorPeticion;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
@@ -30,6 +32,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Aplica no-cache a todas las rutas protegidas con auth
         $middleware->appendToGroup('web', [
             PreventBackHistory::class,
+        ]);
+
+        // Correlación (spec 020, D5): el X-Request-Id de cada respuesta, también las de error, y el
+        // actor de los logs al empezar cada petición con sesión.
+        $middleware->prepend(IdentificadorPeticion::class);
+        $middleware->appendToGroup('web', [
+            ContextoActor::class,
         ]);
 
     })
