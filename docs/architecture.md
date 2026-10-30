@@ -68,12 +68,13 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Servicios | `app/Http/Controllers/ServiciosController.php` | Catálogo (Eloquent + `Route::resource`) | `servicios` |
 | Usuarios | `app/Http/Controllers/UsuarioController.php` | Administración de cuentas y roles | `usuarios` |
 | Perfil | `app/Http/Controllers/PerfilController.php` | Perfil y contraseña del cliente | `usuarios`, `pacientes` |
-| Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php` | Rol por grupo de rutas; cabeceras no-cache | `usuarios.rol` |
+| Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php`, `IdentificadorPeticion.php`, `ContextoActor.php` | Rol por grupo de rutas; cabeceras no-cache. Spec 020: `IdentificadorPeticion` (global) reutiliza el `X-Request-Id` si es un UUID o genera uno, lo pone en el `Context` y lo devuelve en toda respuesta; `ContextoActor` (al final del grupo `web`) pone o quita el actor de los logs al empezar cada petición | `usuarios.rol`, `Context` de Laravel |
+| Auditoría | `app/Auditoria/` (`Auditoria`, `AlmacenAuditoria` y `AlmacenAuditoriaBaseDatos`, `RegistroCentralDenegaciones`, `AuditoriaNoDisponible`, `AccesoDenegadoAuditado`), `app/Listeners/ActualizarActorDelContexto.php`, `AuditoriaController`, `routes/console.php` (`auditoria:purgar`) | Registro de auditoría común (spec 020, [ADR 0004](adr/0004-registro-auditoria-mariadb.md)): `Auditoria::registrar()` y `denegar()` son el único punto de registro; actor de la sesión o de un `Usuario` comprobado, IP y `request_id` de la petición, solo identificadores y nombres de campo; modo crítico con fallo cerrado (página 503 genérica). Las denegaciones las registra el callback `respond` de `withExceptions` (403 y 404 de Gates con `denyAsNotFound`). Un fallo al escribir deja `auditoria.fallo` en el canal `seguridad`. Consulta en `/admin/auditoria`, solo para el admin y solo lectura; purga mensual de lo de más de 5 años en el servicio `scheduler` | tabla `auditoria`, canal `seguridad`, `Context` |
 | Límites de intentos | `app/Providers/AppServiceProvider.php` (limitadores `registro` y `google`), `AuthController::login`, `routes/web.php` (`throttle:`) | 5 intentos por minuto; mismo mensaje en los tres casos, que no revela si la cuenta existe (spec 030, CA8) | caché (`CACHE_STORE=database` en producción) |
 | Proxy | `bootstrap/app.php` (`trustProxies`) | Detrás de nginx y el túnel, Laravel solo confía en `X-Forwarded-Proto` (URL y redirecciones en https); la IP real la pone nginx en `REMOTE_ADDR` (spec 030, D3) | — |
 | Comandos | `app/Console/Commands/RotarCredencialesVolcado.php`, `app/Console/Commands/Vigilar.php` | `dentissa:rotar-credenciales --confirmar`: contraseña aleatoria para cada cuenta del volcado con contraseña, mostrada una sola vez (spec 030, CA5). `dentissa:vigilar` (y `--prueba`): una vuelta del vigilante de avisos; sale con código distinto de 0 si un aviso no se pudo enviar (spec 032) | `usuarios`; `app/Avisos`, correo |
 | Registro de fallos de acceso | `app/Listeners/RegistrarFalloAcceso.php`, canal `seguridad` de `config/logging.php` | Escucha `Failed` y `Lockout` (descubierto automáticamente) y escribe una línea JSON por intento fallido o bloqueado, con huellas HMAC del origen y de la cuenta (`AuthController::origenLimite` y `sujetoLimite`, las mismas reglas que el limitador), sin IP ni correo. Alerta, no audita (spec 032, ADR 0007) | `AuthController`, `usuarios` |
-| Avisos de producción | `app/Avisos/Vigilante.php`, `app/Avisos/Estado.php`, `app/Mail/AvisoProduccion.php`, `config/avisos.php` | Lee lo nuevo del log de acceso de nginx y del canal `seguridad` (desplazamientos e inodo en `storage/app/avisos/estado.json`, con tope por ejecución), cuenta en una ventana de 5 minutos y avisa por correo de errores del servidor (> 1 %), inicios de sesión fallidos (> 10 por origen o cuenta) y log con otro formato; un correo por tipo cada 30 minutos con el acumulado, sin datos de los logs (spec 032, ADR 0007) | log de acceso (volumen `nginx_logs`), canal `seguridad`, Mail de Laravel |
+| Avisos de producción | `app/Avisos/Vigilante.php`, `app/Avisos/Estado.php`, `app/Mail/AvisoProduccion.php`, `config/avisos.php` | Lee lo nuevo del log de acceso de nginx y del canal `seguridad` (desplazamientos e inodo en `storage/app/avisos/estado.json`, con tope por ejecución), cuenta en una ventana de 5 minutos y avisa por correo de errores del servidor (> 1 %), inicios de sesión fallidos (> 10 por origen o cuenta), log con otro formato y, desde la spec 020, eventos de auditoría que no se pudieron guardar (uno basta; las líneas del canal se distinguen por su mensaje); un correo por tipo cada 30 minutos con el acumulado, sin datos de los logs (spec 032, ADR 0007) | log de acceso (volumen `nginx_logs`), canal `seguridad`, Mail de Laravel |
 
 Los controladores no se llaman entre sí, salvo dos excepciones: `DashboardController` usa el aviso de
 plazo de `ClienteCitasController` y `AppServiceProvider` usa `AuthController::origenLimite` y su
@@ -82,7 +83,7 @@ mensaje de demasiados intentos. Fuera de los controladores, `RegistrarFalloAcces
 controladores sirven a varios roles bajo prefijos `/admin`, `/dentista`, `/asistente`; `/cliente`
 tiene su propio grupo, que solo exige `auth` (`role:cliente` va ruta a ruta en cancelar y
 reprogramar; RS2.a). Otras rutas: `/` redirige según el rol, `/admin/reportes` sirve
-`placeholder.blade.php` y `/up` es la ruta de salud que comprueba `deploy/verificar.sh`.
+`placeholder.blade.php`, `/admin/auditoria` es la consulta del registro de auditoría (spec 020), `/_disenio/020/{pantalla}` es una vista previa del diseño que solo existe con `APP_ENV=local`, y `/up` es la ruta de salud que comprueba `deploy/verificar.sh`.
 
 ## Flujo principal
 Ejemplo: el personal agenda una cita.
@@ -108,13 +109,19 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 - Entidades: `usuarios` (rol enum cliente/asistente/dentista/admin), `pacientes`, `personal`
   (tipo dentista/asistente/administrador), `asistente_dentista`, `horarios_dentista`, `servicios`,
   `citas` (estado enum de 6 valores), `historial_citas` (`cambiado_por`, `estado_anterior`,
-  `estado_nuevo`, `motivo`, `fecha_hora_anterior`, `fecha_hora_nueva`), `expedientes`. Vistas SQL `v_citas_hoy` y
+  `estado_nuevo`, `motivo`, `fecha_hora_anterior`, `fecha_hora_nueva`), `expedientes` y, desde la
+  spec 020, `auditoria` (`id` autoincremental, `ocurrido_en` en UTC con microsegundos, actor sin
+  clave foránea, acción, recurso, resultado de vocabulario cerrado, `campos` y `detalle` JSON, IP y
+  `request_id`; índices por fecha, acción, recurso y petición). Vistas SQL `v_citas_hoy` y
   `v_historial_paciente` (no las usa el código PHP).
 - Esquema: las tablas de dominio, las vistas y el trigger `trg_historial_cita` solo existen en
   `database/dentissa.sql`. Las migraciones crean tablas de infraestructura (`users`, `sessions`,
   `cache`, `jobs`…) y `asistente_dentista`, alteran `usuarios` y `pacientes`, que ninguna migración
   crea, retiran el trigger (spec 026) y añaden a `historial_citas` `fecha_hora_anterior` y
-  `fecha_hora_nueva` (`DATETIME NULL`, spec 028). El
+  `fecha_hora_nueva` (`DATETIME NULL`, spec 028). La tabla `auditoria` sí nace de una migración
+  (spec 020), con sus triggers `auditoria_sin_update` (rechaza todo `UPDATE`) y
+  `auditoria_sin_delete` (solo deja borrar con el indicador `@auditoria_purga` y eventos de más de
+  5 años medidos con `UTC_TIMESTAMP()`). El
   esquema no se puede recrear desde migraciones sobre una base vacía.
 
 ## Integraciones externas
@@ -140,7 +147,13 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   (`aria-expanded`, `inert` en `<main>`, foco y Escape); sin JS, el menú queda en el flujo.
   `public/js/filtros.js` (spec 034), el segundo, lo carga solo la lista de citas del personal en
   `<head>` sin `defer`: marca `<html>` con `filtros-js` y pliega y despliega el panel de filtros
-  con el botón «Filtros» (`aria-expanded`); sin JS, el filtro queda desplegado.
+  con el botón «Filtros» (`aria-expanded`); sin JS, el filtro queda desplegado. La consulta de
+  auditoría (spec 020) también lo carga.
+- Pantallas de la spec 020: `auditoria/index.blade.php` (consulta con filtro plegable, lista
+  `tabla-auditoria` que en el móvil se lee como tarjetas, estado vacío, error junto al campo y la
+  paginación `nav.paginacion` del sistema 1.7.0) y `errors/auditoria-no-disponible.blade.php`, la
+  página 503 del modo crítico: documento propio sin el layout autenticado, `noindex`, con
+  `app.css`, `errores.css` y la Roboto propia de `public/fonts/roboto/` (sin Google Fonts).
 - Routing: rutas con nombre en `routes/web.php`; hay 49 `href="/..."` escritos a mano en vistas.
 - Design tokens / sistema de diseño: CSS propio en `public/css/app.css`, `auth.css`, `citas.css`
   con variables (`--p50…--p800`, `--text`, `--border`), mucho `style=""` inline. `public/css/movil.css`
@@ -172,7 +185,10 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   controladores (`aplicarAlcanceRol`, `autorizadoParaCita`, que delegan en `AlcanceClinico`), y
   Gates para los cambios de estado (spec 026) y la reprogramación (spec 028) de las citas y para el
   horario del dentista (spec 027). Detalle en [security.md](security.md).
-- Observabilidad: sin logs propios, sin correlación, sin auditoría; ver [observability.md](observability.md).
+- Observabilidad: cada respuesta lleva `X-Request-Id`, y el `request_id` y el actor de la sesión
+  van en el `Context` de Laravel, que los añade a todos los logs; el registro de auditoría guarda
+  el mismo `request_id`. El aviso `auditoria` del vigilante cuenta los eventos que no se pudieron
+  guardar (spec 020); ver [observability.md](observability.md).
 - Seguridad: CSRF por defecto, consultas con bindings, sin `{!! !!}`; riesgos en [security.md](security.md).
 
 ## Contrato entre capas
@@ -183,8 +199,9 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 
 ## Despliegue
 Dos entornos (spec 030, [ADR 0005](adr/0005-produccion-servidor-propio-cloudflare-tunnel.md)):
-- **Local:** Docker Compose (`app` php-fpm, `nginx`, `db` MariaDB, `phpmyadmin`), con los puertos
-  solo en `127.0.0.1` y las imágenes con versión exacta.
+- **Local:** Docker Compose (`app` php-fpm, `nginx`, `db` MariaDB, `phpmyadmin` y, desde la spec
+  020, `scheduler` con `schedule:work` y el mismo build que `app`), con los puertos solo en
+  `127.0.0.1` y las imágenes con versión exacta.
 - **Producción:** servidor propio (Ubuntu Server 24.04) con `docker-compose.prod.yml`. Staging no
   existe.
 
@@ -196,6 +213,7 @@ flowchart LR
     CFD -->|HTTP| WEB[web · nginx<br/>real_ip de CF-Connecting-IP<br/>http → 301 https<br/>cabeceras de seguridad y HSTS]
     WEB -->|FastCGI :9000| APPP[app · php-fpm<br/>código en la imagen]
     APPP --> DBP[(db · MariaDB<br/>usuario dentissa_app)]
+    SCH[scheduler · imagen de app<br/>schedule:work: auditoria:purgar cada mes] --> DBP
     WEB -.->|log de acceso, volumen nginx_logs :ro| APPP
     TMR[systemd · dentissa-vigilar.timer<br/>cada minuto] -->|php artisan dentissa:vigilar| APPP
     BK[("copias .sql.gz.gpg<br/>/var/backups/dentissa<br/>solo la clave pública")]
@@ -235,6 +253,12 @@ flowchart LR
 - Avisos (spec 032): el temporizador `dentissa-vigilar` (systemd, cada minuto, instalado por
   `preparar-vigilancia.sh`) ejecuta `dentissa:vigilar` en `app`, que lee el log de acceso de `web`
   (montado en solo lectura) y el canal `seguridad`.
+- Tareas programadas (spec 020): el servicio `scheduler` ejecuta `schedule:work` con la misma imagen
+  que `app` (`dentissa-prod-app:produccion`, sin construir otra ni descargarla), `www-data`, solo
+  `app.env`, el mismo `local.ini` y sin puertos; se reinicia solo. Su única tarea es la purga
+  mensual del registro de auditoría. `desplegar.sh`, `volver.sh` y `restaurar.sh` lo levantan y lo
+  paran con `app`, y solo lo nombran si la versión de destino lo tiene; `aplicar-entorno.sh app`
+  lo recrea también.
 - Secretos en `app.env`, `db.env` y `tunnel.env` fuera del clon (y la clave pública de las copias,
   `copias.pub.asc`); volúmenes `db_data`, `storage` y `nginx_logs` (este también en `app`, en solo
   lectura). El volcado se carga una sola vez en `db`; `desplegar.sh` aplica las migraciones.
