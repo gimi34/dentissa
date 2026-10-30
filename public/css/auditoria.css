@@ -1,0 +1,99 @@
+/* Spec 020 · consulta del registro de auditoría (design.md, c4). Solo tokens del sistema (app.css, system.md 1.7.0);
+   la paginación es el componente del sistema (nav.paginacion, app.css). */
+.intro-auditoria { font-size: var(--text-body); line-height: var(--leading-publico); color: var(--text); max-width: 72ch; margin-bottom: var(--space-7); }
+
+/* Filtro: el plegable de la 034 (filtros.js) con los valores AA del formulario accesible (028). */
+.filtro-auditoria .field-hint { font-size: var(--text-small); color: var(--text); margin-top: 0; }
+.filtro-auditoria .campo-filtro { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.filtro-auditoria .field-label { margin-bottom: 0; }
+.filtro-auditoria .filtro-acciones { display: flex; gap: var(--space-3); align-items: center; }
+.campo-error { font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--red); }
+.campo-con-error .field, .campo-con-error .field:focus { border: var(--border-width-strong) solid var(--red); }
+.aviso-filtro { display: flex; gap: var(--space-3); align-items: center; margin-bottom: var(--space-6); padding: var(--space-5) var(--space-6);
+  background: var(--red-bg); color: var(--red); border: var(--border-width) solid var(--red); border-radius: var(--radius-sm); font-size: var(--text-body); }
+.aviso-filtro svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+@media (min-width: 900px) {
+  .filtro-auditoria { display: block; }
+  .filtro-auditoria .filtro-atajos { display: none; }
+  .filtro-auditoria .filtro-panel { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-4); align-items: start; }
+  .filtro-auditoria .filtro-acciones { grid-column: 1 / -1; }
+}
+@media (min-width: 900px) and (max-width: 1279px) {
+  .filtro-auditoria .filtro-panel { grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); }
+}
+
+/* Lista de eventos: tabla en el escritorio, tarjetas de la 034 en el móvil. */
+.lista-cab { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3) var(--space-5);
+  padding: var(--space-6) var(--space-7); border-bottom: var(--border-width) solid var(--border); }
+.lista-cab-sola { padding: 0 0 var(--space-5); }
+.lista-recuento { font-size: var(--text-meta); color: var(--text); }
+/* Los th globales van en --text-light (3,51:1, DS1): aquí, --p600 como las etiquetas de las tarjetas (7,00:1). */
+.tabla-auditoria th { color: var(--p600); padding: var(--space-4) var(--space-5); }
+.tabla-auditoria td { vertical-align: top; padding: var(--space-4) var(--space-5); border-bottom-color: var(--border); }
+.tabla-auditoria tr:hover td { background: transparent; }
+.evento-hora { display: block; font-weight: var(--weight-strong); font-variant-numeric: tabular-nums; }
+.evento-fecha, .evento-detalle { display: block; font-size: var(--text-small); }
+.evento-accion { display: block; font-weight: var(--weight-strong); }
+.dato-rol { display: block; }
+.dato-id { display: block; font-size: var(--text-small); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dato-ip { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabla-auditoria .badge-green { color: var(--text); }
+
+
+/* Estado vacío. */
+.vacio-auditoria .vacio-titulo { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text); }
+.vacio-auditoria .vacio-texto { font-size: var(--text-meta); color: var(--text); margin: var(--space-2) 0 var(--space-6); }
+.vacio-auditoria .btn-outline { border-color: var(--border-control); }
+.vacio-auditoria .btn:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+@media (max-width: 899px) {
+  .filtro-auditoria .filtro-panel .campo-ancho, .filtro-auditoria .filtro-acciones { grid-column: 1 / -1; }
+  .filtro-auditoria .field { min-height: var(--touch-min); }
+  .filtro-auditoria .filtro-acciones .btn, .paginacion-botones .btn { flex: 1; justify-content: center; min-height: var(--touch-min); }
+  .lista-cab { padding: var(--space-5); }
+  .lista-cab-sola { padding: 0 0 var(--space-5); }
+  .tabla-auditoria td { padding: var(--space-1) 0; }
+  .tabla-auditoria .celda-cab { padding-bottom: var(--space-3); }
+  .vacio-auditoria .btn { min-height: var(--touch-min); }
+}
+
+/* c2: el campo de fecha recibe el foco en sus partes internas y en el botón del calendario, donde
+   :focus-visible del campo no se aplica (G-foco en c1): el anillo va en el campo mientras el foco
+   esté dentro. */
+.filtro-auditoria .field:focus, .filtro-auditoria .field:focus-within { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+/* c3 (desde c2, problemas del evaluador): (1) en el escritorio cada identificador va en una línea:
+   origen y petición comparten columna, las celdas tienen menos relleno y la cabecera no se parte;
+   en el teléfono, origen y petición siguen en filas propias de la tarjeta. */
+.tabla-auditoria th { white-space: nowrap; }
+.tabla-auditoria th, .tabla-auditoria td { padding-left: var(--space-4); padding-right: var(--space-4); }
+.tabla-auditoria th:first-child, .tabla-auditoria td:first-child { padding-left: var(--space-7); }
+.dato-peticion { margin-top: var(--space-1); }
+@media (min-width: 900px) { .tabla-auditoria .celda-peticion-movil { display: none; } }
+@media (min-width: 1400px) { .tabla-auditoria .dato-id { white-space: nowrap; overflow-wrap: normal; } }
+@media (max-width: 899px) {
+  .tabla-auditoria .celda-origen .dato-peticion { display: none; }
+  .tabla-auditoria th:first-child, .tabla-auditoria td:first-child { padding-left: 0; }
+  .tabla-auditoria td { padding-left: 0; padding-right: 0; }
+}
+/* (2) Acción y tipo de recurso, selectores con los valores registrados. */
+.filtro-auditoria select.field { appearance: auto; }
+
+/* c4 (desde c3, problemas del evaluador): (1) en el escritorio, la tabla con el mismo margen a la
+   derecha que a la izquierda y aire entre las líneas de cada celda. */
+.tabla-auditoria th:last-child, .tabla-auditoria td:last-child { padding-right: var(--space-7); }
+.tabla-auditoria .celda-valor { display: flex; flex-direction: column; gap: var(--space-1); }
+.evento-fecha, .evento-detalle, .dato-id { line-height: var(--leading-publico); }
+/* El vacío usa la cabecera de la lista con datos (separador de borde a borde). */
+.lista-auditoria .vacio-auditoria { padding: var(--space-8) var(--space-7); }
+@media (max-width: 899px) {
+  /* (2) Sin tarjeta dentro de tarjeta: en el teléfono la lista y el filtro pierden su marco y cada
+     evento es una tarjeta sobre el fondo, con todo el ancho para sus valores. */
+  .lista-auditoria, .filtro-tarjeta.formulario-accesible { background: transparent; border: 0; border-radius: 0; padding: 0; }
+  .lista-auditoria .lista-cab { padding: 0 0 var(--space-5); border-bottom: 0; }
+  .lista-auditoria .tabla-tarjetas tbody { background: transparent; padding: 0; }
+  .lista-auditoria .paginacion { padding: var(--space-5) 0 0; border-top: 0; }
+  .lista-auditoria .vacio-auditoria { background: var(--white); border: var(--border-width) solid var(--border); border-radius: var(--radius); padding: var(--space-8) var(--space-6); }
+  .filtro-tarjeta.formulario-accesible { margin-bottom: var(--space-7); }
+  .filtro-auditoria.abierto .filtro-panel, html:not(.filtros-js) .filtro-auditoria .filtro-panel { background: var(--white); border: var(--border-width) solid var(--border); border-radius: var(--radius); padding: var(--space-5); }
+}
