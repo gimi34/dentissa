@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -32,10 +33,26 @@ return new class extends Migration
 
             $tabla->index(['recurso_tipo', 'recurso_id']);
         });
+
+        // Solo de anexado (CA2; TM1, TM2): ningún evento se modifica, y solo se borra en la purga
+        // (indicador @auditoria_purga) y si tiene más de 5 años, medidos en UTC como ocurrido_en.
+        // SQL estático, sin entrada del usuario.
+        DB::unprepared(<<<'SQL'
+            CREATE TRIGGER auditoria_sin_update BEFORE UPDATE ON auditoria FOR EACH ROW
+              SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'auditoria: solo anexado'
+            SQL);
+        DB::unprepared(<<<'SQL'
+            CREATE TRIGGER auditoria_sin_delete BEFORE DELETE ON auditoria FOR EACH ROW
+              IF COALESCE(@auditoria_purga, 0) <> 1 OR OLD.ocurrido_en >= UTC_TIMESTAMP() - INTERVAL 5 YEAR THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'auditoria: borrado no permitido';
+              END IF
+            SQL);
     }
 
     public function down(): void
     {
+        DB::unprepared('DROP TRIGGER IF EXISTS auditoria_sin_delete');
+        DB::unprepared('DROP TRIGGER IF EXISTS auditoria_sin_update');
         Schema::dropIfExists('auditoria');
     }
 };
