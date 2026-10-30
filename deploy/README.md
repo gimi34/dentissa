@@ -314,7 +314,16 @@ bash deploy/restaurar.sh <copia>.sql.gz.gpg <cuenta>@<IP del servidor> --volver 
 `restaurar.sh` comprueba la copia en tu PC, llama a `volver.sh <anterior>
 --sin-levantar` en el servidor (cambia de versión y deja `app` y `web` parados),
 carga la copia y levanta la versión anterior. Sirve también para volver a una
-versión anterior a la 032. Cuando la verificación de un despliegue falla,
+versión anterior a la 032.
+
+**El `scheduler` (spec 020)** hace la purga mensual del registro de auditoría y
+escribe en la base, así que `volver.sh` lo para **antes** de cambiar de versión y
+`restaurar.sh` lo deja parado mientras carga la copia; al terminar, los dos lo
+levantan solo si la versión de destino lo tiene. Si la versión de destino no lo
+tiene (anterior a la 020), el contenedor se quita (`--remove-orphans`) y no queda
+ningún `scheduler` de otra versión en marcha. **Con la 020 la vuelta va sin la
+copia:** su migración solo añade la tabla `auditoria`, que la versión anterior
+ignora; con la copia se perderían los eventos escritos desde el despliegue. Cuando la verificación de un despliegue falla,
 `desplegar.sh` imprime la orden exacta. La forma de la 030
 (`volver.sh <anterior> <copia>`) ya no restaura: se detiene y da esta orden.
 
@@ -374,6 +383,27 @@ el propio tag: la vuelta, si hace falta, es a la versión anterior real (la que
 estaba instalada antes del paso 1). Después: aviso de prueba y monitor de
 UptimeRobot (§12), y en tu PC, sustituir y borrar las copias en claro (§7).
 
+### Primera liberación de la 020 (una sola vez)
+
+El `desplegar.sh` instalado (hasta la 0.11) no conoce el `scheduler`. En esta
+liberación se hace el checkout a mano, para que corra el de la 020, que ya lo
+levanta:
+
+```bash
+cd /opt/dentissa/app
+# 1. Anota la versión instalada: es a la que se vuelve si algo falla.
+git describe --tags
+# 2. El checkout del tag, a mano.
+git fetch --tags origin && git -c advice.detachedHead=false checkout vX.Y.Z
+# 3. El despliegue: app, web y el scheduler, y la verificación interna.
+bash deploy/desplegar.sh vX.Y.Z
+# 4. La verificación completa: también «scheduler en marcha» y «auditoria:purgar».
+bash deploy/verificar.sh
+```
+
+Como el checkout ya está hecho, `desplegar.sh` informa como «versión anterior»
+el propio tag: la vuelta, si hace falta, es a la versión anotada en el paso 1.
+
 ## 10. Cambiar un archivo de entorno
 
 Un `up -d` normal **no relee** `app.env` ni `tunnel.env`: el contenedor sigue con
@@ -385,7 +415,9 @@ bash deploy/aplicar-entorno.sh app        # o cloudflared, o el servicio que lea
 ```
 
 `aplicar-entorno.sh` recrea el servicio, en `app` vuelve a generar las cachés de
-configuración y rutas, y termina con `verificar.sh --interna`. Su sección
+configuración y rutas, y termina con `verificar.sh --interna`. Con `app` recrea
+también el `scheduler` (spec 020), que lee el mismo `app.env`: si no, seguiría
+con los valores antiguos (por ejemplo, la contraseña de la base sin rotar). Su sección
 «Entorno aplicado» da FALLO si algún servicio en marcha usa una configuración
 distinta de la guardada, y dice cuál (sin mostrar valores). También da FALLO si no
 puede comparar algún servicio: nunca da OK sin haberlos revisado todos.

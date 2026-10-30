@@ -38,6 +38,11 @@ main() {
 
     paso "Recreando ${servicio} con su archivo de entorno"
     "${compose[@]}" up -d --force-recreate --no-deps "${servicio}"
+    # Spec 020 (A74): el scheduler lee el mismo app.env que app.
+    if [[ "${servicio}" == "app" ]] && grep -qxF scheduler <<< "${servicios}"; then
+        paso "Recreando también el scheduler, que lee el mismo app.env"
+        "${compose[@]}" up -d --force-recreate --no-deps scheduler
+    fi
 
     if [[ "${servicio}" == "app" ]]; then
         paso "Cachés de configuración y rutas"

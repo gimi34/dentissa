@@ -64,9 +64,17 @@ main() {
     echo "== Servicios"
     local enMarcha
     enMarcha="$("${compose[@]}" ps --status running --services 2>/dev/null)"
-    for servicio in db app web; do
+    for servicio in db app web scheduler; do
         if grep -qx "${servicio}" <<< "${enMarcha}"; then ok "${servicio} en marcha"; else fallo "${servicio} en marcha"; fi
     done
+
+    echo "== Tareas programadas (spec 020)"
+    # La purga mensual del registro de auditoría es la única tarea del scheduler (CA5).
+    if "${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null | grep -q 'auditoria:purgar'; then
+        ok "el scheduler programa auditoria:purgar"
+    else
+        fallo "el scheduler programa auditoria:purgar (docker compose -f docker-compose.prod.yml logs scheduler)"
+    fi
 
     echo "== Salud por la red interna"
     if "${compose[@]}" exec -T web wget -q -S -O /dev/null http://127.0.0.1/up 2>&1 | grep -q " 200 "; then
