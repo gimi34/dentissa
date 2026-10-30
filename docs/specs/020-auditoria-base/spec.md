@@ -3,7 +3,7 @@ id: 020
 slug: auditoria-base
 status: approved
 created: 2026-09-28
-extends: [032]
+extends: [030, 031, 032]
 ---
 
 # 020 · Registro de auditoría base y correlación por petición
@@ -150,6 +150,7 @@ primera pantalla 25, sistema 30, lectura 20, plantilla 0 (ver Supuestos).
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
 |---|---|---|---|---|
 | 2026-10-28 | contradicción | La barra lateral del escritorio (#C75078) no cumple el contraste AA (DS1) y la puerta de contraste mide la página entera | La barra se queda como está, como en la 034: deuda DS1 del objetivo 6; la puerta se aplica al resto de la pantalla ([design.md](design.md)) | usuario |
+| 2026-10-28 | brecha | La 020 cambia cómo se despliega, se vuelve atrás y se verifica producción (un servicio más que se levanta, se para y se comprueba), que definen las specs 030 y 031, y solo extendía la 032 | Extiende también la 030 y la 031; al liberar, cada una recibe su fila de Historial | usuario (/analyze 020 A72) |
 | 2026-10-28 | diseño | Resultado del ciclo de /design-spec | `c4` aceptado con 80/100; 25 eventos por página y selectores para acción y tipo de recurso; acta en [design.md](design.md) | /design-spec |
 
 ## Notas para /plan
@@ -184,3 +185,5 @@ primera pantalla 25, sistema 30, lectura 20, plantilla 0 (ver Supuestos).
 | 2026-10-28 | CA1 y CA10 admiten como actor una cuenta comprobada por otra credencial (spec 041) y prohíben tomarlo de un identificador enviado; CA4 cubre las denegaciones que responden «no encontrado»; CA14 nuevo (aviso del fallo al escribir un evento en producción) y `extends: [032]`; la limitación de CA2 en una sola frase; «Fuera de alcance» separa el traslado del vigilante; secciones «Diseño» y «Criterios de diseño»; accesibilidad y descubribilidad en los RNF; notas para el `--redo`. Vuelve a `draft`. | /analyze 020 ronda 5: A43, A45, A46, A48, A50, A51, A60 (decisiones del usuario, 2026-10-27 y 2026-10-28) |
 | 2026-10-28 | Aprobada de nuevo por el usuario; se mantiene junta | /specify --edit |
 | 2026-10-28 | Diseño aprobado (`design.md`, `c4` con 80/100) | /design-spec 020 (aprobación del usuario) |
+| 2026-10-28 | `extends: [030, 031, 032]`: la 020 cambia el despliegue, la vuelta atrás y la verificación de producción de la 030 y la 031. Vuelve a `draft`. | /analyze 020 ronda 6: A72 (decisión del usuario, 2026-10-28) |
+| 2026-10-29 | Aprobada de nuevo por el usuario | /specify --edit |
