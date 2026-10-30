@@ -12,6 +12,13 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <!-- Spec 020 (D14): los requisitos no funcionales se miden aparte, con datos
+         sintéticos; se ejecutan con «php artisan test» y la opción group=rnf. -->
+    <groups>
+        <exclude>
+            <group>rnf</group>
+        </exclude>
+    </groups>
     <source>
         <include>
             <directory>app</directory>
