@@ -79,6 +79,8 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | `app/Http/Controllers/` | 12 controladores (más el `Controller` base) con casi toda la lógica (ver docs/architecture.md) |
 | `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación y horario (specs 025–028) |
 | `app/Autorizacion/` | alcance del personal y Gates de citas y de personal (ADR 0003) |
+| `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
+| `app/Listeners/` | fallos de acceso al canal `seguridad` (spec 032) y actor del `Context` de los logs (spec 020) |
 | `app/Rules/`, `app/Console/Commands/` | regla `HoraFinPosterior`; comando `dentissa:rotar-credenciales` |
 | `app/Http/Middleware/` | `RoleMiddleware` (rol), `PreventBackHistory` (no-cache) |
 | `app/Models/` | `Usuario` (auth), `Servicio`; `User` es un resto sin uso |
