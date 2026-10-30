@@ -79,6 +79,12 @@
     --weight-bold:            600;
     --expediente-dato-max:    140px;
     --campo-fecha-max:        220px;
+    /* Registro de auditoría y error genérico (spec 020; system.md 1.7.0). Nombres de la 041. */
+    --leading-publico:        1.5;
+    --text-acceso-titulo:     28px;  /* tamaño, no color */
+    --text-acceso:            14px;  /* tamaño, no color */
+    --acceso-form-max:        480px;
+    --sombra-tarjeta-alta:    0 14px 32px rgba(114, 36, 62, 0.16);
 }
 
 body {
@@ -654,3 +660,19 @@ tr:hover td { background: var(--p50); }
    misma especificidad que la regla de foco y después de ella, para que siga rojo con foco (/review R21). */
 .form-expediente .field.field-error { border-color: var(--red); }
 /* Fin spec 035 */
+
+/* Spec 020: paginación tras una lista (design.md; system.md 1.7.0). A lo ancho y con botones de 44 px por
+   debajo de 900 px; en el escritorio, los botones a la derecha del texto. */
+.paginacion { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4) var(--space-6);
+  padding: var(--space-5) var(--space-7); border-top: var(--border-width) solid var(--border); }
+.paginacion-texto { font-size: var(--text-meta); color: var(--text); }
+.paginacion-botones { display: flex; gap: var(--space-3); }
+.paginacion .btn-outline { border-color: var(--border-control); }
+.paginacion .pagina-off { color: var(--text); background: var(--p50); border-color: var(--border); cursor: default; }
+.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+@media (max-width: 899px) {
+  .paginacion { padding: var(--space-5); }
+  .paginacion-botones { width: 100%; }
+  .paginacion-botones .btn { flex: 1; justify-content: center; min-height: var(--touch-min); }
+}
+/* Fin spec 020 */

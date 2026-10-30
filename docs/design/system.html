@@ -179,6 +179,20 @@
                       border-radius: var(--radius-sm); padding: 0 var(--space-4); font: inherit; background: var(--color-surface); }
   .opt .m-campo-035:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
 </style>
+<style id="componentes-020">
+  /* Muestras vivas de la spec 020 (paginación, con y sin «Anterior»), con los tokens de .opt. */
+  .opt .m-paginacion { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4) var(--space-6);
+                       padding: var(--space-5) var(--space-7); border-top: var(--border-width) solid var(--color-border);
+                       background: var(--color-surface); margin-bottom: var(--space-5); }
+  .opt .m-paginacion-texto { font-size: var(--text-meta); color: var(--color-text); }
+  .opt .m-paginacion-botones { display: flex; gap: var(--space-3); }
+  .opt .m-paginacion a { display: inline-flex; align-items: center; padding: var(--space-3) var(--space-6); border: var(--border-width) solid var(--color-border-control);
+                         border-radius: var(--radius-sm); color: var(--color-accent-text); text-decoration: none; font-size: var(--text-meta); }
+  .opt .m-paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
+  .opt .m-paginacion-movil { width: 320px; box-sizing: border-box; padding: var(--space-5); }
+  .opt .m-paginacion-movil .m-paginacion-botones { width: 100%; }
+  .opt .m-paginacion-movil a { flex: 1; justify-content: center; min-height: var(--touch-min); box-sizing: border-box; }
+</style>
 <style id="componentes-034">
   /* Muestras vivas de la spec 034 (opción A: tarjetas de lista, filtro plegable, botón de icono y logo), con los tokens de .opt. */
   .opt .m-lista { background: var(--color-bg); padding: var(--space-5); display: grid; gap: var(--space-5); width: 320px; box-sizing: border-box; }
@@ -274,6 +288,8 @@
     --filtro-buscar-min: 180px; --filtro-fecha-min: 130px; --filtro-dentista-min: 150px; --filtro-estado-min: 140px; /* spec 034 */
     --ficha-lateral-w: 320px; --expediente-lateral-w: 300px; --perfil-avatar-w: 64px; --perfil-avatar-movil: 48px; /* spec 035 */
     --perfil-iniciales-text: 22px; --perfil-iniciales-movil: 17px; --perfil-nombre-text: 20px; --perfil-nombre-movil: 16px; --weight-bold: 600; /* spec 035 */
+    --leading-publico: 1.5; --text-acceso-titulo: 28px; --text-acceso: 14px; --acceso-form-max: 480px; /* spec 020 */
+    --sombra-tarjeta-alta: 0 14px 32px rgba(114, 36, 62, 0.16); /* spec 020 */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
 
     --duration-fast: 150ms; --duration-base: 150ms;
@@ -535,6 +551,21 @@
           <input id="m-035-campo" class="m-campo-035" type="tel" value="5550102">
         </div>
       </div>
+    </div></div>
+    <h3 id="paginacion-020">Paginación (spec 020)</h3>
+    <p class="v-note">Muestra viva de la paginación de la consulta de auditoría
+      (<a href="../specs/020-auditoria-base/design.md">diseño</a>, <code>c4</code>), con los tokens de
+      <code>app.css</code>: en la primera página solo «Siguiente»; en las demás, «Anterior» y «Siguiente».
+      Debajo, la misma a 320 px, a lo ancho y con botones de <code>--touch-min</code>. Los tokens nuevos de
+      la 020 (<code>--leading-publico</code>, <code>--text-acceso-titulo</code>, <code>--text-acceso</code>,
+      <code>--acceso-form-max</code> y <code>--sombra-tarjeta-alta</code>) los usa el error genérico.</p>
+    <div class="v-stage"><div class="opt">
+      <nav class="m-paginacion" aria-label="Paginación, primera página"><p class="m-paginacion-texto">Mostrando 1–25 de 1.284 · página 1 de 52</p>
+        <div class="m-paginacion-botones"><a href="#paginacion-020" rel="next">Siguiente</a></div></nav>
+      <nav class="m-paginacion" aria-label="Paginación, página intermedia"><p class="m-paginacion-texto">Mostrando 26–50 de 1.284 · página 2 de 52</p>
+        <div class="m-paginacion-botones"><a href="#paginacion-020" rel="prev">Anterior</a><a href="#paginacion-020" rel="next">Siguiente</a></div></nav>
+      <nav class="m-paginacion m-paginacion-movil" aria-label="Paginación a 320 px"><p class="m-paginacion-texto">Mostrando 26–50 de 1.284 · página 2 de 52</p>
+        <div class="m-paginacion-botones"><a href="#paginacion-020" rel="prev">Anterior</a><a href="#paginacion-020" rel="next">Siguiente</a></div></nav>
     </div></div>
   </section>
 
