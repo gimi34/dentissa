@@ -166,7 +166,9 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
     tabla de tipografía);
   - `--acceso-form-max` (480px): ancho máximo de la tarjeta del error genérico;
   - `--sombra-tarjeta-alta` (`0 14px 32px rgba(114, 36, 62, 0.16)`): sombra de la tarjeta del error
-    genérico, la única sombra de una tarjeta fuera del acceso.
+    genérico, la única sombra de una tarjeta fuera del acceso;
+  - `--logo-franja-w` (104px) y `--logo-panel-w` (260px): ancho del logo del error genérico en la
+    franja del teléfono y en el panel del escritorio (los de `c4`; decisión del usuario, 2026-10-30).
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -683,3 +685,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
 | 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |
 | 2026-10-29 | diseño | ¿Qué incorpora el sistema para el registro de auditoría (spec 020)? | Versión 1.7.0: tokens `--leading-publico`, `--text-acceso-titulo`, `--text-acceso`, `--acceso-form-max` y `--sombra-tarjeta-alta` (los nombres de la 041, que los reutiliza); componentes «Paginación», «Tabla de auditoría» y «Filtro de auditoría», con el foco del campo de fecha; la barra lateral sigue como deuda DS1 | usuario (spec 020, design.md `c4` y plan) |
+| 2026-10-30 | brecha | La página 503 de `c4` fija el logo a 104 px (franja) y 260 px (panel), pero `design.md` no los lleva a «Cambios a incorporar al sistema» y P9 no admite literales | Dos tokens más en la 1.7.0: `--logo-franja-w` y `--logo-panel-w`, con los valores de `c4` | usuario (/implement 020, T036) |
