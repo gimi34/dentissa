@@ -1,5 +1,7 @@
 <?php
 
+use App\Auditoria\AuditoriaNoDisponible;
+use App\Auditoria\RegistroCentralDenegaciones;
 use App\Http\Middleware\ContextoActor;
 use App\Http\Middleware\IdentificadorPeticion;
 use App\Http\Middleware\PreventBackHistory;
@@ -8,6 +10,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,5 +46,18 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+
+        // Modo crítico del registro de auditoría (spec 020, CA11; TM7): la acción se detiene con
+        // una página 503 genérica, también con APP_DEBUG=true, y no se reporta (el aviso lo da la
+        // línea auditoria.fallo del canal seguridad).
+        $exceptions->dontReport(AuditoriaNoDisponible::class);
+        $exceptions->render(fn (AuditoriaNoDisponible $e) => response()->view('errors.auditoria-no-disponible', [], 503));
+
+        // Denegaciones de usuarios autenticados (spec 020, CA4; D4).
+        $exceptions->respond(function (Response $respuesta, Throwable $e, Request $peticion) {
+            app(RegistroCentralDenegaciones::class)->registrar($respuesta, $e, $peticion);
+
+            return $respuesta;
+        });
+
     })->create();

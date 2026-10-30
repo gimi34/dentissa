@@ -32,6 +32,8 @@ class DenegacionesAuditadasTest extends TestCase
         $this->crearEscenario();
 
         Gate::define('prueba-siempre-no', fn () => false);
+        // Una ruta sin `auth` que deniega: lo único que la separa de una denegación es la sesión.
+        Route::middleware('web')->get('/_pruebas/020/publica/{id}', fn () => abort(403))->name('pruebas.publica.ver');
         Route::middleware(['web', 'auth'])->prefix('_pruebas/020')->name('pruebas.')->group(function () {
             Route::get('/recursos/{id}', fn () => abort(403))->name('recursos.ver');
             Route::get('/recursos/{id}/denegar', function (string $id) {
@@ -209,6 +211,7 @@ class DenegacionesAuditadasTest extends TestCase
     {
         $this->get('/admin')->assertRedirect('/login');
         $this->get('/_pruebas/020/recursos/abc')->assertRedirect('/login');
+        $this->get('/_pruebas/020/publica/abc')->assertForbidden();
         $this->get('/cliente/citas/'.$this->citaDeOtro())->assertRedirect('/login');
 
         $this->assertCount(0, DB::table('auditoria')->get());
