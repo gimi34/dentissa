@@ -165,8 +165,12 @@ main() {
         paso "Volviendo a ${ref} (app y web quedan parados)"
         en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null
     else
-        paso "Parando app y web"
+        paso "Parando app, web y el scheduler"
         en_servidor docker compose -f docker-compose.prod.yml stop app web < /dev/null
+        # Spec 020 (D22, A68): nada escribe en la base mientras se carga la copia.
+        if en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null | grep -qxF scheduler; then
+            en_servidor docker compose -f docker-compose.prod.yml stop scheduler < /dev/null
+        fi
     fi
 
     paso "Cargando la copia (si la frase caducó, gpg la vuelve a pedir)"
@@ -179,14 +183,21 @@ main() {
             error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado, y app y web siguen parados en ${ref}. Repite la orden, o levántalos con la versión que quieras."
         fi
         en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null
+        # A83: también vuelve el scheduler, que estaba parado para la carga.
+        if en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null | grep -qxF scheduler; then
+            en_servidor docker compose -f docker-compose.prod.yml up -d scheduler < /dev/null
+        fi
         error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado y app y web vuelven a estar en marcha."
     fi
     if [[ "${resultado[0]}" -ne 0 || "${resultado[1]}" -ne 0 ]]; then
         error "la carga quedó incompleta (gpg ${resultado[0]}, servidor ${resultado[1]}) y la base '${base}' está vacía o a medias. La copia sigue intacta: repite la orden antes de levantar app y web."
     fi
 
-    paso "Levantando app y web"
+    paso "Levantando app, web y el scheduler"
     en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null
+    if en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null | grep -qxF scheduler; then
+        en_servidor docker compose -f docker-compose.prod.yml up -d scheduler < /dev/null
+    fi
     en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan config:cache < /dev/null
     en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan route:cache < /dev/null
 

@@ -52,6 +52,14 @@ main() {
     compose=(docker compose -f docker-compose.prod.yml)
     SECONDS=0
 
+    # Spec 020 (D22, A68): el scheduler de la versión instalada se para antes del checkout, con su
+    # propio Compose, para que no escriba en la base mientras se cambia de versión. Una versión de
+    # destino sin scheduler lo pierde con --remove-orphans.
+    if "${compose[@]}" config --services | grep -qxF scheduler; then
+        paso "Parando el scheduler de la versión instalada"
+        "${compose[@]}" stop scheduler
+    fi
+
     paso "Obteniendo ${ref}"
     git fetch --tags origin
     git -c advice.detachedHead=false checkout "${ref}"
@@ -69,13 +77,16 @@ main() {
     if [[ "${opcion}" == "--sin-levantar" ]]; then
         paso "Parando app y web; db queda lista para cargar la copia (restaurar.sh)"
         "${compose[@]}" stop app web
-        "${compose[@]}" up -d db
+        "${compose[@]}" up -d --remove-orphans db
         esperar_db
         return 0
     fi
 
-    paso "Levantando app y web"
-    "${compose[@]}" up -d app web
+    paso "Levantando app, web y el scheduler"
+    "${compose[@]}" up -d --remove-orphans app web
+    if "${compose[@]}" config --services | grep -qxF scheduler; then
+        "${compose[@]}" up -d scheduler
+    fi
 
     paso "Cachés"
     "${compose[@]}" exec -T -u www-data app php artisan config:cache

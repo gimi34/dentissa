@@ -105,8 +105,13 @@ main() {
     sin_migraciones_pendientes && sin_migraciones="si"
     "${compose[@]}" run --rm -u www-data app php artisan migrate --force
 
-    paso "Levantando app y web"
-    "${compose[@]}" up -d app web
+    paso "Levantando app, web y el scheduler"
+    # Spec 020 (D22): --remove-orphans quita lo que esta versión ya no tiene, y el scheduler solo
+    # se nombra si su Compose lo tiene.
+    "${compose[@]}" up -d --remove-orphans app web
+    if "${compose[@]}" config --services | grep -qxF scheduler; then
+        "${compose[@]}" up -d scheduler
+    fi
 
     paso "Cachés"
     "${compose[@]}" exec -T -u www-data app php artisan config:cache
