@@ -1,7 +1,7 @@
 ---
 spec: 020-auditoria-base
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 020 Registro de auditoría base y correlación por petición
