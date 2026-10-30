@@ -399,8 +399,9 @@ Lista de eventos (`.tabla-auditoria`, sobre `tabla-tarjetas` de la 034):
 de y» (`--text-meta`, `--text`) y los botones «Anterior» y «Siguiente» (`btn-outline` con borde
 `--border-control`). En la primera página solo aparece «Siguiente» y en la última solo «Anterior».
 Por debajo de 900 px, a lo ancho y con botones de `--touch-min` que se reparten el ancho; desde 900
-px, los botones a la derecha del texto. Sustituye a la paginación con `style=""` de la lista de
-citas cuando esa pantalla se toque.
+px, los botones a la derecha del texto. Las reglas van acotadas a `nav.paginacion`: la lista de
+expedientes (035) usa todavía un `div.paginacion` con `style=""` y no cambia. Sustituye a esa
+paginación y a la de la lista de citas cuando esas pantallas se toquen.
 
 ### Rejilla de estadísticas (spec 034)
 `.stats-grid` (ya existía) con las variantes `.stats-grid-2` y `.stats-grid-3`, que solo fijan
