@@ -100,6 +100,22 @@ Administrar desde fuera de casa: SSH con clave por la red privada de Tailscale, 
 `sudo bash deploy/preparar-acceso-remoto.sh` (spec 031, CA8; ADR 0006; guía §11, que también dice
 cómo retirar un dispositivo). Sin puertos abiertos en el router.
 
+**Servicio `scheduler` (spec 020):** ejecuta `php artisan schedule:work`, cuya única tarea es la
+purga mensual del registro de auditoría (`auditoria:purgar`, el día 1 a las 03:00 UTC). En local
+usa el mismo `build:` que `app`; en producción, la imagen que construye `app`
+(`dentissa-prod-app:produccion`, `pull_policy: never`), con `www-data`, solo `app.env`, el mismo
+`local.ini` y sin puertos. Se reinicia solo. `desplegar.sh` y `volver.sh` lo levantan con `app` y
+`web` (`--remove-orphans`); `volver.sh` lo para antes del checkout y `restaurar.sh` mientras carga
+la copia; los tres lo nombran solo si la versión de destino lo tiene. `aplicar-entorno.sh app` lo
+recrea también, porque lee el mismo `app.env`. `verificar.sh` comprueba que está en marcha y que
+`schedule:list` tiene `auditoria:purgar`. `dentissa:vigilar` sigue en su temporizador de systemd.
+
+**Primera liberación de la 020 (una sola vez):** el `desplegar.sh` instalado no conoce el
+`scheduler`. Se anota la versión instalada (`git describe --tags`), se hace el checkout del tag a
+mano y después `bash deploy/desplegar.sh <tag>`, que ya lo levanta; como el checkout está hecho,
+el script informa como «anterior» el propio tag, y la vuelta es a la versión anotada
+(`deploy/README.md` §9).
+
 Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
 fuera del repositorio y del chat).
@@ -124,6 +140,15 @@ fuera del repositorio y del chat).
   (`deploy/volver.sh <tag anterior>`) no necesita revertirla ni restaurar la copia; las entradas de
   reprogramación siguen en la tabla y la versión anterior las muestra como un cambio de estado sin
   fechas.
+- Spec 020: la migración `create_auditoria_table` crea la tabla `auditoria` y sus triggers
+  `auditoria_sin_update` y `auditoria_sin_delete` con el usuario de la aplicación (`dentissa_app`,
+  sin root): MariaDB 10.11 sin binlog no exige `SUPER` para crear triggers, y `dentissa_app` tiene
+  `ALL` sobre su base. Solo añade, así que la vuelta atrás es `deploy/volver.sh <tag anterior>`
+  **sin revertirla y sin la copia**: la versión anterior ignora la tabla y los eventos escritos
+  desde el despliegue son evidencia. Con la copia se perderían. `down()` solo se usa en desarrollo.
+  La purga mide en UTC (`UTC_TIMESTAMP()` en el trigger y `ocurrido_en` en UTC), así que los
+  relojes del servidor y de la base deben estar sincronizados (NTP): con un desfase, un evento
+  dentro del margen haría fallar la purga entera.
 - Base de tests: `database/testing/bootstrap-test-db.sh` recarga el volcado, que trae el trigger, y
   no ejecuta migraciones. Después hay que ejecutar
   `docker compose exec -e DB_DATABASE=dentissa_test app php artisan migrate --force`; si no,
@@ -164,6 +189,9 @@ Cifradas desde la spec 032 ([ADR 0007](adr/0007-copias-cifradas-y-avisos.md)):
    (`volver.sh <tag> <copia>`) ya no restaura.
 4. Si la versión de destino es anterior a la 032, parar el temporizador de avisos:
    `sudo systemctl disable --now dentissa-vigilar.timer` (`volver.sh` lo avisa).
+5. Desde la spec 020, el `scheduler` se para antes del checkout y se levanta al final solo si la
+   versión de destino lo tiene; hacia una versión anterior a la 020, el contenedor se quita
+   (`--remove-orphans`). La vuelta de la propia 020 va sin la copia (ver Migraciones).
 - Tiempo ensayado: 4 min 44 s con la copia cifrada desde el PC (spec 032, T044); 27 s sin cifrar en
   la 030 (T044); objetivo, 15 minutos o menos.
 - Con la copia, se pierde todo lo escrito en la base desde el despliegue, y no se avisa (RD8.a).
@@ -225,7 +253,12 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   `MAIL_FROM_ADDRESS` y `AVISOS_CORREO` con formato de correo: 16 comprobaciones) y, solo sin
   `--interna`, la sección «Avisos y copias»: temporizador activo, clave pública válida y sin clave
   secreta, llavero del servidor sin claves secretas, ninguna copia en claro en
-  `/var/backups/dentissa` ni en la carpeta personal, y que `app` lee el log de acceso.
+  `/var/backups/dentissa` ni en la carpeta personal, y que `app` lee el log de acceso. Desde la
+  spec 020, también el `scheduler` en marcha, «Tareas programadas» con `auditoria:purgar` y
+  «Entorno aplicado» en los cinco servicios.
+- Correlación y auditoría (spec 020): una petición con un `X-Request-Id` válido lo devuelve en la
+  respuesta; tras entrar como dentista a `/admin`, el admin encuentra en `/admin/auditoria` el
+  `acceso_denegado` con ese `request_id` y la acción solicitada `admin.dashboard`.
 - Avisos (spec 032): aviso de prueba con
   `docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan dentissa:vigilar --prueba`
   (llega en menos de 5 minutos) y monitor de UptimeRobot en verde.
