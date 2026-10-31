@@ -234,8 +234,9 @@ Añadidas por `/review 020 --rerun` (2026-10-31); cada tarea cita su hallazgo de
 - [x] T078 Actualizar el comentario de cabecera de `errores.css` a «system.md 1.8.0» (R41) — public/css/errores.css — hecho cuando: la cabecera nombra la 1.8.0 y `AuditoriaVistasTest` sigue en verde — cubre: CA11
   - nota: añadida por /review: R41
   - nota: 2026-10-31 — la cabecera dice «system.md 1.8.0»; `AuditoriaVistasTest` en verde.
-- [ ] T079 Repetir la verificación de cierre sobre la ronda 2: `php artisan test` en verde contra `dentissa_test`; `vendor/bin/pint --test` sobre los PHP tocados; `gitleaks` y `semgrep … --baseline-commit` sin hallazgos nuevos; `python .ai/bin/aidd.py validate docs/specs/020-auditoria-base` sin errores — (sin archivos) — hecho cuando: todo lo anterior en verde y la nota lo registra — depende: T073, T074, T075, T077, T078
+- [x] T079 Repetir la verificación de cierre sobre la ronda 2: `php artisan test` en verde contra `dentissa_test`; `vendor/bin/pint --test` sobre los PHP tocados; `gitleaks` y `semgrep … --baseline-commit` sin hallazgos nuevos; `python .ai/bin/aidd.py validate docs/specs/020-auditoria-base` sin errores — (sin archivos) — hecho cuando: todo lo anterior en verde y la nota lo registra — depende: T073, T074, T075, T077, T078
   - nota: añadida por /review: verificación de R36–R41
+  - nota: 2026-10-31 — sobre `7847985`: `php artisan test` contra `dentissa_test`, 545 pasan (8350 aserciones); `vendor/bin/pint --test` sobre los 5 PHP tocados en la ronda 2, PASS; `gitleaks` sobre los commits de la rama, «no leaks found»; `semgrep … --baseline-commit <merge-base con origin/main> --error`, 0 hallazgos; `validate`, 0 errores.
 
 ## Integración y documentación
 - [x] T040 Añadir el servicio `scheduler` al Compose local (plan D2; A67): el mismo `build:` que `app`, `php artisan schedule:work`, `restart: unless-stopped` y los mismos montajes que `app`, `local.ini` incluido — **ruta protegida: requiere aprobación explícita del usuario** — docker-compose.yml — hecho cuando: los casos del Compose local de T019 pasan, `docker compose up -d` levanta `scheduler` y `docker compose exec scheduler php artisan schedule:list` muestra solo `auditoria:purgar`, mensual — cubre: CA5 — depende: T019, T028
@@ -302,7 +303,7 @@ Añadidas por `/review 020 --rerun` (2026-10-31); cada tarea cita su hallazgo de
   - nota: 2026-10-30 — el roadmap cierra (tachadas, con la 020 como motivo) las excepciones P7 de la 025 (403 del alta de citas), la 026 (Gates `gestionar-cita` y `cambiar-estado-cita`) y la 028 (`reprogramar-cita`), y las notas del `scheduler` en producción y del menú; apunta `/plan 014 --fix` con el contrato final y `/plan 041 --fix` tras fusionar, y la spec propia del traslado del vigilante. Solo queda para la liberación la nota de la 024 (T095). `security.md`: la consulta, la vista previa local, el `scheduler` y `X-Request-Id` en la superficie de ataque; las amenazas y los residuos aceptados del registro.
 - [x] T049 Añadir `app/Auditoria/` y `app/Listeners/` al mapa del repositorio (A65) — **ruta protegida: requiere aprobación explícita del usuario** — AGENTS.md — hecho cuando: el mapa nombra el módulo de auditoría y los listeners
   - nota: 2026-10-30 — ruta protegida **aprobada por el usuario el 2026-10-30**; dos filas nuevas en el mapa del repositorio.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5). Antes de liberar (roadmap; A57):
