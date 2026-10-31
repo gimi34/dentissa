@@ -146,6 +146,43 @@ del usuario al ejecutarlas.
 - [x] T039 Añadir el tipo `auditoria` al correo de aviso: título «El registro de auditoría no pudo guardar eventos», recuento y horas de la ventana, y cómo consultarlo en el servidor (el canal `seguridad`), sin ningún dato del evento ni de la persona (control TM16) — app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php — hecho cuando: los casos del correo de T018 pasan y `AvisoProduccionTest` sigue en verde completo — cubre: CA14 — depende: T018, T038
   - nota: 2026-10-30 — los casos del correo de T018 pasan y `AvisoProduccionTest` y `VigilanteTest` están completos en verde (41). El correo dice cómo buscar las líneas `auditoria.fallo` del día en el canal `seguridad`, sin ningún dato del evento.
 
+## Correcciones de /review (ronda 1)
+Añadidas por `/review 020` (2026-10-30); cada tarea cita su hallazgo de `review.md`. Los tokens de
+T055 conservan los valores de c4: ningún cambio visual.
+
+- [ ] T054 Ampliar `AuditoriaVistasTest` (R1, R24, R26): `test_el_css_de_la_020_no_trae_literales_de_tipografia_ni_multiplicadores` (en `public/css/errores.css` y `public/css/auditoria.css`, ningún `letter-spacing` ni `line-height` con un valor que no sea `var(--…)` ni `normal`, y ningún `calc()` con un multiplicador numérico salvo `* -1`); `test_los_tokens_de_la_020_coinciden_con_el_sistema` (`--tracking-etiqueta` 0.08em, `--tracking-titulo` -0.01em, `--leading-titulo` 1.15, `--text-acceso-destacado` 16.8px, `--acceso-franja-pie` 70px, `--acceso-solape` 56px, `--acceso-panel-pad` 56px y `--acceso-lado-pad` 42px en `:root` de `public/css/app.css`, en `docs/design/system.md` y en `docs/design/system.html`, con el mismo valor); la tabla de la consulta tiene `aria-labelledby="titulo-eventos"`; el `<p class="codigo-valor">` del 503 no lleva `aria-labelledby` — tests/Feature/Auditoria/AuditoriaVistasTest.php — hecho cuando: los casos nuevos fallan por la razón esperada (los 10 literales de `errores.css`, los tokens que faltan, la tabla sin nombre y el `aria-labelledby` del párrafo) y los anteriores siguen en verde — cubre: CA6, CA11
+  - nota: añadida por /review: R1, R24, R26
+- [ ] T055 Añadir al sistema los tokens de T054 con esos valores (R1): en `:root` de `public/css/app.css`, junto a los de la 020; en `docs/design/system.md`, en «Tokens de tamaño (spec 020)» y en la lista de la 020, con la versión 1.8.0 y su fila en Decisiones; y en `:root` y en la sección de la 020 de `docs/design/system.html` — public/css/app.css, docs/design/system.md, docs/design/system.html — hecho cuando: `test_los_tokens_de_la_020_coinciden_con_el_sistema` pasa y los tests de tokens del sistema (`MovilPacienteTest`, `MovilPacientesExpedientesTest`, `MovilPersonalTest`) siguen en verde — cubre: CA6, CA11 — depende: T054
+  - nota: añadida por /review: R1
+- [ ] T056 Usar los tokens en la hoja del 503 y quitar el `aria-labelledby` del párrafo (R1, R26): en `errores.css`, `letter-spacing: var(--tracking-etiqueta)` (`.etiqueta`, `.codigo-etiqueta`), `var(--tracking-titulo)` y `line-height: var(--leading-titulo)` (`.carnet h1`), `font-size: var(--text-acceso-destacado)` (`.panel-texto b`), el `padding` inferior de `.franja` con `var(--acceso-franja-pie)`, `margin-top: calc(var(--acceso-solape) * -1)` (`.carnet`), `padding: var(--acceso-panel-pad)` (`.panel`) y `var(--acceso-lado-pad)` en `.lado` del escritorio; en la vista, el `<p class="codigo-valor">` sin `aria-labelledby` — public/css/errores.css, resources/views/errors/auditoria-no-disponible.blade.php — hecho cuando: T054 pasa completo y `ErrorAuditoriaTest` sigue en verde; `medir.mjs` sobre `/_disenio/020` sale con código 0 y el mismo resultado que en T053 · revisión de accesibilidad: el 503 a 320, 390 y 1440 px igual que antes (capturas de `medir.mjs` frente a las de T053) — cubre: CA11 — depende: T055
+  - nota: añadida por /review: R1, R26
+- [ ] T057 Ampliar `ConsultaAuditoriaTest` (R7, R33): `test_un_filtro_enviado_como_lista_vuelve_con_su_error` (`?actor[]=x`, `?recurso_id[]=x` y `?desde[]=x`, siguiendo la redirección: 200, el error junto a su campo, sin `auditoria_consultada` y sin 500); y `assertFiltra` comprueba el valor que aparece y el que no dentro de la tabla de eventos (XPath sobre `table.tabla-auditoria`), no en toda la página — tests/Feature/Auditoria/ConsultaAuditoriaTest.php — hecho cuando: el caso de la lista falla hoy con 500 (`htmlspecialchars`); `assertFiltra` se comprueba rompiendo el filtro por `recurso_id` (que no filtre): el caso falla, y se restaura — cubre: CA6
+  - nota: añadida por /review: R7, R33
+- [ ] T058 La consulta repone en el formulario solo valores de texto y nombra su tabla (R7, R24): `$valor` usa `old($campo)` solo si es una cadena (si no, el filtro aplicado o vacío), y la `<table>` lleva `aria-labelledby="titulo-eventos"` — resources/views/auditoria/index.blade.php — hecho cuando: T057 y el caso de la tabla de T054 pasan, y `ConsultaAuditoriaTest` y `AuditoriaVistasTest` siguen en verde; `medir.mjs` sale con código 0 · revisión de accesibilidad: la tabla se anuncia como «Eventos» (nombre accesible en el árbol de accesibilidad de Playwright) — cubre: CA6 — depende: T054, T057
+  - nota: añadida por /review: R7, R24
+- [ ] T059 Fijar en `InmutabilidadAuditoriaTest` las dos condiciones del trigger de borrado con `DELETE` directos, sin el comando (R2; TM2): `test_sin_el_indicador_no_se_borra_un_evento_antiguo` (un evento de hace 7 años, solo él: rechazo 45000 y sigue existiendo) y `test_con_el_indicador_el_trigger_corta_a_los_5_anios_en_utc` (`SET @auditoria_purga = 1`: un evento a UTC −5 años +1 minuto se rechaza y uno a −5 años −1 minuto se borra) — tests/Feature/Auditoria/InmutabilidadAuditoriaTest.php — hecho cuando: los dos pasan, y se comprueba rompiendo el trigger en `dentissa_test` (sin la condición del indicador; con `INTERVAL 4 YEAR 6 MONTH`) que cada uno falla, y se restaura con la migración — cubre: CA2, CA5
+  - nota: añadida por /review: R2
+- [ ] T060 Endurecer `ConfiguracionProduccionTest` (R4, R16, R17, R18, R21, R23): `test_los_scripts_levantan_y_paran_el_scheduler_con_app` exige que `desplegar.sh`, `volver.sh` y `restaurar.sh` lean `config --services` una sola vez en una variable con `|| error` y busquen con `grep -qxF scheduler <<<`, sin `config --services |` en ningún `if`; `desplegar.sh` para el `scheduler` (con esa guarda) antes de `migrate`; `volver.sh` lo para después de `git fetch` y antes del checkout; el mensaje de «ningún dato descifrado» de `restaurar.sh` nombra el `scheduler`; y el bloque del `scheduler` de `docker-compose.prod.yml` tiene exactamente las claves `image`, `pull_policy`, `restart`, `user`, `command`, `env_file`, `volumes`, `networks`, `depends_on`, `cap_drop` y `security_opt`, con `cap_drop: [ALL]`, `security_opt: ["no-new-privileges:true"]`, sus dos volúmenes y una sola red — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: los casos nuevos fallan hoy por cada una de esas razones y el resto del archivo sigue en verde — cubre: CA5
+  - nota: añadida por /review: R4, R16, R17, R18, R21, R23
+- [ ] T061 Guardas del `scheduler` que fallan cerradas en `desplegar.sh` y `volver.sh` (R4, R16, R17): la lista de servicios en una variable (`servicios="$("${compose[@]}" config --services)" || error "…"`) y `grep -qxF scheduler <<< "${servicios}"`; `desplegar.sh` para el `scheduler` instalado justo antes de `migrate`; `volver.sh` lo para después de `git fetch`, justo antes del checkout — deploy/desplegar.sh, deploy/volver.sh — hecho cuando: los casos de T060 de esos dos scripts pasan, `bash -n` limpio en los dos y el resto de `ConfiguracionProduccionTest` en verde — cubre: CA5 — depende: T060
+  - nota: añadida por /review: R4, R16, R17
+- [ ] T062 Guardas del `scheduler` en `restaurar.sh` (R4, R18): la lista de servicios del servidor una vez antes de parar y otra antes de levantar, con `en_servidor … config --services` en una variable y `|| error`, y el mensaje de «ningún dato descifrado» con `--volver` nombra el `scheduler` («app, web y el scheduler, si la versión lo tiene») — deploy/restaurar.sh — hecho cuando: los casos de T060 de `restaurar.sh` pasan, `bash -n` limpio y el resto de `ConfiguracionProduccionTest` en verde — cubre: CA5 — depende: T060
+  - nota: añadida por /review: R4, R18
+- [ ] T063 Quitar capacidades al `scheduler` de producción (R23; TM14): `cap_drop: [ALL]` y `security_opt: ["no-new-privileges:true"]` en su bloque de `docker-compose.prod.yml` — docker-compose.prod.yml — hecho cuando: el caso del bloque de T060 pasa; `docker compose -f docker-compose.prod.yml config -q` válido (con un `DENTISSA_ENV_DIR` de prueba); y con la imagen local, `docker run --rm --cap-drop ALL --security-opt no-new-privileges:true -u www-data dentissa-020-app php artisan schedule:list` lista `auditoria:purgar` — cubre: CA5 — depende: T060
+  - nota: añadida por /review: R23
+- [ ] T064 Documentar la vuelta de la primera liberación y el `scheduler` al restaurar (R3, R19, R20): en `deploy/README.md` §9 («Primera liberación de la 020»), si la verificación falla, la orden de vuelta es `bash deploy/volver.sh <versión anotada en el paso 1>`, sin copia, y no se sigue la de `restaurar.sh` que imprime `desplegar.sh` (su «anterior» es el propio tag y su copia no tiene la tabla `auditoria`); y si se ejecutó el `desplegar.sh` instalado sin el checkout a mano: `docker compose -f docker-compose.prod.yml up -d scheduler` y `bash deploy/verificar.sh`, sin volver atrás. En el §7, los pasos 3 y 4 nombran el `scheduler` y piden el clon del PC en la versión instalada o posterior. En `docs/deployment.md`, el mismo aviso en «Primera liberación de la 020» — deploy/README.md, docs/deployment.md — hecho cuando: el §9 y `deployment.md` dan la orden de vuelta sin copia y el aviso, el §9 cubre el olvido del checkout, y el §7 nombra el `scheduler` — cubre: CA5 — depende: T061, T062
+  - nota: añadida por /review: R3, R19, R20
+- [ ] T065 Ampliar `DenegacionesAuditadasTest` (R5, R6; CA4): `test_una_cita_ajena_con_espacio_final_responde_como_la_inexistente` (show y `reprogramarForm`: `/cliente/citas/<id ajeno>%20` da 404 con un evento `denegado_404` cuyo `recurso_id` es el id guardado; `<id inexistente>%20` da 404 sin evento); y `test_un_usuario_sin_ficha_de_paciente_deja_su_denegacion` (un dentista en `/cliente/citas/<cita existente>` recibe 404 con evento `denegado_404`; con una inexistente, 404 sin evento) — tests/Feature/Auditoria/DenegacionesAuditadasTest.php — hecho cuando: el primero falla hoy con 500 y el segundo por el evento que falta; los demás casos siguen en verde — cubre: CA4
+  - nota: añadida por /review: R5, R6
+- [ ] T066 Denegar en `ClienteCitasController` con el id guardado y también sin ficha de paciente (R5, R6): `noEncontrada()` toma el id de la base (`DB::table('citas')->where('id', $id)->value('id')`) y, si existe, `denegar(…, <ese id>, 'denegado_404')`; `show` y `citaDelPaciente` llaman a `noEncontrada($id)` cuando no hay paciente, en lugar de `abort_unless($paciente, 404)` — app/Http/Controllers/ClienteCitasController.php — hecho cuando: T065 pasa completo y `ReprogramarCitaRolesTest`, `EstadosCitaRolesTest` y el resto de tests de citas del paciente siguen en verde — cubre: CA4 — depende: T065
+  - nota: añadida por /review: R5, R6
+- [ ] T067 Rechazar el salto de línea final en los identificadores (R9; TM12): en `RegistroAuditoriaTest`, `test_un_valor_con_salto_de_linea_final_se_rechaza` (`recurso_id` `"p1\n"`, la acción `"x\n"` y un valor de detalle `"v\n"` lanzan `InvalidArgumentException` sin registrar); en `DenegacionesAuditadasTest`, una ruta denegada con el id `p1%0A` deja su evento con `recurso_id` nulo — tests/Feature/Auditoria/RegistroAuditoriaTest.php, tests/Feature/Auditoria/DenegacionesAuditadasTest.php — hecho cuando: los dos casos fallan hoy (se aceptan los valores con `\n`) — cubre: CA3, CA4 — depende: T065
+  - nota: añadida por /review: R9
+- [ ] T068 Anclar los patrones al final del texto con `\z` en lugar de `$` (R9): `NOMBRE`, `IDENTIFICADOR`, `VALOR_DE_DETALLE` y el patrón en línea del campo de `Auditoria`; `ACCION`, `TIPO` e `IDENTIFICADOR` de `RegistroCentralDenegaciones` — app/Auditoria/Auditoria.php, app/Auditoria/RegistroCentralDenegaciones.php — hecho cuando: T067 pasa y `RegistroAuditoriaTest` y `DenegacionesAuditadasTest` siguen en verde — cubre: CA3, CA4 — depende: T067
+  - nota: añadida por /review: R9
+- [ ] T069 Repetir la verificación de cierre sobre las correcciones: `php artisan test` en verde contra `dentissa_test`; `vendor/bin/pint --test` sobre los PHP tocados; `gitleaks` y `semgrep … --baseline-commit` sin hallazgos nuevos; `python .ai/bin/aidd.py validate docs/specs/020-auditoria-base` sin errores — (sin archivos) — hecho cuando: todo lo anterior en verde y la nota lo registra — depende: T056, T058, T059, T061, T062, T063, T064, T066, T068
+  - nota: añadida por /review: verificación de R1–R7 y R9
+
 ## Integración y documentación
 - [x] T040 Añadir el servicio `scheduler` al Compose local (plan D2; A67): el mismo `build:` que `app`, `php artisan schedule:work`, `restart: unless-stopped` y los mismos montajes que `app`, `local.ini` incluido — **ruta protegida: requiere aprobación explícita del usuario** — docker-compose.yml — hecho cuando: los casos del Compose local de T019 pasan, `docker compose up -d` levanta `scheduler` y `docker compose exec scheduler php artisan schedule:list` muestra solo `auditoria:purgar`, mensual — cubre: CA5 — depende: T019, T028
   - nota: 2026-10-30 — ruta protegida **aprobada por el usuario el 2026-10-30**. A80: el caso local de `test_el_scheduler_se_reinicia_solo_y_monta_el_local_ini_de_app` pasa. `docker compose up -d scheduler` lo levanta (`dentissa_scheduler Up`) y `docker compose exec scheduler php artisan schedule:list` da solo `0 3 1 * *  php artisan auditoria:purgar`. Antes de levantarlo se quitó el contenedor huérfano `dentissa_scheduler` de una rama antigua del clon principal, que ocupaba el nombre.
@@ -211,7 +248,7 @@ del usuario al ejecutarlas.
   - nota: 2026-10-30 — el roadmap cierra (tachadas, con la 020 como motivo) las excepciones P7 de la 025 (403 del alta de citas), la 026 (Gates `gestionar-cita` y `cambiar-estado-cita`) y la 028 (`reprogramar-cita`), y las notas del `scheduler` en producción y del menú; apunta `/plan 014 --fix` con el contrato final y `/plan 041 --fix` tras fusionar, y la spec propia del traslado del vigilante. Solo queda para la liberación la nota de la 024 (T095). `security.md`: la consulta, la vista previa local, el `scheduler` y `X-Request-Id` en la superficie de ataque; las amenazas y los residuos aceptados del registro.
 - [x] T049 Añadir `app/Auditoria/` y `app/Listeners/` al mapa del repositorio (A65) — **ruta protegida: requiere aprobación explícita del usuario** — AGENTS.md — hecho cuando: el mapa nombra el módulo de auditoría y los listeners
   - nota: 2026-10-30 — ruta protegida **aprobada por el usuario el 2026-10-30**; dos filas nuevas en el mapa del repositorio.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5). Antes de liberar (roadmap; A57):
@@ -232,16 +269,16 @@ del usuario al ejecutarlas.
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T010 | T001, T021, T022, T023 |
-| CA2 | T011, T014 | T029, T031, T047 |
-| CA3 | T010, T013 | T022, T023, T027 |
-| CA4 | T013, T014 | T004, T022, T027, T029, T035, T050 |
-| CA5 | T011, T019, T051 | T021, T028, T031, T040, T043, T044, T045, T047 |
-| CA6 | T014, T017, T033 | T021, T029, T030, T037, T046, T052, T053 |
+| CA2 | T011, T014, T059 | T029, T031, T047 |
+| CA3 | T010, T013, T067 | T022, T023, T027, T068 |
+| CA4 | T013, T014, T065, T067 | T004, T022, T027, T029, T035, T050, T066, T068 |
+| CA5 | T011, T019, T051, T059, T060 | T021, T028, T031, T040, T043, T044, T045, T047, T061, T062, T063, T064 |
+| CA6 | T014, T017, T033, T054, T057 | T021, T029, T030, T037, T046, T052, T053, T055, T058 |
 | CA7 | T014 | T029 |
 | CA8 | T012 | T024, T026 |
 | CA9 | T012 | T024, T026 |
 | CA10 | T010, T012 | T022, T024, T025, T026, T034 |
-| CA11 | T010, T016, T017 | T004, T022, T023, T027, T036, T037, T053 |
+| CA11 | T010, T016, T017, T054 | T004, T022, T023, T027, T036, T037, T053, T055, T056 |
 | CA12 | T011, T014 | T028, T029 |
 | CA13 | T012 | T022, T024, T026 |
 | CA14 | T010, T018 | T022, T023, T038, T039 |
@@ -249,7 +286,7 @@ del usuario al ejecutarlas.
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
 | TM1 | T031 | T011 |
-| TM2 | T021, T031 | T011 |
+| TM2 | T021, T031 | T011, T059 |
 | TM3 | T024 | T012 |
 | TM4 | T029 | T014 |
 | TM5 | T022 | T010 |
@@ -259,9 +296,9 @@ del usuario al ejecutarlas.
 | TM9 | T028 | T011 |
 | TM10 | T022 | T010 |
 | TM11 | T022, T024 | T012 |
-| TM12 | T022, T027, T029 | T010, T013, T014 |
+| TM12 | T022, T027, T029, T058, T068 | T010, T013, T014, T057, T067 |
 | TM13 | T022 | T010 |
-| TM14 | T028, T040, T043 | T011, T019 |
+| TM14 | T028, T040, T043, T061, T062, T063 | T011, T019, T060 |
 | TM15 | T037 | T017 |
 | TM16 | T038, T039 | T018 |
 | TM17 | T027 (solo usuarios autenticados; el resto, residuo aceptado) | T013 |
@@ -270,12 +307,12 @@ del usuario al ejecutarlas.
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | database/migrations/<fecha>_create_auditoria_table.php | T001, T031 |
-| app/Auditoria/Auditoria.php | T022 |
+| app/Auditoria/Auditoria.php | T022, T068 |
 | app/Auditoria/AlmacenAuditoria.php, AlmacenAuditoriaBaseDatos.php | T004, T021 |
 | app/Auditoria/AuditoriaNoDisponible.php, AccesoDenegadoAuditado.php | T004 |
-| app/Auditoria/RegistroCentralDenegaciones.php | T027 |
+| app/Auditoria/RegistroCentralDenegaciones.php | T027, T068 |
 | app/Autorizacion/GestionPersonal.php | T035 |
-| app/Http/Controllers/ClienteCitasController.php | T050 |
+| app/Http/Controllers/ClienteCitasController.php | T050, T066 |
 | app/Providers/AppServiceProvider.php | T023 |
 | app/Listeners/ActualizarActorDelContexto.php | T034 |
 | app/Http/Middleware/IdentificadorPeticion.php | T024 |
@@ -285,29 +322,29 @@ del usuario al ejecutarlas.
 | app/Http/Controllers/DisenioAuditoriaController.php | T037 |
 | routes/web.php | T029, T037 |
 | routes/console.php | T028 |
-| resources/views/auditoria/index.blade.php | T030 |
-| resources/views/errors/auditoria-no-disponible.blade.php | T036 |
+| resources/views/auditoria/index.blade.php | T030, T058 |
+| resources/views/errors/auditoria-no-disponible.blade.php | T036, T056 |
 | config/clinica.php | T036 |
 | resources/views/layouts/app.blade.php | T030 |
 | docs/design/capturar.mjs | T052 |
 | docs/specs/020-auditoria-base/design/medir.mjs, criterios.json | T053 |
-| public/css/app.css | T006 |
+| public/css/app.css | T006, T055 |
 | public/css/auditoria.css | T030 |
-| public/css/errores.css, public/fonts/roboto/ | T036, T007 |
+| public/css/errores.css, public/fonts/roboto/ | T036, T007, T056 |
 | app/Avisos/Vigilante.php, config/avisos.php | T038 |
 | app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php | T039 |
 | docker-compose.yml | T040 |
-| docker-compose.prod.yml | T043 |
-| deploy/desplegar.sh, deploy/volver.sh, deploy/restaurar.sh | T044 |
-| deploy/verificar.sh, deploy/aplicar-entorno.sh, deploy/README.md | T045 |
-| docs/deployment.md, docs/observability.md | T091 |
+| docker-compose.prod.yml | T043, T063 |
+| deploy/desplegar.sh, deploy/volver.sh, deploy/restaurar.sh | T044, T061, T062 |
+| deploy/verificar.sh, deploy/aplicar-entorno.sh, deploy/README.md | T045, T064 |
+| docs/deployment.md, docs/observability.md | T091, T064 |
 | docs/architecture.md | T090 |
 | docs/roadmap.md, docs/security.md | T048 |
 | AGENTS.md | T049 |
-| docs/design/system.md, system.html | T006 |
-| tests/Feature/Auditoria/*Test.php, tests/Support/* | T003, T005, T010–T017 |
+| docs/design/system.md, system.html | T006, T055 |
+| tests/Feature/Auditoria/*Test.php, tests/Support/* | T003, T005, T010–T017, T054, T057, T059, T065, T067 |
 | tests/Feature/MovilPacienteTest.php | T033 |
-| tests/Feature/ConfiguracionProduccionTest.php | T019, T051 |
+| tests/Feature/ConfiguracionProduccionTest.php | T019, T051, T060 |
 | tests/Feature/VigilanteTest.php, tests/Feature/AvisoProduccionTest.php | T018 |
 | phpunit.xml | T015 |
 
