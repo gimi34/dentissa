@@ -399,9 +399,15 @@ class PaginasPublicasCssTest extends TestCase
 
     public function test_las_entradas_solo_ocultan_con_javascript(): void
     {
-        // M-3 y M-4: sin JavaScript (sin la clase js) y con movimiento reducido, todo está visible.
-        $ocultas = array_filter($this->reglasCss(self::HOJA), fn ($r) => (str_contains($r[0], '[data-reveal') || str_contains($r[0], '.pub-hero h1 .ln')) && ! str_contains($r[0], '.is-in'));
+        // M-3 y M-4: sin JavaScript (sin la clase js) y con movimiento reducido, todo está visible. Se
+        // buscan las reglas que ocultan o desplazan su contenido (fuera de los fotogramas).
+        $oculta = '/opacity\s*:\s*0\s*;|transform\s*:\s*translateY\(|clip-path\s*:\s*inset\(0 0 100%/';
+        $this->assertMatchesRegularExpression($oculta, '.js x { opacity: 0; }', 'Control: detecta la opacidad 0.');
+        $this->assertDoesNotMatchRegularExpression($oculta, '.x { opacity: 0.14; }', 'Control: no confunde una opacidad parcial.');
+        $ocultas = array_filter($this->reglasCss(self::HOJA), fn ($r) => preg_match($oculta, $r[1])
+            && ! str_contains($r[0], '.is-in') && ! array_filter($r[2], fn ($c) => str_starts_with($c, '@keyframes')));
         $this->assertNotEmpty($ocultas, 'Hay entradas por sección.');
+        $this->assertNotEmpty(array_filter($ocultas, fn ($r) => str_contains($r[0], '.pub-hero h1')), 'El titular entra por líneas.');
         foreach ($ocultas as [$selector, , $envolventes]) {
             foreach (array_map('trim', explode(',', $selector)) as $uno) {
                 $this->assertStringStartsWith('.js ', $uno, "{$uno}: solo oculta con JavaScript.");
