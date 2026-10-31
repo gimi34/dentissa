@@ -87,6 +87,15 @@
     --sombra-tarjeta-alta:    0 14px 32px rgba(114, 36, 62, 0.16);
     --logo-franja-w:          104px; /* logo del error genérico en la franja del teléfono (c4) */
     --logo-panel-w:           260px; /* logo del error genérico en el panel del escritorio (c4) */
+    /* Error genérico, valores de c4 como tokens (system.md 1.8.0; /review 020 R1). */
+    --tracking-etiqueta:      0.08em;
+    --tracking-titulo:        -0.01em;
+    --leading-titulo:         1.15;
+    --text-acceso-destacado:  16.8px; /* tamaño, no color */
+    --acceso-franja-pie:      70px;
+    --acceso-solape:          56px;
+    --acceso-panel-pad:       56px;
+    --acceso-lado-pad:        42px;
 }
 
 body {

@@ -290,6 +290,8 @@
     --perfil-iniciales-text: 22px; --perfil-iniciales-movil: 17px; --perfil-nombre-text: 20px; --perfil-nombre-movil: 16px; --weight-bold: 600; /* spec 035 */
     --leading-publico: 1.5; --text-acceso-titulo: 28px; --text-acceso: 14px; --acceso-form-max: 480px; /* spec 020 */
     --sombra-tarjeta-alta: 0 14px 32px rgba(114, 36, 62, 0.16); /* spec 020 */
+    --tracking-etiqueta: 0.08em; --tracking-titulo: -0.01em; --leading-titulo: 1.15; --text-acceso-destacado: 16.8px; /* spec 020, 1.8.0 */
+    --acceso-franja-pie: 70px; --acceso-solape: 56px; --acceso-panel-pad: 56px; --acceso-lado-pad: 42px; /* spec 020, 1.8.0 */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
 
     --duration-fast: 150ms; --duration-base: 150ms;
@@ -558,7 +560,9 @@
       <code>app.css</code>: en la primera página solo «Siguiente»; en las demás, «Anterior» y «Siguiente».
       Debajo, la misma a 320 px, a lo ancho y con botones de <code>--touch-min</code>. Los tokens nuevos de
       la 020 (<code>--leading-publico</code>, <code>--text-acceso-titulo</code>, <code>--text-acceso</code>,
-      <code>--acceso-form-max</code> y <code>--sombra-tarjeta-alta</code>) los usa el error genérico.</p>
+      <code>--acceso-form-max</code> y <code>--sombra-tarjeta-alta</code>) los usa el error genérico, como los
+      de la 1.8.0 (<code>--tracking-etiqueta</code>, <code>--tracking-titulo</code>, <code>--leading-titulo</code>,
+      <code>--text-acceso-destacado</code> y los espaciados <code>--acceso-*</code>), que llevan a tokens los valores de <code>c4</code>.</p>
     <div class="v-stage"><div class="opt">
       <nav class="m-paginacion" aria-label="Paginación, primera página"><p class="m-paginacion-texto">Mostrando 1–25 de 1.284 · página 1 de 52</p>
         <div class="m-paginacion-botones"><a href="#paginacion-020" rel="next">Siguiente</a></div></nav>

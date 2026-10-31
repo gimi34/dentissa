@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.7.0
+version: 1.8.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -83,8 +83,10 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
 
-Tokens de tamaño (spec 020): `--text-acceso-titulo` (28px) y `--text-acceso` (14px), del error
-genérico; interlineado: `--leading-publico` (1.5).
+Tokens de tamaño (spec 020): `--text-acceso-titulo` (28px), `--text-acceso` (14px) y
+`--text-acceso-destacado` (16.8px), del error genérico; interlineado: `--leading-publico` (1.5) y
+`--leading-titulo` (1.15); espaciado de letras: `--tracking-etiqueta` (0.08em) y `--tracking-titulo`
+(-0.01em).
 
 Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
 `--text-meta` (13px, migas de pan) y `--text-marca` (16px; sin uso desde la spec 034, que cambia la marca de
@@ -168,7 +170,14 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - `--sombra-tarjeta-alta` (`0 14px 32px rgba(114, 36, 62, 0.16)`): sombra de la tarjeta del error
     genérico, la única sombra de una tarjeta fuera del acceso;
   - `--logo-franja-w` (104px) y `--logo-panel-w` (260px): ancho del logo del error genérico en la
-    franja del teléfono y en el panel del escritorio (los de `c4`; decisión del usuario, 2026-10-30).
+    franja del teléfono y en el panel del escritorio (los de `c4`; decisión del usuario, 2026-10-30);
+  - versión 1.8.0 (/review 020 R1), los valores de `c4` del error genérico como tokens:
+    `--tracking-etiqueta` (0.08em, etiquetas en mayúsculas), `--tracking-titulo` (-0.01em) y
+    `--leading-titulo` (1.15) del título, `--text-acceso-destacado` (16.8px, frase destacada del
+    panel), `--acceso-franja-pie` (70px, margen inferior de la franja del teléfono),
+    `--acceso-solape` (56px, lo que la tarjeta sube sobre la franja), `--acceso-panel-pad` (56px,
+    relleno del panel del escritorio) y `--acceso-lado-pad` (42px, relleno vertical del lado de la
+    tarjeta en el escritorio).
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -686,3 +695,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |
 | 2026-10-29 | diseño | ¿Qué incorpora el sistema para el registro de auditoría (spec 020)? | Versión 1.7.0: tokens `--leading-publico`, `--text-acceso-titulo`, `--text-acceso`, `--acceso-form-max` y `--sombra-tarjeta-alta` (los nombres de la 041, que los reutiliza); componentes «Paginación», «Tabla de auditoría» y «Filtro de auditoría», con el foco del campo de fecha; la barra lateral sigue como deuda DS1 | usuario (spec 020, design.md `c4` y plan) |
 | 2026-10-30 | brecha | La página 503 de `c4` fija el logo a 104 px (franja) y 260 px (panel), pero `design.md` no los lleva a «Cambios a incorporar al sistema» y P9 no admite literales | Dos tokens más en la 1.7.0: `--logo-franja-w` y `--logo-panel-w`, con los valores de `c4` | usuario (/implement 020, T036) |
+| 2026-10-30 | brecha | La hoja del 503 copia de `c4` espaciados de letras, interlineado y multiplicadores sobre tokens que el sistema no tiene, y P9 no admite literales (/review 020 R1) | Versión 1.8.0: `--tracking-etiqueta`, `--tracking-titulo`, `--leading-titulo`, `--text-acceso-destacado`, `--acceso-franja-pie`, `--acceso-solape`, `--acceso-panel-pad` y `--acceso-lado-pad`, con los valores de `c4` (ningún cambio visual) | usuario (/review 020, decisión de corregir R1) |
