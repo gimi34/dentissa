@@ -210,6 +210,26 @@ T055 conservan los valores de c4: ningún cambio visual.
   - nota: añadida durante /implement: hallazgo colateral de T055
   - nota: 2026-10-30 — T070 pasa; `AuditoriaVistasTest` en verde (12).
 
+## Correcciones de /review (ronda 2)
+Añadidas por `/review 020 --rerun` (2026-10-31); cada tarea cita su hallazgo de `review.md`.
+
+- [ ] T072 Ampliar `ConfiguracionProduccionTest` (R36, R37): en `restaurar.sh`, después de cargar la copia, ninguna lectura de `config --services` va antes de `if [[ "${resultado[1]}" -eq 3 ]]`, y hay una justo antes de `paso "Levantando app, web y el scheduler"`, ya pasada la comprobación de carga incompleta (`test_restaurar_lee_los_servicios_despues_de_comprobar_la_carga`); y `schedulerSinComprobar()` quita solo la cadena del mensaje (`/\berror "[^"]*"/`), con un control en el que una orden sin guarda escrita tras el mensaje (`x="$(…)" || error "m"; "${compose[@]}" up -d scheduler`) queda marcada — tests/Feature/ConfiguracionProduccionTest.php — hecho cuando: el caso nuevo de `restaurar.sh` falla hoy (la lectura de la línea 185 va antes de comprobar `resultado`) y el control de la orden tras el mensaje falla con el ayudante actual; el resto del archivo en verde — cubre: CA5
+  - nota: añadida por /review: R36, R37
+- [ ] T073 Leer la lista de servicios de `restaurar.sh` donde se usa (R36): quitar la lectura que sigue a la carga y leerla dentro de la rama «ningún dato descifrado» sin `--volver`, justo antes de levantar, y después de la comprobación de carga incompleta, justo antes de `paso "Levantando app, web y el scheduler"`, las dos con `|| error` — deploy/restaurar.sh — hecho cuando: T072 pasa, `bash -n` limpio y el resto de `ConfiguracionProduccionTest` en verde — cubre: CA5 — depende: T072
+  - nota: añadida por /review: R36
+- [ ] T074 Ampliar la regla de multiplicadores de `test_el_css_de_la_020_no_trae_literales_de_tipografia_ni_multiplicadores` (R38): detecta `*` y `/` seguidos de un número, también sin cero inicial (`* .5`, `/ 2`), y solo admite `* -1` — tests/Feature/Auditoria/AuditoriaVistasTest.php — hecho cuando: pasa sobre las hojas de hoy y se comprueba rompiendo `errores.css` (una regla con `calc(var(--space-8) / 2)` y otra con `* .5`): el caso falla, y se restaura — cubre: CA6, CA11
+  - nota: añadida por /review: R38
+- [ ] T075 Completar `test_un_valor_con_salto_de_linea_final_se_rechaza` (R40): `campos: ["telefono\n"]` y `recurso_tipo` `"pacientes\n"` también se rechazan — tests/Feature/Auditoria/RegistroAuditoriaTest.php — hecho cuando: pasa hoy y se comprueba volviendo a `$`, un momento, el patrón del campo (`Auditoria.php:130`) y luego `NOMBRE`: el caso falla en cada uno, y se restaura — cubre: CA3
+  - nota: añadida por /review: R40
+- [ ] T076 Ampliar `ConsultaAuditoriaTest` (R39): `test_un_filtro_con_salto_de_linea_final_vuelve_con_su_error`, sin `TrimStrings` (`withoutMiddleware`): `recurso_id=x%0A` y `accion=x%0A`, siguiendo la redirección, dan 200 con el error junto a su campo y sin `auditoria_consultada` — tests/Feature/Auditoria/ConsultaAuditoriaTest.php — hecho cuando: falla hoy con 500 (`InvalidArgumentException` de `Auditoria`) — cubre: CA6
+  - nota: añadida por /review: R39
+- [ ] T077 Anclar con `\z` las reglas de filtro de `AuditoriaController` (R39): el patrón de nombre (`accion`, `recurso_tipo`) y el de `recurso_id` — app/Http/Controllers/AuditoriaController.php — hecho cuando: T076 pasa y `ConsultaAuditoriaTest` sigue en verde — cubre: CA6 — depende: T076
+  - nota: añadida por /review: R39
+- [ ] T078 Actualizar el comentario de cabecera de `errores.css` a «system.md 1.8.0» (R41) — public/css/errores.css — hecho cuando: la cabecera nombra la 1.8.0 y `AuditoriaVistasTest` sigue en verde — cubre: CA11
+  - nota: añadida por /review: R41
+- [ ] T079 Repetir la verificación de cierre sobre la ronda 2: `php artisan test` en verde contra `dentissa_test`; `vendor/bin/pint --test` sobre los PHP tocados; `gitleaks` y `semgrep … --baseline-commit` sin hallazgos nuevos; `python .ai/bin/aidd.py validate docs/specs/020-auditoria-base` sin errores — (sin archivos) — hecho cuando: todo lo anterior en verde y la nota lo registra — depende: T073, T074, T075, T077, T078
+  - nota: añadida por /review: verificación de R36–R41
+
 ## Integración y documentación
 - [x] T040 Añadir el servicio `scheduler` al Compose local (plan D2; A67): el mismo `build:` que `app`, `php artisan schedule:work`, `restart: unless-stopped` y los mismos montajes que `app`, `local.ini` incluido — **ruta protegida: requiere aprobación explícita del usuario** — docker-compose.yml — hecho cuando: los casos del Compose local de T019 pasan, `docker compose up -d` levanta `scheduler` y `docker compose exec scheduler php artisan schedule:list` muestra solo `auditoria:purgar`, mensual — cubre: CA5 — depende: T019, T028
   - nota: 2026-10-30 — ruta protegida **aprobada por el usuario el 2026-10-30**. A80: el caso local de `test_el_scheduler_se_reinicia_solo_y_monta_el_local_ini_de_app` pasa. `docker compose up -d scheduler` lo levanta (`dentissa_scheduler Up`) y `docker compose exec scheduler php artisan schedule:list` da solo `0 3 1 * *  php artisan auditoria:purgar`. Antes de levantarlo se quitó el contenedor huérfano `dentissa_scheduler` de una rama antigua del clon principal, que ocupaba el nombre.
@@ -275,7 +295,7 @@ T055 conservan los valores de c4: ningún cambio visual.
   - nota: 2026-10-30 — el roadmap cierra (tachadas, con la 020 como motivo) las excepciones P7 de la 025 (403 del alta de citas), la 026 (Gates `gestionar-cita` y `cambiar-estado-cita`) y la 028 (`reprogramar-cita`), y las notas del `scheduler` en producción y del menú; apunta `/plan 014 --fix` con el contrato final y `/plan 041 --fix` tras fusionar, y la spec propia del traslado del vigilante. Solo queda para la liberación la nota de la 024 (T095). `security.md`: la consulta, la vista previa local, el `scheduler` y `X-Request-Id` en la superficie de ataque; las amenazas y los residuos aceptados del registro.
 - [x] T049 Añadir `app/Auditoria/` y `app/Listeners/` al mapa del repositorio (A65) — **ruta protegida: requiere aprobación explícita del usuario** — AGENTS.md — hecho cuando: el mapa nombra el módulo de auditoría y los listeners
   - nota: 2026-10-30 — ruta protegida **aprobada por el usuario el 2026-10-30**; dos filas nuevas en el mapa del repositorio.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5). Antes de liberar (roadmap; A57):
@@ -297,15 +317,15 @@ T055 conservan los valores de c4: ningún cambio visual.
 |---|---|---|
 | CA1 | T010 | T001, T021, T022, T023 |
 | CA2 | T011, T014, T059 | T029, T031, T047 |
-| CA3 | T010, T013, T067 | T022, T023, T027, T068 |
+| CA3 | T010, T013, T067, T075 | T022, T023, T027, T068 |
 | CA4 | T013, T014, T065, T067 | T004, T022, T027, T029, T035, T050, T066, T068 |
-| CA5 | T011, T019, T051, T059, T060 | T021, T028, T031, T040, T043, T044, T045, T047, T061, T062, T063, T064 |
-| CA6 | T014, T017, T033, T054, T057 | T021, T029, T030, T037, T046, T052, T053, T055, T058 |
+| CA5 | T011, T019, T051, T059, T060, T072 | T021, T028, T031, T040, T043, T044, T045, T047, T061, T062, T063, T064, T073 |
+| CA6 | T014, T017, T033, T054, T057, T074, T076 | T021, T029, T030, T037, T046, T052, T053, T055, T058, T077 |
 | CA7 | T014 | T029 |
 | CA8 | T012 | T024, T026 |
 | CA9 | T012 | T024, T026 |
 | CA10 | T010, T012 | T022, T024, T025, T026, T034 |
-| CA11 | T010, T016, T017, T054, T070 | T004, T022, T023, T027, T036, T037, T053, T055, T056, T071 |
+| CA11 | T010, T016, T017, T054, T070, T074 | T004, T022, T023, T027, T036, T037, T053, T055, T056, T071, T078 |
 | CA12 | T011, T014 | T028, T029 |
 | CA13 | T012 | T022, T024, T026 |
 | CA14 | T010, T018 | T022, T023, T038, T039 |
@@ -323,9 +343,9 @@ T055 conservan los valores de c4: ningún cambio visual.
 | TM9 | T028 | T011 |
 | TM10 | T022 | T010 |
 | TM11 | T022, T024 | T012 |
-| TM12 | T022, T027, T029, T058, T068 | T010, T013, T014, T057, T067 |
+| TM12 | T022, T027, T029, T058, T068, T077 | T010, T013, T014, T057, T067, T075, T076 |
 | TM13 | T022 | T010 |
-| TM14 | T028, T040, T043, T061, T062, T063 | T011, T019, T060 |
+| TM14 | T028, T040, T043, T061, T062, T063, T073 | T011, T019, T060, T072 |
 | TM15 | T037 | T017 |
 | TM16 | T038, T039 | T018 |
 | TM17 | T027 (solo usuarios autenticados; el resto, residuo aceptado) | T013 |
@@ -345,7 +365,7 @@ T055 conservan los valores de c4: ningún cambio visual.
 | app/Http/Middleware/IdentificadorPeticion.php | T024 |
 | app/Http/Middleware/ContextoActor.php | T025 |
 | bootstrap/app.php | T026, T027 |
-| app/Http/Controllers/AuditoriaController.php | T029 |
+| app/Http/Controllers/AuditoriaController.php | T029, T077 |
 | app/Http/Controllers/DisenioAuditoriaController.php | T037 |
 | routes/web.php | T029, T037 |
 | routes/console.php | T028 |
@@ -357,21 +377,21 @@ T055 conservan los valores de c4: ningún cambio visual.
 | docs/specs/020-auditoria-base/design/medir.mjs, criterios.json | T053 |
 | public/css/app.css | T006, T055 |
 | public/css/auditoria.css | T030 |
-| public/css/errores.css, public/fonts/roboto/ | T036, T007, T056 |
+| public/css/errores.css, public/fonts/roboto/ | T036, T007, T056, T078 |
 | app/Avisos/Vigilante.php, config/avisos.php | T038 |
 | app/Mail/AvisoProduccion.php, resources/views/correos/aviso.blade.php | T039 |
 | docker-compose.yml | T040 |
 | docker-compose.prod.yml | T043, T063 |
-| deploy/desplegar.sh, deploy/volver.sh, deploy/restaurar.sh | T044, T061, T062 |
+| deploy/desplegar.sh, deploy/volver.sh, deploy/restaurar.sh | T044, T061, T062, T073 |
 | deploy/verificar.sh, deploy/aplicar-entorno.sh, deploy/README.md | T045, T064 |
 | docs/deployment.md, docs/observability.md | T091, T064 |
 | docs/architecture.md | T090 |
 | docs/roadmap.md, docs/security.md | T048 |
 | AGENTS.md | T049 |
 | docs/design/system.md, system.html | T006, T055, T071 |
-| tests/Feature/Auditoria/*Test.php, tests/Support/* | T003, T005, T010–T017, T054, T057, T059, T065, T067 |
+| tests/Feature/Auditoria/*Test.php, tests/Support/* | T003, T005, T010–T017, T054, T057, T059, T065, T067, T074, T075, T076 |
 | tests/Feature/MovilPacienteTest.php | T033 |
-| tests/Feature/ConfiguracionProduccionTest.php | T019, T051, T060 |
+| tests/Feature/ConfiguracionProduccionTest.php | T019, T051, T060, T072 |
 | tests/Feature/VigilanteTest.php, tests/Feature/AvisoProduccionTest.php | T018 |
 | phpunit.xml | T015 |
 
