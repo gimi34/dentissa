@@ -231,8 +231,9 @@ Añadidas por `/review 020 --rerun` (2026-10-31); cada tarea cita su hallazgo de
 - [x] T077 Anclar con `\z` las reglas de filtro de `AuditoriaController` (R39): el patrón de nombre (`accion`, `recurso_tipo`) y el de `recurso_id` — app/Http/Controllers/AuditoriaController.php — hecho cuando: T076 pasa y `ConsultaAuditoriaTest` sigue en verde — cubre: CA6 — depende: T076
   - nota: añadida por /review: R39
   - nota: 2026-10-31 — T076 pasa y `ConsultaAuditoriaTest` en verde (19); Pint limpio.
-- [ ] T078 Actualizar el comentario de cabecera de `errores.css` a «system.md 1.8.0» (R41) — public/css/errores.css — hecho cuando: la cabecera nombra la 1.8.0 y `AuditoriaVistasTest` sigue en verde — cubre: CA11
+- [x] T078 Actualizar el comentario de cabecera de `errores.css` a «system.md 1.8.0» (R41) — public/css/errores.css — hecho cuando: la cabecera nombra la 1.8.0 y `AuditoriaVistasTest` sigue en verde — cubre: CA11
   - nota: añadida por /review: R41
+  - nota: 2026-10-31 — la cabecera dice «system.md 1.8.0»; `AuditoriaVistasTest` en verde.
 - [ ] T079 Repetir la verificación de cierre sobre la ronda 2: `php artisan test` en verde contra `dentissa_test`; `vendor/bin/pint --test` sobre los PHP tocados; `gitleaks` y `semgrep … --baseline-commit` sin hallazgos nuevos; `python .ai/bin/aidd.py validate docs/specs/020-auditoria-base` sin errores — (sin archivos) — hecho cuando: todo lo anterior en verde y la nota lo registra — depende: T073, T074, T075, T077, T078
   - nota: añadida por /review: verificación de R36–R41
 

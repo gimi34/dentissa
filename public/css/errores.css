@@ -1,6 +1,6 @@
 /* Spec 020 · error genérico (503), según design.md (c4/error.html). No usa el layout autenticado (A52):
    se ve igual con y sin sesión. Carcasa del acceso de la 041: panel de marca en el escritorio y franja
-   --p800 con el logo en el teléfono. Solo tokens de app.css (system.md 1.7.0) y la Roboto propia. */
+   --p800 con el logo en el teléfono. Solo tokens de app.css (system.md 1.8.0) y la Roboto propia. */
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
