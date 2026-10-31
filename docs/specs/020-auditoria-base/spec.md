@@ -1,7 +1,7 @@
 ---
 id: 020
 slug: auditoria-base
-status: approved
+status: implemented
 created: 2026-09-28
 extends: [030, 031, 032]
 ---
