@@ -389,7 +389,8 @@ class PaginaInicioTest extends TestCase
         $marcas = $xpath->query('//*[@role="img"][@aria-label="Melissa López N. · Odontología integral"]');
         $this->assertSame(1, $marcas->length, 'La marca se anuncia una vez.');
         $this->assertSame(1, $xpath->query('ancestor::header', $marcas->item(0))->length, 'Y es en la cabecera.');
-        $this->assertSame(0, $xpath->query('.//*[@role="img"]', $this->porClase($xpath, 'pub-hero'))->length, 'La presentación no repite la marca.');
+        // La ventana sí es una imagen con nombre (la foto de la clínica, D20), pero no el de la marca.
+        $this->assertSame(0, $xpath->query('.//*[@role="img"][@aria-label="Melissa López N. · Odontología integral"]', $this->porClase($xpath, 'pub-hero'))->length, 'La presentación no repite la marca.');
     }
 
     public function test_el_mapa_es_perezoso_y_avisa_de_google(): void
