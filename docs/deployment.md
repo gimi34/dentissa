@@ -114,7 +114,10 @@ recrea también, porque lee el mismo `app.env`. `verificar.sh` comprueba que est
 `scheduler`. Se anota la versión instalada (`git describe --tags`), se hace el checkout del tag a
 mano y después `bash deploy/desplegar.sh <tag>`, que ya lo levanta; como el checkout está hecho,
 el script informa como «anterior» el propio tag, y la vuelta es a la versión anotada
-(`deploy/README.md` §9).
+(`deploy/README.md` §9): `bash deploy/volver.sh <versión anotada>`, **sin la copia**. Si la
+verificación falla, **no se sigue la orden de `restaurar.sh` que imprime `desplegar.sh`**: su
+«anterior» es el propio tag y su copia, tomada antes de la migración, no tiene la tabla
+`auditoria`; con ella se volvería a levantar la 020 sin su tabla (/review 020 R3).
 
 Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
