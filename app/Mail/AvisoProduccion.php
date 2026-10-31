@@ -21,11 +21,12 @@ class AvisoProduccion extends Mailable
         'errores' => 'Errores del servidor',
         'accesos' => 'Inicios de sesión fallidos',
         'formato' => 'El log de acceso tiene otro formato',
+        'auditoria' => 'El registro de auditoría no pudo guardar eventos',
         'prueba' => 'Aviso de prueba',
     ];
 
     /**
-     * @param  string  $tipo  errores, accesos, formato o prueba
+     * @param  string  $tipo  errores, accesos, formato, auditoria (spec 020) o prueba
      * @param  int  $recuento  eventos desde el fin del aviso anterior (o en la ventana, si no lo hay)
      * @param  CarbonImmutable|null  $anterior  momento del aviso anterior del mismo tipo
      */

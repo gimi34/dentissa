@@ -32,9 +32,11 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     solo vale desde el despliegue siguiente (en la 032 se resolvió con el checkout a mano, D6);
   - el umbral de 5xx no tiene mínimo de peticiones y da falsos avisos con poco tráfico (riesgo
     aceptado por el usuario, 2026-10-25; si molesta, otra spec);
-  - la spec 020 tiene que llevar su `scheduler` también al Compose de producción, mover
-    `dentissa:vigilar` a él (`everyMinute()->withoutOverlapping()`) y retirar el temporizador
-    `dentissa-vigilar`, para no tener dos mecanismos (032 D11, /analyze A20 y A39);
+  - el `scheduler` de la 020 llega también al Compose de producción, con la purga como única
+    tarea (hecho en la 020, pendiente de liberar). Mover `dentissa:vigilar` a él
+    (`everyMinute()->withoutOverlapping()`) y retirar el temporizador `dentissa-vigilar` va en una
+    **spec propia**, para no tener dos mecanismos (032 D11, /analyze A20 y A39; decisión del
+    usuario, 2026-10-28);
   - al retomar la 038, su vuelta atrás es a la versión de la 032 (v0.11.0) y no a v0.10.0 (032 D15,
     /analyze A25).
   - aceptados sin tarea de `/review` (deuda menor, liberada en v0.11.0):
@@ -195,7 +197,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - RS8.d (de la spec 031): política de contenido estricta, sin `'unsafe-inline'`. Requiere sacar de
   las vistas los scripts incrustados (unas 8), los manejadores `on…` (11) y los `style=""` (32);
   se hace por pantallas, al tocar cada una (decisión del usuario, 2026-10-05).
-- Spec 020 tras la 033 (decisión del usuario, 2026-10-11): al reconstruirla sobre `main`, su
+- Hecho en la 020 (reconstruida en `feature/020-auditoria` sobre `main`, 2026-10-30): el enlace
+  «Auditoría» es la última entrada de la barra, con el patrón de la 033, `MovilPacienteTest` lo
+  lleva, `capturar.mjs --medir` lo deja fuera de la comparación con la línea base y la 020 no
+  toca `citas.css`. Nota original: Spec 020 tras la 033 (decisión del usuario, 2026-10-11): al reconstruirla sobre `main`, su
   enlace «Auditoría» del menú de admin sigue el patrón de la 033 (`.active` y `aria-current="page"`
   en la sección actual) y actualiza la lista de `MovilPacienteTest::test_el_menu_del_movil_tiene_las_mismas_secciones`.
   Si se fusiona después de la 034 (plan de la 034, Rollout; A42, A63): el foco de los campos del
@@ -376,9 +381,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   (spec 025, D9; decisión del usuario, 2026-09-29). Hecho: constitución 1.2.0 (2026-10-02, spec 027).
 - Auditoría del alta de citas con notas (dato de salud) → spec 022. Excepción P7 de la spec 025:
   la 025 no cambia qué notas se guardan ni quién (D9; decisión del usuario, 2026-09-30).
-- Auditoría del 403 del alta de citas del personal (`autorizadoParaCita`) → spec 020, registro
+- ~~Auditoría del 403 del alta de citas del personal (`autorizadoParaCita`) → spec 020, registro
   central de accesos denegados (OB1.c). Excepción P7 de la spec 025 (D9; decisión del usuario,
-  2026-09-30).
+  2026-09-30).~~ Cerrada por la 020: el registro central registra todo 403 de un usuario
+  autenticado (OB1.c; pendiente de liberar).
 - Gate o Policy del alta de citas del paciente (`POST /cliente/agendar`) y rechazo por rol en
   `/cliente/*` → spec 015. Excepción P3 de la spec 025. El alta del personal recibe su Gate en la
   014 (D9; decisión del usuario, 2026-09-30).
@@ -404,8 +410,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   `AppServiceProvider` (`App\Autorizacion\ReprogramarCita`) y de `puede_reprogramar` en
   `CitasController@show` (spec 028).
 - Auditoría de la reprogramación y de la cancelación desde «No reagendar»: hoy solo quedan en el
-  historial de la cita (autor, fechas y motivo), sin evento formal → spec 022; los 403 del Gate
-  `reprogramar-cita` no se registran → spec 020 (registro central de accesos denegados). Excepción P7
+  historial de la cita (autor, fechas y motivo), sin evento formal → spec 022; ~~los 403 del Gate
+  `reprogramar-cita` no se registran → spec 020~~ (cerrado por la 020: los 403 y los 404 de ese Gate,
+  y la cita de otro paciente que el paciente pide, quedan como `acceso_denegado`). Excepción P7
   de la spec 028 (decisión del usuario, 2026-10-07).
 - Residuo de SQL con bindings en el log: si el `update` de la cita o el `insert` del historial de
   `ReprogramacionCitas` fallan con una `QueryException` distinta de 1205/1213, el reporte por defecto
@@ -437,8 +444,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
   usuario, 2026-10-02).
 - Residuos P7 de la spec 026: el cambio de estado y su motivo quedan en el historial de la cita,
-  pero sin evento de auditoría formal → spec 022; los 403 de los Gates `gestionar-cita` y
-  `cambiar-estado-cita` no se registran → spec 020 (D10; decisión del usuario, 2026-10-02).
+  pero sin evento de auditoría formal → spec 022; ~~los 403 de los Gates `gestionar-cita` y
+  `cambiar-estado-cita` no se registran → spec 020~~ (cerrado por la 020: sus 403 y 404 quedan como
+  `acceso_denegado`) (D10; decisión del usuario, 2026-10-02).
 - Residuo P8 de la spec 026: una `QueryException` de `EstadosCita` distinta de 1205/1213 sigue el
   reporte por defecto y registra el SQL con sus valores, motivo incluido → spec 023 (D10;
   decisión del usuario, 2026-10-02).
@@ -459,9 +467,15 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   dejar SQL con sus valores en `laravel.log` del servidor. Se acepta con datos ficticios; la spec 023
   (OB4.a) debe liberarse antes de tener datos reales (spec 030, /analyze A26; decisión del usuario,
   2026-10-03).
-- La spec 020 debe añadir su servicio `scheduler` (purga de la auditoría) también a
+- ~~La spec 020 debe añadir su servicio `scheduler` (purga de la auditoría) también a
   `docker-compose.prod.yml` y probar sus triggers con el usuario de base `dentissa_app`, sin root
-  (spec 030, /analyze A26).
+  (spec 030, /analyze A26).~~ Hecho en la 020 (T043; los triggers con `dentissa_app`, en su ensayo
+  local T047).
+- Tras fusionar la 020: `/plan 014 --fix` antes de `/tasks 014`, con el contrato final de la 020
+  (`Auditoria::registrar` con `actor:`, `denegar()` y `denegado_404`; sin `Auditoria::denegacion`,
+  `denegado_403`, `Gate::after` ni la marca en el `Context`) (plan 020, A58). Y `/plan 041 --fix`
+  (T002 de la 041): `clinica.contacto`, los tokens con nombre de la 041 y la Roboto propia ya están
+  en `main` con la 020.
 - Staging (objetivo 5): RD1.d (restauración probada en staging), RD3.d (TLS en staging), RS7.e
   (configuración de staging separada), OB4.c (checklist de staging) y OB7.b (logs de nginx en
   staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1);

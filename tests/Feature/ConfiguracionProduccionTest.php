@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -64,8 +65,12 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
-     * Imágenes de un Compose (`image:`) o de un Dockerfile (`FROM` y
+     * Imágenes que se descargan de un Compose (`image:`) o de un Dockerfile (`FROM` y
      * `COPY --from=` que no son etapas propias).
+     *
+     * Spec 020 (A67, A81): no cuenta la imagen que construye el propio Compose (el `image:` de
+     * un servicio con `build:`) ni ninguna otra aparición de ese mismo valor, como el `scheduler`,
+     * que la reutiliza sin descargarla (`pull_policy: never`). Cualquier otra sigue contando.
      *
      * @return list<string>
      */
@@ -77,8 +82,27 @@ class ConfiguracionProduccionTest extends TestCase
 
         $etapas = array_filter($from[2]);
         $copiasDeImagen = array_filter($copias[1], fn ($origen) => ! in_array($origen, $etapas, true));
+        $construidas = $this->imagenesConstruidas($texto);
+        $descargadas = array_filter($compose[1], fn ($imagen) => ! in_array($imagen, $construidas, true));
 
-        return array_values(array_merge($compose[1], $from[1], $copiasDeImagen));
+        return array_values(array_merge($descargadas, $from[1], $copiasDeImagen));
+    }
+
+    /** @return list<string> `image:` de los servicios de un Compose que también tienen `build:` */
+    private function imagenesConstruidas(string $texto): array
+    {
+        if (! preg_match('/^services:$/m', $texto)) {
+            return [];
+        }
+
+        $construidas = [];
+        foreach ($this->servicios($texto) as $bloque) {
+            if (preg_match('/^    build:/m', $bloque) && preg_match('/^    image:\s*["\']?([^"\'\s]+)/m', $bloque, $m)) {
+                $construidas[] = $m[1];
+            }
+        }
+
+        return $construidas;
     }
 
     /** @return array<string, string> repositorio → etiqueta */
@@ -122,7 +146,7 @@ class ConfiguracionProduccionTest extends TestCase
     public function test_cada_servicio_de_produccion_lee_solo_su_archivo_de_entorno(): void
     {
         $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
-        $esperado = ['app' => 'app.env', 'db' => 'db.env', 'cloudflared' => 'tunnel.env', 'web' => null];
+        $esperado = ['app' => 'app.env', 'scheduler' => 'app.env', 'db' => 'db.env', 'cloudflared' => 'tunnel.env', 'web' => null];
 
         foreach ($esperado as $nombre => $propio) {
             $this->assertArrayHasKey($nombre, $servicios, "Falta el servicio {$nombre}.");
@@ -192,12 +216,26 @@ class ConfiguracionProduccionTest extends TestCase
         );
     }
 
+    /**
+     * Cada servicio PHP (`app` y, desde la spec 020, el `scheduler`) monta `local.ini` una vez,
+     * desde el mismo origen, que es un archivo; ningún otro servicio lo monta (A67).
+     */
     private function assertMontaLocalIni(string $archivo): void
     {
+        $patron = '/-\s*["\']?\.\/([^:"\'\s]+):[^"\'\s]*local\.ini/';
         $compose = $this->leer($archivo);
-        $this->assertSame(1, preg_match_all('/-\s*["\']?\.\/([^:"\'\s]+):[^"\'\s]*local\.ini/', $compose, $m), "{$archivo} no monta local.ini una vez.");
-        // is_file y no file_exists: si el origen no existe, Docker crea en su lugar una carpeta vacía.
-        $this->assertTrue(is_file(base_path($m[1][0])), "{$archivo} monta {$m[1][0]}, que no es un archivo.");
+        $php = array_intersect_key($this->servicios($compose), array_flip(['app', 'scheduler']));
+        $this->assertArrayHasKey('app', $php, "{$archivo} no tiene app.");
+
+        $origenes = [];
+        foreach ($php as $nombre => $bloque) {
+            $this->assertSame(1, preg_match_all($patron, $bloque, $m), "{$nombre} de {$archivo} no monta local.ini una vez.");
+            // is_file y no file_exists: si el origen no existe, Docker crea en su lugar una carpeta vacía.
+            $this->assertTrue(is_file(base_path($m[1][0])), "{$archivo} monta {$m[1][0]}, que no es un archivo.");
+            $origenes[$nombre] = $m[1][0];
+        }
+        $this->assertCount(1, array_unique($origenes), "Los servicios PHP de {$archivo} montan el mismo local.ini.");
+        $this->assertSame(count($php), preg_match_all($patron, $compose), "En {$archivo}, solo los servicios PHP montan local.ini.");
     }
 
     public function test_las_imagenes_de_local_tienen_version_exacta(): void
@@ -220,6 +258,64 @@ class ConfiguracionProduccionTest extends TestCase
         foreach ($compartidas as $repositorio => $etiqueta) {
             $this->assertSame($etiqueta, $etiquetasProduccion[$repositorio], "{$repositorio} tiene otra versión en producción.");
         }
+    }
+
+    /**
+     * Spec 020 (D2, TM14): el `scheduler` de producción ejecuta la imagen que construye `app`, sin
+     * construir otra ni descargarla, con el usuario sin privilegios, solo `app.env`, en la red de
+     * producción, sin puertos y cuando la base está sana.
+     */
+    public function test_el_scheduler_de_produccion_usa_la_imagen_de_app_y_solo_app_env(): void
+    {
+        $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
+        $this->assertArrayHasKey('scheduler', $servicios, 'Falta el servicio scheduler.');
+        [$app, $scheduler] = [$servicios['app'], $servicios['scheduler']];
+
+        $this->assertMatchesRegularExpression('/^    build:/m', $app, 'app construye su imagen.');
+        $this->assertSame(1, preg_match('/^    image:\s*["\']?([^"\'\s]+)/m', $app, $imagen), 'app nombra la imagen que construye.');
+        $this->assertMatchesRegularExpression('/^    image:\s*["\']?'.preg_quote($imagen[1], '/').'["\']?$/m', $scheduler, 'El scheduler usa la imagen de app.');
+        $this->assertDoesNotMatchRegularExpression('/^    build:/m', $scheduler, 'El scheduler no construye otra imagen.');
+        $this->assertMatchesRegularExpression('/^    pull_policy:\s*never$/m', $scheduler, 'Nunca se descarga.');
+        $this->assertMatchesRegularExpression('/^    user:\s*["\']?www-data["\']?$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    command:.*php.*artisan.*schedule:work/m', $scheduler);
+        $this->assertSame([], $this->puertos($scheduler));
+        $this->assertMatchesRegularExpression('/^    networks:\n      - produccion$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    depends_on:\n      db:\n        condition: service_healthy$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^      - storage:\/var\/www\/storage$/m', $scheduler, 'Escribe sus logs en el mismo storage que app.');
+
+        // /review 020 R21 y R23: nada más que esto, y sin capacidades ni escalada de privilegios.
+        preg_match_all('/^    ([a-z_]+):/m', $scheduler, $claves);
+        $this->assertEqualsCanonicalizing(
+            ['image', 'pull_policy', 'restart', 'user', 'command', 'env_file', 'volumes', 'networks', 'depends_on', 'cap_drop', 'security_opt'],
+            $claves[1],
+            'El bloque del scheduler tiene exactamente estas claves.',
+        );
+        $this->assertMatchesRegularExpression('/^    cap_drop: \[ALL\]$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    security_opt: \["no-new-privileges:true"\]$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    volumes:\n      - storage:\/var\/www\/storage\n      - \.\/docker\/nginx\/php\/local\.ini:\/usr\/local\/etc\/php\/conf\.d\/local\.ini:ro\n(?!      - )/m', $scheduler, 'Solo sus dos volúmenes.');
+        $this->assertMatchesRegularExpression('/^    networks:\n      - produccion\n(?!      - )/m', $scheduler, 'Una sola red.');
+    }
+
+    /** @return array<string, array{0: string}> */
+    public static function composeConScheduler(): array
+    {
+        return ['local' => ['docker-compose.yml'], 'producción' => ['docker-compose.prod.yml']];
+    }
+
+    /**
+     * Spec 020 (A67; 030 CA9 y CA10): el `scheduler` vuelve solo tras reiniciar el servidor y
+     * corre con la misma configuración de PHP que `app`. Un caso por Compose (A80): el local lo
+     * cierra T040 y el de producción, T043.
+     */
+    #[DataProvider('composeConScheduler')]
+    public function test_el_scheduler_se_reinicia_solo_y_monta_el_local_ini_de_app(string $archivo): void
+    {
+        $servicios = $this->servicios($this->leer($archivo));
+        $this->assertArrayHasKey('scheduler', $servicios, "{$archivo} no tiene scheduler.");
+
+        $this->assertMatchesRegularExpression('/^    restart:\s*unless-stopped$/m', $servicios['scheduler'], 'Se reinicia solo.');
+        $this->assertSame(1, preg_match('/^      - .*local\.ini.*$/m', $servicios['app'], $deApp), 'app monta local.ini.');
+        $this->assertStringContainsString($deApp[0]."\n", $servicios['scheduler']."\n", 'El scheduler monta el mismo local.ini, igual que app.');
     }
 
     public function test_el_compose_de_local_monta_un_local_ini_que_existe(): void
@@ -333,6 +429,12 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^servicios="\$\('.$compose.' config --services\)"/m', $ordenes, 'Lee los servicios del Compose de producción.');
         $this->assertMatchesRegularExpression('/^grep -qxF -- "\$\{servicio\}" <<< "\$\{servicios\}" \|\| error /m', $ordenes, 'El servicio se compara como texto fijo y nunca como opción (R5).');
         $this->assertMatchesRegularExpression('/^'.$compose.' up -d --force-recreate --no-deps "\$\{servicio\}"$/m', $ordenes, 'Recrea solo ese servicio para que relea su archivo de entorno.');
+        // Spec 020 (A74): el scheduler lee el mismo app.env, así que con app se recrea también.
+        $this->assertMatchesRegularExpression(
+            '/^if \[\[ "\$\{servicio\}" == "app" \]\] && grep -qxF scheduler <<< "\$\{servicios\}"; then\n(?:paso "[^"\n]*"\n)?'.$compose.' up -d --force-recreate --no-deps scheduler\nfi$/m',
+            $ordenes,
+            'Con app recrea también el scheduler, si el Compose lo tiene.',
+        );
         $this->assertMatchesRegularExpression(
             '/^if \[\[ "\$\{servicio\}" == "app" \]\]; then\n(?:paso "[^"\n]*"\n)?'.$compose.' exec -T -u www-data app php artisan config:cache\n'.$compose.' exec -T -u www-data app php artisan route:cache\nfi$/m',
             $ordenes,
@@ -519,7 +621,7 @@ class ConfiguracionProduccionTest extends TestCase
         $comprobar = $this->posicion(substr($ordenes, $main), "\ncomprobar\n", 'main() no llama a comprobar.');
         $confirmar = $this->posicion(substr($ordenes, $main), 'read -r -p ', 'main() no pide la confirmación.');
         $this->assertLessThan($confirmar, $comprobar, 'Comprueba antes de pedir la confirmación.');
-        foreach (['bash deploy/volver.sh', 'stop app web', '| ssh '] as $cambio) {
+        foreach (['bash deploy/volver.sh', 'stop app web', 'stop scheduler', '| ssh '] as $cambio) {
             $this->assertGreaterThan($confirmar, $this->posicion(substr($ordenes, $main), $cambio, "main() no hace «{$cambio}»."), "«{$cambio}» va después de la confirmación.");
         }
         $this->assertMatchesRegularExpression('/^\[\[ "\$\{respuesta\}" == "\$\{base\}" \]\] \|\| error "confirmación incorrecta; no se ha tocado nada"$/m', $ordenes);
@@ -634,8 +736,13 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/^bash deploy\/restaurar\.sh\b/m', $volver, 'volver.sh ya no restaura.');
 
         $sinLevantar = $this->posicion($volver, 'if [[ "${opcion}" == "--sin-levantar" ]]; then', 'volver.sh admite --sin-levantar.');
-        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d db\nesperar_db\nreturn 0\nfi$/m', $volver);
-        $this->assertLessThan($this->posicion($volver, '"${compose[@]}" up -d app web', 'volver.sh levanta app y web.'), $sinLevantar, '--sin-levantar sale antes de levantar app y web.');
+        // Spec 020 (D22, A68): db se levanta con --remove-orphans, que quita el scheduler de la 020
+        // si la versión de destino no lo tiene; si lo tiene, sigue parado desde antes del checkout.
+        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d --remove-orphans db\nesperar_db\nreturn 0\nfi$/m', $volver);
+        $this->assertLessThan($this->posicion($volver, '"${compose[@]}" up -d --remove-orphans app web', 'volver.sh levanta app y web.'), $sinLevantar, '--sin-levantar sale antes de levantar app y web.');
+        $parar = $this->posicion($volver, '"${compose[@]}" stop scheduler', 'volver.sh para el scheduler.');
+        $this->assertLessThan($checkout, $parar, 'El scheduler se para antes del checkout, con el Compose de la versión instalada.');
+        $this->assertLessThan($sinLevantar, $parar, 'También con --sin-levantar.');
 
         $aviso = $this->posicion($volver, 'if [[ ! -f app/Console/Commands/Vigilar.php ]]; then', 'volver.sh avisa del temporizador.');
         $this->assertGreaterThan($checkout, $aviso, 'El aviso mira la versión de destino.');
@@ -653,6 +760,152 @@ class ConfiguracionProduccionTest extends TestCase
         ] as $orden) {
             $this->assertGreaterThan($cargar, $this->posicion($restaurar, $orden, "restaurar.sh no hace «{$orden}»."), "«{$orden}» va después de la carga.");
         }
+    }
+
+    /**
+     * Spec 020 (D22): líneas de un script que nombran el `scheduler` fuera de un `if` que
+     * comprueba que el Compose de destino lo tiene (`config --services | grep -qxF scheduler`).
+     *
+     * @return list<string>
+     */
+    private function schedulerSinComprobar(string $ordenes): array
+    {
+        $sueltas = [];
+        $dentro = 0;
+        foreach (explode("\n", $ordenes) as $linea) {
+            // /review 020 R4: la lista se lee una vez (con `|| error`) y se busca en ella, sin tubería.
+            if (preg_match('/^if grep -qxF scheduler <<< "\$\{\w+\}"; then$/', $linea)) {
+                $dentro++;
+
+                continue;
+            }
+            if ($dentro > 0 && $linea === 'fi') {
+                $dentro--;
+
+                continue;
+            }
+            // El texto de un mensaje de error no es una orden: puede nombrar el scheduler (R18).
+            // Solo la cadena del mensaje: lo que va detrás sigue siendo una orden (/review R37).
+            $orden = preg_replace('/\berror "[^"]*"/', '', $linea);
+            if ($dentro === 0 && preg_match('/\bscheduler\b/', $orden) && ! str_starts_with($linea, 'paso ')) {
+                $sueltas[] = $linea;
+            }
+        }
+
+        return $sueltas;
+    }
+
+    /**
+     * Spec 020 (CA5, D22, A68): desplegar.sh, volver.sh y restaurar.sh levantan y paran el
+     * scheduler con app y web, y solo lo nombran si la versión de destino lo tiene: hacia una
+     * versión anterior a la 020, nombrarlo fallaría («no such service»).
+     */
+    public function test_los_scripts_levantan_y_paran_el_scheduler_con_app(): void
+    {
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertMatchesRegularExpression('/\bup -d scheduler\b/', $ordenes, "{$script} levanta el scheduler.");
+            $this->assertSame([], $this->schedulerSinComprobar($ordenes), "{$script} nombra el scheduler sin comprobar que existe.");
+        }
+        $this->assertCount(1, $this->schedulerSinComprobar("if x; then\nfi\n\"\${compose[@]}\" up -d scheduler"), 'Control positivo.');
+        $this->assertContains('"${compose[@]}" up -d scheduler', $this->schedulerSinComprobar("if \"\${compose[@]}\" config --services | grep -qxF scheduler; then\n\"\${compose[@]}\" up -d scheduler\nfi"), 'La tubería ya no cuenta como comprobación.');
+        $this->assertCount(1, $this->schedulerSinComprobar('x="$(a)" || error "m"; "${compose[@]}" up -d scheduler'), 'Una orden tras el mensaje de error sigue contando (R37).');
+        $this->assertSame([], $this->schedulerSinComprobar('x="$(a)" || error "no se pudo levantar el scheduler"'), 'El texto del mensaje no es una orden.');
+
+        // /review 020 R4: si no se puede leer la lista de servicios, el script se detiene.
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertDoesNotMatchRegularExpression('/config --services[^\n]*\|\s*grep/', $ordenes, "{$script} no lee la lista con una tubería.");
+            $this->assertMatchesRegularExpression('/^\w+="\$\([^\n]*config --services[^\n]*\)" \|\| error "/m', $ordenes, "{$script} lee la lista y se detiene si no puede.");
+        }
+
+        // /review 020 R16 y R17: el scheduler instalado se para antes de migrar, y volver.sh lo para tras el fetch.
+        $desplegar = $this->ordenes('deploy/desplegar.sh');
+        $this->assertLessThan(
+            $this->posicion($desplegar, 'php artisan migrate --force', 'desplegar.sh migra.'),
+            $this->posicion($desplegar, '"${compose[@]}" stop scheduler', 'desplegar.sh para el scheduler instalado.'),
+            'El scheduler se para antes de migrar.',
+        );
+        $volver = $this->ordenes('deploy/volver.sh');
+        $parada = $this->posicion($volver, '"${compose[@]}" stop scheduler', 'volver.sh para el scheduler.');
+        $this->assertGreaterThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh hace el fetch.'), $parada, 'Lo para después del fetch.');
+        $this->assertLessThan($this->posicion($volver, 'checkout "${ref}"', 'volver.sh hace el checkout.'), $parada, 'Y antes del checkout.');
+
+        // /review 020 R18: con --volver, la salida sin datos descifrados nombra también el scheduler.
+        $this->assertSame(1, preg_match('/^error "no llegó ningún dato descifrado[^\n]*siguen parados en \$\{ref\}[^\n]*"$/m', $this->ordenes('deploy/restaurar.sh'), $mensaje));
+        $this->assertStringContainsString('scheduler', $mensaje[0], 'El mensaje nombra el scheduler, también parado.');
+
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertMatchesRegularExpression('/^"\$\{compose\[@\]\}" up -d --remove-orphans app web$/m', $ordenes, "{$script} levanta con --remove-orphans.");
+            $this->assertDoesNotMatchRegularExpression('/^"\$\{compose\[@\]\}" up -d app web$/m', $ordenes, "{$script} no deja huérfanos.");
+            $levantar = $this->posicion($ordenes, '"${compose[@]}" up -d --remove-orphans app web', "{$script} levanta app y web.");
+            $this->assertGreaterThan($levantar, $this->posicion($ordenes, '"${compose[@]}" up -d scheduler', "{$script} levanta el scheduler."), 'El scheduler, tras app y web.');
+        }
+    }
+
+    /**
+     * Spec 020 (D22; A68, A83): con y sin --volver, restaurar.sh para todo lo que escribe en la
+     * base antes de cargar la copia, y cada salida que vuelve a levantar app y web levanta también
+     * el scheduler si la versión lo tiene, también la de «ningún dato descifrado».
+     */
+    public function test_restaurar_para_todo_lo_que_escribe_antes_de_cargar(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+        $main = substr($ordenes, $this->posicion($ordenes, "\nmain() {", 'Falta main().'));
+        $servidor = 'en_servidor docker compose -f docker-compose.prod.yml';
+        $carga = $this->posicion($main, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.');
+
+        $sinVolver = $this->posicion($main, "{$servidor} stop app web < /dev/null", 'Sin --volver para app y web.');
+        $paraScheduler = $this->posicion($main, "{$servidor} stop scheduler < /dev/null", 'Para el scheduler.');
+        $this->assertLessThan($carga, $sinVolver);
+        $this->assertLessThan($carga, $paraScheduler, 'El scheduler está parado antes de cargar.');
+        $this->assertLessThan($carga, $this->posicion($main, 'en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null', 'Con --volver, volver.sh --sin-levantar.'));
+
+        $tras = substr($main, $carga);
+        $this->assertSame(
+            substr_count($tras, "{$servidor} up -d app web < /dev/null"),
+            substr_count($tras, "{$servidor} up -d scheduler < /dev/null"),
+            'Cada vez que levanta app y web, levanta también el scheduler (A83).',
+        );
+        $this->assertSame(2, substr_count($tras, "{$servidor} up -d scheduler < /dev/null"), 'La salida sin datos descifrados y el final.');
+        $sinDatos = substr($tras, 0, $this->posicion($tras, 'la base no se ha tocado y app y web vuelven a estar en marcha', 'Salida sin datos descifrados.'));
+        $this->assertStringContainsString("{$servidor} up -d scheduler < /dev/null", $sinDatos, 'La salida sin datos descifrados levanta el scheduler.');
+    }
+
+    /**
+     * /review 020 R36: tras la carga, la lista de servicios no se lee antes de comprobar cómo terminó
+     * (con el SSH caído fallaría también, y su mensaje taparía el de la carga incompleta), y se lee
+     * justo antes de levantar, ya descartada la carga incompleta.
+     */
+    public function test_restaurar_lee_los_servicios_despues_de_comprobar_la_carga(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+        $main = substr($ordenes, $this->posicion($ordenes, "\nmain() {", 'Falta main().'));
+        $tras = substr($main, $this->posicion($main, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.'));
+
+        $this->assertGreaterThan(
+            $this->posicion($tras, 'if [[ "${resultado[1]}" -eq 3 ]]; then', 'Comprueba si llegaron datos.'),
+            $this->posicion($tras, 'config --services', 'Lee la lista tras la carga.'),
+            'Ninguna lectura de la lista antes de comprobar cómo terminó la carga.',
+        );
+        $incompleta = $this->posicion($tras, 'la carga quedó incompleta', 'Comprueba la carga incompleta.');
+        $levantar = $this->posicion($tras, 'paso "Levantando app, web y el scheduler"', 'Levanta al final.');
+        $this->assertStringContainsString('config --services', substr($tras, $incompleta, $levantar - $incompleta), 'Lee la lista justo antes de levantar.');
+    }
+
+    /** Spec 020 (CA5): verificar.sh comprueba que el scheduler está en marcha y programa la purga. */
+    public function test_verificar_comprueba_el_scheduler(): void
+    {
+        $ordenes = $this->ordenes('deploy/verificar.sh');
+
+        $this->assertMatchesRegularExpression('/^for servicio in db app web scheduler; do$/m', $ordenes, 'El scheduler en «Servicios».');
+        $this->assertMatchesRegularExpression(
+            '/^if "\$\{compose\[@\]\}" exec -T -u www-data scheduler php artisan schedule:list 2> ?\/dev\/null \| grep -q \'auditoria:purgar\'; then\nok "[^"\n]*auditoria:purgar[^"\n]*"\nelse\nfallo "[^"\n]*auditoria:purgar[^"\n]*"\nfi$/m',
+            $ordenes,
+            'Comprueba que el scheduler programa auditoria:purgar.',
+        );
+        $this->assertStringContainsString('echo "== Tareas programadas', $this->leer('deploy/verificar.sh'));
     }
 
     /**

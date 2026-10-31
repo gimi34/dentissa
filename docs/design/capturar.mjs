@@ -304,7 +304,7 @@ const COMPROBACIONES = [
   '034 menú: a 390, «Menú» sin texto visible, con nombre y 44 × 44; con el menú abierto, el logo de --logo-max-w con fondo --p600 (CA9, CA10)',
   '034 cambios de modo (033 T064 y R21): (a) foco en «Cerrar menú» y paso a 1000 px → enlace actual; (b) foco en un enlace del menú y paso a 390 → «Menú»; (c) Intro y Escape → cerrado y foco en «Menú»; (d) «Atrás» → cerrado y sin inert; (R21) a 1000, foco en un enlace de la barra, clic en una zona sin foco y paso a 390 → el foco no se mueve (CA9, A10)',
   '034 sin JS: a 390, las pantallas del personal sin desplazamiento horizontal (CA8)',
-  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro) (CA11, D13)',
+  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro ni el enlace «Auditoría» del admin, spec 020) (CA11, D13)',
   '035 pantallas: ficha, alta y edición del paciente, lista, ficha y alta de expediente de cada rol que las ve, a 320, 390, 844x390 y 1440 sin desplazamiento horizontal; a 320, 390 y 844x390, sin recortes, toque ≥ 44 × 44 (también las migas), sin solapes y tarjetas con su etiqueta; y en las palabras de 30 letras (también el título de la barra y las migas) (CA1–CA4, CA8, CA9)',
   '035 fichas: a 320, 390 y 844x390, las dos fichas en una columna; en la del paciente, iniciales de 48 px con el nombre, la edad y el tipo de sangre a su derecha y las etiquetas de contacto visibles, que a 1440 no se ven; las acciones de la barra bajo el título y a partes iguales; los botones de las acciones con el texto centrado (±2 px) y alineados en su fila (CA1, CA4, CA7, D12)',
   '035 formularios: a 320, el alta y la edición del paciente, el alta del expediente y la ficha del expediente (admin y dentista) enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13, /review R12)',
@@ -691,7 +691,10 @@ const EN_PAGINA = {
     const cs = getComputedStyle(b); const r = b.getBoundingClientRect();
     return { borde: cs.borderTopWidth, fondo: cs.backgroundColor, ancho: r.width, alto: r.height };
   },
-  excluidos: () => [...document.querySelectorAll('.filtro-citas .field')].map((e) => {
+  // Spec 020 (D24): también el enlace «Auditoría» de la barra del admin, que la línea base del tag de
+  // producción no tiene; es la última entrada y no desplaza nada. Solo si existe: las pantallas de
+  // los demás roles se comparan enteras.
+  excluidos: () => [...document.querySelectorAll('.filtro-citas .field, .sidebar a[href="/admin/auditoria"]')].map((e) => {
     const r = e.getBoundingClientRect();
     return [Math.floor(r.left + scrollX - 4), Math.floor(r.top + scrollY - 4), Math.ceil(r.width + 8), Math.ceil(r.height + 8)];
   }),

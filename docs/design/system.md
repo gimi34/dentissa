@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.6.0
+version: 1.8.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-10-16
+updated: 2026-10-29
 ---
 
 # Sistema de diseño de Dentissa
@@ -83,6 +83,11 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
 
+Tokens de tamaño (spec 020): `--text-acceso-titulo` (28px), `--text-acceso` (14px) y
+`--text-acceso-destacado` (16.8px), del error genérico; interlineado: `--leading-publico` (1.5) y
+`--leading-titulo` (1.15); espaciado de letras: `--tracking-etiqueta` (0.08em) y `--tracking-titulo`
+(-0.01em).
+
 Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
 `--text-meta` (13px, migas de pan) y `--text-marca` (16px; sin uso desde la spec 034, que cambia la marca de
 texto por el logo; no se retira porque lo comprueba el test de la 033). **Son tamaños** y
@@ -156,6 +161,23 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
   - `--campo-fecha-max` (220px): ancho máximo de hoy de la fecha sugerida del alta de expediente en el
     escritorio (`.campo-fecha`); en el móvil, sin máximo (/review 035 R14);
   - `--weight-bold` (600, en la tabla de tipografía).
+- **Spec 020 (registro de auditoría y error genérico; nombres de la 041, que los reutiliza):**
+  - `--leading-publico` (1.5): interlineado del texto corrido (introducción de la consulta, error) y de
+    las líneas secundarias de cada evento;
+  - `--text-acceso-titulo` (28px) y `--text-acceso` (14px): título y texto del error genérico (en la
+    tabla de tipografía);
+  - `--acceso-form-max` (480px): ancho máximo de la tarjeta del error genérico;
+  - `--sombra-tarjeta-alta` (`0 14px 32px rgba(114, 36, 62, 0.16)`): sombra de la tarjeta del error
+    genérico, la única sombra de una tarjeta fuera del acceso;
+  - `--logo-franja-w` (104px) y `--logo-panel-w` (260px): ancho del logo del error genérico en la
+    franja del teléfono y en el panel del escritorio (los de `c4`; decisión del usuario, 2026-10-30);
+  - versión 1.8.0 (/review 020 R1), los valores de `c4` del error genérico como tokens:
+    `--tracking-etiqueta` (0.08em, etiquetas en mayúsculas), `--tracking-titulo` (-0.01em) y
+    `--leading-titulo` (1.15) del título, `--text-acceso-destacado` (16.8px, frase destacada del
+    panel), `--acceso-franja-pie` (70px, margen inferior de la franja del teléfono),
+    `--acceso-solape` (56px, lo que la tarjeta sube sobre la franja), `--acceso-panel-pad` (56px,
+    relleno del panel del escritorio) y `--acceso-lado-pad` (42px, relleno vertical del lado de la
+    tarjeta en el escritorio).
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -356,6 +378,41 @@ Filtro de la lista de citas del personal (`.filtro-citas`):
   D6b).
 - Las etiquetas de los campos (`--text-light`, 3,51:1) y «Filtrar» y el atajo activo (`btn-primary`,
   3,93:1) siguen como deuda DS1 (decisión del usuario, spec 034).
+
+### Filtro de auditoría (spec 020)
+El filtro plegable de la 034 (`.filtro-citas` y `filtros.js`, sin cambios) con la clase
+`.filtro-auditoria`, dentro de `.formulario-accesible` (028) para que sus etiquetas, campos y foco
+cumplan AA:
+- **Campos:** actor (con su ayuda, «Escribe el identificador del usuario»), acción y tipo de recurso
+  como selectores con «Todas» y los valores registrados, identificador de recurso, desde y hasta.
+- **Escritorio:** una fila de seis columnas desde 1280 px y dos filas entre 900 y 1279 px; «Filtrar»
+  y «Limpiar» debajo, sin los atajos de la 034.
+- **Móvil:** dos columnas, con actor e identificador de recurso a lo ancho; campos y botones con
+  `--touch-min`.
+- **Error:** aviso «Revisa el filtro marcado: no se buscó nada.» (`role="alert"`) y el error bajo su
+  campo (`--red`, `aria-invalid` y `aria-describedby`), con el borde del campo en `--red`.
+- **Foco del campo de fecha:** el anillo del sistema en el campo con `:focus` y `:focus-within`,
+  porque el botón del calendario recibe el foco y `:focus-visible` del campo no se aplica.
+
+### Tabla de auditoría (spec 020)
+Lista de eventos (`.tabla-auditoria`, sobre `tabla-tarjetas` de la 034):
+- **Escritorio (900 px o más):** tabla con hora y fecha, acción y su detalle, actor (rol e
+  identificador), recurso (tipo e identificador), resultado, y origen con la petición en la misma
+  columna; `th` en `--p600` (los `th` globales van en `--text-light`, DS1); mismo margen a izquierda y
+  derecha (`--space-7`); desde 1400 px, los identificadores sin partir.
+- **Móvil:** una tarjeta por evento sobre el fondo (sin tarjeta dentro de tarjeta), con origen y
+  petición en filas propias; los identificadores parten donde haga falta (`overflow-wrap: anywhere`).
+- Identificadores en `--text-small` con cifras tabulares; líneas secundarias con `--leading-publico`.
+- **Vacío:** «No hay eventos con estos filtros» (`role="status"`) y «Quitar los filtros».
+
+### Paginación (spec 020)
+`.paginacion`, un `nav` con nombre propio tras una lista: el texto «Mostrando 1–25 de n · página x
+de y» (`--text-meta`, `--text`) y los botones «Anterior» y «Siguiente» (`btn-outline` con borde
+`--border-control`). En la primera página solo aparece «Siguiente» y en la última solo «Anterior».
+Por debajo de 900 px, a lo ancho y con botones de `--touch-min` que se reparten el ancho; desde 900
+px, los botones a la derecha del texto. Las reglas van acotadas a `nav.paginacion`: la lista de
+expedientes (035) usa todavía un `div.paginacion` con `style=""` y no cambia. Sustituye a esa
+paginación y a la de la lista de citas cuando esas pantallas se toquen.
 
 ### Rejilla de estadísticas (spec 034)
 `.stats-grid` (ya existía) con las variantes `.stats-grid-2` y `.stats-grid-3`, que solo fijan
@@ -636,3 +693,6 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-13 | diseño | ¿Qué incorpora el sistema para el móvil del personal (spec 034)? | Versión 1.5.0: opción A (tarjeta con etiquetas y filtro en la página); tokens `--tarjeta-etiqueta-w`, `--logo-movil-h`, `--space-detalle`, `--detalle-lateral-w` y los cuatro anchos mínimos del filtro; componentes «Tarjeta de lista en el móvil», «Filtro plegable», «Rejilla de estadísticas» y «Botón de icono»; cambian «Botón Menú» (solo icono), «Marca del menú del móvil» (logo con máscara) y la línea de tiempo de la dentista; `--text-marca` sin uso | usuario (spec 034 y plan 034, D1, D4, D5b, D6, D6b, D10; /analyze A33, A35, A36, A59, A60, A68, A69) |
 | 2026-10-11 | diseño | ¿Qué incorpora el sistema para el móvil del paciente (spec 033)? | Versión 1.4.0: tokens `--touch-min`, `--overlay`, `--menu-movil-w`, `--duration-fast`, `--topbar-h`, `--border-width-strong`, `--text-meta`, `--logo-max-w`, `--icon-md` y `--text-marca`; punto de corte de 900 px; componentes «Menú del móvil» (opción A), «Pestañas» y «Migas de pan»; anchos [320, 390, 1440]; DS6, DS8 y DS10 en curso | usuario (spec 033 y plan 033, D1, D6, D11, D13; /analyze A1, A4, A35) |
 | 2026-10-16 | diseño | ¿Qué incorpora el sistema para pacientes y expedientes del personal (spec 035)? | Versión 1.6.0: tokens `--ficha-lateral-w`, `--expediente-lateral-w`, `--perfil-avatar-w`, `--perfil-avatar-movil`, `--perfil-iniciales-text`, `--perfil-iniciales-movil`, `--perfil-nombre-text`, `--perfil-nombre-movil` y `--weight-bold`; componentes «Ficha en una columna», «Perfil compacto del paciente», «Acciones de la barra en el móvil» y «Acciones de formulario»; foco del sistema en los formularios del paciente y del expediente; botones del menú del móvil solo con el icono, sin recuadro | usuario (spec 035, design.md y plan) |
+| 2026-10-29 | diseño | ¿Qué incorpora el sistema para el registro de auditoría (spec 020)? | Versión 1.7.0: tokens `--leading-publico`, `--text-acceso-titulo`, `--text-acceso`, `--acceso-form-max` y `--sombra-tarjeta-alta` (los nombres de la 041, que los reutiliza); componentes «Paginación», «Tabla de auditoría» y «Filtro de auditoría», con el foco del campo de fecha; la barra lateral sigue como deuda DS1 | usuario (spec 020, design.md `c4` y plan) |
+| 2026-10-30 | brecha | La página 503 de `c4` fija el logo a 104 px (franja) y 260 px (panel), pero `design.md` no los lleva a «Cambios a incorporar al sistema» y P9 no admite literales | Dos tokens más en la 1.7.0: `--logo-franja-w` y `--logo-panel-w`, con los valores de `c4` | usuario (/implement 020, T036) |
+| 2026-10-30 | brecha | La hoja del 503 copia de `c4` espaciados de letras, interlineado y multiplicadores sobre tokens que el sistema no tiene, y P9 no admite literales (/review 020 R1) | Versión 1.8.0: `--tracking-etiqueta`, `--tracking-titulo`, `--leading-titulo`, `--text-acceso-destacado`, `--acceso-franja-pie`, `--acceso-solape`, `--acceso-panel-pad` y `--acceso-lado-pad`, con los valores de `c4` (ningún cambio visual) | usuario (/review 020, decisión de corregir R1) |

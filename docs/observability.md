@@ -14,12 +14,12 @@ cubierta.
 |---|---|---|---|
 | Logs de aplicación | Monolog (Laravel), canal `stack` → `single`, y canal `seguridad` (`daily`, JSON, 14 días; spec 032) | en uso solo para los avisos (spec 032): el canal `seguridad` con los fallos de acceso, `Log::warning('aviso no enviado')` (campo `tipo`) y `Log::warning('lectura fallida')` (campo `fuente`: `acceso` o `seguridad`, sin el mensaje de la excepción); el resto del código no escribe logs | `config/logging.php`, `app/Listeners/RegistrarFalloAcceso.php`, `app/Avisos/Vigilante.php` |
 | Agregación de logs | ninguna | — | local: `laravel.log` en el directorio del proyecto montado. Producción (spec 030): `laravel.log` en el volumen `storage` y `dentissa-access.log`/`dentissa-error.log` de nginx en el volumen `nginx_logs`, que sobreviven a reinicios y a recrear los contenedores |
-| Correlación por petición | ninguna | — | `bootstrap/app.php` sin middleware ni `Context::add` |
-| Registro de auditoría | ninguno (`historial_citas` es historial de negocio de estados y reprogramaciones de cita, con autor, sin IP ni request_id) | — | `app/Agenda/EstadosCita.php` (una fila con autor por cambio; el trigger `trg_historial_cita` se retira por migración, spec 026), `app/Agenda/ReprogramacionCitas.php` (fecha anterior y nueva, spec 028) |
+| Correlación por petición | `X-Request-Id` y el `Context` de Laravel (spec 020) | en uso: cada respuesta lleva el identificador y todos los logs llevan `request_id` y, con sesión, `actor_id` en `extra` | `app/Http/Middleware/IdentificadorPeticion.php`, `ContextoActor.php`, `app/Listeners/ActualizarActorDelContexto.php`, `bootstrap/app.php` |
+| Registro de auditoría | tabla `auditoria` de MariaDB, solo de anexado (spec 020, ADR 0004) | en uso: denegaciones (403 y 404 de los Gates), consultas del propio registro y purga; consulta en `/admin/auditoria` solo para el admin. Los eventos de autenticación, cuentas y datos clínicos llegan con la 021, la 022 y la 014. `historial_citas` sigue siendo historial de negocio | `app/Auditoria/`, `database/migrations/*_create_auditoria_table.php`, `routes/console.php` (`auditoria:purgar`) |
 | Eventos de autenticación | `Login`, `Failed`, `Logout` y `Lockout` de Laravel | `Failed` y `Lockout`, en uso para alertar (spec 032): `RegistrarFalloAcceso` escribe una línea con huellas en el canal `seguridad`; no es auditoría (`Login` y `Logout` siguen sin registrarse) | `app/Http/Controllers/AuthController.php`, `app/Providers/AppServiceProvider.php` (limitadores), `app/Listeners/RegistrarFalloAcceso.php` |
 | Métricas | ninguna | — | `composer.json` sin Pulse/Telescope/Prometheus |
 | Trazas distribuidas | ninguna | — | — |
-| Alertas | vigilante propio por correo (`dentissa:vigilar`, cada minuto) y UptimeRobot (spec 032, ADR 0007) | en uso en producción | `app/Avisos/`, `deploy/preparar-vigilancia.sh`, `deploy/README.md` §12 |
+| Alertas | vigilante propio por correo (`dentissa:vigilar`, cada minuto) y UptimeRobot (spec 032, ADR 0007) | en uso en producción; desde la spec 020, también el aviso `auditoria` (eventos que no se pudieron guardar, líneas `auditoria.fallo` del canal `seguridad`) | `app/Avisos/`, `deploy/preparar-vigilancia.sh`, `deploy/README.md` §12 |
 | Health check | `/up` de Laravel (no comprueba BD) | en uso | `bootstrap/app.php`; `deploy/verificar.sh` lo comprueba tras cada despliegue, junto a la configuración aplicada, las cabeceras y la red privada (spec 031) |
 | Visor de logs en local | `laravel/pail` | presente (require-dev), no se usa | `composer.json` |
 
@@ -42,7 +42,8 @@ cubierta.
 - Identificador por petición: cabecera `X-Request-Id`; se acepta del cliente si es un UUID válido
   o se genera; se devuelve en la respuesta y se añade con `Context::add('request_id', …)` al
   contexto de todos los logs y eventos de auditoría de la petición (y de los trabajos en cola, si
-  llega a haberlos). Hoy no existe.
+  llega a haberlos). En uso desde la spec 020; fuera de HTTP (comandos), `Auditoria` genera uno
+  por ejecución.
 
 ## Registro de auditoría
 Separado de los logs técnicos: responde **quién hizo qué, sobre qué, cuándo y con qué resultado**.

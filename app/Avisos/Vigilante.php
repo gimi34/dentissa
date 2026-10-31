@@ -52,12 +52,13 @@ class Vigilante
         $ahora = CarbonImmutable::now();
         $leido = true;
         $nuevas = $this->leer('acceso', fn () => $this->leerAcceso($estado), ['errores' => 0, 'malas' => 0], $leido);
-        $fallos = $this->leerSeguridad($estado, $ahora, $leido);
+        ['accesos' => $fallos, 'auditoria' => $perdidos] = $this->leerSeguridad($estado, $ahora, $leido);
         $this->podar($estado, $ahora);
 
         $enviados = $this->avisoDeErrores($estado, $ahora, $nuevas['errores'])
             & $this->avisoDeFormato($estado, $ahora, $nuevas['malas'])
-            & $this->avisoDeAccesos($estado, $ahora, $fallos);
+            & $this->avisoDeAccesos($estado, $ahora, $fallos)
+            & $this->avisoDeAuditoria($estado, $ahora, $perdidos);
 
         $estado->guardar();
 
@@ -139,13 +140,18 @@ class Vigilante
      * desplazamiento y no impide leer el otro, y los fallos de un archivo se guardan
      * junto con su desplazamiento (/review R23, R24).
      *
-     * @return int fallos leídos ahora
+     * Spec 020 (D16): las líneas se distinguen por su mensaje. `acceso_fallido` es un fallo de
+     * acceso y `auditoria.fallo`, un evento de auditoría que no se pudo guardar; las demás se
+     * ignoran, para que ninguna infle el recuento de la otra.
+     *
+     * @return array{accesos: int, auditoria: int} líneas de cada tipo leídas ahora
      */
-    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora, bool &$leido): int
+    private function leerSeguridad(Estado $estado, CarbonImmutable $ahora, bool &$leido): array
     {
         $seguridad = &$estado->datos['seguridad'];
+        $seguridad['auditoria'] ??= [];
         $desplazamientos = [];
-        $leidos = 0;
+        $leidos = ['accesos' => 0, 'auditoria' => 0];
 
         clearstatcache();
         foreach ($this->archivosDeSeguridad($ahora) as $nombre => $archivo) {
@@ -169,10 +175,13 @@ class Vigilante
             }
 
             foreach ($lineas as $linea) {
-                $fallo = $this->interpretarFallo($linea);
-                if ($fallo !== null) {
+                [$tipo, $fallo] = $this->interpretarFallo($linea) ?? [null, null];
+                if ($tipo === 'accesos') {
                     $seguridad['fallos'][] = $fallo;
-                    $leidos++;
+                    $leidos['accesos']++;
+                } elseif ($tipo === 'auditoria') {
+                    $seguridad['auditoria'][] = $fallo[0];
+                    $leidos['auditoria']++;
                 }
             }
             $desplazamientos[$nombre] = $desplazamiento;
@@ -183,15 +192,24 @@ class Vigilante
     }
 
     /**
-     * Línea del canal `seguridad` (JsonFormatter): se leen `datetime` y `context`
-     * y se ignora `extra`, donde la 020 añadirá su contexto (/analyze A11).
+     * Línea del canal `seguridad` (JsonFormatter): se leen `message`, `datetime` y `context`
+     * y se ignora `extra`, donde la 020 pone su contexto (/analyze A11). Solo se guardan el
+     * momento y, de un fallo de acceso, las huellas.
      *
-     * @return array{0: int, 1: string|null, 2: string|null}|null momento, origen y cuenta
+     * @return array{0: 'accesos'|'auditoria', 1: array{0: int, 1: string|null, 2: string|null}}|null tipo y fallo (momento, origen y cuenta)
      */
     private function interpretarFallo(string $linea): ?array
     {
         $datos = json_decode($linea, true);
         if (! is_array($datos) || ! is_string($datos['datetime'] ?? null) || ! is_array($datos['context'] ?? null)) {
+            return null;
+        }
+        $tipo = match ($datos['message'] ?? null) {
+            'acceso_fallido' => 'accesos',
+            'auditoria.fallo' => 'auditoria',
+            default => null,
+        };
+        if ($tipo === null) {
             return null;
         }
 
@@ -202,7 +220,11 @@ class Vigilante
         }
         $huella = fn ($valor) => is_string($valor) ? $valor : null;
 
-        return [$momento->getTimestamp(), $huella($datos['context']['origen'] ?? null), $huella($datos['context']['cuenta'] ?? null)];
+        if ($tipo === 'auditoria') {
+            return [$tipo, [$momento->getTimestamp(), null, null]];
+        }
+
+        return [$tipo, [$momento->getTimestamp(), $huella($datos['context']['origen'] ?? null), $huella($datos['context']['cuenta'] ?? null)]];
     }
 
     /**
@@ -317,6 +339,10 @@ class Vigilante
             $estado->datos['seguridad']['fallos'],
             fn (array $fallo) => $fallo[0] >= $inicio,
         ));
+        $estado->datos['seguridad']['auditoria'] = array_values(array_filter(
+            $estado->datos['seguridad']['auditoria'] ?? [],
+            fn (int $momento) => $momento >= $inicio,
+        ));
     }
 
     /** @return array<int, array{peticiones: int, errores: int, malas: int}> */
@@ -370,6 +396,17 @@ class Vigilante
         }
 
         return $this->avisar($estado, 'accesos', $mayor > (int) config('avisos.umbral_fallos'), count($fallos), $nuevos, $ahora);
+    }
+
+    /**
+     * Spec 020 (CA14, TM6, TM16): eventos de auditoría que no se pudieron guardar. Basta uno, porque
+     * cada uno es un evento perdido; el correo solo lleva el recuento y las horas.
+     */
+    private function avisoDeAuditoria(Estado $estado, CarbonImmutable $ahora, int $nuevos): bool
+    {
+        $perdidos = count($estado->datos['seguridad']['auditoria'] ?? []);
+
+        return $this->avisar($estado, 'auditoria', $perdidos > (int) config('avisos.umbral_auditoria'), $perdidos, $nuevos, $ahora);
     }
 
     /**

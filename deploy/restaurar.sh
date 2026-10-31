@@ -161,12 +161,19 @@ main() {
     read -r -p "Escribe el nombre de la base para confirmar: " respuesta
     [[ "${respuesta}" == "${base}" ]] || error "confirmación incorrecta; no se ha tocado nada"
 
+    local servicios
     if [[ -n "${ref}" ]]; then
         paso "Volviendo a ${ref} (app y web quedan parados)"
         en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null
     else
-        paso "Parando app y web"
+        # Spec 020 (D22, A68; /review R4): nada escribe en la base mientras se carga la copia. La
+        # lista de servicios del servidor se lee antes de parar nada: si no se puede leer, no se toca.
+        servicios="$(en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null)" || error "no se pudo leer docker-compose.prod.yml en el servidor; no se ha tocado nada"
+        paso "Parando app, web y el scheduler"
         en_servidor docker compose -f docker-compose.prod.yml stop app web < /dev/null
+        if grep -qxF scheduler <<< "${servicios}"; then
+            en_servidor docker compose -f docker-compose.prod.yml stop scheduler < /dev/null
+        fi
     fi
 
     paso "Cargando la copia (si la frase caducó, gpg la vuelve a pedir)"
@@ -176,17 +183,28 @@ main() {
     set -e
     if [[ "${resultado[1]}" -eq 3 ]]; then
         if [[ -n "${ref}" ]]; then
-            error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado, y app y web siguen parados en ${ref}. Repite la orden, o levántalos con la versión que quieras."
+            error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado, y app, web y el scheduler (si la versión lo tiene) siguen parados en ${ref}. Repite la orden, o levántalos con la versión que quieras."
         fi
+        # La lista se lee donde se usa, ya sabido cómo terminó la carga (/review R4, R36).
+        servicios="$(en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null)" || error "no llegó ningún dato descifrado y la base no se ha tocado, pero no se pudo leer docker-compose.prod.yml en el servidor: levanta app, web y el scheduler a mano"
         en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null
+        # A83: también vuelve el scheduler, que estaba parado para la carga.
+        if grep -qxF scheduler <<< "${servicios}"; then
+            en_servidor docker compose -f docker-compose.prod.yml up -d scheduler < /dev/null
+        fi
         error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado y app y web vuelven a estar en marcha."
     fi
     if [[ "${resultado[0]}" -ne 0 || "${resultado[1]}" -ne 0 ]]; then
         error "la carga quedó incompleta (gpg ${resultado[0]}, servidor ${resultado[1]}) y la base '${base}' está vacía o a medias. La copia sigue intacta: repite la orden antes de levantar app y web."
     fi
 
-    paso "Levantando app y web"
+    # La versión que queda instalada (con --volver, la de destino; /review R4, R36).
+    servicios="$(en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null)" || error "la copia se cargó, pero no se pudo leer docker-compose.prod.yml en el servidor: levanta app, web y el scheduler a mano"
+    paso "Levantando app, web y el scheduler"
     en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null
+    if grep -qxF scheduler <<< "${servicios}"; then
+        en_servidor docker compose -f docker-compose.prod.yml up -d scheduler < /dev/null
+    fi
     en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan config:cache < /dev/null
     en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan route:cache < /dev/null
 

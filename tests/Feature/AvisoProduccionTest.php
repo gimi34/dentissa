@@ -134,6 +134,30 @@ class AvisoProduccionTest extends TestCase
         $this->assertStringContainsString('journalctl -u dentissa-vigilar', $cuerpo);
     }
 
+    /** Spec 020, CA14 y TM16: el aviso de auditoría solo lleva el tipo, el recuento y las horas. */
+    public function test_el_aviso_de_auditoria_solo_lleva_tipo_recuento_y_horas(): void
+    {
+        $aviso = new AvisoProduccion(
+            tipo: 'auditoria',
+            recuento: 3,
+            desde: CarbonImmutable::parse('2026-10-25 16:00:00', 'UTC'),
+            hasta: CarbonImmutable::parse('2026-10-25 16:05:00', 'UTC'),
+        );
+
+        $this->assertSame('[Dentissa] El registro de auditoría no pudo guardar eventos', $aviso->envelope()->subject);
+        $cuerpo = $aviso->render();
+        $this->assertMatchesRegularExpression('/\b3 eventos de auditoría no se pudieron guardar\b/', $cuerpo);
+        $this->assertStringContainsString('10:00', $cuerpo);
+        $this->assertStringContainsString('10:05', $cuerpo);
+        $this->assertStringContainsString('Cómo consultar el detalle en el servidor', $cuerpo);
+        $this->assertStringContainsString('storage/logs/seguridad-2026-10-25.log', $cuerpo);
+        $this->assertStringContainsString('auditoria.fallo', $cuerpo, 'Dice qué líneas buscar.');
+        // Solo lo que el correo pone: ninguna línea de log, identificador ni ruta de la aplicación.
+        foreach (['QueryException', 'SQLSTATE', 'request_id', 'actor_id', '@', 'http'] as $prohibido) {
+            $this->assertStringNotContainsString($prohibido, $cuerpo);
+        }
+    }
+
     public function test_el_aviso_de_prueba_se_envia(): void
     {
         $this->artisan('dentissa:vigilar --prueba')->assertExitCode(0);

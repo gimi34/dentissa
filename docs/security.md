@@ -46,7 +46,10 @@ updated: 2026-10-18
   del dentista) y el Gate `reprogramar-cita` (`app/Autorizacion/ReprogramarCita.php`): primero el
   alcance de la 026 (personal fuera de alcance → 403; cita de otro paciente → 404) y después el
   rol (el dentista no reprograma); el paciente busca además la cita entre las suyas (spec 028). No
-  hay Policies.
+  hay Policies. El registro de auditoría (`/admin/auditoria`) va bajo `role:admin` y es solo de
+  lectura; cada 403 de un usuario autenticado y cada 404 de un Gate que oculta un recurso
+  (`denyAsNotFound`) dejan un evento `acceso_denegado`, y la cita de otro paciente que el paciente
+  pide también, con el mismo 404 que una inexistente (spec 020).
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
@@ -66,7 +69,22 @@ updated: 2026-10-18
 | Temporizador `dentissa-vigilar` (systemd, cada minuto) | tarea programada | cuenta de despliegue | `php artisan dentissa:vigilar` en `app` como `www-data`: lee el log de acceso de nginx (montado en solo lectura) y el canal `seguridad`, y envía avisos por correo; sin entrada externa propia (spec 032, ADR 0007) |
 | Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar los avisos; los correos no llevan datos personales ni secretos (spec 032, TM7, TM13) |
 
-No hay rutas API, webhooks ni colas. La única tarea programada es el vigilante de avisos (spec 032).
+| `GET /admin/auditoria` | HTTP | sí, `role:admin` | consulta del registro de auditoría, solo lectura; filtros validados (identificadores, nombres y fechas `AAAA-MM-DD`); la propia consulta queda registrada (spec 020) |
+| `GET /_disenio/020/{pantalla}` | HTTP, solo `APP_ENV=local` | no | vista previa del diseño con datos inventados, sin sesión ni base; no existe en producción (spec 020, TM15; exención de P3 aceptada) |
+| Servicio `scheduler` (`schedule:work`) | tarea programada | — | misma imagen que `app`, `www-data`, solo `app.env`, sin puertos; su única tarea es la purga mensual del registro de auditoría (spec 020, TM14) |
+| Cabecera `X-Request-Id` | entrada en toda petición | — | se acepta solo si es un UUID de 36 caracteres; si no, se genera otro; solo correlaciona, nunca da actor ni acceso (spec 020, TM3, TM11) |
+
+No hay rutas API, webhooks ni colas. Las tareas programadas son el vigilante de avisos (spec 032) y
+la purga del registro de auditoría (spec 020).
+
+Amenazas del registro de auditoría (spec 020, modelo de amenazas del plan): eventos inmodificables
+salvo la purga de más de 5 años (triggers; vaciar la tabla o quitar los triggers con privilegios
+totales queda fuera, limitación aceptada), sin datos personales ni de salud salvo la IP y el
+identificador intentado, actor del servidor y nunca de la petición, fallo cerrado con una página 503
+sin detalles internos, y ningún dato del evento en el log ni en el aviso por correo. Residuos
+aceptados: un usuario autenticado puede provocar denegaciones en masa (volumen académico) y, con las
+credenciales de la aplicación, insertar eventos falsos (decisión del usuario, 2026-10-28). Las vistas
+nuevas de la 020 no llevan estilos ni scripts en línea.
 
 ## Manejo de secretos
 - Dónde se guardan: `.env` local no versionado (en `.gitignore`). Credenciales de BD de desarrollo
