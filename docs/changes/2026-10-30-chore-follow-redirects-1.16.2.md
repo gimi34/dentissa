@@ -36,8 +36,8 @@ de seguridad es informativo. La imagen de producción no instala dependencias de
   - integridad `sha512-/kVP2U8z59…` igual a la del registro.
 
 ## Escalado
-`lane-check` al empezar y al cerrar: 1 archivo, 0 de código. «Escalar: no. El cambio cabe en el
-carril.»
+`lane-check` al empezar (1 archivo previsto) y al cerrar (2, con la ficha): 0 de código. «Escalar:
+no. El cambio cabe en el carril.»
 
 ## Verificación
 - `npm audit --audit-level=high`: 0 vulnerabilidades (antes, 1 alta).
