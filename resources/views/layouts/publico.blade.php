@@ -1,4 +1,9 @@
 @use('App\Http\Controllers\PaginasPublicasController')
+@php
+    $contacto = config('clinica.contacto');
+    $horario = collect($contacto['horario'])->map(fn ($horas, $dias) => "{$dias} {$horas}")->implode(' · ');
+    $panel = auth()->check() ? PaginasPublicasController::panelDelRol(auth()->user()) : null;
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,7 +13,7 @@
     <title>@yield('titulo')</title>
     <meta name="description" content="@yield('descripcion')">
     <link rel="canonical" href="@yield('canonica')">
-    {{-- app.css por los tokens de :root; publico.css, Lexend autoalojada y los componentes públicos. --}}
+    {{-- app.css por los tokens de :root; publico.css, las fuentes autoalojadas y la superficie «Sitio público». --}}
     <link href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/publico.css') }}?v={{ filemtime(public_path('css/publico.css')) }}" rel="stylesheet">
     {{-- Un solo script propio, con defer y sin código en línea: la página está completa sin él (CA8, D16). --}}
@@ -16,40 +21,38 @@
 </head>
 <body class="publico">
 
-<header class="pub-cabecera">
-    <div class="pub-bar">
-        <a class="pub-inicio" href="{{ url('/') }}" aria-label="Inicio">
+{{-- Ronda 5 (D19): cabecera fija en --p50 con el filete al bajar; «Menú» por debajo de 900 px. --}}
+<header class="pub-bar" id="top">
+    <div class="pub-wrap pub-bar__in">
+        <a class="pub-brand" href="{{ url('/') }}" aria-label="Inicio">
             <span class="logo" role="img" aria-label="Melissa López N. · Odontología integral"></span>
         </a>
-        <nav class="pub-nav-d" aria-label="Secciones">
-            <ul>
-                <li><a href="{{ url('/servicios') }}">Servicios</a></li>
-                <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
-            </ul>
-            @auth
-                <a class="c-btn c-btn--claro" href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a>
+        <nav class="pub-nav" aria-label="Secciones">
+            <a href="{{ url('/servicios') }}">Servicios</a>
+            <a href="{{ url('/') }}#ubicacion">Ubicación</a>
+            @if ($panel)
+                <a class="c-btn c-btn--ink" href="{{ $panel }}">Ir a mi panel</a>
             @else
-                <a class="c-btn c-btn--claro" href="{{ route('login') }}">Iniciar sesión</a>
-            @endauth
+                <a href="{{ route('login') }}">Iniciar sesión</a>
+                <a class="c-btn c-btn--ink" href="{{ route('register') }}">Crear cuenta</a>
+            @endif
         </nav>
-        {{-- Menú del móvil por debajo de 900 px: <details> funciona con el teclado y sin JavaScript.
-             Solo el icono de hamburguesa; el nombre «Menú» lo lleva aria-label (D15). La nav lo
-             mantiene como landmark en el móvil y se oculta con él en el escritorio (/review R18). --}}
-        <nav class="pub-menu" aria-label="Secciones">
-            <details class="pub-menu-detalles">
-                <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-                <ul>
-                    <li><a href="{{ url('/servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
-                    @auth
-                        <li><a href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a></li>
-                    @else
-                        <li><a href="{{ route('login') }}">Iniciar sesión</a></li>
-                        <li><a href="{{ route('register') }}">Crear cuenta</a></li>
-                    @endauth
-                </ul>
-            </details>
-        </nav>
+        {{-- <details> funciona con el teclado y sin JavaScript; con él, Escape lo cierra (publico.js).
+             El panel es la nav «Secciones» del móvil (/review R18). --}}
+        <details class="pub-menu">
+            <summary>Menú <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 8h16M4 16h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+            <nav class="pub-menu__panel" aria-label="Secciones">
+                <a href="{{ url('/') }}#nosotros">Sobre nosotros</a>
+                <a href="{{ url('/servicios') }}">Servicios</a>
+                <a href="{{ url('/') }}#ubicacion">Ubicación y contacto</a>
+                @if ($panel)
+                    <a class="c-btn c-btn--primary" href="{{ $panel }}">Ir a mi panel</a>
+                @else
+                    <a href="{{ route('login') }}">Iniciar sesión</a>
+                    <a class="c-btn c-btn--primary" href="{{ route('register') }}">Crear cuenta</a>
+                @endif
+            </nav>
+        </details>
     </div>
 </header>
 
@@ -57,40 +60,32 @@
     @yield('contenido')
 </main>
 
-{{-- Pie en tres columnas, como el de la landing del colaborador (D15), y la marca grande debajo (D16). --}}
-<footer class="lb-pie">
-    <div class="lb-wrap">
-        <div class="lb-pie-cols">
-            <div>
-                <span class="logo" role="img" aria-label="Melissa López N. · Odontología integral"></span>
-                <p>Odontología integral para toda la familia en el centro de Lázaro Cárdenas.</p>
-            </div>
-            <div>
-                <h2>Horarios</h2>
-                <dl>
-                    @foreach (config('clinica.contacto.horario') as $dias => $horas)
-                        <dt>{{ $dias }}</dt>
-                        <dd>{{ $horas }}</dd>
-                    @endforeach
-                </dl>
-            </div>
-            <div>
-                <h2>Contacto</h2>
-                <a class="c-link" href="{{ config('clinica.contacto.telefono_enlace') }}">{{ config('clinica.contacto.telefono') }}</a>
-                <nav aria-label="Pie">
-                    <a class="c-link" href="{{ url('/servicios') }}">Servicios</a>
-                    @auth
-                        <a class="c-link" href="{{ PaginasPublicasController::panelDelRol(auth()->user()) }}">Ir a mi panel</a>
-                    @else
-                        <a class="c-link" href="{{ route('register') }}">Crear cuenta</a>
-                        <a class="c-link" href="{{ route('login') }}">Iniciar sesión</a>
-                    @endauth
-                </nav>
-            </div>
+{{-- Pie de la ronda 5: enlaces, horario, teléfono, dirección y el nombre a todo el ancho (decorativo). --}}
+<footer class="pub-foot">
+    <div class="pub-wrap">
+        <nav aria-label="Pie">
+            <ul class="pub-foot__links">
+                <li><a href="{{ url('/') }}#nosotros">Sobre nosotros</a></li>
+                <li><a href="{{ url('/servicios') }}">Servicios</a></li>
+                <li><a href="{{ url('/') }}#ubicacion">Ubicación</a></li>
+                @if ($panel)
+                    <li><a href="{{ $panel }}">Ir a mi panel</a></li>
+                @else
+                    <li><a href="{{ route('login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ route('register') }}">Crear cuenta</a></li>
+                @endif
+            </ul>
+        </nav>
+        <div class="pub-foot__info">
+            <span>{{ $horario }}</span>
+            <a href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a>
+            <span>{{ $contacto['direccion'] }}</span>
         </div>
-        {{-- Decorativa: la marca ya la nombran la cabecera y la primera columna. --}}
-        <span class="logo lb-pie-marca" aria-hidden="true"></span>
-        <p class="lb-pie-legal">© {{ now()->year }} Dentissa</p>
+        <p class="pub-foot__word" aria-hidden="true">Dentissa</p>
+        <div class="pub-foot__small">
+            <span>Melissa López N. · Odontología integral</span>
+            <span>© {{ now()->year }} Dentissa</span>
+        </div>
     </div>
 </footer>
 
