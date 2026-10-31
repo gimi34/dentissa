@@ -52,16 +52,21 @@ main() {
     compose=(docker compose -f docker-compose.prod.yml)
     SECONDS=0
 
-    # Spec 020 (D22, A68): el scheduler de la versión instalada se para antes del checkout, con su
-    # propio Compose, para que no escriba en la base mientras se cambia de versión. Una versión de
-    # destino sin scheduler lo pierde con --remove-orphans.
-    if "${compose[@]}" config --services | grep -qxF scheduler; then
+    paso "Obteniendo ${ref}"
+    git fetch --tags origin
+
+    # Spec 020 (D22, A68; /review R4, R17): el scheduler de la versión instalada se para con su
+    # propio Compose después del fetch (si el fetch falla, sigue en marcha) y antes del checkout,
+    # para que no escriba en la base mientras se cambia de versión. Si no se puede leer la lista
+    # de servicios, la vuelta se detiene. Una versión de destino sin scheduler lo pierde con
+    # --remove-orphans.
+    local servicios
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml (¿faltan archivos en /opt/dentissa/entorno?)"
+    if grep -qxF scheduler <<< "${servicios}"; then
         paso "Parando el scheduler de la versión instalada"
         "${compose[@]}" stop scheduler
     fi
 
-    paso "Obteniendo ${ref}"
-    git fetch --tags origin
     git -c advice.detachedHead=false checkout "${ref}"
 
     # Una versión anterior a la 032 no tiene el vigilante: el temporizador
@@ -83,8 +88,10 @@ main() {
     fi
 
     paso "Levantando app, web y el scheduler"
+    # La lista de la versión de destino, ya con su checkout.
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml de ${ref}"
     "${compose[@]}" up -d --remove-orphans app web
-    if "${compose[@]}" config --services | grep -qxF scheduler; then
+    if grep -qxF scheduler <<< "${servicios}"; then
         "${compose[@]}" up -d scheduler
     fi
 

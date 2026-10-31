@@ -100,6 +100,17 @@ main() {
     "${compose[@]}" up -d db
     esperar_db
 
+    # Spec 020 (/review R4, R16): la lista de servicios se lee una vez, y si no se puede leer el
+    # despliegue se detiene en lugar de dar el scheduler por inexistente. El scheduler instalado se
+    # para antes de migrar: nada escribe con el código anterior sobre el esquema que cambia, y un
+    # corte posterior lo deja parado, no en la versión anterior.
+    local servicios
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml (¿faltan archivos en /opt/dentissa/entorno?)"
+    if grep -qxF scheduler <<< "${servicios}"; then
+        paso "Parando el scheduler instalado mientras se migra"
+        "${compose[@]}" stop scheduler
+    fi
+
     paso "Migraciones (con la imagen nueva, antes de cambiar el tráfico)"
     local sin_migraciones="no"
     sin_migraciones_pendientes && sin_migraciones="si"
@@ -109,7 +120,7 @@ main() {
     # Spec 020 (D22): --remove-orphans quita lo que esta versión ya no tiene, y el scheduler solo
     # se nombra si su Compose lo tiene.
     "${compose[@]}" up -d --remove-orphans app web
-    if "${compose[@]}" config --services | grep -qxF scheduler; then
+    if grep -qxF scheduler <<< "${servicios}"; then
         "${compose[@]}" up -d scheduler
     fi
 
