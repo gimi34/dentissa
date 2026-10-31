@@ -48,13 +48,14 @@ class AuditoriaController extends Controller
     /** @return array<string, string> */
     private static function reglasDeFiltro(): array
     {
-        $nombre = 'nullable|string|regex:/^[a-z_]{1,60}$/';
+        // Anclados con \z: `$` admite un salto de línea final (/review R39).
+        $nombre = 'nullable|string|regex:/^[a-z_]{1,60}\z/';
 
         return [
             'actor' => 'nullable|string|uuid',
             'accion' => $nombre,
             'recurso_tipo' => $nombre,
-            'recurso_id' => 'nullable|string|regex:/^[A-Za-z0-9_-]{1,64}$/',
+            'recurso_id' => 'nullable|string|regex:/^[A-Za-z0-9_-]{1,64}\z/',
             'desde' => 'nullable|date_format:Y-m-d',
             'hasta' => 'nullable|date_format:Y-m-d|after_or_equal:desde',
             'page' => 'nullable|integer|min:1',
