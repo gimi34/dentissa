@@ -5,6 +5,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-31
+
+### Added
+- Registro de auditoría: queda constancia de quién hizo qué, sobre qué recurso, cuándo, desde
+  dónde y con qué resultado, sin datos personales ni de salud en claro. Nadie puede modificar ni
+  borrar un evento, tampoco un admin ni la propia aplicación (spec 020).
+- Consulta del registro en `/admin/auditoria`, solo para el admin: filtros por actor, acción, tipo
+  e identificador de recurso y rango de fechas, del más reciente al más antiguo (spec 020).
+- Los accesos denegados quedan registrados, también cuando se responden como «no encontrado» para
+  no revelar que el recurso existe (spec 020).
+- Cada respuesta lleva un identificador de petición (`X-Request-Id`) que comparten los registros
+  técnicos y los eventos de auditoría de esa petición (spec 020).
+- Purga mensual de los eventos de más de 5 años, con un servicio nuevo de tareas programadas en
+  producción (spec 020).
+
+### Changed
+- Si el registro de auditoría no puede escribirse, las acciones sobre datos clínicos y la consulta
+  del registro no se realizan y se muestra un error genérico; en producción se avisa por correo al
+  responsable, sin datos del evento (spec 020).
+
+### Security
+- `follow-redirects` 1.16.2, que corrige un aviso alto (GHSA-mrwp-f3q8-3g9p) en el entorno de
+  desarrollo (chore 2026-10-30-chore-follow-redirects-1.16.2).
+
 ### Changed — flujo AI-DD actualizado a 1.19.0
 - Validador 1.19.0: acta de diseño por criterios (`exploration: loop`), `criterios.json` y aviso a
   las specs abiertas con interfaz sin "Criterios de diseño". Desaparece `aidd.py deal`.
