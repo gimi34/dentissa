@@ -117,7 +117,9 @@ landing del colaborador: opción C «La línea de abound» con la ubicación de 
 queda archivada y sigue siendo el diseño de la 039 y la 040 hasta su propio `/design-spec`.
 Las rondas 4 y 5 (2026-10-21) empiezan desde cero: la 5 elige «La ventana del diente», desde la
 referencia del usuario, con una superficie «Sitio público» (Cormorant Garamond y Montserrat).
-Documento de diseño: [design.md](design.md).
+La ronda 6 (2026-10-31, motor por criterios de AI-DD 1.19) regenera la página de inicio desde cero:
+se fijan los «Criterios de diseño» y se acepta el primer candidato que los supera; la ronda 5 queda
+en `design/history/ronda-5/`. Documento de diseño: [design.md](design.md).
 
 - **Qué debe transmitir:** una presentación breve, cercana y fiable de una clínica real, con la
   misma identidad de marca que la aplicación. No debe parecerse al panel interno.
@@ -131,6 +133,34 @@ Documento de diseño: [design.md](design.md).
 - **Contenido:** se conservan los textos de la página que subió el colaborador
   (`landing/index.blade.php`, rama `feat/landing-page-completa`, `3c8202b`), salvo los datos de
   contacto, que se sustituyen por los de CA5, y se añade «Sobre nosotros» (CA3).
+
+## Criterios de diseño
+Modo: `/` persuadir · `/servicios` leer · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos
+(`.ai/project.yaml → design`). Se miden con `evaluate.mjs` sobre `/` a 320, 390, 900 y 1440 px
+([design/criterios.json](design/criterios.json)).
+
+| ID | Qué se mide | Objetivo | Sale de |
+|---|---|---|---|
+| K1 | «Agendar mi primera cita» en la primera pantalla | visible entero a 320, 390, 900 y 1440 px | CA1 |
+| K2 | El titular y el teléfono en la primera pantalla | «Tu sonrisa, nuestra prioridad.» y «753 000 0000» a 900 y 1440 px | CA1 |
+| K3 | Orden de las secciones | presentación («Agendar mi primera cita») → «Sobre nosotros» → «Nuestros servicios» → «Cómo llegar» | CA1 |
+| K4 | Textos exactos | los dos párrafos de CA3, «Ver todos los servicios», «Iniciar sesión» y «Crear cuenta» | CA1, CA3, CA4 |
+| K5 | Contacto exacto | la dirección de CA5, «753 000 0000», «Lunes a viernes», «9:00–20:00», «Sábados», «9:00–14:00», «Cómo llegar» y «El mapa lo sirve Google.» | CA5 |
+| K6 | Peso de la primera visita | ≤ 1 MB | P10, RNF |
+| K7 | JavaScript de la ruta | ≤ 100 kB | P10 |
+| K8 | Estabilidad visual (CLS) | ≤ 0.1 | modo persuadir |
+| K9 | Líneas de cada titular (`h1`–`h3`) | ≤ 3 | modo persuadir |
+| K10 | Escenas de scroll que se mueven al bajar | ≥ 1 | decisión del usuario (las rondas anteriores, genéricas) |
+| K11 | Elementos que se mueven al cargar y al recorrer | ≥ 8 | ídem |
+| K12 | Regiones con fondo propio | ≥ 2 | ídem |
+| K13 | Imágenes de muestra | 0 (la foto propia de la marca y dibujos) | criterios §7 |
+
+Puertas: las de `design-spec/references/criterios.md` §2; `G-red` admite solo `www.google.com` (el
+mapa de CA5 y CA7). CA7, CA8 y CA9 los cubren las puertas (`G-red`, `G-sin-js`, `G-desborde`,
+`G-toque`, `G-foco`, `G-reducido`); CA2 y CA10 no se miden en el diseño (los prueban sus tests); CA6
+(`/servicios`, modo leer) usa los componentes del aceptado y pasa las mismas puertas en su tarea.
+Rúbrica: `jerarquia` 20, `primera_pantalla` 20, `sistema` 15, `lectura` 10, `plantilla` 15,
+`riqueza` 10 y `tipografia` 10 (decisión del usuario, 2026-10-31).
 
 ## Requisitos no funcionales
 - Accesibilidad: WCAG 2.1 AA (P9), con contraste ≥ 4.5:1 en texto y ≥ 3:1 en bordes de control y
@@ -164,6 +194,7 @@ Ninguna.
 | 2026-10-20 | supuesto | Cabecera con sesión en `/servicios` | Ofrece «Ir a mi panel» en lugar de «Iniciar sesión» | razonable |
 | 2026-10-21 | diseño | Rediseño tras la aprobación: la opción B es «muy básica» | Ronda 3 de `/design-spec` en la línea de la landing del colaborador: opción C con la ubicación de D (`design.md`); los criterios no cambian | usuario |
 | 2026-10-21 | diseño | Rediseño desde cero: las rondas anteriores se ven genéricas | Ronda 5 de `/design-spec`: «La ventana del diente» desde la referencia del usuario, con la superficie «Sitio público» (`design.md`); los criterios no cambian | usuario |
+| 2026-10-31 | diseño | Regenerar el diseño con el motor por criterios de AI-DD 1.19 | Ronda 6 de `/design-spec`: criterios K1–K13, puertas y rúbrica (con `plantilla`, `riqueza` y `tipografia`) aprobados; primer candidato en blanco; la ronda 5 «La ventana del diente» pasa a `design/history/ronda-5/` aunque ya estaba implementada (T046–T058) | usuario |
 
 ## Notas para /plan
 - Punto de partida: `resources/views/landing/index.blade.php` de `origin/feat/landing-page-completa`
