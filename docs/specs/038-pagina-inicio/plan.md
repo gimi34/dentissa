@@ -65,7 +65,7 @@ fuentes, la foto y los tests que asertaban la ronda 3.
 | `resources/views/partials/icono-categoria.blade.php` (D16) | Se borra (D21): la ronda 5 no usa iconos de categoría | Bajo |
 | `resources/views/landing/index.blade.php` | Se borra (la sustituye `publico/inicio`) | Bajo |
 | `public/css/publico.css` (nuevo) | Ronda 5 (D19), se reescribe desde `opcion-a-pagina.html` con las clases de la maqueta prefijadas con `pub-` (no chocan con `.btn`, `.nav` ni `.menu` de `app.css`) y los botones en `.c-btn` (`--primary` rosa con tinta, `--ink`, `--secondary` fantasma, `--lg`): `@font-face` de Cormorant Garamond y Montserrat, `body.publico`, cabecera y menú, presentación y ventana del diente, escena `ventana` (máscara con `--p`), «Sobre nosotros», promesas con el título fijo, índice, tarjeta de la agenda, ubicación y mapa, pie y `/servicios`. Cortes de 900 y 560 px. Solo tokens; todo el movimiento dentro de `prefers-reduced-motion: no-preference` y lo que oculta, bajo `.js` | Medio: reescritura completa; la cubren `PaginasPublicasCssTest` y las capturas |
-| `public/css/app.css` | Tokens en `:root` (system.md 1.7.0–1.7.2: `--font-publica`, `--text-publico-*`, `--leading-publico*`, `--space-seccion`, `--measure`, `--page-max`, `--duration-base`, `--ease-puerta`, `--green-texto`, `--focus-ring-inverso`, `--logo-ratio`). Ronda 5 (D19, system.md 1.9.0): `--font-publica` pasa a Montserrat; nuevos `--font-display`, `--text-display`, `--text-statement`, `--text-seccion`, `--text-indice`, `--text-firma`, `--text-lead`, `--shadow-soft`, `--ease-in-out`, `--page-ancho`, `--gutter` y `--space-seccion-publica`; se quedan `--radius-pill`, `--ease-out`, `--ease-expo`, `--duration-reveal` y `--stagger`; se retiran los 1.8.0 sin uso (`--text-portada`, `--text-marquesina`, `--leading-portada`, `--tracking-portada`, `--velo-portada`, `--velo-portada-suave`, `--sombra-tarjeta`, `--sombra-tarjeta-alta`, `--icono-tarjeta`, `--duration-marquesina`; D21) | Bajo: solo variables; el resto de la app no las usa |
+| `public/css/app.css` | Tokens en `:root` (system.md 1.7.0–1.7.2: `--font-publica`, `--text-publico-*`, `--leading-publico*`, `--space-seccion`, `--measure`, `--page-max`, `--duration-base`, `--ease-puerta`, `--green-texto`, `--focus-ring-inverso`, `--logo-ratio`). Ronda 5 (D19, system.md 1.9.0): `--font-publica` pasa a Montserrat; nuevos `--font-display`, `--text-display`, `--text-statement`, `--text-seccion`, `--text-indice`, `--text-firma`, `--text-lead`, `--shadow-soft`, `--ease-in-out`, `--page-ancho`, `--gutter` y `--space-seccion-publica`; se quedan `--radius-pill`, `--ease-out`, `--ease-expo`, `--duration-reveal` y `--stagger`; se retiran los 1.8.0 sin uso (`--text-portada`, `--text-marquesina`, `--leading-portada`, `--tracking-portada`, `--velo-portada`, `--velo-portada-suave`, `--sombra-tarjeta`, `--icono-tarjeta`, `--duration-marquesina`; D21). `--sombra-tarjeta-alta` y `--leading-publico` se quedan, con una sola declaración: tras fusionar `main` los usa la página de error de la 020 (`errores.css`; /analyze A35) | Bajo: solo variables; el resto de la app no las usa |
 | `public/js/publico.js` (nuevo, D16) | Script clásico sin dependencias, con `defer`. Se queda (D16, D18): `estadoAhora(horario, zona, fecha)` expuesto para su test, la clase `js` al final y las entradas `[data-reveal]` con IntersectionObserver. Ronda 5 (D19): los textos de la pastilla en primera persona («Abierto ahora · cerramos a las 20:00», «Cerrado · abrimos hoy / mañana / el lunes a las 9:00»), escritos en un solo nodo con `textContent`, y el `data-open` del punto; la fila de hoy de la semana (`data-today`); el progreso `--p` de la escena `ventana` (solo con movimiento normal, sin capturar la rueda); el filete de la cabecera al bajar; el menú que se cierra con Escape (devuelve el foco a «Menú») y al elegir un enlace. Se quitan el botón de pausa de la franja y `escribirPastilla()` (D21) | Bajo: sin él la página está completa (CA8) |
 | `public/fonts/` | Ronda 5 (D19): `cormorant-garamond/` (500 y 600) y `montserrat/` (400, 500, 600 y 700), woff2 latino de `@fontsource` 5.3.0, cada carpeta con su `OFL.txt`; se borra `lexend/` (D21) | Bajo |
 | `public/images/` | Se borran `cover-bg.jpg` (1,2 MB, foto de banco) y `logo-rosa.png` (424 kB) (D11). `logo-icon1.png` se queda (DS15). Ronda 5: `brand/access.webp` (900 × 900) y `brand/access-recorte.webp` (520 × 600), la foto propia de la marca (D20); se borran `portada-800.webp` y `portada-1600.webp` de la ronda 3 (D21) | Bajo |
@@ -537,12 +537,24 @@ auditoría.
   - Lexend (`public/fonts/lexend/`);
   - la foto de Unsplash (`public/images/portada-800.webp` y `-1600.webp`);
   - el parcial `partials/icono-categoria.blade.php`;
-  - los tokens 1.8.0 sin uso;
+  - los tokens 1.8.0 sin uso, salvo `--sombra-tarjeta-alta` y `--leading-publico`, que usa la página
+    de error de la 020 en `main` (/analyze A35, 2026-10-31);
   - el botón de pausa de la franja y `escribirPastilla()` de `publico.js`;
   - el cambio de T085 sin commit en `servicios.blade.php` (T085 pasa a obsoleta y `/servicios` se
     rehace en su tarea de la ronda 5).
 
   Un test comprueba que nada cita lo retirado.
+- **D22 · Fusionar `main` antes de la ronda 5** (/analyze A34–A36; decisión del usuario,
+  2026-10-31): la rama va por detrás de `main`, donde la 020 (v0.12.0) cambió `config/clinica.php`,
+  `system.md`/`system.html`, `app.css`, `routes/web.php`, `capturar.mjs`, `desplegar.sh` y
+  `verificar.sh`. Una tarea fusiona `origin/main` antes de T046 y reconcilia:
+  - `contacto` único con la forma de la 038 (`direccion`, `telefono`, `telefono_enlace`, `horario`,
+    `horario_semanal`) y el teléfono ficticio `753 000 0000` (CA5, P5), que también leen la 503 de
+    la 020 y los correos de la 041;
+  - el historial de `system.md` y `system.html` con las entradas 1.7.0 y 1.8.0 de las dos specs
+    (la 038 pasa después a 1.9.0, T046);
+  - las rutas `/`, `/servicios`, `/admin/auditoria` y la local `/_disenio/020`, y en `capturar.mjs`
+    los `excluidos` de la 020 junto a las comprobaciones de la 038.
 
 ## Impacto en arquitectura
 Lo actualiza T090 al implementar:
