@@ -61,13 +61,11 @@ body.publico {
     font-size: var(--text-publico);
     line-height: var(--leading-publico);
 }
-body.publico a { color: inherit; }
-body.publico img,
-body.publico svg { display: block; max-width: 100%; }
-body.publico h1,
-body.publico h2,
-body.publico h3,
-body.publico p { margin: 0; }
+/* Restablecimientos sin peso (:where), para que los componentes los sustituyan. */
+:where(body.publico) a { color: inherit; }
+:where(body.publico) img,
+:where(body.publico) svg { display: block; max-width: 100%; }
+:where(body.publico) :is(h1, h2, h3, p) { margin: 0; }
 
 /* Foco del sistema; sobre la tinta (tarjeta de la agenda), el inverso. */
 body.publico a:focus-visible,
@@ -670,6 +668,10 @@ body.publico button:focus-visible {
     .pub-hero__actions .c-btn { width: 100%; }
     .pub-tooth__tag { left: 0; }
     .pub-open__photo { object-fit: contain; }
+    .pub-index a { grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-5); }
+    .pub-index__name { min-width: 0; overflow-wrap: anywhere; }
+    .pub-index__count { grid-column: 1; grid-row: 2; }
+    .pub-index__go { grid-column: 2; grid-row: 1 / span 2; }
     .lb-indice,
     .lb-lista dl { grid-template-columns: 1fr; }
     .lb-lista dt { padding-bottom: 0; border-bottom: 0; }
