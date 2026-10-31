@@ -784,7 +784,9 @@ class ConfiguracionProduccionTest extends TestCase
 
                 continue;
             }
-            if ($dentro === 0 && preg_match('/\bscheduler\b/', $linea) && ! str_starts_with($linea, 'paso ')) {
+            // El texto de un mensaje de error no es una orden: puede nombrar el scheduler (R18).
+            $orden = preg_replace('/\berror ".*$/', '', $linea);
+            if ($dentro === 0 && preg_match('/\bscheduler\b/', $orden) && ! str_starts_with($linea, 'paso ')) {
                 $sueltas[] = $linea;
             }
         }
@@ -805,12 +807,12 @@ class ConfiguracionProduccionTest extends TestCase
             $this->assertSame([], $this->schedulerSinComprobar($ordenes), "{$script} nombra el scheduler sin comprobar que existe.");
         }
         $this->assertCount(1, $this->schedulerSinComprobar("if x; then\nfi\n\"\${compose[@]}\" up -d scheduler"), 'Control positivo.');
-        $this->assertCount(1, $this->schedulerSinComprobar("if \"\${compose[@]}\" config --services | grep -qxF scheduler; then\n\"\${compose[@]}\" up -d scheduler\nfi"), 'La tubería ya no cuenta como comprobación.');
+        $this->assertContains('"${compose[@]}" up -d scheduler', $this->schedulerSinComprobar("if \"\${compose[@]}\" config --services | grep -qxF scheduler; then\n\"\${compose[@]}\" up -d scheduler\nfi"), 'La tubería ya no cuenta como comprobación.');
 
         // /review 020 R4: si no se puede leer la lista de servicios, el script se detiene.
         foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
             $ordenes = $this->ordenes($script);
-            $this->assertDoesNotMatchRegularExpression('/config --services[^\n]*\|/', $ordenes, "{$script} no lee la lista con una tubería.");
+            $this->assertDoesNotMatchRegularExpression('/config --services[^\n]*\|\s*grep/', $ordenes, "{$script} no lee la lista con una tubería.");
             $this->assertMatchesRegularExpression('/^\w+="\$\([^\n]*config --services[^\n]*\)" \|\| error "/m', $ordenes, "{$script} lee la lista y se detiene si no puede.");
         }
 

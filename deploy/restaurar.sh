@@ -161,14 +161,17 @@ main() {
     read -r -p "Escribe el nombre de la base para confirmar: " respuesta
     [[ "${respuesta}" == "${base}" ]] || error "confirmación incorrecta; no se ha tocado nada"
 
+    local servicios
     if [[ -n "${ref}" ]]; then
         paso "Volviendo a ${ref} (app y web quedan parados)"
         en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null
     else
+        # Spec 020 (D22, A68; /review R4): nada escribe en la base mientras se carga la copia. La
+        # lista de servicios del servidor se lee antes de parar nada: si no se puede leer, no se toca.
+        servicios="$(en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null)" || error "no se pudo leer docker-compose.prod.yml en el servidor; no se ha tocado nada"
         paso "Parando app, web y el scheduler"
         en_servidor docker compose -f docker-compose.prod.yml stop app web < /dev/null
-        # Spec 020 (D22, A68): nada escribe en la base mientras se carga la copia.
-        if en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null | grep -qxF scheduler; then
+        if grep -qxF scheduler <<< "${servicios}"; then
             en_servidor docker compose -f docker-compose.prod.yml stop scheduler < /dev/null
         fi
     fi
@@ -178,13 +181,15 @@ main() {
     gpg --decrypt -- "${copia}" 2> /dev/null | ssh -- "${servidor}" "bash -c $(printf '%q' "${CARGA}") carga $(printf '%q' "${APP}")"
     resultado=("${PIPESTATUS[@]}")
     set -e
+    # La lista de la versión que queda instalada (con --volver, la de destino; /review R4).
+    servicios="$(en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null)" || error "no se pudo leer docker-compose.prod.yml en el servidor tras la carga (gpg ${resultado[0]}, servidor ${resultado[1]}); levanta app, web y el scheduler a mano"
     if [[ "${resultado[1]}" -eq 3 ]]; then
         if [[ -n "${ref}" ]]; then
-            error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado, y app y web siguen parados en ${ref}. Repite la orden, o levántalos con la versión que quieras."
+            error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado, y app, web y el scheduler (si la versión lo tiene) siguen parados en ${ref}. Repite la orden, o levántalos con la versión que quieras."
         fi
         en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null
         # A83: también vuelve el scheduler, que estaba parado para la carga.
-        if en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null | grep -qxF scheduler; then
+        if grep -qxF scheduler <<< "${servicios}"; then
             en_servidor docker compose -f docker-compose.prod.yml up -d scheduler < /dev/null
         fi
         error "no llegó ningún dato descifrado (¿frase cancelada?): la base no se ha tocado y app y web vuelven a estar en marcha."
@@ -195,7 +200,7 @@ main() {
 
     paso "Levantando app, web y el scheduler"
     en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null
-    if en_servidor docker compose -f docker-compose.prod.yml config --services < /dev/null | grep -qxF scheduler; then
+    if grep -qxF scheduler <<< "${servicios}"; then
         en_servidor docker compose -f docker-compose.prod.yml up -d scheduler < /dev/null
     fi
     en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan config:cache < /dev/null
