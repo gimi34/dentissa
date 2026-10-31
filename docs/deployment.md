@@ -25,22 +25,22 @@ reinicio. Cada ensayo exige antes la aprobación explícita del responsable, ano
 Nadie de fuera llega a la aplicación mientras `cloudflared` está parado.
 
 ## Plataforma e infraestructura
-- **Local:** `Dockerfile` (`php:8.4.25-fpm` + extensiones pdo_mysql, mbstring, exif, pcntl, bcmath,
-  gd, zip; Composer desde `composer:2.10.2`), `docker-compose.yml` con `app`, `nginx`
-  (`nginx:1.30.5-alpine`, `127.0.0.1:8000`), `db` (`mariadb:10.11.18`, `127.0.0.1:3306`, colación
+- **Local:** `Dockerfile` (`php:8.4.26-fpm` + extensiones pdo_mysql, mbstring, exif, pcntl, bcmath,
+  gd, zip; Composer desde `composer:2.10.3`), `docker-compose.yml` con `app`, `nginx`
+  (`nginx:1.30.5-alpine`, `127.0.0.1:8000`), `db` (`mariadb:10.11.19`, `127.0.0.1:3306`, colación
   `utf8mb4_unicode_ci`, volumen `dentissa_db_data`, carga el volcado solo la primera vez) y
-  `phpmyadmin` (`phpmyadmin:5.2.2`, `127.0.0.1:8080`). PHP lee `docker/nginx/php/local.ini`.
+  `phpmyadmin` (`phpmyadmin:5.2.3`, `127.0.0.1:8080`). PHP lee `docker/nginx/php/local.ini`.
   Configuración nginx en `docker/nginx/dentissa.conf`. Todas las imágenes con versión exacta.
 - **Producción** (ADR 0005): servidor propio con Ubuntu Server 24.04, Docker Engine y
   `docker-compose.prod.yml` (proyecto `dentissa-prod`):
-  - `cloudflared` (`cloudflare/cloudflared:2026.9.3`): túnel saliente hacia Cloudflare, única
+  - `cloudflared` (`cloudflare/cloudflared:2026.10.2`): túnel saliente hacia Cloudflare, única
     entrada; HTTPS en el borde de Cloudflare.
   - `web` (nginx de `docker/prod/Dockerfile`, etapa `web`): `public/` y
     `docker/nginx/dentissa.prod.conf`; toma la IP real de `CF-Connecting-IP` solo desde la red
     `172.28.0.0/24` y redirige con 301 a `https://` lo que llega por `http://`.
   - `app` (php-fpm de `docker/prod/Dockerfile`, etapa `app`): el código dentro de la imagen, sin
     dependencias de desarrollo ni secretos, con los paquetes del sistema actualizados al construir.
-  - `db` (`mariadb:10.11.18`): usuario propio `dentissa_app` (no root), colación
+  - `db` (`mariadb:10.11.19`): usuario propio `dentissa_app` (no root), colación
     `utf8mb4_unicode_ci`, volumen `db_data`; el volcado solo en la primera carga.
   - Ningún servicio publica puertos; `restart: unless-stopped`; volúmenes `db_data`, `storage`
     (logs de Laravel y sesiones) y `nginx_logs`.
@@ -100,6 +100,25 @@ Administrar desde fuera de casa: SSH con clave por la red privada de Tailscale, 
 `sudo bash deploy/preparar-acceso-remoto.sh` (spec 031, CA8; ADR 0006; guía §11, que también dice
 cómo retirar un dispositivo). Sin puertos abiertos en el router.
 
+**Servicio `scheduler` (spec 020):** ejecuta `php artisan schedule:work`, cuya única tarea es la
+purga mensual del registro de auditoría (`auditoria:purgar`, el día 1 a las 03:00 UTC). En local
+usa el mismo `build:` que `app`; en producción, la imagen que construye `app`
+(`dentissa-prod-app:produccion`, `pull_policy: never`), con `www-data`, solo `app.env`, el mismo
+`local.ini` y sin puertos. Se reinicia solo. `desplegar.sh` y `volver.sh` lo levantan con `app` y
+`web` (`--remove-orphans`); `volver.sh` lo para antes del checkout y `restaurar.sh` mientras carga
+la copia; los tres lo nombran solo si la versión de destino lo tiene. `aplicar-entorno.sh app` lo
+recrea también, porque lee el mismo `app.env`. `verificar.sh` comprueba que está en marcha y que
+`schedule:list` tiene `auditoria:purgar`. `dentissa:vigilar` sigue en su temporizador de systemd.
+
+**Primera liberación de la 020 (una sola vez):** el `desplegar.sh` instalado no conoce el
+`scheduler`. Se anota la versión instalada (`git describe --tags`), se hace el checkout del tag a
+mano y después `bash deploy/desplegar.sh <tag>`, que ya lo levanta; como el checkout está hecho,
+el script informa como «anterior» el propio tag, y la vuelta es a la versión anotada
+(`deploy/README.md` §9): `bash deploy/volver.sh <versión anotada>`, **sin la copia**. Si la
+verificación falla, **no se sigue la orden de `restaurar.sh` que imprime `desplegar.sh`**: su
+«anterior» es el propio tag y su copia, tomada antes de la migración, no tiene la tabla
+`auditoria`; con ella se volvería a levantar la 020 sin su tabla (/review 020 R3).
+
 Tras el primer despliegue: `docker compose -f docker-compose.prod.yml exec -u www-data app php artisan
 dentissa:rotar-credenciales --confirmar` (las contraseñas nuevas se muestran una vez y se guardan
 fuera del repositorio y del chat).
@@ -124,6 +143,15 @@ fuera del repositorio y del chat).
   (`deploy/volver.sh <tag anterior>`) no necesita revertirla ni restaurar la copia; las entradas de
   reprogramación siguen en la tabla y la versión anterior las muestra como un cambio de estado sin
   fechas.
+- Spec 020: la migración `create_auditoria_table` crea la tabla `auditoria` y sus triggers
+  `auditoria_sin_update` y `auditoria_sin_delete` con el usuario de la aplicación (`dentissa_app`,
+  sin root): MariaDB 10.11 sin binlog no exige `SUPER` para crear triggers, y `dentissa_app` tiene
+  `ALL` sobre su base. Solo añade, así que la vuelta atrás es `deploy/volver.sh <tag anterior>`
+  **sin revertirla y sin la copia**: la versión anterior ignora la tabla y los eventos escritos
+  desde el despliegue son evidencia. Con la copia se perderían. `down()` solo se usa en desarrollo.
+  La purga mide en UTC (`UTC_TIMESTAMP()` en el trigger y `ocurrido_en` en UTC), así que los
+  relojes del servidor y de la base deben estar sincronizados (NTP): con un desfase, un evento
+  dentro del margen haría fallar la purga entera.
 - Base de tests: `database/testing/bootstrap-test-db.sh` recarga el volcado, que trae el trigger, y
   no ejecuta migraciones. Después hay que ejecutar
   `docker compose exec -e DB_DATABASE=dentissa_test app php artisan migrate --force`; si no,
@@ -131,25 +159,45 @@ fuera del repositorio y del chat).
   volcado.
 
 ## Copias de seguridad
-- `deploy/respaldar.sh`: `mariadb-dump` dentro de `db` (sin contraseñas en la línea de comandos) a
-  `/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz` (carpeta 700, copia 600); conserva las 14
-  más recientes. `desplegar.sh` la ejecuta antes de cada despliegue.
-- Tras cada despliegue, el responsable se lleva la copia más reciente a su PC con `scp`.
-- `deploy/restaurar.sh <copia>`: con confirmación escrita, borra la base y la recrea desde la copia
-  (queda exactamente como estaba). Ensayado el 2026-10-04 (spec 030, T043): mismas filas y
-  `CHECKSUM TABLE` en las 18 tablas.
-- Sin cifrar todavía (RS15.b → spec 032, alertas y cifrado de copias; /analyze 031 A17).
+Cifradas desde la spec 032 ([ADR 0007](adr/0007-copias-cifradas-y-avisos.md)):
+- `deploy/respaldar.sh`: `mariadb-dump` dentro de `db` (sin contraseñas en la línea de comandos), en
+  la misma tubería por `gzip` y `gpg --recipient-file` con la clave pública del responsable
+  (`/opt/dentissa/entorno/copias.pub.asc`), a
+  `/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz.gpg` (carpeta 700, copia 600): nunca hay
+  volcado en claro en el disco. Sin gpg o sin una clave pública válida se detiene antes de volcar.
+  Conserva las 14 más recientes y nunca pisa una copia del mismo segundo. `desplegar.sh` la ejecuta
+  antes de cada despliegue.
+- El servidor solo tiene la clave pública y no puede abrirlas. La clave secreta, con su frase, está
+  en el PC del responsable y en una segunda copia fuera del PC; si se pierden las dos, las copias no
+  se recuperan.
+- Tras cada despliegue, el responsable se lleva la copia más reciente a su PC con `scp` (cifrada).
+- `deploy/restaurar.sh <copia.sql.gz.gpg> <cuenta@servidor> [--volver <ref>] [--solo-comprobar]`, **en
+  el PC** (Git Bash): comprueba la copia entera en local (con un mensaje distinto para una copia de
+  otra clave, una frase incorrecta o cancelada, una copia alterada o cortada y un volcado
+  incompleto), pide confirmación escrita y envía por SSH solo el volcado descifrado; el servidor no
+  toca la base hasta recibir la primera línea. Ensayado el 2026-10-25 (spec 032, T044) con la
+  segunda copia de la clave: mismas filas y `CHECKSUM TABLE` en las 14 tablas no volátiles.
+- `deploy/cifrar-copias-antiguas.sh`: cifra las copias en claro anteriores a la 032 y borra las
+  originales (`shred -u`); se ejecutó en el ensayo (9 copias).
 
 ## Rollback
 1. Para dejar la aplicación sin exposición al instante:
    `docker compose -f docker-compose.prod.yml stop cloudflared`.
 2. Volver a la versión anterior: `bash deploy/volver.sh <tag anterior>`.
-3. Si la versión que se abandona migró la base: `bash deploy/volver.sh <tag anterior> <copia>`,
-   con la copia que dejó `desplegar.sh`. `volver.sh` para `app` y `web`, restaura la copia y
-   levanta la versión anterior.
-- Tiempo ensayado: 27 s con restauración de la base (spec 030, T044); objetivo, 15 minutos o menos.
-- Con `<copia>`, se pierde todo lo escrito en la base desde el despliegue, y `volver.sh` no avisa
-  (RD8.a).
+3. Si la versión que se abandona migró la base, desde el PC (spec 032): `scp` de la copia que dejó
+   `desplegar.sh` y `bash deploy/restaurar.sh <copia> <cuenta@servidor> --volver <tag anterior>`.
+   `restaurar.sh` comprueba la copia, llama a `volver.sh <tag anterior> --sin-levantar` (app y web
+   parados, db sana), carga la copia y levanta la versión anterior. `desplegar.sh` imprime la orden
+   exacta según haya o no migraciones pendientes (`migrate:status --pending`). La forma de la 030
+   (`volver.sh <tag> <copia>`) ya no restaura.
+4. Si la versión de destino es anterior a la 032, parar el temporizador de avisos:
+   `sudo systemctl disable --now dentissa-vigilar.timer` (`volver.sh` lo avisa).
+5. Desde la spec 020, el `scheduler` se para antes del checkout y se levanta al final solo si la
+   versión de destino lo tiene; hacia una versión anterior a la 020, el contenedor se quita
+   (`--remove-orphans`). La vuelta de la propia 020 va sin la copia (ver Migraciones).
+- Tiempo ensayado: 4 min 44 s con la copia cifrada desde el PC (spec 032, T044); 27 s sin cifrar en
+  la 030 (T044); objetivo, 15 minutos o menos.
+- Con la copia, se pierde todo lo escrito en la base desde el despliegue, y no se avisa (RD8.a).
 - Si hubo migración no compatible y no hay copia: **antes** de `volver.sh`, con la versión que se
   abandona todavía en marcha, `docker compose -f docker-compose.prod.yml exec app php artisan
   migrate:rollback --step=N`; después, `volver.sh <tag anterior>`. La imagen anterior ya no trae los
@@ -175,7 +223,11 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
 | SESSION_DRIVER, SESSION_LIFETIME, SESSION_ENCRYPT, SESSION_PATH, SESSION_DOMAIN, SESSION_SECURE_COOKIE | ✓ | — | ✓ (`file`, `SESSION_SECURE_COOKIE=true`) | `.env` · `app.env` |
 | GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI | ✓ | — | ✓ (redirect en https) | `.env` · `app.env` |
 | CACHE_STORE | ✓ | — | ✓ (`database`: los límites de intentos necesitan un almacén compartido) | `.env` · `app.env` |
-| QUEUE_CONNECTION, FILESYSTEM_DISK, MAIL_* | ✓ | — | — | `.env` (sin uso real hoy) |
+| QUEUE_CONNECTION, FILESYSTEM_DISK | ✓ | — | — | `.env` (sin uso real hoy) |
+| MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS, MAIL_FROM_NAME (spec 032) | ✓ (`MAIL_MAILER=log`) | — | ✓ (`smtp`, `smtp.gmail.com`, `465`, cuenta de Gmail solo para enviar, contraseña de aplicación) | `.env` · `app.env` |
+| AVISOS_CORREO (destino de los avisos; spec 032) | vacío | — | ✓ | `.env` · `app.env` |
+| DENTISSA_CLAVE_PUBLICA (clave pública de las copias; por defecto `/opt/dentissa/entorno/copias.pub.asc`; spec 032) | — | — | opcional | entorno del shell que ejecuta `respaldar.sh`, `cifrar-copias-antiguas.sh`, `preparar-vigilancia.sh` y `verificar.sh` |
+| DENTISSA_APP (clon del servidor que usa `restaurar.sh` desde el PC; por defecto `/opt/dentissa/app`; spec 032) | — | — | opcional | Git Bash del PC del responsable |
 | MARIADB_PASSWORD, MARIADB_ROOT_PASSWORD | — | — | ✓ | `db.env` en el servidor (solo el servicio `db`) |
 | TUNNEL_TOKEN | — | — | ✓ | `tunnel.env` en el servidor (solo `cloudflared`) |
 | DENTISSA_ENV_DIR (carpeta de los archivos de entorno; por defecto `/opt/dentissa/entorno`) | — | — | opcional | entorno del shell que ejecuta Compose |
@@ -203,13 +255,29 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   de marcos sale de `docker/nginx/seguridad/marcos.conf`, que la imagen `web` ya lleva porque copia
   `docker/nginx/seguridad/` entera (spec 038). Las versiones
   anteriores a la 031 dan un FALLO conocido en «nada escucha fuera de localhost salvo SSH» por
-  `tailscaled` (spec 031, CA8).
+  `tailscaled` (spec 031, CA8). Desde la spec 032, la configuración comprueba también el envío de
+  avisos (`MAIL_MAILER=smtp`, host y puerto 465, usuario y contraseña sin el texto de ejemplo,
+  `MAIL_FROM_ADDRESS` y `AVISOS_CORREO` con formato de correo: 16 comprobaciones) y, solo sin
+  `--interna`, la sección «Avisos y copias»: temporizador activo, clave pública válida y sin clave
+  secreta, llavero del servidor sin claves secretas, ninguna copia en claro en
+  `/var/backups/dentissa` ni en la carpeta personal, y que `app` lee el log de acceso. Desde la
+  spec 020, también el `scheduler` en marcha, «Tareas programadas» con `auditoria:purgar` y
+  «Entorno aplicado» en los cinco servicios.
+- Correlación y auditoría (spec 020): una petición con un `X-Request-Id` válido lo devuelve en la
+  respuesta; tras entrar como dentista a `/admin`, el admin encuentra en `/admin/auditoria` el
+  `acceso_denegado` con ese `request_id` y la acción solicitada `admin.dashboard`.
+- Avisos (spec 032): aviso de prueba con
+  `docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan dentissa:vigilar --prueba`
+  (llega en menos de 5 minutos) y monitor de UptimeRobot en verde.
 - Smoke tests: login de una cuenta de prueba por rol, agendar y cancelar una cita ficticia. Sin
   exponer, por túnel SSH al contenedor `web` (`http://localhost:<puerto>`, ver `deploy/README.md`).
 - Health check: `GET /up` (hoy no comprueba la BD; ver OB6).
 - Logs: `storage/logs/laravel.log` en el volumen `storage` y `dentissa-access.log` /
   `dentissa-error.log` de nginx en el volumen `nginx_logs`; se conservan tras reiniciar el servidor
-  (ensayado, spec 030, T045). Métricas: ninguna · Alertas: ninguna (ver [observability.md](observability.md)).
+  (ensayado, spec 030, T045); desde la spec 032, `storage/logs/seguridad-AAAA-MM-DD.log` (fallos de
+  acceso, 14 días) y el journal del temporizador (`journalctl -u dentissa-vigilar`). Métricas:
+  ninguna · Alertas: errores del servidor, inicios de sesión fallidos, log de acceso con otro formato
+  y caída vista desde fuera, por correo (ver [observability.md](observability.md)).
 - Trazabilidad: busca por `request_id` una petición de los smoke tests y confirma que sus logs
   y eventos de auditoría llegan al destino esperado (cuando exista la correlación, OB2).
 

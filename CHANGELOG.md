@@ -5,6 +5,72 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-31
+
+### Added
+- Registro de auditoría: queda constancia de quién hizo qué, sobre qué recurso, cuándo, desde
+  dónde y con qué resultado, sin datos personales ni de salud en claro. Nadie puede modificar ni
+  borrar un evento, tampoco un admin ni la propia aplicación (spec 020).
+- Consulta del registro en `/admin/auditoria`, solo para el admin: filtros por actor, acción, tipo
+  e identificador de recurso y rango de fechas, del más reciente al más antiguo (spec 020).
+- Los accesos denegados quedan registrados, también cuando se responden como «no encontrado» para
+  no revelar que el recurso existe (spec 020).
+- Cada respuesta lleva un identificador de petición (`X-Request-Id`) que comparten los registros
+  técnicos y los eventos de auditoría de esa petición (spec 020).
+- Purga mensual de los eventos de más de 5 años, con un servicio nuevo de tareas programadas en
+  producción (spec 020).
+
+### Changed
+- Si el registro de auditoría no puede escribirse, las acciones sobre datos clínicos y la consulta
+  del registro no se realizan y se muestra un error genérico; en producción se avisa por correo al
+  responsable, sin datos del evento (spec 020).
+
+### Security
+- `follow-redirects` 1.16.2, que corrige un aviso alto (GHSA-mrwp-f3q8-3g9p) en el entorno de
+  desarrollo (chore 2026-10-30-chore-follow-redirects-1.16.2).
+
+### Changed — flujo AI-DD actualizado a 1.19.0
+- Validador 1.19.0: acta de diseño por criterios (`exploration: loop`), `criterios.json` y aviso a
+  las specs abiertas con interfaz sin "Criterios de diseño". Desaparece `aidd.py deal`.
+- `/design-spec` deja de generar 2–3 opciones para elegir: define puertas, KPIs y una rúbrica,
+  genera un candidato tras otro, los mide con `evaluate.mjs` (sustituye a `inspect.mjs`) y acepta
+  el primero que supera el umbral. Las actas aprobadas con `exploration: options` siguen valiendo.
+- Plantilla `docs/templates/spec.md` con la sección "Criterios de diseño".
+- `.ai/project.yaml → design`: `threshold: 80`, `floor: 3` y `budget: 5`.
+- Sin cambios en la constitución ni en la CI.
+
+## [0.11.1] - 2026-10-27
+
+### Security
+- El túnel hacia internet (`cloudflared`) pasa a la versión 2026.10.2, que corrige seis avisos
+  altos de seguridad de la anterior (chore 2026-10-27-chore-imagenes-031-r4).
+
+## [0.11.0] - 2026-10-27
+
+### Added
+- Avisos por correo al responsable: si en 5 minutos más del 1 % de las respuestas son errores del
+  servidor, si hay más de 10 inicios de sesión fallidos desde una misma dirección o contra una
+  misma cuenta, o si el registro de acceso cambia de formato. Como mucho un correo por tipo cada
+  30 minutos, con el recuento acumulado, y sin datos personales ni secretos (spec 032).
+- Aviso de caída desde fuera del servidor (UptimeRobot), también con el servidor apagado, y otro
+  cuando vuelve a responder (spec 032).
+- Aviso de prueba y comprobación del envío de avisos en la verificación posterior al despliegue
+  (spec 032).
+
+### Changed
+- Las copias de seguridad de la base se cifran desde el primer momento con la clave pública del
+  responsable: nunca existen en claro en el servidor, y la clave que las abre solo está en su PC.
+  La restauración, también la vuelta atrás con copia, se hace desde el PC y se detiene sin tocar
+  la base si la copia es de otra clave, está alterada o incompleta (spec 032).
+- La vuelta atrás sin copia (`volver.sh <versión>`) ya no restaura copias; la guía explica la
+  vuelta con copia desde el PC (spec 032).
+
+### Security
+- Las copias en claro de antes se cifran al liberar y la verificación falla si queda alguna; la
+  guía explica cómo sustituir las del PC y guardar una segunda copia de la clave (spec 032).
+- `vite` 8.3.4, que corrige avisos altos de `launch-editor` en el entorno de desarrollo
+  (chore 2026-10-20-chore-vite-8.3.4).
+
 ### Changed — flujo AI-DD actualizado a 1.16.0
 - Validador 1.16.0 (`aidd.py deal` para repartir jugadas y escenas entre composiciones).
 - `/design-spec` con motor creativo: modo y registro de cada pantalla (al menos una opción audaz),

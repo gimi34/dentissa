@@ -51,6 +51,16 @@ base_con_datos() {
     [[ -n "${contenido}" ]]
 }
 
+# Spec 032 (D4; /analyze A32, A50): ¿sabe con certeza que no hay migraciones
+# pendientes? Solo si migrate:status --pending dice "No pending migrations" y
+# sale con 0 (con pendientes sale con otro código). Si no se puede saber, no:
+# entonces la vuelta propuesta es la de la copia, que es la segura.
+sin_migraciones_pendientes() {
+    local salida
+    salida="$("${compose[@]}" run --rm -u www-data app php artisan migrate:status --pending --no-ansi 2>&1)" || return 1
+    grep -q 'No pending migrations' <<< "${salida}"
+}
+
 main() {
     local ref="${1:-}"
     [[ -n "${ref}" ]] || error "indica la versión: bash deploy/desplegar.sh <tag o commit>"
@@ -90,11 +100,29 @@ main() {
     "${compose[@]}" up -d db
     esperar_db
 
+    # Spec 020 (/review R4, R16): la lista de servicios se lee una vez, y si no se puede leer el
+    # despliegue se detiene en lugar de dar el scheduler por inexistente. El scheduler instalado se
+    # para antes de migrar: nada escribe con el código anterior sobre el esquema que cambia, y un
+    # corte posterior lo deja parado, no en la versión anterior.
+    local servicios
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml (¿faltan archivos en /opt/dentissa/entorno?)"
+    if grep -qxF scheduler <<< "${servicios}"; then
+        paso "Parando el scheduler instalado mientras se migra"
+        "${compose[@]}" stop scheduler
+    fi
+
     paso "Migraciones (con la imagen nueva, antes de cambiar el tráfico)"
+    local sin_migraciones="no"
+    sin_migraciones_pendientes && sin_migraciones="si"
     "${compose[@]}" run --rm -u www-data app php artisan migrate --force
 
-    paso "Levantando app y web"
-    "${compose[@]}" up -d app web
+    paso "Levantando app, web y el scheduler"
+    # Spec 020 (D22): --remove-orphans quita lo que esta versión ya no tiene, y el scheduler solo
+    # se nombra si su Compose lo tiene.
+    "${compose[@]}" up -d --remove-orphans app web
+    if grep -qxF scheduler <<< "${servicios}"; then
+        "${compose[@]}" up -d scheduler
+    fi
 
     paso "Cachés"
     "${compose[@]}" exec -T -u www-data app php artisan config:cache
@@ -116,8 +144,16 @@ main() {
             echo "    bash deploy/verificar.sh --interna"
             echo "Si falla algo más, para el despliegue: docker compose -f docker-compose.prod.yml down"
         else
-            echo "La verificación falló. Para volver a la versión anterior:"
-            echo "    bash deploy/volver.sh ${anterior} ${copia}"
+            # Si la base pudo cambiar, se vuelve con la copia, cifrada, desde el PC
+            # del responsable, donde está la clave (spec 032, D3).
+            if [[ "${sin_migraciones}" == "si" ]]; then
+                echo "La verificación falló y no había migraciones que aplicar. Para volver a la versión anterior:"
+                echo "    bash deploy/volver.sh ${anterior}"
+            else
+                echo "La verificación falló y la base pudo cambiar. Para volver con la copia, desde el PC (Git Bash, en el clon):"
+                echo "    scp <cuenta>@<servidor>:${copia} ."
+                echo "    bash deploy/restaurar.sh ${copia##*/} <cuenta>@<servidor> --volver ${anterior}"
+            fi
         fi
         exit 1
     fi

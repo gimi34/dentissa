@@ -113,6 +113,22 @@
     --duration-reveal:    800ms;
     --stagger:            80ms;
     --duration-marquesina: 48s;
+    /* Registro de auditoría y error genérico (spec 020; system.md 1.7.0). Nombres de la 041; usa también
+       --leading-publico y --sombra-tarjeta-alta, declarados arriba por la 038 (/analyze 038 A35). */
+    --text-acceso-titulo:     28px;  /* tamaño, no color */
+    --text-acceso:            14px;  /* tamaño, no color */
+    --acceso-form-max:        480px;
+    --logo-franja-w:          104px; /* logo del error genérico en la franja del teléfono (c4) */
+    --logo-panel-w:           260px; /* logo del error genérico en el panel del escritorio (c4) */
+    /* Error genérico, valores de c4 como tokens (system.md 1.8.0; /review 020 R1). */
+    --tracking-etiqueta:      0.08em;
+    --tracking-titulo:        -0.01em;
+    --leading-titulo:         1.15;
+    --text-acceso-destacado:  16.8px; /* tamaño, no color */
+    --acceso-franja-pie:      70px;
+    --acceso-solape:          56px;
+    --acceso-panel-pad:       56px;
+    --acceso-lado-pad:        42px;
 }
 
 body {
@@ -688,3 +704,20 @@ tr:hover td { background: var(--p50); }
    misma especificidad que la regla de foco y después de ella, para que siga rojo con foco (/review R21). */
 .form-expediente .field.field-error { border-color: var(--red); }
 /* Fin spec 035 */
+
+/* Spec 020: paginación tras una lista (design.md; system.md 1.7.0). A lo ancho y con botones de 44 px por
+   debajo de 900 px; en el escritorio, los botones a la derecha del texto. Acotada a `nav.paginacion`: la
+   lista de expedientes (035) usa todavía un `div.paginacion` con estilos en línea y no cambia. */
+nav.paginacion { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4) var(--space-6);
+  padding: var(--space-5) var(--space-7); border-top: var(--border-width) solid var(--border); }
+.paginacion-texto { font-size: var(--text-meta); color: var(--text); }
+.paginacion-botones { display: flex; gap: var(--space-3); }
+nav.paginacion .btn-outline { border-color: var(--border-control); }
+nav.paginacion .pagina-off { color: var(--text); background: var(--p50); border-color: var(--border); cursor: default; }
+nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+@media (max-width: 899px) {
+  nav.paginacion { padding: var(--space-5); }
+  .paginacion-botones { width: 100%; }
+  .paginacion-botones .btn { flex: 1; justify-content: center; min-height: var(--touch-min); }
+}
+/* Fin spec 020 */

@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -71,6 +72,19 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
+        ],
+
+        // Spec 032 (plan D7): inicios de sesión fallidos y bloqueados, que cuenta
+        // el vigilante de avisos (dentissa:vigilar). Una línea JSON por intento,
+        // con huellas del origen y de la cuenta y sin IP ni correo. Alerta, no
+        // audita: el registro de auditoría es el de la spec 021.
+        'seguridad' => [
+            'driver' => 'daily',
+            'name' => 'seguridad',
+            'path' => storage_path('logs/seguridad.log'),
+            'level' => 'info',
+            'days' => 14,
+            'formatter' => JsonFormatter::class,
         ],
 
         'slack' => [

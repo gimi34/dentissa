@@ -128,3 +128,4 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-06 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-20 | Liberada en v0.10.0 (PR #38, merge `e4fd141`, tag `v0.10.0`) y desplegada en producción | /release |
 | 2026-10-20 | CA1 ampliado por la 038 CA7: la política de contenido admite el marco de `https://www.google.com` solo en `/` (`frame-src` desde `marcos.conf`); el resto de rutas sigue sin marcos externos, y `frame-ancestors 'none'` y `X-Frame-Options` no cambian. `verificar.sh` comprueba la redirección a https con `/admin` (038 D10). Rige al liberar la 038 | /implement 038 (T043) |
+| 2026-10-31 | Comportamiento modificado por 020 en v0.12.0: `verificar.sh` comprueba el `scheduler` y «Tareas programadas», «Entorno aplicado» cubre cinco servicios y `aplicar-entorno.sh app` recrea también el `scheduler` | /release |

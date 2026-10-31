@@ -1,0 +1,150 @@
+<!doctype html>
+<!--
+  041 · candidato 2 · pedir. Plantilla ai-dd pagina.html; se mide con design/medir.mjs.
+  Composición: el carnet de citas (opción B de la ronda anterior) dentro de la carcasa del inicio
+  de sesión. Escritorio: panel de marca del login a la izquierda (degradado --p600→--p800, sin los dos
+  tonos fuera del sistema del login actual) y el carnet sobre --p50 a la derecha. Teléfono: franja
+  --p800 con el logo y el carnet montado encima.
+  Tokens nuevos (Cambios a incorporar al sistema): --font-acceso, --text-acceso-titulo, --text-acceso,
+  --text-acceso-small, --acceso-form-max, --duration-respuesta, --duration-exito, --ease-clinico: el
+  acceso tiene hoy estos valores como literales en auth.css (DS4).
+  c2: la casilla «Recordarme» tiene una zona de toque de 44 px (G-toque falló en c1 con 18×18);
+  la casilla visible sigue siendo de 20 px, dibujada con tokens.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>¿Olvidaste tu contraseña? · Dentissa</title>
+<style id="tokens">
+:root {
+  --p50:#FDF5F8; --p100:#FBEAF0; --p200:#F4C0D1; --p300:#ED93B1; --p400:#D4537E; --p500:#B83C65; --p600:#993556; --p800:#72243E;
+  --text:#000000; --border:#F0DCE4; --bg:#FDF5F8; --white:#FFFFFF;
+  --red:#A32D2D; --red-bg:#FCEBEB; --green-texto:#137A5A; --green-bg:#E1F5EE; --amber:#854F0B; --amber-bg:#FAEEDA;
+  --border-control:var(--p400); --focus-ring:var(--p600);
+  --focus-ring-width:2px; --focus-ring-offset:2px; --border-width:1px; --border-width-strong:2px;
+  --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
+  --space-1:4px; --space-2:6px; --space-3:8px; --space-4:10px; --space-5:14px; --space-6:16px; --space-7:20px; --space-8:28px;
+  --touch-min:44px; --icon-md:18px;
+  --text-meta:13px; --text-publico:17px; --leading-publico:1.5;
+  --sombra-tarjeta-alta:0 14px 32px rgba(114, 36, 62, 0.16);
+  --weight-regular:400; --weight-strong:500; --weight-bold:600;
+  /* Nuevos (041) */
+  --font-acceso:Roboto, system-ui, sans-serif;
+  --text-acceso-titulo:28px; --text-acceso:14px; --text-acceso-small:12px;
+  --acceso-form-max:440px;
+  --duration-respuesta:150ms; --duration-exito:600ms; --ease-clinico:cubic-bezier(.2, .7, .2, 1);
+}
+</style>
+<style id="components">
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--font-acceso); color:var(--text); background:var(--bg); min-height:100vh; }
+.acceso { min-height:100vh; display:flex; flex-direction:column; }
+/* Panel de marca: el del inicio de sesión (solo escritorio). */
+.panel { display:none; }
+/* Franja del teléfono: --p800 con el logo; el carnet se monta encima. */
+.franja { background:var(--p800); padding:var(--space-6) var(--space-6) calc(var(--space-8) * 2.5); }
+.franja img { width:104px; display:block; }
+.lado { flex:1; display:flex; flex-direction:column; align-items:center; padding:0 var(--space-6) var(--space-8); }
+.carnet { width:100%; max-width:var(--acceso-form-max); margin-top:calc(var(--space-8) * -2); background:var(--white); border-radius:var(--radius); box-shadow:var(--sombra-tarjeta-alta); }
+.carnet-cuerpo { padding:var(--space-8) var(--space-7); display:flex; flex-direction:column; gap:var(--space-6); }
+@media (min-width:769px) {
+  .acceso { flex-direction:row; }
+  .franja { display:none; }
+  .panel { display:flex; width:48%; flex-direction:column; justify-content:center; align-items:center; gap:var(--space-8); padding:calc(var(--space-8) * 2); background:linear-gradient(145deg, var(--p600), var(--p800)); color:var(--white); text-align:center; }
+  .panel img { width:260px; display:block; }
+  .panel .contacto { font-size:var(--text-acceso); line-height:var(--leading-publico); color:var(--p100); max-width:32ch; }
+  .panel .contacto b { color:var(--white); display:block; font-size:var(--text-publico); font-weight:var(--weight-strong); margin-bottom:var(--space-1); }
+  .lado { justify-content:center; padding:calc(var(--space-8) * 1.5) var(--space-8); }
+  .carnet { margin-top:0; }
+}
+.etiqueta { font-size:var(--text-acceso-small); font-weight:var(--weight-bold); color:var(--p600); text-transform:uppercase; letter-spacing:0.08em; }
+h1 { font-size:var(--text-acceso-titulo); font-weight:var(--weight-bold); letter-spacing:-0.01em; line-height:1.15; }
+.sub { font-size:var(--text-acceso); line-height:var(--leading-publico); }
+.campo { display:flex; flex-direction:column; gap:var(--space-2); }
+.campo label { font-size:var(--text-acceso-small); font-weight:var(--weight-strong); }
+.campo input { width:100%; min-height:var(--touch-min); padding:0 var(--space-5); border:var(--border-width) solid var(--border-control); border-radius:var(--radius-sm); font:inherit; font-size:var(--text-acceso); background:var(--white); color:var(--text); }
+.campo input:focus-visible { outline:var(--focus-ring-width) solid var(--focus-ring); outline-offset:var(--focus-ring-offset); }
+.campo .ayuda { font-size:var(--text-acceso-small); }
+.campo.error input { border-color:var(--red); border-width:var(--border-width-strong); }
+.campo .msg-error { font-size:var(--text-acceso-small); color:var(--red); font-weight:var(--weight-strong); display:flex; gap:var(--space-1); align-items:flex-start; }
+.btn { min-height:var(--touch-min); display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); padding:0 var(--space-7); border-radius:var(--radius-sm); font:inherit; font-size:var(--text-acceso); font-weight:var(--weight-strong); text-decoration:none; cursor:pointer; border:var(--border-width) solid transparent; transition:background var(--duration-respuesta) var(--ease-clinico), transform var(--duration-respuesta) var(--ease-clinico); }
+.btn:active { transform:scale(.98); }
+/* Botón principal en --p500: blanco sobre --p400 es 3.93:1 (DS1). */
+.btn-primario { background:var(--p500); color:var(--white); width:100%; }
+.btn-primario:hover { background:var(--p600); }
+.btn-secundario { background:var(--white); color:var(--p600); border-color:var(--border-control); width:100%; }
+.enlace { color:var(--p600); font-weight:var(--weight-strong); font-size:var(--text-acceso); text-decoration:underline; text-underline-offset:3px; min-height:var(--touch-min); display:inline-flex; align-items:center; gap:var(--space-2); align-self:flex-start; }
+a:focus-visible, button:focus-visible { outline:var(--focus-ring-width) solid var(--focus-ring); outline-offset:var(--focus-ring-offset); }
+.aviso { display:flex; gap:var(--space-3); align-items:flex-start; padding:var(--space-5) var(--space-6); border-radius:var(--radius-sm); font-size:var(--text-acceso); line-height:var(--leading-publico); border:var(--border-width) solid currentColor; }
+.aviso-error { background:var(--red-bg); color:var(--red); }
+.aviso-exito { background:var(--green-bg); color:var(--green-texto); }
+.aviso-espera { background:var(--amber-bg); color:var(--amber); }
+.aviso strong { display:block; }
+.ico { width:var(--icon-md); height:var(--icon-md); flex-shrink:0; }
+/* Troquel: línea discontinua con dos muescas del color del fondo, como el carnet impreso. */
+.troquel { position:relative; border-top:var(--border-width-strong) dashed var(--p200); margin:0 var(--space-6); }
+.troquel::before, .troquel::after { content:""; position:absolute; top:calc(var(--space-6) * -0.5 - 1px); width:var(--space-6); height:var(--space-6); border-radius:var(--radius-pill); background:var(--bg); }
+.troquel::before { left:calc(var(--space-6) * -1.5); }
+.troquel::after { right:calc(var(--space-6) * -1.5); }
+.talon { padding:var(--space-6) var(--space-7) var(--space-7); display:grid; grid-template-columns:auto 1fr; gap:var(--space-2) var(--space-6); font-size:var(--text-meta); line-height:var(--leading-publico); }
+.talon dt { font-weight:var(--weight-bold); color:var(--p600); }
+/* M-1 · vacío que orienta: en «Revisa tu correo» el talón crece con la hora y los pasos. */
+.hora { font-size:calc(var(--text-acceso-titulo) * 1.5); font-weight:var(--weight-bold); color:var(--p800); line-height:1; letter-spacing:-0.02em; }
+.pasos { list-style:none; display:flex; flex-direction:column; counter-reset:paso; }
+.pasos li { counter-increment:paso; display:grid; grid-template-columns:var(--touch-min) 1fr; gap:var(--space-4); align-items:center; padding:var(--space-3) 0; border-bottom:var(--border-width) solid var(--border); font-size:var(--text-acceso); line-height:var(--leading-publico); }
+.pasos li::before { content:counter(paso); width:var(--touch-min); height:var(--touch-min); border-radius:var(--radius-pill); background:var(--p100); color:var(--p800); font-weight:var(--weight-bold); display:flex; align-items:center; justify-content:center; }
+.pasos li:last-child { border-bottom:0; }
+.entra { animation:entra var(--duration-exito) var(--ease-clinico) both; }
+.pasos li:nth-child(2) { animation-delay:80ms; } .pasos li:nth-child(3) { animation-delay:160ms; }
+@keyframes entra { from { transform:translateY(8px); } to { transform:none; } }
+/* Correos: una columna de 600 px como máximo, cabecera --p800 con el logo. */
+.buzon-cab { background:var(--p100); padding:var(--space-5) var(--space-6); font-size:var(--text-acceso-small); line-height:var(--leading-publico); }
+.correo { max-width:600px; margin:var(--space-6) auto; background:var(--white); border-radius:var(--radius); overflow:hidden; }
+.correo-cab { background:var(--p800); padding:var(--space-6) var(--space-7) var(--space-7); }
+.correo-cab img { width:104px; display:block; }
+.correo-cuerpo { padding:var(--space-8) var(--space-7); display:flex; flex-direction:column; gap:var(--space-6); font-size:var(--text-acceso); line-height:var(--leading-publico); }
+.correo .btn-primario { width:auto; align-self:flex-start; }
+.correo .talon { background:var(--p50); }
+.url { font-size:var(--text-acceso-small); overflow-wrap:anywhere; color:var(--p600); }
+/* Inicio de sesión con el aviso de éxito (pantalla vecina, solo cambia el aviso). */
+.login-form { width:100%; max-width:400px; display:flex; flex-direction:column; gap:var(--space-6); }
+.login-form .pie { font-size:var(--text-acceso); text-align:center; }
+.fila { display:flex; justify-content:space-between; align-items:center; gap:var(--space-3); flex-wrap:wrap; font-size:var(--text-acceso); }
+.fila label { display:inline-flex; gap:var(--space-3); align-items:center; min-height:var(--touch-min); }
+/* Casilla con zona de toque de 44 px; el cuadro visible (20 px) se dibuja con dos fondos. */
+.fila input { appearance:none; width:var(--touch-min); height:var(--touch-min); margin:0 calc(var(--space-4) * -1); cursor:pointer; border-radius:var(--radius-sm);
+  background:linear-gradient(var(--white), var(--white)) center / 16px 16px no-repeat, linear-gradient(var(--p400), var(--p400)) center / 20px 20px no-repeat; }
+.fila input:checked { background:linear-gradient(var(--p500), var(--p500)) center / 20px 20px no-repeat; }
+.fila input:focus-visible { outline:var(--focus-ring-width) solid var(--focus-ring); outline-offset:calc(var(--focus-ring-offset) * -4); }
+.separador { display:flex; align-items:center; gap:var(--space-4); font-size:var(--text-acceso-small); }
+.separador::before, .separador::after { content:""; flex:1; border-top:var(--border-width) solid var(--border); }
+.lado-login { flex:1; display:flex; justify-content:center; align-items:center; padding:var(--space-8) var(--space-6); background:var(--p50); }
+@media (min-width:769px) { .lado-login { background:var(--white); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration:0ms !important; animation-duration:0ms !important; animation-delay:0ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="acceso">
+  <header class="franja"><img src="../../../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral" data-origen="propia"></header>
+  <aside class="panel"><img src="../../../../../../public/images/logo-main.png" alt="Melissa López N. · Odontología integral" data-origen="propia"><p class="contacto"><b>¿No puedes usar tu correo?</b>Llama a la consulta: 753 000 0000<br>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</p></aside>
+  <main class="lado">
+    <div class="carnet">
+      <form class="carnet-cuerpo" action="#" method="post">
+        <span class="etiqueta">Recuperar acceso</span>
+        <h1>¿Olvidaste tu contraseña?</h1>
+        <p class="sub">Escribe el correo de tu cuenta y te enviamos un enlace para elegir una nueva.</p>
+        <div class="campo"><label for="correo">Correo electrónico de tu cuenta</label><input id="correo" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" required></div>
+        <button class="btn btn-primario" type="submit">Enviar enlace</button>
+        <a class="enlace" href="#">Volver a iniciar sesión</a>
+      </form>
+      <div class="troquel" aria-hidden="true"></div>
+      <dl class="talon"><dt>Vale</dt><dd>60 minutos desde que lo pidas, una sola vez</dd><dt>¿Sin correo?</dt><dd>Llama a la consulta: 753 000 0000</dd></dl>
+    </div>
+  </main>
+</div>
+</body>
+</html>

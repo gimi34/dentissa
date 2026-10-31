@@ -9,10 +9,17 @@
 #
 # Cada comprobación imprime OK o FALLO con su nombre; sale con código distinto
 # de 0 si alguna falla. No imprime ningún valor secreto.
+#
+# Spec 032 (CA6, CA8, CA10; D12): el envío de avisos en la configuración y, sin
+# --interna, la sección «Avisos y copias». Esa sección no corre con --interna
+# para que desplegar.sh y volver.sh pasen antes de instalar el temporizador y de
+# cifrar las copias antiguas (/analyze A3).
 
 set -uo pipefail
 
 FALLOS=0
+DESTINO="${DENTISSA_BACKUP_DIR:-/var/backups/dentissa}"
+CLAVE_PUBLICA="${DENTISSA_CLAVE_PUBLICA:-/opt/dentissa/entorno/copias.pub.asc}"
 
 ok() { echo "OK    $*"; }
 fallo() {
@@ -58,9 +65,17 @@ main() {
     echo "== Servicios"
     local enMarcha
     enMarcha="$("${compose[@]}" ps --status running --services 2>/dev/null)"
-    for servicio in db app web; do
+    for servicio in db app web scheduler; do
         if grep -qx "${servicio}" <<< "${enMarcha}"; then ok "${servicio} en marcha"; else fallo "${servicio} en marcha"; fi
     done
+
+    echo "== Tareas programadas (spec 020)"
+    # La purga mensual del registro de auditoría es la única tarea del scheduler (CA5).
+    if "${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null | grep -q 'auditoria:purgar'; then
+        ok "el scheduler programa auditoria:purgar"
+    else
+        fallo "el scheduler programa auditoria:purgar (docker compose -f docker-compose.prod.yml logs scheduler)"
+    fi
 
     echo "== Salud por la red interna"
     if "${compose[@]}" exec -T web wget -q -S -O /dev/null http://127.0.0.1/up 2>&1 | grep -q " 200 "; then
@@ -70,8 +85,10 @@ main() {
     fi
 
     echo "== Configuración de producción (sin mostrar valores secretos)"
-    # Doce comprobaciones; si php termina con error o faltan líneas, las que no
-    # llegaron a ejecutarse cuentan como fallo (/review R9).
+    # Dieciséis comprobaciones; si php termina con error o faltan líneas, las que
+    # no llegaron a ejecutarse cuentan como fallo (/review R9). Las cuatro últimas
+    # son del envío de avisos (spec 032): TLS implícito en el puerto 465, para que
+    # la contraseña de aplicación nunca viaje sin cifrar (/analyze A42).
     local config codigo lineas
     config="$("${php[@]}" -r "${ARRANQUE}"'
         $c(app()->environment() === "production", "APP_ENV=production");
@@ -89,13 +106,17 @@ main() {
         $c((bool) preg_match("/^[0-9]+-[0-9a-z]+\\.apps\\.googleusercontent\\.com\$/", (string) config("services.google.client_id")), "GOOGLE_CLIENT_ID con formato de id de Google (no el de ejemplo de la guía)");
         $secreto = (string) config("services.google.client_secret");
         $c($secreto !== "" && ! preg_match("/[<>\\s]/", $secreto), "GOOGLE_CLIENT_SECRET definido y sin el texto de ejemplo de la guía");
+        $c(config("mail.default") === "smtp", "MAIL_MAILER=smtp");
+        $c((string) config("mail.mailers.smtp.host") !== "" && (int) config("mail.mailers.smtp.port") === 465, "MAIL_HOST definido y MAIL_PORT=465 (TLS obligatorio)");
+        $c((string) config("mail.mailers.smtp.username") !== "" && (string) config("mail.mailers.smtp.password") !== "" && ! preg_match("/[<>\\s]/", config("mail.mailers.smtp.username").config("mail.mailers.smtp.password")), "MAIL_USERNAME y MAIL_PASSWORD definidos y sin el texto de ejemplo de la guía");
+        $c(filter_var((string) config("mail.from.address"), FILTER_VALIDATE_EMAIL) !== false && filter_var((string) config("avisos.destino"), FILTER_VALIDATE_EMAIL) !== false, "MAIL_FROM_ADDRESS y AVISOS_CORREO con formato de correo");
     ')"
     codigo=$?
     [[ -n "${config}" ]] && echo "${config}"
     FALLOS=$((FALLOS + $(grep -c '^FALLO' <<< "${config}" || true)))
     lineas="$(grep -cE '^(OK|FALLO) ' <<< "${config}" || true)"
-    if [[ "${codigo}" -ne 0 || "${lineas}" -ne 12 ]]; then
-        fallo "configuración de app: php terminó con código ${codigo} y dio ${lineas} de 12 comprobaciones"
+    if [[ "${codigo}" -ne 0 || "${lineas}" -ne 16 ]]; then
+        fallo "configuración de app: php terminó con código ${codigo} y dio ${lineas} de 16 comprobaciones"
     fi
 
     echo "== Cabeceras por la red interna (spec 031)"
@@ -276,6 +297,44 @@ PY
             fallo "${clave}: esperado '${esperado}', actual '${actual}'"
         fi
     done
+
+    if [[ "${modo}" != "--interna" ]]; then
+        echo "== Avisos y copias (spec 032)"
+        if systemctl is-active --quiet dentissa-vigilar.timer; then
+            ok "temporizador dentissa-vigilar activo"
+        else
+            fallo "temporizador dentissa-vigilar activo (sudo bash deploy/preparar-vigilancia.sh)"
+        fi
+        local claves_publicas
+        claves_publicas="$(gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}" 2> /dev/null || true)"
+        if grep -q '^pub:' <<< "${claves_publicas}" && ! grep -q '^sec:' <<< "${claves_publicas}"; then
+            ok "clave pública de las copias válida y sin clave secreta"
+        else
+            fallo "clave pública de las copias válida y sin clave secreta (${CLAVE_PUBLICA}, deploy/README.md §7)"
+        fi
+        if gpg --list-secret-keys --with-colons 2> /dev/null | grep -q '^sec:'; then
+            fallo "el llavero del servidor no tiene claves secretas: hay alguna (gpg --list-secret-keys)"
+        else
+            ok "el llavero del servidor no tiene claves secretas"
+        fi
+        local claras
+        # Sin poder leer la carpeta, la búsqueda daría 0 y un OK falso: no se hace (/review R5, R28).
+        if [[ ! -d "${DESTINO}" || ! -r "${DESTINO}" ]]; then
+            fallo "la carpeta de copias ${DESTINO} no existe o no se puede leer"
+        else
+            claras="$(find "${DESTINO}" "${HOME}" -maxdepth 1 -name 'dentissa-*.sql.gz' 2> /dev/null | wc -l)"
+            if [[ "${claras}" -eq 0 ]]; then
+                ok "ninguna copia en claro en ${DESTINO} ni en la carpeta personal"
+            else
+                fallo "hay ${claras} copias en claro en ${DESTINO} o en la carpeta personal (bash deploy/cifrar-copias-antiguas.sh)"
+            fi
+        fi
+        if "${compose[@]}" exec -T -u www-data app test -r /var/log/nginx/dentissa-access.log; then
+            ok "app lee el log de acceso de nginx"
+        else
+            fallo "app lee el log de acceso de nginx (volumen nginx_logs)"
+        fi
+    fi
 
     if [[ "${modo}" != "--interna" ]]; then
         echo "== Dirección pública"

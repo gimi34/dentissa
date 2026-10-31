@@ -12,8 +12,8 @@ despliegue** (la cuenta creada al instalar Ubuntu), salvo los marcados "en tu PC
 | Ruta en el servidor | Contenido |
 |---|---|
 | `/opt/dentissa/app` | clon del repositorio (solo lectura desde GitHub) |
-| `/opt/dentissa/entorno` | `app.env`, `db.env` y `tunnel.env` (carpeta 700, archivos 600, **fuera del clon**) |
-| `/var/backups/dentissa` | copias de la base (carpeta 700, copias 600, las 14 más recientes) |
+| `/opt/dentissa/entorno` | `app.env`, `db.env`, `tunnel.env` y `copias.pub.asc` (carpeta 700, archivos 600, **fuera del clon**) |
+| `/var/backups/dentissa` | copias cifradas de la base, `.sql.gz.gpg` (carpeta 700, copias 600, las 14 más recientes) |
 
 ## 1. Preparar el servidor (una sola vez)
 
@@ -97,7 +97,28 @@ DB_PASSWORD=<la misma que MARIADB_PASSWORD de db.env>
 GOOGLE_CLIENT_ID=<client id>
 GOOGLE_CLIENT_SECRET=<client secret>
 GOOGLE_REDIRECT_URI=https://<subdominio>/auth/google/callback
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=<cuenta de envío>@gmail.com
+MAIL_PASSWORD=<contraseña de aplicación, sin espacios>
+MAIL_FROM_ADDRESS=<cuenta de envío>@gmail.com
+MAIL_FROM_NAME=Dentissa
+AVISOS_CORREO=<tu correo de siempre>
 ```
+
+> **Correo de los avisos (spec 032):** crea una **cuenta de Gmail nueva, solo
+> para enviar los avisos**, sin otros datos ni reenvíos, y no la uses para nada
+> más. Una contraseña de aplicación da acceso a todo el buzón de su cuenta: si
+> alguien comprometiera la aplicación, solo vería esa cuenta vacía, no tu correo.
+> En esa cuenta: **Cuenta de Google → Seguridad → Verificación en dos pasos**
+> (activada) y después **Contraseñas de aplicaciones** → crea una para «Dentissa»
+> y cópiala **sin espacios** en `MAIL_PASSWORD`. Los avisos llegan a
+> `AVISOS_CORREO`, tu correo de siempre. El puerto 465 es TLS desde el primer
+> byte: la contraseña nunca viaja sin cifrar. `verificar.sh` da FALLO con otro
+> puerto o con los `<…>` de ejemplo, sin mostrar los valores. Si cambias la
+> contraseña de esa cuenta, Google revoca la de aplicación: crea otra y aplícala
+> con `aplicar-entorno.sh app` (§10).
 
 > **Sustituye todos los `<…>`**, también `GOOGLE_CLIENT_ID` y
 > `GOOGLE_CLIENT_SECRET`: si se quedan con el texto de ejemplo, Google responde
@@ -191,39 +212,131 @@ es `Secure` y el navegador solo la envía por http cuando el sitio es
 
 ## 7. Copias de la base
 
-`desplegar.sh` hace una copia antes de cada despliegue (salvo el primero). A mano:
+Desde la spec 032 las copias van **cifradas** para tu clave
+(`dentissa-AAAAMMDD-HHMMSS.sql.gz.gpg`). El servidor solo tiene la clave pública:
+puede cifrarlas, pero no abrirlas. Se abren y se restauran **solo desde tu PC**,
+donde está la clave secreta; ni la clave ni su frase llegan nunca al servidor.
+
+### La clave de las copias (una sola vez, en tu PC)
+
+Todo en **Git Bash** (viene con Git para Windows, con `gpg` y `ssh`).
+
+1. Crea la clave:
+   ```bash
+   gpg --quick-generate-key "Dentissa copias" default default never
+   ```
+   Te pide una **frase de al menos 5 palabras al azar o 20 caracteres**, que no
+   uses en ningún otro sitio: en tu PC están juntas las copias y la clave, así
+   que una copia robada de tu PC solo la protege esa frase. La clave no caduca a
+   propósito: caducar solo impediría cifrar copias nuevas.
+2. Haz la **segunda copia de la clave secreta fuera del PC** (una memoria USB
+   guardada en otro sitio, o tu gestor de contraseñas como archivo adjunto):
+   ```bash
+   gpg --armor --export-secret-keys "Dentissa copias" > dentissa-copias-secreta.asc
+   ```
+   Guárdala, y después borra el archivo del PC. Sigue protegida por la frase.
+3. Lleva la clave pública al servidor:
+   ```bash
+   gpg --armor --export "Dentissa copias" > copias.pub.asc                       # en tu PC
+   scp copias.pub.asc <cuenta>@<IP del servidor>:/opt/dentissa/entorno/          # en tu PC
+   chmod 600 /opt/dentissa/entorno/copias.pub.asc                                # en el servidor
+   gpg --show-keys /opt/dentissa/entorno/copias.pub.asc                          # en el servidor: «pub», nunca «sec»
+   ```
+
+> **Si pierdes la clave secreta y su segunda copia, las copias no se recuperan:**
+> nadie, tampoco tú, puede abrirlas. Si pierdes el PC, importa la segunda copia
+> en otro equipo con gpg y SSH (`gpg --import dentissa-copias-secreta.asc`) y
+> sigue desde allí. El ensayo de restauración se hace con esa segunda copia.
+
+### Hacer y llevarte una copia
+
+`desplegar.sh` hace una antes de cada despliegue (salvo el primero). A mano:
 
 ```bash
 bash deploy/respaldar.sh
 ```
 
-Tras cada despliegue, llévate la copia más reciente a tu PC (**en tu PC**):
+Sin `gpg` o sin una clave pública válida en `/opt/dentissa/entorno/copias.pub.asc`,
+la copia **no se hace en claro**: el script se detiene (y `desplegar.sh`, antes de
+cambiar nada). Tras cada despliegue, llévate la copia más reciente (**en tu PC**):
 
 ```bash
-scp <cuenta>@<IP del servidor>:/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz .
+scp <cuenta>@<IP del servidor>:/var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz.gpg .
 ```
 
-Las copias contienen datos personales y de salud y aún van sin cifrar (spec 031):
-guárdalas en una carpeta solo tuya.
+Va cifrada; aun así, guárdala en una carpeta solo tuya. **Las copias en claro de
+antes de la 032 que tengas en el PC (`.sql.gz`)**: sustitúyelas por copias
+cifradas y bórralas del todo (también de la papelera).
 
-Restaurar una copia (borra la base y la recrea desde la copia; pide confirmación):
+### Restaurar una copia (en tu PC)
+
+Desde tu clon del repositorio, en Git Bash, con el clon en la versión instalada
+en el servidor o posterior (desde la 020, para que pare también el `scheduler`).
+Borra la base del servidor y la recrea desde la copia:
 
 ```bash
-docker compose -f docker-compose.prod.yml stop app web
-bash deploy/restaurar.sh /var/backups/dentissa/dentissa-AAAAMMDD-HHMMSS.sql.gz
-docker compose -f docker-compose.prod.yml up -d app web
+bash deploy/restaurar.sh dentissa-AAAAMMDD-HHMMSS.sql.gz.gpg <cuenta>@<IP del servidor>
 ```
+
+1. Comprueba la copia entera en tu PC: pide la frase y la descifra hacia ningún
+   sitio. Si algo no cuadra, se detiene **sin tocar nada** y dice por qué: «la
+   copia no es para tu clave», «no se pudo usar la clave (frase incorrecta o
+   cancelada)», «la copia está alterada o cortada» o «el volcado está
+   incompleto».
+2. Te pide escribir el nombre de la base (`dentissa`) para confirmar.
+3. Para `app`, `web` y el `scheduler` (si la versión lo tiene), descifra otra vez
+   y envía el volcado por SSH; el servidor
+   lo carga sin escribirlo en el disco. La frase se pide una sola vez si el
+   agente de gpg aún la recuerda (10 minutos); si no, la vuelve a pedir, y la
+   base no se toca hasta que llegan los datos.
+4. Levanta `app`, `web` y el `scheduler`, rehace las cachés y ejecuta
+   `verificar.sh --interna`.
+
+Solo para comprobar una copia, sin servidor: `bash deploy/restaurar.sh <copia> --solo-comprobar`.
+Si la carga se corta (por ejemplo, se cae la red), la base queda a medias: la
+copia sigue intacta en tu PC, repite la misma orden antes de nada más. Si el clon
+del servidor no está en `/opt/dentissa/app`, añade delante
+`DENTISSA_APP=<ruta>`.
 
 ## 8. Volver a la versión anterior
 
+Sin cambios en la base, **en el servidor**:
+
 ```bash
-bash deploy/volver.sh <tag o commit anterior>            # sin cambios de base
-bash deploy/volver.sh <tag o commit anterior> <copia>    # si la versión nueva migró la base
+bash deploy/volver.sh <tag o commit anterior>
 ```
 
-Con copia, `volver.sh` para `app` y `web`, restaura la base y levanta la versión
-anterior. Termina con `verificar.sh --interna`. Para dejar la aplicación sin
-exposición al instante: `docker compose -f docker-compose.prod.yml stop cloudflared`.
+Si la versión nueva migró la base, se vuelve con la copia que dejó
+`desplegar.sh`, **desde tu PC** (la copia está cifrada):
+
+```bash
+scp <cuenta>@<IP del servidor>:/var/backups/dentissa/<copia>.sql.gz.gpg .
+bash deploy/restaurar.sh <copia>.sql.gz.gpg <cuenta>@<IP del servidor> --volver <tag o commit anterior>
+```
+
+`restaurar.sh` comprueba la copia en tu PC, llama a `volver.sh <anterior>
+--sin-levantar` en el servidor (cambia de versión y deja `app` y `web` parados),
+carga la copia y levanta la versión anterior. Sirve también para volver a una
+versión anterior a la 032.
+
+**El `scheduler` (spec 020)** hace la purga mensual del registro de auditoría y
+escribe en la base, así que `volver.sh` lo para **antes** de cambiar de versión y
+`restaurar.sh` lo deja parado mientras carga la copia; al terminar, los dos lo
+levantan solo si la versión de destino lo tiene. Si la versión de destino no lo
+tiene (anterior a la 020), el contenedor se quita (`--remove-orphans`) y no queda
+ningún `scheduler` de otra versión en marcha. **Con la 020 la vuelta va sin la
+copia:** su migración solo añade la tabla `auditoria`, que la versión anterior
+ignora; con la copia se perderían los eventos escritos desde el despliegue. Cuando la verificación de un despliegue falla,
+`desplegar.sh` imprime la orden exacta. La forma de la 030
+(`volver.sh <anterior> <copia>`) ya no restaura: se detiene y da esta orden.
+
+Para dejar la aplicación sin exposición al instante:
+`docker compose -f docker-compose.prod.yml stop cloudflared`.
+
+**Volver a una versión anterior a la 032:** esa versión no tiene el vigilante de
+avisos, y `volver.sh` avisa de parar su temporizador:
+`sudo systemctl disable --now dentissa-vigilar.timer`. Las copias siguen
+cifradas y se restauran igual, desde tu PC.
 
 **Volver a una versión anterior a la 031 (p. ej. `v0.5.0`) con la red privada
 activa:** el `verificar.sh` de esa versión da **un único FALLO conocido**, en
@@ -244,6 +357,76 @@ bash deploy/verificar.sh           # ahora también por la dirección pública
 Desde entonces `cloudflared` vuelve solo tras un reinicio. Los scripts de
 despliegue nunca lo arrancan ni lo paran.
 
+### Primera liberación con copias cifradas (spec 032, una sola vez)
+
+`desplegar.sh` hace la copia previa con el `respaldar.sh` de la versión
+**instalada**: el de una versión anterior a la 032 la haría en claro. Por eso,
+en esta liberación el orden es otro:
+
+```bash
+cd /opt/dentissa/app
+# 0. Antes de cambiar nada: hay con qué cifrar (si algo falla, no sigas).
+command -v gpg && gpg --show-keys /opt/dentissa/entorno/copias.pub.asc   # «pub», nunca «sec»
+# 1. El checkout del tag, a mano, para que la copia previa ya salga cifrada.
+git fetch --tags origin && git -c advice.detachedHead=false checkout vX.Y.Z
+# 2. El despliegue.
+bash deploy/desplegar.sh vX.Y.Z
+# 3. El temporizador de los avisos (§12).
+sudo bash deploy/preparar-vigilancia.sh
+# 4. Las copias en claro de antes: se cifran y se borran las originales.
+bash deploy/cifrar-copias-antiguas.sh
+# 5. La verificación completa: también «Avisos y copias».
+bash deploy/verificar.sh
+# 6. Ningún volcado en claro en todo el disco (también de los ensayos de la 030).
+sudo find / -xdev \( -name '*.sql' -o -name '*.sql.gz' \) -path '*dentissa*' 2> /dev/null
+```
+
+Como el checkout ya está hecho, `desplegar.sh` informa como «versión anterior»
+el propio tag: la vuelta, si hace falta, es a la versión anterior real (la que
+estaba instalada antes del paso 1). Después: aviso de prueba y monitor de
+UptimeRobot (§12), y en tu PC, sustituir y borrar las copias en claro (§7).
+
+### Primera liberación de la 020 (una sola vez)
+
+El `desplegar.sh` instalado (hasta la 0.11) no conoce el `scheduler`. En esta
+liberación se hace el checkout a mano, para que corra el de la 020, que ya lo
+levanta:
+
+```bash
+cd /opt/dentissa/app
+# 1. Anota la versión instalada: es a la que se vuelve si algo falla.
+git describe --tags
+# 2. El checkout del tag, a mano.
+git fetch --tags origin && git -c advice.detachedHead=false checkout vX.Y.Z
+# 3. El despliegue: app, web y el scheduler, y la verificación interna.
+bash deploy/desplegar.sh vX.Y.Z
+# 4. La verificación completa: también «scheduler en marcha» y «auditoria:purgar».
+bash deploy/verificar.sh
+```
+
+Como el checkout ya está hecho, `desplegar.sh` informa como «versión anterior»
+el propio tag: la vuelta, si hace falta, es a la versión anotada en el paso 1.
+
+**Si la verificación falla**, vuelve **sin la copia**, a la versión del paso 1:
+
+```bash
+bash deploy/volver.sh <versión anotada en el paso 1>
+```
+
+**No sigas la orden de `restaurar.sh` que imprime `desplegar.sh`**: su «anterior»
+es el propio tag de la 020 y su copia se tomó antes de la migración, sin la tabla
+`auditoria`, así que volverías a levantar la 020 sin su tabla. La migración de la
+020 solo añade, y la versión anterior la ignora (`docs/deployment.md`, Migraciones).
+
+**Si ejecutaste el `desplegar.sh` instalado sin el checkout a mano**, la 020 ya
+está en marcha pero sin el `scheduler`, y `verificar.sh` da FALLO en él. No
+vuelvas atrás: levántalo y repite la verificación.
+
+```bash
+docker compose -f docker-compose.prod.yml up -d scheduler
+bash deploy/verificar.sh
+```
+
 ## 10. Cambiar un archivo de entorno
 
 Un `up -d` normal **no relee** `app.env` ni `tunnel.env`: el contenedor sigue con
@@ -255,7 +438,9 @@ bash deploy/aplicar-entorno.sh app        # o cloudflared, o el servicio que lea
 ```
 
 `aplicar-entorno.sh` recrea el servicio, en `app` vuelve a generar las cachés de
-configuración y rutas, y termina con `verificar.sh --interna`. Su sección
+configuración y rutas, y termina con `verificar.sh --interna`. Con `app` recrea
+también el `scheduler` (spec 020), que lee el mismo `app.env`: si no, seguiría
+con los valores antiguos (por ejemplo, la contraseña de la base sin rotar). Su sección
 «Entorno aplicado» da FALLO si algún servicio en marcha usa una configuración
 distinta de la guardada, y dice cuál (sin mostrar valores). También da FALLO si no
 puede comparar algún servicio: nunca da OK sin haberlos revisado todos.
@@ -314,3 +499,61 @@ No se abre ningún puerto en el router y se sigue entrando por SSH **con tu clav
 2. En el servidor, borra su clave de `~/.ssh/authorized_keys` (cada clave lleva al
    final un comentario con su nombre). Así tampoco entra desde la red local.
 3. Comprueba desde otro dispositivo que sigues entrando.
+
+## 12. Avisos de producción (spec 032)
+
+Te llega un correo a `AVISOS_CORREO` cuando:
+
+| Aviso | Cuándo |
+|---|---|
+| Errores del servidor | En 5 minutos, más del 1 % de las respuestas son errores del servidor (5xx). |
+| Inicios de sesión fallidos | En 5 minutos, más de 10 fallos desde un mismo origen o contra una misma cuenta (contraseña o vuelta de Google). El límite de intentos sigue frenándolos. |
+| El log de acceso tiene otro formato | El vigilante no reconoce las líneas del log de nginx; mientras dure, no puede contar los errores. |
+| Caída vista desde fuera | `/up` no responde durante 5 minutos, también con el servidor apagado; y otro correo al volver (UptimeRobot). |
+
+Como mucho llega **un correo por tipo cada 30 minutos**; lo que pase entre medias
+se acumula y llega en el siguiente, con cada evento contado una sola vez. Los
+correos solo llevan el tipo, recuentos, horas y cómo consultar el detalle: nunca
+datos de pacientes, correos de cuentas, direcciones IP ni secretos. Con poco
+tráfico, un solo error entre pocas peticiones ya pasa del 1 %: es un riesgo
+aceptado; si molesta, el umbral se ajusta en otra spec.
+
+**Instalar el vigilante** (una vez; lo lanza un temporizador de systemd cada
+minuto, con la cuenta de despliegue):
+
+```bash
+sudo bash deploy/preparar-vigilancia.sh
+systemctl list-timers dentissa-vigilar.timer      # la próxima ejecución, en menos de un minuto
+```
+
+**Aviso de prueba** (debe llegar en 5 minutos o menos; si no, revisa las
+variables de correo de `app.env`, §4):
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan dentissa:vigilar --prueba
+```
+
+**Consultar el detalle** (en `/opt/dentissa/app`):
+
+```bash
+journalctl -u dentissa-vigilar --since today        # cada ejecución; un envío fallido sale como error
+docker compose -f docker-compose.prod.yml exec web tail -n 200 /var/log/nginx/dentissa-access.log
+docker compose -f docker-compose.prod.yml exec app tail -n 50 storage/logs/seguridad-AAAA-MM-DD.log
+```
+
+El canal `seguridad` guarda cada fallo de acceso con huellas del origen y de la
+cuenta, sin la IP ni el correo, durante 14 días.
+
+**Pararlo:** `sudo systemctl disable --now dentissa-vigilar.timer` (por ejemplo,
+al volver a una versión anterior a la 032). Para reanudarlo, repite
+`preparar-vigilancia.sh`.
+
+**Caída vista desde fuera, con UptimeRobot** (gratuito: no pide tarjeta y admite
+uso comercial; plan comprobado el 2026-10-25):
+
+1. Crea una cuenta en uptimerobot.com con tu correo de siempre.
+2. **Add New Monitor** → tipo **HTTP(s)**, URL `https://<subdominio>/up`,
+   intervalo **5 minutes**, y como contacto de alerta tu correo.
+3. UptimeRobot avisa al caer y al volver. Con el servidor apagado o el túnel
+   parado, Cloudflare responde con un error y cuenta como caída.
+4. Comprueba en su panel que el monitor está en verde (**Up**).

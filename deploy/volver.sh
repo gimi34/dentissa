@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 #
-# Spec 030 (CA7, D17): vuelve a la versión anterior.
+# Spec 030 (CA7, D17) y spec 032 (CA9, TM11; D4): vuelve a la versión anterior.
 #
-#     bash deploy/volver.sh <tag o commit anterior> [copia]
+#     bash deploy/volver.sh <tag o commit anterior>
+#     bash deploy/volver.sh <tag o commit anterior> --sin-levantar
 #
-# Si la versión que se abandona migró la base, indica la copia que dejó
-# deploy/desplegar.sh: se restaura con app y web parados y antes de levantar la
-# versión anterior. Nunca arranca ni para cloudflared.
+# Si la versión que se abandona migró la base, la vuelta va con la copia que
+# dejó deploy/desplegar.sh, y desde la spec 032 esa copia está cifrada: la dirige
+# deploy/restaurar.sh desde el PC del responsable, que llama a este script con
+# --sin-levantar (deja app y web parados y db sana) y luego carga la copia y
+# levanta. Este script ya no recibe la copia. Nunca arranca ni para cloudflared.
 #
 # Todo el cuerpo va en main(), que se invoca en la última línea: el checkout no
 # cambia el script a mitad.
@@ -35,11 +38,14 @@ esperar_db() {
 }
 
 main() {
-    local ref="${1:-}" copia="${2:-}"
-    [[ -n "${ref}" ]] || error "indica la versión anterior: bash deploy/volver.sh <tag o commit> [copia]"
-    if [[ -n "${copia}" ]]; then
-        copia="$(readlink -f "${copia}")"
-        [[ -f "${copia}" ]] || error "no existe la copia ${copia}"
+    local ref="${1:-}" opcion="${2:-}"
+    [[ -n "${ref}" ]] || error "indica la versión anterior: bash deploy/volver.sh <tag o commit> [--sin-levantar]"
+    # También se ejecuta a mano: la versión no puede llegar a git como una opción (/review R29).
+    [[ "${ref}" =~ ^[A-Za-z0-9._/][A-Za-z0-9._/-]*$ ]] || error "la versión solo admite letras, números, . _ / y -, y no puede empezar por -"
+    # La forma de la 030 (volver.sh <ref> <copia>) ya no restaura: la copia está
+    # cifrada y su clave no está en el servidor (/analyze A17, A40).
+    if [[ $# -gt 2 || ( -n "${opcion}" && "${opcion}" != "--sin-levantar" ) ]]; then
+        error "volver.sh ya no restaura copias (spec 032). Para volver con la copia, desde el PC: bash deploy/restaurar.sh <copia.sql.gz.gpg> <cuenta@servidor> --volver ${ref}"
     fi
 
     cd "$(dirname "$(readlink -f "$0")")/.."
@@ -48,21 +54,46 @@ main() {
 
     paso "Obteniendo ${ref}"
     git fetch --tags origin
+
+    # Spec 020 (D22, A68; /review R4, R17): el scheduler de la versión instalada se para con su
+    # propio Compose después del fetch (si el fetch falla, sigue en marcha) y antes del checkout,
+    # para que no escriba en la base mientras se cambia de versión. Si no se puede leer la lista
+    # de servicios, la vuelta se detiene. Una versión de destino sin scheduler lo pierde con
+    # --remove-orphans.
+    local servicios
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml (¿faltan archivos en /opt/dentissa/entorno?)"
+    if grep -qxF scheduler <<< "${servicios}"; then
+        paso "Parando el scheduler de la versión instalada"
+        "${compose[@]}" stop scheduler
+    fi
+
     git -c advice.detachedHead=false checkout "${ref}"
+
+    # Una versión anterior a la 032 no tiene el vigilante: el temporizador
+    # fallaría cada minuto.
+    if [[ ! -f app/Console/Commands/Vigilar.php ]]; then
+        echo "AVISO: ${ref} no tiene el vigilante de avisos (spec 032). Para su temporizador:"
+        echo "    sudo systemctl disable --now dentissa-vigilar.timer"
+    fi
 
     paso "Construyendo las imágenes"
     "${compose[@]}" build app web
 
-    if [[ -n "${copia}" ]]; then
-        paso "Restaurando la base (app y web parados)"
+    if [[ "${opcion}" == "--sin-levantar" ]]; then
+        paso "Parando app y web; db queda lista para cargar la copia (restaurar.sh)"
         "${compose[@]}" stop app web
-        "${compose[@]}" up -d db
+        "${compose[@]}" up -d --remove-orphans db
         esperar_db
-        bash deploy/restaurar.sh "${copia}"
+        return 0
     fi
 
-    paso "Levantando app y web"
-    "${compose[@]}" up -d app web
+    paso "Levantando app, web y el scheduler"
+    # La lista de la versión de destino, ya con su checkout.
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml de ${ref}"
+    "${compose[@]}" up -d --remove-orphans app web
+    if grep -qxF scheduler <<< "${servicios}"; then
+        "${compose[@]}" up -d scheduler
+    fi
 
     paso "Cachés"
     "${compose[@]}" exec -T -u www-data app php artisan config:cache

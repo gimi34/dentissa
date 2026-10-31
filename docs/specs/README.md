@@ -26,7 +26,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
-| 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | approved | — | — (2026-09-28) |
+| 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | released (v0.12.0) | — | — (2026-09-28) |
 | 024 | [dependencias-seguras](024-dependencias-seguras/spec.md) | Transversal | released (v0.1.0) | — | — (2026-09-29) |
 | 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | released (v0.2.0) | — | — (2026-09-29) |
 | 026 | [estados-cita](026-estados-cita/spec.md) | Agenda | released (v0.3.0) | — | — (2026-10-02) |
@@ -35,30 +35,30 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 029 | [dependencias-al-dia](029-dependencias-al-dia/spec.md) | Transversal | released (v0.4.1) | — | — (2026-10-03) |
 | 030 | [despliegue-servidor-propio](030-despliegue-servidor-propio/spec.md) | Transversal | released (v0.5.0) | — | — (2026-10-04) |
 | 031 | [endurecer-produccion](031-endurecer-produccion/spec.md) | Transversal | released (v0.10.0) | — | — (2026-10-19) |
+| 032 | [alertas-cifrado-copias](032-alertas-cifrado-copias/spec.md) | Transversal | released (v0.11.0) | — | — (2026-10-07) |
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
 | 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
 | 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | released (v0.9.0) | — | — (2026-10-19) |
 | 038 | [pagina-inicio](038-pagina-inicio/spec.md) | Transversal | implemented | — | — (2026-10-20) |
 | 039 | [galeria-trabajos](039-galeria-trabajos/spec.md) | Transversal | approved | — | — (2026-10-20) |
 | 040 | [promociones](040-promociones/spec.md) | Transversal | approved | — | — (2026-10-20) |
+| 041 | [recuperar-contrasena](041-recuperar-contrasena/spec.md) | Identidad | approved | — | — (2026-10-27) |
+| 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
   018 vinculacion-google-segura · 019 credenciales-generadas.
 - Objetivo 3: 021 auditoria-accesos-cuentas · 022 auditoria-datos-clinicos · 023 logs-y-errores.
-- Objetivo 5: 032 alertas-cifrado-copias (tras la 031; decisión del usuario, 2026-10-05).
 - Objetivo 4 (agenda): la 027 reservada como horarios-reprogramar se dividió en 027
   horarios-validos y 028 reprogramar-citas, las dos liberadas.
-- En ramas, sin fusionar en `main`: 031 endurecer-produccion (`feature/031-endurecer-produccion`,
-  `/review` r1: changes_requested, correcciones T060–T068), 032 alertas-cifrado-copias (`feature/032-alertas-cifrado-copias`,
-  approved, `/plan` en pausa).
+- En ramas, sin fusionar en `main`: 032 alertas-cifrado-copias (`feature/032-alertas-cifrado-copias`,
+  `/review` r1: changes_requested, correcciones T052–T062).
 - Objetivo 6 (móvil): 036 agenda y servicios y 037 administración, sin crear.
 
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida
 construirlas:
 - **Reportes** (`/admin/reportes`): vista "en construcción".
-- **Recuperar contraseña**: enlace `href="#"` en el login; la tabla `password_reset_tokens` existe sin rutas.
 - **Recordatorios de cita**: `citas.recordatorio_enviado` se lee pero nunca se escribe.
 - **Adjuntos del expediente**: `expedientes.archivos_url` siempre se guarda como `null`.
 - `welcome.blade.php`: código muerto del esqueleto de Laravel.

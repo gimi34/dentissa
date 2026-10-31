@@ -6,6 +6,10 @@
 .env*
 **/*.env
 
+# Spec 032 (CA8): claves OpenPGP y copias cifradas, en cualquier carpeta.
+**/*.asc
+**/*.gpg
+
 # Repositorio y dependencias (composer y npm instalan dentro de la imagen).
 .git
 node_modules

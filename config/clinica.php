@@ -24,6 +24,8 @@ return [
     | Lo que muestra la página de inicio pública (spec 038, CA5): la dirección
     | (también la del mapa y la de «Cómo llegar»), el teléfono en texto y como
     | enlace `tel:`, y el horario. Son datos ficticios del proyecto académico.
+    | Es la única fuente del contacto: también lo usan el error genérico de la
+    | spec 020 y los correos de la 041 (D16 de la 041).
     |
     | `horario_semanal` es el mismo horario por día ISO (1 = lunes … 7 = domingo;
     | el que falta, cerrado) con la hora de apertura y la de cierre. Lo usa la

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -64,8 +65,12 @@ class ConfiguracionProduccionTest extends TestCase
     }
 
     /**
-     * Imágenes de un Compose (`image:`) o de un Dockerfile (`FROM` y
+     * Imágenes que se descargan de un Compose (`image:`) o de un Dockerfile (`FROM` y
      * `COPY --from=` que no son etapas propias).
+     *
+     * Spec 020 (A67, A81): no cuenta la imagen que construye el propio Compose (el `image:` de
+     * un servicio con `build:`) ni ninguna otra aparición de ese mismo valor, como el `scheduler`,
+     * que la reutiliza sin descargarla (`pull_policy: never`). Cualquier otra sigue contando.
      *
      * @return list<string>
      */
@@ -77,8 +82,27 @@ class ConfiguracionProduccionTest extends TestCase
 
         $etapas = array_filter($from[2]);
         $copiasDeImagen = array_filter($copias[1], fn ($origen) => ! in_array($origen, $etapas, true));
+        $construidas = $this->imagenesConstruidas($texto);
+        $descargadas = array_filter($compose[1], fn ($imagen) => ! in_array($imagen, $construidas, true));
 
-        return array_values(array_merge($compose[1], $from[1], $copiasDeImagen));
+        return array_values(array_merge($descargadas, $from[1], $copiasDeImagen));
+    }
+
+    /** @return list<string> `image:` de los servicios de un Compose que también tienen `build:` */
+    private function imagenesConstruidas(string $texto): array
+    {
+        if (! preg_match('/^services:$/m', $texto)) {
+            return [];
+        }
+
+        $construidas = [];
+        foreach ($this->servicios($texto) as $bloque) {
+            if (preg_match('/^    build:/m', $bloque) && preg_match('/^    image:\s*["\']?([^"\'\s]+)/m', $bloque, $m)) {
+                $construidas[] = $m[1];
+            }
+        }
+
+        return $construidas;
     }
 
     /** @return array<string, string> repositorio → etiqueta */
@@ -122,7 +146,7 @@ class ConfiguracionProduccionTest extends TestCase
     public function test_cada_servicio_de_produccion_lee_solo_su_archivo_de_entorno(): void
     {
         $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
-        $esperado = ['app' => 'app.env', 'db' => 'db.env', 'cloudflared' => 'tunnel.env', 'web' => null];
+        $esperado = ['app' => 'app.env', 'scheduler' => 'app.env', 'db' => 'db.env', 'cloudflared' => 'tunnel.env', 'web' => null];
 
         foreach ($esperado as $nombre => $propio) {
             $this->assertArrayHasKey($nombre, $servicios, "Falta el servicio {$nombre}.");
@@ -192,12 +216,26 @@ class ConfiguracionProduccionTest extends TestCase
         );
     }
 
+    /**
+     * Cada servicio PHP (`app` y, desde la spec 020, el `scheduler`) monta `local.ini` una vez,
+     * desde el mismo origen, que es un archivo; ningún otro servicio lo monta (A67).
+     */
     private function assertMontaLocalIni(string $archivo): void
     {
+        $patron = '/-\s*["\']?\.\/([^:"\'\s]+):[^"\'\s]*local\.ini/';
         $compose = $this->leer($archivo);
-        $this->assertSame(1, preg_match_all('/-\s*["\']?\.\/([^:"\'\s]+):[^"\'\s]*local\.ini/', $compose, $m), "{$archivo} no monta local.ini una vez.");
-        // is_file y no file_exists: si el origen no existe, Docker crea en su lugar una carpeta vacía.
-        $this->assertTrue(is_file(base_path($m[1][0])), "{$archivo} monta {$m[1][0]}, que no es un archivo.");
+        $php = array_intersect_key($this->servicios($compose), array_flip(['app', 'scheduler']));
+        $this->assertArrayHasKey('app', $php, "{$archivo} no tiene app.");
+
+        $origenes = [];
+        foreach ($php as $nombre => $bloque) {
+            $this->assertSame(1, preg_match_all($patron, $bloque, $m), "{$nombre} de {$archivo} no monta local.ini una vez.");
+            // is_file y no file_exists: si el origen no existe, Docker crea en su lugar una carpeta vacía.
+            $this->assertTrue(is_file(base_path($m[1][0])), "{$archivo} monta {$m[1][0]}, que no es un archivo.");
+            $origenes[$nombre] = $m[1][0];
+        }
+        $this->assertCount(1, array_unique($origenes), "Los servicios PHP de {$archivo} montan el mismo local.ini.");
+        $this->assertSame(count($php), preg_match_all($patron, $compose), "En {$archivo}, solo los servicios PHP montan local.ini.");
     }
 
     public function test_las_imagenes_de_local_tienen_version_exacta(): void
@@ -220,6 +258,64 @@ class ConfiguracionProduccionTest extends TestCase
         foreach ($compartidas as $repositorio => $etiqueta) {
             $this->assertSame($etiqueta, $etiquetasProduccion[$repositorio], "{$repositorio} tiene otra versión en producción.");
         }
+    }
+
+    /**
+     * Spec 020 (D2, TM14): el `scheduler` de producción ejecuta la imagen que construye `app`, sin
+     * construir otra ni descargarla, con el usuario sin privilegios, solo `app.env`, en la red de
+     * producción, sin puertos y cuando la base está sana.
+     */
+    public function test_el_scheduler_de_produccion_usa_la_imagen_de_app_y_solo_app_env(): void
+    {
+        $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
+        $this->assertArrayHasKey('scheduler', $servicios, 'Falta el servicio scheduler.');
+        [$app, $scheduler] = [$servicios['app'], $servicios['scheduler']];
+
+        $this->assertMatchesRegularExpression('/^    build:/m', $app, 'app construye su imagen.');
+        $this->assertSame(1, preg_match('/^    image:\s*["\']?([^"\'\s]+)/m', $app, $imagen), 'app nombra la imagen que construye.');
+        $this->assertMatchesRegularExpression('/^    image:\s*["\']?'.preg_quote($imagen[1], '/').'["\']?$/m', $scheduler, 'El scheduler usa la imagen de app.');
+        $this->assertDoesNotMatchRegularExpression('/^    build:/m', $scheduler, 'El scheduler no construye otra imagen.');
+        $this->assertMatchesRegularExpression('/^    pull_policy:\s*never$/m', $scheduler, 'Nunca se descarga.');
+        $this->assertMatchesRegularExpression('/^    user:\s*["\']?www-data["\']?$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    command:.*php.*artisan.*schedule:work/m', $scheduler);
+        $this->assertSame([], $this->puertos($scheduler));
+        $this->assertMatchesRegularExpression('/^    networks:\n      - produccion$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    depends_on:\n      db:\n        condition: service_healthy$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^      - storage:\/var\/www\/storage$/m', $scheduler, 'Escribe sus logs en el mismo storage que app.');
+
+        // /review 020 R21 y R23: nada más que esto, y sin capacidades ni escalada de privilegios.
+        preg_match_all('/^    ([a-z_]+):/m', $scheduler, $claves);
+        $this->assertEqualsCanonicalizing(
+            ['image', 'pull_policy', 'restart', 'user', 'command', 'env_file', 'volumes', 'networks', 'depends_on', 'cap_drop', 'security_opt'],
+            $claves[1],
+            'El bloque del scheduler tiene exactamente estas claves.',
+        );
+        $this->assertMatchesRegularExpression('/^    cap_drop: \[ALL\]$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    security_opt: \["no-new-privileges:true"\]$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    volumes:\n      - storage:\/var\/www\/storage\n      - \.\/docker\/nginx\/php\/local\.ini:\/usr\/local\/etc\/php\/conf\.d\/local\.ini:ro\n(?!      - )/m', $scheduler, 'Solo sus dos volúmenes.');
+        $this->assertMatchesRegularExpression('/^    networks:\n      - produccion\n(?!      - )/m', $scheduler, 'Una sola red.');
+    }
+
+    /** @return array<string, array{0: string}> */
+    public static function composeConScheduler(): array
+    {
+        return ['local' => ['docker-compose.yml'], 'producción' => ['docker-compose.prod.yml']];
+    }
+
+    /**
+     * Spec 020 (A67; 030 CA9 y CA10): el `scheduler` vuelve solo tras reiniciar el servidor y
+     * corre con la misma configuración de PHP que `app`. Un caso por Compose (A80): el local lo
+     * cierra T040 y el de producción, T043.
+     */
+    #[DataProvider('composeConScheduler')]
+    public function test_el_scheduler_se_reinicia_solo_y_monta_el_local_ini_de_app(string $archivo): void
+    {
+        $servicios = $this->servicios($this->leer($archivo));
+        $this->assertArrayHasKey('scheduler', $servicios, "{$archivo} no tiene scheduler.");
+
+        $this->assertMatchesRegularExpression('/^    restart:\s*unless-stopped$/m', $servicios['scheduler'], 'Se reinicia solo.');
+        $this->assertSame(1, preg_match('/^      - .*local\.ini.*$/m', $servicios['app'], $deApp), 'app monta local.ini.');
+        $this->assertStringContainsString($deApp[0]."\n", $servicios['scheduler']."\n", 'El scheduler monta el mismo local.ini, igual que app.');
     }
 
     public function test_el_compose_de_local_monta_un_local_ini_que_existe(): void
@@ -333,6 +429,12 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^servicios="\$\('.$compose.' config --services\)"/m', $ordenes, 'Lee los servicios del Compose de producción.');
         $this->assertMatchesRegularExpression('/^grep -qxF -- "\$\{servicio\}" <<< "\$\{servicios\}" \|\| error /m', $ordenes, 'El servicio se compara como texto fijo y nunca como opción (R5).');
         $this->assertMatchesRegularExpression('/^'.$compose.' up -d --force-recreate --no-deps "\$\{servicio\}"$/m', $ordenes, 'Recrea solo ese servicio para que relea su archivo de entorno.');
+        // Spec 020 (A74): el scheduler lee el mismo app.env, así que con app se recrea también.
+        $this->assertMatchesRegularExpression(
+            '/^if \[\[ "\$\{servicio\}" == "app" \]\] && grep -qxF scheduler <<< "\$\{servicios\}"; then\n(?:paso "[^"\n]*"\n)?'.$compose.' up -d --force-recreate --no-deps scheduler\nfi$/m',
+            $ordenes,
+            'Con app recrea también el scheduler, si el Compose lo tiene.',
+        );
         $this->assertMatchesRegularExpression(
             '/^if \[\[ "\$\{servicio\}" == "app" \]\]; then\n(?:paso "[^"\n]*"\n)?'.$compose.' exec -T -u www-data app php artisan config:cache\n'.$compose.' exec -T -u www-data app php artisan route:cache\nfi$/m',
             $ordenes,
@@ -382,5 +484,661 @@ class ConfiguracionProduccionTest extends TestCase
             'El origen de Tailscale (origen y nombre de la versión) debe entrar en las actualizaciones automáticas.',
         );
         $this->assertMatchesRegularExpression('/^\s*ufw allow in on tailscale0 to any port 22 proto tcp$/m', $script);
+    }
+
+    /**
+     * Spec 032 (CA1, D10): app lee el log de acceso de nginx, en solo lectura, para que el
+     * vigilante cuente las respuestas 5xx (también las 502/504 que no pasan por Laravel).
+     */
+    public function test_app_monta_el_log_de_nginx_en_solo_lectura(): void
+    {
+        $servicios = $this->servicios($this->leer('docker-compose.prod.yml'));
+
+        $this->assertMatchesRegularExpression('/^      - nginx_logs:\/var\/log\/nginx:ro$/m', $servicios['app'], 'app monta nginx_logs en solo lectura.');
+        $this->assertMatchesRegularExpression('/^      - nginx_logs:\/var\/log\/nginx$/m', $servicios['web'], 'web sigue escribiendo en nginx_logs.');
+    }
+
+    /**
+     * Spec 032 (CA8, TM1, TM9; /analyze A18): ninguna clave (`*.asc`) ni copia cifrada (`*.gpg`)
+     * entra en el repo ni en el paquete, en ninguna carpeta.
+     */
+    public function test_los_archivos_de_clave_quedan_fuera_del_paquete_y_del_repo(): void
+    {
+        $dockerignore = array_map('trim', explode("\n", $this->leer('.dockerignore')));
+        $gitignore = array_map('trim', explode("\n", $this->leer('.gitignore')));
+
+        foreach (['**/*.asc', '**/*.gpg'] as $exclusion) {
+            $this->assertContains($exclusion, $dockerignore, ".dockerignore no excluye {$exclusion}.");
+        }
+        foreach (['*.asc', '*.gpg'] as $exclusion) {
+            $this->assertContains($exclusion, $gitignore, ".gitignore no ignora {$exclusion}.");
+        }
+    }
+
+    /** Posición de `$aguja` en `$texto`; falla si no está. */
+    private function posicion(string $texto, string $aguja, string $mensaje): int
+    {
+        $posicion = strpos($texto, $aguja);
+        $this->assertNotFalse($posicion, $mensaje);
+
+        return $posicion;
+    }
+
+    /**
+     * Spec 032 (CA7, CA8, TM1; D2): la copia se cifra para la clave pública del responsable.
+     * El servidor solo tiene esa clave: puede cifrar, pero no descifrar.
+     */
+    public function test_respaldar_cifra_con_la_clave_publica(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+
+        $this->assertMatchesRegularExpression('/^CLAVE_PUBLICA="\$\{DENTISSA_CLAVE_PUBLICA:-\/opt\/dentissa\/entorno\/copias\.pub\.asc\}"$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^\| gpg [^\n]*--trust-model always --recipient-file "\$\{CLAVE_PUBLICA\}" --output "\$\{parte\}" --encrypt\b/m', $ordenes, 'Cifra para la clave pública, hacia el archivo parcial.');
+        $this->assertDoesNotMatchRegularExpression('/--symmetric|--passphrase|\bgpg\b[^\n]*\s-c\b/', $ordenes, 'Nunca con una contraseña simétrica, que tendría que estar en el servidor.');
+    }
+
+    /**
+     * Spec 032 (CA7, TM2; D2, /analyze A8): el volcado no existe en claro en el disco. La
+     * tubería va de mariadb-dump a gpg; la línea final la guarda un miembro de la tubería
+     * (awk), que el script ya ha esperado al terminar, a diferencia de una sustitución de
+     * procesos `>(…)`.
+     */
+    public function test_respaldar_no_escribe_en_claro(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^copia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^parte="\$\{copia\}\.part"$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^marca="\$\(mktemp -p \/dev\/shm dentissa-marca\.XXXXXX\)"$/m', $ordenes, 'La marca vive en memoria.');
+        $this->assertMatchesRegularExpression(
+            '/mariadb-dump[^\n]*\\\\\n\| awk -v marca="\$\{marca\}" \'\{ print \} END \{ print > marca \}\' \\\\\n\| gzip \\\\\n\| gpg /',
+            $ordenes,
+            'mariadb-dump | awk | gzip | gpg, sin archivos intermedios.',
+        );
+        $this->assertStringNotContainsString('>(', $ordenes, 'Sin sustitución de procesos (/analyze A8).');
+        $this->assertDoesNotMatchRegularExpression('/>\s*"?\$\{?(copia|parte)\b/', $ordenes, 'Nada se redirige a la copia: la escribe gpg.');
+        $this->assertStringNotContainsString('gzip -cd', $ordenes, 'La copia no se vuelve a leer en claro.');
+
+        $tuberia = $this->posicion($ordenes, '| gpg ', 'Falta la tubería de cifrado.');
+        $comprobacion = $this->posicion($ordenes, 'grep -q -- \'-- Dump completed\' "${marca}"', 'Falta la comprobación de la línea final.');
+        $mover = $this->posicion($ordenes, 'mv -- "${parte}" "${copia}"', 'Falta el paso del archivo parcial a la copia.');
+        $this->assertGreaterThan($tuberia, $comprobacion, 'La línea final se comprueba después de la tubería.');
+        $this->assertGreaterThan($comprobacion, $mover, 'La copia solo se da por buena tras comprobarla.');
+    }
+
+    /** Spec 032 (CA7; D2): sin gpg o sin clave pública válida no se vuelca nada. */
+    public function test_respaldar_se_detiene_sin_gpg_o_sin_clave(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+        $volcado = $this->posicion($ordenes, 'mariadb-dump', 'Falta el volcado.');
+
+        foreach ([
+            'command -v gpg > /dev/null || error ',
+            '[[ -r "${CLAVE_PUBLICA}" ]] || error ',
+            'gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"',
+        ] as $comprobacion) {
+            $this->assertLessThan($volcado, $this->posicion($ordenes, $comprobacion, "Falta «{$comprobacion}»."), "«{$comprobacion}» va antes del volcado.");
+        }
+        $this->assertMatchesRegularExpression('/grep -q \'\^pub:\'[^\n]*\|\| error /', $ordenes, 'Exige una clave pública.');
+        $this->assertMatchesRegularExpression('/grep -q \'\^sec:\'[^\n]*&& error /', $ordenes, 'Rechaza un archivo con clave secreta (CA8).');
+    }
+
+    /** Spec 032 (D2): se conservan las 14 copias cifradas más recientes. */
+    public function test_respaldar_conserva_14_copias_cifradas(): void
+    {
+        $ordenes = $this->ordenes('deploy/respaldar.sh');
+
+        $this->assertMatchesRegularExpression('/^CONSERVAR=14$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^find "\$\{DESTINO\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\.gpg\' /m', $ordenes);
+        // Con leer() y no ordenes(), que quita los echo.
+        $this->assertMatchesRegularExpression('/\n    echo "\$\{copia\}"\n\}\n\nmain "\$@"\n?$/', $this->leer('deploy/respaldar.sh'), 'La última línea es la ruta de la copia.');
+    }
+
+    /** Script que restaurar.sh ejecuta en el servidor para cargar la copia (heredoc CARGA). */
+    private function cargaRemota(): string
+    {
+        $this->assertSame(1, preg_match("/^read -r -d '' CARGA <<'REMOTO' \|\| true\n(.*?)\nREMOTO$/ms", $this->leer('deploy/restaurar.sh'), $m), 'restaurar.sh define la carga remota en el heredoc CARGA.');
+
+        return $m[1];
+    }
+
+    /**
+     * Spec 032 (CA9, TM3; D3): restaurar.sh corre en el PC. Antes de pedir la confirmación y
+     * de tocar nada en el servidor, descifra la copia entera hacia ningún sitio y comprueba
+     * su línea final.
+     */
+    public function test_restaurar_comprueba_antes_de_borrar(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{copia\}" == \*\.sql\.gz\.gpg \]\] \|\| error /m', $ordenes, 'Solo acepta copias cifradas.');
+        // /review R7: del volcado solo se guarda si termina bien, nunca su última línea.
+        $this->assertMatchesRegularExpression('/^gpg --status-fd 3 --decrypt -- "\$\{copia\}" 3> "\$\{estado\}" 2> \/dev\/null \| gzip -cd 2> \/dev\/null \| awk \'END \{ print \(index\(\$0, "-- Dump completed"\) == 1 \? "completo" : "incompleto"\) \}\' > "\$\{final\}"$/m', $ordenes, 'La pasada de comprobación descifra y descomprime entera.');
+        $this->assertMatchesRegularExpression('/^comprobar\n\[\[ -n "\$\{solo\}" \]\] && return 0$/m', $ordenes, '--solo-comprobar termina tras la comprobación.');
+
+        $main = $this->posicion($ordenes, "\nmain() {", 'Falta main().');
+        $comprobar = $this->posicion(substr($ordenes, $main), "\ncomprobar\n", 'main() no llama a comprobar.');
+        $confirmar = $this->posicion(substr($ordenes, $main), 'read -r -p ', 'main() no pide la confirmación.');
+        $this->assertLessThan($confirmar, $comprobar, 'Comprueba antes de pedir la confirmación.');
+        foreach (['bash deploy/volver.sh', 'stop app web', 'stop scheduler', '| ssh '] as $cambio) {
+            $this->assertGreaterThan($confirmar, $this->posicion(substr($ordenes, $main), $cambio, "main() no hace «{$cambio}»."), "«{$cambio}» va después de la confirmación.");
+        }
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{respuesta\}" == "\$\{base\}" \]\] \|\| error "confirmación incorrecta; no se ha tocado nada"$/m', $ordenes);
+    }
+
+    /**
+     * Spec 032 (CA9; /analyze A13, A34): cada rechazo dice por qué. gpg sale con 2 en todos;
+     * se distinguen por sus líneas de estado: NO_SECKEY con el código 17 (No secret key) es una
+     * copia para otra clave, y con otro código (frase incorrecta, cancelada) es la clave que no
+     * se pudo usar; sin NO_SECKEY es la integridad (alterada o cortada).
+     */
+    public function test_restaurar_distingue_los_rechazos(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        foreach ([
+            'la copia no es para tu clave',
+            'no se pudo usar la clave (frase incorrecta o cancelada)',
+            'la copia está alterada o cortada (falla la comprobación de integridad)',
+            'el volcado está incompleto (falta -- Dump completed)',
+        ] as $mensaje) {
+            $this->assertMatchesRegularExpression('/^(?:[^\n]* (?:then|&&|\|\|) )?rechazar "'.preg_quote($mensaje, '/').'"/m', $ordenes, "Falta el rechazo «{$mensaje}».");
+        }
+        $this->assertMatchesRegularExpression('/grep -q \'\^\\\\\[GNUPG:\\\\\] NO_SECKEY\' "\$\{estado\}"/', $ordenes);
+        $this->assertMatchesRegularExpression('/ERROR pkdecrypt_failed/', $ordenes);
+        $this->assertMatchesRegularExpression('/\$\(\( codigo & 65535 \)\) -ne 17/', $ordenes, 'El código 17 (No secret key) separa la clave ajena de la frase.');
+    }
+
+    /**
+     * Spec 032 (CA9; /analyze A29, A51): la base no se toca hasta que llegan datos
+     * descifrados. Si gpg falla en la segunda pasada (la caché de la frase caducó y se
+     * cancela), la orden remota no recibe ninguna línea y termina sin DROP. El éxito exige
+     * código 0 a los dos lados y la línea final del volcado en lo cargado.
+     */
+    public function test_restaurar_no_toca_la_base_sin_datos_descifrados(): void
+    {
+        $carga = $this->cargaRemota();
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $carga, 'La orden remota también usa pipefail.');
+        $leer = $this->posicion($carga, 'IFS= read -r primera || exit 3', 'La orden remota espera la primera línea.');
+        $borrar = $this->posicion($carga, 'DROP DATABASE', 'La orden remota recrea la base.');
+        $this->assertLessThan($borrar, $leer, 'DROP solo después de recibir la primera línea.');
+        $this->assertMatchesRegularExpression('/^\s*"\$\{compose\[@\]\}" exec -T db sh -c [^\n]*DROP DATABASE[^\n]*< \/dev\/null$/m', $carga, 'El DROP no consume la entrada con los datos.');
+        $this->assertMatchesRegularExpression('/\{ printf \'%s\\\\n\' "\$\{primera\}"; cat; \} \\\\\n\s*\| awk -v marca="\$\{marca\}" \'\{ print \} END \{ print > marca \}\' \\\\\n\s*\| "\$\{compose\[@\]\}" exec -T db /', $carga, 'Carga la primera línea y el resto, guardando la última.');
+        $this->assertMatchesRegularExpression('/grep -q -- \'-- Dump completed\' "\$\{marca\}" \|\| \{ rm -f "\$\{marca\}"; exit 4; \}/', $carga, 'Sin la línea final, la carga quedó incompleta.');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^gpg --decrypt -- "\$\{copia\}" 2> \/dev\/null \| ssh -- "\$\{servidor\}" [^\n]*CARGA[^\n]*$\nresultado=\("\$\{PIPESTATUS\[@\]\}"\)$/m', $ordenes, 'Guarda el código de gpg y el de la carga remota.');
+        $this->assertStringContainsString('la carga quedó incompleta', $ordenes);
+    }
+
+    /**
+     * Spec 032 (CA8, TM4; /analyze A5): la clave secreta y su frase nunca llegan al servidor.
+     * Por SSH solo viaja la salida de gpg --decrypt, y ningún script que corre en el servidor
+     * descifra ni importa claves.
+     */
+    public function test_la_clave_nunca_llega_al_servidor(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        foreach (['--import', '--export-secret-keys', '--pinentry-mode', '--passphrase', 'scp '] as $prohibido) {
+            $this->assertStringNotContainsString($prohibido, $ordenes, "restaurar.sh no usa {$prohibido}.");
+        }
+        $entradas = preg_grep('/\|\s*ssh\b/', explode("\n", $ordenes));
+        $this->assertCount(1, $entradas, 'Solo la carga envía datos por SSH.');
+        $this->assertStringStartsWith('gpg --decrypt -- "${copia}"', (string) current($entradas));
+        $this->assertMatchesRegularExpression('/^ssh -- "\$\{servidor\}" "\$\{orden\}" < \/dev\/null$/m', $ordenes, 'Las demás órdenes remotas no reciben entrada.');
+
+        foreach (glob(base_path('deploy/*.sh')) as $script) {
+            if (basename($script) === 'restaurar.sh') {
+                continue;
+            }
+            $texto = $this->ordenes('deploy/'.basename($script));
+            $this->assertStringNotContainsString('--decrypt', $texto, basename($script).' no descifra en el servidor.');
+            $this->assertStringNotContainsString('--import', $texto, basename($script).' no importa claves en el servidor.');
+        }
+    }
+
+    /**
+     * Spec 032 (/analyze A2, A43): restaurar.sh no depende de su ruta ni de la versión
+     * instalada; el clon del servidor es DENTISSA_APP, y lo que viaja a la orden remota se
+     * valida y se cita.
+     */
+    public function test_restaurar_no_depende_de_su_ruta_y_cita_lo_remoto(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^APP="\$\{DENTISSA_APP:-\/opt\/dentissa\/app\}"$/m', $ordenes);
+        $this->assertStringNotContainsString('dirname', $ordenes);
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{APP\}" =~ \^\/\[A-Za-z0-9\._\/-\]\+\$ \]\] \|\| error /m', $ordenes, 'DENTISSA_APP es una ruta absoluta sin espacios.');
+        // /review R9: tampoco puede empezar por «-», que git tomaría como una opción.
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{ref\}" =~ \^\[A-Za-z0-9\._\/\]\[A-Za-z0-9\._\/-\]\*\$ \]\] \|\| error /m', $ordenes, 'La versión de --volver no lleva espacios ni ; ni empieza por -.');
+        $this->assertMatchesRegularExpression('/^orden="cd \$\(printf \'%q\' "\$\{APP\}"\) && \$\(printf \'%q \' "\$@"\)"$/m', $ordenes, 'Cada argumento de la orden remota va citado.');
+    }
+
+    /**
+     * Spec 032 (CA9, TM11; D4, /analyze A1, A17, A40): la vuelta con copia la dirige
+     * restaurar.sh desde el PC. volver.sh ya no recibe la copia: con --sin-levantar deja app y
+     * web parados y db sana, y restaurar.sh carga y levanta con sus propias órdenes, que
+     * existen desde la 030, así que vale para cualquier versión de destino.
+     */
+    public function test_volver_con_copia_no_depende_de_la_version_de_destino(): void
+    {
+        $volver = $this->ordenes('deploy/volver.sh');
+        $checkout = $this->posicion($volver, 'git -c advice.detachedHead=false checkout "${ref}"', 'volver.sh hace el checkout.');
+
+        $rechazo = $this->posicion($volver, 'if [[ $# -gt 2 || ( -n "${opcion}" && "${opcion}" != "--sin-levantar" ) ]]; then', 'volver.sh rechaza cualquier otro argumento (A40).');
+        $this->assertLessThan($checkout, $rechazo, 'El rechazo va antes de cambiar nada.');
+        $this->assertMatchesRegularExpression('/^if \[\[ \$# -gt 2[^\n]*\nerror "[^"\n]*restaurar\.sh [^"\n]*--volver \$\{ref\}"$/m', $volver, 'El rechazo da la orden de restaurar.sh --volver.');
+        // El mensaje del rechazo nombra restaurar.sh; lo que no puede es ejecutarlo.
+        $this->assertDoesNotMatchRegularExpression('/^bash deploy\/restaurar\.sh\b/m', $volver, 'volver.sh ya no restaura.');
+
+        $sinLevantar = $this->posicion($volver, 'if [[ "${opcion}" == "--sin-levantar" ]]; then', 'volver.sh admite --sin-levantar.');
+        // Spec 020 (D22, A68): db se levanta con --remove-orphans, que quita el scheduler de la 020
+        // si la versión de destino no lo tiene; si lo tiene, sigue parado desde antes del checkout.
+        $this->assertMatchesRegularExpression('/^if \[\[ "\$\{opcion\}" == "--sin-levantar" \]\]; then\n(?:paso "[^"\n]*"\n)?"\$\{compose\[@\]\}" stop app web\n"\$\{compose\[@\]\}" up -d --remove-orphans db\nesperar_db\nreturn 0\nfi$/m', $volver);
+        $this->assertLessThan($this->posicion($volver, '"${compose[@]}" up -d --remove-orphans app web', 'volver.sh levanta app y web.'), $sinLevantar, '--sin-levantar sale antes de levantar app y web.');
+        $parar = $this->posicion($volver, '"${compose[@]}" stop scheduler', 'volver.sh para el scheduler.');
+        $this->assertLessThan($checkout, $parar, 'El scheduler se para antes del checkout, con el Compose de la versión instalada.');
+        $this->assertLessThan($sinLevantar, $parar, 'También con --sin-levantar.');
+
+        $aviso = $this->posicion($volver, 'if [[ ! -f app/Console/Commands/Vigilar.php ]]; then', 'volver.sh avisa del temporizador.');
+        $this->assertGreaterThan($checkout, $aviso, 'El aviso mira la versión de destino.');
+        $this->assertStringContainsString('sudo systemctl disable --now dentissa-vigilar.timer', $this->leer('deploy/volver.sh'));
+
+        $restaurar = $this->ordenes('deploy/restaurar.sh');
+        $preparar = $this->posicion($restaurar, 'en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null', 'restaurar.sh --volver usa volver.sh --sin-levantar.');
+        $cargar = $this->posicion($restaurar, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.');
+        $this->assertLessThan($cargar, $preparar, 'Primero la versión de destino, después la carga.');
+        foreach ([
+            'en_servidor docker compose -f docker-compose.prod.yml up -d app web < /dev/null',
+            'en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan config:cache < /dev/null',
+            'en_servidor docker compose -f docker-compose.prod.yml exec -T -u www-data app php artisan route:cache < /dev/null',
+            'en_servidor bash deploy/verificar.sh --interna < /dev/null',
+        ] as $orden) {
+            $this->assertGreaterThan($cargar, $this->posicion($restaurar, $orden, "restaurar.sh no hace «{$orden}»."), "«{$orden}» va después de la carga.");
+        }
+    }
+
+    /**
+     * Spec 020 (D22): líneas de un script que nombran el `scheduler` fuera de un `if` que
+     * comprueba que el Compose de destino lo tiene (`config --services | grep -qxF scheduler`).
+     *
+     * @return list<string>
+     */
+    private function schedulerSinComprobar(string $ordenes): array
+    {
+        $sueltas = [];
+        $dentro = 0;
+        foreach (explode("\n", $ordenes) as $linea) {
+            // /review 020 R4: la lista se lee una vez (con `|| error`) y se busca en ella, sin tubería.
+            if (preg_match('/^if grep -qxF scheduler <<< "\$\{\w+\}"; then$/', $linea)) {
+                $dentro++;
+
+                continue;
+            }
+            if ($dentro > 0 && $linea === 'fi') {
+                $dentro--;
+
+                continue;
+            }
+            // El texto de un mensaje de error no es una orden: puede nombrar el scheduler (R18).
+            // Solo la cadena del mensaje: lo que va detrás sigue siendo una orden (/review R37).
+            $orden = preg_replace('/\berror "[^"]*"/', '', $linea);
+            if ($dentro === 0 && preg_match('/\bscheduler\b/', $orden) && ! str_starts_with($linea, 'paso ')) {
+                $sueltas[] = $linea;
+            }
+        }
+
+        return $sueltas;
+    }
+
+    /**
+     * Spec 020 (CA5, D22, A68): desplegar.sh, volver.sh y restaurar.sh levantan y paran el
+     * scheduler con app y web, y solo lo nombran si la versión de destino lo tiene: hacia una
+     * versión anterior a la 020, nombrarlo fallaría («no such service»).
+     */
+    public function test_los_scripts_levantan_y_paran_el_scheduler_con_app(): void
+    {
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertMatchesRegularExpression('/\bup -d scheduler\b/', $ordenes, "{$script} levanta el scheduler.");
+            $this->assertSame([], $this->schedulerSinComprobar($ordenes), "{$script} nombra el scheduler sin comprobar que existe.");
+        }
+        $this->assertCount(1, $this->schedulerSinComprobar("if x; then\nfi\n\"\${compose[@]}\" up -d scheduler"), 'Control positivo.');
+        $this->assertContains('"${compose[@]}" up -d scheduler', $this->schedulerSinComprobar("if \"\${compose[@]}\" config --services | grep -qxF scheduler; then\n\"\${compose[@]}\" up -d scheduler\nfi"), 'La tubería ya no cuenta como comprobación.');
+        $this->assertCount(1, $this->schedulerSinComprobar('x="$(a)" || error "m"; "${compose[@]}" up -d scheduler'), 'Una orden tras el mensaje de error sigue contando (R37).');
+        $this->assertSame([], $this->schedulerSinComprobar('x="$(a)" || error "no se pudo levantar el scheduler"'), 'El texto del mensaje no es una orden.');
+
+        // /review 020 R4: si no se puede leer la lista de servicios, el script se detiene.
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertDoesNotMatchRegularExpression('/config --services[^\n]*\|\s*grep/', $ordenes, "{$script} no lee la lista con una tubería.");
+            $this->assertMatchesRegularExpression('/^\w+="\$\([^\n]*config --services[^\n]*\)" \|\| error "/m', $ordenes, "{$script} lee la lista y se detiene si no puede.");
+        }
+
+        // /review 020 R16 y R17: el scheduler instalado se para antes de migrar, y volver.sh lo para tras el fetch.
+        $desplegar = $this->ordenes('deploy/desplegar.sh');
+        $this->assertLessThan(
+            $this->posicion($desplegar, 'php artisan migrate --force', 'desplegar.sh migra.'),
+            $this->posicion($desplegar, '"${compose[@]}" stop scheduler', 'desplegar.sh para el scheduler instalado.'),
+            'El scheduler se para antes de migrar.',
+        );
+        $volver = $this->ordenes('deploy/volver.sh');
+        $parada = $this->posicion($volver, '"${compose[@]}" stop scheduler', 'volver.sh para el scheduler.');
+        $this->assertGreaterThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh hace el fetch.'), $parada, 'Lo para después del fetch.');
+        $this->assertLessThan($this->posicion($volver, 'checkout "${ref}"', 'volver.sh hace el checkout.'), $parada, 'Y antes del checkout.');
+
+        // /review 020 R18: con --volver, la salida sin datos descifrados nombra también el scheduler.
+        $this->assertSame(1, preg_match('/^error "no llegó ningún dato descifrado[^\n]*siguen parados en \$\{ref\}[^\n]*"$/m', $this->ordenes('deploy/restaurar.sh'), $mensaje));
+        $this->assertStringContainsString('scheduler', $mensaje[0], 'El mensaje nombra el scheduler, también parado.');
+
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertMatchesRegularExpression('/^"\$\{compose\[@\]\}" up -d --remove-orphans app web$/m', $ordenes, "{$script} levanta con --remove-orphans.");
+            $this->assertDoesNotMatchRegularExpression('/^"\$\{compose\[@\]\}" up -d app web$/m', $ordenes, "{$script} no deja huérfanos.");
+            $levantar = $this->posicion($ordenes, '"${compose[@]}" up -d --remove-orphans app web', "{$script} levanta app y web.");
+            $this->assertGreaterThan($levantar, $this->posicion($ordenes, '"${compose[@]}" up -d scheduler', "{$script} levanta el scheduler."), 'El scheduler, tras app y web.');
+        }
+    }
+
+    /**
+     * Spec 020 (D22; A68, A83): con y sin --volver, restaurar.sh para todo lo que escribe en la
+     * base antes de cargar la copia, y cada salida que vuelve a levantar app y web levanta también
+     * el scheduler si la versión lo tiene, también la de «ningún dato descifrado».
+     */
+    public function test_restaurar_para_todo_lo_que_escribe_antes_de_cargar(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+        $main = substr($ordenes, $this->posicion($ordenes, "\nmain() {", 'Falta main().'));
+        $servidor = 'en_servidor docker compose -f docker-compose.prod.yml';
+        $carga = $this->posicion($main, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.');
+
+        $sinVolver = $this->posicion($main, "{$servidor} stop app web < /dev/null", 'Sin --volver para app y web.');
+        $paraScheduler = $this->posicion($main, "{$servidor} stop scheduler < /dev/null", 'Para el scheduler.');
+        $this->assertLessThan($carga, $sinVolver);
+        $this->assertLessThan($carga, $paraScheduler, 'El scheduler está parado antes de cargar.');
+        $this->assertLessThan($carga, $this->posicion($main, 'en_servidor bash deploy/volver.sh "${ref}" --sin-levantar < /dev/null', 'Con --volver, volver.sh --sin-levantar.'));
+
+        $tras = substr($main, $carga);
+        $this->assertSame(
+            substr_count($tras, "{$servidor} up -d app web < /dev/null"),
+            substr_count($tras, "{$servidor} up -d scheduler < /dev/null"),
+            'Cada vez que levanta app y web, levanta también el scheduler (A83).',
+        );
+        $this->assertSame(2, substr_count($tras, "{$servidor} up -d scheduler < /dev/null"), 'La salida sin datos descifrados y el final.');
+        $sinDatos = substr($tras, 0, $this->posicion($tras, 'la base no se ha tocado y app y web vuelven a estar en marcha', 'Salida sin datos descifrados.'));
+        $this->assertStringContainsString("{$servidor} up -d scheduler < /dev/null", $sinDatos, 'La salida sin datos descifrados levanta el scheduler.');
+    }
+
+    /**
+     * /review 020 R36: tras la carga, la lista de servicios no se lee antes de comprobar cómo terminó
+     * (con el SSH caído fallaría también, y su mensaje taparía el de la carga incompleta), y se lee
+     * justo antes de levantar, ya descartada la carga incompleta.
+     */
+    public function test_restaurar_lee_los_servicios_despues_de_comprobar_la_carga(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+        $main = substr($ordenes, $this->posicion($ordenes, "\nmain() {", 'Falta main().'));
+        $tras = substr($main, $this->posicion($main, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.'));
+
+        $this->assertGreaterThan(
+            $this->posicion($tras, 'if [[ "${resultado[1]}" -eq 3 ]]; then', 'Comprueba si llegaron datos.'),
+            $this->posicion($tras, 'config --services', 'Lee la lista tras la carga.'),
+            'Ninguna lectura de la lista antes de comprobar cómo terminó la carga.',
+        );
+        $incompleta = $this->posicion($tras, 'la carga quedó incompleta', 'Comprueba la carga incompleta.');
+        $levantar = $this->posicion($tras, 'paso "Levantando app, web y el scheduler"', 'Levanta al final.');
+        $this->assertStringContainsString('config --services', substr($tras, $incompleta, $levantar - $incompleta), 'Lee la lista justo antes de levantar.');
+    }
+
+    /** Spec 020 (CA5): verificar.sh comprueba que el scheduler está en marcha y programa la purga. */
+    public function test_verificar_comprueba_el_scheduler(): void
+    {
+        $ordenes = $this->ordenes('deploy/verificar.sh');
+
+        $this->assertMatchesRegularExpression('/^for servicio in db app web scheduler; do$/m', $ordenes, 'El scheduler en «Servicios».');
+        $this->assertMatchesRegularExpression(
+            '/^if "\$\{compose\[@\]\}" exec -T -u www-data scheduler php artisan schedule:list 2> ?\/dev\/null \| grep -q \'auditoria:purgar\'; then\nok "[^"\n]*auditoria:purgar[^"\n]*"\nelse\nfallo "[^"\n]*auditoria:purgar[^"\n]*"\nfi$/m',
+            $ordenes,
+            'Comprueba que el scheduler programa auditoria:purgar.',
+        );
+        $this->assertStringContainsString('echo "== Tareas programadas', $this->leer('deploy/verificar.sh'));
+    }
+
+    /**
+     * Spec 032 (D4; /analyze A17, A32, A50): si la verificación falla, desplegar.sh propone
+     * la vuelta sin copia solo si sabe que no hubo migraciones (migrate:status --pending dijo
+     * «No pending migrations» y salió con 0); en la duda, la vuelta con la copia desde el PC.
+     * Sin copia (primer despliegue) no propone ninguna vuelta.
+     */
+    public function test_desplegar_imprime_la_vuelta_del_contrato(): void
+    {
+        $script = $this->leer('deploy/desplegar.sh');
+        $ordenes = $this->ordenes('deploy/desplegar.sh');
+
+        $this->assertSame(1, preg_match('/^sin_migraciones_pendientes\(\) \{\n.*?^\}$/ms', $script, $funcion), 'desplegar.sh define sin_migraciones_pendientes().');
+        foreach ([
+            ['INFO  No pending migrations.', 0, 'si'],
+            ["Migration name ........ Batch / Status\n2026_10_25_000000_nueva ... Pending", 1, 'no'],
+            ['Illuminate\\Database\\QueryException: SQLSTATE[HY000] [2002] Connection refused', 1, 'no'],
+            ['INFO  No pending migrations.', 1, 'no'],
+        ] as [$salida, $codigo, $esperado]) {
+            $prueba = 'falso() { printf "%s\n" "$SALIDA"; return "$CODIGO"; }; compose=(falso); '.$funcion[0]."\n".'if sin_migraciones_pendientes; then echo si; else echo no; fi';
+            $resultado = trim((string) shell_exec('SALIDA='.escapeshellarg($salida).' CODIGO='.$codigo.' bash -c '.escapeshellarg($prueba)));
+            $this->assertSame($esperado, $resultado, "Con «{$salida}» y código {$codigo}.");
+        }
+        $this->assertMatchesRegularExpression('/^salida="\$\("\$\{compose\[@\]\}" run --rm -u www-data app php artisan migrate:status --pending --no-ansi 2>&1\)" \|\| return 1$/m', $ordenes);
+
+        $this->assertMatchesRegularExpression('/^local sin_migraciones="no"$/m', $ordenes);
+        $deteccion = $this->posicion($ordenes, 'sin_migraciones_pendientes && sin_migraciones="si"', 'desplegar.sh cuenta las migraciones pendientes.');
+        $this->assertLessThan($this->posicion($ordenes, 'php artisan migrate --force', 'desplegar.sh migra.'), $deteccion, 'Se cuentan antes de migrar.');
+
+        $this->assertMatchesRegularExpression(
+            '/^\s*if \[\[ "\$\{sin_migraciones\}" == "si" \]\]; then\n(?:\s*echo "[^\n]*"\n)*?\s*echo "    bash deploy\/volver\.sh \$\{anterior\}"\n\s*else\n(?:\s*echo "[^\n]*"\n)*?\s*echo "    scp [^"\n]*:\$\{copia\} \."\n\s*echo "    bash deploy\/restaurar\.sh \$\{copia##\*\/\} [^"\n]* --volver \$\{anterior\}"\n\s*fi$/m',
+            $script,
+            'Sin migraciones, volver.sh; si no, la vuelta con la copia desde el PC.',
+        );
+        $this->assertStringNotContainsString('volver.sh ${anterior} ${copia}', $script, 'La forma de la 030 ya no existe.');
+
+        $this->assertSame(1, preg_match('/^\s*if \[\[ -z "\$\{copia\}" \]\]; then\n(.*?)^\s*else$/ms', $script, $primerDespliegue), 'desplegar.sh distingue el primer despliegue.');
+        $this->assertStringNotContainsString('volver.sh', $primerDespliegue[1], 'Sin copia no se propone ninguna vuelta.');
+        $this->assertStringNotContainsString('restaurar.sh', $primerDespliegue[1], 'Sin copia no se propone ninguna vuelta.');
+    }
+
+    /**
+     * Spec 032 (CA10; D5, /analyze A16): las copias en claro de antes se cifran y solo
+     * entonces se borran las originales. Una copia dañada también se cifra, con otro nombre,
+     * para que no quede nada en claro.
+     */
+    public function test_cifrar_copias_antiguas_cifra_antes_de_borrar(): void
+    {
+        $ordenes = $this->ordenes('deploy/cifrar-copias-antiguas.sh');
+
+        $this->assertMatchesRegularExpression('/^set -euo pipefail$/m', $ordenes);
+        // También la carpeta personal, que verificar.sh revisa (/review R5).
+        $this->assertMatchesRegularExpression('/^for original in "\$\{DESTINO\}"\/dentissa-\*\.sql\.gz "\$\{HOME\}"\/dentissa-\*\.sql\.gz; do$/m', $ordenes);
+        $this->assertMatchesRegularExpression('/^destino="\$\{original\}\.gpg"$/m', $ordenes, 'Una copia buena pasa a .sql.gz.gpg.');
+        $this->assertMatchesRegularExpression('/^destino="\$\{original%\.sql\.gz\}\.sql\.gz\.danada\.gpg"$/m', $ordenes, 'Una dañada pasa a .sql.gz.danada.gpg.');
+
+        $comprobacion = $this->posicion($ordenes, 'if gzip -t -- "${original}" 2> /dev/null && gzip -cd -- "${original}" | tail -n 1 | grep -q -- \'-- Dump completed\'; then', 'Comprueba cada copia antes de cifrarla.');
+        $cifrado = $this->posicion($ordenes, 'gpg --batch --yes --quiet --trust-model always --recipient-file "${CLAVE_PUBLICA}" --output "${destino}.part" --encrypt -- "${original}"', 'Cifra hacia un archivo parcial.');
+        $mover = $this->posicion($ordenes, 'mv -- "${destino}.part" "${destino}"', 'Pasa el parcial a la copia cifrada.');
+        $fecha = $this->posicion($ordenes, 'touch -r "${original}" -- "${destino}"', 'Conserva la fecha de la original.');
+        $borrado = $this->posicion($ordenes, 'shred -u -- "${original}"', 'Borra la original con shred.');
+        $this->assertTrue($comprobacion < $cifrado && $cifrado < $mover && $mover < $fecha && $fecha < $borrado, 'Comprobar → cifrar → mover → fecha → borrar.');
+        $this->assertSame(1, substr_count($ordenes, 'shred -u'), 'Solo se borra tras cifrar.');
+        $this->assertDoesNotMatchRegularExpression('/^rm\b[^\n]*original/m', $ordenes);
+    }
+
+    /**
+     * Spec 032 (CA1, CA2, TM10; D11): el temporizador de systemd lanza el vigilante cada
+     * minuto con la cuenta de despliegue, dentro de app como www-data.
+     */
+    public function test_preparar_vigilancia_instala_el_temporizador(): void
+    {
+        $script = $this->leer('deploy/preparar-vigilancia.sh');
+        $ordenes = $this->ordenes('deploy/preparar-vigilancia.sh');
+
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{EUID\}" -eq 0 \]\] \|\| error /m', $ordenes, 'Exige root.');
+        $this->assertMatchesRegularExpression('/^\[\[ -n "\$\{cuenta\}" && "\$\{cuenta\}" != "root" \]\] \|\| error /m', $ordenes, 'Usa la cuenta de despliegue que llama con sudo.');
+        $this->assertSame(1, preg_match('/^cat > \/etc\/systemd\/system\/dentissa-vigilar\.service <<UNIDAD\n(.*?)\nUNIDAD$/ms', $ordenes, $servicio), 'Instala el servicio.');
+        $this->assertMatchesRegularExpression('/^Type=oneshot$/m', $servicio[1]);
+        $this->assertMatchesRegularExpression('/^User=\$\{cuenta\}$/m', $servicio[1]);
+        $this->assertMatchesRegularExpression('#^ExecStart=/usr/bin/docker compose -f /opt/dentissa/app/docker-compose\.prod\.yml exec -T -u www-data app php artisan dentissa:vigilar$#m', $servicio[1]);
+        $this->assertSame(1, preg_match('/^cat > \/etc\/systemd\/system\/dentissa-vigilar\.timer <<UNIDAD\n(.*?)\nUNIDAD$/ms', $ordenes, $temporizador), 'Instala el temporizador.');
+        $this->assertMatchesRegularExpression('/^OnCalendar=minutely$/m', $temporizador[1]);
+        $this->assertMatchesRegularExpression('/^WantedBy=timers\.target$/m', $temporizador[1]);
+        $this->assertMatchesRegularExpression('/^systemctl daemon-reload\nsystemctl enable --now dentissa-vigilar\.timer$/m', $ordenes);
+        $this->assertStringContainsString('gpg --show-keys --with-colons -- "${CLAVE_PUBLICA}"', $script, 'Comprueba antes la clave pública.');
+    }
+
+    /** Código PHP del bloque «Configuración de producción» de verificar.sh. */
+    private function configuracionDeVerificar(): string
+    {
+        $this->assertSame(1, preg_match('/^    config="\$\("\$\{php\[@\]\}" -r "\$\{ARRANQUE\}"\'\n(.*?)\n    \'\)"$/ms', $this->leer('deploy/verificar.sh'), $m), 'verificar.sh tiene el bloque de configuración.');
+
+        return $m[1];
+    }
+
+    /**
+     * Spec 032 (CA6; D12, /analyze A28, A42): sin el envío de avisos configurado, o con el
+     * texto de ejemplo de la guía, la verificación falla. El envío exige TLS (puerto 465 con
+     * TLS implícito: la contraseña de aplicación nunca viaja sin cifrar).
+     */
+    public function test_verificar_comprueba_el_envio_de_avisos(): void
+    {
+        $php = $this->configuracionDeVerificar();
+        $script = $this->leer('deploy/verificar.sh');
+
+        preg_match_all('/^\s*\$c\(/m', $php, $comprobaciones);
+        $this->assertCount(16, $comprobaciones[0], 'El bloque tiene 16 comprobaciones.');
+        $this->assertMatchesRegularExpression('/"\$\{lineas\}" -ne 16 \]\]/', $script);
+        $this->assertStringContainsString('de 16 comprobaciones', $script);
+
+        $this->assertMatchesRegularExpression('/^\s*\$c\(config\("mail\.default"\) === "smtp", "MAIL_MAILER=smtp"\);$/m', $php);
+        $this->assertMatchesRegularExpression('/^\s*\$c\([^\n]*config\("mail\.mailers\.smtp\.host"\)[^\n]*\(int\) config\("mail\.mailers\.smtp\.port"\) === 465[^\n]*"MAIL_HOST definido y MAIL_PORT=465 \(TLS obligatorio\)"\);$/m', $php, 'Exige el host y TLS implícito (A42).');
+        $this->assertMatchesRegularExpression('/^\s*\$c\([^\n]*config\("mail\.mailers\.smtp\.username"\)[^\n]*config\("mail\.mailers\.smtp\.password"\)[^\n]*\[<>\\\\\\\\s\][^\n]*"MAIL_USERNAME y MAIL_PASSWORD definidos y sin el texto de ejemplo de la guía"\);$/m', $php);
+        $this->assertMatchesRegularExpression('/^\s*\$c\([^\n]*filter_var\(\(string\) config\("mail\.from\.address"\), FILTER_VALIDATE_EMAIL\)[^\n]*filter_var\(\(string\) config\("avisos\.destino"\), FILTER_VALIDATE_EMAIL\)[^\n]*"MAIL_FROM_ADDRESS y AVISOS_CORREO con formato de correo"\);$/m', $php, 'Con el remitente (A28).');
+    }
+
+    /** Spec 032 (CA6, TM9): ninguna comprobación imprime un valor de la configuración. */
+    public function test_verificar_no_imprime_valores_del_correo(): void
+    {
+        $php = $this->configuracionDeVerificar();
+        $script = $this->leer('deploy/verificar.sh');
+
+        preg_match_all('/^\s*\$c\((.*), ("[^"\n]*")\);$/m', $php, $comprobaciones);
+        $this->assertCount(16, $comprobaciones[2]);
+        foreach ($comprobaciones[2] as $texto) {
+            $this->assertStringNotContainsString('config(', $texto, "El texto {$texto} no lleva valores.");
+            $this->assertStringNotContainsString('$', $texto, "El texto {$texto} no lleva variables.");
+        }
+        $this->assertDoesNotMatchRegularExpression('/\becho\b[^\n]*config\("(mail|avisos)/', $php);
+        $this->assertDoesNotMatchRegularExpression('/printenv\s+(MAIL_|AVISOS_)/', $script);
+    }
+
+    /**
+     * Spec 032 (CA8, CA10, TM1, TM4, TM10; D12, /analyze A3): la sección «Avisos y copias»
+     * solo corre sin --interna, para que desplegar.sh y volver.sh pasen antes de instalar el
+     * temporizador y de cifrar las copias antiguas.
+     */
+    public function test_verificar_comprueba_avisos_y_copias_fuera_de_la_interna(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+
+        $this->assertSame(1, preg_match('/^    if \[\[ "\$\{modo\}" != "--interna" \]\]; then\n        echo "== Avisos y copias \(spec 032\)"\n(.*?)^    fi$/ms', $script, $seccion), 'La sección es un bloque que no corre con --interna.');
+
+        // Órdenes de la sección sin comentarios ni echo (/review R4): una orden en un comentario
+        // no cuenta, y cada comprobación lleva su rama ok / fallo correcta.
+        $lineas = array_map('trim', explode("\n", $seccion[1]));
+        $ordenes = implode("\n", array_filter($lineas, fn (string $l) => $l !== '' && ! str_starts_with($l, '#') && ! str_starts_with($l, 'echo ')));
+
+        foreach ([
+            'temporizador activo → ok' => '/^if systemctl is-active --quiet dentissa-vigilar\.timer; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+            'clave pública con pub y sin sec → ok' => '/^claves_publicas="\$\(gpg --show-keys --with-colons -- "\$\{CLAVE_PUBLICA\}" 2> \/dev\/null \|\| true\)"\nif grep -q \'\^pub:\' <<< "\$\{claves_publicas\}" && ! grep -q \'\^sec:\' <<< "\$\{claves_publicas\}"; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+            'llavero con una clave secreta → fallo' => '/^if gpg --list-secret-keys --with-colons 2> \/dev\/null \| grep -q \'\^sec:\'; then\nfallo "[^"\n]*"\nelse\nok "[^"\n]*"\nfi$/m',
+            'app lee el log de acceso → ok' => '/^if "\$\{compose\[@\]\}" exec -T -u www-data app test -r \/var\/log\/nginx\/dentissa-access\.log; then\nok "[^"\n]*"\nelse\nfallo "[^"\n]*"\nfi$/m',
+        ] as $que => $patron) {
+            $this->assertMatchesRegularExpression($patron, $ordenes, "La sección comprueba: {$que}.");
+        }
+    }
+
+    /** Spec 032 (CA10; /analyze A16): una copia en claro en el servidor es un FALLO. */
+    public function test_verificar_falla_con_copias_en_claro(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then\n\s*ok [^\n]*\n\s*else\n\s*fallo [^\n]*copias en claro[^\n]*$/m',
+            $this->leer('deploy/verificar.sh'),
+        );
+    }
+
+    /**
+     * Spec 032 (CA7; T039, visto en el ensayo T041): dos copias en el mismo segundo no
+     * comparten nombre; si ya existe una copia con el de ese segundo, se espera al siguiente.
+     */
+    public function test_respaldar_no_pisa_una_copia_existente(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^copia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\nwhile \[\[ -e "\$\{copia\}" \]\]; do\nsleep 1\ncopia="\$\{DESTINO\}\/dentissa-\$\(date \+%Y%m%d-%H%M%S\)\.sql\.gz\.gpg"\ndone$/m',
+            $this->ordenes('deploy/respaldar.sh'),
+        );
+    }
+
+    /**
+     * Spec 032 (CA10; /review R5, R27, R28): si la carpeta de copias no existe o no se puede leer,
+     * es un FALLO y la búsqueda de copias en claro no se hace (daría 0 y un OK falso); si se puede,
+     * cero copias en claro es OK y alguna es FALLO.
+     */
+    public function test_verificar_falla_si_no_puede_leer_las_copias(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/^\s*if \[\[ ! -d "\$\{DESTINO\}" \|\| ! -r "\$\{DESTINO\}" \]\]; then\n'
+            .'\s*fallo "[^"\n]*"\n'
+            .'\s*else\n'
+            .'\s*claras="\$\(find "\$\{DESTINO\}" "\$\{HOME\}" -maxdepth 1 -name \'dentissa-\*\.sql\.gz\' 2> \/dev\/null \| wc -l\)"\n'
+            .'\s*if \[\[ "\$\{claras\}" -eq 0 \]\]; then\n'
+            .'\s*ok "[^"\n]*"\n'
+            .'\s*else\n'
+            .'\s*fallo "[^"\n]*"\n'
+            .'\s*fi\n'
+            .'\s*fi$/m',
+            $this->leer('deploy/verificar.sh'),
+        );
+    }
+
+    /**
+     * Spec 032 (CA7, CA9; /review R6, R7, R8): en la carga remota, la marca de /dev/shm se borra
+     * también si la carga falla; la pasada 1 del PC solo guarda si el volcado termina bien; y la
+     * carga va en el modo sandbox del cliente de MariaDB, que no ejecuta órdenes del sistema que
+     * viniesen en una copia fabricada.
+     */
+    public function test_restaurar_no_deja_restos_y_carga_en_sandbox(): void
+    {
+        $carga = $this->cargaRemota();
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+
+        $this->assertMatchesRegularExpression('/^\s*marca="\$\(mktemp -p \/dev\/shm dentissa-marca\.XXXXXX\)"\n\s*trap \'rm -f -- "\$\{marca\}"\' EXIT$/m', $carga, 'La marca se borra al salir, también si la carga falla (R6).');
+        $this->assertMatchesRegularExpression('/\| "\$\{compose\[@\]\}" exec -T db sh -c \'MYSQL_PWD="\$MARIADB_ROOT_PASSWORD" exec mariadb --sandbox -uroot "\$MARIADB_DATABASE"\'$/m', $carga, 'La carga usa el modo sandbox (R8).');
+        $this->assertMatchesRegularExpression('/^\[\[ "\$\{resultado\[1\]\}" -eq 0 \]\] && grep -qx completo "\$\{final\}" \|\| rechazar "el volcado está incompleto/m', $ordenes, 'Solo se comprueba la marca completo / incompleto (R7).');
+        $this->assertStringNotContainsString('tail -n 1 > "${final}"', $ordenes, 'La última línea del volcado no se escribe en el PC (R7).');
+    }
+
+    /**
+     * Spec 032 (CA9, TM11; /review R29): `volver.sh` también se ejecuta a mano (guía y vuelta que
+     * imprime `desplegar.sh`), así que comprueba la versión antes de pasarla a git, con la misma
+     * expresión que `restaurar.sh`: sin espacios ni `;` y sin un «-» inicial que git tomaría como
+     * una opción.
+     */
+    public function test_volver_comprueba_la_version_antes_de_git(): void
+    {
+        $comprobacion = '[[ "${ref}" =~ ^[A-Za-z0-9._/][A-Za-z0-9._/-]*$ ]] || error ';
+        $volver = $this->ordenes('deploy/volver.sh');
+
+        $antes = $this->posicion($volver, $comprobacion, 'volver.sh comprueba la versión.');
+        $this->assertLessThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh obtiene las versiones.'), $antes, 'La comprobación va antes de git.');
+        $this->assertStringContainsString($comprobacion, $this->ordenes('deploy/restaurar.sh'), 'La misma expresión que restaurar.sh.');
     }
 }

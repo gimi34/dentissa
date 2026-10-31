@@ -29,7 +29,7 @@ de Google para no recordar otra contraseña.
 - [ ] CA6 · Dado un usuario con `google_id` vinculado, cuando completa el callback de Google, entonces inicia sesión y va a su panel.
 - [ ] CA7 · Dado un correo de Google sin cuenta, cuando completa el callback, entonces sus datos se guardan en sesión y se le envía a `/registro/contacto` (spec 002).
 - [ ] CA8 · Dado un usuario autenticado, cuando envía `POST /logout`, entonces la sesión se invalida y el token CSRF se regenera.
-- [ ] CA9 (abuso) · Como atacante, pruebo muchas contraseñas contra una cuenta → los intentos se limitan por IP y cuenta y se registran. **HOY NO SE CUMPLE: no se registran los intentos.** Atendido en parte por 030 (v0.5.0): los intentos fallidos se limitan por cuenta e IP (5 por minuto, `LimiteIntentosTest`); falta registrarlos (→ spec 020).
+- [ ] CA9 (abuso) · Como atacante, pruebo muchas contraseñas contra una cuenta → los intentos se limitan por IP y cuenta y se registran. **HOY NO SE CUMPLE: no se registran los intentos.** Atendido en parte por 030 (v0.5.0): los intentos fallidos se limitan por cuenta e IP (5 por minuto, `LimiteIntentosTest`); falta registrarlos (→ spec 020). El canal `seguridad` de la 032 (v0.11.0) registra los fallos para avisar, pero no es el registro de auditoría: sigue → 020/021.
 - [ ] CA10 (abuso) · Como atacante con una cuenta de Google cuyo email coincide con la de un admin, intento entrar → no se vincula sin email verificado ni confirmación. **HOY NO SE CUMPLE: se vincula por coincidencia de email.**
 - [ ] CA11 (abuso) · Como usuario desactivado con sesión abierta, sigo navegando → la sesión se cierra. **HOY NO SE CUMPLE: `activo` solo se comprueba al hacer login.**
 
@@ -73,3 +73,4 @@ Eventos requeridos en `docs/observability.md`.
 | 2026-10-20 | Comportamiento modificado por 031 en v0.10.0 (vuelta fallida de Google al login con mensaje) | /release |
 | 2026-10-20 | Corregido por la ficha 2026-10-20-fix-raiz-al-login en v0.10.0 (CA4) | /release |
 | 2026-10-20 | CA4 reemplazado por la 038 CA1: sin sesión, `/` muestra la página de inicio pública (con sesión, cada rol sigue yendo a su panel); el test de CA4 pasa a `ExampleTest::test_el_visitante_sin_sesion_ve_la_pagina_de_inicio` y `PaginaInicioTest`. Rige al liberar la 038 | /implement 038 (T041) |
+| 2026-10-27 | Anotado por 032 en v0.11.0: el canal `seguridad` registra los fallos de acceso para los avisos; no es el registro de auditoría de CA9, que sigue → 020/021 (032 /analyze A48) | /release |

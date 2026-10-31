@@ -39,8 +39,8 @@ aplicación quedará abierta a todo internet.
 - [x] CA3 (abuso) · Dado un atacante en internet o en la red local, cuando intenta conectarse al servidor por cualquier vía que no sea la dirección pública de la aplicación, entonces no llega a la base de datos, a su herramienta de administración ni a ningún servicio interno; la única vía administrativa es el acceso remoto con clave desde la red local, sin contraseña. Además, en el entorno local de cada integrante, la base de datos y su herramienta de administración solo son accesibles desde el propio equipo, no desde otros equipos de su red. → reemplazado en parte por 031 CA8
 - [x] CA4 (abuso) · Dado un error inesperado en producción, cuando ocurre, entonces la persona ve un mensaje genérico sin detalles internos (rutas, consultas, versiones ni datos), y la lista de verificación de la configuración de producción lo confirma en cada despliegue.
 - [x] CA5 (abuso) · Dado el entorno de producción, cuando alguien prueba las contraseñas de las cuentas del volcado que figuran en el repositorio o en su documentación, entonces ninguna funciona. Además, las credenciales de producción (base de datos, clave de la aplicación y acceso con Google) no están en el repositorio ni en el paquete de la aplicación, y la base de datos no se usa con su cuenta de máximo privilegio.
-- [x] CA6 · Dado un despliegue, cuando empieza, entonces antes de cualquier cambio queda una copia de seguridad fechada de la base de datos fuera de la aplicación; y restaurar esa copia deja la base exactamente como estaba, algo que se ha ensayado al menos una vez.
-- [x] CA7 · Dado un despliegue que falla en la verificación posterior, cuando el responsable sigue el procedimiento documentado de vuelta atrás, entonces la versión anterior vuelve a funcionar y pasa la misma verificación en 15 minutos o menos. Se ha ensayado al menos una vez antes de dar la spec por terminada. → modificado por 031 CA8 (con Tailscale activo, una versión anterior a la 031 da un único FALLO conocido en su verificación)
+- [x] CA6 · Dado un despliegue, cuando empieza, entonces antes de cualquier cambio queda una copia de seguridad fechada de la base de datos fuera de la aplicación; y restaurar esa copia deja la base exactamente como estaba, algo que se ha ensayado al menos una vez. → reemplazado por 032 CA9 (copia cifrada; restauración desde el PC)
+- [x] CA7 · Dado un despliegue que falla en la verificación posterior, cuando el responsable sigue el procedimiento documentado de vuelta atrás, entonces la versión anterior vuelve a funcionar y pasa la misma verificación en 15 minutos o menos. Se ha ensayado al menos una vez antes de dar la spec por terminada. → modificado por 031 CA8 (con Tailscale activo, una versión anterior a la 031 da un único FALLO conocido en su verificación); modificado por 032 CA9 (la vuelta con copia se hace desde el PC con `restaurar.sh --volver`)
 - [x] CA8 (abuso) · Dado un atacante, cuando en 1 minuto supera 5 intentos (fallidos de inicio de sesión con el mismo correo desde la misma dirección, o de cualquier tipo de alta de cuenta o de vuelta del acceso con Google desde la misma dirección), entonces los siguientes se rechazan temporalmente con un mensaje que dice cuánto esperar, sin revelar si la cuenta existe. Una persona legítima vuelve a poder entrar al terminar la espera.
 - [x] CA9 · Dado un reinicio del servidor o de los servicios de la aplicación, cuando termina, entonces la aplicación vuelve a estar disponible por sí sola en 5 minutos o menos, y los registros del servidor web y de la aplicación anteriores al reinicio se conservan.
 - [x] CA10 · Dada una versión liberada, cuando se construye y despliega en el servidor, entonces usa las mismas versiones fijas de todos sus componentes que en local, y la configuración del lenguaje del servidor (límites de subida y zona horaria) se aplica de verdad; el paquete de la aplicación no incluye secretos, el repositorio de git, dependencias de desarrollo ni el volcado de datos.
@@ -52,7 +52,7 @@ aplicación quedará abierta a todo internet.
 - Despliegue automático desde el CI: el despliegue es manual y lo aprueba una persona.
 - Quitar las contraseñas del README, sustituir el volcado por datos generados y purgar el historial de git → objetivo 1 (RS6.a, RS6.b, RS6.d).
 - El registro de auditoría de los intentos de inicio de sesión → spec 020.
-- Envío de correos desde producción.
+- Envío de correos desde producción. → atendido por la 032 (v0.11.0)
 - Decidir el futuro de las herramientas del frontend, fijar las acciones del CI y alinear la versión declarada del lenguaje → roadmap, objetivo 5.
 
 ## Seguridad y privacidad
@@ -99,12 +99,15 @@ aplicación quedará abierta a todo internet.
 | RS8.c — HSTS en staging (creada por la 031 al dividir RS8.b) | fuera | → objetivo 5, cuando exista staging |
 | RS8.d — política de contenido estricta (creada por la 031 al dividir RS8.a) | fuera | → roadmap, por pantallas |
 | RS15.a — cifrar los campos clínicos en la base | fuera | → objetivo 4 (spec 013) |
-| RS15.b — cifrado del disco y de las copias de seguridad | fuera | → spec 031 |
+| RS15.b — cifrado del disco y de las copias de seguridad | fuera | → spec 032 (copias cifradas, mitigada en v0.11.0; el disco quedó en RS15.c) |
+| RS15.c — cifrado del disco del servidor de producción (creada por la 032 al dividir RS15.b) | fuera | → spec 032: aceptado como excepción EX3 hasta cargar el primer dato real de pacientes |
+| RS15.d — cifrado del disco y de las copias en staging (creada por la 032 al dividir RS15.b) | fuera | → objetivo 5, cuando exista staging |
 | OB4.a — redactar los datos de las consultas en los errores registrados | fuera | → objetivo 3 |
 | OB4.b — modo de producción y depuración apagada verificados en la lista de despliegue de producción (corrección dividida, /analyze A1) | dentro | CA4 |
 | OB4.c — lo mismo en la lista de despliegue de staging (nueva al dividir OB4.b) | fuera | No hay staging → roadmap, objetivo 5 |
 | OB6.a — comprobación de salud que incluya la base de datos | fuera | → objetivo 3 |
-| OB6.b — alertas mínimas | fuera | → spec 031 |
+| OB6.b — alertas mínimas | fuera | → spec 032 (mitigada en v0.11.0) |
+| OB6.c — alertas mínimas en staging (creada por la 032 al dividir OB6.b) | fuera | → objetivo 5, cuando exista staging |
 | OB7.a — conservar los registros del servidor web en producción (corrección dividida, /analyze A1) | dentro | CA9 |
 | OB7.b — lo mismo en staging (nueva al dividir OB7.a) | fuera | No hay staging → roadmap, objetivo 5 |
 | RS13.a — límite de intentos en el alta (corrección dividida, /analyze A34) | dentro | CA8 |
@@ -179,3 +182,7 @@ inicio de sesión.
 | 2026-10-20 | Comportamiento modificado por 031 en v0.10.0 (cabeceras, administración remota por la red privada; CA3 reemplazado en parte por 031 CA8) | /release |
 | 2026-10-20 | CA7 modificado por 031 CA8; la excepción P7 (inicios de sesión fallidos sin evento de auditoría) vence con la spec 021, no con la 020 (031 /analyze A25) | /release |
 | 2026-10-20 | La comprobación de la redirección a https de CA2 pasa de `/` a `/admin` en `ProxyHttpsTest` y en `deploy/verificar.sh`, porque con la 038 `/` es la página de inicio y ya no redirige (038 D10). CA2 no cambia. Rige al liberar la 038 | /implement 038 (T041) |
+| 2026-10-25 | Cobertura de riesgos: RS15.c y RS15.d, creadas por la 032 al dividir RS15.b, declaradas fuera (RS15.c aceptada como EX3 por la 032; RS15.d → objetivo 5) | /implement 032 (T038) |
+| 2026-10-25 | Cobertura de riesgos: OB6.c, creada por la 032 al dividir OB6.b, declarada fuera (→ objetivo 5) | /implement 032 (T091) |
+| 2026-10-27 | Comportamiento modificado por 032 en v0.11.0: CA6 reemplazado por 032 CA9 y CA7 modificado por 032 CA9 (copias cifradas, restauración y vuelta con copia desde el PC); envío de correos desde producción atendido; destinos de RS15.b y OB6.b → 032 | /release |
+| 2026-10-31 | Comportamiento modificado por 020 en v0.12.0: el `scheduler` (purga de la auditoría) es un servicio más que `desplegar.sh` y `volver.sh` levantan y paran; la vuelta de la 020 es sin la copia | /release |

@@ -46,7 +46,10 @@ updated: 2026-10-18
   del dentista) y el Gate `reprogramar-cita` (`app/Autorizacion/ReprogramarCita.php`): primero el
   alcance de la 026 (personal fuera de alcance → 403; cita de otro paciente → 404) y después el
   rol (el dentista no reprograma); el paciente busca además la cita entre las suyas (spec 028). No
-  hay Policies.
+  hay Policies. El registro de auditoría (`/admin/auditoria`) va bajo `role:admin` y es solo de
+  lectura; cada 403 de un usuario autenticado y cada 404 de un Gate que oculta un recurso
+  (`denyAsNotFound`) dejan un evento `acceso_denegado`, y la cita de otro paciente que el paciente
+  pide también, con el mismo 404 que una inexistente (spec 020).
 
 ## Superficie de ataque
 | Punto de entrada | Tipo | Autenticado | Notas |
@@ -64,16 +67,45 @@ updated: 2026-10-18
 | phpMyAdmin `:8080`, MariaDB `:3306` | Docker local | root | solo en `127.0.0.1` del equipo de desarrollo (spec 030); no existen en producción |
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
 | SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
+| Temporizador `dentissa-vigilar` (systemd, cada minuto) | tarea programada | cuenta de despliegue | `php artisan dentissa:vigilar` en `app` como `www-data`: lee el log de acceso de nginx (montado en solo lectura) y el canal `seguridad`, y envía avisos por correo; sin entrada externa propia (spec 032, ADR 0007) |
+| Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar los avisos; los correos no llevan datos personales ni secretos (spec 032, TM7, TM13) |
 
-No hay rutas API, webhooks, colas ni tareas programadas.
+| `GET /admin/auditoria` | HTTP | sí, `role:admin` | consulta del registro de auditoría, solo lectura; filtros validados (identificadores, nombres y fechas `AAAA-MM-DD`); la propia consulta queda registrada (spec 020) |
+| `GET /_disenio/020/{pantalla}` | HTTP, solo `APP_ENV=local` | no | vista previa del diseño con datos inventados, sin sesión ni base; no existe en producción (spec 020, TM15; exención de P3 aceptada) |
+| Servicio `scheduler` (`schedule:work`) | tarea programada | — | misma imagen que `app`, `www-data`, solo `app.env`, sin puertos; su única tarea es la purga mensual del registro de auditoría (spec 020, TM14) |
+| Cabecera `X-Request-Id` | entrada en toda petición | — | se acepta solo si es un UUID de 36 caracteres; si no, se genera otro; solo correlaciona, nunca da actor ni acceso (spec 020, TM3, TM11) |
+
+No hay rutas API, webhooks ni colas. Las tareas programadas son el vigilante de avisos (spec 032) y
+la purga del registro de auditoría (spec 020).
+
+Amenazas del registro de auditoría (spec 020, modelo de amenazas del plan): eventos inmodificables
+salvo la purga de más de 5 años (triggers; vaciar la tabla o quitar los triggers con privilegios
+totales queda fuera, limitación aceptada), sin datos personales ni de salud salvo la IP y el
+identificador intentado, actor del servidor y nunca de la petición, fallo cerrado con una página 503
+sin detalles internos, y ningún dato del evento en el log ni en el aviso por correo. Residuos
+aceptados: un usuario autenticado puede provocar denegaciones en masa (volumen académico) y, con las
+credenciales de la aplicación, insertar eventos falsos (decisión del usuario, 2026-10-28). Las vistas
+nuevas de la 020 no llevan estilos ni scripts en línea.
 
 ## Manejo de secretos
 - Dónde se guardan: `.env` local no versionado (en `.gitignore`). Credenciales de BD de desarrollo
   escritas en `docker-compose.yml` y `phpunit.xml`. En producción (spec 030): `app.env`, `db.env` y
   `tunnel.env` en `/opt/dentissa/entorno` del servidor (carpeta 700, archivos 600, fuera del clon,
   excluidos de git y de la imagen); cada servicio lee solo el suyo (ver [deployment.md](deployment.md)).
+- Avisos de producción (spec 032): `MAIL_USERNAME` y `MAIL_PASSWORD` de `app.env` son la contraseña
+  de aplicación de una **cuenta de Gmail solo para enviar**, sin otros datos ni reenvíos (TM13): una
+  contraseña de aplicación da acceso a todo el buzón de su cuenta. `verificar.sh` comprueba que
+  están definidas, sin el texto de ejemplo y con TLS (puerto 465), sin mostrar los valores.
+- Copias de la base (spec 032, ADR 0007): cifradas (`.sql.gz.gpg`) para la clave del responsable. En
+  el servidor solo está la **clave pública** (`/opt/dentissa/entorno/copias.pub.asc`, 600). La
+  **clave secreta**, con su frase (al menos 5 palabras al azar o 20 caracteres), está solo en el PC
+  del responsable y en una segunda copia fuera del PC; nunca llega al servidor (se restaura desde el
+  PC, `deploy/restaurar.sh`), ni al repositorio ni al paquete (`*.asc` y `*.gpg` en `.gitignore` y
+  `.dockerignore`). Si se pierden las dos copias de la clave, las copias no se recuperan.
 - Rotación: las contraseñas de las cuentas del volcado se rotan en producción con
-  `php artisan dentissa:rotar-credenciales --confirmar` (spec 030); el resto, sin procedimiento.
+  `php artisan dentissa:rotar-credenciales --confirmar` (spec 030). La contraseña de aplicación de
+  Gmail se revoca y se crea otra en la cuenta de envío, y se aplica con `aplicar-entorno.sh app`
+  (spec 032). La clave de las copias no caduca ni se rota; el resto, sin procedimiento.
 - `README.md` contiene contraseñas de cuentas de prueba y `database/dentissa.sql` datos ficticios
   con hashes (datos ficticios y repo privado, confirmado por el usuario, 2026-09-28).
 
@@ -105,12 +137,14 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 - Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com, hub.docker.com (solo para consultar la fecha de publicación de las etiquetas de imagen al fijar versiones; aprobado por el usuario el 2026-10-03, spec 030, /analyze A28)
 
 ## Excepciones aceptadas
-Vigente: EX2. EX1 (avisos bajos de `laravel/framework` y `league/flysystem`, aprobada el
-2026-09-29) se retiró en v0.4.1 (spec 029, 2026-10-03): sus avisos quedaron corregidos.
+Vigentes: EX2 y EX3 (aprobada el 2026-10-27 en la v0.11.0, spec 032). EX1 (avisos bajos de
+`laravel/framework` y `league/flysystem`, aprobada el 2026-09-29) se retiró en v0.4.1 (spec 029,
+2026-10-03): sus avisos quedaron corregidos.
 
 | ID | Hallazgo | Severidad | Motivo | Aprobado por | Vence |
 |---|---|---|---|---|---|
-| EX2 | Avisos sin corrección aplicable en las imágenes de producción (`trivy image`; 2026-10-04, spec 030 T033/T035; repetido el 2026-10-19, spec 031 T031, RS18). `app` (`php:8.4.26-fpm`, Debian 13, construida con `apt-get upgrade`): 114 altas y 4 críticas «affected» y 4 altas «fix_deferred», ninguna con corrección publicada (`linux-libc-dev` 56, libxml2, util-linux, curl, ncurses, systemd, perl). `mariadb:10.11.19`: 25 altas (Go de `gosu`) y 1 crítica (libssl3), corregidas en la reconstrucción de la misma etiqueta del 2026-10-17, que cumple 7 días el 2026-10-24. `cloudflare/cloudflared:2026.10.0`: 5 altas (Go `stdlib`, `golang.org/x/net`, libssl3), corregidas en la 2026.10.1, que cumple 7 días el 2026-10-22. `web` (nginx 1.30.5) construida sin caché: sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; casi la mitad es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). Las de `mariadb` y `cloudflared` se corrigen al refrescarlas cuando cumplan 7 días (RS18.a) y volver a escanear antes del vencimiento. Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04; renovada por el usuario el 2026-10-19 | 2026-11-30 |
+| EX2 | Avisos sin corrección aplicable en las imágenes de producción (`trivy image`; 2026-10-04, spec 030 T033/T035; repetido el 2026-10-19, spec 031 T031, y el 2026-10-27, ficha 2026-10-27-chore-imagenes-031-r4, RS18). `app` (`php:8.4.26-fpm`, Debian 13, construida sin caché y con `apt-get upgrade` el 2026-10-27): 122 altas y 4 críticas, ninguna con corrección publicada (118 altas y las 4 críticas «affected», 4 altas «fix_deferred»; `linux-libc-dev` 60, libxml2, util-linux, login, systemd, perl). `mariadb:10.11.19`: 25 altas y 1 crítica en el Go `stdlib` con que se compiló `gosu`; las reconstrucciones de la etiqueta del 2026-10-17 y del 2026-10-27 las tienen igual, sin imagen corregida. `cloudflare/cloudflared:2026.10.2`: 1 alta (`github.com/klauspost/compress`), corregida en la 2026.10.4, que cumple 7 días el 2026-11-02. `web` (nginx 1.30.5) construida sin caché: sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; casi la mitad es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). `gosu` solo se ejecuta al arrancar `db` para bajar de privilegios, sin red. La de `cloudflared` se corrige al refrescarla cuando cumpla 7 días (RS18.a) y volver a escanear antes del vencimiento. Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04; renovada por el usuario el 2026-10-19 y el 2026-10-27 | 2026-12-31 |
+| EX3 | Disco del servidor de producción sin cifrar (RS15.c; spec 032 CA10) | Media | Cifrarlo exige reinstalar el servidor. Los datos de hoy son ficticios; las copias ya van cifradas (RS15.b) y la clave secreta no está en el servidor. Residuo: un archivo borrado puede quedar en el disco (`shred` no garantiza el borrado en ext4 con journal), por ejemplo las copias en claro de antes de la 032 | el responsable (gimi34), 2026-10-27, en la liberación de la v0.11.0 (spec 032, T096) | al cargar el primer dato real de pacientes |
 
 ## Riesgos conocidos
 <!-- Cada riesgo con ID `RS<n>` y cada corrección con ID `RS<n>.<letra>`. Estados de una
@@ -267,7 +301,9 @@ notas de `citas` están en claro. Con Query Builder los casts de Eloquent no apl
 
 Correcciones:
 - RS15.a Cast `encrypted` en los campos clínicos al introducir los modelos Eloquent (spec 013) — estado: pendiente
-- RS15.b Cifrado de disco y de backups en staging/prod — estado: pendiente
+- RS15.b Cifrado de las copias de la base en producción — estado: mitigada (v0.11.0)
+- RS15.c Cifrado del disco del servidor de producción — estado: aceptada como excepción EX3 (2026-10-27, v0.11.0)
+- RS15.d Cifrado del disco y de las copias en staging — estado: pendiente (→ roadmap, objetivo 5)
 
 ### RS16 · Alta — Dependencias con vulnerabilidades conocidas (A03 Software Supply Chain Failures)
 **Mitigado en v0.1.0 (spec 024, 2026-10-02):** RS16.a, RS16.b y RS16.c mitigadas. Los dos avisos
@@ -310,13 +346,13 @@ Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 0
 Debian 13 de `php:8.4.25-fpm` arrastra avisos altos y críticos sin corrección publicada, y
 `mariadb:10.11.18` y `cloudflare/cloudflared:2026.9.3` tienen avisos ya corregidos en imágenes más
 nuevas. Las correcciones publicadas de los paquetes del sistema de `app` y `web` se aplican al
-construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-11-30 (renovada el
-2026-10-19, spec 031 T031). El 2026-10-19 se vio además que `desplegar.sh` construye con la caché
+construir (T035); el resto queda cubierto por la excepción EX2 hasta el 2026-12-31 (renovada el
+2026-10-19, spec 031 T031, y el 2026-10-27, ficha 2026-10-27-chore-imagenes-031-r4). El 2026-10-19 se vio además que `desplegar.sh` construye con la caché
 de Docker y la capa de `apt-get upgrade` / `apk upgrade` no se renueva: el `web` sin caché sale sin
 avisos y con caché, con 3 (→ spec 031, T054–T055, dentro de RS18.a).
 
 Correcciones:
-- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: mitigada (v0.10.0): imágenes refrescadas y escaneadas, construcción sin caché, EX2 renovada hasta el 2026-11-30; queda refrescar `cloudflared` 2026.10.1 y la `mariadb` reconstruida antes de ese vencimiento (roadmap, 031/R4)
+- RS18.a Refrescar las imágenes fijadas (`php`, `mariadb`, `cloudflared` y las demás) a las más nuevas con ≥ 7 días y volver a escanear con `trivy image` antes de que venza EX2; renovar o retirar EX2 según el resultado. Incluye construir sin caché en cada despliegue, para que la capa de actualización del sistema se renueve (spec 031, T054–T055) — estado: mitigada (v0.10.0): imágenes refrescadas y escaneadas, construcción sin caché, EX2 renovada hasta el 2026-11-30. El 2026-10-27 (ficha 2026-10-27-chore-imagenes-031-r4): `cloudflared` 2026.10.0 → 2026.10.2 (de 7 altas a 1), `mariadb:10.11.19` sin cambios (las dos reconstrucciones tienen los mismos avisos de `gosu`), todas escaneadas otra vez y EX2 renovada hasta el 2026-12-31; queda subir `cloudflared` a la 2026.10.4 o posterior y volver a escanear antes de ese vencimiento (roadmap)
 
 ### RS19 · Media — Un admin puede dejar la aplicación sin administradores (A01 Broken Access Control)
 Detectado en la re-sincronización del 2026-10-18. `UsuarioController@update` toma `rol` y `activo` del
