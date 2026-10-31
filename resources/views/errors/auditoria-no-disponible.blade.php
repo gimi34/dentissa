@@ -28,7 +28,7 @@
                 <p class="sub">Tuvimos un problema de nuestro lado y no se hizo ningún cambio. Inténtalo de nuevo en unos minutos.</p>
                 <div class="codigo">
                     <p class="codigo-etiqueta" id="codigo-etiqueta">Identificador de la petición</p>
-                    <p class="codigo-valor" aria-labelledby="codigo-etiqueta">{{ $peticion }}</p>
+                    <p class="codigo-valor">{{ $peticion }}</p>
                     <p class="codigo-ayuda">Si vuelve a pasar, da este identificador a soporte.</p>
                 </div>
                 <a class="btn btn-primario" href="/">Volver al inicio</a>
