@@ -10,7 +10,8 @@
     $fecha = fn (\Carbon\CarbonInterface $momento) => $momento->format('j').' '.$meses[$momento->month - 1].' '.$momento->format('Y');
     $nombresDeFiltro = ['actor' => 'actor', 'accion' => 'acción', 'recurso_tipo' => 'tipo de recurso', 'recurso_id' => 'identificador de recurso', 'desde' => 'desde', 'hasta' => 'hasta'];
     $resultados = ['exito' => ['badge-green', 'Éxito'], 'denegado' => ['badge-red', 'Denegado'], 'denegado_404' => ['badge-red', 'Denegado · 404'], 'error' => ['badge-red', 'Error']];
-    $valor = fn (string $campo) => old($campo, $filtros[$campo] ?? '');
+    // Un filtro enviado como lista vuelve con su error; en el campo solo se repone texto (/review R7).
+    $valor = fn (string $campo) => is_string($anterior = old($campo, $filtros[$campo] ?? '')) ? $anterior : '';
     $aplicados = collect(array_keys($nombresDeFiltro))->filter(fn ($campo) => $valor($campo) !== '' && $valor($campo) !== null)->count();
     $conErrores = $eventos === null;
     $campos = [
@@ -95,7 +96,7 @@
         </div>
     @else
         <div class="table-wrap">
-            <table class="tabla-tarjetas tabla-auditoria">
+            <table class="tabla-tarjetas tabla-auditoria" aria-labelledby="titulo-eventos">
                 <thead>
                     <tr>
                         <th class="celda-cab" scope="col">Fecha y hora</th>

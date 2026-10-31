@@ -322,8 +322,11 @@ class ConsultaAuditoriaTest extends TestCase
                 ->get(self::URL.'?'.$campo.'[]=x')->assertOk()->getContent();
 
             $xpath = $this->xpath($html);
-            $this->assertSame('true', $xpath->query('//input[@name="'.$campo.'"]')->item(0)?->getAttribute('aria-invalid'), "{$campo}: el campo queda marcado.");
-            $this->assertNotNull($xpath->query('//*[@id="f-'.$campo.'-error"]')->item(0), "{$campo}: el error está junto a su campo.");
+            $input = $xpath->query('//input[@name="'.$campo.'"]')->item(0);
+            $this->assertSame('true', $input?->getAttribute('aria-invalid'), "{$campo}: el campo queda marcado.");
+            $error = collect(explode(' ', $input->getAttribute('aria-describedby')))->first(fn ($id) => str_ends_with($id, '-error'));
+            $this->assertNotNull($error, "{$campo}: el campo apunta a su error.");
+            $this->assertNotNull($xpath->query('//*[@id="'.$error.'"]')->item(0), "{$campo}: el error está junto a su campo.");
         }
 
         $this->assertCount(0, $this->consultadas(), 'Un filtro rechazado no se registra.');
