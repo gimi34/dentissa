@@ -6,6 +6,7 @@ use App\Models\Usuario;
 use Carbon\Carbon;
 use DOMDocument;
 use DOMXPath;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -327,6 +328,25 @@ class ConsultaAuditoriaTest extends TestCase
             $error = collect(explode(' ', $input->getAttribute('aria-describedby')))->first(fn ($id) => str_ends_with($id, '-error'));
             $this->assertNotNull($error, "{$campo}: el campo apunta a su error.");
             $this->assertNotNull($xpath->query('//*[@id="'.$error.'"]')->item(0), "{$campo}: el error está junto a su campo.");
+        }
+
+        $this->assertCount(0, $this->consultadas(), 'Un filtro rechazado no se registra.');
+    }
+
+    /**
+     * /review R39: las reglas de filtro se anclan al final del texto. Hoy `TrimStrings` quita el salto
+     * de línea; sin él, el filtro validaría y `Auditoria` lo rechazaría con un 500.
+     */
+    public function test_un_filtro_con_salto_de_linea_final_vuelve_con_su_error(): void
+    {
+        $this->withoutMiddleware(TrimStrings::class);
+
+        foreach (['recurso_id', 'accion'] as $campo) {
+            $html = $this->actingAs($this->admin)->from(self::URL)->followingRedirects()
+                ->get(self::URL.'?'.$campo.'=x%0A')->assertOk()->getContent();
+
+            $marcado = $this->xpath($html)->query('//*[@name="'.$campo.'"][@aria-invalid="true"]');
+            $this->assertSame(1, $marcado->length, "{$campo}: el campo queda marcado con su error.");
         }
 
         $this->assertCount(0, $this->consultadas(), 'Un filtro rechazado no se registra.');
