@@ -248,6 +248,14 @@ class DenegacionesAuditadasTest extends TestCase
         $this->assertStringNotContainsString('Juan', json_encode($evento));
     }
 
+    /** /review R9 (TM12): un segmento con salto de línea final no llega al registro como identificador. */
+    public function test_un_id_de_ruta_con_salto_de_linea_final_no_se_guarda(): void
+    {
+        $this->actingAs($this->asistente)->get('/_pruebas/020/recursos/p1%0A')->assertForbidden();
+
+        $this->assertNull($this->denegaciones()->sole()->recurso_id);
+    }
+
     /**
      * Caracterización: pasa hoy; se comprueba, ya con T027, quitando la condición de usuario
      * autenticado del registro central.

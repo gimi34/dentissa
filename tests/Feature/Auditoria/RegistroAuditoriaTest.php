@@ -164,6 +164,24 @@ class RegistroAuditoriaTest extends TestCase
         $this->assertSame(['telefono', 'alergias'], json_decode($this->eventos()->sole()->campos, true));
     }
 
+    /** /review R9 (TM12): `$` admite un salto de línea final; los formatos se anclan al final del texto. */
+    public function test_un_valor_con_salto_de_linea_final_se_rechaza(): void
+    {
+        foreach ([
+            'recurso_id' => fn () => $this->auditoria()->registrar('prueba_salto', 'exito', 'pacientes', "p1\n"),
+            'acción' => fn () => $this->auditoria()->registrar("x\n", 'exito'),
+            'detalle' => fn () => $this->auditoria()->registrar('prueba_salto', 'exito', detalle: ['valor' => "v\n"]),
+        ] as $que => $registrar) {
+            try {
+                $registrar();
+                $this->fail("{$que} con salto de línea final debía rechazarse.");
+            } catch (InvalidArgumentException) {
+            }
+        }
+
+        $this->assertCount(0, $this->eventos());
+    }
+
     public function test_el_detalle_rechaza_valores_no_escalares(): void
     {
         foreach ([['filtros' => ['actor' => 'x']], ['nada' => null], ['decimal' => 1.5]] as $detalle) {
