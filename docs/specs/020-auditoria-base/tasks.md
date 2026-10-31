@@ -202,8 +202,9 @@ T055 conservan los valores de c4: ningún cambio visual.
   - nota: 2026-10-30 — los 4 patrones de `Auditoria` (también el del campo, en línea) y los 3 de `RegistroCentralDenegaciones`, con `\z`. T067 pasa completo (también la acción y el detalle), y `RegistroAuditoriaTest` y `DenegacionesAuditadasTest` en verde (46).
 - [ ] T069 Repetir la verificación de cierre sobre las correcciones: `php artisan test` en verde contra `dentissa_test`; `vendor/bin/pint --test` sobre los PHP tocados; `gitleaks` y `semgrep … --baseline-commit` sin hallazgos nuevos; `python .ai/bin/aidd.py validate docs/specs/020-auditoria-base` sin errores — (sin archivos) — hecho cuando: todo lo anterior en verde y la nota lo registra — depende: T056, T058, T059, T061, T062, T063, T064, T066, T068, T071
   - nota: añadida por /review: verificación de R1–R7 y R9
-- [ ] T070 Comprobar también los tokens del logo del 503 en el sistema: `test_los_tokens_de_la_020_coinciden_con_el_sistema` incluye `--logo-franja-w` 104px y `--logo-panel-w` 260px — tests/Feature/Auditoria/AuditoriaVistasTest.php — hecho cuando: el caso falla hoy solo en `system.html` (los dos tokens faltan en su `:root`) — cubre: CA11 — depende: T055
+- [x] T070 Comprobar también los tokens del logo del 503 en el sistema: `test_los_tokens_de_la_020_coinciden_con_el_sistema` incluye `--logo-franja-w` 104px y `--logo-panel-w` 260px — tests/Feature/Auditoria/AuditoriaVistasTest.php — hecho cuando: el caso falla hoy solo en `system.html` (los dos tokens faltan en su `:root`) — cubre: CA11 — depende: T055
   - nota: añadida durante /implement: hallazgo colateral de T055 (los tokens del logo, añadidos en T036, faltan en `system.html`); el usuario pidió tarea nueva (2026-10-30)
+  - nota: 2026-10-30 — falla solo en `system.html` («system.html define --logo-franja-w: 104px»); `app.css` y `system.md` ya los tenían.
 - [ ] T071 Añadir `--logo-franja-w: 104px` y `--logo-panel-w: 260px` al `:root` de `docs/design/system.html`, junto a los de la 020 — docs/design/system.html — hecho cuando: T070 pasa — cubre: CA11 — depende: T070
   - nota: añadida durante /implement: hallazgo colateral de T055
 

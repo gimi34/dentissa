@@ -133,6 +133,8 @@ class AuditoriaVistasTest extends TestCase
             '--tracking-etiqueta' => '0.08em', '--tracking-titulo' => '-0.01em', '--leading-titulo' => '1.15',
             '--text-acceso-destacado' => '16.8px', '--acceso-franja-pie' => '70px', '--acceso-solape' => '56px',
             '--acceso-panel-pad' => '56px', '--acceso-lado-pad' => '42px',
+            // T070: los del logo, de la brecha de T036.
+            '--logo-franja-w' => '104px', '--logo-panel-w' => '260px',
         ];
         foreach ($tokens as $token => $valor) {
             $definicion = '/'.preg_quote($token, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/';
