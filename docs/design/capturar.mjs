@@ -108,10 +108,10 @@
 // Spec 038 (D12): las páginas públicas `/` y `/servicios` se capturan y se miden sin sesión, con los
 // servicios del volcado; `--medir` las abre a 320, 390, 900 y 1440 (por debajo de 900, también con el
 // menú <details> abierto). No necesitan ids.json ni cuentas, pero el resto de la pasada sí.
-// Rediseño de la ronda 3 (D16): las mismas comprobaciones también con JavaScript desactivado (todo
-// visible y sin el botón de pausa); con JavaScript, la pastilla «¿Abierto ahora?» (dos líneas por
-// debajo de 560 px y una desde ahí, refinado de design.md) y el botón de la franja, que con el teclado
-// la pausa y la reanuda (WCAG 2.2.2, /analyze A23).
+// Rediseño (D16): las mismas comprobaciones también con JavaScript desactivado (todo visible). Ronda 5
+// (D19): con JavaScript, la pastilla «¿Está abierto ahora?» escrita y dentro de la pantalla en los cuatro
+// anchos, y el menú del móvil, que se cierra con Escape y devuelve el foco a «Menú». La franja y su
+// botón de pausa se retiran (D21).
 //
 // Entradas: /tmp/capturas/ids.json y las cuentas <rol>1@dentissa.test (cliente1, con
 // CORREO_CLIENTE) con la contraseña de CLAVE.
@@ -328,9 +328,9 @@ const COMPROBACIONES = [
   '035 menú: a 390, «Menú» y «Cerrar menú» sin borde ni fondo, de 44 × 44 y con foco visible (CA11)',
   '035 sin JS: a 390, las pantallas de la 035 sin desplazamiento horizontal (CA9)',
   '038 páginas públicas: / y /servicios sin sesión, a 320, 390, 900 y 1440 sin desplazamiento horizontal ni recortes; enlaces, botones y summary visibles ≥ 44 × 44 (sin enlaces dentro de un <p>), y por debajo de 900, también con el menú <details> abierto (CA9)',
-  '038 sin JS: / y /servicios a 320, 390, 900 y 1440 con JavaScript desactivado, sin desplazamiento horizontal ni recortes, con todas las entradas visibles y sin el botón de pausa de la franja (CA8, D16)',
-  '038 pastilla: con JavaScript, «¿Abierto ahora?» escrita y dentro de la pantalla; a 320 y 390, en dos líneas como mucho con la hora en la segunda; a 900 y 1440, en una línea (D16, refinado de design.md)',
-  '038 franja: a 390, con JavaScript, el botón de pausa se ve; con el teclado, Intro la pausa (aria-pressed=true y la animación en pausa) y Espacio la reanuda (WCAG 2.2.2, /analyze A23)',
+  '038 sin JS: / y /servicios a 320, 390, 900 y 1440 con JavaScript desactivado, sin desplazamiento horizontal ni recortes, con todas las entradas visibles (CA8, D16)',
+  '038 pastilla: con JavaScript, «Abierto ahora · cerramos…» o «Cerrado · abrimos…» escrita y dentro de la pantalla a 320, 390, 900 y 1440 (D19)',
+  '038 menú: por debajo de 900, con JavaScript, Escape cierra el menú <details> y el foco vuelve a «Menú» (D19, design.md)',
 ];
 
 const PANELES = { admin: '/admin', dentista: '/dentista', asistente: '/asistente', cliente: '/cliente' };
@@ -1170,7 +1170,7 @@ async function medir() {
         await page.close();
       });
 
-      // Rediseño (D16): sin JavaScript, la página terminada: todo visible y la franja quieta, sin botón.
+      // Rediseño (D16): sin JavaScript, la página terminada: todo visible.
       await intenta(`${donde} sin JS`, async () => {
         const page = await abrir(null, ruta, ancho, { js: false });
         const a = await page.evaluate(EN_PAGINA.anchos);
@@ -1179,54 +1179,49 @@ async function medir() {
         for (const r of await page.evaluate(() => [...document.querySelectorAll('[data-reveal]')]
           .filter((el) => getComputedStyle(el).opacity !== '1')
           .map((el) => `«${el.textContent.trim().slice(0, 30)}»`))) falla(`${donde} sin JS`, `entrada oculta: ${r}`);
-        if (await page.locator('.marquesina-pausa').isVisible()) falla(`${donde} sin JS`, 'el botón de pausa se ve sin JavaScript');
         await page.close();
       });
     }
   }
 
-  // Rediseño (D16): la pastilla «¿Abierto ahora?»: dos líneas por debajo de 560 px (estado arriba y
-  // hora debajo) y una desde ahí (refinado de design.md del 2026-10-21).
+  // Ronda 5 (D19): la pastilla «¿Está abierto ahora?», escrita y dentro de la pantalla.
   for (const ancho of ANCHOS_PUBLICOS) {
     const donde = `publico-inicio@${ancho} pastilla`;
     await intenta(donde, async () => {
       const page = await abrir(null, '/', ancho);
-      await page.waitForFunction(() => document.querySelector('.estado-ahora')?.textContent.trim() !== '', null, { timeout: 5000 });
+      await page.waitForFunction(() => document.querySelector('.pub-status__text')?.textContent.trim() !== '', null, { timeout: 5000 });
       const p = await page.evaluate(() => {
-        const el = document.querySelector('.estado-ahora');
-        const partes = [...el.children].filter((h) => h.getClientRects().length);
-        const filas = new Set(partes.map((h) => Math.round(h.getBoundingClientRect().top)));
-        return { texto: el.textContent.trim(), filas: filas.size, derecha: el.getBoundingClientRect().right, W: window.innerWidth,
-          horaAbajo: partes.length > 1 && partes.at(-1).getBoundingClientRect().top > partes[0].getBoundingClientRect().top + 1 };
+        const el = document.querySelector('.pub-status');
+        const r = el.getBoundingClientRect();
+        return { texto: el.textContent.trim(), izquierda: r.left, derecha: r.right, W: window.innerWidth };
       });
-      if (!/^(Abierto|Cerrado) ahora · /.test(p.texto)) falla(donde, `texto inesperado: «${p.texto}»`);
-      if (p.derecha > p.W + 1) falla(donde, 'se sale de la pantalla');
-      if (Number(ancho) < 560 && (p.filas > 2 || !p.horaAbajo)) falla(donde, `en el móvil, ${p.filas} filas y la hora ${p.horaAbajo ? 'debajo' : 'al lado'}`);
-      if (Number(ancho) >= 560 && p.filas !== 1) falla(donde, `ocupa ${p.filas} filas desde 560 px`);
+      if (!/^(Abierto ahora · cerramos a las|Cerrado · abrimos (hoy|mañana|el \S+) a las) \d{1,2}:\d{2}$/.test(p.texto)) falla(donde, `texto inesperado: «${p.texto}»`);
+      if (p.izquierda < -1 || p.derecha > p.W + 1) falla(donde, 'se sale de la pantalla');
       await page.close();
     });
   }
 
-  // Rediseño (D16) y /analyze A23 (WCAG 2.2.2): el botón de pausa de la franja, con el teclado.
-  await intenta('publico-inicio@390 franja', async () => {
-    const page = await abrir(null, '/', '390');
-    const boton = page.locator('.marquesina-pausa');
-    if (!(await boton.isVisible())) throw new Error('el botón de pausa no se ve con JavaScript');
-    const estado = () => page.evaluate(() => ({
-      pulsado: document.querySelector('.marquesina-pausa').getAttribute('aria-pressed'),
-      animacion: document.querySelector('.marquesina-pista').getAnimations().map((x) => x.playState).join(','),
-    }));
-    await boton.focus();
-    await page.keyboard.press('Enter');
-    await page.waitForFunction(() => document.querySelector('.marquesina-pausa').getAttribute('aria-pressed') === 'true', null, { timeout: 2000 });
-    const pausada = await estado();
-    if (pausada.animacion !== 'paused') falla('publico-inicio@390 franja', `con Intro la animación está «${pausada.animacion}»`);
-    await page.keyboard.press('Space');
-    await page.waitForFunction(() => document.querySelector('.marquesina-pausa').getAttribute('aria-pressed') === 'false', null, { timeout: 2000 });
-    const reanudada = await estado();
-    if (reanudada.animacion !== 'running') falla('publico-inicio@390 franja', `con Espacio la animación está «${reanudada.animacion}»`);
-    await page.close();
-  });
+  // Ronda 5 (D19, design.md «Teclado»): Escape cierra el menú del móvil y devuelve el foco a «Menú».
+  for (const ancho of ANCHOS_PUBLICOS.filter((a) => Number(a) < 900)) {
+    const donde = `publico-inicio@${ancho} menú`;
+    await intenta(donde, async () => {
+      const page = await abrir(null, '/', ancho);
+      await page.waitForFunction(() => document.documentElement.classList.contains('js'), null, { timeout: 5000 });
+      const menu = page.locator('.pub-menu summary');
+      await menu.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(() => document.querySelector('.pub-menu').open, null, { timeout: 2000 });
+      await page.locator('.pub-menu__panel a').first().focus();
+      await page.keyboard.press('Escape');
+      const estado = await page.evaluate(() => ({
+        abierto: document.querySelector('.pub-menu').open,
+        foco: document.activeElement === document.querySelector('.pub-menu summary'),
+      }));
+      if (estado.abierto) falla(donde, 'Escape no cierra el menú');
+      if (!estado.foco) falla(donde, 'el foco no vuelve a «Menú»');
+      await page.close();
+    });
+  }
 
   return fallos;
 }

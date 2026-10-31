@@ -1,12 +1,17 @@
 /*
- * Spec 038 (D16, D18; /analyze A25, A27): el script común de las páginas públicas.
+ * Spec 038 (D16, D18; /analyze A25, A27, A39): el script común de las páginas públicas.
  *
- * `estadoAhora(horario, zona, fecha)` escribe la pastilla «¿Abierto ahora?» con el horario de
+ * `estadoAhora(horario, zona, fecha)` escribe la pastilla «¿Está abierto ahora?» con el horario de
  * `config/clinica.php` (el JSON de `data-horario`) y la hora de Lázaro Cárdenas. Se prueba con
  * instantes fijos en UTC: America/Mexico_City está en UTC−6 todo el año (sin horario de verano
  * desde 2022). El script es clásico, así que se carga con node:vm en un contexto aparte.
  *
- * Ejecutar: node --test tests/js/
+ * Ronda 5 (D19): los textos van en primera persona («Abierto ahora · cerramos a las 20:00»,
+ * «Cerrado · abrimos mañana a las 9:00»), en un solo nodo; sale `escribirPastilla()` (D21) y entran
+ * dos funciones puras (A39): `diaDeHoy(zona, fecha)`, la fila de la semana que se marca, y
+ * `progresoEscena(rect, alto)`, el progreso --p de la escena de la ventana.
+ *
+ * Ejecutar: node --test tests/js/publico.test.mjs
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,38 +30,38 @@ function cargar(globales = {}) {
     return contexto;
 }
 
-const { estadoAhora } = cargar().DentissaPublico;
+const { estadoAhora, diaDeHoy, progresoEscena } = cargar().DentissaPublico;
 // Hora de Lázaro Cárdenas → instante UTC (UTC−6).
 const local = (fecha, hora) => new Date(`${fecha}T${hora}:00-06:00`);
 
-test('abierto: cierra hoy', () => {
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '10:00')), 'Abierto ahora · cierra a las 20:00');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '19:59')), 'Abierto ahora · cierra a las 20:00');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-24', '09:00')), 'Abierto ahora · cierra a las 14:00', 'sábado');
+test('abierto: cerramos hoy', () => {
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '10:00')), 'Abierto ahora · cerramos a las 20:00');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '19:59')), 'Abierto ahora · cerramos a las 20:00');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-24', '09:00')), 'Abierto ahora · cerramos a las 14:00', 'sábado');
 });
 
-test('cerrado antes de abrir: abre hoy', () => {
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '08:00')), 'Cerrado ahora · abre hoy a las 9:00');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '00:00')), 'Cerrado ahora · abre hoy a las 9:00', 'la medianoche del lunes');
+test('cerrado antes de abrir: abrimos hoy', () => {
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '08:00')), 'Cerrado · abrimos hoy a las 9:00');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '00:00')), 'Cerrado · abrimos hoy a las 9:00', 'la medianoche del lunes');
 });
 
-test('cerrado al terminar: abre mañana', () => {
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '20:00')), 'Cerrado ahora · abre mañana a las 9:00', 'el cierre exacto ya está cerrado');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '21:00')), 'Cerrado ahora · abre mañana a las 9:00');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-23', '21:00')), 'Cerrado ahora · abre mañana a las 9:00', 'viernes: el sábado abre');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-25', '12:00')), 'Cerrado ahora · abre mañana a las 9:00', 'domingo: el lunes abre');
+test('cerrado al terminar: abrimos mañana', () => {
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '20:00')), 'Cerrado · abrimos mañana a las 9:00', 'el cierre exacto ya está cerrado');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-19', '21:00')), 'Cerrado · abrimos mañana a las 9:00');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-23', '21:00')), 'Cerrado · abrimos mañana a las 9:00', 'viernes: el sábado abre');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-25', '12:00')), 'Cerrado · abrimos mañana a las 9:00', 'domingo: el lunes abre');
 });
 
-test('cerrado más de un día: abre el lunes', () => {
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-24', '14:00')), 'Cerrado ahora · abre el lunes a las 9:00', 'sábado al cerrar');
-    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-24', '15:00')), 'Cerrado ahora · abre el lunes a las 9:00');
+test('cerrado más de un día: abrimos el lunes', () => {
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-24', '14:00')), 'Cerrado · abrimos el lunes a las 9:00', 'sábado al cerrar');
+    assert.equal(estadoAhora(HORARIO, ZONA, local('2026-10-24', '15:00')), 'Cerrado · abrimos el lunes a las 9:00');
 });
 
 test('usa la hora de Lázaro Cárdenas, no la del navegador ni la UTC', () => {
     // Martes 02:30 en UTC es lunes 20:30 en Lázaro Cárdenas.
-    assert.equal(estadoAhora(HORARIO, ZONA, new Date('2026-10-20T02:30:00Z')), 'Cerrado ahora · abre mañana a las 9:00');
+    assert.equal(estadoAhora(HORARIO, ZONA, new Date('2026-10-20T02:30:00Z')), 'Cerrado · abrimos mañana a las 9:00');
     // Lunes 15:30 en UTC es lunes 9:30 en Lázaro Cárdenas.
-    assert.equal(estadoAhora(HORARIO, ZONA, new Date('2026-10-19T15:30:00Z')), 'Abierto ahora · cierra a las 20:00');
+    assert.equal(estadoAhora(HORARIO, ZONA, new Date('2026-10-19T15:30:00Z')), 'Abierto ahora · cerramos a las 20:00');
 });
 
 test('con datos que no valen devuelve null sin lanzar (A27)', () => {
@@ -67,6 +72,30 @@ test('con datos que no valen devuelve null sin lanzar (A27)', () => {
     assert.equal(estadoAhora(HORARIO, ZONA, new Date('no es una fecha')), null, 'fecha inválida');
     assert.equal(estadoAhora(JSON.stringify({ 1: ['9:00'] }), ZONA, ahora), null, 'día sin cierre');
     assert.equal(estadoAhora('{}', ZONA, ahora), null, 'sin ningún día abierto');
+});
+
+test('la fila de hoy de la semana, con la hora de Lázaro Cárdenas (A39)', () => {
+    // data-day de la semana: «1-5» (lunes a viernes), «6» (sábados) y «0» (domingos).
+    assert.equal(diaDeHoy(ZONA, local('2026-10-19', '10:00')), '1-5', 'lunes');
+    assert.equal(diaDeHoy(ZONA, local('2026-10-23', '23:59')), '1-5', 'viernes');
+    assert.equal(diaDeHoy(ZONA, local('2026-10-24', '00:00')), '6', 'sábado');
+    assert.equal(diaDeHoy(ZONA, local('2026-10-25', '12:00')), '0', 'domingo');
+    // Lunes 03:00 en UTC es domingo 21:00 en Lázaro Cárdenas.
+    assert.equal(diaDeHoy(ZONA, new Date('2026-10-26T03:00:00Z')), '0', 'no la UTC');
+    assert.equal(diaDeHoy('Zona/Inventada', local('2026-10-19', '10:00')), null, 'zona inválida');
+    assert.equal(diaDeHoy(ZONA, new Date('no es una fecha')), null, 'fecha inválida');
+});
+
+test('el progreso de la escena va de 0 a 1 con el desplazamiento (A39)', () => {
+    // La escena mide 1.4 pantallas (data-hold): con la ventana de 800 px, 1120 px y 320 de recorrido.
+    const alto = 800;
+    assert.equal(progresoEscena({ top: 200, height: 1120 }, alto), 0, 'antes de llegar');
+    assert.equal(progresoEscena({ top: 0, height: 1120 }, alto), 0, 'al llegar arriba');
+    assert.equal(progresoEscena({ top: -160, height: 1120 }, alto), 0.5, 'a la mitad del recorrido');
+    assert.equal(progresoEscena({ top: -320, height: 1120 }, alto), 1, 'al final');
+    assert.equal(progresoEscena({ top: -900, height: 1120 }, alto), 1, 'después');
+    assert.equal(progresoEscena({ top: -50, height: 600 }, alto), 1, 'sin recorrido (más baja que la ventana): la foto entera');
+    assert.equal(progresoEscena({ top: Number.NaN, height: 1120 }, alto), 1, 'datos que no valen: la foto entera');
 });
 
 /** Documento mínimo: lo justo para ver qué clases pone el script en <html>. */
@@ -98,31 +127,8 @@ test('con IntersectionObserver pone la clase js al terminar (A27)', () => {
     assert.equal(falso.clases.has('js'), true);
 });
 
-/** Elemento falso con lo justo para escribir la pastilla: hijos, textContent y su documento. */
-function elementoFalso() {
-    const crear = (etiqueta) => ({
-        tagName: etiqueta.toUpperCase(), className: '', textContent: '', hijos: [],
-        appendChild(hijo) { this.hijos.push(hijo); return hijo; },
-        set innerHTML(_) { throw new Error('innerHTML no se usa'); },
-    });
-    const el = crear('span');
-    el.ownerDocument = { createElement: crear };
-    Object.defineProperty(el, 'textContent', {
-        get() { return this.hijos.map((h) => h.textContent).join(''); },
-        set(valor) { if (valor !== '') throw new Error('se escribe por partes'); this.hijos = []; },
-    });
-    return el;
-}
-
-test('la pastilla se escribe en tres partes para partirse en el móvil (refinado)', () => {
-    const { escribirPastilla } = cargar().DentissaPublico;
-    assert.equal(typeof escribirPastilla, 'function', 'publico.js expone escribirPastilla');
-    const el = elementoFalso();
-    escribirPastilla(el, 'Cerrado ahora · abre mañana a las 9:00');
-    assert.deepEqual(el.hijos.map((h) => [h.tagName, h.className, h.textContent]), [
-        ['SPAN', '', 'Cerrado ahora'],
-        ['SPAN', 'estado-sep', ' · '],
-        ['SPAN', '', 'abre mañana a las 9:00'],
-    ]);
-    assert.equal(el.textContent, 'Cerrado ahora · abre mañana a las 9:00', 'el texto entero no cambia');
+test('sin el botón de pausa ni escribirPastilla (D21)', () => {
+    const publico = cargar().DentissaPublico;
+    assert.equal(publico.escribirPastilla, undefined);
+    assert.doesNotMatch(CODIGO, /marquesina/, 'el script ya no conoce la franja');
 });
