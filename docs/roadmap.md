@@ -13,7 +13,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
 | 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); 015–019 previstas | pendiente |
-| 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b y OB6.c → objetivo 5 | 020 (OB1.a, OB1.c, OB1.g, OB1.h, OB2); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
+| 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b y OB6.c → objetivo 5 | [020](specs/020-auditoria-base/spec.md) (OB1.a, OB1.c, OB1.g, OB1.h, OB2; released v0.12.0); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b, RS15.c y RS15.d → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS8.c, RS15.b, RS15.c, RS15.d, OB4.b, OB4.c, OB6.b, OB6.c, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS8.d → Pendientes y deuda (CSP estricta, por pantallas), RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); [031](specs/031-endurecer-produccion/spec.md) (cabeceras, conexión segura obligatoria, incidencias de la 030 y administración desde fuera); [032](specs/032-alertas-cifrado-copias/spec.md) (alertas y copias cifradas, en curso: OB6.b y RS15.b; RS15.c como excepción EX3 hasta el primer dato real; OB6.c y RS15.d, staging, pendientes) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, released v0.8.0) · [035](specs/035-movil-pacientes-expedientes/spec.md) (DS6 en pacientes y expedientes del personal, released v0.9.0) | pendiente |
@@ -33,7 +33,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - el umbral de 5xx no tiene mínimo de peticiones y da falsos avisos con poco tráfico (riesgo
     aceptado por el usuario, 2026-10-25; si molesta, otra spec);
   - el `scheduler` de la 020 llega también al Compose de producción, con la purga como única
-    tarea (hecho en la 020, pendiente de liberar). Mover `dentissa:vigilar` a él
+    tarea (hecho en la 020, liberado en v0.12.0 el 2026-10-31). Mover `dentissa:vigilar` a él
     (`everyMinute()->withoutOverlapping()`) y retirar el temporizador `dentissa-vigilar` va en una
     **spec propia**, para no tener dos mecanismos (032 D11, /analyze A20 y A39; decisión del
     usuario, 2026-10-28);
@@ -54,6 +54,25 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
       de `preparar-vigilancia.sh` sin `set -euo pipefail` ni `Requires=docker.service`; 032/R15 nota
       de que `test_desplegar_imprime_la_vuelta_del_contrato` necesita bash; 032/R22 un test con un
       gpg falso para `comprobar()`.
+- Spec 020 (2026-10-31), aceptados sin tarea de `/review` (deuda menor, liberada en v0.12.0):
+  - código: 020/R10 patrones de identificador duplicados entre `Auditoria` y
+    `RegistroCentralDenegaciones`; 020/R12 índices de `auditoria` para filtrar por `actor_id` y por
+    `recurso_id` sin tipo; 020/R31 `valoresRegistrados()` antes del registro crítico (500 en vez de
+    503 si cae la base); 020/R32 `page` fuera de rango en la consulta del registro;
+  - pantalla: 020/R25 enlace del teléfono del 503 con `href` vacío si falta `telefono_enlace`;
+    020/R27 «Todas» en el selector «Tipo de recurso» (también en c4); 020/R28 el aviso de filtros
+    rechazados no lleva al primer campo con error; 020/R29 `data-label="Origen"` frente a «Origen y
+    petición» en el teléfono; 020/R30 un filtro rechazado vuelve a `url()->previous()`;
+  - producción: 020/R15 `verificar.sh` no compara la imagen del `scheduler` con la de `app`;
+    020/R22 `app` sin `pull_policy` con una imagen del espacio `library/`;
+  - tests y docs: 020/R11 el p95 de `registrar` se mide dentro de una transacción, sin el coste del
+    commit; 020/R13 docblock desplazado en `VigilanteTest`; 020/R14 la fila de middlewares de
+    `AGENTS.md` no nombra `IdentificadorPeticion` ni `ContextoActor`; 020/R34 test del enlace
+    «Auditoría» solo para el admin; 020/R35 inventario de `docs/seo.md` sin la 503 de auditoría ni la
+    vista previa; 020/R42 la regla de literales del CSS de la 020 no detecta un multiplicador numérico
+    a la izquierda (`calc(2 * var(--x))`);
+  - ~~020/R8 `npm audit` de la 020 depende de la chore de `follow-redirects` 1.16.2~~ resuelto en
+    v0.12.0 (chore 2026-10-30-chore-follow-redirects-1.16.2, PR #55).
 - Re-sincronización del 2026-10-18 (riesgos nuevos, con decisión del usuario de registrarlos): RS10.c
   sesiones cifradas en producción y RS19.a–c salvaguardas de la cuenta de admin (objetivo 2); OB8.a
   y OB8.b búsquedas fuera del log de acceso de nginx y rotación de logs (objetivo 3), OB8.c purga de
@@ -75,12 +94,14 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - 024/R8: la evidencia de T022 no registra que `integrity` y `resolved` coincidan con el registro
   (comprobado en `/review`: coinciden las 48). En próximas specs de dependencias, compararlos con
   `npm view <p>@<v> dist.integrity dist.tarball` (/review 024, aceptado sin tarea).
-- 020 antes de `/release 020` (plan de la 024, Rollout pasos 4 y 5): reconstruir `feature/020-auditoria-base`
+- ~~020 antes de `/release 020` (plan de la 024, Rollout pasos 4 y 5): reconstruir `feature/020-auditoria-base`
   sobre `main` sin sus copias de los commits de la 024 y comprobar que no cambian `docs/specs/024-dependencias-seguras`,
   la fila 024 de `docs/specs/README.md` ni su enlace aquí; después, que el merge de la 024 es ancestro del commit
   que se libera y que `composer audit --ignore-severity=low --ignore-severity=medium` y
   `npm audit --audit-level=high` terminan con código 0, es decir, 0 críticas y 0 altas (decisión del
-  usuario, 2026-09-29; comando de la spec 024, D10).
+  usuario, 2026-09-29; comando de la spec 024, D10).~~ Hecho en v0.12.0 (2026-10-31): la 020 salió de
+  `feature/020-auditoria`, reconstruida sobre `main`; el merge de la 024 es ancestro y los dos audits
+  terminaron con código 0 (`npm audit`, tras la chore `follow-redirects` 1.16.2) (020 T095).
 - EX1 (`docs/security.md`, spec 024, D10): actualizar `laravel/framework` a ≥ 12.69.0 y
   `league/flysystem` a ≥ 3.35.3 antes del 2026-10-31. Al vencer, el usuario decide si se actualizan
   en una spec propia o se renueva EX1 con fecha y aprobación nuevas; lo comprueba el primer `/plan`

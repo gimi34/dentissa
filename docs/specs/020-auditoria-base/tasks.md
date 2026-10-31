@@ -306,19 +306,25 @@ Añadidas por `/review 020 --rerun` (2026-10-31); cada tarea cita su hallazgo de
 - [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5). Antes de liberar (roadmap; A57):
+- [x] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: no hay staging (objetivo 5). Antes de liberar (roadmap; A57):
   - el merge de la 024 es ancestro del commit que se libera (`git merge-base --is-ancestor`);
   - `composer audit --ignore-severity=low --ignore-severity=medium` y `npm audit --audit-level=high` terminan con código 0;
   - la rama vieja `feature/020-auditoria-base` no se usa: la 020 sale de `feature/020-auditoria` (decisión del usuario, 2026-10-28).
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout):
+  - nota: no hay staging (objetivo 5). Condiciones previas comprobadas el 2026-10-31 sobre 6e25179: el merge de la 024 (fddca7d) es ancestro; composer audit --locked sin avisos altos ni críticos (uno medio de symfony/mime, ignorado por la configuración); npm audit 0 vulnerabilidades tras la chore follow-redirects 1.16.2 (PR #55, R8); trivy fs sin HIGH ni CRITICAL; la 020 salió de feature/020-auditoria (PR #56).
+- [x] T096 Aprobación humana para producción
+  - nota: aprobado por gimi34 (responsable) el 2026-10-31 15:01 para v0.12.0 («desplegar v0.12.0 a producción»), con el CI del PR #57 en verde (1944ac2); tag v0.12.0 subido. Excepciones vigentes que aplican: EX2 y EX3.
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout):
   - en el servidor, con el orden del plan (Rollout; A76): anotar en esta tarea la versión instalada (`git describe --tags`; hoy `v0.11.1`), que es a la que se vuelve si algo falla, aunque `desplegar.sh` informe como «anterior» el propio tag; `git fetch --tags origin && git -c advice.detachedHead=false checkout vX.Y.Z`; `bash deploy/desplegar.sh vX.Y.Z`, que ya levanta el `scheduler`; `verificar.sh` completo, con OK en el `scheduler`, en `auditoria:purgar` y en «Entorno aplicado»;
   - verificación manual (CA8, CA4): una petición con `X-Request-Id` válido lo devuelve; como dentista, entrar a `/admin`; como admin, encontrar en `/admin/auditoria` ese `acceso_denegado` con su `request_id` y `admin.dashboard`;
   - verificación manual (CA14): `php artisan dentissa:vigilar --prueba` sigue enviando;
   - durante la primera hora: ningún aviso `auditoria`, `journalctl -u dentissa-vigilar` sin errores y 0 5xx nuevos.
-- [ ] T098 Marcar spec como `released`:
+  - nota: 2026-10-31, lo hizo el responsable en el servidor: versión instalada anotada v0.11.1 (git describe); git fetch --tags origin y checkout a mano de v0.12.0; desplegar.sh v0.12.0 en 364 s (sin la verificación), con la copia previa cifrada /var/backups/dentissa/dentissa-20261031-210302.sql.gz.gpg, la migración create_auditoria_table en 85 ms, app, web y scheduler levantados y verificación interna todo OK. Como estaba previsto, informó «Anterior: v0.12.0»: la vuelta es volver.sh v0.11.1, sin la copia.
+  - nota: verificar.sh completo todo OK: scheduler en marcha, «Tareas programadas» con auditoria:purgar, «Entorno aplicado» en los cinco servicios, «Avisos y copias» y la dirección pública (https://dentissa.app/up 200).
+  - nota: verificación manual OK 2026-10-31 (usuario): CA8 (X-Request-Id válido devuelto), CA4 (acceso_denegado de admin.dashboard del dentista con su request_id en /admin/auditoria), CA14 (dentissa:vigilar --prueba recibido) y primera hora sin avisos auditoria, journalctl -u dentissa-vigilar sin errores, 0 5xx nuevos y UptimeRobot en verde.
+- [x] T098 Marcar spec como `released`:
   - correcciones → mitigada (vX.Y.Z): OB1.a, OB1.c, OB1.g, OB1.h, OB2.a y OB2.b; siguen abiertas OB1.b, OB1.d, OB1.e y OB1.f (→ 021, 022 y 014) y OB4.a (→ 023, residuo aceptado);
   - specs extendidas 030, 031 y 032 (`extends` de la spec; A72), cada una con su fila de Historial: en la 030, el `scheduler` es un servicio más que el despliegue y la vuelta atrás levantan y paran; en la 031, `verificar.sh` comprueba el `scheduler` y `aplicar-entorno.sh app` lo recrea; en la 032, el vigilante gana el aviso `auditoria` (CA14 de la 020) y `volver.sh` y `restaurar.sh` paran el `scheduler` antes de cargar una copia.
+  - nota: 2026-10-31: spec released (v0.12.0), README actualizado. OB1.a, OB1.c, OB1.g, OB1.h, OB2.a y OB2.b mitigadas (v0.12.0); OB2 mitigado; OB1 sigue abierto (OB1.b, OB1.d, OB1.e y OB1.f → 021, 022 y 014). Specs 030, 031 y 032 con su fila de Historial. Ficha 2026-10-30-chore-follow-redirects-1.16.2 released en v0.12.0.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

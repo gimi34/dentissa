@@ -1,8 +1,9 @@
 ---
 id: 020
 slug: auditoria-base
-status: implemented
+status: released
 created: 2026-09-28
+released: v0.12.0 (2026-10-31)
 extends: [030, 031, 032]
 ---
 
@@ -187,3 +188,4 @@ primera pantalla 25, sistema 30, lectura 20, plantilla 0 (ver Supuestos).
 | 2026-10-28 | Diseño aprobado (`design.md`, `c4` con 80/100) | /design-spec 020 (aprobación del usuario) |
 | 2026-10-28 | `extends: [030, 031, 032]`: la 020 cambia el despliegue, la vuelta atrás y la verificación de producción de la 030 y la 031. Vuelve a `draft`. | /analyze 020 ronda 6: A72 (decisión del usuario, 2026-10-28) |
 | 2026-10-29 | Aprobada de nuevo por el usuario | /specify --edit |
+| 2026-10-31 | Liberada en v0.12.0 (PR #56 y #57, merge `1944ac2`, tag `v0.12.0`; review r3 approved) y desplegada en producción | /release 020 |
