@@ -73,7 +73,9 @@ class ClienteCitasController extends Controller
     public function show(string $id, EstadosCita $estados)
     {
         $paciente = $this->pacienteActual();
-        abort_unless($paciente, 404);
+        if (! $paciente) {
+            $this->noEncontrada($id);
+        }
 
         $cita = DB::table('citas')
             ->join('personal', 'citas.dentista_id', '=', 'personal.id')
@@ -194,7 +196,9 @@ class ClienteCitasController extends Controller
     private function citaDelPaciente(string $id): object
     {
         $paciente = $this->pacienteActual();
-        abort_unless($paciente, 404);
+        if (! $paciente) {
+            $this->noEncontrada($id);
+        }
 
         $cita = DB::table('citas')
             ->join('personal', 'citas.dentista_id', '=', 'personal.id')
@@ -227,8 +231,10 @@ class ClienteCitasController extends Controller
      */
     private function noEncontrada(string $id): never
     {
-        if (DB::table('citas')->where('id', $id)->exists()) {
-            app(Auditoria::class)->denegar(request()->route()?->getName() ?? 'ruta_sin_nombre', 'citas', $id, 'denegado_404');
+        // El id guardado, no el de la ruta: la colación PAD SPACE encuentra `<id> ` (/review R5).
+        $guardado = DB::table('citas')->where('id', $id)->value('id');
+        if ($guardado !== null) {
+            app(Auditoria::class)->denegar(request()->route()?->getName() ?? 'ruta_sin_nombre', 'citas', $guardado, 'denegado_404');
         }
 
         abort(404);
