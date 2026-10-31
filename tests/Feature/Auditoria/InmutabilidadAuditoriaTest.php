@@ -111,6 +111,28 @@ class InmutabilidadAuditoriaTest extends TestCase
         $this->assertTrue(DB::table('auditoria')->where('id', $reciente)->exists());
     }
 
+    /** /review R2 (TM2): sin el indicador de la purga, ni un evento antiguo se borra. */
+    public function test_sin_el_indicador_no_se_borra_un_evento_antiguo(): void
+    {
+        $antiguo = $this->evento($this->hace(7));
+
+        $this->assertRechazado(fn () => DB::table('auditoria')->where('id', $antiguo)->delete(), 'Sin el indicador no se borra.');
+        $this->assertTrue(DB::table('auditoria')->where('id', $antiguo)->exists());
+    }
+
+    /** /review R2 (TM2): con el indicador, el propio trigger corta a los 5 años en UTC, sin el comando. */
+    public function test_con_el_indicador_el_trigger_corta_a_los_5_anios_en_utc(): void
+    {
+        $corte = Carbon::now('UTC')->subYearsNoOverflow(5);
+        $dentro = $this->evento($corte->copy()->addMinute());
+        $fuera = $this->evento($corte->copy()->subMinute());
+
+        DB::statement('SET @auditoria_purga = 1');
+        $this->assertRechazado(fn () => DB::table('auditoria')->where('id', $dentro)->delete(), 'A menos de 5 años no se borra.');
+        $this->assertSame(1, DB::table('auditoria')->where('id', $fuera)->delete(), 'A más de 5 años se borra.');
+        $this->assertTrue(DB::table('auditoria')->where('id', $dentro)->exists());
+    }
+
     public function test_la_purga_elimina_solo_eventos_de_mas_de_5_anios(): void
     {
         $antiguo = $this->evento($this->hace(6));
