@@ -111,6 +111,51 @@ class DenegacionesAuditadasTest extends TestCase
         $this->assertCount(0, $this->denegaciones());
     }
 
+    /**
+     * /review R5 (CA4, A66): con la colación PAD SPACE, `<id>%20` encuentra la cita ajena; tiene que
+     * responder como la inexistente y dejar el evento con el id guardado, no un 500.
+     *
+     * @return array<string, array{0: string, 1: string}> ruta y nombre de ruta
+     */
+    public static function rutasGetDeCitaDelPaciente(): array
+    {
+        return [
+            'detalle' => ['/cliente/citas/%s', 'cliente.citas.show'],
+            'reprogramar (formulario)' => ['/cliente/citas/%s/reprogramar', 'cliente.citas.reprogramar'],
+        ];
+    }
+
+    #[DataProvider('rutasGetDeCitaDelPaciente')]
+    public function test_una_cita_ajena_con_espacio_final_responde_como_la_inexistente(string $ruta, string $nombre): void
+    {
+        $cita = $this->citaDeOtro();
+
+        $this->actingAs($this->paciente1)->get(sprintf($ruta, $cita.'%20'))->assertNotFound();
+        $evento = $this->denegaciones()->sole();
+        $this->assertSame('denegado_404', $evento->resultado);
+        $this->assertSame($cita, $evento->recurso_id, 'El evento lleva el id guardado.');
+        $this->assertSame(['accion_solicitada' => $nombre], json_decode($evento->detalle, true));
+
+        $this->actingAs($this->paciente1)->get(sprintf($ruta, Str::uuid().'%20'))->assertNotFound();
+        $this->assertCount(1, $this->denegaciones(), 'La inexistente no deja evento.');
+    }
+
+    /** /review R6 (CA4): `cliente.citas.show` solo lleva `auth`; sin ficha de paciente también se audita. */
+    public function test_un_usuario_sin_ficha_de_paciente_deja_su_denegacion(): void
+    {
+        $cita = $this->citaDeOtro();
+
+        $this->actingAs($this->dentista1)->get('/cliente/citas/'.$cita)->assertNotFound();
+        $evento = $this->denegaciones()->sole();
+        $this->assertSame('denegado_404', $evento->resultado);
+        $this->assertSame($cita, $evento->recurso_id);
+        $this->assertSame($this->dentista1->id, $evento->actor_id);
+        $this->assertSame(['accion_solicitada' => 'cliente.citas.show'], json_decode($evento->detalle, true));
+
+        $this->actingAs($this->dentista1)->get('/cliente/citas/'.Str::uuid())->assertNotFound();
+        $this->assertCount(1, $this->denegaciones(), 'Una cita que no existe no deja evento.');
+    }
+
     /** A66: el paciente no puede saber si la cita existe. */
     #[DataProvider('rutasDeCitaDelPaciente')]
     public function test_la_cita_ajena_y_la_inexistente_responden_igual(string $metodo, string $ruta, string $nombre): void
