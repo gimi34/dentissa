@@ -1,9 +1,11 @@
 /*
- * Script común de las páginas públicas (spec 038, D16). Se carga con defer y la página está completa
- * sin él: añade la pastilla «¿Abierto ahora?», las entradas al bajar (clase is-in) y el botón de pausa
- * de la franja (WCAG 2.2.2). La clase js de <html>, que activa las entradas y la franja en
- * publico.css, se pone al final y solo con movimiento normal e IntersectionObserver. Escribe siempre
- * con textContent; sin dependencias ni HTML construido desde cadenas.
+ * Script común de las páginas públicas (spec 038, D16; ronda 5, D19). Se carga con defer y la página
+ * está completa sin él. Escribe la pastilla «¿Está abierto ahora?» y marca la fila de hoy de la
+ * semana; pone el filete de la cabecera al bajar; cierra el menú del móvil con Escape (devolviendo el
+ * foco a «Menú») y al elegir un enlace. Solo con movimiento normal e IntersectionObserver: las
+ * entradas al bajar (clase is-in), el progreso --p de la escena de la ventana (sin capturar la rueda)
+ * y la clase js de <html>, que se pone al final. Escribe siempre con textContent; sin dependencias ni
+ * HTML construido desde cadenas.
  */
 (function (global) {
     'use strict';
@@ -15,6 +17,10 @@
     function minutos(hora) {
         var m = HORA.exec(hora);
         return m ? Number(m[1]) * 60 + Number(m[2]) : NaN;
+    }
+
+    function esFecha(fecha) {
+        return Object.prototype.toString.call(fecha) === '[object Date]' && !isNaN(fecha.getTime());
     }
 
     // Día ISO y minutos del día en la zona de la consulta (no en la del navegador).
@@ -37,19 +43,19 @@
                 var tramo = datos[dias[i]];
                 if (!DIAS[dias[i]] || !Array.isArray(tramo) || tramo.length !== 2 || !(minutos(tramo[0]) < minutos(tramo[1]))) return null;
             }
-            if (Object.prototype.toString.call(fecha) !== '[object Date]' || isNaN(fecha.getTime())) return null;
+            if (!esFecha(fecha)) return null;
 
             var ahora = ahoraEn(zona, fecha);
             var hoy = datos[ahora.dia];
             if (hoy && ahora.minuto >= minutos(hoy[0]) && ahora.minuto < minutos(hoy[1])) {
-                return 'Abierto ahora · cierra a las ' + hoy[1];
+                return 'Abierto ahora · cerramos a las ' + hoy[1];
             }
             for (var k = 0; k < 8; k++) {
                 var dia = ((ahora.dia - 1 + k) % 7) + 1;
                 var abre = datos[dia];
                 if (!abre || (k === 0 && ahora.minuto >= minutos(abre[0]))) continue;
                 var cuando = k === 0 ? 'hoy' : k === 1 ? 'mañana' : 'el ' + DIAS[dia];
-                return 'Cerrado ahora · abre ' + cuando + ' a las ' + abre[0];
+                return 'Cerrado · abrimos ' + cuando + ' a las ' + abre[0];
             }
             return null;
         } catch (e) {
@@ -58,45 +64,71 @@
         }
     }
 
-    // Escribe el texto en tres span (estado, « · » y hora) para que publico.css lo parta en dos
-    // líneas por debajo de 560 px (refinado de design.md); el textContent junto es el texto entero.
-    function escribirPastilla(elemento, texto) {
-        var corte = texto.indexOf(' · ');
-        var partes = corte < 0 ? [texto] : [texto.slice(0, corte), ' · ', texto.slice(corte + 3)];
-        elemento.textContent = '';
-        partes.forEach(function (parte, i) {
-            var span = elemento.ownerDocument.createElement('span');
-            if (i === 1) span.className = 'estado-sep';
-            span.textContent = parte;
-            elemento.appendChild(span);
-        });
+    // La fila de la semana de hoy (su data-day): «1-5» de lunes a viernes, «6» el sábado y «0» el
+    // domingo, con la hora de la consulta (/analyze A39). null si los datos no valen.
+    function diaDeHoy(zona, fecha) {
+        try {
+            if (!esFecha(fecha)) return null;
+            var dia = ahoraEn(zona, fecha).dia;
+            if (!dia) return null;
+            return dia === 7 ? '0' : dia === 6 ? '6' : '1-5';
+        } catch (e) {
+            return null;
+        }
     }
 
-    global.DentissaPublico = { estadoAhora: estadoAhora, escribirPastilla: escribirPastilla };
+    // Progreso de la escena (0 → 1) mientras su caja recorre la pantalla: rect es su
+    // getBoundingClientRect() y alto el de la ventana (/analyze A39). Sin recorrido, la foto entera.
+    function progresoEscena(rect, alto) {
+        var recorrido = rect.height - alto;
+        if (!(recorrido > 0) || isNaN(rect.top)) return 1;
+        return Math.min(1, Math.max(0, -rect.top / recorrido));
+    }
+
+    global.DentissaPublico = { estadoAhora: estadoAhora, diaDeHoy: diaDeHoy, progresoEscena: progresoEscena };
 
     var doc = global.document;
     if (!doc) return;
 
     function iniciar() {
+        var ahora = new Date();
         var vivo = doc.querySelector('[data-live]');
-        var pastilla = vivo && vivo.querySelector('.estado-ahora');
-        var texto = vivo && estadoAhora(vivo.getAttribute('data-horario'), vivo.getAttribute('data-zona'), new Date());
-        if (pastilla && texto) escribirPastilla(pastilla, texto);
+        var zona = vivo && vivo.getAttribute('data-zona');
+        var texto = vivo && estadoAhora(vivo.getAttribute('data-horario'), zona, ahora);
+        var nodo = vivo && vivo.querySelector('.pub-status__text');
+        if (nodo && texto) {
+            nodo.textContent = texto;
+            vivo.setAttribute('data-open', String(texto.indexOf('Abierto') === 0));
+        }
+        var hoy = zona && diaDeHoy(zona, ahora);
+        Array.prototype.forEach.call(doc.querySelectorAll('[data-semana] [data-day]'), function (fila) {
+            if (fila.getAttribute('data-day') === hoy) fila.setAttribute('data-today', '');
+        });
+
+        // Cabecera: el filete aparece al bajar.
+        var barra = doc.querySelector('.pub-bar');
+        if (barra && typeof global.addEventListener === 'function') {
+            var alBajar = function () { barra.classList.toggle('is-scrolled', global.scrollY > 8); };
+            global.addEventListener('scroll', alBajar, { passive: true });
+            alBajar();
+        }
+
+        // Menú del móvil: Escape lo cierra y devuelve el foco a «Menú»; elegir un enlace también lo cierra.
+        var menu = doc.querySelector('.pub-menu');
+        if (menu) {
+            menu.addEventListener('keydown', function (e) {
+                if (e.key !== 'Escape' || !menu.open) return;
+                menu.open = false;
+                menu.querySelector('summary').focus();
+            });
+            Array.prototype.forEach.call(menu.querySelectorAll('a'), function (a) {
+                a.addEventListener('click', function () { menu.open = false; });
+            });
+        }
 
         // Con movimiento reducido o sin IntersectionObserver, nada se oculta ni se mueve.
         var reducido = typeof global.matchMedia === 'function' && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reducido || typeof global.IntersectionObserver !== 'function') return;
-
-        var franja = doc.querySelector('.marquesina');
-        var pausa = doc.querySelector('.marquesina-pausa');
-        if (franja && pausa) {
-            pausa.hidden = false;
-            pausa.addEventListener('click', function () {
-                var pausada = pausa.getAttribute('aria-pressed') !== 'true';
-                pausa.setAttribute('aria-pressed', String(pausada));
-                franja.classList.toggle('is-pausada', pausada);
-            });
-        }
 
         var observador = new global.IntersectionObserver(function (entradas) {
             entradas.forEach(function (entrada) {
@@ -105,12 +137,37 @@
                 observador.unobserve(entrada.target);
             });
         }, { rootMargin: '0px 0px -12% 0px' });
+        var grupos = [];
         Array.prototype.forEach.call(doc.querySelectorAll('[data-reveal]'), function (el) {
-            // Escalonado por orden entre hermanos, cuatro pasos como máximo (design.md, M-3).
-            var orden = Array.prototype.indexOf.call(el.parentNode.children, el);
-            el.style.setProperty('--i', String(Math.min(orden, 3)));
+            // Escalonado por sección, cuatro pasos como máximo (design.md, M-4).
+            var seccion = el.closest('section') || doc.body;
+            var grupo = grupos.filter(function (g) { return g.seccion === seccion; })[0];
+            if (!grupo) grupos.push(grupo = { seccion: seccion, n: 0 });
+            el.style.setProperty('--i', String(Math.min(grupo.n++, 3)));
             observador.observe(el);
         });
+
+        // La escena de la ventana (M-1): --p con el progreso del desplazamiento nativo.
+        var escenas = Array.prototype.slice.call(doc.querySelectorAll('[data-scene]'));
+        escenas.forEach(function (escena) {
+            escena.style.setProperty('--p', '0');
+            escena.classList.add('is-live');
+        });
+        if (escenas.length && typeof global.requestAnimationFrame === 'function') {
+            var ultimo = -1;
+            var paso = function () {
+                if (global.scrollY !== ultimo) {
+                    ultimo = global.scrollY;
+                    escenas.forEach(function (escena) {
+                        var r = escena.getBoundingClientRect();
+                        if (r.bottom < 0 || r.top > global.innerHeight) return;
+                        escena.style.setProperty('--p', progresoEscena(r, global.innerHeight).toFixed(4));
+                    });
+                }
+                global.requestAnimationFrame(paso);
+            };
+            global.requestAnimationFrame(paso);
+        }
 
         doc.documentElement.classList.add('js');
     }
