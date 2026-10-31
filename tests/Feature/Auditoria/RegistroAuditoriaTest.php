@@ -171,6 +171,9 @@ class RegistroAuditoriaTest extends TestCase
             'recurso_id' => fn () => $this->auditoria()->registrar('prueba_salto', 'exito', 'pacientes', "p1\n"),
             'acción' => fn () => $this->auditoria()->registrar("x\n", 'exito'),
             'detalle' => fn () => $this->auditoria()->registrar('prueba_salto', 'exito', detalle: ['valor' => "v\n"]),
+            // /review R40: el patrón en línea de los campos y el tipo de recurso.
+            'campos' => fn () => $this->auditoria()->registrar('prueba_salto', 'exito', 'pacientes', 'p1', campos: ["telefono\n"]),
+            'recurso_tipo' => fn () => $this->auditoria()->registrar('prueba_salto', 'exito', "pacientes\n", 'p1'),
         ] as $que => $registrar) {
             try {
                 $registrar();
