@@ -1,7 +1,7 @@
 ---
 id: 020
 slug: auditoria-base
-status: approved
+status: implemented
 created: 2026-09-28
 extends: [030, 031, 032]
 ---
@@ -25,19 +25,19 @@ eventos concretos de autenticación, cuentas y datos clínicos van en 021 y 022)
 - Como paciente, quiero que nadie pueda ver mis datos clínicos sin dejar rastro.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dada una acción auditable, cuando ocurre, entonces queda un evento con: actor, acción, tipo e identificador del recurso, resultado, fecha y hora, dirección de origen e identificador de la petición. El actor es el usuario de la sesión; si la acción la hace una cuenta comprobada por otra credencial distinta de la sesión (por ejemplo, el enlace para restablecer la contraseña de la spec 041), es esa cuenta; si no hay ninguno de los dos, se guarda el identificador intentado. El actor nunca sale de un identificador enviado por el cliente.
-- [ ] CA2 (abuso) · Dado cualquier usuario, incluido un admin, cuando intenta modificar o borrar un evento, entonces la aplicación no ofrece ninguna forma de hacerlo y el almacén rechaza la modificación o el borrado de cualquier evento, de uno en uno o de muchos a la vez, venga de donde venga, incluidos los intentos hechos con las credenciales con que opera la propia aplicación, salvo la purga por retención (CA5). Solo quedan fuera de este criterio las operaciones hechas con privilegios totales sobre el almacén que lo vacían entero de una vez, desactivan su protección o cambian su estructura (ver Supuestos).
-- [ ] CA3 · Dado cualquier evento, cuando se registra, entonces no contiene datos personales ni de salud en claro, salvo la dirección de origen y el identificador intentado de CA1 (ver Supuestos): solo identificadores y, en los cambios, los nombres de los campos cambiados sin sus valores.
-- [ ] CA4 · Dado un usuario autenticado, cuando el sistema le deniega una acción (por ejemplo, entrar al área de otro rol), entonces queda un evento de acceso denegado con la acción y el recurso solicitados, también cuando la denegación se responde como «no encontrado» para no revelar que el recurso existe; un recurso que de verdad no existe no genera evento.
-- [ ] CA5 · Dados eventos de más de 5 años, cuando se ejecuta la purga periódica, entonces se eliminan solo esos y los más recientes se conservan intactos.
-- [ ] CA6 · Dado un admin, cuando consulta el registro, entonces puede filtrar por actor, acción, tipo de recurso, identificador de recurso y rango de fechas, con resultados paginados del más reciente al más antiguo.
-- [ ] CA7 (abuso) · Dado un usuario que no es admin, cuando intenta consultar el registro, entonces se le deniega y no ve ningún evento.
-- [ ] CA8 · Dada cualquier petición, cuando se responde, entonces la respuesta lleva un identificador de petición: si el cliente envió uno con formato válido se reutiliza; si no, se genera uno nuevo.
-- [ ] CA9 (abuso) · Dado un cliente que envía un identificador de petición malformado o excesivamente largo, cuando se procesa la petición, entonces se descarta y se usa uno generado; el valor enviado nunca se refleja ni se registra tal cual.
-- [ ] CA10 · Dada una petición que produce registros técnicos o eventos de auditoría, cuando se consultan, entonces todos llevan el mismo identificador de petición; los registros técnicos llevan además el usuario de la sesión, si la hay, y los eventos llevan el actor de CA1, que coincide con él salvo cuando la acción la hace una cuenta comprobada por otra credencial.
-- [ ] CA11 · Dada una acción sobre datos clínicos o una consulta del registro de auditoría, cuando su evento no puede escribirse, entonces la acción no se realiza y el usuario ve un error genérico sin detalles internos.
-- [ ] CA13 (abuso) · Dado un cliente que envía un identificador de petición válido ya usado en otra petición (por ejemplo, copiado de otra respuesta), cuando se procesa la petición, entonces se acepta, pero cada evento conserva su propia identidad, actor, fecha y dirección de origen, y el identificador repetido nunca hace que un evento reciba el actor ni el acceso de la otra petición.
-- [ ] CA14 · Dado un evento que no puede escribirse en producción, cuando ocurre, entonces el responsable recibe un aviso por correo como los demás avisos de producción (spec 032), sin datos del evento ni de la persona, y con el mismo límite de frecuencia que esos avisos.
+- [x] CA1 · Dada una acción auditable, cuando ocurre, entonces queda un evento con: actor, acción, tipo e identificador del recurso, resultado, fecha y hora, dirección de origen e identificador de la petición. El actor es el usuario de la sesión; si la acción la hace una cuenta comprobada por otra credencial distinta de la sesión (por ejemplo, el enlace para restablecer la contraseña de la spec 041), es esa cuenta; si no hay ninguno de los dos, se guarda el identificador intentado. El actor nunca sale de un identificador enviado por el cliente.
+- [x] CA2 (abuso) · Dado cualquier usuario, incluido un admin, cuando intenta modificar o borrar un evento, entonces la aplicación no ofrece ninguna forma de hacerlo y el almacén rechaza la modificación o el borrado de cualquier evento, de uno en uno o de muchos a la vez, venga de donde venga, incluidos los intentos hechos con las credenciales con que opera la propia aplicación, salvo la purga por retención (CA5). Solo quedan fuera de este criterio las operaciones hechas con privilegios totales sobre el almacén que lo vacían entero de una vez, desactivan su protección o cambian su estructura (ver Supuestos).
+- [x] CA3 · Dado cualquier evento, cuando se registra, entonces no contiene datos personales ni de salud en claro, salvo la dirección de origen y el identificador intentado de CA1 (ver Supuestos): solo identificadores y, en los cambios, los nombres de los campos cambiados sin sus valores.
+- [x] CA4 · Dado un usuario autenticado, cuando el sistema le deniega una acción (por ejemplo, entrar al área de otro rol), entonces queda un evento de acceso denegado con la acción y el recurso solicitados, también cuando la denegación se responde como «no encontrado» para no revelar que el recurso existe; un recurso que de verdad no existe no genera evento.
+- [x] CA5 · Dados eventos de más de 5 años, cuando se ejecuta la purga periódica, entonces se eliminan solo esos y los más recientes se conservan intactos.
+- [x] CA6 · Dado un admin, cuando consulta el registro, entonces puede filtrar por actor, acción, tipo de recurso, identificador de recurso y rango de fechas, con resultados paginados del más reciente al más antiguo.
+- [x] CA7 (abuso) · Dado un usuario que no es admin, cuando intenta consultar el registro, entonces se le deniega y no ve ningún evento.
+- [x] CA8 · Dada cualquier petición, cuando se responde, entonces la respuesta lleva un identificador de petición: si el cliente envió uno con formato válido se reutiliza; si no, se genera uno nuevo.
+- [x] CA9 (abuso) · Dado un cliente que envía un identificador de petición malformado o excesivamente largo, cuando se procesa la petición, entonces se descarta y se usa uno generado; el valor enviado nunca se refleja ni se registra tal cual.
+- [x] CA10 · Dada una petición que produce registros técnicos o eventos de auditoría, cuando se consultan, entonces todos llevan el mismo identificador de petición; los registros técnicos llevan además el usuario de la sesión, si la hay, y los eventos llevan el actor de CA1, que coincide con él salvo cuando la acción la hace una cuenta comprobada por otra credencial.
+- [x] CA11 · Dada una acción sobre datos clínicos o una consulta del registro de auditoría, cuando su evento no puede escribirse, entonces la acción no se realiza y el usuario ve un error genérico sin detalles internos.
+- [x] CA13 (abuso) · Dado un cliente que envía un identificador de petición válido ya usado en otra petición (por ejemplo, copiado de otra respuesta), cuando se procesa la petición, entonces se acepta, pero cada evento conserva su propia identidad, actor, fecha y dirección de origen, y el identificador repetido nunca hace que un evento reciba el actor ni el acceso de la otra petición.
+- [x] CA14 · Dado un evento que no puede escribirse en producción, cuando ocurre, entonces el responsable recibe un aviso por correo como los demás avisos de producción (spec 032), sin datos del evento ni de la persona, y con el mismo límite de frecuencia que esos avisos.
 
 ## Fuera de alcance
 - Eventos de login, logout, acceso con Google, altas de cuentas, cambios de rol y de contraseña (spec 021).
@@ -75,7 +75,7 @@ eventos concretos de autenticación, cuentas y datos clínicos van en 021 y 022)
 | OB4.c — lo mismo en staging | fuera | objetivo 5, cuando exista staging |
 
 ## Auditoría
-- [ ] CA12 · Dada una consulta del registro por un admin o una ejecución de la purga, cuando ocurre, entonces queda registrado quién consultó y con qué filtros, o cuántos eventos purgó la purga y hasta qué fecha.
+- [x] CA12 · Dada una consulta del registro por un admin o una ejecución de la purga, cuando ocurre, entonces queda registrado quién consultó y con qué filtros, o cuántos eventos purgó la purga y hasta qué fecha.
 
 ## Diseño
 Quien consulta el registro es la administración, casi siempre investigando algo concreto: un acceso
