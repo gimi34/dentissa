@@ -16,7 +16,7 @@
 <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
 <aside class="sidebar" id="menu-principal" aria-label="Menú">
     <div class="sidebar-logo">
-        <img src="{{ asset('images/logo-icon.png') }}" alt="Melissa López N.">
+        <img src="{{ asset('images/logo-icon.png') }}" alt="Melissa López N." data-origen="propia">
         {{-- En el móvil la imagen desaparece sobre el panel blanco: el logo se pinta con una máscara (spec 033, A9; spec 034, D10). --}}
         <span class="sidebar-marca" role="img" aria-label="Melissa López N."></span>
         <button type="button" class="menu-cerrar" aria-label="Cerrar menú">

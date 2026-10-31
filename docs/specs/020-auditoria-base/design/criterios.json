@@ -42,18 +42,22 @@
   "pantallas": {
     "consulta": {
       "file": "consulta.html",
+      "url": "consulta",
       "barra_lateral": true
     },
     "vacia": {
       "file": "vacia.html",
+      "url": "vacia",
       "barra_lateral": true
     },
     "filtro": {
       "file": "filtro.html",
+      "url": "filtro",
       "barra_lateral": true
     },
     "menu": {
       "file": "menu.html",
+      "url": "menu",
       "widths": [
         320,
         390
@@ -62,6 +66,7 @@
     },
     "menu-escritorio": {
       "file": "consulta.html",
+      "url": "consulta",
       "widths": [
         1440
       ],
@@ -69,7 +74,8 @@
       "barra_lateral": true
     },
     "error": {
-      "file": "error.html"
+      "file": "error.html",
+      "url": "error"
     }
   },
   "kpis": [

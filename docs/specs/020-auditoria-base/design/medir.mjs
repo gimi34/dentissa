@@ -12,10 +12,13 @@
 //   mide como pantalla propia (menu.html), sin excepción.
 // Si lo único que falla son esas puertas a esos anchos, se repite la medición (sin KPIs) sobre una
 // copia con la barra fuera de la medición (aria-hidden): si entonces pasan todas las puertas, los
-// fallos eran solo de la barra y la pantalla pasa con la excepción anotada. Solo con carpetas
-// locales; sobre una URL, la excepción se comprueba a mano.
+// fallos eran solo de la barra y la pantalla pasa con la excepción anotada. Con una carpeta, la copia
+// es un archivo temporal junto al candidato; con una URL (la vista previa /_disenio/020 de la app,
+// plan D19, A70), es la misma URL con ?sin-barra=1, que la vista previa sirve con la barra ya
+// fuera de la medición.
 //
 // Uso:  node medir.mjs <carpeta del candidato | URL base> --evaluate <ruta de evaluate.mjs> --out <dir>
+//       URL base de la vista previa: http://<app local>/_disenio/020 (cada pantalla usa su "url")
 // Código 0: todas las páginas pasan puertas y KPIs · 1: alguna falla · 2: uso.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -54,7 +57,7 @@ for (const [id, p] of Object.entries(pantallas)) {
   const r = correr(target, crit, id);
   let ok = r.status === 0, nota = '';
   process.stdout.write(`── ${id}: ${ok ? 'pasa' : 'falla'}\n${(r.stdout || '').trim()}\n${(r.stderr || '').trim()}\n`);
-  if (!ok && r.status === 1 && p.barra_lateral && !esUrl) {
+  if (!ok && r.status === 1 && p.barra_lateral) {
     const rep = JSON.parse(fs.readFileSync(path.join(out, id, 'report.json'), 'utf8'));
     const malas = rep.gates.filter(g => !g.pass);
     const ancho = d => Number((d.match(/^(\d+)px/) || [])[1]);
@@ -62,10 +65,13 @@ for (const [id, p] of Object.entries(pantallas)) {
       (['G-aparece', 'G-reducido'].includes(g.id) && g.details.every(d => ancho(d) < ESCRITORIO));
     const soloBarra = rep.kpis.every(k => k.pass) && malas.every(admitida);
     if (soloBarra) {
-      const copia = path.join(base, `.sin-barra-${p.file}`);
-      fs.writeFileSync(copia, fs.readFileSync(target, 'utf8').replace('<aside class="sidebar"', '<aside aria-hidden="true" class="sidebar"'));
+      let copia = `${target}${target.includes('?') ? '&' : '?'}sin-barra=1`;
+      if (!esUrl) {
+        copia = path.join(base, `.sin-barra-${p.file}`);
+        fs.writeFileSync(copia, fs.readFileSync(target, 'utf8').replace('<aside class="sidebar"', '<aside aria-hidden="true" class="sidebar"'));
+      }
       const r2 = correr(copia, { ...crit, kpis: [] }, `${id}-sin-barra`);
-      fs.rmSync(copia);
+      if (!esUrl) fs.rmSync(copia);
       const rep2 = JSON.parse(fs.readFileSync(path.join(out, `${id}-sin-barra`, 'report.json'), 'utf8'));
       const otras = rep2.gates.filter(g => !g.pass && malas.some(m => m.id === g.id));
       if (r2.status === 0) {

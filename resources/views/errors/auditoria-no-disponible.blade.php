@@ -18,8 +18,8 @@
 </head>
 <body>
 <div class="acceso">
-    <header class="franja"><img src="{{ asset('images/logo-main.png') }}" alt="Melissa López N. · Odontología integral"></header>
-    <aside class="panel"><img src="{{ asset('images/logo-main.png') }}" alt="Melissa López N. · Odontología integral"><p class="panel-texto"><b>No se guardó nada a medias</b>La acción no llegó a hacerse: tus datos siguen como estaban.</p></aside>
+    <header class="franja"><img src="{{ asset('images/logo-main.png') }}" alt="Melissa López N. · Odontología integral" data-origen="propia"></header>
+    <aside class="panel"><img src="{{ asset('images/logo-main.png') }}" alt="Melissa López N. · Odontología integral" data-origen="propia"><p class="panel-texto"><b>No se guardó nada a medias</b>La acción no llegó a hacerse: tus datos siguen como estaban.</p></aside>
     <main class="lado">
         <div class="carnet">
             <div class="carnet-cuerpo">

@@ -42,3 +42,5 @@ body { display: block; }
 .talon dt { font-weight: var(--weight-bold); color: var(--p600); }
 .tel { white-space: nowrap; color: inherit; }
 @media (max-width: 400px) { .talon { grid-template-columns: 1fr; gap: 0; } }
+/* El teléfono es un enlace (D23): en el teléfono, con la zona de toque del sistema. */
+@media (max-width: 899px) { .tel { display: inline-flex; align-items: center; min-height: var(--touch-min); } }
