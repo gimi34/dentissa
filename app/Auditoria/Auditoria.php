@@ -26,11 +26,12 @@ class Auditoria
 {
     public const RESULTADOS = ['exito', 'denegado', 'denegado_404', 'error'];
 
-    private const NOMBRE = '/^[a-z_]{1,60}$/';
+    // Anclados con \z: `$` admite un salto de línea final (/review R9).
+    private const NOMBRE = '/^[a-z_]{1,60}\z/';
 
-    private const IDENTIFICADOR = '/^[A-Za-z0-9_-]{1,64}$/';
+    private const IDENTIFICADOR = '/^[A-Za-z0-9_-]{1,64}\z/';
 
-    private const VALOR_DE_DETALLE = '/^[A-Za-z0-9_.:-]{1,64}$/';
+    private const VALOR_DE_DETALLE = '/^[A-Za-z0-9_.:-]{1,64}\z/';
 
     public function __construct(private readonly AlmacenAuditoria $almacen) {}
 
@@ -126,7 +127,7 @@ class Auditoria
 
         $exigir(array_is_list($campos), 'Los campos son una lista de nombres, sin valores.');
         foreach ($campos as $campo) {
-            $exigir(is_string($campo) && preg_match('/^[a-z_]{1,60}$/', $campo) === 1, 'Un campo no tiene el formato de un nombre.');
+            $exigir(is_string($campo) && preg_match('/^[a-z_]{1,60}\z/', $campo) === 1, 'Un campo no tiene el formato de un nombre.');
         }
 
         foreach ($detalle as $clave => $valor) {

@@ -24,11 +24,12 @@ class RegistroCentralDenegaciones
     /** Código con el que un Gate declara que el recurso no existe para ese usuario, sin ocultarlo. */
     public const RECURSO_INEXISTENTE = 'recurso_inexistente';
 
-    private const ACCION = '/^[A-Za-z0-9_.:-]{1,64}$/';
+    // Anclados con \z: `$` admite un salto de línea final (/review R9).
+    private const ACCION = '/^[A-Za-z0-9_.:-]{1,64}\z/';
 
-    private const TIPO = '/^[a-z_]{1,60}$/';
+    private const TIPO = '/^[a-z_]{1,60}\z/';
 
-    private const IDENTIFICADOR = '/^[A-Za-z0-9_-]{1,64}$/';
+    private const IDENTIFICADOR = '/^[A-Za-z0-9_-]{1,64}\z/';
 
     public function __construct(private readonly Auditoria $auditoria) {}
 
