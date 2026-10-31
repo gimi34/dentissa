@@ -785,7 +785,8 @@ class ConfiguracionProduccionTest extends TestCase
                 continue;
             }
             // El texto de un mensaje de error no es una orden: puede nombrar el scheduler (R18).
-            $orden = preg_replace('/\berror ".*$/', '', $linea);
+            // Solo la cadena del mensaje: lo que va detrás sigue siendo una orden (/review R37).
+            $orden = preg_replace('/\berror "[^"]*"/', '', $linea);
             if ($dentro === 0 && preg_match('/\bscheduler\b/', $orden) && ! str_starts_with($linea, 'paso ')) {
                 $sueltas[] = $linea;
             }
@@ -808,6 +809,8 @@ class ConfiguracionProduccionTest extends TestCase
         }
         $this->assertCount(1, $this->schedulerSinComprobar("if x; then\nfi\n\"\${compose[@]}\" up -d scheduler"), 'Control positivo.');
         $this->assertContains('"${compose[@]}" up -d scheduler', $this->schedulerSinComprobar("if \"\${compose[@]}\" config --services | grep -qxF scheduler; then\n\"\${compose[@]}\" up -d scheduler\nfi"), 'La tubería ya no cuenta como comprobación.');
+        $this->assertCount(1, $this->schedulerSinComprobar('x="$(a)" || error "m"; "${compose[@]}" up -d scheduler'), 'Una orden tras el mensaje de error sigue contando (R37).');
+        $this->assertSame([], $this->schedulerSinComprobar('x="$(a)" || error "no se pudo levantar el scheduler"'), 'El texto del mensaje no es una orden.');
 
         // /review 020 R4: si no se puede leer la lista de servicios, el script se detiene.
         foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
@@ -868,6 +871,27 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertSame(2, substr_count($tras, "{$servidor} up -d scheduler < /dev/null"), 'La salida sin datos descifrados y el final.');
         $sinDatos = substr($tras, 0, $this->posicion($tras, 'la base no se ha tocado y app y web vuelven a estar en marcha', 'Salida sin datos descifrados.'));
         $this->assertStringContainsString("{$servidor} up -d scheduler < /dev/null", $sinDatos, 'La salida sin datos descifrados levanta el scheduler.');
+    }
+
+    /**
+     * /review 020 R36: tras la carga, la lista de servicios no se lee antes de comprobar cómo terminó
+     * (con el SSH caído fallaría también, y su mensaje taparía el de la carga incompleta), y se lee
+     * justo antes de levantar, ya descartada la carga incompleta.
+     */
+    public function test_restaurar_lee_los_servicios_despues_de_comprobar_la_carga(): void
+    {
+        $ordenes = $this->ordenes('deploy/restaurar.sh');
+        $main = substr($ordenes, $this->posicion($ordenes, "\nmain() {", 'Falta main().'));
+        $tras = substr($main, $this->posicion($main, '| ssh -- "${servidor}"', 'restaurar.sh carga la copia.'));
+
+        $this->assertGreaterThan(
+            $this->posicion($tras, 'if [[ "${resultado[1]}" -eq 3 ]]; then', 'Comprueba si llegaron datos.'),
+            $this->posicion($tras, 'config --services', 'Lee la lista tras la carga.'),
+            'Ninguna lectura de la lista antes de comprobar cómo terminó la carga.',
+        );
+        $incompleta = $this->posicion($tras, 'la carga quedó incompleta', 'Comprueba la carga incompleta.');
+        $levantar = $this->posicion($tras, 'paso "Levantando app, web y el scheduler"', 'Levanta al final.');
+        $this->assertStringContainsString('config --services', substr($tras, $incompleta, $levantar - $incompleta), 'Lee la lista justo antes de levantar.');
     }
 
     /** Spec 020 (CA5): verificar.sh comprueba que el scheduler está en marcha y programa la purga. */
