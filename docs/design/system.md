@@ -232,8 +232,11 @@ los mantenedores de Fontsource (`jwr1`, `lotusdevshack`), licencia OFL-1.1. Cada
   - `--shadow-soft` (`0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24)`):
     promesas, pastilla de estado, etiqueta de la ventana y menú; es la única sombra del sitio público;
   - `--page-ancho` (1440px): ancho de cartel del sitio público (la app sigue con `--page-max`);
-  - `--gutter`: margen lateral del sitio público, fluido de 16px (320 px) a 56px (1440 px);
-  - `--space-seccion-publica`: aire entre secciones, fluido de 80px a 168px.
+  - `--gutter` (fluido de 16px a 56px, de 320 a 1440 px): margen lateral del sitio público;
+  - `--space-seccion-publica` (fluido de 80px a 168px): aire entre secciones.
+  - Las medidas de los componentes de la superficie (radios de 24 y 36 px, filas de 88 px, círculo de
+    48 px, punto de 10 px, desplazamiento de 12 px y de 3 px) no llevan token propio: salen de los que ya
+    existen con `calc()` (`--space-*`, `--touch-min`, `--border-width`), sin px sueltos (P9).
 - **Spec 020 (registro de auditoría y error genérico; nombres de la 041, que los reutiliza):**
   - `--leading-publico` (1.5): interlineado del texto corrido (introducción de la consulta, error) y de
     las líneas secundarias de cada evento;

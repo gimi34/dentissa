@@ -10,20 +10,21 @@ use Tests\TestCase;
 /**
  * Spec 038 (CA9; P9): el CSS de las páginas públicas.
  *
- * Los tokens nuevos de `app.css` son los de `system.md` 1.7.0; `publico.css` usa solo tokens
+ * Los tokens de la 038 en `app.css` son los de `system.md`; `publico.css` usa solo tokens
  * (fuera de `@font-face` y de las condiciones de `@media`); las vistas no llevan `style=""`; los
- * pares nuevos cumplen AA; enlaces, botones y el menú tienen el toque mínimo; el foco es el del
- * sistema; los cortes son los de 900 y 560 px y las transiciones solo corren sin
+ * pares cumplen AA; enlaces, botones y el menú tienen el toque mínimo; el foco es el del
+ * sistema; los cortes son los de 900 y 560 px y el movimiento solo corre sin
  * `prefers-reduced-motion: reduce`.
  *
- * Rediseño de la ronda 3 (system.md 1.8.0, plan D16): tokens de portada, franja, velo,
- * píldora, sombras, icono y movimiento; la portada es la escena de la hoja (sticky); el texto
- * pequeño va sobre el tramo fuerte del velo (/analyze A24); la franja solo se mueve con
- * JavaScript, se pausa con su botón (A23, A33) y las entradas solo ocultan bajo `.js`; nada se
- * levanta al pasar el puntero.
+ * Ronda 5 (system.md 1.9.0, plan D19–D21, «La ventana del diente»): superficie «Sitio
+ * público» con Cormorant Garamond y Montserrat autoalojadas, tokens nuevos y sin los de la
+ * ronda 3 que se retiran (salvo `--sombra-tarjeta-alta` y `--leading-publico`, que usa la
+ * página de error de la 020, /analyze A35); la escena de la ventana sin velo cuando no está
+ * viva; el movimiento bajo la mano solo sin movimiento reducido. Los casos de la portada sticky,
+ * el velo, la franja y su pausa se retiran con ellas (D21).
  *
  * El comportamiento en un navegador real (anchos, desbordamiento, toque medido) lo comprueba
- * `docs/design/capturar.mjs --medir` (T017, T031, T079).
+ * `docs/design/capturar.mjs --medir` (T089).
  */
 class PaginasPublicasCssTest extends TestCase
 {
@@ -33,9 +34,8 @@ class PaginasPublicasCssTest extends TestCase
 
     private const SIN_MOVIMIENTO = '@media (prefers-reduced-motion: no-preference)';
 
-    /** Tokens de la 038 (system.md 1.7.0, plan D14) con su valor en `app.css`. */
+    /** Tokens de la 038 con su valor en `app.css` (system.md 1.7.0–1.9.0). */
     private const TOKENS = [
-        '--font-publica' => '"Lexend", system-ui, sans-serif',
         '--text-publico-h1' => 'clamp(30px, calc(30px + 18 * (100vw - 320px) / 1120), 48px)',
         '--text-publico-h2' => 'clamp(22px, calc(22px + 8 * (100vw - 320px) / 1120), 30px)',
         '--text-publico-h3' => '19px',
@@ -53,27 +53,31 @@ class PaginasPublicasCssTest extends TestCase
         '--leading-publico-h1' => '1.15',
         '--leading-publico-h2' => '1.25',
         '--logo-ratio' => '454 / 135',
-        // system.md 1.8.0 (rediseño de la ronda 3, plan D16).
-        '--text-portada' => 'clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px)',
-        '--text-marquesina' => 'clamp(34px, calc(34px + 46 * (100vw - 320px) / 1120), 80px)',
-        '--leading-portada' => '0.98',
-        '--tracking-portada' => '-0.03em',
-        '--velo-portada' => 'rgba(114, 36, 62, 0.82)',
-        '--velo-portada-suave' => 'rgba(114, 36, 62, 0.35)',
+        // system.md 1.8.0 que se quedan en 1.9.0.
         '--radius-pill' => '999px',
-        '--sombra-tarjeta' => '0 1px 2px rgba(114, 36, 62, 0.08)',
         '--sombra-tarjeta-alta' => '0 14px 32px rgba(114, 36, 62, 0.16)',
-        '--icono-tarjeta' => '56px',
         '--ease-out' => 'cubic-bezier(0.23, 1, 0.32, 1)',
         '--ease-expo' => 'cubic-bezier(0.16, 1, 0.3, 1)',
         '--duration-reveal' => '800ms',
         '--stagger' => '80ms',
-        '--duration-marquesina' => '48s',
+        // system.md 1.9.0 (ronda 5, plan D19).
+        '--font-publica' => '"Montserrat", ui-sans-serif, system-ui, sans-serif',
+        '--font-display' => '"Cormorant Garamond", ui-serif, Georgia, serif',
+        '--text-display' => 'clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px)',
+        '--text-statement' => 'clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px)',
+        '--text-seccion' => 'clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px)',
+        '--text-indice' => 'clamp(28px, calc(28px + 28 * (100vw - 320px) / 1120), 56px)',
+        '--text-firma' => 'clamp(76px, calc(76px + 284 * (100vw - 320px) / 1120), 360px)',
+        '--text-lead' => 'clamp(18px, calc(18px + 3 * (100vw - 320px) / 1120), 21px)',
+        '--shadow-soft' => '0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24)',
+        '--ease-in-out' => 'cubic-bezier(0.77, 0, 0.175, 1)',
+        '--page-ancho' => '1440px',
+        '--gutter' => 'clamp(16px, calc(16px + 40 * (100vw - 320px) / 1120), 56px)',
+        '--space-seccion-publica' => 'clamp(80px, calc(80px + 88 * (100vw - 320px) / 1120), 168px)',
     ];
 
     /** Lo que `system.md` dice de cada token (los fluidos, sus extremos). */
     private const EN_EL_SISTEMA = [
-        '--font-publica' => ['"Lexend", system-ui, sans-serif'],
         '--text-publico-h1' => ['30px', '48px'],
         '--text-publico-h2' => ['22px', '30px'],
         '--text-publico-h3' => ['19px'],
@@ -90,35 +94,44 @@ class PaginasPublicasCssTest extends TestCase
         '--leading-publico-h1' => ['1.15'],
         '--leading-publico-h2' => ['1.25'],
         '--logo-ratio' => ['454 / 135'],
-        '--text-portada' => ['40px', '96px'],
-        '--text-marquesina' => ['34px', '80px'],
-        '--leading-portada' => ['0.98'],
-        '--tracking-portada' => ['-0.03em'],
-        '--velo-portada' => ['rgba(114, 36, 62, 0.82)'],
-        '--velo-portada-suave' => ['rgba(114, 36, 62, 0.35)'],
         '--radius-pill' => ['999px'],
-        '--sombra-tarjeta' => ['0 1px 2px rgba(114, 36, 62, 0.08)'],
         '--sombra-tarjeta-alta' => ['0 14px 32px rgba(114, 36, 62, 0.16)'],
-        '--icono-tarjeta' => ['56px'],
         '--ease-out' => ['cubic-bezier(0.23, 1, 0.32, 1)'],
         '--ease-expo' => ['cubic-bezier(0.16, 1, 0.3, 1)'],
         '--duration-reveal' => ['800ms'],
         '--stagger' => ['80ms'],
-        '--duration-marquesina' => ['48s'],
+        '--font-publica' => ['"Montserrat", ui-sans-serif, system-ui, sans-serif'],
+        '--font-display' => ['"Cormorant Garamond", ui-serif, Georgia, serif'],
+        '--text-display' => ['52px', '120px'],
+        '--text-statement' => ['28px', '44px'],
+        '--text-seccion' => ['40px', '80px'],
+        '--text-indice' => ['28px', '56px'],
+        '--text-firma' => ['76px', '360px'],
+        '--text-lead' => ['18px', '21px'],
+        '--shadow-soft' => ['0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24)'],
+        '--ease-in-out' => ['cubic-bezier(0.77, 0, 0.175, 1)'],
+        '--page-ancho' => ['1440px'],
+        '--gutter' => ['16px', '56px'],
+        '--space-seccion-publica' => ['80px', '168px'],
     ];
 
-    /**
-     * Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). Con el
-     * rediseño (D16), las tarjetas sustituyen a las puertas (`.lb-puertas a`) y se añade el botón
-     * de pausa de la franja (A23).
-     */
+    /** Tokens 1.8.0 de la ronda 3 que la ronda 5 retira (D21; A35 deja fuera los que usa la 020). */
+    private const RETIRADOS = [
+        '--text-portada', '--text-marquesina', '--leading-portada', '--tracking-portada', '--velo-portada',
+        '--velo-portada-suave', '--sombra-tarjeta', '--icono-tarjeta', '--duration-marquesina',
+    ];
+
+    /** Fuentes del sitio público (D19): familia → [peso => archivo]. */
+    private const FUENTES = [
+        'Cormorant Garamond' => [500 => 'cormorant-garamond/cormorant-garamond-latin-500-normal.woff2', 600 => 'cormorant-garamond/cormorant-garamond-latin-600-normal.woff2'],
+        'Montserrat' => [400 => 'montserrat/montserrat-latin-400-normal.woff2', 500 => 'montserrat/montserrat-latin-500-normal.woff2', 600 => 'montserrat/montserrat-latin-600-normal.woff2', 700 => 'montserrat/montserrat-latin-700-normal.woff2'],
+    ];
+
+    /** Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). */
     private const TOQUE = [
-        '.pub-nav-d a:not(.c-btn)', '.pub-menu summary', '.pub-menu li a',
-        '.tarjeta', '.lb-indice a', '.marquesina-pausa', '.c-btn', '.c-link',
+        '.pub-nav a', '.pub-menu summary', '.pub-menu__panel a', '.pub-hero__facts a', '.pub-index a',
+        '.pub-visit__tel', '.pub-foot__links a', '.pub-foot__info a', '.lb-indice a', '.c-btn',
     ];
-
-    /** Ancestros de la portada sticky: ninguno puede recortar el desplazamiento (plan, Riesgos). */
-    private const ANCESTROS_DE_LA_HOJA = ['html', 'body', 'body.publico', 'main', '.hoja'];
 
     private const VISTAS = [
         'resources/views/layouts/publico.blade.php',
@@ -126,16 +139,48 @@ class PaginasPublicasCssTest extends TestCase
         'resources/views/publico/servicios.blade.php',
     ];
 
+    /** El bloque `:root` de `app.css`. */
+    private function raiz(): string
+    {
+        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
+
+        return $root[1] ?? '';
+    }
+
     public function test_los_tokens_038_coinciden_con_el_sistema(): void
     {
         $sistema = file_get_contents(base_path('docs/design/system.md'));
-        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
+        $raiz = $this->raiz();
 
         foreach (self::TOKENS as $token => $valor) {
             foreach (self::EN_EL_SISTEMA[$token] as $texto) {
                 $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'`[\s\S]{0,60}?'.preg_quote($texto, '/').'/', $sistema, "system.md documenta {$token} con {$texto}.");
             }
-            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $root[1] ?? '', "app.css define {$token}: {$valor}.");
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:\s*'.preg_quote($valor, '/').'\s*;/', $raiz, "app.css define {$token}: {$valor}.");
+            $this->assertSame(1, preg_match_all('/'.preg_quote($token, '/').'\s*:/', $raiz), "app.css declara {$token} una sola vez.");
+        }
+    }
+
+    public function test_los_tokens_retirados_no_siguen(): void
+    {
+        // D21: la ronda 5 retira los tokens de la portada, la franja y la tarjeta de la ronda 3.
+        $raiz = $this->raiz();
+        $publico = file_get_contents(public_path(self::HOJA));
+        foreach (self::RETIRADOS as $token) {
+            $this->assertDoesNotMatchRegularExpression('/'.preg_quote($token, '/').'\s*:/', $raiz, "app.css ya no define {$token}.");
+            $this->assertStringNotContainsString("var({$token})", $publico, "publico.css ya no usa {$token}.");
+        }
+    }
+
+    public function test_el_error_generico_de_la_020_tiene_todas_sus_variables(): void
+    {
+        // /analyze A35: tras fusionar main, errores.css usa tokens que la 038 también tocaba.
+        preg_match_all('/var\((--[\w-]+)/', file_get_contents(public_path('css/errores.css')), $usadas);
+        $this->assertContains('--sombra-tarjeta-alta', $usadas[1], 'Control: errores.css usa la sombra de la tarjeta.');
+        $this->assertContains('--leading-publico', $usadas[1], 'Control: y el interlineado público.');
+        $raiz = $this->raiz();
+        foreach (array_unique($usadas[1]) as $token) {
+            $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:/', $raiz, "app.css declara {$token}, que usa errores.css.");
         }
     }
 
@@ -161,16 +206,27 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/!important/', $css);
     }
 
-    public function test_font_face_declara_lexend_autoalojada(): void
+    public function test_font_face_declara_las_dos_familias_autoalojadas(): void
     {
-        $css = file_get_contents(public_path(self::HOJA));
-        preg_match_all('/@font-face\s*\{([^}]*)\}/', $css, $caras);
-        $this->assertCount(2, $caras[1], 'Lexend 400 y 600.');
+        // Sustituye a «font-face declara Lexend autoalojada» (D19): seis caras, cada una con su woff2.
+        preg_match_all('/@font-face\s*\{([^}]*)\}/', file_get_contents(public_path(self::HOJA)), $caras);
+        $this->assertCount(6, $caras[1], 'Cormorant Garamond 500 y 600; Montserrat 400, 500, 600 y 700.');
+
+        $vistas = [];
         foreach ($caras[1] as $cara) {
-            $this->assertMatchesRegularExpression('/font-family\s*:\s*"Lexend"/', $cara);
-            $this->assertMatchesRegularExpression('/src\s*:\s*url\("?\.\.\/fonts\/lexend\/lexend-latin-(400|600)-normal\.woff2"?\)\s*format\("woff2"\)/', $cara, 'Archivo propio, en woff2.');
+            $this->assertMatchesRegularExpression('/font-family\s*:\s*"([^"]+)"/', $cara);
+            preg_match('/font-family\s*:\s*"([^"]+)"/', $cara, $familia);
+            preg_match('/font-weight\s*:\s*(\d+)/', $cara, $peso);
+            $this->assertArrayHasKey($familia[1], self::FUENTES, "{$familia[1]} es una familia del sitio público.");
+            $archivo = self::FUENTES[$familia[1]][(int) ($peso[1] ?? 0)] ?? null;
+            $this->assertNotNull($archivo, "{$familia[1]} {$peso[1]}: peso previsto.");
+            $this->assertMatchesRegularExpression('~src\s*:\s*url\("?\.\./fonts/'.preg_quote($archivo, '~').'"?\)\s*format\("woff2"\)~', $cara, 'Archivo propio, en woff2.');
+            $this->assertFileExists(public_path("fonts/{$archivo}"));
             $this->assertMatchesRegularExpression('/font-display\s*:\s*swap/', $cara);
+            $vistas[] = "{$familia[1]} {$peso[1]}";
         }
+        $this->assertCount(6, array_unique($vistas), 'Ninguna cara repetida.');
+        $this->assertStringNotContainsString('Lexend', file_get_contents(public_path(self::HOJA)), 'Lexend se retira (D21).');
     }
 
     public function test_body_publico_usa_la_familia_publica(): void
@@ -178,6 +234,11 @@ class PaginasPublicasCssTest extends TestCase
         $cuerpo = $this->declaraciones('body.publico', self::HOJA);
         $this->assertStringContainsString('font-family: var(--font-publica)', $cuerpo);
         $this->assertStringContainsString('display: block', $cuerpo, 'Anula el display: flex de app.css (plan D3).');
+        $this->assertStringContainsString('background: var(--bg)', $cuerpo, 'El fondo del sitio público es --p50.');
+        foreach (['.pub-hero h1', '.pub-sec h2'] as $titulo) {
+            $this->assertStringContainsString('font-family: var(--font-display)', $this->declaraciones($titulo, self::HOJA), "{$titulo}: en Cormorant Garamond.");
+        }
+        $this->assertStringContainsString('font-size: var(--text-display)', $this->declaraciones('.pub-hero h1', self::HOJA));
     }
 
     public function test_las_vistas_publicas_no_llevan_estilos_en_linea(): void
@@ -196,43 +257,27 @@ class PaginasPublicasCssTest extends TestCase
         }
     }
 
-    public function test_contraste_de_los_pares_nuevos(): void
+    public function test_contraste_de_los_pares_de_la_ronda_5(): void
     {
+        // design.md de la ronda 5, «Accesibilidad» (system.md 1.9.0, «Color»).
         $t = $this->tokensDeColor();
         foreach ([
-            ['--green-texto', '--white', 'Éxito en texto sobre blanco'],
-            ['--green-texto', '--bg', 'Éxito en texto sobre el fondo'],
-            ['--p600', '--bg', 'Texto secundario público sobre el fondo'],
-            // Refinado D15 (system.md 1.7.1): cabecera --p500 y pie --p600.
-            ['--white', '--p500', 'Logo, enlaces e icono de la cabecera'],
-            ['--white', '--p600', 'Texto y enlaces del pie'],
-            // Rediseño (system.md 1.8.0).
-            ['--p100', '--p600', 'Franja del horario'],
-            ['--p600', '--white', 'Pastilla «¿Abierto ahora?» y «N tratamientos»'],
-            ['--p600', '--p100', 'Icono de la tarjeta'],
+            ['--text', '--bg', 'Texto sobre --p50'],
+            ['--text', '--p400', '«Sobre nosotros» y botón principal'],
+            ['--text', '--p200', 'Botón principal con el puntero'],
+            ['--white', '--text', 'Botón de tinta'],
+            ['--p600', '--bg', 'Texto secundario sobre --p50'],
+            ['--p600', '--white', 'Texto de las promesas'],
+            ['--text', '--p100', 'Índice con el puntero'],
+            ['--p100', '--text', 'Tarjeta de la agenda'],
+            ['--p600', '--p100', 'Pie'],
+            ['--green-texto', '--white', 'Punto de «abierto» sobre la pastilla'],
         ] as [$texto, $fondo, $uso]) {
             $this->assertArrayHasKey($texto, $t, "{$texto} es un token de color.");
+            $this->assertArrayHasKey($fondo, $t, "{$fondo} es un token de color.");
             $this->assertGreaterThanOrEqual(4.5, $this->contraste($t[$texto], $t[$fondo]), "{$uso}: AA.");
         }
-        $this->assertGreaterThanOrEqual(3, $this->contraste($t['--border-control'], $t['--white']), 'Borde del botón secundario y de la tarjeta con foco: 3:1.');
-        $this->assertGreaterThanOrEqual(3, $this->contraste($t['--p100'], $t['--p600']), 'Borde e icono del botón de pausa: 3:1.');
-
-        // El velo sobre una foto blanca es el peor caso del texto de la portada (design.md).
-        $velo = $this->veloSobreBlanco();
-        $this->assertSame('#8B4B61', $velo, 'El peor caso del velo es el de design.md.');
-        $this->assertGreaterThanOrEqual(4.5, $this->contraste($t['--white'], $velo), 'Texto de la portada en blanco sobre el velo: AA.');
-        $this->assertGreaterThanOrEqual(3, $this->contraste($t['--p200'], $velo), '«prioridad.» en --p200 sobre el velo: AA de texto grande.');
-    }
-
-    /** `--velo-portada` (rgba) compuesto sobre blanco, en hex. */
-    private function veloSobreBlanco(): string
-    {
-        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
-        $this->assertMatchesRegularExpression('/--velo-portada\s*:\s*rgba\(/', $root[1] ?? '', 'app.css define --velo-portada.');
-        preg_match('/--velo-portada\s*:\s*rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\s*\)/', $root[1], $m);
-        [, $r, $g, $b, $a] = $m;
-
-        return sprintf('#%02X%02X%02X', ...array_map(fn ($c) => (int) round($c * $a + 255 * (1 - $a)), [$r, $g, $b]));
+        $this->assertGreaterThanOrEqual(3, $this->contraste($t['--border-control'], $t['--bg']), 'Borde de «Menú» y del botón fantasma sobre --p50: 3:1.');
     }
 
     public function test_enlaces_botones_y_menu_tienen_el_toque_minimo(): void
@@ -244,58 +289,43 @@ class PaginasPublicasCssTest extends TestCase
         }
     }
 
-    /**
-     * Selector que se pinta sobre el rosa (cabecera, pie y, con el rediseño, la portada con su velo y
-     * la franja) y no dentro del panel blanco del menú (/analyze A21).
-     */
-    private function sobreElRosa(string $selector): bool
-    {
-        $rosa = false;
-        foreach (['.pub-cabecera', '.lb-pie', '.portada', '.marquesina', '.marquesina-pausa'] as $zona) {
-            $rosa = $rosa || preg_match('/'.preg_quote($zona, '/').'(?![\w-])/', $selector) === 1;
-        }
-
-        return $rosa && ! str_contains($selector, '.pub-menu li');
-    }
-
     public function test_el_foco_es_el_del_sistema(): void
     {
+        // design.md: el foco del sistema (--p600) y el inverso solo sobre la tinta (tarjeta de la agenda).
         $focos = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], ':focus'));
         $this->assertNotEmpty($focos);
         $selectores = [];
         foreach ($focos as [$selector, $cuerpo]) {
             $lista = array_map('trim', explode(',', $selector));
-            $rosa = array_map(fn ($s) => $this->sobreElRosa($s), $lista);
-            $this->assertCount(1, array_unique($rosa), "{$selector}: no mezcla selectores sobre el rosa con otros.");
-            // Refinado D15: sobre --p500 y --p600, el anillo inverso; en el resto (también el panel del menú), el del sistema.
-            $anillo = $rosa[0] ? '--focus-ring-inverso' : '--focus-ring';
+            $tinta = array_map(fn ($s) => str_contains($s, '.pub-book__card'), $lista);
+            $this->assertCount(1, array_unique($tinta), "{$selector}: no mezcla selectores sobre la tinta con otros.");
+            $anillo = $tinta[0] ? '--focus-ring-inverso' : '--focus-ring';
             $this->assertStringContainsString("outline: var(--focus-ring-width) solid var({$anillo});", $cuerpo, "{$selector}: anillo {$anillo}.");
             $this->assertStringContainsString('outline-offset: var(--focus-ring-offset);', $cuerpo, "{$selector}: separación del sistema.");
             $selectores = array_merge($selectores, $lista);
         }
         $this->assertNotEmpty(array_filter($selectores, fn ($s) => str_ends_with($s, 'a:focus-visible')), 'Los enlaces tienen foco visible.');
         $this->assertNotEmpty(array_filter($selectores, fn ($s) => str_ends_with($s, 'summary:focus-visible')), 'El menú tiene foco visible.');
-        foreach (['.pub-cabecera a:focus-visible', '.pub-cabecera summary:focus-visible', '.lb-pie a:focus-visible', '.portada a:focus-visible', '.marquesina-pausa:focus-visible'] as $inverso) {
-            $this->assertContains($inverso, $selectores, "{$inverso} lleva el anillo inverso.");
-        }
-        $this->assertContains('.pub-menu li a:focus-visible', $selectores, 'Los enlaces del panel blanco del menú vuelven al anillo del sistema (A21).');
+        $this->assertContains('.pub-book__card a:focus-visible', $selectores, 'Sobre la tinta, el anillo inverso.');
     }
 
-    public function test_cabecera_y_pie_en_rosa_con_el_menu_sin_marco(): void
+    public function test_cabecera_fija_menu_en_pildora_y_pie_en_rosa_claro(): void
     {
-        // Refinado D15 (system.md 1.7.1), siguiendo la landing del colaborador.
-        $this->assertStringContainsString('background: var(--p500)', $this->declaraciones('.pub-cabecera', self::HOJA), 'Cabecera en --p500.');
-        $this->assertStringContainsString('background: var(--p600)', $this->declaraciones('.lb-pie', self::HOJA), 'Pie en --p600.');
-        foreach (['.pub-cabecera .logo', '.lb-pie .logo'] as $logo) {
-            $this->assertStringContainsString('background: var(--white)', $this->declaraciones($logo, self::HOJA), "{$logo}: logo en blanco.");
-        }
-        $this->assertStringContainsString('color: var(--white)', $this->declaraciones('.pub-nav-d a:not(.c-btn)', self::HOJA), 'Enlaces de la cabecera en blanco.');
+        // design.md, «Cabecera pública» y pie (ronda 5).
+        $barra = $this->declaraciones('.pub-bar', self::HOJA);
+        $this->assertStringContainsString('position: sticky', $barra, 'Fija arriba.');
+        $this->assertStringContainsString('top: 0', $barra);
+        $this->assertStringContainsString('background: var(--bg)', $barra);
+        $this->assertStringContainsString('border-bottom-color: var(--border)', $this->declaraciones('.pub-bar.is-scrolled', self::HOJA), 'El filete aparece al bajar.');
 
         $summary = $this->declaraciones('.pub-menu summary', self::HOJA);
-        $this->assertStringContainsString('border: 0', $summary, 'El icono del menú va sin contorno.');
-        $this->assertStringContainsString('background: none', $summary, 'El icono del menú va sin recuadro.');
-        $this->assertStringContainsString('color: var(--white)', $summary, 'Icono en blanco.');
-        $this->assertStringContainsString('min-width: var(--touch-min)', $summary, 'Caja de toque de 44 × 44.');
+        $this->assertStringContainsString('border-radius: var(--radius-pill)', $summary, '«Menú» en píldora.');
+        $this->assertStringContainsString('border: var(--border-width) solid var(--border-control)', $summary);
+
+        $pie = $this->declaraciones('.pub-foot', self::HOJA);
+        $this->assertStringContainsString('background: var(--p100)', $pie);
+        $this->assertStringContainsString('color: var(--p600)', $pie);
+        $this->assertStringContainsString('font-size: var(--text-firma)', $this->declaraciones('.pub-foot__word', self::HOJA), 'El nombre a todo el ancho.');
     }
 
     public function test_los_cortes_son_900_y_560(): void
@@ -303,7 +333,7 @@ class PaginasPublicasCssTest extends TestCase
         $condiciones = [];
         foreach ($this->reglasCss(self::HOJA) as [, , $envolventes]) {
             foreach ($envolventes as $condicion) {
-                // Los fotogramas de la franja (D16) no son cortes.
+                // Los fotogramas (el trazo del diente) no son cortes.
                 if (! str_starts_with($condicion, '@keyframes')) {
                     $condiciones[$condicion] = true;
                 }
@@ -311,8 +341,8 @@ class PaginasPublicasCssTest extends TestCase
         }
         $condiciones = array_keys($condiciones);
 
-        $this->assertContains('@media (max-width: 899px)', $condiciones, 'Corte del menú y la placa.');
-        $this->assertContains('@media (max-width: 559px)', $condiciones, 'Corte de puertas, índice y botones.');
+        $this->assertContains('@media (max-width: 899px)', $condiciones, 'Corte de la navegación, las columnas y el título fijo.');
+        $this->assertContains('@media (max-width: 559px)', $condiciones, 'Corte de los botones y la foto de la escena.');
         $this->assertSame([], array_values(array_diff($condiciones, ['@media (max-width: 899px)', '@media (max-width: 559px)', self::SIN_MOVIMIENTO])), 'Sin otros cortes.');
     }
 
@@ -323,102 +353,54 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertSame([], $this->literalesPublicos('line-height: var(--leading-publico); aspect-ratio: var(--logo-ratio);'));
 
         $this->assertStringContainsString('line-height: var(--leading-publico)', $this->declaraciones('body.publico', self::HOJA));
-        $this->assertStringContainsString('line-height: var(--leading-publico-h1)', $this->declaraciones('.t-h1', self::HOJA));
-        $this->assertStringContainsString('line-height: var(--leading-publico-h2)', $this->declaraciones('.t-h2', self::HOJA));
-        $this->assertStringContainsString('aspect-ratio: var(--logo-ratio)', $this->declaraciones('.logo', self::HOJA));
+        $this->assertStringContainsString('line-height: var(--leading-publico-h1)', $this->declaraciones('.pub-hero h1', self::HOJA));
+        $this->assertStringContainsString('line-height: var(--leading-publico-h2)', $this->declaraciones('.pub-sec h2', self::HOJA));
+        $this->assertStringContainsString('aspect-ratio: var(--logo-ratio)', $this->declaraciones('.pub-brand .logo', self::HOJA));
     }
 
-    /** Declaraciones de un selector solo dentro del corte de 900 px. */
-    private function enElMovil(string $selector): string
+    /** Declaraciones de un selector solo dentro de un corte. */
+    private function enElCorte(string $selector, string $corte = '@media (max-width: 899px)'): string
     {
-        $movil = array_filter($this->reglasCss(self::HOJA), fn ($r) => in_array('@media (max-width: 899px)', $r[2], true)
+        $reglas = array_filter($this->reglasCss(self::HOJA), fn ($r) => in_array($corte, $r[2], true)
             && in_array($selector, array_map('trim', explode(',', $r[0])), true));
 
-        return implode("\n", array_column($movil, 1));
+        return implode("\n", array_column($reglas, 1));
     }
 
-    public function test_la_ubicacion_se_apila_en_el_movil(): void
+    public function test_las_columnas_se_apilan_en_el_movil(): void
     {
-        // Sustituye a «la placa de la dirección queda encima del mapa» (/review R2): con el rediseño
-        // (D16) no hay placa sobre el mapa; el mapa ocupa 3 de 5 columnas a la izquierda y, por
-        // debajo de 900 px, los datos y el mapa se apilan sin solaparse.
-        $this->assertStringContainsString('grid-template-columns: 3fr 2fr', $this->declaraciones('.ubicacion', self::HOJA), 'Ubicación 3:2.');
-        $this->assertStringContainsString('order: -1', $this->declaraciones('.ubicacion-mapa', self::HOJA), 'El mapa a la izquierda.');
-        $this->assertStringContainsString('grid-template-columns: 1fr', $this->enElMovil('.ubicacion'), 'En el móvil, una columna.');
-        $this->assertStringNotContainsString('position: absolute', $this->declaraciones('.ubicacion-datos', self::HOJA), 'Los datos no se pintan sobre el mapa.');
-    }
-
-    public function test_la_portada_es_la_escena_de_la_hoja(): void
-    {
-        // M-1: la portada queda fija una pantalla y «Sobre nosotros» sube encima, solo con CSS.
-        $portada = $this->declaraciones('.portada', self::HOJA);
-        $this->assertStringContainsString('position: sticky', $portada);
-        $this->assertStringContainsString('top: 0', $portada);
-        $this->assertStringContainsString('min-height: 100svh', $portada);
-        $capitulo = $this->declaraciones('.hoja-capitulo', self::HOJA);
-        $this->assertStringContainsString('position: relative', $capitulo);
-        $this->assertMatchesRegularExpression('/z-index\s*:\s*[1-9]/', $capitulo, 'La hoja se pinta encima de la portada.');
-        $this->assertStringContainsString('background: var(--bg)', $capitulo);
-
-        // Un ancestro con overflow distinto de visible rompe position: sticky (plan, Riesgos).
-        foreach (self::ANCESTROS_DE_LA_HOJA as $ancestro) {
-            $this->assertDoesNotMatchRegularExpression('/overflow(-[xy])?\s*:/', $this->declaraciones($ancestro, self::HOJA), "{$ancestro} no recorta el desplazamiento.");
+        // design.md, «Proporciones»: presentación 1.25fr : 1fr y la ubicación 5fr : 7fr; por debajo de
+        // 900 px, una columna sin solaparse.
+        $this->assertStringContainsString('grid-template-columns: 1.25fr 1fr', $this->declaraciones('.pub-hero__grid', self::HOJA));
+        $this->assertStringContainsString('grid-template-columns: 5fr 7fr', $this->declaraciones('.pub-visit__grid', self::HOJA));
+        foreach (['.pub-hero__grid', '.pub-visit__grid'] as $rejilla) {
+            $this->assertStringContainsString('grid-template-columns: 1fr', $this->enElCorte($rejilla), "{$rejilla}: en el móvil, una columna.");
         }
+        $this->assertStringContainsString('max-width: var(--page-ancho)', $this->declaraciones('.pub-wrap', self::HOJA), 'Ancho de cartel.');
+        $this->assertStringContainsString('padding-inline: var(--gutter)', $this->declaraciones('.pub-wrap', self::HOJA));
+    }
 
-        $foto = $this->declaraciones('.portada-foto', self::HOJA);
+    public function test_la_escena_solo_tapa_la_foto_cuando_esta_viva(): void
+    {
+        // M-1: sin JavaScript o con movimiento reducido, la foto entera y sin velo (design.md).
+        $this->assertStringContainsString('display: none', $this->declaraciones('.pub-open:not(.is-live) .pub-open__veil', self::HOJA));
+        $foto = $this->declaraciones('.pub-open__photo', self::HOJA);
         $this->assertStringContainsString('object-fit: cover', $foto);
-        $this->assertStringContainsString('object-position: right center', $foto, 'El sujeto de la foto a la derecha (design.md).');
-    }
-
-    public function test_el_texto_pequeno_de_la_portada_va_sobre_el_velo_fuerte(): void
-    {
-        // /analyze A24: el texto de menos de 24 px queda sobre --velo-portada (≥ 0.82) entero.
-        $velo = $this->declaraciones('.portada-velo', self::HOJA);
-        $this->assertMatchesRegularExpression('/linear-gradient\(\s*to right,\s*var\(--velo-portada\)\s+0\s+(\d+)%,\s*var\(--velo-portada-suave\)\s+100%\s*\)/', $velo, 'Degradado del velo de izquierda a derecha.');
-        preg_match('/var\(--velo-portada\)\s+0\s+(\d+)%/', $velo, $tramo);
-        $this->assertGreaterThanOrEqual(60, (int) $tramo[1], 'El velo fuerte llega al menos al 60 % del ancho.');
-        $this->assertStringContainsString('background: var(--velo-portada)', $this->enElMovil('.portada-velo'), 'Velo uniforme por debajo de 900 px.');
-
-        // Control: el texto pequeño ocupa como mucho el 60 % de su columna, que nunca empieza a la
-        // derecha del borde de la página (centrada en --page-max).
-        foreach (['.portada-lead', '.estado'] as $pequeno) {
-            $this->assertStringContainsString('max-width: 60%', $this->declaraciones($pequeno, self::HOJA), "{$pequeno} cabe en el tramo fuerte del velo.");
-        }
-        $this->assertStringContainsString('max-width: var(--page-max)', $this->declaraciones('.lb-wrap', self::HOJA));
-        $this->assertStringContainsString('margin: 0 auto', $this->declaraciones('.lb-wrap', self::HOJA));
-    }
-
-    public function test_la_franja_solo_se_mueve_con_javascript_y_se_puede_pausar(): void
-    {
-        // M-2 y /analyze A23 (WCAG 2.2.2): sin JavaScript no hay botón para pararla, así que no se mueve.
-        $css = file_get_contents(public_path(self::HOJA));
-        $this->assertMatchesRegularExpression('/@keyframes marquesina\s*\{/', $css);
-
-        $animaciones = array_filter($this->reglasCss(self::HOJA), fn ($r) => preg_match('/animation\s*:[^;]*\bmarquesina\b/', $r[1]));
-        $this->assertNotEmpty($animaciones, 'La pista de la franja se anima.');
-        foreach ($animaciones as [$selector, $cuerpo, $envolventes]) {
-            foreach (array_map('trim', explode(',', $selector)) as $uno) {
-                $this->assertStringStartsWith('.js ', $uno, "{$uno}: la franja solo se mueve con JavaScript.");
+        $this->assertStringContainsString('width: 100%', $foto);
+        $vivas = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], '.is-live') && ! str_contains($r[0], ':not(.is-live)'));
+        $this->assertNotEmpty($vivas, 'La escena viva tiene sus reglas.');
+        foreach ($vivas as [$selector, $cuerpo]) {
+            if (str_contains($cuerpo, 'transform')) {
+                $this->assertStringContainsString('var(--p', $cuerpo, "{$selector}: el hueco crece con el progreso --p.");
             }
-            $this->assertContains(self::SIN_MOVIMIENTO, $envolventes, "{$selector}: y sin movimiento reducido.");
-            $this->assertStringContainsString('var(--duration-marquesina)', $cuerpo);
         }
-
-        $pausadas = $this->declaraciones('.js .marquesina.is-pausada .marquesina-pista', self::HOJA)."\n".$this->declaraciones('.js .marquesina:hover .marquesina-pista', self::HOJA);
-        $this->assertSame(2, substr_count($pausadas, 'animation-play-state: paused'), 'Se para con su botón (is-pausada) y con el puntero.');
-
-        // A33: el botón lleva hidden en el HTML; su propio display no puede anularlo.
-        $this->assertStringContainsString('display: none', $this->declaraciones('.marquesina-pausa[hidden]', self::HOJA));
-        $boton = $this->declaraciones('.marquesina-pausa', self::HOJA);
-        $this->assertStringContainsString('min-width: var(--touch-min)', $boton);
-        $this->assertStringContainsString('border: var(--border-width-strong) solid var(--p100)', $boton);
-        $this->assertStringContainsString('color: var(--p100)', $boton);
+        $this->assertStringContainsString('object-fit: contain', $this->enElCorte('.pub-open__photo', '@media (max-width: 559px)'), 'Por debajo de 560 px, la foto contenida.');
     }
 
     public function test_las_entradas_solo_ocultan_con_javascript(): void
     {
-        // M-3: sin JavaScript (sin la clase js) y con movimiento reducido, todo está visible.
-        $ocultas = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], '[data-reveal') && ! str_contains($r[0], '.is-in'));
+        // M-3 y M-4: sin JavaScript (sin la clase js) y con movimiento reducido, todo está visible.
+        $ocultas = array_filter($this->reglasCss(self::HOJA), fn ($r) => (str_contains($r[0], '[data-reveal') || str_contains($r[0], '.pub-hero h1 .ln')) && ! str_contains($r[0], '.is-in'));
         $this->assertNotEmpty($ocultas, 'Hay entradas por sección.');
         foreach ($ocultas as [$selector, , $envolventes]) {
             foreach (array_map('trim', explode(',', $selector)) as $uno) {
@@ -429,19 +411,24 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertStringContainsString('opacity: 1', $this->declaraciones('.js [data-reveal].is-in', self::HOJA), 'Al entrar, se ve.');
     }
 
-    public function test_nada_se_levanta_al_pasar_el_puntero(): void
+    public function test_el_movimiento_bajo_la_mano_solo_sin_movimiento_reducido(): void
     {
-        // M-4 y reglas de uso (1.8.0): con el puntero o el foco cambian borde, sombra y color; nada se mueve.
-        foreach ($this->reglasCss(self::HOJA) as [$selector, $cuerpo]) {
-            if (preg_match('/:hover|:focus/', $selector)) {
-                $this->assertDoesNotMatchRegularExpression('/translate|transform\s*:/', $cuerpo, "{$selector}: no se levanta.");
+        // Sustituye a «nada se levanta al pasar el puntero» (1.8.0): en la ronda 5 los botones ceden y
+        // las filas del índice responden (M-5), pero solo sin movimiento reducido; con él, solo el color.
+        foreach ($this->reglasCss(self::HOJA) as [$selector, $cuerpo, $envolventes]) {
+            if (preg_match('/:hover|:focus|:active/', $selector) && preg_match('/transform\s*:/', $cuerpo)) {
+                $this->assertContains(self::SIN_MOVIMIENTO, $envolventes, "{$selector}: se mueve solo sin movimiento reducido.");
             }
         }
-        $tarjeta = $this->declaraciones('.tarjeta:hover', self::HOJA);
-        $this->assertStringContainsString('border-color: var(--border-control)', $tarjeta);
-        $this->assertStringContainsString('box-shadow: var(--sombra-tarjeta-alta)', $tarjeta);
-        $this->assertStringContainsString('box-shadow: var(--sombra-tarjeta)', $this->declaraciones('.tarjeta', self::HOJA));
         $this->assertStringContainsString('border-radius: var(--radius-pill)', $this->declaraciones('.c-btn', self::HOJA), 'Botones en píldora.');
+        $principal = $this->declaraciones('.c-btn--primary', self::HOJA);
+        $this->assertStringContainsString('background: var(--p400)', $principal);
+        $this->assertStringContainsString('color: var(--text)', $principal);
+        $this->assertStringContainsString('background: var(--p200)', $this->declaraciones('.c-btn--primary:hover', self::HOJA));
+        $tinta = $this->declaraciones('.c-btn--ink', self::HOJA);
+        $this->assertStringContainsString('background: var(--text)', $tinta);
+        $this->assertStringContainsString('color: var(--white)', $tinta);
+        $this->assertStringContainsString('background: var(--p100)', $this->declaraciones('.pub-index a:hover', self::HOJA), 'La fila del índice se llena de --p100.');
     }
 
     public function test_una_descripcion_vacia_no_deja_hueco(): void
@@ -458,10 +445,10 @@ class PaginasPublicasCssTest extends TestCase
         foreach ($this->reglasCss(self::HOJA) as [$selector, $cuerpo, $envolventes]) {
             if (preg_match('/\b(transition|animation)(-[\w-]+)?\s*:|scroll-behavior\s*:\s*smooth/', $cuerpo)) {
                 $this->assertContains(self::SIN_MOVIMIENTO, $envolventes, "{$selector}: el movimiento solo sin prefers-reduced-motion.");
-                $this->assertMatchesRegularExpression('/var\(--duration-(base|fast|reveal|marquesina)\)/', $cuerpo, "{$selector}: duración con token.");
+                $this->assertMatchesRegularExpression('/var\(--(duration-(base|fast|reveal)|stagger)\)/', $cuerpo, "{$selector}: duración con token.");
                 $con++;
             }
         }
-        $this->assertGreaterThan(0, $con, 'Las tarjetas, los botones y las entradas tienen su transición (design.md).');
+        $this->assertGreaterThan(0, $con, 'Los botones, el índice, el trazo y las entradas tienen su transición (design.md).');
     }
 }
