@@ -282,6 +282,18 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertMatchesRegularExpression('/^    networks:\n      - produccion$/m', $scheduler);
         $this->assertMatchesRegularExpression('/^    depends_on:\n      db:\n        condition: service_healthy$/m', $scheduler);
         $this->assertMatchesRegularExpression('/^      - storage:\/var\/www\/storage$/m', $scheduler, 'Escribe sus logs en el mismo storage que app.');
+
+        // /review 020 R21 y R23: nada más que esto, y sin capacidades ni escalada de privilegios.
+        preg_match_all('/^    ([a-z_]+):/m', $scheduler, $claves);
+        $this->assertEqualsCanonicalizing(
+            ['image', 'pull_policy', 'restart', 'user', 'command', 'env_file', 'volumes', 'networks', 'depends_on', 'cap_drop', 'security_opt'],
+            $claves[1],
+            'El bloque del scheduler tiene exactamente estas claves.',
+        );
+        $this->assertMatchesRegularExpression('/^    cap_drop: \[ALL\]$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    security_opt: \["no-new-privileges:true"\]$/m', $scheduler);
+        $this->assertMatchesRegularExpression('/^    volumes:\n      - storage:\/var\/www\/storage\n      - \.\/docker\/nginx\/php\/local\.ini:\/usr\/local\/etc\/php\/conf\.d\/local\.ini:ro\n(?!      - )/m', $scheduler, 'Solo sus dos volúmenes.');
+        $this->assertMatchesRegularExpression('/^    networks:\n      - produccion\n(?!      - )/m', $scheduler, 'Una sola red.');
     }
 
     /** @return array<string, array{0: string}> */
@@ -761,7 +773,8 @@ class ConfiguracionProduccionTest extends TestCase
         $sueltas = [];
         $dentro = 0;
         foreach (explode("\n", $ordenes) as $linea) {
-            if (preg_match('/^if .*config --services.*\| grep -qxF scheduler; then$/', $linea)) {
+            // /review 020 R4: la lista se lee una vez (con `|| error`) y se busca en ella, sin tubería.
+            if (preg_match('/^if grep -qxF scheduler <<< "\$\{\w+\}"; then$/', $linea)) {
                 $dentro++;
 
                 continue;
@@ -792,6 +805,30 @@ class ConfiguracionProduccionTest extends TestCase
             $this->assertSame([], $this->schedulerSinComprobar($ordenes), "{$script} nombra el scheduler sin comprobar que existe.");
         }
         $this->assertCount(1, $this->schedulerSinComprobar("if x; then\nfi\n\"\${compose[@]}\" up -d scheduler"), 'Control positivo.');
+        $this->assertCount(1, $this->schedulerSinComprobar("if \"\${compose[@]}\" config --services | grep -qxF scheduler; then\n\"\${compose[@]}\" up -d scheduler\nfi"), 'La tubería ya no cuenta como comprobación.');
+
+        // /review 020 R4: si no se puede leer la lista de servicios, el script se detiene.
+        foreach (['deploy/desplegar.sh', 'deploy/volver.sh', 'deploy/restaurar.sh'] as $script) {
+            $ordenes = $this->ordenes($script);
+            $this->assertDoesNotMatchRegularExpression('/config --services[^\n]*\|/', $ordenes, "{$script} no lee la lista con una tubería.");
+            $this->assertMatchesRegularExpression('/^\w+="\$\([^\n]*config --services[^\n]*\)" \|\| error "/m', $ordenes, "{$script} lee la lista y se detiene si no puede.");
+        }
+
+        // /review 020 R16 y R17: el scheduler instalado se para antes de migrar, y volver.sh lo para tras el fetch.
+        $desplegar = $this->ordenes('deploy/desplegar.sh');
+        $this->assertLessThan(
+            $this->posicion($desplegar, 'php artisan migrate --force', 'desplegar.sh migra.'),
+            $this->posicion($desplegar, '"${compose[@]}" stop scheduler', 'desplegar.sh para el scheduler instalado.'),
+            'El scheduler se para antes de migrar.',
+        );
+        $volver = $this->ordenes('deploy/volver.sh');
+        $parada = $this->posicion($volver, '"${compose[@]}" stop scheduler', 'volver.sh para el scheduler.');
+        $this->assertGreaterThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh hace el fetch.'), $parada, 'Lo para después del fetch.');
+        $this->assertLessThan($this->posicion($volver, 'checkout "${ref}"', 'volver.sh hace el checkout.'), $parada, 'Y antes del checkout.');
+
+        // /review 020 R18: con --volver, la salida sin datos descifrados nombra también el scheduler.
+        $this->assertSame(1, preg_match('/^error "no llegó ningún dato descifrado[^\n]*siguen parados en \$\{ref\}[^\n]*"$/m', $this->ordenes('deploy/restaurar.sh'), $mensaje));
+        $this->assertStringContainsString('scheduler', $mensaje[0], 'El mensaje nombra el scheduler, también parado.');
 
         foreach (['deploy/desplegar.sh', 'deploy/volver.sh'] as $script) {
             $ordenes = $this->ordenes($script);
