@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.8.0
+version: 1.9.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -65,10 +65,18 @@ que usa `system.html`.
 | `--green` / `--green-bg` | `#1D9E75` / `#E1F5EE` | `--color-success` | Badge "Completada", flash de éxito, cifra "Completadas" | 2.98:1 sobre --green-bg · 3.39:1 sobre --white (no cumple, DS1) |
 | `--amber` / `--amber-bg` | `#854F0B` / `#FAEEDA` | `--color-warning` | Badge "En curso", avisos | 5.87:1 sobre --amber-bg |
 | `--blue` / `--blue-bg` | `#185FA5` / `#E6F1FB` | `--color-info` | Badge "Confirmada" | 5.70:1 sobre --blue-bg |
-| `--velo-portada` (spec 038, 1.8.0) | `rgba(114, 36, 62, 0.82)` (`--p800` al 82 %) | `--color-velo` | Velo de la marca sobre la foto de la portada pública, en el tramo del texto | blanco 6.41:1 y `--p200` 4.06:1 (texto grande) en el peor caso (foto blanca: `#8B4B61`) |
-| `--velo-portada-suave` (spec 038, 1.8.0) | `rgba(114, 36, 62, 0.35)` | `--color-velo-suave` | Extremo derecho del degradado del velo, donde se ve la foto; sin texto encima | — (no lleva texto pequeño) |
+| `--velo-portada` (spec 038, 1.8.0; retirado en 1.9.0) | `rgba(114, 36, 62, 0.82)` (`--p800` al 82 %) | `--color-velo` | Velo de la marca sobre la foto de la portada pública, en el tramo del texto | blanco 6.41:1 y `--p200` 4.06:1 (texto grande) en el peor caso (foto blanca: `#8B4B61`) |
+| `--velo-portada-suave` (spec 038, 1.8.0; retirado en 1.9.0) | `rgba(114, 36, 62, 0.35)` | `--color-velo-suave` | Extremo derecho del degradado del velo, donde se ve la foto; sin texto encima | — (no lleva texto pequeño) |
 | `--overlay` | `rgba(0, 0, 0, 0.45)` | `--color-overlay` | Velo bajo el menú abierto en el móvil (spec 033) | — (no lleva texto) |
 | (literal) `#C75078` | `#C75078` | `--color-sidebar` | Barra lateral, medida en las 104 capturas con menú; no es token (DS4) | blanco 4.33:1 · menú en blanco al 90% 3.82:1 (no cumple, DS1) · `.nav-label` en blanco al 65% 2.72:1 (no cumple, DS1) |
+
+Pares del sitio público (spec 038, 1.9.0, ronda 5; calculados en `design/opcion-a.html#color`):
+`--text` sobre `--p50` 19.59:1; `--text` sobre `--p400` («Sobre nosotros» y botón principal) 5.34:1;
+`--text` sobre `--p200` (botón principal con el puntero) 13.31:1; `--white` sobre `--text` 21.00:1;
+`--p600` sobre `--p50` 6.54:1 y sobre `--white` 7.00:1; `--text` sobre `--p100` (índice) 18.13:1;
+`--p100` sobre `--text` (tarjeta de la agenda) 18.13:1; `--p600` sobre `--p100` (pie) 6.05:1;
+`--border-control` sobre `--p50` 3.67:1 (borde, no texto); `--green-texto` sobre `--white` 5.30:1
+(punto de «abierto»).
 
 Contraste calculado con la fórmula de luminancia relativa de WCAG 2.x. Umbrales: ≥ 4.5:1 en texto
 normal, ≥ 3:1 en texto grande y en bordes de control. Modo oscuro: no aplica (no existe en la app;
@@ -87,17 +95,24 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
 
-Páginas públicas (spec 038; [diseño](../specs/038-pagina-inicio/design.md)): familia `--font-publica`
-(`"Lexend", system-ui, sans-serif`), con Lexend 400 y 600 autoalojada en `public/fonts/lexend/`
-(woff2 latino de `@fontsource/lexend` 5.3.0, licencia OFL-1.1) y declarada con `@font-face` en
-`public/css/publico.css`. Tamaños: `--text-publico-h1` (fluido de 30px a 320 px a 48px a 1440 px),
+Sitio público (spec 038, 1.9.0, ronda 5 «La ventana del diente»; [diseño](../specs/038-pagina-inicio/design.md)):
+dos familias autoalojadas en `public/fonts/` (woff2 latino de `@fontsource` 5.3.0, OFL-1.1, cada una
+con su `OFL.txt`) y declaradas con `@font-face` en `public/css/publico.css`: `--font-display`
+(`"Cormorant Garamond", ui-serif, Georgia, serif`; 500 y 600, `cormorant-garamond/`) para los títulos
+y `--font-publica` (`"Montserrat", ui-sans-serif, system-ui, sans-serif`; 400–700, `montserrat/`) para
+el texto. Montserrat sustituye a Lexend, que se retira (D21). Tamaños fluidos de 320 a 1440 px:
+`--text-display` (52px a 120px, titular de cartel, una palabra por línea), `--text-statement` (28px a
+44px, frase de «Sobre nosotros»), `--text-seccion` (40px a 80px, títulos de sección), `--text-indice`
+(28px a 56px, nombres del índice de categorías), `--text-firma` (76px a 360px, el nombre a todo el
+ancho del pie) y `--text-lead` (18px a 21px, texto de presentación). Antes (1.7.0): `--font-publica`
+en Lexend 400 y 600 (`public/fonts/lexend/`), retirada en 1.9.0. Tamaños: `--text-publico-h1` (fluido de 30px a 320 px a 48px a 1440 px),
 `--text-publico-h2` (fluido de 22px a 30px), `--text-publico-h3` (19px), `--text-publico` (17px) y
 `--text-publico-small` (15px). La app de gestión sigue en Roboto (DS9 no cambia). En las páginas
 públicas el texto secundario es `--p600` (6.54:1 sobre `--bg`); `--text-muted` de la app no cambia (DS3).
 Interlineado de las páginas públicas (1.7.2, `/review 038` R1): `--leading-publico` (1.5) para el
 texto, `--leading-publico-h1` (1.15) para el `h1` y `--leading-publico-h2` (1.25) para los títulos de
 sección. Son proporciones sin unidad y solo van en `line-height`.
-Portada y franja (1.8.0, rediseño de la ronda 3): `--text-portada` (fluido de 40px a 320 px a 96px a
+Portada y franja (1.8.0, rediseño de la ronda 3; retirados en 1.9.0): `--text-portada` (fluido de 40px a 320 px a 96px a
 1440 px, el titular de la portada, ≥ 4× el cuerpo), `--text-marquesina` (fluido de 34px a 80px, la
 franja del horario), `--leading-portada` (0.98, solo en `line-height`) y `--tracking-portada`
 (-0.03em, solo en `letter-spacing`), estos dos para el titular y la franja.
@@ -189,11 +204,20 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
     definiciones en una columna y botones a todo el ancho. Acompaña al de 900 px y, como él, es el único
     literal admitido, solo en la condición.
 - **Spec 038, rediseño de la ronda 3 (1.8.0):**
-  - `--radius-pill` (999px): botones, índice de `/servicios`, pastilla «¿Abierto ahora?»;
-  - `--sombra-tarjeta` (`0 1px 2px rgba(114, 36, 62, 0.08)`): tarjeta de categoría en reposo;
+  - `--radius-pill` (999px): botones, índice de `/servicios`, pastilla «¿Abierto ahora?» (se queda en
+    1.9.0);
+  - `--sombra-tarjeta` (`0 1px 2px rgba(114, 36, 62, 0.08)`): tarjeta de categoría en reposo (retirado
+    en 1.9.0);
   - `--sombra-tarjeta-alta` (`0 14px 32px rgba(114, 36, 62, 0.16)`): botón principal y tarjeta con el
-    puntero o el foco. Son las únicas sombras de las páginas públicas;
-  - `--icono-tarjeta` (56px): círculo del icono de la tarjeta de categoría.
+    puntero o el foco; desde 1.9.0 no la usan las páginas públicas, pero se queda por el error genérico
+    de la 020;
+  - `--icono-tarjeta` (56px): círculo del icono de la tarjeta de categoría (retirado en 1.9.0).
+- **Spec 038, sitio público de la ronda 5 (1.9.0):**
+  - `--shadow-soft` (`0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24)`):
+    promesas, pastilla de estado, etiqueta de la ventana y menú; es la única sombra del sitio público;
+  - `--page-ancho` (1440px): ancho de cartel del sitio público (la app sigue con `--page-max`);
+  - `--gutter`: margen lateral del sitio público, fluido de 16px (320 px) a 56px (1440 px);
+  - `--space-seccion-publica`: aire entre secciones, fluido de 80px a 168px.
 - **Spec 020 (registro de auditoría y error genérico; nombres de la 041, que los reutiliza):**
   - `--leading-publico` (1.5): interlineado del texto corrido (introducción de la consulta, error) y de
     las líneas secundarias de cada evento;
@@ -484,8 +508,38 @@ con los botones a partes iguales y el texto centrado. Sin `:has()`, queda a la d
 
 ### Páginas públicas (spec 038)
 Componentes de `/` y `/servicios` (y de `/galeria` con la 039), en `public/css/publico.css`, solo con
-tokens. Desde 1.8.0 siguen el rediseño de la ronda 3 ([diseño](../specs/038-pagina-inicio/design.md), opción C «La línea de abound» con
-la ubicación de D):
+tokens y con el prefijo `pub-`. **Desde 1.9.0, superficie «Sitio público»** (ronda 5, «La ventana del
+diente»; [diseño](../specs/038-pagina-inicio/design.md)):
+- **Botón en píldora** (`.c-btn`, 1.9.0): `--radius-pill`, alto `--touch-min` (56 px en `.c-btn--lg`),
+  `--font-publica` 600. Principal (`.c-btn--primary`): `--p400` con texto `--text` (con el puntero,
+  `--p200`); tinta (`.c-btn--ink`): `--text` con texto `--white` (con el puntero, `--p800`); fantasma
+  (`.c-btn--secondary`): borde `--border-control`. Cede al pulsar (`scale(0.97)`, `--ease-out`) y la
+  flecha avanza 3 px, solo sin movimiento reducido.
+- **Pastilla de estado** (`.pub-status`, 1.9.0): `--white`, `--shadow-soft`, esquinas de 22 px y punto
+  de 10 px en `--green-texto` (abierto) o `--p400` (cerrado); texto en primera persona («Abierto ahora ·
+  cerramos a las 20:00»), escrito con `textContent` (`aria-live="polite"`). Sin JavaScript no aparece y
+  el horario completo se lee al lado.
+- **Promesa** (`.pub-promise__item`, 1.9.0): `--white`, radio de 24 px, `--shadow-soft`, icono lineal
+  de 44 px en `--p400` (`aria-hidden`), título en `--font-display` 600 y texto `--p600`.
+- **Índice de categorías** (`.pub-index`, 1.9.0): filete superior `--text`, filas de 88 px con el
+  nombre en `--text-indice`, la cuenta en `--p600` y la flecha en un círculo de 48 px; cada fila es un
+  enlace entero. Con el puntero o el foco, la fila se llena de `--p100` desde abajo, el nombre se
+  desplaza 12 px y la flecha gira.
+- **Tarjeta de la agenda** (`.pub-book__card`, 1.9.0): `--text` con texto `--p100`, radio de 36 px y el
+  contorno del diente como marca de agua (`aria-hidden`).
+- **Cabecera pública** (`.pub-bar`, 1.9.0): fija arriba, `--p50`, filete `--border` al bajar; logo,
+  «Servicios», «Ubicación», «Iniciar sesión» o «Ir a mi panel» y «Crear cuenta». Por debajo de 900 px,
+  «Menú» en píldora con borde `--border-control` y su icono (`<details class="pub-menu">`, que se abre y
+  se cierra sin JavaScript; con él, Escape lo cierra y devuelve el foco a «Menú»). Foco `--focus-ring`.
+- **Pie público** (`.pub-foot`, 1.9.0): enlaces, horario, teléfono `tel:`, dirección, el nombre a todo
+  el ancho en `--text-firma` (`aria-hidden`) y el ©; texto `--p600` sobre `--p100`.
+- **Exclusivos de `/`:** **la ventana del diente** (`.pub-tooth`: la foto de la marca recortada dentro
+  del contorno del logo, con su trazo `--p400` y la etiqueta blanca «Antes de empezar, te explicamos
+  cada paso.») y **su escena** (`.pub-open`: velo `--p50` con un hueco en forma de diente que crece con
+  el desplazamiento; sin JavaScript o con movimiento reducido, la foto entera sin velo).
+
+Componentes de 1.8.0 (ronda 3, opción C «La línea de abound» con la ubicación de D), **retirados en
+1.9.0** salvo el botón en píldora, que cambia de colores; se documentan como historial:
 - **Botón en píldora** (`.c-btn`, 1.8.0): `--radius-pill`, borde `--border-width-strong`, alto
   `--touch-min`. Principal (`.c-btn--primary`) en `--p500` con texto `--white` y
   `--sombra-tarjeta-alta`; claro (`.c-btn--claro`) `--white` con texto `--p600`, en la cabecera y la
@@ -596,7 +650,8 @@ SHA-256 de cada archivo.
 | `--ease-expo` (spec 038, 1.8.0) | `cubic-bezier(0.16, 1, 0.3, 1)` | Entradas de sección de las páginas públicas |
 | `--duration-reveal` (spec 038, 1.8.0) | `800ms` | Entradas de sección |
 | `--stagger` (spec 038, 1.8.0) | `80ms` | Escalonado entre partes de una entrada (cuatro pasos como máximo) |
-| `--duration-marquesina` (spec 038, 1.8.0) | `48s` | Una vuelta de la franja del horario |
+| `--duration-marquesina` (spec 038, 1.8.0; retirado en 1.9.0) | `48s` | Una vuelta de la franja del horario |
+| `--ease-in-out` (spec 038, 1.9.0) | `cubic-bezier(0.77, 0, 0.175, 1)` | El trazo del diente (M-2) |
 | (sin token) | `all 0.15s` | Hover de botones, menú y accesos rápidos (`translateY(-1px)` en `.quick-action`) |
 | (sin token) | animaciones `fadeUp` y `modalIn` | Entrada del acceso y del registro, y diálogos |
 
@@ -604,7 +659,13 @@ No respeta `prefers-reduced-motion` (DS10), salvo el menú del móvil de la spec
 con `prefers-reduced-motion: no-preference`. Las páginas públicas (1.8.0) tampoco animan nada con
 movimiento reducido y, sin JavaScript, dejan todo visible y la franja quieta.
 
-Páginas públicas (1.8.0): una escena (la hoja que sube sobre la portada, CSS sticky), una jugada
+Sitio público (1.9.0, ronda 5): una escena (`ventana`: el hueco con forma de diente crece con el
+progreso del desplazamiento, `--p`, sin capturar la rueda), la firma de la primera pantalla (el trazo
+del diente y el titular por líneas), entradas por sección (`--duration-reveal`, `--ease-expo`,
+`--stagger`) y respuesta bajo la mano (botones que ceden, filas del índice que se llenan). Todo con la
+clase `js` y sin movimiento reducido; sin JavaScript, todo visible y quieto.
+
+Antes, páginas públicas (1.8.0): una escena (la hoja que sube sobre la portada, CSS sticky), una jugada
 firma (la franja del horario), entradas por sección que cambian con el contenido (títulos por línea,
 tarjetas una a una, mapa desde una máscara) con la clase `is-in` que pone el script común
 `public/js/publico.js`, y respuesta bajo la mano (botones que ceden, tarjetas que cambian borde,
@@ -633,8 +694,8 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Nuevo y editar paciente (spec 035) | `system.html#pacientes-create-admin-390` · `capturas/pacientes-create-admin-320.png` | `system.html#pacientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, foco del sistema, acciones de formulario |
 | Expedientes (spec 035) | `system.html#expedientes-index-dentista-390` · `capturas/expedientes-index-dentista-320.png` | `system.html#expedientes-index-dentista-1440` | buscador con etiqueta, tabla (tarjetas en el móvil), paginación |
 | Expediente (spec 035) | `system.html#expedientes-show-admin-390` · `capturas/expedientes-show-admin-320.png` | `system.html#expedientes-show-admin-1440` | migas, cabecera, avisos de alergias y medicamentos, formulario con etiquetas, próxima visita, información (ficha en una columna) |
-| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública, portada a sangre con la pastilla «¿Abierto ahora?», hoja de «Sobre nosotros», tarjetas de categoría, franja del horario con su pausa, ubicación 3:2, pie con la marca (1.8.0; capturas en T086) |
-| Servicios (`/servicios`, spec 038) | capturas en T031 | capturas en T031 | cabecera pública, título centrado, índice en píldoras, listas por categoría, pie (1.8.0; capturas en T086) |
+| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública con «Menú», presentación con la ventana del diente, la pastilla de estado, el horario y el teléfono; escena de la foto; «Sobre nosotros» en `--p400`; tres promesas; índice de categorías; tarjeta de la agenda; ubicación con la semana y el mapa; pie con el nombre a todo el ancho (1.9.0, ronda 5; capturas en T089) |
+| Servicios (`/servicios`, spec 038) | capturas en T031 | capturas en T031 | cabecera pública, título en `--font-display`, índice en píldoras, listas por categoría, botones `.c-btn`, pie (1.9.0; capturas en T089) |
 | Nuevo expediente (spec 035) | `system.html#expedientes-create-admin-390` · `capturas/expedientes-create-admin-320.png` | `system.html#expedientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, acciones de formulario |
 
 **Reprogramar cita (spec 028)**, del personal y del paciente: dentro de `.formulario-accesible`, una
@@ -767,7 +828,12 @@ Estados: `capturada` · `sin captura (motivo)` · `no accesible (motivo)`.
 - Pantallas nuevas o modificadas: solo tokens de este documento, sin valores literales de color,
   tamaño ni espaciado. Si falta un valor, se añade aquí primero. El código anterior no bloquea
   (regla de "Código previo"; constitución, P9).
-- Páginas públicas (spec 038; 1.8.0, rediseño de la ronda 3): una escena y una franja como máximo
+- Sitio público (spec 038; 1.9.0, ronda 5): una escena por página; la foto de la marca solo dentro de
+  la forma del logo o a pantalla completa en su escena; todo movimiento solo sin
+  `prefers-reduced-motion: reduce` y lo que oculta, solo con JavaScript; un solo script propio
+  (`public/js/publico.js`, con `defer`) y la página completa sin él; nada se presenta como el equipo;
+  las promociones (040) sin cintillo, contadores ni colores de oferta.
+- Antes, páginas públicas (1.8.0, rediseño de la ronda 3; sustituida por la regla anterior): una escena y una franja como máximo
   por página; entradas que cambian con el contenido, nunca el mismo fundido en todo; nada se levanta al
   pasar el puntero; la foto solo bajo un velo de la marca; un solo script propio
   (`public/js/publico.js`, con `defer`) y la página completa sin él; todo movimiento de más de 5 s se
@@ -827,3 +893,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-30 | brecha | La página 503 de `c4` fija el logo a 104 px (franja) y 260 px (panel), pero `design.md` no los lleva a «Cambios a incorporar al sistema» y P9 no admite literales | Dos tokens más en la 1.7.0: `--logo-franja-w` y `--logo-panel-w`, con los valores de `c4` | usuario (/implement 020, T036) |
 | 2026-10-30 | brecha | La hoja del 503 copia de `c4` espaciados de letras, interlineado y multiplicadores sobre tokens que el sistema no tiene, y P9 no admite literales (/review 020 R1) | Versión 1.8.0: `--tracking-etiqueta`, `--tracking-titulo`, `--leading-titulo`, `--text-acceso-destacado`, `--acceso-franja-pie`, `--acceso-solape`, `--acceso-panel-pad` y `--acceso-lado-pad`, con los valores de `c4` (ningún cambio visual) | usuario (/review 020, decisión de corregir R1) |
 | 2026-10-31 | brecha | La 038 y la 020 numeraron por separado las versiones 1.7.0 y 1.8.0 en ramas paralelas, y comparten `--leading-publico` y `--sombra-tarjeta-alta` con el mismo valor | Al fusionar `main` en la 038 se conservan las entradas de las dos specs bajo 1.7.0 y 1.8.0, con una sola declaración de cada token compartido; la versión siguiente es 1.9.0 (ronda 5 de la 038, T046) | usuario (/analyze 038 A35 y A36, T033) |
+| 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 5 de las páginas públicas (spec 038, «La ventana del diente»)? | Versión 1.9.0, superficie «Sitio público»: `--font-display` (Cormorant Garamond) y `--font-publica` en Montserrat (sustituye a Lexend); `--text-display`, `--text-statement`, `--text-seccion`, `--text-indice`, `--text-firma` y `--text-lead` (fluidos); `--shadow-soft`, `--ease-in-out`, `--page-ancho`, `--gutter` y `--space-seccion-publica`; componentes botón en píldora (principal, tinta y fantasma), pastilla de estado, promesa, índice de categorías, tarjeta de la agenda, cabecera pública con «Menú» y pie; los pares de contraste de la ronda 5; reglas de uso. Se retiran Lexend, los velos, `--text-portada`, `--text-marquesina`, `--leading-portada`, `--tracking-portada`, `--sombra-tarjeta`, `--icono-tarjeta` y `--duration-marquesina` y los componentes de la ronda 3 (portada, tarjeta de categoría y franja); `--sombra-tarjeta-alta` y `--leading-publico` se quedan por la 020 | usuario (spec 038, design.md de la ronda 5 y plan D19–D21) |

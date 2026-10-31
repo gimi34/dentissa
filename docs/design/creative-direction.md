@@ -7,6 +7,11 @@ rondas 1–3 (archivadas en `history/creative-direction.ronda-3.md` y en
 la leen antes de diseñar cualquier pantalla pública. La app de gestión sigue el sistema extraído
 (`system.md`).
 
+**Ronda 5 (2026-10-21, aprobada; `system.md` 1.9.0):** el usuario encontró genéricas las rondas
+anteriores y trajo su referencia. Se fija una sola dirección, **«La ventana del diente»**, que manda
+sobre lo que estas secciones dejaban abierto a «las opciones» (concepto firma, tipografía, modo y
+registro). Lo demás de este documento sigue valiendo.
+
 ## Estética
 - **Profesional y seria:** confianza por rigor; lo que se muestra es preciso, ordenado y verificable
   (horario, dirección, servicios reales), como un documento clínico bien hecho.
@@ -31,22 +36,27 @@ la leen antes de diseñar cualquier pantalla pública. La app de gestión sigue 
   frases cortas y precisas, sin promesas comerciales.
 
 ## Concepto firma
-Lo deciden las opciones: cada una desarrolla su territorio con su idea y su momento firma.
+**La ventana del diente** (ronda 5): el contorno del diente del logo de la consulta es la ventana por
+la que se ve la consulta. Enmarca la foto de la marca en la portada, se abre al bajar hasta llenar la
+pantalla (la escena `ventana`, el momento protagonista) y vuelve como marca de agua en la tarjeta de la
+agenda; el nombre cierra la página a todo el ancho. Antes de la ronda 5 lo decidían las opciones.
 
 ## Color y tipografía
 - **El rosa de la marca es la base** (`--p400` `#D4537E`, `--p500` `#B83C65`, `--p600` `#993556`,
   `--p800` `#72243E`, `--p100`, `--p50`); cada opción propone los neutros, el acento oscuro y cómo
   ocupa el rosa la página. El logo se pinta por máscara en el color que toque.
 - Nada de azul o blanco clínico ni verde menta.
-- Tipografía: cada opción propone una familia de marca con motivo (legible a tamaño grande en el
-  móvil y con sol, cifras claras para el horario, acentos del español), con licencia abierta y
-  servida por la app; Lexend no es obligatoria.
+- Tipografía (ronda 5): **Cormorant Garamond** (500 y 600) en los títulos, de cartel y una palabra
+  por línea en el titular, y **Montserrat** (400–700) en el texto y los botones; las dos con licencia
+  OFL-1.1 y servidas por la app (`public/fonts/`). Lexend se retira. El rosa ocupa «Sobre nosotros»
+  (`--p400`) y la tinta, la tarjeta de la agenda; el resto, `--p50`.
 
 ## Modo y registro
 - Pantallas por modo: persuadir: `/` · leer: `/servicios` (y la galería de la 039 y las promociones
   de la 040 deciden el suyo en su `/design-spec`).
-- Registro máximo permitido: **audaz** (decisión del usuario). Las opciones cubren los tres
-  registros: sobrio, firme y audaz.
+- Registro máximo permitido: **audaz** (decisión del usuario). Ronda 5: `/` en registro **firme**
+  (modo persuadir) y `/servicios` de leer, con su estructura y la tipografía y los botones de la
+  superficie «Sitio público».
 
 ## Movimiento
 - Intensidad: hasta protagonista en la opción audaz; escenas de scroll por página en Persuadir:

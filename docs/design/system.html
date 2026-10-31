@@ -162,10 +162,49 @@
                     min-width: var(--touch-min); color: var(--color-text-muted); text-decoration: none; }
   .opt .m-migas .m-actual { color: var(--color-text); }
 </style>
+<style id="componentes-038-r5">
+  /* Muestras vivas de la superficie «Sitio público» (spec 038, 1.9.0, ronda 5), solo con tokens de .opt. */
+  .opt .s-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); color: var(--color-text); }
+  .opt .s-titulo { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: var(--text-seccion); line-height: var(--leading-publico-h1); }
+  .opt .s-lead { margin: 0; font-size: var(--text-lead); line-height: var(--leading-publico); max-width: var(--measure); }
+  .opt .s-botones { display: flex; flex-wrap: wrap; gap: var(--space-5); }
+  .opt .s-btn { display: inline-flex; align-items: center; min-height: var(--touch-min); padding: 0 var(--space-7); border-radius: var(--radius-pill);
+                border: var(--border-width) solid transparent; font-weight: 600; text-decoration: none; }
+  .opt .s-btn--primary { background: var(--color-primary); color: var(--color-text); }
+  .opt .s-btn--primary:hover, .opt .s-btn--primary:focus-visible { background: var(--color-p200); }
+  .opt .s-btn--ink { background: var(--color-text); color: var(--color-surface); }
+  .opt .s-btn--secondary { border-color: var(--color-border-control); color: var(--color-text); }
+  .opt .s-btn:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
+  .opt .s-status { display: inline-flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-5); background: var(--color-surface);
+                   border-radius: var(--radius-pill); box-shadow: var(--shadow-soft); width: max-content; }
+  .opt .s-status i { width: var(--space-4); height: var(--space-4); border-radius: var(--radius-pill); background: var(--color-success-text); }
+  .opt .s-promesa { display: grid; gap: var(--space-3); max-width: 320px; padding: var(--space-7); background: var(--color-surface); border-radius: var(--radius-lg);
+                    box-shadow: var(--shadow-soft); }
+  .opt .s-promesa strong { font-family: var(--font-display); font-weight: 600; font-size: var(--text-publico-h2); }
+  .opt .s-promesa span { color: var(--color-accent-text); }
+  .opt .s-indice { list-style: none; margin: 0; padding: 0; border-top: var(--border-width) solid var(--color-text); max-width: 640px; }
+  .opt .s-indice a { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-5); padding: var(--space-6) 0;
+                     border-bottom: var(--border-width) solid var(--color-border); color: var(--color-text); text-decoration: none; }
+  .opt .s-indice a:hover, .opt .s-indice a:focus-visible { background: var(--color-p100); }
+  .opt .s-indice strong { font-family: var(--font-display); font-weight: 500; font-size: var(--text-indice); }
+  .opt .s-indice small { color: var(--color-accent-text); }
+  .opt .s-agenda { display: grid; gap: var(--space-5); max-width: 420px; padding: var(--space-8); background: var(--color-text); color: var(--color-p100);
+                   border-radius: var(--radius-lg); }
+  .opt .s-agenda strong { font-family: var(--font-display); font-weight: 600; font-size: var(--text-publico-h2); }
+  .opt .s-barra { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); max-width: 420px; padding: var(--space-3) var(--space-5);
+                  background: var(--color-bg); border-bottom: var(--border-width) solid var(--color-border); }
+  .opt .s-barra .s-btn { min-height: var(--touch-min); border-color: var(--color-border-control); }
+  .opt .s-firma { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: var(--text-publico-h1); color: var(--color-accent-text); }
+</style>
 <style id="componentes-038">
   /* Muestras vivas de la spec 038 (placa, puertas y pie de las páginas públicas), con los tokens de .opt. */
-  @font-face { font-family: "Lexend"; font-weight: 400; font-display: swap; src: url("../../public/fonts/lexend/lexend-latin-400-normal.woff2") format("woff2"); }
-  @font-face { font-family: "Lexend"; font-weight: 600; font-display: swap; src: url("../../public/fonts/lexend/lexend-latin-600-normal.woff2") format("woff2"); }
+  /* 1.9.0: Cormorant Garamond y Montserrat autoalojadas (public/fonts/, T047); Lexend se retira (D21). */
+  @font-face { font-family: "Cormorant Garamond"; font-weight: 500; font-display: swap; src: url("../../public/fonts/cormorant-garamond/cormorant-garamond-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Cormorant Garamond"; font-weight: 600; font-display: swap; src: url("../../public/fonts/cormorant-garamond/cormorant-garamond-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Montserrat"; font-weight: 400; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Montserrat"; font-weight: 500; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Montserrat"; font-weight: 600; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Montserrat"; font-weight: 700; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-700-normal.woff2") format("woff2"); }
   .opt .p-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); }
   .opt .p-placa { background: var(--color-surface); border: var(--border-width-strong) solid var(--color-accent-text); border-radius: var(--radius-md);
                   padding: var(--space-7); display: grid; gap: var(--space-5); max-width: 360px; }
@@ -335,22 +374,31 @@
     --tracking-etiqueta: 0.08em; --tracking-titulo: -0.01em; --leading-titulo: 1.15; --text-acceso-destacado: 16.8px; /* spec 020, 1.8.0 */
     --acceso-franja-pie: 70px; --acceso-solape: 56px; --acceso-panel-pad: 56px; --acceso-lado-pad: 42px; /* spec 020, 1.8.0 */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
-    --font-publica: "Lexend", system-ui, sans-serif; /* spec 038 */
+    --font-publica: "Montserrat", ui-sans-serif, system-ui, sans-serif; /* spec 038, 1.9.0 (antes Lexend) */
+    --font-display: "Cormorant Garamond", ui-serif, Georgia, serif; /* spec 038, 1.9.0 */
+    --text-display: clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px); --text-statement: clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px); /* spec 038, 1.9.0 */
+    --text-seccion: clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px); --text-indice: clamp(28px, calc(28px + 28 * (100vw - 320px) / 1120), 56px); /* spec 038, 1.9.0 */
+    --text-firma: clamp(76px, calc(76px + 284 * (100vw - 320px) / 1120), 360px); --text-lead: clamp(18px, calc(18px + 3 * (100vw - 320px) / 1120), 21px); /* spec 038, 1.9.0 */
+    --shadow-soft: 0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24); /* spec 038, 1.9.0 */
+    --page-ancho: 1440px; --gutter: clamp(16px, calc(16px + 40 * (100vw - 320px) / 1120), 56px); /* spec 038, 1.9.0 */
+    --space-seccion-publica: clamp(80px, calc(80px + 88 * (100vw - 320px) / 1120), 168px); /* spec 038, 1.9.0 */
     --text-publico-h1: clamp(30px, calc(30px + 18 * (100vw - 320px) / 1120), 48px); --text-publico-h2: clamp(22px, calc(22px + 8 * (100vw - 320px) / 1120), 30px); /* spec 038 */
     --text-publico-h3: 19px; --text-publico: 17px; --text-publico-small: 15px; /* spec 038 */
-    --leading-publico: 1.5; --leading-publico-h1: 1.15; --leading-publico-h2: 1.25; --logo-ratio: 454 / 135; /* spec 038, 1.7.2 */
+    --leading-publico-h1: 1.15; --leading-publico-h2: 1.25; --logo-ratio: 454 / 135; /* spec 038, 1.7.2 (--leading-publico, arriba, lo comparte con la 020) */
     --space-seccion: clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px); --measure: 62ch; --page-max: 1180px; /* spec 038 */
     --ease-puerta: cubic-bezier(0.2, 0, 0, 1); /* spec 038 */
+    /* 1.8.0 (ronda 3), retirados en 1.9.0: solo los usan las muestras de historial de esta página. */
     --text-portada: clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px); --text-marquesina: clamp(34px, calc(34px + 46 * (100vw - 320px) / 1120), 80px); /* spec 038, 1.8.0 */
     --leading-portada: 0.98; --tracking-portada: -0.03em; --radius-pill: 999px; --icono-tarjeta: 56px; /* spec 038, 1.8.0 */
     --velo-portada: rgba(114, 36, 62, 0.82); --velo-portada-suave: rgba(114, 36, 62, 0.35); /* spec 038, 1.8.0 */
-    --sombra-tarjeta: 0 1px 2px rgba(114, 36, 62, 0.08); --sombra-tarjeta-alta: 0 14px 32px rgba(114, 36, 62, 0.16); /* spec 038, 1.8.0 */
+    --sombra-tarjeta: 0 1px 2px rgba(114, 36, 62, 0.08); /* spec 038, 1.8.0 (--sombra-tarjeta-alta, arriba, la comparte con la 020) */
     --color-velo-peor: #8B4B61;     /* --velo-portada sobre una foto blanca: el peor caso del texto (1.8.0) */
     --color-p200: #F4C0D1; --color-p100: #FBEAF0; /* --p200 («prioridad.») y --p100 (franja), 1.8.0 */
 
     --duration-fast: 150ms; --duration-base: 250ms; /* --duration-base: 0.25s (spec 038) */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); /* spec 038, 1.8.0 */
-    --duration-reveal: 800ms; --stagger: 80ms; --duration-marquesina: 48s; /* spec 038, 1.8.0 */
+    --duration-reveal: 800ms; --stagger: 80ms; --duration-marquesina: 48s; /* spec 038, 1.8.0 (--duration-marquesina, retirado en 1.9.0) */
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* spec 038, 1.9.0: el trazo del diente */
   }
   .opt[data-motion="reduced"] { --duration-fast: 0ms; --duration-base: 0ms; }
   @media (prefers-reduced-motion: reduce) { .opt { --duration-fast: 0ms; --duration-base: 0ms; } }
@@ -437,6 +485,15 @@
       <li class="v-pair" data-fg="--color-success-text" data-bg="--color-surface" data-min="4.5">Éxito en texto sobre blanco (--green-texto, spec 038)</li>
       <li class="v-pair" data-fg="--color-success-text" data-bg="--color-bg" data-min="4.5">Éxito en texto sobre fondo (--green-texto, spec 038)</li>
       <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Botón principal de las páginas públicas (--p500, spec 038)</li>
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-bg" data-min="4.5">Sitio público: texto sobre --p50 (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-primary" data-min="4.5">«Sobre nosotros» y botón principal: tinta sobre --p400 (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-p200" data-min="4.5">Botón principal con el puntero: tinta sobre --p200 (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-surface" data-bg="--color-text" data-min="4.5">Botón de tinta: blanco sobre tinta (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="4.5">Texto de las promesas: --p600 sobre blanco (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-text" data-bg="--color-p100" data-min="4.5">Índice con el puntero: tinta sobre --p100 (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-p100" data-bg="--color-text" data-min="4.5">Tarjeta de la agenda: --p100 sobre tinta (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-p100" data-min="4.5">Pie público: --p600 sobre --p100 (spec 038, 1.9.0)</li>
+      <li class="v-pair" data-fg="--color-border-control" data-bg="--color-bg" data-min="3">Borde de «Menú» y del botón fantasma sobre --p50 (spec 038, 1.9.0)</li>
       <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Cabecera pública: logo, enlaces e icono del menú en blanco sobre --p500 (spec 038, 1.7.1)</li>
       <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-accent-text" data-min="4.5">Pie público: blanco sobre --p600 (spec 038, 1.7.1)</li>
       <li class="v-pair" data-fg="--color-focus-inverse" data-bg="--color-link" data-min="3">Anillo de foco inverso sobre la cabecera --p500 (spec 038, 1.7.1)</li>
@@ -599,7 +656,41 @@
       </div>
     </div></div>
 
-    <h3 id="paginas-publicas-038">Placa, puertas y pie de las páginas públicas (spec 038)</h3>
+    <h3 id="sitio-publico-038">Sitio público (spec 038, 1.9.0, ronda 5 «La ventana del diente»)</h3>
+    <p class="v-note">Muestras vivas de la superficie «Sitio público» con los tokens de 1.9.0 (Cormorant Garamond en los títulos,
+      Montserrat en el texto; <a href="../specs/038-pagina-inicio/design.md">diseño</a>,
+      <a href="../specs/038-pagina-inicio/design/opcion-a.html">composición</a>). La ventana del diente y su escena
+      son exclusivas de <code>/</code> y se ven en la composición; las capturas de <code>/</code> y <code>/servicios</code> llegan en T089.</p>
+    <div class="v-stage"><div class="opt" style="padding:24px">
+      <div class="s-publico">
+        <div class="s-barra" aria-label="Cabecera pública a 390 px (1.9.0)">
+          <span class="s-firma">Melissa López N.</span>
+          <a class="s-btn" href="#sitio-publico-038">Menú</a>
+        </div>
+        <h3 class="s-titulo">Tu sonrisa, nuestra prioridad.</h3>
+        <p class="s-lead">Texto de presentación en --text-lead, con --leading-publico.</p>
+        <div class="s-botones">
+          <a class="s-btn s-btn--primary" href="#sitio-publico-038">Agendar mi primera cita</a>
+          <a class="s-btn s-btn--ink" href="#sitio-publico-038">Ver servicios</a>
+          <a class="s-btn s-btn--secondary" href="#sitio-publico-038">Cómo llegar</a>
+        </div>
+        <p class="s-status" aria-label="Pastilla de estado (1.9.0)"><i aria-hidden="true"></i>Abierto ahora · cerramos a las 20:00</p>
+        <div class="s-promesa" aria-label="Promesa (1.9.0)">
+          <strong>Antes de empezar</strong>
+          <span>Te explicamos cada paso del tratamiento.</span>
+        </div>
+        <ul class="s-indice" aria-label="Índice de categorías (1.9.0)">
+          <li><a href="#sitio-publico-038"><strong>Endodoncia</strong><small>3 tratamientos</small></a></li>
+          <li><a href="#sitio-publico-038"><strong>Estética</strong><small>1 tratamiento</small></a></li>
+        </ul>
+        <div class="s-agenda" aria-label="Tarjeta de la agenda (1.9.0)">
+          <strong>Agenda sin llamar</strong>
+          <span>Crea tu cuenta y elige tu cita en línea.</span>
+        </div>
+      </div>
+    </div></div>
+
+    <h3 id="paginas-publicas-038">Placa, puertas y pie de las páginas públicas (spec 038, historial: rondas 2 y 3)</h3>
     <p class="v-note">Muestras vivas, no capturas: la composición elegida de la spec 038
       (<a href="../specs/038-pagina-inicio/design.md">diseño</a>, opción B «La puerta de la consulta»;
       <a href="../specs/038-pagina-inicio/design/opcion-b.html">composición</a>), con Lexend y los tokens de
