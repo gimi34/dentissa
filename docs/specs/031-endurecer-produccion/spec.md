@@ -127,3 +127,4 @@ existe y sin cambios visuales. Sistema: [docs/design/system.md](../../design/sys
 | 2026-10-06 | CA8 declara el fallo conocido al volver a versiones anteriores (modifica 030 CA7); la excepción P7 vence con la 021; HSTS como decisión del usuario. Vuelve a `draft` | /analyze 031 A2, A9, A16 |
 | 2026-10-06 | Aprobada de nuevo | Decisión del usuario |
 | 2026-10-20 | Liberada en v0.10.0 (PR #38, merge `e4fd141`, tag `v0.10.0`) y desplegada en producción | /release |
+| 2026-10-31 | Comportamiento modificado por 020 en v0.12.0: `verificar.sh` comprueba el `scheduler` y «Tareas programadas», «Entorno aplicado» cubre cinco servicios y `aplicar-entorno.sh app` recrea también el `scheduler` | /release |

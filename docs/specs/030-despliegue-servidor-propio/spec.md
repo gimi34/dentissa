@@ -184,3 +184,4 @@ inicio de sesión.
 | 2026-10-25 | Cobertura de riesgos: RS15.c y RS15.d, creadas por la 032 al dividir RS15.b, declaradas fuera (RS15.c aceptada como EX3 por la 032; RS15.d → objetivo 5) | /implement 032 (T038) |
 | 2026-10-25 | Cobertura de riesgos: OB6.c, creada por la 032 al dividir OB6.b, declarada fuera (→ objetivo 5) | /implement 032 (T091) |
 | 2026-10-27 | Comportamiento modificado por 032 en v0.11.0: CA6 reemplazado por 032 CA9 y CA7 modificado por 032 CA9 (copias cifradas, restauración y vuelta con copia desde el PC); envío de correos desde producción atendido; destinos de RS15.b y OB6.b → 032 | /release |
+| 2026-10-31 | Comportamiento modificado por 020 en v0.12.0: el `scheduler` (purga de la auditoría) es un servicio más que `desplegar.sh` y `volver.sh` levantan y paran; la vuelta de la 020 es sin la copia | /release |
