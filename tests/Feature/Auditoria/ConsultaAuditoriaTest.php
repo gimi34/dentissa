@@ -132,11 +132,14 @@ class ConsultaAuditoriaTest extends TestCase
         $this->assertFiltra(['desde' => '2026-09-01', 'hasta' => '2026-09-03'], $antiguo['recurso_id'], $otro['recurso_id']);
     }
 
+    /** /review R33: se mira dentro de la tabla, porque el valor del filtro también está en su campo. */
     private function assertFiltra(array $filtros, string $aparece, string $noAparece): void
     {
-        $respuesta = $this->consultar($filtros)->assertOk();
-        $respuesta->assertSee($aparece);
-        $respuesta->assertDontSee($noAparece);
+        $tabla = $this->xpath($this->consultar($filtros)->assertOk()->getContent())
+            ->query('//table[contains(@class, "tabla-auditoria")]')->item(0);
+        $this->assertNotNull($tabla, 'Hay tabla de eventos.');
+        $this->assertStringContainsString($aparece, $tabla->textContent);
+        $this->assertStringNotContainsString($noAparece, $tabla->textContent);
     }
 
     public function test_los_selectores_ofrecen_los_valores_registrados(): void
@@ -309,6 +312,21 @@ class ConsultaAuditoriaTest extends TestCase
         }
 
         $this->assertCount(0, $this->consultadas());
+    }
+
+    /** /review R7 (P4): un filtro enviado como lista vuelve con su error, sin un 500 al reponerlo. */
+    public function test_un_filtro_enviado_como_lista_vuelve_con_su_error(): void
+    {
+        foreach (['actor', 'recurso_id', 'desde'] as $campo) {
+            $html = $this->actingAs($this->admin)->from(self::URL)->followingRedirects()
+                ->get(self::URL.'?'.$campo.'[]=x')->assertOk()->getContent();
+
+            $xpath = $this->xpath($html);
+            $this->assertSame('true', $xpath->query('//input[@name="'.$campo.'"]')->item(0)?->getAttribute('aria-invalid'), "{$campo}: el campo queda marcado.");
+            $this->assertNotNull($xpath->query('//*[@id="f-'.$campo.'-error"]')->item(0), "{$campo}: el error está junto a su campo.");
+        }
+
+        $this->assertCount(0, $this->consultadas(), 'Un filtro rechazado no se registra.');
     }
 
     public function test_la_consulta_queda_registrada_con_sus_filtros(): void
