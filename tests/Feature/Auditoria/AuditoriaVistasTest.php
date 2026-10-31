@@ -113,8 +113,12 @@ class AuditoriaVistasTest extends TestCase
         foreach ($m as [, $propiedad, $valor]) {
             $this->assertMatchesRegularExpression('/^(var\(--[\w-]+\)|normal)$/', trim($valor), "{$propiedad}: {$valor} no es un token.");
         }
-        preg_match_all('/\*\s*(-?\d+(\.\d+)?)/', $css, $multiplicadores);
-        $this->assertSame([], array_values(array_diff($multiplicadores[1], ['-1'])), 'Sin multiplicadores numéricos en calc() salvo * -1.');
+        // Dentro de calc(): también divisiones y números sin cero inicial (/review R38). Fuera de
+        // calc(), `/` es sintaxis (`grid-column: 1 / -1`), no una operación.
+        preg_match_all('/calc\([^;}]*/', $css, $calculos);
+        preg_match_all('/([*\/])\s*(-?(\d*\.)?\d+)/', implode("\n", $calculos[0]), $operaciones, PREG_SET_ORDER);
+        $numericas = array_map(fn ($o) => $o[1].' '.$o[2], $operaciones);
+        $this->assertSame([], array_values(array_diff($numericas, ['* -1'])), 'Sin multiplicadores ni divisores numéricos en calc() salvo * -1.');
     }
 
     /** @return array<string, array{0: string}> */
