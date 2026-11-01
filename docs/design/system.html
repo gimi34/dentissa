@@ -194,17 +194,32 @@
   .opt .s-barra { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); max-width: 420px; padding: var(--space-3) var(--space-5);
                   background: var(--color-bg); border-bottom: var(--border-width) solid var(--color-border); }
   .opt .s-barra .s-btn { min-height: var(--touch-min); border-color: var(--color-border-control); }
+  .opt .s-etiqueta { font-size: var(--text-publico-small); font-weight: 600; letter-spacing: var(--tracking-etiqueta); text-transform: uppercase; color: var(--color-accent-text); }
+  .opt .s-cita { margin: 0; max-width: 24ch; font-family: var(--font-display); font-weight: 500; font-size: var(--text-statement); line-height: var(--leading-publico-h1); }
+  .opt .s-cita::before { content: "«"; color: var(--color-primary); }
+  .opt .s-cita::after { content: "»"; color: var(--color-primary); }
+  .opt .s-pasos { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-7); margin: 0; padding: 0; list-style: none; max-width: 760px; }
+  .opt .s-pasos::before { content: ""; position: absolute; top: calc(var(--touch-min) / 2); left: 0; right: 0; border-top: var(--border-width) solid var(--color-primary); }
+  .opt .s-pasos li { position: relative; display: grid; gap: var(--space-3); }
+  .opt .s-pasos b { display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); border-radius: var(--radius-pill); background: var(--color-primary); font-family: var(--font-display); font-size: var(--text-publico-h2); }
+  .opt .s-pasos span { color: var(--color-accent-text); }
+  .opt .s-semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: var(--space-6); list-style: none; background: var(--color-text); color: var(--color-p100); border-radius: var(--radius-lg); max-width: 760px; }
+  .opt .s-semana li { display: grid; gap: var(--space-2); justify-items: center; padding: var(--space-5) var(--space-1); border: var(--border-width) solid var(--color-p100); border-radius: var(--radius-md); font-size: var(--text-publico-small); }
+  .opt .s-semana b { font-family: var(--font-display); font-size: var(--text-publico-h2); color: var(--color-surface); }
+  .opt .s-semana li.cerrado { border-style: dashed; }
+  .opt .s-hamburguesa { display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); color: var(--color-text); }
+  .opt .s-hamburguesa svg { width: calc(var(--icon-md) + var(--space-3)); height: calc(var(--icon-md) + var(--space-3)); }
   .opt .s-firma { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: var(--text-publico-h1); color: var(--color-accent-text); }
 </style>
 <style id="componentes-038">
   /* Muestras vivas de la spec 038 (placa, puertas y pie de las páginas públicas), con los tokens de .opt. */
-  /* 1.9.0: Cormorant Garamond y Montserrat autoalojadas (public/fonts/, T047); Lexend se retira (D21). */
-  @font-face { font-family: "Cormorant Garamond"; font-weight: 500; font-display: swap; src: url("../../public/fonts/cormorant-garamond/cormorant-garamond-latin-500-normal.woff2") format("woff2"); }
-  @font-face { font-family: "Cormorant Garamond"; font-weight: 600; font-display: swap; src: url("../../public/fonts/cormorant-garamond/cormorant-garamond-latin-600-normal.woff2") format("woff2"); }
+  /* 1.10.0: Newsreader y Montserrat autoalojadas (public/fonts/, T035); Cormorant Garamond (1.9.0) y Lexend se retiran. */
+  @font-face { font-family: "Newsreader"; font-weight: 500; font-display: swap; src: url("../../public/fonts/newsreader/newsreader-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Newsreader"; font-weight: 600; font-display: swap; src: url("../../public/fonts/newsreader/newsreader-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Newsreader"; font-style: italic; font-weight: 500; font-display: swap; src: url("../../public/fonts/newsreader/newsreader-latin-500-italic.woff2") format("woff2"); }
   @font-face { font-family: "Montserrat"; font-weight: 400; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-400-normal.woff2") format("woff2"); }
   @font-face { font-family: "Montserrat"; font-weight: 500; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-500-normal.woff2") format("woff2"); }
   @font-face { font-family: "Montserrat"; font-weight: 600; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-600-normal.woff2") format("woff2"); }
-  @font-face { font-family: "Montserrat"; font-weight: 700; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-700-normal.woff2") format("woff2"); }
   .opt .p-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); }
   .opt .p-placa { background: var(--color-surface); border: var(--border-width-strong) solid var(--color-accent-text); border-radius: var(--radius-md);
                   padding: var(--space-7); display: grid; gap: var(--space-5); max-width: 360px; }
@@ -375,7 +390,7 @@
     --acceso-franja-pie: 70px; --acceso-solape: 56px; --acceso-panel-pad: 56px; --acceso-lado-pad: 42px; /* spec 020, 1.8.0 */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
     --font-publica: "Montserrat", ui-sans-serif, system-ui, sans-serif; /* spec 038, 1.9.0 (antes Lexend) */
-    --font-display: "Cormorant Garamond", ui-serif, Georgia, serif; /* spec 038, 1.9.0 */
+    --font-display: "Newsreader", ui-serif, Georgia, serif; /* spec 038, 1.10.0 (en 1.9.0, Cormorant Garamond) */
     --text-display: clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px); --text-statement: clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px); /* spec 038, 1.9.0 */
     --text-seccion: clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px); --text-indice: clamp(28px, calc(28px + 28 * (100vw - 320px) / 1120), 56px); /* spec 038, 1.9.0 */
     --text-firma: clamp(76px, calc(76px + 284 * (100vw - 320px) / 1120), 360px); --text-lead: clamp(18px, calc(18px + 3 * (100vw - 320px) / 1120), 21px); /* spec 038, 1.9.0 */
@@ -656,8 +671,8 @@
       </div>
     </div></div>
 
-    <h3 id="sitio-publico-038">Sitio público (spec 038, 1.9.0, ronda 5 «La ventana del diente»)</h3>
-    <p class="v-note">Muestras vivas de la superficie «Sitio público» con los tokens de 1.9.0 (Cormorant Garamond en los títulos,
+    <h3 id="sitio-publico-038">Sitio público (spec 038, 1.10.0, ronda 6 «la arcada»)</h3>
+    <p class="v-note">Muestras vivas de la superficie «Sitio público» con los tokens de 1.10.0 (Newsreader en los títulos,
       Montserrat en el texto; <a href="../specs/038-pagina-inicio/design.md">diseño</a>,
       <a href="../specs/038-pagina-inicio/design/opcion-a.html">composición</a>). La ventana del diente y su escena
       son exclusivas de <code>/</code> y se ven en la composición; las capturas de <code>/</code> y <code>/servicios</code> llegan en T089.</p>
@@ -665,7 +680,7 @@
       <div class="s-publico">
         <div class="s-barra" aria-label="Cabecera pública a 390 px (1.9.0)">
           <span class="s-firma">Melissa López N.</span>
-          <a class="s-btn" href="#sitio-publico-038">Menú</a>
+          <a class="s-hamburguesa" href="#sitio-publico-038" aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
         </div>
         <h3 class="s-titulo">Tu sonrisa, nuestra prioridad.</h3>
         <p class="s-lead">Texto de presentación en --text-lead, con --leading-publico.</p>
@@ -675,18 +690,21 @@
           <a class="s-btn s-btn--secondary" href="#sitio-publico-038">Cómo llegar</a>
         </div>
         <p class="s-status" aria-label="Pastilla de estado (1.9.0)"><i aria-hidden="true"></i>Abierto ahora · cerramos a las 20:00</p>
-        <div class="s-promesa" aria-label="Promesa (1.9.0)">
-          <strong>Antes de empezar</strong>
-          <span>Te explicamos cada paso del tratamiento.</span>
-        </div>
+        <span class="s-etiqueta">Sobre nosotros</span>
+        <p class="s-cita">Somos una consulta de odontología integral en el centro de Lázaro Cárdenas.</p>
+        <ol class="s-pasos" aria-label="Pasos en línea (1.10.0)">
+          <li><b>1</b><strong>Qué vamos a hacer</strong><span>Lo vemos juntos, con palabras claras.</span></li>
+          <li><b>2</b><strong>Cuánto dura</strong><span>Cuántas citas lleva y cuánto tiempo cada una.</span></li>
+          <li><b>3</b><strong>Qué opciones tienes</strong><span>Si hay más de un camino, te los mostramos.</span></li>
+        </ol>
         <ul class="s-indice" aria-label="Índice de categorías (1.9.0)">
-          <li><a href="#sitio-publico-038"><strong>Endodoncia</strong><small>3 tratamientos</small></a></li>
+          <li><a href="#sitio-publico-038"><small>03</small> <strong>Endodoncia</strong><small>3 tratamientos</small></a></li>
           <li><a href="#sitio-publico-038"><strong>Estética</strong><small>1 tratamiento</small></a></li>
         </ul>
-        <div class="s-agenda" aria-label="Tarjeta de la agenda (1.9.0)">
-          <strong>Agenda sin llamar</strong>
-          <span>Crea tu cuenta y elige tu cita en línea.</span>
-        </div>
+        <ul class="s-semana" aria-label="Semana de la consulta (1.10.0)">
+          <li><b>Lun</b>9:00–20:00</li><li><b>Mar</b>9:00–20:00</li><li><b>Mié</b>9:00–20:00</li><li><b>Jue</b>9:00–20:00</li>
+          <li><b>Vie</b>9:00–20:00</li><li><b>Sáb</b>9:00–14:00</li><li class="cerrado"><b>Dom</b>Cerrado</li>
+        </ul>
       </div>
     </div></div>
 
@@ -714,7 +732,7 @@
         <p><a class="p-pildora" href="#paginas-publicas-038">Agendar mi primera cita</a></p>
         <a class="p-tarjeta" href="#paginas-publicas-038" aria-label="Tarjeta de categoría (1.8.0)">
           <span class="p-icono" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 3c-2 0-3 2-3 4 0 3 1 5 2 8 .5 2 1 6 2.5 6S10 16 12 16s2 5 3.5 5S17 17 18 15c1-3 2-5 2-8 0-2-1-4-3-4-2 0-3 1-5 1S9 3 7 3z"/></svg></span>
-          <strong>Endodoncia</strong><small>3 tratamientos</small>
+          <small>03</small> <strong>Endodoncia</strong><small>3 tratamientos</small>
         </a>
         <div class="p-franja" aria-label="Franja del horario con su pausa (1.8.0)">
           <span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</span>

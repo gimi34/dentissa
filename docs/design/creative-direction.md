@@ -7,6 +7,13 @@ rondas 1–3 (archivadas en `history/creative-direction.ronda-3.md` y en
 la leen antes de diseñar cualquier pantalla pública. La app de gestión sigue el sistema extraído
 (`system.md`).
 
+**Ronda 6 (2026-10-31, aprobada; `system.md` 1.10.0):** regenerada desde cero con el motor por criterios
+de AI-DD 1.19 (candidato `c5`). Idea: **la consulta vista por la forma de su arcada**: la foto propia en un
+marco con la forma de la arcada en la presentación, que en la escena «consulta» se abre hasta llenar la
+pantalla; el arco vuelve en el fondo de la presentación y en la tarjeta de la agenda. Tipografía:
+**Newsreader** (titulares; centra las tildes) y **Montserrat** (texto). Registro firme en `/`. Lo que
+sigue de la ronda 5 queda como historial donde esto lo sustituye.
+
 **Ronda 5 (2026-10-21, aprobada; `system.md` 1.9.0):** el usuario encontró genéricas las rondas
 anteriores y trajo su referencia. Se fija una sola dirección, **«La ventana del diente»**, que manda
 sobre lo que estas secciones dejaban abierto a «las opciones» (concepto firma, tipografía, modo y

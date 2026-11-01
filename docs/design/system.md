@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.9.0
+version: 1.10.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -95,12 +95,13 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 | (sin token) | no aplica | — | `'DM Sans'` (usuarios) y `'DM Mono'` (receta del expediente) se nombran sin cargarse: los campos de usuarios caen a la sans-serif genérica (medido, DS9) |
 | (sin token) | fuente del navegador | — | Los campos de servicios (crear y editar) se ven en Arial de 13.33px porque su `.field` local no declara familia (medido, DS12) |
 
-Sitio público (spec 038, 1.9.0, ronda 5 «La ventana del diente»; [diseño](../specs/038-pagina-inicio/design.md)):
+Sitio público (spec 038; 1.9.0, ronda 5; 1.10.0, ronda 6; [diseño](../specs/038-pagina-inicio/design.md)):
 dos familias autoalojadas en `public/fonts/` (woff2 latino de `@fontsource` 5.3.0, OFL-1.1, cada una
 con su `OFL.txt`) y declaradas con `@font-face` en `public/css/publico.css`: `--font-display`
-(`"Cormorant Garamond", ui-serif, Georgia, serif`; 500 y 600, `cormorant-garamond/`) para los títulos
-y `--font-publica` (`"Montserrat", ui-sans-serif, system-ui, sans-serif`; 400–700, `montserrat/`) para
-el texto. Montserrat sustituye a Lexend, que se retira (D21). Tamaños fluidos de 320 a 1440 px:
+(`"Newsreader", ui-serif, Georgia, serif`; 500, 600 y cursiva 500, `newsreader/`; desde 1.10.0) para los
+títulos y `--font-publica` (`"Montserrat", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
+`montserrat/`) para el texto. Newsreader sustituye en 1.10.0 a Cormorant Garamond (1.9.0), que coloca
+las tildes corridas a la derecha y en titulares en español se leen rotas. Montserrat sustituye a Lexend, que se retira (D21). Tamaños fluidos de 320 a 1440 px:
 `--text-display` (52px a 120px, titular de cartel, una palabra por línea), `--text-statement` (28px a
 44px, frase de «Sobre nosotros»), `--text-seccion` (40px a 80px, títulos de sección), `--text-indice`
 (28px a 56px, nombres del índice de categorías), `--text-firma` (76px a 360px, el nombre a todo el
@@ -527,8 +528,33 @@ con los botones a partes iguales y el texto centrado. Sin `:has()`, queda a la d
 
 ### Páginas públicas (spec 038)
 Componentes de `/` y `/servicios` (y de `/galeria` con la 039), en `public/css/publico.css`, solo con
-tokens y con el prefijo `pub-`. **Desde 1.9.0, superficie «Sitio público»** (ronda 5, «La ventana del
-diente»; [diseño](../specs/038-pagina-inicio/design.md)):
+tokens y con el prefijo `pub-`. **Superficie «Sitio público»** (1.9.0, ronda 5; **1.10.0, ronda 6**, la
+arcada: [diseño](../specs/038-pagina-inicio/design.md), `design/candidatos/c5.html`). Nuevos o cambiados
+en 1.10.0:
+- **Etiqueta** (`.pub-etiqueta`, 1.10.0): Montserrat `--weight-bold`, `--text-publico-small`, mayúsculas
+  con `--tracking-etiqueta`, `--p600`; encabeza cada sección (en «Sobre nosotros» es el propio `h2`).
+- **Cita destacada** (`.pub-cita`, 1.10.0): `--font-display` en `--text-seccion`, `--weight-strong`,
+  `--leading-publico-h1`, como mucho 24ch, entre comillas `«»` en `--p400` (contenido generado).
+- **Pasos en línea** (`.pub-pasos`, 1.10.0): tres pasos unidos por una línea `--p400`, cada uno con su
+  número en un círculo `--p400` de `--touch-min` (en `--font-display`), el título en
+  `--text-publico-h2` y el texto en `--p600`; en vertical por debajo de 900 px.
+- **Semana de la consulta** (`.pub-semana`, 1.10.0): siete casillas día–hora con borde `--p800` sobre la
+  tinta, el día en `--font-display` blanco y el domingo con borde discontinuo y «Cerrado»; por debajo de
+  560 px, filas día–hora.
+- **Índice de categorías con número** (`.pub-index__n`, 1.10.0): `01…07` en `--p600` antes del nombre.
+- **Arcada** (`.pub-arcada`, exclusivo de `/`, 1.10.0): la foto propia en un marco con la forma de la
+  arcada, `--shadow-soft`. **Escena «consulta»** (`.pub-consulta`, 1.10.0): la misma foto que se abre
+  con `clip-path` guiado por `--p` desde la arcada hasta llenar la pantalla; sin JavaScript o con
+  movimiento reducido, la foto entera; el pie de foto debajo, en `--p800`.
+- **Cabecera pública:** por debajo de 900 px, **solo el icono de hamburguesa** (tres rayas), sin la
+  palabra ni el borde, en una caja de `--touch-min` × `--touch-min`, con `aria-label="Menú"` (decisión
+  del usuario, 1.10.0; sustituye a «Menú» en píldora de 1.9.0). El logo mide
+  `calc(var(--logo-max-w) * 1.25)` desde 560 px y `--logo-max-w` por debajo.
+- **Pie público:** sin el nombre a todo el ancho (`--text-firma` deja de usarse en `/`).
+- **Retirados en 1.10.0:** la promesa en tarjetas, la tarjeta de la agenda con el diente, la ventana del
+  diente y su escena (`.pub-tooth`, `.pub-open`).
+
+De 1.9.0 (ronda 5, «La ventana del diente»), lo que sigue vale salvo lo que cambia arriba:
 - **Botón en píldora** (`.c-btn`, 1.9.0): `--radius-pill`, alto `--touch-min` (56 px en `.c-btn--lg`),
   `--font-publica` 600. Principal (`.c-btn--primary`): `--p400` con texto `--text` (con el puntero,
   `--p200`); tinta (`.c-btn--ink`): `--text` con texto `--white` (con el puntero, `--p800`); fantasma
@@ -714,7 +740,7 @@ Todas son capturas reales (galería completa en `system.html` → Pantallas).
 | Nuevo y editar paciente (spec 035) | `system.html#pacientes-create-admin-390` · `capturas/pacientes-create-admin-320.png` | `system.html#pacientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, foco del sistema, acciones de formulario |
 | Expedientes (spec 035) | `system.html#expedientes-index-dentista-390` · `capturas/expedientes-index-dentista-320.png` | `system.html#expedientes-index-dentista-1440` | buscador con etiqueta, tabla (tarjetas en el móvil), paginación |
 | Expediente (spec 035) | `system.html#expedientes-show-admin-390` · `capturas/expedientes-show-admin-320.png` | `system.html#expedientes-show-admin-1440` | migas, cabecera, avisos de alergias y medicamentos, formulario con etiquetas, próxima visita, información (ficha en una columna) |
-| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública con «Menú», presentación con la ventana del diente, la pastilla de estado, el horario y el teléfono; escena de la foto; «Sobre nosotros» en `--p400`; tres promesas; índice de categorías; tarjeta de la agenda; ubicación con la semana y el mapa; pie con el nombre a todo el ancho (1.9.0, ronda 5; capturas en T089) |
+| Página de inicio (spec 038) | capturas en T031 | capturas en T031 | cabecera pública (el icono de hamburguesa en el móvil), presentación con la foto en la arcada, la pastilla de estado, el horario, el teléfono e «Iniciar sesión · Crear cuenta» en el móvil; «Sobre nosotros» con la cita destacada y los pasos en línea; escena «consulta» (la foto que se abre); índice numerado; tarjeta de la agenda con la semana; ubicación con el mapa; pie (1.10.0, ronda 6, `design/candidatos/c5.html`; capturas en T089) |
 | Servicios (`/servicios`, spec 038) | capturas en T031 | capturas en T031 | cabecera pública, título en `--font-display`, índice en píldoras, listas por categoría, botones `.c-btn`, pie (1.9.0; capturas en T089) |
 | Nuevo expediente (spec 035) | `system.html#expedientes-create-admin-390` · `capturas/expedientes-create-admin-320.png` | `system.html#expedientes-create-admin-1440` | migas, formulario con etiquetas y errores accesibles, acciones de formulario |
 
@@ -848,8 +874,8 @@ Estados: `capturada` · `sin captura (motivo)` · `no accesible (motivo)`.
 - Pantallas nuevas o modificadas: solo tokens de este documento, sin valores literales de color,
   tamaño ni espaciado. Si falta un valor, se añade aquí primero. El código anterior no bloquea
   (regla de "Código previo"; constitución, P9).
-- Sitio público (spec 038; 1.9.0, ronda 5): una escena por página; la foto de la marca solo dentro de
-  la forma del logo o a pantalla completa en su escena; todo movimiento solo sin
+- Sitio público (spec 038; 1.10.0, ronda 6): una escena por página; la foto de la marca solo dentro de
+  la forma de la arcada o a pantalla completa en su escena; todo movimiento solo sin
   `prefers-reduced-motion: reduce` y lo que oculta, solo con JavaScript; un solo script propio
   (`public/js/publico.js`, con `defer`) y la página completa sin él; nada se presenta como el equipo;
   las promociones (040) sin cintillo, contadores ni colores de oferta.
@@ -914,3 +940,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-30 | brecha | La hoja del 503 copia de `c4` espaciados de letras, interlineado y multiplicadores sobre tokens que el sistema no tiene, y P9 no admite literales (/review 020 R1) | Versión 1.8.0: `--tracking-etiqueta`, `--tracking-titulo`, `--leading-titulo`, `--text-acceso-destacado`, `--acceso-franja-pie`, `--acceso-solape`, `--acceso-panel-pad` y `--acceso-lado-pad`, con los valores de `c4` (ningún cambio visual) | usuario (/review 020, decisión de corregir R1) |
 | 2026-10-31 | brecha | La 038 y la 020 numeraron por separado las versiones 1.7.0 y 1.8.0 en ramas paralelas, y comparten `--leading-publico` y `--sombra-tarjeta-alta` con el mismo valor | Al fusionar `main` en la 038 se conservan las entradas de las dos specs bajo 1.7.0 y 1.8.0, con una sola declaración de cada token compartido; la versión siguiente es 1.9.0 (ronda 5 de la 038, T046) | usuario (/analyze 038 A35 y A36, T033) |
 | 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 5 de las páginas públicas (spec 038, «La ventana del diente»)? | Versión 1.9.0, superficie «Sitio público»: `--font-display` (Cormorant Garamond) y `--font-publica` en Montserrat (sustituye a Lexend); `--text-display`, `--text-statement`, `--text-seccion`, `--text-indice`, `--text-firma` y `--text-lead` (fluidos); `--shadow-soft`, `--ease-in-out`, `--page-ancho`, `--gutter` y `--space-seccion-publica`; componentes botón en píldora (principal, tinta y fantasma), pastilla de estado, promesa, índice de categorías, tarjeta de la agenda, cabecera pública con «Menú» y pie; los pares de contraste de la ronda 5; reglas de uso. Se retiran Lexend, los velos, `--text-portada`, `--text-marquesina`, `--leading-portada`, `--tracking-portada`, `--sombra-tarjeta`, `--icono-tarjeta` y `--duration-marquesina` y los componentes de la ronda 3 (portada, tarjeta de categoría y franja); `--sombra-tarjeta-alta` y `--leading-publico` se quedan por la 020 | usuario (spec 038, design.md de la ronda 5 y plan D19–D21) |
+| 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 6 de la 038 (motor por criterios, candidato `c5`)? | Versión 1.10.0: `--font-display` pasa a Newsreader (Cormorant Garamond corre las tildes); componentes «Etiqueta», «Cita destacada», «Pasos en línea», «Semana de la consulta» e índice con número; la arcada y la escena «consulta» (exclusivos de `/`); el menú del móvil solo con el icono de hamburguesa; el ancho del logo de la cabecera; se retiran la promesa en tarjetas, la tarjeta con el diente y la ventana del diente | usuario (spec 038, design.md de la ronda 6 y plan D23) |
