@@ -1,6 +1,6 @@
 ---
 spec: 038-pagina-inicio
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # aprobado por el usuario el 2026-10-31
 exploration: loop        # ciclo por criterios (AI-DD 1.19), ronda 6
 threshold: 80
 floor: 3
@@ -81,8 +81,8 @@ y la página construida debe seguir pasando `evaluate.mjs`):
    a 320, el botón de la agenda y la pastilla de estado en una línea.
 3. Menos pesos de Montserrat (regular y semibold) y los números de los pasos centrados en su círculo.
 
-Abierto para el usuario: el evaluador señala que la foto aparece dos veces (en la presentación y en la
-escena). Ver Decisiones.
+La foto aparece dos veces (en la presentación y en la escena): se queda así por decisión del usuario
+(ver Decisiones).
 
 ## Imágenes de muestra
 
@@ -179,3 +179,4 @@ D20); los arcos son dibujos en código.
 | 2026-10-31 | brecha | Cormorant Garamond (1.9.0) coloca las tildes corridas y el evaluador las leyó rotas | `--font-display` pasa a Newsreader; afecta también a lo implementado en la ronda 5 | `/design-spec` (c2) |
 | 2026-10-31 | diseño | c4 (80/100) no convence: menú del móvil, «Sobre nosotros» y los dientes | El menú del móvil, solo el icono de hamburguesa; «Sobre nosotros» como cita destacada con los pasos en línea; la escena pasa a ser la foto que se abre desde la arcada; presupuesto de 5 a 7 candidatos | usuario |
 | 2026-10-31 | diseño | Aceptar c5 con 80/100 justo en el umbral | Aceptado por la regla del ciclo; las mejoras que dejó el evaluador van a `/implement` sin cambiar criterios | `references/evaluacion.md` §4 |
+| 2026-10-31 | diseño | La foto aparece en la presentación y en la escena (lo señaló el evaluador) | Se queda en los dos sitios; acta aprobada | usuario |
