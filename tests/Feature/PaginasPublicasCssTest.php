@@ -23,6 +23,10 @@ use Tests\TestCase;
  * viva; el movimiento bajo la mano solo sin movimiento reducido. Los casos de la portada sticky,
  * el velo, la franja y su pausa se retiran con ellas (D21).
  *
+ * Ronda 6 (system.md 1.10.0, plan D23, `c5`): `--font-display` en Newsreader (sin Cormorant Garamond
+ * ni Montserrat 700); el menú del móvil solo con el icono; el ancho del logo (A46); la escena
+ * «consulta» con la foto entera cuando no está viva; las columnas de la presentación de `c5`.
+ *
  * El comportamiento en un navegador real (anchos, desbordamiento, toque medido) lo comprueba
  * `docs/design/capturar.mjs --medir` (T089).
  */
@@ -62,7 +66,7 @@ class PaginasPublicasCssTest extends TestCase
         '--stagger' => '80ms',
         // system.md 1.9.0 (ronda 5, plan D19).
         '--font-publica' => '"Montserrat", ui-sans-serif, system-ui, sans-serif',
-        '--font-display' => '"Cormorant Garamond", ui-serif, Georgia, serif',
+        '--font-display' => '"Newsreader", ui-serif, Georgia, serif',
         '--text-display' => 'clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px)',
         '--text-statement' => 'clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px)',
         '--text-seccion' => 'clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px)',
@@ -101,7 +105,7 @@ class PaginasPublicasCssTest extends TestCase
         '--duration-reveal' => ['800ms'],
         '--stagger' => ['80ms'],
         '--font-publica' => ['"Montserrat", ui-sans-serif, system-ui, sans-serif'],
-        '--font-display' => ['"Cormorant Garamond", ui-serif, Georgia, serif'],
+        '--font-display' => ['"Newsreader", ui-serif, Georgia, serif'],
         '--text-display' => ['52px', '120px'],
         '--text-statement' => ['28px', '44px'],
         '--text-seccion' => ['40px', '80px'],
@@ -121,16 +125,20 @@ class PaginasPublicasCssTest extends TestCase
         '--velo-portada-suave', '--sombra-tarjeta', '--icono-tarjeta', '--duration-marquesina',
     ];
 
-    /** Fuentes del sitio público (D19): familia → [peso => archivo]. */
+    /** Fuentes del sitio público (D19, D23): «familia peso estilo» → archivo. */
     private const FUENTES = [
-        'Cormorant Garamond' => [500 => 'cormorant-garamond/cormorant-garamond-latin-500-normal.woff2', 600 => 'cormorant-garamond/cormorant-garamond-latin-600-normal.woff2'],
-        'Montserrat' => [400 => 'montserrat/montserrat-latin-400-normal.woff2', 500 => 'montserrat/montserrat-latin-500-normal.woff2', 600 => 'montserrat/montserrat-latin-600-normal.woff2', 700 => 'montserrat/montserrat-latin-700-normal.woff2'],
+        'Newsreader 500 normal' => 'newsreader/newsreader-latin-500-normal.woff2',
+        'Newsreader 600 normal' => 'newsreader/newsreader-latin-600-normal.woff2',
+        'Newsreader 500 italic' => 'newsreader/newsreader-latin-500-italic.woff2',
+        'Montserrat 400 normal' => 'montserrat/montserrat-latin-400-normal.woff2',
+        'Montserrat 500 normal' => 'montserrat/montserrat-latin-500-normal.woff2',
+        'Montserrat 600 normal' => 'montserrat/montserrat-latin-600-normal.woff2',
     ];
 
     /** Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). */
     private const TOQUE = [
         '.pub-nav a', '.pub-menu summary', '.pub-menu__panel a', '.pub-hero__facts a', '.pub-index a',
-        '.pub-visit__tel', '.pub-foot__links a', '.pub-foot__info a', '.lb-indice a', '.c-btn',
+        '.pub-visit__tel', '.pub-foot__links a', '.pub-foot__info a', '.lb-indice a', '.c-btn', '.pub-acceso a',
     ];
 
     private const VISTAS = [
@@ -208,25 +216,28 @@ class PaginasPublicasCssTest extends TestCase
 
     public function test_font_face_declara_las_dos_familias_autoalojadas(): void
     {
-        // Sustituye a «font-face declara Lexend autoalojada» (D19): seis caras, cada una con su woff2.
+        // Ronda 6 (D23): Newsreader 500, 600 y cursiva 500, y Montserrat 400, 500 y 600; cada cara con su woff2.
         preg_match_all('/@font-face\s*\{([^}]*)\}/', file_get_contents(public_path(self::HOJA)), $caras);
-        $this->assertCount(6, $caras[1], 'Cormorant Garamond 500 y 600; Montserrat 400, 500, 600 y 700.');
+        $this->assertCount(count(self::FUENTES), $caras[1], 'Las seis caras del sitio público.');
 
         $vistas = [];
         foreach ($caras[1] as $cara) {
             $this->assertMatchesRegularExpression('/font-family\s*:\s*"([^"]+)"/', $cara);
             preg_match('/font-family\s*:\s*"([^"]+)"/', $cara, $familia);
             preg_match('/font-weight\s*:\s*(\d+)/', $cara, $peso);
-            $this->assertArrayHasKey($familia[1], self::FUENTES, "{$familia[1]} es una familia del sitio público.");
-            $archivo = self::FUENTES[$familia[1]][(int) ($peso[1] ?? 0)] ?? null;
-            $this->assertNotNull($archivo, "{$familia[1]} {$peso[1]}: peso previsto.");
+            preg_match('/font-style\s*:\s*(\w+)/', $cara, $estilo);
+            $clave = "{$familia[1]} ".($peso[1] ?? '?').' '.($estilo[1] ?? 'normal');
+            $this->assertArrayHasKey($clave, self::FUENTES, "{$clave}: cara prevista.");
+            $archivo = self::FUENTES[$clave];
             $this->assertMatchesRegularExpression('~src\s*:\s*url\("?\.\./fonts/'.preg_quote($archivo, '~').'"?\)\s*format\("woff2"\)~', $cara, 'Archivo propio, en woff2.');
             $this->assertFileExists(public_path("fonts/{$archivo}"));
             $this->assertMatchesRegularExpression('/font-display\s*:\s*swap/', $cara);
-            $vistas[] = "{$familia[1]} {$peso[1]}";
+            $vistas[] = $clave;
         }
-        $this->assertCount(6, array_unique($vistas), 'Ninguna cara repetida.');
-        $this->assertStringNotContainsString('Lexend', file_get_contents(public_path(self::HOJA)), 'Lexend se retira (D21).');
+        $this->assertCount(count(self::FUENTES), array_unique($vistas), 'Ninguna cara repetida.');
+        foreach (['Lexend', 'Cormorant'] as $retirada) {
+            $this->assertStringNotContainsString($retirada, file_get_contents(public_path(self::HOJA)), "{$retirada} se retira.");
+        }
     }
 
     public function test_body_publico_usa_la_familia_publica(): void
@@ -309,9 +320,10 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertContains('.pub-book__card a:focus-visible', $selectores, 'Sobre la tinta, el anillo inverso.');
     }
 
-    public function test_cabecera_fija_menu_en_pildora_y_pie_en_rosa_claro(): void
+    public function test_cabecera_fija_menu_solo_con_el_icono_y_pie_en_rosa_claro(): void
     {
-        // design.md, «Cabecera pública» y pie (ronda 5).
+        // design.md de la ronda 6: cabecera fija; el menú del móvil, solo el icono de hamburguesa, sin
+        // borde ni fondo, en una caja de 44 × 44 (decisión del usuario); el logo más ancho desde 560 px (A46).
         $barra = $this->declaraciones('.pub-bar', self::HOJA);
         $this->assertStringContainsString('position: sticky', $barra, 'Fija arriba.');
         $this->assertStringContainsString('top: 0', $barra);
@@ -319,13 +331,16 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertStringContainsString('border-bottom-color: var(--border)', $this->declaraciones('.pub-bar.is-scrolled', self::HOJA), 'El filete aparece al bajar.');
 
         $summary = $this->declaraciones('.pub-menu summary', self::HOJA);
-        $this->assertStringContainsString('border-radius: var(--radius-pill)', $summary, '«Menú» en píldora.');
-        $this->assertStringContainsString('border: var(--border-width) solid var(--border-control)', $summary);
+        $this->assertStringContainsString('border: 0', $summary, 'Sin contorno.');
+        $this->assertStringContainsString('background: none', $summary, 'Sin recuadro.');
+        $this->assertStringContainsString('min-width: var(--touch-min)', $summary, 'Caja de toque de 44 × 44.');
+
+        $this->assertStringContainsString('width: calc(var(--logo-max-w) * 1.25)', $this->declaraciones('.pub-brand .logo', self::HOJA), 'A46: el logo se lee en el escritorio.');
+        $this->assertStringContainsString('width: var(--logo-max-w)', $this->enElCorte('.pub-brand .logo', '@media (max-width: 559px)'), 'A46: y no desborda a 320.');
 
         $pie = $this->declaraciones('.pub-foot', self::HOJA);
         $this->assertStringContainsString('background: var(--p100)', $pie);
         $this->assertStringContainsString('color: var(--p600)', $pie);
-        $this->assertStringContainsString('font-size: var(--text-firma)', $this->declaraciones('.pub-foot__word', self::HOJA), 'El nombre a todo el ancho.');
     }
 
     public function test_los_cortes_son_900_y_560(): void
@@ -371,7 +386,8 @@ class PaginasPublicasCssTest extends TestCase
     {
         // design.md, «Proporciones»: presentación 1.25fr : 1fr y la ubicación 5fr : 7fr; por debajo de
         // 900 px, una columna sin solaparse.
-        $this->assertStringContainsString('grid-template-columns: 1.25fr 1fr', $this->declaraciones('.pub-hero__grid', self::HOJA));
+        // Ronda 6 (c5): presentación 1.15fr : 1fr, con columnas que encogen (la pastilla no desborda a 320).
+        $this->assertStringContainsString('grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)', $this->declaraciones('.pub-hero__grid', self::HOJA));
         $this->assertStringContainsString('grid-template-columns: 5fr 7fr', $this->declaraciones('.pub-visit__grid', self::HOJA));
         foreach (['.pub-hero__grid', '.pub-visit__grid'] as $rejilla) {
             $this->assertStringContainsString('grid-template-columns: 1fr', $this->enElCorte($rejilla), "{$rejilla}: en el móvil, una columna.");
@@ -380,21 +396,18 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertStringContainsString('padding-inline: var(--gutter)', $this->declaraciones('.pub-wrap', self::HOJA));
     }
 
-    public function test_la_escena_solo_tapa_la_foto_cuando_esta_viva(): void
+    public function test_la_escena_solo_recorta_la_foto_cuando_esta_viva(): void
     {
-        // M-1: sin JavaScript o con movimiento reducido, la foto entera y sin velo (design.md).
-        $this->assertStringContainsString('display: none', $this->declaraciones('.pub-open:not(.is-live) .pub-open__veil', self::HOJA));
-        $foto = $this->declaraciones('.pub-open__photo', self::HOJA);
-        $this->assertStringContainsString('object-fit: cover', $foto);
-        $this->assertStringContainsString('width: 100%', $foto);
-        $vivas = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], '.is-live') && ! str_contains($r[0], ':not(.is-live)'));
-        $this->assertNotEmpty($vivas, 'La escena viva tiene sus reglas.');
+        // Ronda 6 (M-1 de c5): sin JavaScript o con movimiento reducido, la foto entera; viva, el recorte con
+        // la forma de la arcada se abre con el progreso --p.
+        $this->assertStringNotContainsString('clip-path', $this->declaraciones('.pub-consulta__foto', self::HOJA), 'Sin recorte cuando no está viva.');
+        $this->assertStringContainsString('object-fit: cover', $this->declaraciones('.pub-consulta__foto img', self::HOJA));
+        $vivas = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], '.is-live') && str_contains($r[1], 'clip-path'));
+        $this->assertNotEmpty($vivas, 'La escena viva recorta la foto.');
         foreach ($vivas as [$selector, $cuerpo]) {
-            if (str_contains($cuerpo, 'transform')) {
-                $this->assertStringContainsString('var(--p', $cuerpo, "{$selector}: el hueco crece con el progreso --p.");
-            }
+            $this->assertStringStartsWith('.js ', $selector, "{$selector}: solo con JavaScript.");
+            $this->assertStringContainsString('var(--p', $cuerpo, "{$selector}: el recorte sigue el progreso --p.");
         }
-        $this->assertStringContainsString('object-fit: contain', $this->enElCorte('.pub-open__photo', '@media (max-width: 559px)'), 'Por debajo de 560 px, la foto contenida.');
     }
 
     public function test_las_entradas_solo_ocultan_con_javascript(): void
@@ -408,6 +421,7 @@ class PaginasPublicasCssTest extends TestCase
             && ! str_contains($r[0], '.is-in') && ! array_filter($r[2], fn ($c) => str_starts_with($c, '@keyframes')));
         $this->assertNotEmpty($ocultas, 'Hay entradas por sección.');
         $this->assertNotEmpty(array_filter($ocultas, fn ($r) => str_contains($r[0], '.pub-hero h1')), 'El titular entra por líneas.');
+        $this->assertNotEmpty(array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], '.pub-cita')), 'Ronda 6: la cita destacada tiene sus reglas.');
         foreach ($ocultas as [$selector, , $envolventes]) {
             foreach (array_map('trim', explode(',', $selector)) as $uno) {
                 $this->assertStringStartsWith('.js ', $uno, "{$uno}: solo oculta con JavaScript.");

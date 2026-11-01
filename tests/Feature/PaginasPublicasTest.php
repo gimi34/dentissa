@@ -32,6 +32,12 @@ use Tests\TestCase;
  * a `test_las_fuentes_van_con_su_licencia` (con el SHA-256 de cada woff2,
  * /analyze A38, y un `OFL.txt` en cada carpeta, A37), los adornos son los de la
  * ronda 5 y el layout lleva «Menú» visible, «Crear cuenta» y el pie nuevo.
+ *
+ * Ronda 6 (D23, `c5`): la foto de la marca va en la arcada y en la escena «consulta» (el recorte deja de
+ * usarse); las fuentes son Newsreader (500, 600 y cursiva 500) y Montserrat (400, 500 y 600), y cada
+ * carpeta lleva exactamente los woff2 de la tabla de `system.md` (A43); Cormorant Garamond se retira; el
+ * menú del móvil es solo el icono, con el nombre «Menú»; el pie ya no lleva el nombre a todo el ancho;
+ * `/servicios` lleva la etiqueta y «Volver al inicio» en `.c-btn` (A41).
  */
 class PaginasPublicasTest extends TestCase
 {
@@ -57,13 +63,13 @@ class PaginasPublicasTest extends TestCase
     /** Sumideros de HTML y de código que `publico.js` no puede usar (TM1, /analyze A27). */
     private const SUMIDEROS = '/\binnerHTML\b|\bouterHTML\b|\binsertAdjacentHTML\b|document\.write|\beval\s*\(|\bnew\s+Function\b/';
 
-    /** La foto de la marca (D20): la ventana usa el recorte y la escena la foto entera. */
-    private const FOTOS = ['images/brand/access.webp', 'images/brand/access-recorte.webp'];
+    /** La foto de la marca (D20, D23): la arcada y la escena «consulta» usan la foto entera. */
+    private const FOTOS = ['images/brand/access.webp'];
 
     /** Las fuentes que carga el sitio público (D19), por carpeta. */
     private const FUENTES = [
-        'cormorant-garamond' => ['cormorant-garamond-latin-500-normal.woff2', 'cormorant-garamond-latin-600-normal.woff2'],
-        'montserrat' => ['montserrat-latin-400-normal.woff2', 'montserrat-latin-500-normal.woff2', 'montserrat-latin-600-normal.woff2', 'montserrat-latin-700-normal.woff2'],
+        'newsreader' => ['newsreader-latin-500-normal.woff2', 'newsreader-latin-600-normal.woff2', 'newsreader-latin-500-italic.woff2'],
+        'montserrat' => ['montserrat-latin-400-normal.woff2', 'montserrat-latin-500-normal.woff2', 'montserrat-latin-600-normal.woff2'],
     ];
 
     private const VISTAS = [
@@ -228,14 +234,15 @@ class PaginasPublicasTest extends TestCase
     public function test_la_foto_de_la_marca_es_la_propia(): void
     {
         // Sustituye a «la foto de portada va acreditada» (D17, A28): la foto de Unsplash se retira (D21)
-        // y la de la marca es propia de la clínica (D20), con el SHA-256 de cada archivo en system.md.
+        // y la de la marca es propia de la clínica (D20), con el SHA-256 en system.md. Ronda 6 (D23): la
+        // arcada de la presentación y la escena «consulta» usan la foto entera.
         $xpath = $this->xpath($this->get('/')->getContent());
-        $ventana = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " pub-tooth ")]//*[local-name()="image"]');
-        $this->assertSame(1, $ventana->length, 'La ventana del diente lleva una sola imagen.');
-        $this->assertSame('/'.self::FOTOS[1], parse_url($ventana->item(0)->getAttribute('href'), PHP_URL_PATH), 'La ventana usa el recorte.');
-        $escena = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " pub-open ")]//img');
+        $arcada = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " pub-arcada ")]//img');
+        $this->assertSame(1, $arcada->length, 'La arcada lleva una sola foto.');
+        $this->assertSame('/'.self::FOTOS[0], parse_url($arcada->item(0)->getAttribute('src'), PHP_URL_PATH));
+        $escena = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " pub-consulta ")]//img');
         $this->assertSame(1, $escena->length, 'La escena lleva una sola foto.');
-        $this->assertSame('/'.self::FOTOS[0], parse_url($escena->item(0)->getAttribute('src'), PHP_URL_PATH), 'La escena usa la foto entera.');
+        $this->assertSame('/'.self::FOTOS[0], parse_url($escena->item(0)->getAttribute('src'), PHP_URL_PATH), 'La escena usa la misma foto (una sola descarga).');
         $this->assertSame('lazy', $escena->item(0)->getAttribute('loading'), 'La escena queda por debajo de la primera pantalla.');
 
         $seccion = $this->seccionDelSistema('Imágenes');
@@ -248,18 +255,15 @@ class PaginasPublicasTest extends TestCase
 
     public function test_los_adornos_del_rediseno_estan_ocultos(): void
     {
-        // Ronda 5 (D19): el trazo del diente, los filetes de sección, la marca de agua de la agenda,
-        // las flechas del índice y el nombre a todo el ancho del pie no se anuncian.
+        // Ronda 6 (D23): los arcos de fondo de la presentación y de la agenda, los números de los pasos y
+        // las flechas del índice no se anuncian.
         $xpath = $this->xpath($this->get('/')->getContent());
-        foreach (['pub-tooth__line', 'pub-kicker-line', 'pub-book__mark', 'pub-index__go', 'pub-foot__word'] as $clase) {
+        foreach (['pub-arco', 'pub-book__arco', 'pub-paso__n', 'pub-index__go'] as $clase) {
             $nodos = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " '.$clase.' ")]');
             $this->assertGreaterThan(0, $nodos->length, "/: hay .{$clase}.");
             foreach ($nodos as $nodo) {
                 $this->assertSame(1, $xpath->query('ancestor-or-self::*[@aria-hidden="true"]', $nodo)->length, "/: .{$clase} es decorativo.");
             }
-        }
-        foreach ($xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " pub-promise__item ")]//*[local-name()="svg"]') as $icono) {
-            $this->assertSame('true', $icono->getAttribute('aria-hidden'), '/: los iconos de las promesas son decorativos.');
         }
     }
 
@@ -398,6 +402,15 @@ class PaginasPublicasTest extends TestCase
             }
         }
 
+        // A43: cada carpeta de las fuentes públicas lleva exactamente los woff2 de la tabla.
+        foreach (self::FUENTES as $carpeta => $archivos) {
+            $hay = array_map('basename', glob(public_path("fonts/{$carpeta}/*.woff2")));
+            sort($hay);
+            $esperados = $archivos;
+            sort($esperados);
+            $this->assertSame($esperados, $hay, "public/fonts/{$carpeta}/ lleva exactamente los woff2 de system.md.");
+        }
+
         $carpetas = glob(public_path('fonts/*'), GLOB_ONLYDIR);
         $this->assertNotEmpty($carpetas);
         foreach ($carpetas as $carpeta) {
@@ -421,14 +434,14 @@ class PaginasPublicasTest extends TestCase
         $retirados = [
             'resources/views/landing/index.blade.php', 'public/images/cover-bg.jpg', 'public/images/logo-rosa.png',
             'public/fonts/lexend', 'public/images/portada-800.webp', 'public/images/portada-1600.webp',
-            'resources/views/partials/icono-categoria.blade.php',
+            'resources/views/partials/icono-categoria.blade.php', 'public/fonts/cormorant-garamond',
         ];
         foreach ($retirados as $archivo) {
             $this->assertFileDoesNotExist(base_path($archivo));
         }
 
         // Solo en resources/ y public/ (los documentos sí las citan; /analyze A19).
-        $buscados = ['landing.index', 'cover-bg.jpg', 'logo-rosa.png', 'fonts/lexend', 'portada-800', 'portada-1600', 'icono-categoria'];
+        $buscados = ['landing.index', 'cover-bg.jpg', 'logo-rosa.png', 'fonts/lexend', 'portada-800', 'portada-1600', 'icono-categoria', 'cormorant'];
         foreach (['resources', 'public'] as $carpeta) {
             $iterador = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(base_path($carpeta), \FilesystemIterator::SKIP_DOTS));
             foreach ($iterador as $archivo) {
@@ -497,10 +510,12 @@ class PaginasPublicasTest extends TestCase
         $this->assertSame(0, $xpath->query('//a[normalize-space()="Promociones" or normalize-space()="Trabajos"]')->length, 'Sin enlaces de la 039 y la 040.');
         $this->assertSame('publico', $xpath->query('//body')->item(0)->getAttribute('class'));
 
-        // Ronda 5 (sustituye al refinado D15): «Menú» se ve, con su icono oculto al lector.
+        // Ronda 6 (decisión del usuario, D23; como el refinado D15): solo el icono de hamburguesa, con el
+        // nombre «Menú» para el lector y sin la palabra a la vista.
         $summary = $xpath->query('//details[contains(concat(" ", normalize-space(@class), " "), " pub-menu ")]/summary')->item(0);
         $this->assertNotNull($summary);
-        $this->assertSame('Menú', trim(preg_replace('/\s+/u', ' ', $summary->textContent)), 'La palabra «Menú» a la vista.');
+        $this->assertSame('', trim($summary->textContent), 'Sin la palabra «Menú» a la vista.');
+        $this->assertSame('Menú', $summary->getAttribute('aria-label'));
         $this->assertSame(1, $xpath->query('*[local-name()="svg"][@aria-hidden="true"]', $summary)->length, 'El icono es un SVG oculto al lector.');
         // /review R18: por debajo de 900 px el menú sigue siendo un landmark de navegación.
         $this->assertSame(1, $xpath->query('//details[contains(concat(" ", normalize-space(@class), " "), " pub-menu ")]//nav[@aria-label="Secciones"]')->length, 'El panel del menú es la nav «Secciones».');
@@ -518,9 +533,7 @@ class PaginasPublicasTest extends TestCase
         foreach (['Sobre nosotros', 'Servicios', 'Ubicación', 'Crear cuenta', 'Iniciar sesión'] as $enlace) {
             $this->assertSame(1, $xpath->query('.//a[normalize-space()="'.$enlace.'"]', $pie)->length, "El pie enlaza «{$enlace}».");
         }
-        $palabra = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " pub-foot__word ")]', $pie)->item(0);
-        $this->assertNotNull($palabra);
-        $this->assertSame('true', $palabra->getAttribute('aria-hidden'), 'El nombre a todo el ancho es decorativo.');
+        $this->assertSame(0, $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " pub-foot__word ")]', $pie)->length, 'Ronda 6: sin el nombre a todo el ancho.');
 
         $cliente = Usuario::create([
             'nombre' => 'Paciente', 'apellido' => 'De Pruebas', 'email' => 'layout.'.Str::random(8).'@example.test',
@@ -530,5 +543,18 @@ class PaginasPublicasTest extends TestCase
         $this->assertGreaterThan(0, $conSesion->query('//a[normalize-space()="Ir a mi panel"][@href="'.route('cliente.dashboard').'"]')->length);
         $this->assertSame(0, $conSesion->query('//a[normalize-space()="Iniciar sesión"]')->length);
         $this->assertSame(0, $conSesion->query('//a[normalize-space()="Crear cuenta"]')->length, 'Con sesión, sin «Crear cuenta».');
+    }
+
+    public function test_servicios_con_la_superficie_de_la_ronda_6(): void
+    {
+        // /analyze A41: /servicios con la etiqueta, el título y «Volver al inicio» como botón de la superficie.
+        $xpath = $this->xpath($this->get('/servicios')->assertOk()->getContent());
+        $cabeza = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " lb-cabeza ")]')->item(0);
+        $this->assertNotNull($cabeza);
+        $this->assertSame('Catálogo', trim($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " pub-etiqueta ")]', $cabeza)->item(0)?->textContent ?? ''), 'La etiqueta encabeza la página.');
+        $this->assertSame(1, $xpath->query('.//h1[normalize-space()="Nuestros servicios"]', $cabeza)->length);
+        $volver = $xpath->query('//a[normalize-space()="Volver al inicio"]')->item(0);
+        $this->assertNotNull($volver);
+        $this->assertStringContainsString(' c-btn ', ' '.$volver->getAttribute('class').' ', '«Volver al inicio» es un botón de la superficie.');
     }
 }

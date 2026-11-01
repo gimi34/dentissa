@@ -35,6 +35,13 @@ use Tests\TestCase;
  * - las tarjetas con «N tratamientos» → el índice de categorías;
  * - el logo decorativo de la portada → la marca anunciada solo en la cabecera;
  * - la franja que se puede pausar → sin equivalente (D21).
+ *
+ * Ronda 6 (plan D23, `design.md` con `c5`): la presentación lleva la foto propia en la arcada
+ * (sustituye a la ventana del diente); «Sobre nosotros» es una cita destacada con los dos párrafos y
+ * los tres pasos en línea (sustituye a la sección «Antes de cada tratamiento» con las promesas en
+ * tarjetas, /analyze A45); la escena es «consulta», la foto que se abre (sustituye a la escena
+ * `ventana`); la agenda muestra la semana (sustituye a la tarjeta con el diente); el índice lleva su
+ * número. El texto de CA3 se compara uniendo la cita y los párrafos (A44).
  */
 class PaginaInicioTest extends TestCase
 {
@@ -121,14 +128,13 @@ class PaginaInicioTest extends TestCase
         $respuesta = $this->get('/');
 
         $respuesta->assertOk();
-        // Ronda 5 (CA1): presentación → escena → «Sobre nosotros» → «Antes de cada tratamiento» →
-        // servicios → agenda → ubicación → pie, en el orden del HTML.
+        // Ronda 6 (CA1, A45): presentación → «Sobre nosotros» → escena «consulta» → servicios → agenda →
+        // ubicación → pie, en el orden del HTML.
         $respuesta->assertSeeInOrder([
             '<section class="pub-hero',
             'Agendar mi primera cita',
-            '<section class="pub-open',
             'id="nosotros"',
-            'Antes de cada tratamiento',
+            '<section class="pub-consulta',
             'id="servicios"',
             '<section class="pub-book',
             'id="ubicacion"',
@@ -140,8 +146,9 @@ class PaginaInicioTest extends TestCase
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Iniciar sesión"][@href="'.route('login').'"]')->length, 'Hay un enlace visible a «Iniciar sesión».');
         $this->assertGreaterThan(0, $xpath->query('//a[normalize-space()="Crear cuenta"][@href="'.route('register').'"]')->length, 'Hay un enlace a crear una cuenta.');
 
-        // Ronda 5 (D21): sin la placa, la portada a sangre, la hoja, las tarjetas ni la franja.
-        foreach (['lb-placa', 'lb-aviso', 'portada', 'hoja', 'tarjeta', 'marquesina'] as $clase) {
+        // Rondas anteriores (D21, D23): sin la placa, la portada, la hoja, las tarjetas, la franja, la
+        // ventana del diente, su escena ni las promesas en tarjetas.
+        foreach (['lb-placa', 'lb-aviso', 'portada', 'hoja', 'tarjeta', 'marquesina', 'pub-tooth', 'pub-open', 'pub-promise'] as $clase) {
             $this->assertNull($this->porClase($xpath, $clase), "Sin «.{$clase}» de las rondas anteriores.");
         }
     }
@@ -149,7 +156,8 @@ class PaginaInicioTest extends TestCase
     public function test_la_presentacion_lleva_el_horario_y_el_telefono(): void
     {
         // Sustituye a «la portada lleva el horario y el teléfono» (/review R3): junto a «Agendar mi
-        // primera cita» (CA1); la ubicación y el pie los repiten.
+        // primera cita» (CA1); la ubicación y el pie los repiten. Ronda 6: además, «Iniciar sesión» y
+        // «Crear cuenta» a la vista (en el móvil, sin abrir el menú).
         $xpath = $this->xpath($this->get('/')->getContent());
         $presentacion = $this->porClase($xpath, 'pub-hero');
         $this->assertNotNull($presentacion, 'Hay una presentación.');
@@ -162,27 +170,36 @@ class PaginaInicioTest extends TestCase
 
         $this->assertStringContainsString('Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00', $this->textoDe($presentacion), 'El horario completo, también sin JavaScript.');
         $this->assertSame(1, $xpath->query('.//a[@href="tel:+527530000000"][contains(normalize-space(), "753 000 0000")]', $presentacion)->length, 'La presentación ofrece llamar.');
+
+        $acceso = $this->porClase($xpath, 'pub-acceso', $presentacion);
+        $this->assertNotNull($acceso, 'La presentación lleva el acceso.');
+        $this->assertSame(1, $xpath->query('.//a[normalize-space()="Iniciar sesión"][@href="'.route('login').'"]', $acceso)->length);
+        $this->assertSame(1, $xpath->query('.//a[normalize-space()="Crear cuenta"][@href="'.route('register').'"]', $acceso)->length);
     }
 
-    public function test_la_ventana_del_diente_lleva_la_foto_propia(): void
+    public function test_la_arcada_y_la_escena_llevan_la_foto_propia(): void
     {
-        // D20: la foto de la marca, propia de la clínica: recortada en la ventana y entera en la escena.
+        // Sustituye a «la ventana del diente lleva la foto propia» (D20, D23): la foto de la marca va en
+        // el marco de la arcada en la presentación y se abre entera en la escena «consulta».
         $xpath = $this->xpath($this->get('/')->getContent());
-        $ventana = $this->porClase($xpath, 'pub-tooth', $this->porClase($xpath, 'pub-hero'));
-        $this->assertNotNull($ventana, 'La ventana del diente está en la presentación.');
+        $arcada = $this->porClase($xpath, 'pub-arcada', $this->porClase($xpath, 'pub-hero'));
+        $this->assertNotNull($arcada, 'La arcada está en la presentación.');
+        $foto = $xpath->query('.//img', $arcada);
+        $this->assertSame(1, $foto->length, 'La arcada lleva una foto.');
+        $this->assertStringEndsWith('/images/brand/access.webp', $foto->item(0)->getAttribute('src'));
+        $this->assertNotSame('', trim($foto->item(0)->getAttribute('alt')), 'La foto es de la clínica y lleva su texto alternativo.');
+        $this->assertNotSame('lazy', $foto->item(0)->getAttribute('loading'), 'Primera pantalla: no es perezosa.');
 
-        $recorte = $xpath->query('.//*[local-name()="image" or local-name()="img"][contains(@href, "/images/brand/access-recorte.webp") or contains(@src, "/images/brand/access-recorte.webp")]', $ventana);
-        $this->assertSame(1, $recorte->length, 'La ventana enmarca el recorte de la foto de la marca.');
-        $this->assertSame('Antes de empezar, te explicamos cada paso.', $this->textoDe($this->porClase($xpath, 'pub-tooth__tag', $ventana)));
-
-        $escena = $this->porClase($xpath, 'pub-open');
-        $this->assertNotNull($escena, 'Hay una escena de la foto.');
-        $foto = $xpath->query('.//img[contains(concat(" ", normalize-space(@class), " "), " pub-open__photo ")]', $escena)->item(0);
-        $this->assertNotNull($foto);
-        $this->assertStringEndsWith('/images/brand/access.webp', $foto->getAttribute('src'));
-        $this->assertNotSame('', trim($foto->getAttribute('alt')), 'La foto es de la clínica y lleva su texto alternativo.');
-        $this->assertSame('900', $foto->getAttribute('width'));
-        $this->assertSame('900', $foto->getAttribute('height'));
+        $escena = $xpath->query('//section[@data-scene="consulta"]')->item(0);
+        $this->assertNotNull($escena, 'Hay una escena «consulta».');
+        $this->assertStringContainsString(' pub-consulta ', ' '.$escena->getAttribute('class').' ');
+        $img = $xpath->query('.//img', $escena)->item(0);
+        $this->assertNotNull($img);
+        $this->assertStringEndsWith('/images/brand/access.webp', $img->getAttribute('src'));
+        $this->assertNotSame('', trim($img->getAttribute('alt')));
+        $this->assertSame('900', $img->getAttribute('width'));
+        $this->assertSame('900', $img->getAttribute('height'));
+        $this->assertSame('La consulta de Melissa López N., en el centro de Lázaro Cárdenas.', $this->textoDe($xpath->query('.//figcaption', $escena)->item(0)));
     }
 
     public function test_la_pastilla_toma_el_horario_y_la_zona_de_la_configuracion(): void
@@ -230,38 +247,43 @@ class PaginaInicioTest extends TestCase
 
     public function test_sobre_nosotros_con_el_texto_aprobado(): void
     {
-        $html = $this->get('/')->getContent();
-
-        // Sustituye a «la hoja de Sobre nosotros» (A31): el texto de CA3, dentro de su sección.
-        $xpath = $this->xpath($html);
+        // Ronda 6 (A44): la primera frase de CA3 es la cita destacada y el resto va en dos párrafos; unidos,
+        // en orden, son el texto exacto de la spec.
+        $xpath = $this->xpath($this->get('/')->getContent());
         $seccion = $xpath->query('//section[@id="nosotros"]')->item(0);
         $this->assertNotNull($seccion);
         $this->assertStringContainsString(' pub-about ', ' '.$seccion->getAttribute('class').' ');
         $this->assertSame(1, $xpath->query('.//h2[normalize-space()="Sobre nosotros"]', $seccion)->length);
 
-        $cuerpo = $this->porClase($xpath, 'pub-about__body', $seccion);
-        $this->assertNotNull($cuerpo);
-        foreach (self::NOSOTROS as $parrafo) {
-            $this->assertStringContainsString($parrafo, $this->textoDe($cuerpo));
+        $cita = $this->porClase($xpath, 'pub-cita', $seccion);
+        $this->assertNotNull($cita, 'Hay una cita destacada.');
+        $this->assertSame('Somos una consulta de odontología integral en el centro de Lázaro Cárdenas.', $this->textoDe($cita));
+
+        $partes = [$this->textoDe($cita)];
+        foreach ($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " pub-about__body ")]/p', $seccion) as $parrafo) {
+            $partes[] = $this->textoDe($parrafo);
         }
+        $this->assertSame(implode(' ', self::NOSOTROS), implode(' ', $partes), 'La cita y los párrafos, en orden, son el texto de CA3.');
     }
 
-    public function test_las_tres_promesas_con_su_texto(): void
+    public function test_los_tres_pasos_con_su_texto(): void
     {
+        // Sustituye a «las tres promesas con su texto» (A45): los pasos en línea dentro de «Sobre nosotros».
         $xpath = $this->xpath($this->get('/')->getContent());
-        $seccion = $this->porClase($xpath, 'pub-promise');
-        $this->assertNotNull($seccion, 'Hay una sección «Antes de cada tratamiento».');
-        $this->assertSame(1, $xpath->query('.//h2[normalize-space()="Antes de cada tratamiento"]', $seccion)->length);
+        $pasos = $xpath->query('//section[@id="nosotros"]//ol[contains(concat(" ", normalize-space(@class), " "), " pub-pasos ")]')->item(0);
+        $this->assertNotNull($pasos, 'Los pasos están en «Sobre nosotros».');
+        $this->assertSame('Antes de cada tratamiento', $pasos->getAttribute('aria-label'));
 
-        $items = $xpath->query('.//ol/li[contains(concat(" ", normalize-space(@class), " "), " pub-promise__item ")]', $seccion);
-        $this->assertSame(3, $items->length, 'Tres promesas, en una lista ordenada.');
+        $items = $xpath->query('./li[contains(concat(" ", normalize-space(@class), " "), " pub-paso ")]', $pasos);
+        $this->assertSame(3, $items->length, 'Tres pasos, en una lista ordenada.');
         $i = 0;
         foreach (self::PROMESAS as $titulo => $texto) {
             $item = $items->item($i++);
             $this->assertSame($titulo, $this->textoDe($xpath->query('.//h3', $item)->item(0)));
             $this->assertSame($texto, $this->textoDe($xpath->query('.//p', $item)->item(0)));
-            $this->assertSame(0, $xpath->query('.//*[local-name()="svg"][not(@aria-hidden="true")]', $item)->length, 'El icono de la promesa es decorativo.');
+            $this->assertSame('true', $this->porClase($xpath, 'pub-paso__n', $item)->getAttribute('aria-hidden'), 'El número es decorativo (lo da la lista).');
         }
+        $this->assertSame(1, $xpath->query('//section[@id="nosotros"]//a[normalize-space()="Crear mi cuenta"][@href="'.route('register').'"]')->length);
     }
 
     public function test_solo_categorias_activas_sin_servicios_sueltos(): void
@@ -299,8 +321,9 @@ class PaginaInicioTest extends TestCase
         foreach (['Categoria038 Dos' => '2 tratamientos', 'Categoria038 Uno' => '1 tratamiento'] as $categoria => $cuenta) {
             $enlace = $fila($categoria);
             $this->assertNotNull($enlace, "Hay una fila para {$categoria}.");
-            $this->assertSame("{$categoria} {$cuenta}", $this->textoDe($enlace), 'Solo el nombre y el número de tratamientos activos, sin servicios sueltos.');
+            $this->assertMatchesRegularExpression('/^0\d '.preg_quote("{$categoria} {$cuenta}", '/').'$/u', $this->textoDe($enlace), 'Solo el número de la fila, el nombre y el número de tratamientos activos, sin servicios sueltos.');
             $this->assertSame($cuenta, $this->textoDe($this->porClase($xpath, 'pub-index__count', $enlace)));
+            $this->assertMatchesRegularExpression('/^0\d$/', $this->textoDe($this->porClase($xpath, 'pub-index__n', $enlace)), 'Ronda 6: cada fila lleva su número.');
             $this->assertSame('true', $this->porClase($xpath, 'pub-index__go', $enlace)->getAttribute('aria-hidden'), 'La flecha es decorativa.');
 
             // /analyze A26: el ancla de la fila existe en /servicios y es la de su categoría.
@@ -321,7 +344,13 @@ class PaginaInicioTest extends TestCase
         $this->assertSame(1, $xpath->query('.//h2[normalize-space()="Agenda sin llamar."]', $tarjeta)->length);
         $this->assertStringContainsString('Crea tu cuenta y elige el día de tu cita en línea', $this->textoDe($tarjeta));
         $this->assertSame(1, $xpath->query('.//a[normalize-space()="Agendar mi primera cita"][@href="'.route('register').'"]', $tarjeta)->length);
-        $this->assertSame('true', $this->porClase($xpath, 'pub-book__mark', $tarjeta)->getAttribute('aria-hidden'), 'La marca de agua del diente es decorativa.');
+        $this->assertSame('true', $this->porClase($xpath, 'pub-book__arco', $tarjeta)->getAttribute('aria-hidden'), 'Los arcos de fondo son decorativos.');
+
+        // Ronda 6 (D23): la semana real de la consulta, sacada del horario semanal de la configuración.
+        $semana = $xpath->query('.//ul[contains(concat(" ", normalize-space(@class), " "), " pub-semana ")]/li', $tarjeta);
+        $this->assertSame(7, $semana->length, 'Los siete días.');
+        $dias = array_map(fn ($li) => $this->textoDe($li), iterator_to_array($semana));
+        $this->assertSame(['Lun 9:00–20:00', 'Mar 9:00–20:00', 'Mié 9:00–20:00', 'Jue 9:00–20:00', 'Vie 9:00–20:00', 'Sáb 9:00–14:00', 'Dom Cerrado'], $dias);
     }
 
     public function test_la_semana_marca_lunes_a_viernes_sabados_y_domingo_cerrado(): void
