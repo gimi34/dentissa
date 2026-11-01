@@ -145,14 +145,17 @@ acceso). Es un servicio externo que `docs/security.md` no aprueba (DS9).
 Fuentes del sitio público (spec 038, 1.9.0; T047, /analyze A38): woff2 latino copiado sin cambios de
 `npm pack` (`--ignore-scripts`) de `@fontsource/cormorant-garamond@5.3.0` (publicado el 2026-07-19 03:38
 UTC, integridad `sha512-weuGsCirGVWBWqpt6YUp0yLThTe4G8YO4…`, igual a la del registro) y
-`@fontsource/montserrat@5.3.0` (2026-07-19 03:42 UTC, `sha512-iQPDtZOnmM5ih4JBGaMSXisRap0ixb9bA…`), de
-los mantenedores de Fontsource (`jwr1`, `lotusdevshack`), licencia OFL-1.1. Cada carpeta lleva el
+`@fontsource/montserrat@5.3.0` (2026-07-19 03:42 UTC, `sha512-iQPDtZOnmM5ih4JBGaMSXisRap0ixb9bA…`) y, desde 1.10.0, `@fontsource/newsreader@5.3.0`
+(2026-07-19, `sha512-AFR6ZKY89GNL…`, igual a la del registro; T035), de los mantenedores de Fontsource (`jwr1`, `lotusdevshack`), licencia OFL-1.1. Cada carpeta lleva el
 `LICENSE` del paquete como `OFL.txt`. Un test compara cada archivo con su SHA-256:
 
 | Archivo | Bytes | SHA-256 |
 |---|---|---|
 | `public/fonts/cormorant-garamond/cormorant-garamond-latin-500-normal.woff2` | 23312 | `8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8` |
 | `public/fonts/cormorant-garamond/cormorant-garamond-latin-600-normal.woff2` | 23396 | `ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea` |
+| `public/fonts/newsreader/newsreader-latin-500-normal.woff2` | 23624 | `5613e2fc8377392c02e8ac9d55014689fb5320a5f2a7be55e8088a314728ac2c` |
+| `public/fonts/newsreader/newsreader-latin-600-normal.woff2` | 23876 | `05c91a26d19a61eafe7ce8e0b77eff3fd279ce994dc89f432f4cd06784935e84` |
+| `public/fonts/newsreader/newsreader-latin-500-italic.woff2` | 25636 | `3d184d574e56fcb42f4c1920d4130db872ec0af6de9a0ad0f9e850444be44b7d` |
 | `public/fonts/montserrat/montserrat-latin-400-normal.woff2` | 18780 | `e66bcd2761ab6924b25ce70dafe10e57a39193c4fea1516730bd9cb5240af6c8` |
 | `public/fonts/montserrat/montserrat-latin-500-normal.woff2` | 18748 | `2b53300fb9471520df2f4905847fb7a209879b2029ae893c05c6ee346b1320cd` |
 | `public/fonts/montserrat/montserrat-latin-600-normal.woff2` | 18688 | `d857325c360f7128b347ca924c1974967aaa886ba47dad22e4042d6c38b26a83` |
