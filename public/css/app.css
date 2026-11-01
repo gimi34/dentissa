@@ -105,8 +105,8 @@
     --ease-expo:          cubic-bezier(0.16, 1, 0.3, 1);
     --duration-reveal:    800ms;
     --stagger:            80ms;
-    /* Sitio público de la ronda 5, «La ventana del diente» (spec 038; system.md 1.9.0). */
-    --font-display:       "Cormorant Garamond", ui-serif, Georgia, serif;
+    /* Sitio público de la ronda 5 (spec 038; system.md 1.9.0) y de la ronda 6 (1.10.0, la arcada). */
+    --font-display:       "Newsreader", ui-serif, Georgia, serif;  /* 1.10.0 (antes Cormorant Garamond) */
     --text-display:       clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px);  /* tamaño, no color */
     --text-statement:     clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px);   /* tamaño, no color */
     --text-seccion:       clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px);   /* tamaño, no color */

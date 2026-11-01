@@ -1,25 +1,32 @@
-/* Páginas públicas (spec 038; system.md 1.9.0, superficie «Sitio público» de la ronda 5, «La ventana
-   del diente»; diseño en docs/specs/038-pagina-inicio/design.md y design/opcion-a-pagina.html, con las
-   clases prefijadas con pub-, D19). Se carga después de app.css, que pone los tokens de :root. Colores,
+/* Páginas públicas (spec 038; system.md 1.10.0, superficie «Sitio público» de la ronda 6, la arcada;
+   diseño en docs/specs/038-pagina-inicio/design.md y design/candidatos/c5.html, con las clases
+   prefijadas con pub-, D19 y D23). Se carga después de app.css, que pone los tokens de :root. Colores,
    tipografía, espacios, radios, sombras y duraciones salen de tokens; los únicos literales son los de
    @font-face, las condiciones de los cortes de 900 y 560 px, las proporciones de rejilla (fr), los
    porcentajes y las escalas sin unidad (también los factores de calc() sobre tokens, system.md 1.9.0).
    La clase js la pone public/js/publico.js: sin ella todo está visible y quieto. */
 
-/* Cormorant Garamond y Montserrat autoalojadas (OFL-1.1, su OFL.txt en cada carpeta; D19). */
+/* Newsreader y Montserrat autoalojadas (OFL-1.1, su OFL.txt en cada carpeta; D23). */
 @font-face {
-    font-family: "Cormorant Garamond";
+    font-family: "Newsreader";
     font-style: normal;
     font-weight: 500;
     font-display: swap;
-    src: url("../fonts/cormorant-garamond/cormorant-garamond-latin-500-normal.woff2") format("woff2");
+    src: url("../fonts/newsreader/newsreader-latin-500-normal.woff2") format("woff2");
 }
 @font-face {
-    font-family: "Cormorant Garamond";
+    font-family: "Newsreader";
     font-style: normal;
     font-weight: 600;
     font-display: swap;
-    src: url("../fonts/cormorant-garamond/cormorant-garamond-latin-600-normal.woff2") format("woff2");
+    src: url("../fonts/newsreader/newsreader-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Newsreader";
+    font-style: italic;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../fonts/newsreader/newsreader-latin-500-italic.woff2") format("woff2");
 }
 @font-face {
     font-family: "Montserrat";
@@ -41,13 +48,6 @@
     font-weight: 600;
     font-display: swap;
     src: url("../fonts/montserrat/montserrat-latin-600-normal.woff2") format("woff2");
-}
-@font-face {
-    font-family: "Montserrat";
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url("../fonts/montserrat/montserrat-latin-700-normal.woff2") format("woff2");
 }
 
 /* Anula el display: flex y la familia del body de app.css (plan D3). Sin overflow en los ancestros
@@ -94,7 +94,7 @@ body.publico button:focus-visible {
     -webkit-mask: url("../images/logo-icon.png") left center / contain no-repeat;
     mask: url("../images/logo-icon.png") left center / contain no-repeat;
 }
-.pub-brand .logo { aspect-ratio: var(--logo-ratio); }
+.pub-brand .logo { width: calc(var(--logo-max-w) * 1.25); aspect-ratio: var(--logo-ratio); }
 
 /* Botón en píldora (system.md 1.9.0): principal rosa con tinta, tinta y fantasma. */
 .c-btn {
@@ -157,28 +157,28 @@ body.publico button:focus-visible {
     min-height: var(--touch-min);
     padding: 0 var(--space-4);
     font-size: var(--text-publico-small);
-    font-weight: var(--weight-strong);
+    font-weight: var(--weight-regular);
     text-decoration: none;
     text-underline-offset: var(--space-2);
 }
 .pub-nav a:not(.c-btn):hover { text-decoration: underline; text-decoration-color: var(--p400); }
 .pub-nav .c-btn { padding: 0 var(--space-7); }
 .pub-menu { position: relative; display: none; }
+/* Menú del móvil: solo el icono de hamburguesa, sin la palabra ni el borde (decisión del usuario, D23). */
 .pub-menu summary {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
+    display: inline-grid;
+    place-items: center;
+    min-width: var(--touch-min);
     min-height: var(--touch-min);
-    padding: 0 var(--space-6);
-    border: var(--border-width) solid var(--border-control);
-    border-radius: var(--radius-pill);
-    font-size: var(--text-publico-small);
-    font-weight: var(--weight-bold);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
     list-style: none;
     cursor: pointer;
 }
 .pub-menu summary::-webkit-details-marker { display: none; }
-.pub-menu summary svg { width: var(--icon-md); height: var(--icon-md); }
+.pub-menu summary svg { width: calc(var(--icon-md) + var(--space-3)); height: calc(var(--icon-md) + var(--space-3)); }
 .pub-menu__panel {
     position: absolute;
     top: calc(100% + var(--space-3));
@@ -203,11 +203,24 @@ body.publico button:focus-visible {
 .pub-menu__panel a:not(.c-btn):hover { background: var(--p100); }
 .pub-menu__panel .c-btn { justify-content: center; margin-top: var(--space-3); }
 
-/* Presentación: el titular de cartel y la ventana del diente. */
-.pub-hero { padding: var(--space-8) 0 var(--space-seccion); }
+/* Etiqueta de cada sección (system.md 1.10.0). */
+.pub-etiqueta {
+    display: block;
+    color: var(--p600);
+    font-size: var(--text-publico-small);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-etiqueta);
+    text-transform: uppercase;
+}
+
+/* Presentación: el titular, la acción y el horario; la foto propia en el marco de la arcada (D23). */
+.pub-hero { position: relative; overflow: hidden; padding: var(--space-8) 0 var(--space-seccion); }
+.pub-arco { position: absolute; right: 0; bottom: 0; left: 0; width: 100%; height: 70%; pointer-events: none; }
+.pub-arco path { fill: none; stroke: var(--p200); stroke-width: 1.5; }
 .pub-hero__grid {
+    position: relative;
     display: grid;
-    grid-template-columns: 1.25fr 1fr;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     gap: var(--space-seccion);
     align-items: center;
 }
@@ -220,18 +233,15 @@ body.publico button:focus-visible {
 }
 .pub-hero h1 .pub-ln { display: block; overflow: hidden; }
 .pub-hero h1 .pub-ln > span { display: inline-block; }
-.pub-hero__lead {
-    max-width: 34ch;
-    margin-top: var(--space-8);
-    font-size: var(--text-lead);
-}
-.pub-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-8); }
+.pub-hero h1 em { color: var(--p600); font-style: italic; }
+.pub-hero__lead { max-width: 40ch; margin-top: var(--space-5); font-size: var(--text-lead); }
+.pub-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-7); }
 .pub-hero__facts {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-4) var(--space-8);
-    margin: var(--space-8) 0 0;
+    gap: var(--space-2) var(--space-7);
+    margin: var(--space-7) 0 0;
     padding: 0;
     font-size: var(--text-publico-small);
     list-style: none;
@@ -240,18 +250,23 @@ body.publico button:focus-visible {
     display: inline-flex;
     align-items: center;
     min-height: var(--touch-min);
+    font-size: var(--text-publico-h2);
     font-weight: var(--weight-bold);
     text-decoration: none;
 }
 .pub-hero__facts a:hover { text-decoration: underline; text-decoration-color: var(--p400); }
+/* En el móvil, «Iniciar sesión · Crear cuenta» a la vista sin abrir el menú. */
+.pub-acceso { display: none; flex-wrap: wrap; column-gap: var(--space-6); margin-top: var(--space-2); font-size: var(--text-publico-small); }
+.pub-acceso a { display: inline-flex; align-items: center; min-height: var(--touch-min); font-weight: var(--weight-bold); }
 
 /* Cosa viva: «¿Está abierto ahora?». Sin JavaScript (sin data-open) no se ve; el horario completo sí. */
 .pub-status {
     display: inline-flex;
     align-items: center;
     gap: var(--space-4);
+    max-width: 100%;
     min-height: var(--touch-min);
-    padding: var(--space-3) var(--space-6) var(--space-3) var(--space-5);
+    padding: var(--space-2) var(--space-6) var(--space-2) var(--space-5);
     background: var(--white);
     border-radius: var(--radius-pill);
     box-shadow: var(--shadow-soft);
@@ -265,75 +280,19 @@ body.publico button:focus-visible {
     border-radius: var(--radius-pill);
     background: var(--p400);
 }
-.pub-status[data-open="true"] .pub-status__dot {
-    background: var(--green-texto);
-    box-shadow: 0 0 0 var(--space-1) var(--p100);
-}
+.pub-status[data-open="true"] .pub-status__dot { background: var(--green-texto); }
 
-.pub-tooth { position: relative; width: min(100%, calc(var(--touch-min) * 12)); margin: 0 auto; }
-.pub-tooth__img { width: 100%; height: auto; }
-.pub-tooth__line {
-    position: absolute;
-    inset: -4% -6% -2% -2%;
-    width: 108%;
-    height: 106%;
-    overflow: visible;
-    pointer-events: none;
-}
-.pub-tooth__line path { fill: none; stroke: var(--p400); stroke-width: 2.2; stroke-linecap: round; }
-.pub-tooth__tag {
-    position: absolute;
-    left: -4%;
-    bottom: 10%;
-    display: grid;
-    gap: var(--space-1);
-    padding: var(--space-5) var(--space-7);
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-soft);
-    font-size: var(--text-publico-small);
-}
-.pub-tooth__tag strong {
-    font-family: var(--font-display);
-    font-size: var(--text-publico-h2);
-    font-weight: var(--weight-bold);
-    line-height: var(--leading-publico-h1);
-}
-
-/* Escena: la ventana se abre (M-1). El diente es un hueco en el velo que crece con --p; sin
-   JavaScript o con movimiento reducido no hay velo y la foto se ve entera. */
-.pub-open { position: relative; }
-.pub-open__stage {
-    position: relative;
-    display: grid;
-    place-items: center;
-    min-height: 80svh;
+.pub-arcada { position: relative; margin: 0; }
+.pub-arcada__marco {
     overflow: hidden;
+    border-radius: 50% 50% var(--radius-lg) var(--radius-lg) / 42% 42% var(--radius-lg) var(--radius-lg);
     background: var(--p400);
+    box-shadow: var(--shadow-soft);
 }
-.pub-open__photo {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.pub-open__veil { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--bg); }
-.pub-open__veil .pub-open__hole {
-    transform-box: fill-box;
-    transform-origin: 50% 28%;
-    transform: scale(calc(1 + var(--p, 1) * 18));
-}
-.pub-open:not(.is-live) .pub-open__veil { display: none; }
-.js .pub-open.is-live { height: calc(2.4 * 100svh); }
-.js .pub-open.is-live > .pub-open__stage {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-}
+.pub-arcada__marco img { width: 100%; height: auto; object-fit: cover; }
 
 /* Secciones */
-.pub-sec { padding: var(--space-seccion-publica) 0; }
+.pub-sec { padding: calc(var(--space-seccion) * 1.5) 0; }
 .pub-sec h2 {
     font-family: var(--font-display);
     font-size: var(--text-seccion);
@@ -341,73 +300,103 @@ body.publico button:focus-visible {
     line-height: var(--leading-publico-h2);
     letter-spacing: var(--tracking-titulo);
 }
-.pub-kicker-line {
-    display: block;
-    width: calc(var(--touch-min) + var(--space-8));
-    height: calc(var(--border-width) * 3);
-    margin-bottom: var(--space-8);
-    background: var(--text);
-}
 
-/* Sobre nosotros: el campo rosa de la marca con el texto en tinta. */
-.pub-about { background: var(--p400); }
-.pub-about__grid {
-    display: grid;
-    grid-template-columns: 5fr 7fr;
-    gap: var(--space-seccion);
-    align-items: start;
+/* Sobre nosotros: la primera frase como cita destacada; el resto en dos columnas y los tres pasos en línea. */
+.pub-about { background: var(--white); }
+.pub-about h2 {
+    color: var(--p600);
+    font-family: var(--font-publica);
+    font-size: var(--text-publico-small);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-etiqueta);
+    line-height: var(--leading-publico);
+    text-transform: uppercase;
 }
-.pub-about__body p {
-    max-width: 44ch;
-    margin-bottom: var(--space-6);
-    font-size: var(--text-publico-h3);
-}
-.pub-about__body p:first-child {
+.pub-cita {
     max-width: 24ch;
+    margin-top: var(--space-6);
     font-family: var(--font-display);
-    font-size: var(--text-statement);
+    font-size: var(--text-seccion);
     font-weight: var(--weight-strong);
     line-height: var(--leading-publico-h1);
+    letter-spacing: var(--tracking-titulo);
 }
-.pub-about__body .c-btn { margin-top: var(--space-4); }
-
-/* Antes de cada tratamiento: el título fijo y las tres promesas. */
-.pub-promise__grid {
+.pub-cita::before { content: "«"; color: var(--p400); }
+.pub-cita::after { content: "»"; color: var(--p400); }
+.pub-about__body {
     display: grid;
-    grid-template-columns: 5fr 7fr;
-    gap: var(--space-seccion);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-seccion);
+    margin-top: var(--space-seccion);
+    font-size: var(--text-lead);
 }
-.pub-promise__head {
-    position: sticky;
-    top: calc(var(--touch-min) * 2 + var(--space-8));
-    align-self: start;
-}
-.pub-promise__head p { max-width: 32ch; margin-top: var(--space-7); color: var(--p600); }
-.pub-promise__list { display: grid; gap: var(--space-7); margin: 0; padding: 0; list-style: none; }
-.pub-promise__item {
+.pub-about__body p { max-width: 44ch; }
+.pub-pasos {
+    position: relative;
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-2) var(--space-8);
-    align-items: baseline;
-    padding: calc(var(--space-8) + var(--space-7));
-    background: var(--white);
-    border-radius: calc(var(--space-6) + var(--space-3));
-    box-shadow: var(--shadow-soft);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+    margin: var(--space-seccion) 0 0;
+    padding: 0;
+    list-style: none;
 }
-.pub-promise__item svg {
-    grid-row: span 2;
-    align-self: start;
+.pub-pasos::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--touch-min) / 2);
+    right: 0;
+    left: 0;
+    border-top: var(--border-width) solid var(--p400);
+}
+.pub-paso { position: relative; display: grid; gap: var(--space-3); align-content: start; }
+.pub-paso__n {
+    display: inline-grid;
+    place-items: center;
     width: var(--touch-min);
     height: var(--touch-min);
-    color: var(--p400);
-}
-.pub-promise__item h3 {
+    border-radius: var(--radius-pill);
+    background: var(--p400);
+    color: var(--text);
     font-family: var(--font-display);
-    font-size: var(--text-statement);
+    font-size: var(--text-publico-h2);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-publico-h1);
+    font-variant-numeric: lining-nums;
+}
+.pub-paso h3 {
+    font-family: var(--font-display);
+    font-size: var(--text-publico-h2);
     font-weight: var(--weight-bold);
     line-height: var(--leading-publico-h1);
 }
-.pub-promise__item p { max-width: 40ch; color: var(--p600); }
+.pub-paso p { max-width: 34ch; color: var(--p600); }
+.pub-pasos + .c-btn { margin-top: var(--space-8); }
+
+/* Escena «consulta» (M-1): la foto propia se abre desde la arcada hasta llenar la pantalla. Sin JavaScript
+   o con movimiento reducido, la foto entera; viva, el recorte sigue el progreso --p (publico.js). */
+.pub-consulta { position: relative; background: var(--p100); }
+.pub-consulta__stage { display: grid; place-items: center; padding: var(--space-seccion) 0; }
+.pub-consulta figure { width: 100%; margin: 0; }
+.pub-consulta__foto {
+    width: min(100%, calc(var(--page-ancho) - var(--gutter) * 2));
+    height: 70svh;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--p400);
+}
+.pub-consulta__foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.pub-consulta figcaption { margin-top: var(--space-5); color: var(--p800); font-size: var(--text-publico-small); text-align: center; }
+.js .pub-consulta.is-live { height: calc(1.8 * 100svh); }
+.js .pub-consulta.is-live > .pub-consulta__stage { position: sticky; top: 0; height: 100svh; padding: 0; overflow: hidden; }
+.js .pub-consulta.is-live .pub-consulta__foto {
+    width: 100%;
+    height: 100svh;
+    border-radius: 0;
+    clip-path: inset(calc((1 - var(--p, 1)) * 18%) calc((1 - var(--p, 1)) * 34%)
+        round calc((1 - var(--p, 1)) * 48%) calc((1 - var(--p, 1)) * 48%) var(--radius-lg) var(--radius-lg));
+}
+.js .pub-consulta.is-live figcaption { position: absolute; right: 0; bottom: var(--space-8); left: 0; margin: 0; }
 
 /* Avance de servicios: el índice de las categorías a todo el ancho. */
 .pub-services { padding-top: 0; }
@@ -424,7 +413,7 @@ body.publico button:focus-visible {
 .pub-index li { border-bottom: var(--border-width) solid var(--border); }
 .pub-index a {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: var(--space-6) var(--space-8);
     min-height: var(--touch-min);
@@ -444,6 +433,7 @@ body.publico button:focus-visible {
     line-height: var(--leading-publico-h1);
 }
 .pub-index__count { color: var(--p600); font-size: var(--text-publico-small); white-space: nowrap; }
+.pub-index__n { color: var(--p600); font-size: var(--text-publico-small); font-weight: var(--weight-bold); }
 .pub-index__go {
     display: inline-grid;
     place-items: center;
@@ -455,14 +445,12 @@ body.publico button:focus-visible {
 .pub-index__go svg { width: var(--space-7); height: var(--space-7); }
 .pub-index a:hover .pub-index__go { background: var(--p400); border-color: var(--p400); }
 
-/* Agenda en línea: la tarjeta de tinta con el diente como marca de agua. */
-.pub-book { padding: var(--space-seccion) 0; }
+/* Agenda en línea: la tarjeta de tinta con la semana real de la consulta y los arcos de fondo (D23). */
+.pub-book { padding: 0 0 var(--space-seccion); }
 .pub-book__card {
     position: relative;
     display: grid;
-    grid-template-columns: 1.4fr auto;
     gap: var(--space-8);
-    align-items: center;
     padding: calc(var(--space-8) * 2);
     overflow: hidden;
     background: var(--text);
@@ -477,15 +465,32 @@ body.publico button:focus-visible {
     line-height: var(--leading-publico-h2);
 }
 .pub-book__card p { max-width: 46ch; margin-top: var(--space-6); }
-.pub-book__mark {
-    position: absolute;
-    right: calc(var(--space-8) * -1.5);
-    bottom: calc(var(--space-8) * -2.5);
-    width: calc(var(--touch-min) * 7);
-    opacity: 0.14;
-    pointer-events: none;
+.pub-book__texto,
+.pub-book__pie,
+.pub-semana { position: relative; }
+.pub-book__arco { position: absolute; top: -20%; right: -10%; width: 60%; height: 140%; opacity: 0.18; pointer-events: none; }
+.pub-book__arco path { fill: none; stroke: var(--p200); stroke-width: 2; }
+.pub-semana {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
-.pub-book__mark path { fill: none; stroke: var(--p100); stroke-width: 2; }
+.pub-semana li {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+    padding: var(--space-5) var(--space-1);
+    border: var(--border-width) solid var(--p800);
+    border-radius: var(--radius);
+    font-size: var(--text-publico-small);
+    text-align: center;
+}
+.pub-semana b { color: var(--white); font-family: var(--font-display); font-size: var(--text-publico-h2); font-weight: var(--weight-bold); }
+.pub-semana .pub-semana__cerrado { border-style: dashed; color: var(--p200); }
+.pub-book__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-6); }
 
 /* Ubicación y contacto: la dirección en tipo de cartel, la semana con «hoy» y el mapa de Google. */
 .pub-visit__grid {
@@ -538,7 +543,7 @@ body.publico button:focus-visible {
 }
 .pub-map p { color: var(--p600); font-size: var(--text-publico-small); }
 
-/* Pie: el nombre vuelve a todo el ancho. */
+/* Pie: enlaces, horario, teléfono y dirección (D23: sin el nombre a todo el ancho). */
 .pub-foot {
     padding: calc(var(--space-8) * 3) 0 var(--space-8);
     overflow: hidden;
@@ -568,15 +573,6 @@ body.publico button:focus-visible {
     align-items: center;
     min-height: var(--touch-min);
     font-weight: var(--weight-bold);
-}
-.pub-foot__word {
-    margin: var(--space-seccion) 0 var(--space-4);
-    font-family: var(--font-display);
-    font-size: var(--text-firma);
-    font-weight: var(--weight-strong);
-    line-height: var(--leading-titulo);
-    letter-spacing: var(--tracking-titulo);
-    white-space: nowrap;
 }
 .pub-foot__small {
     display: flex;
@@ -647,28 +643,37 @@ body.publico button:focus-visible {
 .lb-lista dd:empty { display: none; }
 .lb-volver { margin-top: var(--space-seccion); }
 
-/* Por debajo de 900 px: «Menú» en lugar de la navegación, una columna y el título sin fijar. */
+/* Por debajo de 900 px: el icono del menú en lugar de la navegación, una columna y el acceso a la vista. */
 @media (max-width: 899px) {
     .pub-nav { display: none; }
     .pub-menu { display: block; }
+    .pub-acceso { display: flex; }
     .pub-hero__grid,
-    .pub-about__grid,
-    .pub-promise__grid,
-    .pub-book__card,
     .pub-visit__grid,
     .lb-servicios { grid-template-columns: 1fr; }
-    .pub-promise__head { position: static; }
-    .pub-promise__item { padding: var(--space-8); }
+    .pub-about__body,
+    .pub-pasos { grid-template-columns: 1fr; }
+    .pub-pasos::before { top: 0; right: auto; bottom: 0; left: calc(var(--touch-min) / 2); border-top: 0; border-left: var(--border-width) solid var(--p400); }
+    .pub-paso { grid-template-columns: var(--touch-min) 1fr; column-gap: var(--space-6); }
+    .pub-paso__n { grid-row: span 2; }
     .pub-book__card { padding: var(--space-8); }
     .lb-indice { position: static; grid-template-columns: 1fr 1fr; }
 }
 
-/* Por debajo de 560 px: botones a todo el ancho y la foto de la escena contenida sobre el rosa. */
+/* Por debajo de 560 px: el logo a su ancho, botones a todo el ancho y en una línea, la semana en filas y
+   la foto de la escena entera con el logo dentro del margen. */
 @media (max-width: 559px) {
-    .pub-hero__actions .c-btn { width: 100%; }
-    .pub-tooth__tag { left: 0; }
-    .pub-open__photo { object-fit: contain; }
+    .pub-brand .logo { width: var(--logo-max-w); }
+    .pub-bar__in { gap: var(--space-4); }
+    .pub-hero__actions .c-btn,
+    .pub-book__pie .c-btn { width: 100%; padding: 0 var(--space-6); font-size: var(--text-publico-small); }
+    .pub-consulta__foto { height: 60svh; }
+    .pub-consulta__foto img { object-fit: contain; }
+    .pub-semana { grid-template-columns: 1fr; }
+    .pub-semana li { grid-template-columns: 1fr auto; justify-items: start; padding: var(--space-3) var(--space-5); text-align: left; }
+    .pub-semana b { font-size: var(--text-publico); }
     .pub-index a { grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-5); }
+    .pub-index__n { display: none; }
     .pub-index__name { min-width: 0; overflow-wrap: anywhere; }
     .pub-index__count { grid-column: 1; grid-row: 2; }
     .pub-index__go { grid-column: 2; grid-row: 1 / span 2; }
@@ -691,13 +696,15 @@ body.publico button:focus-visible {
     .pub-index a:hover .pub-index__go { transform: rotate(-45deg); }
     .lb-indice a { transition: background-color var(--duration-base) var(--ease-out); }
 
-    /* M-2 y M-3: el trazo del diente, la foto que se asienta y el titular por líneas. */
-    .js .pub-tooth__line path {
+    /* M-2: los arcos del fondo se dibujan, la foto se asienta y el titular entra por líneas. */
+    .js .pub-arco path {
         stroke-dasharray: 1;
         stroke-dashoffset: 1;
-        animation: pub-trazo calc(var(--duration-reveal) * 2.75) var(--ease-in-out) calc(var(--duration-base) * 1.4) forwards;
+        animation: pub-trazo calc(var(--duration-reveal) * 2.5) var(--ease-in-out) forwards;
     }
-    .js .pub-tooth__img { animation: pub-asentar calc(var(--duration-reveal) * 1.625) var(--ease-expo) both; }
+    .js .pub-arco path:nth-child(2) { animation-delay: calc(var(--stagger) * 3); }
+    .js .pub-arco path:nth-child(3) { animation-delay: calc(var(--stagger) * 6); }
+    .js .pub-arcada__marco img { animation: pub-asentar calc(var(--duration-reveal) * 1.625) var(--ease-expo) both; }
     .js .pub-hero h1 .pub-ln > span {
         transform: translateY(105%);
         animation: pub-subir calc(var(--duration-reveal) * 1.25) var(--ease-expo) forwards;
@@ -705,7 +712,7 @@ body.publico button:focus-visible {
     .js .pub-hero h1 .pub-ln:nth-child(2) > span { animation-delay: var(--stagger); }
     .js .pub-hero h1 .pub-ln:nth-child(3) > span { animation-delay: calc(var(--stagger) * 2); }
 
-    /* M-4: entradas por sección, una vez, escalonadas (--i lo pone publico.js). */
+    /* M-3: entradas por sección, una vez, escalonadas (--i lo pone publico.js). */
     .js [data-reveal] {
         opacity: 0;
         transform: translateY(var(--space-8));
