@@ -1,7 +1,8 @@
 @extends('layouts.publico')
 
 {{-- Spec 038 (CA6): los servicios activos por categoría, sin precio ni duración. El texto del catálogo sale escapado (TM1).
-     Ronda 5 (D19): la misma estructura con la tipografía y los botones de la superficie «Sitio público». --}}
+     Ronda 5 (D19) y ronda 6 (D23): la misma estructura con la etiqueta, la tipografía y los botones de la
+     superficie «Sitio público». --}}
 @section('titulo', 'Servicios · Dentissa')
 @section('descripcion', 'Todos los tratamientos de la consulta Dentissa en Lázaro Cárdenas, de la revisión general a la ortodoncia y las prótesis.')
 @section('canonica', rtrim(config('app.url'), '/').'/servicios')
@@ -10,6 +11,7 @@
 <div class="lb-seccion">
     <div class="lb-wrap">
         <div class="lb-cabeza">
+            <span class="pub-etiqueta">Catálogo</span>
             <h1>Nuestros servicios</h1>
             <p>Todo lo que atendemos en la consulta, por tipo de tratamiento.</p>
         </div>

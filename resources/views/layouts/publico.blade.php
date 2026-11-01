@@ -21,7 +21,8 @@
 </head>
 <body class="publico">
 
-{{-- Ronda 5 (D19): cabecera fija en --p50 con el filete al bajar; «Menú» por debajo de 900 px. --}}
+{{-- Cabecera fija en --p50 con el filete al bajar; por debajo de 900 px, solo el icono de hamburguesa con el
+     nombre «Menú» (ronda 6, D23). --}}
 <header class="pub-bar" id="top">
     <div class="pub-wrap pub-bar__in">
         <a class="pub-brand" href="{{ url('/') }}" aria-label="Inicio">
@@ -40,7 +41,7 @@
         {{-- <details> funciona con el teclado y sin JavaScript; con él, Escape lo cierra (publico.js).
              El panel es la nav «Secciones» del móvil (/review R18). --}}
         <details class="pub-menu">
-            <summary>Menú <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 8h16M4 16h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+            <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
             <nav class="pub-menu__panel" aria-label="Secciones">
                 <a href="{{ url('/') }}#nosotros">Sobre nosotros</a>
                 <a href="{{ url('/servicios') }}">Servicios</a>
@@ -60,7 +61,7 @@
     @yield('contenido')
 </main>
 
-{{-- Pie de la ronda 5: enlaces, horario, teléfono, dirección y el nombre a todo el ancho (decorativo). --}}
+{{-- Pie: enlaces, horario, teléfono y dirección (ronda 6, D23: sin el nombre a todo el ancho). --}}
 <footer class="pub-foot">
     <div class="pub-wrap">
         <nav aria-label="Pie">
@@ -81,7 +82,6 @@
             <a href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a>
             <span>{{ $contacto['direccion'] }}</span>
         </div>
-        <p class="pub-foot__word" aria-hidden="true">Dentissa</p>
         <div class="pub-foot__small">
             <span>Melissa López N. · Odontología integral</span>
             <span>© {{ now()->year }} Dentissa</span>
