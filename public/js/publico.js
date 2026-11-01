@@ -1,9 +1,9 @@
 /*
- * Script común de las páginas públicas (spec 038, D16; ronda 5, D19). Se carga con defer y la página
+ * Script común de las páginas públicas (spec 038, D16; rondas 5 y 6, D19 y D23). Se carga con defer y la página
  * está completa sin él. Escribe la pastilla «¿Está abierto ahora?» y marca la fila de hoy de la
  * semana; pone el filete de la cabecera al bajar; cierra el menú del móvil con Escape (devolviendo el
- * foco a «Menú») y al elegir un enlace. Solo con movimiento normal e IntersectionObserver: las
- * entradas al bajar (clase is-in), el progreso --p de la escena de la ventana (sin capturar la rueda)
+ * foco al icono del menú) y al elegir un enlace. Solo con movimiento normal e IntersectionObserver: las
+ * entradas al bajar (clase is-in), el progreso --p de la escena de la consulta (sin capturar la rueda)
  * y la clase js de <html>, que se pone al final. Escribe siempre con textContent; sin dependencias ni
  * HTML construido desde cadenas.
  */
@@ -147,7 +147,7 @@
             observador.observe(el);
         });
 
-        // La escena de la ventana (M-1): --p con el progreso del desplazamiento nativo.
+        // La escena de la consulta (M-1, la foto que se abre desde la arcada): --p con el progreso del desplazamiento nativo.
         var escenas = Array.prototype.slice.call(doc.querySelectorAll('[data-scene]'));
         escenas.forEach(function (escena) {
             escena.style.setProperty('--p', '0');

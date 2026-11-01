@@ -307,7 +307,9 @@ class PaginasPublicasCssTest extends TestCase
     public function test_el_foco_es_el_del_sistema(): void
     {
         // design.md: el foco del sistema (--p600) y el inverso solo sobre la tinta (tarjeta de la agenda).
-        $focos = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], ':focus'));
+        // Las reglas del anillo son las del elemento enfocado (selector que acaba en :focus o :focus-visible);
+        // las que mueven algo dentro del enlace enfocado (/review R42) se comprueban abajo.
+        $focos = array_filter($this->reglasCss(self::HOJA), fn ($r) => (bool) preg_match('/:focus(-visible)?\s*(,|$)/', trim($r[0])));
         $this->assertNotEmpty($focos);
         $selectores = [];
         foreach ($focos as [$selector, $cuerpo]) {
@@ -322,6 +324,10 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertNotEmpty(array_filter($selectores, fn ($s) => str_ends_with($s, 'a:focus-visible')), 'Los enlaces tienen foco visible.');
         $this->assertNotEmpty(array_filter($selectores, fn ($s) => str_ends_with($s, 'summary:focus-visible')), 'El menú tiene foco visible.');
         $this->assertContains('.pub-book__card a:focus-visible', $selectores, 'Sobre la tinta, el anillo inverso.');
+        // /review R42: el índice mueve el nombre y gira la flecha también con el foco del teclado.
+        $hoja = file_get_contents(public_path(self::HOJA));
+        $this->assertStringContainsString('.pub-index a:focus-visible .pub-index__name', $hoja, 'El nombre del índice se desplaza con el foco.');
+        $this->assertStringContainsString('.pub-index a:focus-visible .pub-index__go', $hoja, 'La flecha del índice gira con el foco.');
     }
 
     public function test_cabecera_fija_menu_solo_con_el_icono_y_pie_en_rosa_claro(): void

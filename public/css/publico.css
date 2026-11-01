@@ -704,9 +704,11 @@ body.publico button:focus-visible {
     .pub-menu[open] .pub-menu__panel { animation: pub-pop var(--duration-base) var(--ease-out); }
     .pub-index a { transition: background-color var(--duration-base) var(--ease-out); }
     .pub-index__name { transition: transform var(--duration-base) var(--ease-out); }
-    .pub-index a:hover .pub-index__name { transform: translateX(calc(var(--space-3) + var(--space-1))); }
+    .pub-index a:hover .pub-index__name,
+    .pub-index a:focus-visible .pub-index__name { transform: translateX(calc(var(--space-3) + var(--space-1))); }
     .pub-index__go { transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-base) var(--ease-out); }
-    .pub-index a:hover .pub-index__go { transform: rotate(-45deg); }
+    .pub-index a:hover .pub-index__go,
+    .pub-index a:focus-visible .pub-index__go { transform: rotate(-45deg); }
     .lb-indice a { transition: background-color var(--duration-base) var(--ease-out); }
 
     /* M-2: los arcos del fondo se dibujan, la foto se asienta y el titular entra por líneas. */

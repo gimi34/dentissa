@@ -60,7 +60,7 @@
             <p data-reveal>Atendemos a toda la familia, desde la primera revisión de los niños hasta la ortodoncia y las prótesis de los adultos, en un mismo lugar y con el mismo equipo.</p>
             <p data-reveal>Antes de cada tratamiento te explicamos qué vamos a hacer, cuánto dura y qué opciones tienes, para que decidas con calma. Y para que no tengas que llamar en horario de trabajo, puedes crear tu cuenta y agendar tus citas en línea.</p>
         </div>
-        <ol class="pub-pasos" aria-label="Antes de cada tratamiento">
+        <ol class="pub-pasos" role="list" aria-label="Antes de cada tratamiento">
             @foreach ($pasos as [$titulo, $texto])
                 <li class="pub-paso" data-reveal><span class="pub-paso__n" aria-hidden="true">{{ $loop->iteration }}</span><h3>{{ $titulo }}</h3><p>{{ $texto }}</p></li>
             @endforeach
@@ -70,7 +70,7 @@
 </section>
 
 {{-- M-1: la consulta se abre desde la arcada. Sin JavaScript o con movimiento reducido, la foto entera. --}}
-<section class="pub-consulta" data-scene="consulta" data-hold="0.8" aria-label="La consulta">
+<section class="pub-consulta" data-scene="consulta" aria-label="La consulta">
     <div class="pub-consulta__stage">
         <figure>
             <div class="pub-consulta__foto"><img src="{{ asset('images/brand/access.webp') }}" data-origen="propia" width="900" height="900" loading="lazy" alt="La consulta de Melissa López N.: revisión dental con espejo, teñida de rosa, con el logo encima"></div>
@@ -91,7 +91,7 @@
                 </div>
                 <a class="c-btn c-btn--secondary" href="{{ url('/servicios') }}" data-reveal>Ver todos los servicios <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
             </div>
-            <ul class="pub-index">
+            <ul class="pub-index" role="list">
                 @foreach ($categorias as $categoria => $servicios)
                     <li data-reveal>
                         <a href="{{ url('/servicios') }}#categoria-{{ $loop->index }}">
@@ -116,7 +116,7 @@
                 <p>Crea tu cuenta y elige el día de tu cita en línea, a la hora que te quede, aunque la consulta esté cerrada.</p>
             </div>
             {{-- La semana real de la consulta, del horario semanal de la configuración. --}}
-            <ul class="pub-semana" aria-label="Horario de la semana">
+            <ul class="pub-semana" role="list" aria-label="Horario de la semana">
                 @foreach ($dias as $numero => $dia)
                     @php($tramo = $contacto['horario_semanal'][$numero] ?? null)
                     <li @class(['pub-semana__cerrado' => ! $tramo])><b>{{ $dia }}</b> {{ $tramo ? implode('–', $tramo) : 'Cerrado' }}</li>
