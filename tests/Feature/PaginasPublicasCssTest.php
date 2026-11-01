@@ -283,6 +283,10 @@ class PaginasPublicasCssTest extends TestCase
             ['--p100', '--text', 'Tarjeta de la agenda'],
             ['--p600', '--p100', 'Pie'],
             ['--green-texto', '--white', 'Punto de «abierto» sobre la pastilla'],
+            // /review R35: los pares de la ronda 6.
+            ['--p800', '--p100', 'Pie de foto de la escena quieta'],
+            ['--p800', '--white', 'Pie de foto de la escena viva, sobre su pastilla'],
+            ['--p200', '--text', '«Cerrado» en la semana de la agenda'],
         ] as [$texto, $fondo, $uso]) {
             $this->assertArrayHasKey($texto, $t, "{$texto} es un token de color.");
             $this->assertArrayHasKey($fondo, $t, "{$fondo} es un token de color.");
@@ -402,6 +406,8 @@ class PaginasPublicasCssTest extends TestCase
         // la forma de la arcada se abre con el progreso --p.
         $this->assertStringNotContainsString('clip-path', $this->declaraciones('.pub-consulta__foto', self::HOJA), 'Sin recorte cuando no está viva.');
         $this->assertStringContainsString('object-fit: cover', $this->declaraciones('.pub-consulta__foto img', self::HOJA));
+        // /review R32: viva, el pie de foto va sobre la foto; lleva su pastilla blanca para el contraste.
+        $this->assertStringContainsString('background: var(--white)', $this->declaraciones('.js .pub-consulta.is-live figcaption', self::HOJA));
         $vivas = array_filter($this->reglasCss(self::HOJA), fn ($r) => str_contains($r[0], '.is-live') && str_contains($r[1], 'clip-path'));
         $this->assertNotEmpty($vivas, 'La escena viva recorta la foto.');
         foreach ($vivas as [$selector, $cuerpo]) {

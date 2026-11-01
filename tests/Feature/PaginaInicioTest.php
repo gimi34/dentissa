@@ -388,8 +388,8 @@ class PaginaInicioTest extends TestCase
         $this->assertNotNull($ubicacion);
         $texto = $this->textoDe($ubicacion);
         $this->assertStringContainsString(self::DIRECCION, $texto);
-        $this->assertStringContainsString('Lunes a viernes 9:00–20:00', $texto);
-        $this->assertStringContainsString('Sábados 9:00–14:00', $texto);
+        // /review R34: el horario de CA5, tal cual, en la sección de contacto (no solo sus partes).
+        $this->assertStringContainsString('Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00', $texto);
         $this->assertSame(1, $xpath->query('.//a[@href="tel:+527530000000"][contains(normalize-space(), "753 000 0000")]', $ubicacion)->length, 'El teléfono se marca con un toque.');
 
         $mapa = $xpath->query('.//iframe[starts-with(@src, "https://www.google.com/maps?")]', $ubicacion);
