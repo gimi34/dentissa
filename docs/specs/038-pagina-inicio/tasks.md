@@ -239,6 +239,16 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
 - [x] T039 Ajustar `/servicios` a `c5`: la etiqueta, el título en `--font-display`, el índice en píldoras y «Volver al inicio» en `.c-btn`; la estructura, las anclas y el estado vacío no cambian — `resources/views/publico/servicios.blade.php` — hecho cuando: `ServiciosPublicosTest` sigue en verde y los casos de `/servicios` de T036 pasan · verificación manual: a 390 y 1440 px con la cabecera, el pie y la tipografía de `c5` — cubre: CA6, CA8 — depende: T038
   - nota: 2026-10-31 — la etiqueta «Catálogo» sobre el `h1` (en `--font-display` por `publico.css`), el índice en píldoras y «Volver al inicio» en `.c-btn--secondary`; la estructura, las anclas y el estado vacío no cambian. `ServiciosPublicosTest` en verde y `test_servicios_con_la_superficie_de_la_ronda_6` pasa. A41: `evaluate.mjs` sobre `http://dentissa_nginx/servicios` con las puertas (sin los KPIs de `/`): 11/11. Verificación manual OK 2026-10-31 (usuario): a ancho de escritorio y de móvil con la cabecera, el pie y la tipografía de `c5`.
 
+### Correcciones de /review (ronda 4)
+- [ ] T003 Tests de las correcciones de la ronda 4: en `PaginaInicioTest`, `test_contacto_exacto_con_mapa_y_como_llegar` comprueba la cadena exacta «Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00» dentro de `#ubicacion` (R34); en `PaginasPublicasCssTest`, el contraste de los pares de la ronda 6: `--p800` sobre `--p100` y sobre `--white` (pie de foto) y `--p200` sobre `--text` («Cerrado» de la semana), y que el pie de foto de la escena viva lleve fondo `--white` (R35) — `tests/Feature/PaginaInicioTest.php`, `tests/Feature/PaginasPublicasCssTest.php` — hecho cuando: los casos nuevos fallan por la razón esperada (la línea exacta no está en la ubicación; el pie de la escena viva no tiene fondo) y el resto sigue en verde — cubre: CA5, CA9
+  - nota: añadida por /review: R34, R35
+- [ ] T006 Corregir el contraste del pie de foto de la escena viva con la pastilla `--white` de `c5` (R32) y añadir en la ubicación la línea exacta del horario de CA5 sobre la tabla de la semana (R33) — `public/css/publico.css`, `resources/views/publico/inicio.blade.php` — hecho cuando: T003 pasa, `PaginasPublicasCssTest` y `PaginaInicioTest` en verde y `evaluate.mjs` con `design/criterios.json` sobre `/` servida en local sigue pasando · verificación manual: el pie de foto legible al bajar a 390 y 1440 px — cubre: CA5, CA9 — depende: T003
+  - nota: añadida por /review: R32, R33
+- [ ] T007 Menores baratos de la ronda 4 en el código: quitar `data-hold` de la escena `consulta` (R38); `role="list"` en `.pub-pasos`, `.pub-index` y `.pub-semana` (R41); el desplazamiento del nombre y el giro de la flecha del índice también con `:focus-visible`, dentro de `prefers-reduced-motion: no-preference` (R42); los comentarios de `publico.js` al día con la ronda 6 (R39) — `resources/views/publico/inicio.blade.php`, `public/css/publico.css`, `public/js/publico.js` — hecho cuando: la suite y `node --test tests/js/publico.test.mjs` siguen en verde y `medir038.mjs` da «todo en orden» — cubre: CA9 — depende: T006
+  - nota: añadida por /review: R38, R39, R41, R42
+- [ ] T008 Comentarios y mensajes de los tests al día con la ronda 6 (R39): «la ventana», «Cormorant», «el trazo del diente», «@json» y la duración de la escena en `publico.test.mjs` — `tests/js/publico.test.mjs`, `tests/Feature/PaginasPublicasCssTest.php`, `tests/Feature/PaginaInicioTest.php` — hecho cuando: ningún comentario ni mensaje de esos tests cita la ronda 5 como vigente y los tres siguen en verde — depende: T007
+  - nota: añadida por /review: R39
+
 ## Integración y documentación
 - [x] T040 Actualizar `docs/seo.md` (filas de `/` y `/servicios`, «Se indexa»: `/registro`, `/` y `/servicios`; `/` deja de redirigir) y el criterio del objetivo 7 en `docs/roadmap.md` (el sitemap tendrá que incluir `/` y `/servicios`) — `docs/seo.md`, `docs/roadmap.md` — hecho cuando: los dos documentos dicen lo del plan (Descubribilidad) y `validate` no da errores — cubre: CA10
   - nota: A17 — la corrección del sitemap en `docs/seo.md` deja de decir «la única ruta indexable» y pasa a `/registro`, `/` y `/servicios`; la regla «sin barra final» aclara que la raíz es `https://dentissa.app/`. La enmienda PATCH de P10 («hoy solo `/registro`») queda en el roadmap
@@ -253,7 +263,7 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
   - nota: 2026-10-20 — `architecture.md`: módulo «Páginas públicas» (`PaginasPublicasController`, `panelDelRol()`, `Servicio::porCategoria()`); Frontend con los dos layouts y `publico.css`; SEO con los metadatos de `/` y `/servicios` desde el layout público; Integraciones externas con Lexend autoalojada y Google Maps (`iframe` perezoso y «Cómo llegar», sin clave de API); Despliegue con `frame-src` desde `marcos.conf`
 - [x] T091 Actualizar `docs/deployment.md` (comprobaciones nuevas de `verificar.sh` y `marcos.conf` en la imagen `web`) y `docs/observability.md` si hace falta (la 038 no añade logs ni eventos)
   - nota: 2026-10-20 — `deployment.md`, «Verificación post-deploy»: la redirección pública se comprueba con `/admin`, y se añaden `/` 200 y el `frame-src` de `/` y `/servicios`; `marcos.conf` llega a la imagen `web` con el `COPY docker/nginx/seguridad/` que ya existía (sin cambios en el Dockerfile ni en variables de entorno). `observability.md` no cambia: la 038 no añade logs, eventos ni métricas
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: 2026-10-20 — los 10 criterios marcados con sus tests en verde (59 tests de la 038, 780 aserciones; suite 397); spec en `implemented` con su fila de Historial y `docs/specs/README.md` actualizado. `validate` sin errores
   - nota: 2026-11-01 — vuelve a implemented tras la ronda 6 de diseño (D23): T033–T039, T059 y T087–T089 hechas; CA1–CA10 siguen marcados (sus tests en verde: suite 613); docs/specs/README.md ya la tenía en implemented.
 
@@ -273,11 +283,11 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
 | CA2 | T010, T012, T050 | T022, T023, T055, T038 |
 | CA3 | T010, T074, T049, T036 | T025, T084, T057, T038 |
 | CA4 | T010, T074, T049, T036 | T021, T025, T084, T057, T038 |
-| CA5 | T010, T061, T063, T064, T074, T049, T036 | T021, T025, T029, T062, T065, T084, T057, T033, T038 |
+| CA5 | T010, T061, T063, T064, T074, T049, T036, T003 | T021, T025, T029, T062, T065, T084, T057, T033, T038, T006 |
 | CA6 | T012, T061, T063, T064, T069 | T021, T022, T026, T062, T065, T070, T058, T039 |
 | CA7 | T013, T015, T063, T066, T075, T050 | T028, T029, T030, T067, T084, T057, T038 |
 | CA8 | T013, T075, T076, T079, T050, T051, T036 | T023, T025, T026, T081, T082, T083, T084, T054, T056, T057, T058, T037, T038, T039 |
-| CA9 | T014, T017, T018, T061, T064, T076, T079, T050, T051, T052, T036 | T020, T024, T031, T032, T062, T065, T080, T083, T053, T055, T056, T089, T033, T037, T038 |
+| CA9 | T014, T017, T018, T061, T064, T076, T079, T050, T051, T052, T036, T003 | T020, T024, T031, T032, T062, T065, T080, T083, T053, T055, T056, T089, T033, T037, T038, T006, T007 |
 | CA10 | T013, T063, T075, T050, T036 | T023, T040, T082, T055, T038 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
@@ -296,13 +306,13 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
 | `app/Models/Servicio.php` | T021 |
 | `config/clinica.php` | T021, T080 |
 | `resources/views/layouts/publico.blade.php` | T023, T032, T082, T055, T038 |
-| `resources/views/publico/inicio.blade.php` | T025, T084, T057, T038 |
+| `resources/views/publico/inicio.blade.php` | T025, T084, T057, T038, T006, T007 |
 | `resources/views/publico/servicios.blade.php` | T026, T058, T039 |
 | `resources/views/partials/icono-categoria.blade.php` | T084, T057 (se borra) |
 | `resources/views/landing/index.blade.php` | T027 |
-| `public/css/publico.css` | T024, T032, T083, T056, T037 |
+| `public/css/publico.css` | T024, T032, T083, T056, T037, T006, T007 |
 | `public/css/app.css` | T020, T032, T080, T053, T037 |
-| `public/js/publico.js` | T077, T081, T054 |
+| `public/js/publico.js` | T077, T081, T054, T007 |
 | `public/fonts/` | T002, T047, T059, T035 |
 | `public/images/` | T027, T072, T048, T059 |
 | `docker/nginx/seguridad/marcos.conf` | T028 |
@@ -312,7 +322,7 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
 | `tests/Feature/ProxyHttpsTest.php`, `tests/Feature/ExampleTest.php` | T016 |
 | `tests/Feature/CabecerasSeguridadTest.php` | T015 |
 | Tests nuevos | T010, T012, T013, T014, T018, T074, T075, T076, T049, T050, T051 |
-| `tests/js/publico.test.mjs` | T077, T052 |
+| `tests/js/publico.test.mjs` | T077, T052, T008 |
 | `.github/workflows/ai-dd.yml` | T078 |
 | `docs/design/capturar.mjs` | T017, T031, T079, T052, T089 |
 | Documentación | T001, T005, T040, T041, T043, T071, T072, T073, T087, T090, T091, T046, T048 |
