@@ -396,7 +396,19 @@ body.publico button:focus-visible {
     clip-path: inset(calc((1 - var(--p, 1)) * 18%) calc((1 - var(--p, 1)) * 34%)
         round calc((1 - var(--p, 1)) * 48%) calc((1 - var(--p, 1)) * 48%) var(--radius-lg) var(--radius-lg));
 }
-.js .pub-consulta.is-live figcaption { position: absolute; right: 0; bottom: var(--space-8); left: 0; margin: 0; }
+/* /review R32: sobre la foto, el pie lleva su pastilla blanca para el contraste (P9). */
+.js .pub-consulta.is-live figcaption {
+    position: absolute;
+    right: 0;
+    bottom: var(--space-8);
+    left: 0;
+    width: fit-content;
+    max-width: calc(100% - 2 * var(--space-4));
+    margin: 0 auto;
+    padding: var(--space-2) var(--space-6);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+}
 
 /* Avance de servicios: el índice de las categorías a todo el ancho. */
 .pub-services { padding-top: 0; }
@@ -507,6 +519,7 @@ body.publico button:focus-visible {
     font-weight: var(--weight-strong);
     line-height: var(--leading-publico-h2);
 }
+.pub-visit__horario { margin: 0 0 var(--space-4); font-weight: var(--weight-strong); }
 .pub-visit dl { display: grid; margin: 0; }
 .pub-visit dl div {
     display: grid;

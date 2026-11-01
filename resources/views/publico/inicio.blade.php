@@ -138,6 +138,8 @@
         <div class="pub-visit__grid">
             <div data-reveal>
                 <address class="pub-visit__addr">{{ $contacto['direccion'] }}</address>
+                {{-- CA5 (/review R33): el horario tal cual; la tabla de abajo lo detalla día por día. --}}
+                <p class="pub-visit__horario">{{ $horario }}</p>
                 <dl data-semana>
                     @foreach ($contacto['horario'] as $nombre => $horas)
                         <div data-day="{{ $filas[$nombre] ?? '' }}">
