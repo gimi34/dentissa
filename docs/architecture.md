@@ -128,8 +128,9 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 ## Integraciones externas
 - Google OAuth mediante `laravel/socialite` (`/auth/google`, `/auth/google/callback`); variables
   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
-- Google Fonts (Roboto) desde el navegador, en la app y el acceso. Las páginas públicas usan Lexend
-  autoalojada (`public/fonts/lexend/`, OFL-1.1), sin servicios externos de fuentes (spec 038).
+- Google Fonts (Roboto) desde el navegador, en la app y el acceso. Las páginas públicas usan
+  Newsreader y Montserrat autoalojadas (`public/fonts/newsreader/` y `montserrat/`, OFL-1.1, con el
+  SHA-256 de cada woff2 en `docs/design/system.md`), sin servicios externos de fuentes (spec 038, D23).
 - Google Maps (spec 038): `/` incrusta el mapa de la dirección de la consulta en un `iframe`
   perezoso (`https://www.google.com/maps?q=…&output=embed`, `referrerpolicy`) y «Cómo llegar» abre
   la ruta en Google Maps en otra pestaña (`noopener noreferrer`). Sin clave de API.
@@ -178,9 +179,15 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   desbordar), y los formularios de paciente y expediente llevan etiquetas con `for`/`id`, errores
   con `aria-describedby` y la fila `.acciones-formulario`. Los iconos «Menú» y «Cerrar menú» van sin
   recuadro. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
-  `public/css/publico.css` (spec 038) da estilo solo a las páginas públicas: Lexend por `@font-face`,
-  `body.publico`, cabecera `--p500` y pie `--p600`, placa, puertas y listas de `/servicios`, solo con
-  tokens de `app.css` (sistema 1.7.1) y cortes de 900 y 560 px.
+  `public/css/publico.css` (spec 038) da estilo solo a las páginas públicas (superficie «Sitio público»,
+  sistema 1.10.0, D23): Newsreader y Montserrat por `@font-face`, `body.publico`, la cabecera con el
+  menú del móvil como icono, la presentación con la foto propia en la arcada
+  (`public/images/brand/access.webp`), «Sobre nosotros» con la cita y los pasos, la escena «consulta»,
+  el índice, la agenda con la semana, la ubicación y `/servicios`, solo con tokens de `app.css` y
+  cortes de 900 y 560 px. `public/js/publico.js` (D16, con `defer`) escribe la pastilla «¿Está abierto
+  ahora?» y la fila de hoy, pone el filete de la cabecera, cierra el menú con Escape y, con movimiento
+  normal, las entradas y el progreso `--p` de la escena; sin él la página está completa. Sus funciones
+  puras (`estadoAhora`, `diaDeHoy`, `progresoEscena`) se prueban con `node --test tests/js/`.
 - SEO (upgrade a AI-DD 1.13.0): todo el HTML se renderiza en el servidor con Blade, sin depender de
   JavaScript. Las vistas de acceso (`resources/views/auth/*.blade.php`) tienen su propio `<head>`,
   donde van los metadatos de `/registro`; `/` y `/servicios` (spec 038) los toman de

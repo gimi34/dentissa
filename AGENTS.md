@@ -59,7 +59,8 @@ Nunca escribas secretos en el código, los logs ni los docs.
   El grupo `cliente` solo lleva `auth` y pone `role:cliente` ruta a ruta (RS2.a en docs/security.md).
 - Vistas en `resources/views/<modulo>/` en kebab-case, con dos layouts: `layouts/app.blade.php` para la
   app y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038, con
-  `public/css/publico.css` y sin JavaScript). El acceso sigue con su propio HTML.
+  `public/css/publico.css` y `public/js/publico.js` con `defer`; la página está completa sin él). El
+  acceso sigue con su propio HTML.
 - Código nuevo: validación en servidor con `$request->validate()` y las reglas en la clase de
   dominio (`reglasDeEntrada()` en `app/Agenda/`) o en un helper del controlador; autorización con
   Gates sobre clases de `app/Autorizacion/` registrados en `AppServiceProvider` (ADR 0003); SQL con
@@ -89,11 +90,12 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | `routes/web.php` | todas las rutas |
 | `resources/views/` | vistas Blade por módulo |
 | `public/css/`, `public/js/` | CSS real de la aplicación (`publico.css`, páginas públicas, spec 038); `menu.js` y `filtros.js` (specs 033 y 034) |
-| `public/fonts/lexend/` | Lexend autoalojada de las páginas públicas, con su licencia `OFL.txt` (spec 038) |
+| `public/fonts/` | `newsreader/` y `montserrat/` (páginas públicas, spec 038) y `roboto/` (spec 020), autoalojadas, cada una con su `OFL.txt` |
 | `database/dentissa.sql` | volcado con el esquema del dominio y datos ficticios |
 | `database/migrations/` | infraestructura + 3 migraciones de julio y 2 de octubre de 2026 (specs 026 y 028) |
 | `database/testing/` | arnés de la BD de tests |
 | `tests/Feature/` | tests por área (citas, horarios, producción, móvil…); traits en `Concerns/` |
+| `tests/js/` | tests de `public/js/publico.js` con `node --test tests/js/publico.test.mjs` (spec 038) |
 | `docker/`, `Dockerfile`, `docker-compose.yml` | entorno local |
 | `docker/prod/`, `docker-compose.prod.yml`, `deploy/` | producción: imágenes, Compose y scripts que se ejecutan por SSH |
 | `.github/workflows/ai-dd.yml` | CI: validador, tests, Pint y escáneres de seguridad |

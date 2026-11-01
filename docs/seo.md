@@ -26,7 +26,9 @@ inicio de sesión.
   depende de JavaScript.
 - Se indexa: `/registro` (decisión del usuario, 2026-10-16), `/` y `/servicios` (spec 038,
   decisión del usuario, 2026-10-20).
-- JavaScript: `/` y `/servicios` no cargan JavaScript propio. `/` incrusta el mapa de Google
+- JavaScript: `/` y `/servicios` cargan un solo script propio, `public/js/publico.js` (≈ 8 kB, con
+  `defer`), que solo añade la pastilla, la fila de hoy, las entradas y la escena: el contenido llega
+  entero en el HTML del servidor y se lee sin él (spec 038, D16). `/` incrusta el mapa de Google
   (`iframe` perezoso), cuyo JavaScript es de terceros y no cuenta para el límite de P10: excepción
   aceptada por el usuario en el plan de la 038 (2026-10-20).
 - No se indexa: `/login` (inicio de sesión; decisión del usuario, 2026-10-16, conforme a
