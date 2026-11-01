@@ -1,7 +1,7 @@
 ---
 id: 038
 slug: pagina-inicio
-status: approved
+status: implemented
 created: 2026-10-20
 extends: [001, 031]
 ---
@@ -234,3 +234,4 @@ Ninguna.
 | 2026-10-21 | /review r2 = changes_requested (R30 importante, R31 menor); vuelve a `approved` con T069 y T070 | /review |
 | 2026-10-21 | Implementada de nuevo tras /review r2 (T069, T070: R30, R31) | /implement |
 | 2026-10-21 | Rediseño de la ronda 3 (`design.md` 651e316, plan D16–D18); vuelve a `approved` con T071–T088. Criterios sin cambios | Petición del usuario: la opción B es «muy básica», seguir la línea de abound |
+| 2026-11-01 | Implementada de nuevo con la ronda 6 de diseño (D23, `c5`): T033–T039, T059, T087–T089; suite 613 en verde, `evaluate.mjs` con los criterios de diseño en verde | /implement 038 |

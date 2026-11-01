@@ -255,6 +255,7 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
   - nota: 2026-10-20 — `deployment.md`, «Verificación post-deploy»: la redirección pública se comprueba con `/admin`, y se añaden `/` 200 y el `frame-src` de `/` y `/servicios`; `marcos.conf` llega a la imagen `web` con el `COPY docker/nginx/seguridad/` que ya existía (sin cambios en el Dockerfile ni en variables de entorno). `observability.md` no cambia: la 038 no añade logs, eventos ni métricas
 - [x] T092 Marcar spec como `implemented`
   - nota: 2026-10-20 — los 10 criterios marcados con sus tests en verde (59 tests de la 038, 780 aserciones; suite 397); spec en `implemented` con su fila de Historial y `docs/specs/README.md` actualizado. `validate` sin errores
+  - nota: 2026-11-01 — vuelve a implemented tras la ronda 6 de diseño (D23): T033–T039, T059 y T087–T089 hechas; CA1–CA10 siguen marcados (sus tests en verde: suite 613); docs/specs/README.md ya la tenía en implemented.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: el proyecto no tiene staging (`docs/deployment.md`); las comprobaciones de producción van en T097
