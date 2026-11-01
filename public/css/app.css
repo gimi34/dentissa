@@ -79,12 +79,50 @@
     --weight-bold:            600;
     --expediente-dato-max:    140px;
     --campo-fecha-max:        220px;
-    /* Registro de auditoría y error genérico (spec 020; system.md 1.7.0). Nombres de la 041. */
-    --leading-publico:        1.5;
+    /* Páginas públicas (spec 038; system.md 1.7.0). Los fluidos van de 320 a 1440 px de ancho. */
+    --font-publica:       "Montserrat", ui-sans-serif, system-ui, sans-serif;  /* 1.9.0 (antes Lexend) */
+    --text-publico-h1:    clamp(30px, calc(30px + 18 * (100vw - 320px) / 1120), 48px);  /* tamaño, no color */
+    --text-publico-h2:    clamp(22px, calc(22px + 8 * (100vw - 320px) / 1120), 30px);   /* tamaño, no color */
+    --text-publico-h3:    19px;  /* tamaño, no color */
+    --text-publico:       17px;  /* tamaño, no color */
+    --text-publico-small: 15px;  /* tamaño, no color */
+    --space-seccion:      clamp(40px, calc(40px + 56 * (100vw - 320px) / 1120), 96px);
+    --measure:            62ch;
+    --page-max:           1180px;
+    --duration-base:      0.25s;
+    --ease-puerta:        cubic-bezier(0.2, 0, 0, 1);
+    --green-texto:        #137A5A;
+    --focus-ring-inverso: var(--white);  /* foco sobre el rosa de la cabecera y el pie públicos (system.md 1.7.1) */
+    --leading-publico:    1.5;   /* interlineado público (system.md 1.7.2) */
+    --leading-publico-h1: 1.15;
+    --leading-publico-h2: 1.25;
+    --logo-ratio:         454 / 135;  /* proporción de public/images/logo-icon.png */
+    /* Páginas públicas, de la ronda 3 (spec 038; system.md 1.8.0) y que siguen en 1.9.0; la 020 usa también
+       --sombra-tarjeta-alta en el error genérico (/analyze 038 A35). */
+    --radius-pill:        999px;
+    --sombra-tarjeta-alta: 0 14px 32px rgba(114, 36, 62, 0.16);
+    --ease-out:           cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-expo:          cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-reveal:    800ms;
+    --stagger:            80ms;
+    /* Sitio público de la ronda 5 (spec 038; system.md 1.9.0) y de la ronda 6 (1.10.0, la arcada). */
+    --font-display:       "Newsreader", ui-serif, Georgia, serif;  /* 1.10.0 (antes Cormorant Garamond) */
+    --text-display:       clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px);  /* tamaño, no color */
+    --text-statement:     clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px);   /* tamaño, no color */
+    --text-seccion:       clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px);   /* tamaño, no color */
+    --text-indice:        clamp(28px, calc(28px + 28 * (100vw - 320px) / 1120), 56px);   /* tamaño, no color */
+    --text-firma:         clamp(76px, calc(76px + 284 * (100vw - 320px) / 1120), 360px); /* tamaño, no color */
+    --text-lead:          clamp(18px, calc(18px + 3 * (100vw - 320px) / 1120), 21px);    /* tamaño, no color */
+    --shadow-soft:        0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24);
+    --ease-in-out:        cubic-bezier(0.77, 0, 0.175, 1);
+    --page-ancho:         1440px;
+    --gutter:             clamp(16px, calc(16px + 40 * (100vw - 320px) / 1120), 56px);
+    --space-seccion-publica: clamp(80px, calc(80px + 88 * (100vw - 320px) / 1120), 168px);
+    /* Registro de auditoría y error genérico (spec 020; system.md 1.7.0). Nombres de la 041; usa también
+       --leading-publico y --sombra-tarjeta-alta, declarados arriba por la 038 (/analyze 038 A35). */
     --text-acceso-titulo:     28px;  /* tamaño, no color */
     --text-acceso:            14px;  /* tamaño, no color */
     --acceso-form-max:        480px;
-    --sombra-tarjeta-alta:    0 14px 32px rgba(114, 36, 62, 0.16);
     --logo-franja-w:          104px; /* logo del error genérico en la franja del teléfono (c4) */
     --logo-panel-w:           260px; /* logo del error genérico en el panel del escritorio (c4) */
     /* Error genérico, valores de c4 como tokens (system.md 1.8.0; /review 020 R1). */

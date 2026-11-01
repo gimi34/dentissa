@@ -18,21 +18,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Contacto de la clínica
+    | Contacto de la consulta
     |--------------------------------------------------------------------------
     |
-    | El teléfono y el horario que publica la página de inicio, con la forma
-    | de la spec 038 para que la consulta tenga una sola fuente. Los usa el
-    | error genérico de la spec 020 y los correos de la 041 (D16 de la 041).
+    | Lo que muestra la página de inicio pública (spec 038, CA5): la dirección
+    | (también la del mapa y la de «Cómo llegar»), el teléfono en texto y como
+    | enlace `tel:`, y el horario. Son datos ficticios del proyecto académico.
+    | Es la única fuente del contacto: también lo usan el error genérico de la
+    | spec 020 y los correos de la 041 (D16 de la 041).
+    |
+    | `horario_semanal` es el mismo horario por día ISO (1 = lunes … 7 = domingo;
+    | el que falta, cerrado) con la hora de apertura y la de cierre. Lo usa la
+    | pastilla «¿Abierto ahora?» de la portada (spec 038, D16); un test lo
+    | mantiene igual que `horario`.
     |
     */
 
     'contacto' => [
-        'telefono' => '753 162 5220',
-        'telefono_enlace' => 'tel:+527531625220',
-        'horario' => [
-            'Lunes a viernes' => '9:00–20:00',
-            'Sábados' => '9:00–14:00',
+        'direccion' => 'Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950',
+        'telefono' => '753 000 0000',
+        'telefono_enlace' => 'tel:+527530000000',
+        'horario' => ['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00'],
+        'horario_semanal' => [
+            1 => ['9:00', '20:00'],
+            2 => ['9:00', '20:00'],
+            3 => ['9:00', '20:00'],
+            4 => ['9:00', '20:00'],
+            5 => ['9:00', '20:00'],
+            6 => ['9:00', '14:00'],
         ],
     ],
 

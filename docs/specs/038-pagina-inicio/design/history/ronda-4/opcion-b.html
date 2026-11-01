@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — Opción B · De 20 a 32</title>
+<style id="viewer">
+:root { --ui-bg: #f6f7f8; --ui-panel: #fff; --ui-text: #1d2125; --ui-muted: #5b636b; --ui-line: #d9dde1; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ui-bg); color: var(--ui-text); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.v-wrap { max-width: 1520px; margin: 0 auto; padding: 0 20px; }
+.v-head { padding: 32px 0 20px; border-bottom: 1px solid var(--ui-line); }
+.v-head h1 { margin: 0 0 6px; font-size: 26px; }
+.v-muted { color: var(--ui-muted); }
+.v-toc ul { display: flex; flex-wrap: wrap; gap: 18px; margin: 0; padding: 12px 0; list-style: none; border-bottom: 1px solid var(--ui-line); }
+.v-toc a { color: var(--ui-muted); text-decoration: none; }
+h2.v-h { margin: 36px 0 12px; font-size: 20px; }
+.v-idea dt { font-weight: 600; margin-top: 10px; }
+.v-idea dd { margin: 2px 0 0; max-width: 100ch; }
+.v-marcos { display: flex; gap: 20px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+.v-frame { margin: 0; flex: none; }
+.v-frame figcaption { color: var(--ui-muted); margin-bottom: 6px; }
+.v-frame iframe { display: block; border: 1px solid var(--ui-line); background: #fff; }
+.v-tabla { border-collapse: collapse; background: var(--ui-panel); }
+.v-tabla th, .v-tabla td { border: 1px solid var(--ui-line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.v-ok { color: #1e7a3c; font-weight: 600; } .v-no { color: #a32d2d; font-weight: 700; }
+</style>
+</head>
+<body>
+<header class="v-head"><div class="v-wrap">
+  <p class="v-muted">Dentissa · spec 038 · /design-spec 038, ronda 4 desde cero (motor creativo de AI-DD 1.16.0; semilla del reparto 180218)</p>
+  <h1>Opción B · «De 20 a 32» · registro firme</h1>
+  <p>Página de prueba a ancho real: <a href="opcion-b-pagina.html">opcion-b-pagina.html</a> (ábrela y recórrela: las escenas, las entradas y la cosa viva funcionan sin red).</p>
+</div></header>
+<nav class="v-toc" aria-label="Contenido de la opción"><div class="v-wrap"><ul>
+  <li><a href="#idea">Idea</a></li><li><a href="#pantallas">Pantallas</a></li><li><a href="#movimiento">Movimiento</a></li><li><a href="#color">Contraste</a></li><li><a href="#compartir">Al compartir</a></li></ul></div></nav>
+<main class="v-wrap">
+<h2 class="v-h" id="idea">Idea</h2>
+<dl class="v-idea"><dt>Modo, registro y color</dt><dd>Persuadir · <strong>firme</strong> · estrategia de color <strong>comprometida</strong>: el campo rosa <code>--p500</code> ocupa la portada y el pie (≈ 35 % de la superficie), sobre el rosa muy claro y blanco. Escena física: una madre o un padre que agenda para la familia, desde el móvil. Tipografía: Bricolage Grotesque 400/700 (OFL-1.1), de cifras grandes y carácter.</dd>
+<dt>Idea</dt><dd>En esta página, <strong>«integral» —toda la familia, de los 20 dientes de leche a los 32 permanentes—</strong> se convierte en <strong>la escala que la organiza: las dos cifras en la portada y, en los servicios, una historia fijada en la que la cifra y el arco cambian con cada etapa de la vida</strong>.</dd>
+<dt>Prueba del competidor</dt><dd>Otra clínica que solo hace ortodoncia o estética no puede decir «de 20 a 32»; esta atiende «desde la primera revisión de los niños hasta las prótesis de los adultos» (CA3), y sus siete categorías reales se reparten por etapas.</dd>
+<dt>Jugada y escenas</dt><dd>Escena <code>historia-fijada</code>: a la izquierda, «Nuestros servicios», la cifra (20 · 28 · 32 · 32) y el arco quedan fijos mientras pasan las cuatro etapas (niños, adolescentes, adultos, mayores) con sus categorías. Desplazamiento nativo con <code>position: sticky</code>. Jugada <code>tinta</code>: el primer párrafo de «Sobre nosotros» se llena de tinta palabra a palabra al subir.</dd>
+<dt>Cosa viva</dt><dd>«¿Para quién es la cita?» — Para mi hijo o hija · Adolescente · Para mí · Para mi mamá o papá: te lleva a su etapa, la cifra cambia y el arco muestra 20 dientes de leche, 28 o 32 permanentes. Sin JavaScript: son enlaces a cada etapa y se ve el arco completo. <em>Las etapas y su relación con las categorías: contenido de muestra para que lo confirmes.</em></dd>
+<dt>Plenitud</dt><dd>Titular de 44 a 104 px; cifras de 120 a 260 px; las siete categorías por etapas, con su número de tratamientos; la dirección en tipo grande junto al mapa; el pie rosa con la marca a todo el ancho. Imágenes: el arco dibujado desde la numeración dental. Hueco para fotos reales: el campo de la portada puede llevar una foto real de la familia en consulta cuando exista.</dd>
+<dt>Inventario del sujeto</dt><dd>1 · la radiografía panorámica, que está en el catálogo (Diagnóstico); 2 · el odontograma de 32 piezas y su numeración FDI (11–48); 3 · el arco dental como forma; 4 · los 20 dientes de leche frente a los 32 permanentes de «toda la familia»; 5 · el ritual de «te explicamos qué vamos a hacer, cuánto dura y qué opciones tienes»; 6 · el horario real: lunes a viernes 9:00–20:00, sábados 9:00–14:00; 7 · la cita en línea «para que no tengas que llamar en horario de trabajo», que casi ninguna clínica de la zona ofrece; 8 · las 7 categorías y los 15 servicios activos del catálogo; 9 · el nombre de la doctora y el logo «Melissa López N. · Odontología integral»; 10 · Av. Insurgentes 450, en el centro de Lázaro Cárdenas. Familias: documentos del oficio (1, 2, 5), forma y cuerpo (3, 4), tiempo y ritual (5, 6, 7), catálogo (8), marca y lugar (9, 10).</dd>
+<dt>Pruebas</dt><dd>Esqueleto: sin textos, la estructura sigue diciendo qué es cada sección (el plan, las etapas o la placa). Retirada: sin la jugada, la página pierde su idea. Vecino: ninguna pantalla de la app (Roboto, barra lateral) ni las rondas 1–3 comparten esqueleto. Cinco segundos: titular, «Agendar mi primera cita», horario y teléfono en la primera pantalla. Inspección: ver la crítica.</dd></dl>
+<p class="v-muted"><strong>Riesgo asumido:</strong> una categoría aparece en varias etapas (Preventivo, Diagnóstico) y quien busca «Cirugía» la encuentra en «Adultos»: lo compensan «Ver todos los servicios» y /servicios por categorías; las frases de cada etapa son de muestra.</p>
+<h2 class="v-h" id="pantallas">Pantallas · página de inicio a 320, 390, 900 y 1440 px</h2>
+<p class="v-muted">Cada marco es la página de prueba real (desplázate dentro). <code>/servicios</code> conserva su estructura (índice y listas por categoría) con la cabecera, el pie, la tipografía y los colores de esta opción.</p>
+<div class="v-marcos"><figure class="v-frame" id="opcion-b-pagina-320"><figcaption>320 px</figcaption><iframe src="opcion-b-pagina.html" width="320" height="1500" title="Página de prueba a 320 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-b-pagina-390"><figcaption>390 px</figcaption><iframe src="opcion-b-pagina.html" width="390" height="1500" title="Página de prueba a 390 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-b-pagina-900"><figcaption>900 px</figcaption><iframe src="opcion-b-pagina.html" width="900" height="1300" title="Página de prueba a 900 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-b-pagina-1440"><figcaption>1440 px</figcaption><iframe src="opcion-b-pagina.html" width="1440" height="1100" title="Página de prueba a 1440 px" loading="lazy"></iframe></figure></div>
+<h2 class="v-h" id="movimiento">Movimiento</h2>
+<p><strong>M-1 · escena <code>historia-fijada</code></strong> — filtro: una vez por visita, es el momento protagonista. La columna izquierda es <code>sticky</code>; un IntersectionObserver marca la etapa que está a media pantalla y la cifra cambia con un fundido corto y el arco pasa de 20 a 28 y 32 piezas. Reducido: sin fundidos (el cambio es inmediato). Sin JavaScript: arco completo y cifra 32, las cuatro etapas legibles. Teléfono: la columna no se fija; arco y botones arriba, etapas debajo.</p>
+<p><strong>M-2 · jugada <code>tinta</code></strong> — el primer párrafo de «Sobre nosotros» pasa de tinta tenue a plena palabra a palabra con el desplazamiento. Reducido y sin JavaScript: tinta plena.</p>
+<p><strong>M-3 · entradas</strong> — titulares por línea, el campo rosa por escala, el mapa desde una máscara. <strong>M-4 · respuesta</strong> — botones que ceden (<code>scale(.97)</code>), filas de categoría que cambian de fondo.</p>
+<h2 class="v-h" id="color">Contraste (calculado)</h2>
+<table class="v-tabla"><thead><tr><th>Par</th><th>Colores</th><th>Contraste</th><th>Mínimo</th><th></th></tr></thead><tbody><tr><td>Texto sobre el fondo</td><td><code>#1E1116</code> sobre <code>#FDF5F8</code></td><td>17.08:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Texto secundario sobre el fondo y blanco</td><td><code>#5B3646</code> sobre <code>#FDF5F8</code></td><td>9.51:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Campo, botón principal y pie: blanco sobre --p500</td><td><code>#FFFFFF</code> sobre <code>#B83C65</code></td><td>5.42:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Etiquetas de las cifras: --p100 sobre --p500</td><td><code>#FBEAF0</code> sobre <code>#B83C65</code></td><td>4.68:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Cifra «20» en contorno --p200 sobre --p500 (decorativa, texto grande)</td><td><code>#F4C0D1</code> sobre <code>#B83C65</code></td><td>3.44:1</td><td>3:1</td><td class="v-ok">cumple</td></tr><tr><td>Cifra del contador: --p500 sobre blanco (texto grande)</td><td><code>#B83C65</code> sobre <code>#FFFFFF</code></td><td>5.42:1</td><td>3:1</td><td class="v-ok">cumple</td></tr><tr><td>«N dientes» y botón secundario: --p600 sobre blanco</td><td><code>#993556</code> sobre <code>#FFFFFF</code></td><td>7.00:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Filas de categoría: texto sobre el fondo rosa claro</td><td><code>#1E1116</code> sobre <code>#FDF5F8</code></td><td>17.08:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr></tbody></table>
+<h2 class="v-h" id="compartir">Al compartir</h2>
+<p class="v-muted">Sin Open Graph ni imagen para compartir: fuera de alcance de la 038 (SE6 en <code>docs/seo.md</code>).</p>
+</main>
+</body>
+</html>

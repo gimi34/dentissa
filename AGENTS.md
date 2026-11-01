@@ -57,7 +57,10 @@ Nunca escribas secretos en el código, los logs ni los docs.
   métodos CRUD en inglés y helpers en español camelCase.
 - Rutas en `routes/web.php`, agrupadas por rol con `middleware(['auth','role:X'])->prefix('X')->name('X.')`.
   El grupo `cliente` solo lleva `auth` y pone `role:cliente` ruta a ruta (RS2.a en docs/security.md).
-- Vistas en `resources/views/<modulo>/` en kebab-case, un solo layout `layouts/app.blade.php`.
+- Vistas en `resources/views/<modulo>/` en kebab-case, con dos layouts: `layouts/app.blade.php` para la
+  app y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038, con
+  `public/css/publico.css` y `public/js/publico.js` con `defer`; la página está completa sin él). El
+  acceso sigue con su propio HTML.
 - Código nuevo: validación en servidor con `$request->validate()` y las reglas en la clase de
   dominio (`reglasDeEntrada()` en `app/Agenda/`) o en un helper del controlador; autorización con
   Gates sobre clases de `app/Autorizacion/` registrados en `AppServiceProvider` (ADR 0003); SQL con
@@ -76,7 +79,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 ## Mapa del repositorio
 | Ruta | Contenido |
 |---|---|
-| `app/Http/Controllers/` | 12 controladores (más el `Controller` base) con casi toda la lógica (ver docs/architecture.md) |
+| `app/Http/Controllers/` | 13 controladores (más el `Controller` base; `PaginasPublicasController`, spec 038) con casi toda la lógica (ver docs/architecture.md) |
 | `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación y horario (specs 025–028) |
 | `app/Autorizacion/` | alcance del personal y Gates de citas y de personal (ADR 0003) |
 | `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
@@ -86,11 +89,13 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | `app/Models/` | `Usuario` (auth), `Servicio`; `User` es un resto sin uso |
 | `routes/web.php` | todas las rutas |
 | `resources/views/` | vistas Blade por módulo |
-| `public/css/`, `public/js/` | CSS real de la aplicación; `menu.js` y `filtros.js` (specs 033 y 034) |
+| `public/css/`, `public/js/` | CSS real de la aplicación (`publico.css`, páginas públicas, spec 038); `menu.js` y `filtros.js` (specs 033 y 034) |
+| `public/fonts/` | `newsreader/` y `montserrat/` (páginas públicas, spec 038) y `roboto/` (spec 020), autoalojadas, cada una con su `OFL.txt` |
 | `database/dentissa.sql` | volcado con el esquema del dominio y datos ficticios |
 | `database/migrations/` | infraestructura + 3 migraciones de julio y 2 de octubre de 2026 (specs 026 y 028) |
 | `database/testing/` | arnés de la BD de tests |
 | `tests/Feature/` | tests por área (citas, horarios, producción, móvil…); traits en `Concerns/` |
+| `tests/js/` | tests de `public/js/publico.js` con `node --test tests/js/publico.test.mjs` (spec 038) |
 | `docker/`, `Dockerfile`, `docker-compose.yml` | entorno local |
 | `docker/prod/`, `docker-compose.prod.yml`, `deploy/` | producción: imágenes, Compose y scripts que se ejecutan por SSH |
 | `.github/workflows/ai-dd.yml` | CI: validador, tests, Pint y escáneres de seguridad |
@@ -104,7 +109,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 - [Despliegue](docs/deployment.md) — entornos, deploy y rollback
 - [Seguridad](docs/security.md) — datos sensibles, auth, herramientas y excepciones
 - [Observabilidad](docs/observability.md) — logs, correlación, auditoría, métricas y alertas
-- [SEO técnico](docs/seo.md) — rutas indexables (solo `/registro`), metadatos, sitemap y brechas SE
+- [SEO técnico](docs/seo.md) — rutas indexables (`/registro`, `/` y `/servicios`), metadatos, sitemap y brechas SE
 - [Sistema de diseño](docs/design/system.md) — tokens, componentes, WCAG 2.1 AA y deuda DS (vista: [system.html](docs/design/system.html))
 - [Roadmap](docs/roadmap.md) — etapa actual y objetivos
 - [Specs](docs/specs/README.md)

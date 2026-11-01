@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — Opción C · La panorámica</title>
+<style id="viewer">
+:root { --ui-bg: #f6f7f8; --ui-panel: #fff; --ui-text: #1d2125; --ui-muted: #5b636b; --ui-line: #d9dde1; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ui-bg); color: var(--ui-text); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.v-wrap { max-width: 1520px; margin: 0 auto; padding: 0 20px; }
+.v-head { padding: 32px 0 20px; border-bottom: 1px solid var(--ui-line); }
+.v-head h1 { margin: 0 0 6px; font-size: 26px; }
+.v-muted { color: var(--ui-muted); }
+.v-toc ul { display: flex; flex-wrap: wrap; gap: 18px; margin: 0; padding: 12px 0; list-style: none; border-bottom: 1px solid var(--ui-line); }
+.v-toc a { color: var(--ui-muted); text-decoration: none; }
+h2.v-h { margin: 36px 0 12px; font-size: 20px; }
+.v-idea dt { font-weight: 600; margin-top: 10px; }
+.v-idea dd { margin: 2px 0 0; max-width: 100ch; }
+.v-marcos { display: flex; gap: 20px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+.v-frame { margin: 0; flex: none; }
+.v-frame figcaption { color: var(--ui-muted); margin-bottom: 6px; }
+.v-frame iframe { display: block; border: 1px solid var(--ui-line); background: #fff; }
+.v-tabla { border-collapse: collapse; background: var(--ui-panel); }
+.v-tabla th, .v-tabla td { border: 1px solid var(--ui-line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.v-ok { color: #1e7a3c; font-weight: 600; } .v-no { color: #a32d2d; font-weight: 700; }
+</style>
+</head>
+<body>
+<header class="v-head"><div class="v-wrap">
+  <p class="v-muted">Dentissa · spec 038 · /design-spec 038, ronda 4 desde cero (motor creativo de AI-DD 1.16.0; semilla del reparto 180218)</p>
+  <h1>Opción C · «La panorámica» · registro audaz</h1>
+  <p>Página de prueba a ancho real: <a href="opcion-c-pagina.html">opcion-c-pagina.html</a> (ábrela y recórrela: las escenas, las entradas y la cosa viva funcionan sin red).</p>
+</div></header>
+<nav class="v-toc" aria-label="Contenido de la opción"><div class="v-wrap"><ul>
+  <li><a href="#idea">Idea</a></li><li><a href="#pantallas">Pantallas</a></li><li><a href="#movimiento">Movimiento</a></li><li><a href="#color">Contraste</a></li><li><a href="#compartir">Al compartir</a></li></ul></div></nav>
+<main class="v-wrap">
+<h2 class="v-h" id="idea">Idea</h2>
+<dl class="v-idea"><dt>Modo, registro y color</dt><dd>Persuadir · <strong>audaz</strong> · estrategia de color <strong>empapada</strong>: la página es un campo oscuro teñido de rosa (<code>#1A0A12</code>, el negatoscopio), con la placa en <code>--p200</code> y el acento <code>--p400</code>; «Sobre nosotros» vuelve a la luz como sección tranquila. Escena física: de noche, en casa, con una muela que duele: una pantalla oscura que no deslumbra. Tipografía: Space Grotesk 400/700 con Space Mono para la numeración (OFL-1.1).</dd>
+<dt>Idea</dt><dd>En esta página, <strong>la radiografía panorámica —el único documento en el que se ve la boca entera de un vistazo, y está en el catálogo—</strong> se convierte en <strong>la columna de la página: aparece con el barrido del aparato en la portada, se toca pieza a pieza en los servicios y su numeración cierra el pie</strong>.</dd>
+<dt>Prueba del competidor</dt><dd>Una clínica sin panorámica en su catálogo no puede abrir con ella; aquí las 32 piezas son las del odontograma FDI, cada una con su nombre, y lo que se toca lleva a las categorías reales.</dd>
+<dt>Jugada y escenas</dt><dd>Jugada <code>persiana</code>: la panorámica aparece de izquierda a derecha con una línea de luz, como el aparato que gira alrededor de la cabeza (CSS, una vez). Escenas: <code>reparto</code> — las siete categorías llegan apiladas y se reparten en su rejilla al bajar; <code>ventana</code> — el mapa se abre desde una ventana hasta ocupar la pantalla, con la ficha de la dirección encima. «Sobre nosotros», claro, es la sección tranquila entre ellas.</dd>
+<dt>Cosa viva</dt><dd>«Toca una pieza»: cada una de las 32 piezas de la panorámica es un botón («Pieza 36, primer molar inferior izquierdo»); el panel dice qué categorías la cuidan, con su número de tratamientos y el enlace a /servicios. Sin JavaScript: una tabla por grupo de piezas (incisivos y caninos, premolares, molares, muelas del juicio). <em>La relación de cada grupo con las categorías: contenido de muestra para que lo confirmes.</em></dd>
+<dt>Plenitud</dt><dd>Titular de 44 a 110 px; la panorámica a todo el ancho en la portada y otra vez, viva, en los servicios; siete cartas con su número; el mapa a pantalla completa; el pie con la numeración de la arcada y la marca a todo el ancho. Imágenes: todo dibujado en código desde la anatomía dental (32 siluetas con raíces y pulpa). Hueco para fotos reales: ninguno (la placa es la imagen).</dd>
+<dt>Inventario del sujeto</dt><dd>1 · la radiografía panorámica, que está en el catálogo (Diagnóstico); 2 · el odontograma de 32 piezas y su numeración FDI (11–48); 3 · el arco dental como forma; 4 · los 20 dientes de leche frente a los 32 permanentes de «toda la familia»; 5 · el ritual de «te explicamos qué vamos a hacer, cuánto dura y qué opciones tienes»; 6 · el horario real: lunes a viernes 9:00–20:00, sábados 9:00–14:00; 7 · la cita en línea «para que no tengas que llamar en horario de trabajo», que casi ninguna clínica de la zona ofrece; 8 · las 7 categorías y los 15 servicios activos del catálogo; 9 · el nombre de la doctora y el logo «Melissa López N. · Odontología integral»; 10 · Av. Insurgentes 450, en el centro de Lázaro Cárdenas. Familias: documentos del oficio (1, 2, 5), forma y cuerpo (3, 4), tiempo y ritual (5, 6, 7), catálogo (8), marca y lugar (9, 10).</dd>
+<dt>Pruebas</dt><dd>Esqueleto: sin textos, la estructura sigue diciendo qué es cada sección (el plan, las etapas o la placa). Retirada: sin la jugada, la página pierde su idea. Vecino: ninguna pantalla de la app (Roboto, barra lateral) ni las rondas 1–3 comparten esqueleto. Cinco segundos: titular, «Agendar mi primera cita», horario y teléfono en la primera pantalla. Inspección: ver la crítica.</dd></dl>
+<p class="v-muted"><strong>Riesgo asumido:</strong> un campo oscuro puede sentirse menos tranquilo que uno claro: lo compensan «Sobre nosotros» en claro, la placa rosa en lugar de gris clínico y textos cortos; la cosa viva con 32 botones exige que el panel y la tabla sin JavaScript sean claros; las escenas solo desde 900 px (en el teléfono, la composición terminada).</p>
+<h2 class="v-h" id="pantallas">Pantallas · página de inicio a 320, 390, 900 y 1440 px</h2>
+<p class="v-muted">Cada marco es la página de prueba real (desplázate dentro). <code>/servicios</code> conserva su estructura (índice y listas por categoría) con la cabecera, el pie, la tipografía y los colores de esta opción.</p>
+<div class="v-marcos"><figure class="v-frame" id="opcion-c-pagina-320"><figcaption>320 px</figcaption><iframe src="opcion-c-pagina.html" width="320" height="1500" title="Página de prueba a 320 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-c-pagina-390"><figcaption>390 px</figcaption><iframe src="opcion-c-pagina.html" width="390" height="1500" title="Página de prueba a 390 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-c-pagina-900"><figcaption>900 px</figcaption><iframe src="opcion-c-pagina.html" width="900" height="1300" title="Página de prueba a 900 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-c-pagina-1440"><figcaption>1440 px</figcaption><iframe src="opcion-c-pagina.html" width="1440" height="1100" title="Página de prueba a 1440 px" loading="lazy"></iframe></figure></div>
+<h2 class="v-h" id="movimiento">Movimiento</h2>
+<p><strong>M-1 · jugada <code>persiana</code></strong> — filtro: una vez por visita, al cargar; es la firma. <code>clip-path: inset()</code> de derecha a izquierda en 2.2 s con una línea de luz que cruza. Reducido: la placa ya está. Sin JavaScript: igual (es CSS).</p>
+<p><strong>M-2 · escena <code>reparto</code></strong> (hold 1) — las siete cartas pasan de un montón girado a su rejilla con el progreso del desplazamiento. Reducido y por debajo de 900 px: la rejilla terminada. Sin JavaScript: la rejilla.</p>
+<p><strong>M-3 · escena <code>ventana</code></strong> (hold 1) — el mapa pasa de una ventana con esquinas redondeadas a toda la pantalla; la ficha de la dirección se lee entera todo el tiempo. Reducido, teléfono y sin JavaScript: el mapa grande con la ficha.</p>
+<p><strong>M-4 · respuesta</strong> — piezas que se iluminan con el puntero o el foco; botones que ceden. <strong>M-5 · cosa viva</strong> — el panel cambia sin animación (<code>aria-live</code>).</p>
+<h2 class="v-h" id="color">Contraste (calculado)</h2>
+<table class="v-tabla"><thead><tr><th>Par</th><th>Colores</th><th>Contraste</th><th>Mínimo</th><th></th></tr></thead><tbody><tr><td>Texto sobre la noche</td><td><code>#FFFFFF</code> sobre <code>#1A0A12</code></td><td>19.16:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Texto tenue sobre la noche</td><td><code>#E0BCCB</code> sobre <code>#1A0A12</code></td><td>11.15:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Placa y enlaces: --p200 sobre la noche</td><td><code>#F4C0D1</code> sobre <code>#1A0A12</code></td><td>12.14:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Botón principal: noche sobre --p400</td><td><code>#1A0A12</code> sobre <code>#D4537E</code></td><td>4.87:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Pulpa y acentos: --p400 sobre la noche (no texto)</td><td><code>#D4537E</code> sobre <code>#1A0A12</code></td><td>4.87:1</td><td>3:1</td><td class="v-ok">cumple</td></tr><tr><td>Panel y cartas: tenue sobre --noche-2</td><td><code>#E0BCCB</code> sobre <code>#2A1220</code></td><td>10.14:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Sobre nosotros: texto sobre --p50</td><td><code>#1A0A12</code> sobre <code>#FDF5F8</code></td><td>17.88:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Sobre nosotros: secundario sobre --p50</td><td><code>#5B3646</code> sobre <code>#FDF5F8</code></td><td>9.51:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr><tr><td>Ficha de la dirección: --p600 sobre --p50</td><td><code>#993556</code> sobre <code>#FDF5F8</code></td><td>6.54:1</td><td>4.5:1</td><td class="v-ok">cumple</td></tr></tbody></table>
+<h2 class="v-h" id="compartir">Al compartir</h2>
+<p class="v-muted">Sin Open Graph ni imagen para compartir: fuera de alcance de la 038 (SE6 en <code>docs/seo.md</code>).</p>
+</main>
+</body>
+</html>

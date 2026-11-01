@@ -7,22 +7,18 @@ use Tests\TestCase;
 class ExampleTest extends TestCase
 {
     /**
-     * La raíz de la aplicación no sirve contenido: siempre redirige.
+     * La raíz de la aplicación es la página de inicio pública (spec 038, CA1).
      *
-     * Esta prueba llegó con el andamiaje de Laravel afirmando que `GET /`
-     * devolvía 200, y llevaba fallando desde que se escribió la ruta raíz. En
-     * este proyecto esa ruta (routes/web.php, línea 31) redirige siempre: al
-     * panel del rol si hay sesión iniciada, y a `/login` si no la hay. La
-     * aserción de 200 nunca describió esta aplicación.
-     *
-     * La aserción nueva no relaja nada: describe el comportamiento real y
-     * verificado, y falla si la aplicación deja de redirigir al visitante
-     * anónimo hacia el inicio de sesión.
+     * Hasta la spec 038, `GET /` redirigía siempre (al panel del rol o a
+     * `/login`, spec 001 CA4). Desde la 038, el visitante sin sesión ve la
+     * presentación de la clínica; con sesión, cada rol sigue yendo a su panel
+     * (lo prueba `PaginaInicioTest`).
      */
-    public function test_anonymous_visitor_is_redirected_to_login(): void
+    public function test_el_visitante_sin_sesion_ve_la_pagina_de_inicio(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect('/login');
+        $response->assertOk();
+        $response->assertViewIs('publico.inicio');
     }
 }

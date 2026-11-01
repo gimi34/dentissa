@@ -66,6 +66,7 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Expedientes | `app/Http/Controllers/ExpedientesController.php` | Expediente clínico ligado a una cita | `expedientes`, `citas` |
 | Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, asignación asistente↔dentista y horarios: valida el horario y lo guarda con `app/Agenda/HorarioDentista.php`, que también da la lista de citas fuera del horario de la ficha (spec 027) | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
 | Servicios | `app/Http/Controllers/ServiciosController.php` | Catálogo (Eloquent + `Route::resource`) | `servicios` |
+| Páginas públicas | `app/Http/Controllers/PaginasPublicasController.php` | `/` (página de inicio; con sesión, `panelDelRol()` redirige al panel) y `/servicios`, sin parámetros, con `Servicio::porCategoria()` (solo activos: nombre, descripción y categoría, en una consulta) y el contacto de `config/clinica.php` (spec 038) | `servicios` |
 | Usuarios | `app/Http/Controllers/UsuarioController.php` | Administración de cuentas y roles | `usuarios` |
 | Perfil | `app/Http/Controllers/PerfilController.php` | Perfil y contraseña del cliente | `usuarios`, `pacientes` |
 | Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php`, `IdentificadorPeticion.php`, `ContextoActor.php` | Rol por grupo de rutas; cabeceras no-cache. Spec 020: `IdentificadorPeticion` (global) reutiliza el `X-Request-Id` si es un UUID o genera uno, lo pone en el `Context` y lo devuelve en toda respuesta; `ContextoActor` (al final del grupo `web`) pone o quita el actor de los logs al empezar cada petición | `usuarios.rol`, `Context` de Laravel |
@@ -127,7 +128,12 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 ## Integraciones externas
 - Google OAuth mediante `laravel/socialite` (`/auth/google`, `/auth/google/callback`); variables
   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
-- Google Fonts (Roboto) desde el navegador.
+- Google Fonts (Roboto) desde el navegador, en la app y el acceso. Las páginas públicas usan
+  Newsreader y Montserrat autoalojadas (`public/fonts/newsreader/` y `montserrat/`, OFL-1.1, con el
+  SHA-256 de cada woff2 en `docs/design/system.md`), sin servicios externos de fuentes (spec 038, D23).
+- Google Maps (spec 038): `/` incrusta el mapa de la dirección de la consulta en un `iframe`
+  perezoso (`https://www.google.com/maps?q=…&output=embed`, `referrerpolicy`) y «Cómo llegar» abre
+  la ruta en Google Maps en otra pestaña (`noopener noreferrer`). Sin clave de API.
 - Correo saliente (spec 032): avisos de producción por el SMTP de Gmail (`smtp.gmail.com:465`, TLS
   implícito) con una cuenta que solo sirve para enviar, hacia `AVISOS_CORREO`; variables `MAIL_*` y
   `AVISOS_CORREO` en `app.env`. Local usa `MAIL_MAILER=log`.
@@ -137,8 +143,10 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 
 ## Frontend
 - Componentes y organización: vistas Blade por módulo en `resources/views/<modulo>/`, archivos en
-  kebab-case, un único layout `layouts/app.blade.php` (las vistas de acceso tienen su propio HTML
-  con `auth.css`), parciales en `partials/` y en `<modulo>/partials/`. Sin componentes `<x-…>`. En
+  kebab-case, dos layouts: `layouts/app.blade.php` para la app y `layouts/publico.blade.php` para
+  las páginas públicas `/` y `/servicios` (spec 038: cabecera y pie propios, menú `<details>` sin
+  JavaScript, `app.css` por los tokens y `publico.css`); las vistas de acceso tienen su propio HTML
+  con `auth.css`; parciales en `partials/` y en `<modulo>/partials/`. Sin componentes `<x-…>`. En
   pacientes, personal y usuarios, `edit` reutiliza `create` con `@include`; servicios tiene su
   propio formulario de edición.
 - Estado: sin estado de cliente; JS inline mínimo (`@push('scripts')`) para modales y rellenar
@@ -171,10 +179,20 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   desbordar), y los formularios de paciente y expediente llevan etiquetas con `for`/`id`, errores
   con `aria-describedby` y la fila `.acciones-formulario`. Los iconos «Menú» y «Cerrar menú» van sin
   recuadro. Vite + Tailwind 4 están declarados pero solo los usa `welcome.blade.php`, que ninguna ruta sirve.
+  `public/css/publico.css` (spec 038) da estilo solo a las páginas públicas (superficie «Sitio público»,
+  sistema 1.10.0, D23): Newsreader y Montserrat por `@font-face`, `body.publico`, la cabecera con el
+  menú del móvil como icono, la presentación con la foto propia en la arcada
+  (`public/images/brand/access.webp`), «Sobre nosotros» con la cita y los pasos, la escena «consulta»,
+  el índice, la agenda con la semana, la ubicación y `/servicios`, solo con tokens de `app.css` y
+  cortes de 900 y 560 px. `public/js/publico.js` (D16, con `defer`) escribe la pastilla «¿Está abierto
+  ahora?» y la fila de hoy, pone el filete de la cabecera, cierra el menú con Escape y, con movimiento
+  normal, las entradas y el progreso `--p` de la escena; sin él la página está completa. Sus funciones
+  puras (`estadoAhora`, `diaDeHoy`, `progresoEscena`) se prueban con `node --test tests/js/`.
 - SEO (upgrade a AI-DD 1.13.0): todo el HTML se renderiza en el servidor con Blade, sin depender de
   JavaScript. Las vistas de acceso (`resources/views/auth/*.blade.php`) tienen su propio `<head>`,
-  donde van los metadatos de la única ruta indexable, `/registro`; el resto usa el `<head>` de
-  `layouts/app.blade.php`. `public/robots.txt` es estático y no hay `sitemap.xml`. Reglas y brechas
+  donde van los metadatos de `/registro`; `/` y `/servicios` (spec 038) los toman de
+  `layouts/publico.blade.php` (título, descripción y canónica por sección, desde `APP_URL`); el
+  resto usa el `<head>` de `layouts/app.blade.php`. `public/robots.txt` es estático y no hay `sitemap.xml`. Reglas y brechas
   en [seo.md](seo.md).
 - Accesibilidad: WCAG 2.1 AA (decisión del usuario, 2026-10-02); principio P9 y deuda DS1–DS11 en [design/system.md](design/system.md).
 
@@ -234,7 +252,9 @@ flowchart LR
 - Cabeceras de seguridad (spec 031): nginx las añade a toda respuesta con los fragmentos
   `docker/nginx/seguridad/comunes.conf` (CSP básica, `frame-ancestors`/X-Frame-Options,
   `nosniff`, Referrer-Policy) y `produccion.conf` (HSTS, solo en producción), sin versiones
-  (`server_tokens off`, `expose_php = Off`).
+  (`server_tokens off`, `expose_php = Off`). Desde la spec 038, `frame-src` sale del `map` de
+  `docker/nginx/seguridad/marcos.conf` (incluido en el contexto `http` de las dos
+  configuraciones): solo `/` admite el marco de Google; el resto, solo marcos propios.
 - Administración desde fuera (spec 031, [ADR 0006](adr/0006-administracion-remota-tailscale.md)):
   el responsable entra por SSH con clave desde la red local o por la red privada de Tailscale
   (`deploy/preparar-acceso-remoto.sh`); ningún puerto del router se abre.

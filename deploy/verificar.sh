@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9) y spec 031 (CA1, CA3, CA4, CA6–CA9;
-# TM1–TM5, TM8, TM9): verificación posterior a cada despliegue en producción.
+# Spec 030 (CA1, CA3, CA4, CA5, CA10; TM2, TM9), spec 031 (CA1, CA3, CA4, CA6–CA9;
+# TM1–TM5, TM8, TM9) y spec 038 (CA7, TM3): verificación posterior a cada despliegue
+# en producción.
 #
 #     bash deploy/verificar.sh --interna   # por la red de Docker (túnel parado o abierto)
 #     bash deploy/verificar.sh             # además, por la dirección pública (túnel abierto)
@@ -126,6 +127,19 @@ main() {
         cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1${ruta}" 2>/dev/null | tr -d '\r')"
         revisar_cabeceras "${ruta} (interna)" "${cabeceras}"
     done
+    # Spec 038 (CA7, TM3; /review R14): solo / admite el mapa de Google, también con el túnel parado.
+    cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1/" 2>/dev/null | tr -d '\r')"
+    if grep -iqE "^content-security-policy:.*frame-src 'self' https://www\.google\.com;" <<< "${cabeceras}"; then
+        ok "/ admite el mapa de Google (interna)"
+    else
+        fallo "/ admite el mapa de Google (interna; frame-src 'self' https://www.google.com)"
+    fi
+    cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - "http://127.0.0.1/servicios" 2>/dev/null | tr -d '\r')"
+    if grep -iqE "^content-security-policy:.*frame-src 'self';" <<< "${cabeceras}"; then
+        ok "/servicios no admite marcos externos (interna)"
+    else
+        fallo "/servicios no admite marcos externos (interna; frame-src 'self')"
+    fi
     cabeceras="$("${compose[@]}" exec -T web curl -sS -o /dev/null -D - -H "X-Forwarded-Proto: http" "http://127.0.0.1/login" 2>/dev/null | tr -d '\r')"
     if grep -qE '^HTTP/[0-9.]+ 301' <<< "${cabeceras}" && grep -iqE '^location: https://' <<< "${cabeceras}"; then
         revisar_cabeceras "la 301 de nginx (interna)" "${cabeceras}"
@@ -335,10 +349,27 @@ PY
             local estado cabeceras
             estado="$(curl -s -o /dev/null -w '%{http_code}' "${url}/up")"
             if [[ "${estado}" == 200 ]]; then ok "${url}/up responde 200"; else fallo "${url}/up responde 200 (dio ${estado})"; fi
-            if curl -sI "${url}/" | grep -iqE '^location: https://'; then
-                ok "/ redirige a https"
+            # Spec 038 (D10): / es la página de inicio y ya no redirige; la redirección
+            # a https se comprueba con /admin, que lleva al inicio de sesión.
+            if curl -sI "${url}/admin" | grep -iqE '^location: https://'; then
+                ok "/admin redirige a https"
             else
-                fallo "/ redirige a https"
+                fallo "/admin redirige a https"
+            fi
+            estado="$(curl -s -o /dev/null -w '%{http_code}' "${url}/")"
+            if [[ "${estado}" == 200 ]]; then ok "/ responde 200"; else fallo "/ responde 200 (dio ${estado})"; fi
+            # Spec 038 (CA7, TM3): solo / admite el mapa de Google; el resto, marcos propios.
+            cabeceras="$(curl -sS -o /dev/null -D - "${url}/" 2>/dev/null | tr -d '\r')"
+            if grep -iqE "^content-security-policy:.*frame-src 'self' https://www\.google\.com;" <<< "${cabeceras}"; then
+                ok "/ admite el mapa de Google"
+            else
+                fallo "/ admite el mapa de Google (frame-src 'self' https://www.google.com)"
+            fi
+            cabeceras="$(curl -sS -o /dev/null -D - "${url}/servicios" 2>/dev/null | tr -d '\r')"
+            if grep -iqE "^content-security-policy:.*frame-src 'self';" <<< "${cabeceras}"; then
+                ok "/servicios no admite marcos externos"
+            else
+                fallo "/servicios no admite marcos externos (frame-src 'self')"
             fi
             # La 301 pública la genera el borde de Cloudflare ("Always Use HTTPS"): no
             # es una respuesta de la aplicación y solo se comprueba su destino

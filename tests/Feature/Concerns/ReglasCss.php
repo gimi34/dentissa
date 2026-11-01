@@ -60,7 +60,7 @@ trait ReglasCss
         return implode("\n", $cuerpos);
     }
 
-    /** Valores literales que P9 prohíbe en reglas nuevas: px, colores, pesos y familias. */
+    /** Valores literales que P9 prohíbe en reglas nuevas: px, colores, pesos y familias (salvo un token de familia). */
     private function literales(string $cuerpo): array
     {
         $hallados = [];
@@ -74,7 +74,24 @@ trait ReglasCss
             $hallados = array_merge($hallados, array_filter($m[1], fn ($v) => ! str_starts_with(trim($v), 'var(--weight-')));
         }
         if (preg_match_all('/font-family\s*:\s*([^;]+)/', $cuerpo, $m)) {
-            $hallados = array_merge($hallados, array_filter($m[1], fn ($v) => trim($v) !== 'inherit'));
+            $hallados = array_merge($hallados, array_filter($m[1], fn ($v) => trim($v) !== 'inherit' && ! str_starts_with(trim($v), 'var(--font-')));
+        }
+
+        return $hallados;
+    }
+
+    /**
+     * Literales de las páginas públicas (spec 038, /analyze A5): los de `literales()` más
+     * duraciones, `rem`/`em` y curvas `cubic-bezier(`, que allí también van con token; y
+     * (`/review 038` R1) `line-height` y `aspect-ratio` con números en lugar de token.
+     */
+    private function literalesPublicos(string $cuerpo): array
+    {
+        $hallados = $this->literales($cuerpo);
+        foreach (['/(?<![\w-])\d+(\.\d+)?m?s\b/', '/(?<![\w-])\d*\.?\d+r?em\b/', '/cubic-bezier\(/', '/line-height\s*:\s*[\d.]+/', '/aspect-ratio\s*:\s*\d[\d.\s\/]*/'] as $patron) {
+            if (preg_match_all($patron, $cuerpo, $m)) {
+                $hallados = array_merge($hallados, $m[0]);
+            }
         }
 
         return $hallados;

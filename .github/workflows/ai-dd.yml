@@ -77,6 +77,10 @@ jobs:
           files=$(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}"...HEAD -- '*.php')
           if [ -n "$files" ]; then vendor/bin/pint --test $files; else echo "Sin archivos PHP cambiados"; fi
       - run: php artisan test
+      - name: Tests del script de las páginas públicas (spec 038, D18)
+        # Node del runner, sin dependencias. Las versiones recientes de Node ya no aceptan un directorio en
+        # --test (Node 24 da MODULE_NOT_FOUND); el patrón lo expande el shell, así vale con cualquiera.
+        run: node --version && node --test tests/js/*.test.mjs
 
   seguridad-pr:
     name: Seguridad (solo cambios del PR)
