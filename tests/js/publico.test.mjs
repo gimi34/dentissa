@@ -9,7 +9,7 @@
  * Ronda 5 (D19): los textos van en primera persona («Abierto ahora · cerramos a las 20:00»,
  * «Cerrado · abrimos mañana a las 9:00»), en un solo nodo; sale `escribirPastilla()` (D21) y entran
  * dos funciones puras (A39): `diaDeHoy(zona, fecha)`, la fila de la semana que se marca, y
- * `progresoEscena(rect, alto)`, el progreso --p de la escena de la ventana.
+ * `progresoEscena(rect, alto)`, el progreso --p de la escena (en la ronda 6, la de la consulta).
  *
  * Ejecutar: node --test tests/js/publico.test.mjs
  */
@@ -20,7 +20,7 @@ import vm from 'node:vm';
 
 const CODIGO = readFileSync(new URL('../../public/js/publico.js', import.meta.url), 'utf8');
 const ZONA = 'America/Mexico_City';
-// El de config/clinica.php (contacto.horario_semanal), como lo escribe @json en data-horario.
+// El de config/clinica.php (contacto.horario_semanal), como lo escribe json_encode en data-horario.
 const HORARIO = JSON.stringify({ 1: ['9:00', '20:00'], 2: ['9:00', '20:00'], 3: ['9:00', '20:00'], 4: ['9:00', '20:00'], 5: ['9:00', '20:00'], 6: ['9:00', '14:00'] });
 
 /** Carga el script en un contexto nuevo con los globales que se le pasen. */
@@ -87,7 +87,8 @@ test('la fila de hoy de la semana, con la hora de Lázaro Cárdenas (A39)', () =
 });
 
 test('el progreso de la escena va de 0 a 1 con el desplazamiento (A39)', () => {
-    // La escena mide 1.4 pantallas (data-hold): con la ventana de 800 px, 1120 px y 320 de recorrido.
+    // Una escena de 1120 px en una pantalla de 800: 320 px de recorrido. (La de la consulta mide 1.8
+    // pantallas en publico.css; la cuenta es la misma.)
     const alto = 800;
     assert.equal(progresoEscena({ top: 200, height: 1120 }, alto), 0, 'antes de llegar');
     assert.equal(progresoEscena({ top: 0, height: 1120 }, alto), 0, 'al llegar arriba');

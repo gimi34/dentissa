@@ -247,7 +247,7 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertStringContainsString('display: block', $cuerpo, 'Anula el display: flex de app.css (plan D3).');
         $this->assertStringContainsString('background: var(--bg)', $cuerpo, 'El fondo del sitio público es --p50.');
         foreach (['.pub-hero h1', '.pub-sec h2'] as $titulo) {
-            $this->assertStringContainsString('font-family: var(--font-display)', $this->declaraciones($titulo, self::HOJA), "{$titulo}: en Cormorant Garamond.");
+            $this->assertStringContainsString('font-family: var(--font-display)', $this->declaraciones($titulo, self::HOJA), "{$titulo}: en Newsreader.");
         }
         $this->assertStringContainsString('font-size: var(--text-display)', $this->declaraciones('.pub-hero h1', self::HOJA));
     }
@@ -268,9 +268,9 @@ class PaginasPublicasCssTest extends TestCase
         }
     }
 
-    public function test_contraste_de_los_pares_de_la_ronda_5(): void
+    public function test_contraste_de_los_pares_de_las_rondas_5_y_6(): void
     {
-        // design.md de la ronda 5, «Accesibilidad» (system.md 1.9.0, «Color»).
+        // design.md de las rondas 5 y 6, «Accesibilidad» (system.md 1.10.0, «Color»).
         $t = $this->tokensDeColor();
         foreach ([
             ['--text', '--bg', 'Texto sobre --p50'],
@@ -358,7 +358,7 @@ class PaginasPublicasCssTest extends TestCase
         $condiciones = [];
         foreach ($this->reglasCss(self::HOJA) as [, , $envolventes]) {
             foreach ($envolventes as $condicion) {
-                // Los fotogramas (el trazo del diente) no son cortes.
+                // Los fotogramas (@keyframes) no son cortes.
                 if (! str_starts_with($condicion, '@keyframes')) {
                     $condiciones[$condicion] = true;
                 }
@@ -481,6 +481,6 @@ class PaginasPublicasCssTest extends TestCase
                 $con++;
             }
         }
-        $this->assertGreaterThan(0, $con, 'Los botones, el índice, el trazo y las entradas tienen su transición (design.md).');
+        $this->assertGreaterThan(0, $con, 'Los botones, el índice, los arcos y las entradas tienen su transición (design.md).');
     }
 }

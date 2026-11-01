@@ -54,7 +54,7 @@ class PaginaInicioTest extends TestCase
         'Antes de cada tratamiento te explicamos qué vamos a hacer, cuánto dura y qué opciones tienes, para que decidas con calma. Y para que no tengas que llamar en horario de trabajo, puedes crear tu cuenta y agendar tus citas en línea.',
     ];
 
-    /** Las tres promesas de «Antes de cada tratamiento» (design.md de la ronda 5), en orden. */
+    /** Las tres promesas de «Antes de cada tratamiento» (design.md de las rondas 5 y 6: los pasos de `c5`), en orden. */
     private const PROMESAS = [
         'Qué vamos a hacer' => 'Lo vemos juntos, con palabras claras, antes de empezar.',
         'Cuánto dura' => 'Cuántas citas lleva y cuánto tiempo cada una, para que lo acomodes a tu semana.',
@@ -411,14 +411,14 @@ class PaginaInicioTest extends TestCase
 
     public function test_la_marca_se_anuncia_solo_en_la_cabecera(): void
     {
-        // Sustituye a «el logo de la portada es decorativo» (/review R21): la ventana del diente y la
+        // Sustituye a «el logo de la portada es decorativo» (/review R21): la foto de la arcada y la
         // marca de agua no anuncian la marca otra vez; el nombre del pie tampoco.
         $xpath = $this->xpath($this->get('/')->getContent());
 
         $marcas = $xpath->query('//*[@role="img"][@aria-label="Melissa López N. · Odontología integral"]');
         $this->assertSame(1, $marcas->length, 'La marca se anuncia una vez.');
         $this->assertSame(1, $xpath->query('ancestor::header', $marcas->item(0))->length, 'Y es en la cabecera.');
-        // La ventana sí es una imagen con nombre (la foto de la clínica, D20), pero no el de la marca.
+        // La foto de la arcada sí es una imagen con nombre (la de la clínica, D20, D23), pero no el de la marca.
         $this->assertSame(0, $xpath->query('.//*[@role="img"][@aria-label="Melissa López N. · Odontología integral"]', $this->porClase($xpath, 'pub-hero'))->length, 'La presentación no repite la marca.');
     }
 
