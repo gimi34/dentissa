@@ -5,6 +5,25 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-01
+
+### Added
+- Página de inicio pública en la dirección principal: presentación de la clínica con «Agendar mi
+  primera cita», el estado «¿Está abierto ahora?», «Sobre nosotros», las categorías de servicios,
+  la semana de la consulta y la sección «Visítanos» con dirección, horario, teléfono, mapa y
+  «Cómo llegar» (spec 038).
+- Página `/servicios` con todos los servicios activos del catálogo, agrupados por categoría, sin
+  precios (spec 038).
+- Las dos páginas se ven completas sin JavaScript, funcionan de 320 a 1440 px con el dedo, el
+  ratón o el teclado, respetan la preferencia de reducir el movimiento y llevan su título y su
+  descripción para los buscadores (spec 038).
+
+### Changed
+- Quien abre la dirección principal sin sesión ve la página de inicio en lugar de ir directo al
+  inicio de sesión; con sesión, sigue yendo a su panel (spec 038).
+- Solo la página de inicio puede mostrar contenido de Google Maps (el mapa de la clínica); el resto
+  de las pantallas sigue sin poder mostrar contenido de otros sitios (spec 038).
+
 ## [0.12.0] - 2026-10-31
 
 ### Added
