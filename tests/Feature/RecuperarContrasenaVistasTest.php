@@ -219,11 +219,34 @@ class RecuperarContrasenaVistasTest extends TestCase
 
     public function test_sin_javascript(): void
     {
-        foreach ($this->todas() as $nombre => $html) {
+        foreach ($this->html($this->pantallasNuevas()) as $nombre => $html) {
             $xpath = $this->xpath($html);
-            $this->assertSame(0, $xpath->query('//script')->length, "{$nombre}: sin <script> (G-sin-js).");
+            $this->assertSame(0, $xpath->query('//script')->length, "{$nombre}: sin <script> (G-sin-js, TM7).");
             $this->assertSame(0, $xpath->query('//*[@onclick or @onsubmit or @onchange]')->length, "{$nombre}: sin manejadores en línea.");
         }
+
+        // D19: el inicio de sesión solo carga el script del ojo, propio y con defer.
+        $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+        $scripts = $xpath->query('//script');
+        $this->assertSame(1, $scripts->length, 'Un solo script.');
+        $this->assertStringContainsString('/js/acceso.js', $scripts->item(0)->getAttribute('src'));
+        $this->assertTrue($scripts->item(0)->hasAttribute('defer'), 'Con defer.');
+        $this->assertSame('', trim($scripts->item(0)->textContent), 'Sin código en línea.');
+        $this->assertSame(0, $xpath->query('//*[@onclick or @onsubmit or @onchange]')->length, 'Sin manejadores en línea.');
+    }
+
+    public function test_el_login_tiene_el_boton_de_ver_la_contrasena(): void
+    {
+        $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+
+        $botones = $xpath->query('//input[@id="password"]/following-sibling::button[contains(@class, "ver-clave")]');
+        $this->assertSame(1, $botones->length, 'El botón va junto al campo de la contraseña.');
+        $boton = $botones->item(0);
+        $this->assertSame('button', $boton->getAttribute('type'), 'No envía el formulario.');
+        $this->assertTrue($boton->hasAttribute('hidden'), 'Sin JavaScript no aparece (D19).');
+        $this->assertSame('Mostrar contraseña', $boton->getAttribute('aria-label'));
+        $this->assertSame('false', $boton->getAttribute('aria-pressed'));
+        $this->assertSame('password', $boton->getAttribute('aria-controls'));
     }
 
     public function test_roles_de_los_avisos_y_errores(): void
