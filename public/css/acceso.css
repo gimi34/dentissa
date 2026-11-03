@@ -110,6 +110,13 @@ h1 { text-wrap: balance; font-size: var(--text-acceso-titulo); font-weight: var(
 .campo.error input { border-color: var(--red); border-width: var(--border-width-strong); }
 .campo .msg-error { font-size: var(--text-meta); color: var(--red); font-weight: var(--weight-strong); display: flex; gap: var(--space-1); align-items: flex-start; }
 
+/* Ver la contraseña (D19): mejora progresiva, sin JavaScript no aparece. */
+.campo-clave { position: relative; }
+.campo-clave input { padding-right: var(--touch-min); }
+.ver-clave { position: absolute; top: 0; right: 0; width: var(--touch-min); height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--radius-sm); color: var(--p600); cursor: pointer; }
+.ver-clave[hidden] { display: none; }
+.ver-clave[aria-pressed="true"] .ojo-abierto, .ver-clave[aria-pressed="false"] .ojo-cerrado { display: none; }
+
 /* Botones y enlaces. M-1: respuesta de los botones, sin transición con movimiento reducido. */
 .btn { min-height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3); padding: 0 var(--space-7); border-radius: var(--radius-sm); font: inherit; font-size: var(--text-acceso); font-weight: var(--weight-strong); text-decoration: none; cursor: pointer; border: var(--border-width) solid transparent; transition: background var(--duration-respuesta) var(--ease-clinico), transform var(--duration-respuesta) var(--ease-clinico); }
 .btn:active { transform: scale(.98); }
@@ -123,6 +130,7 @@ h1 { text-wrap: balance; font-size: var(--text-acceso-titulo); font-weight: var(
 .enlace { color: var(--p600); font-weight: var(--weight-strong); font-size: var(--text-acceso); text-decoration: underline; text-underline-offset: 3px; min-height: var(--touch-min); display: inline-flex; align-items: center; gap: var(--space-2); align-self: flex-start; }
 .en-texto { color: var(--p600); font-weight: var(--weight-strong); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 a:focus-visible, button:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.ver-clave:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -1); }
 
 /* Avisos */
 .aviso { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-5) var(--space-6); border-radius: var(--radius-sm); font-size: var(--text-acceso); line-height: var(--leading-publico); border: var(--border-width) solid currentColor; }
