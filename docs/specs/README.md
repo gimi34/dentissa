@@ -42,7 +42,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 038 | [pagina-inicio](038-pagina-inicio/spec.md) | Transversal | implemented | — | — (2026-10-20) |
 | 039 | [galeria-trabajos](039-galeria-trabajos/spec.md) | Transversal | approved | — | — (2026-10-20) |
 | 040 | [promociones](040-promociones/spec.md) | Transversal | approved | — | — (2026-10-20) |
-| 041 | [recuperar-contrasena](041-recuperar-contrasena/spec.md) | Identidad | implemented | — | — (2026-10-27) |
+| 041 | [recuperar-contrasena](041-recuperar-contrasena/spec.md) | Identidad | approved | — | — (2026-10-27) |
 | 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):

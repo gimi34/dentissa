@@ -179,6 +179,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
 | TM12 | Spoofing: enlace envenenado con una cabecera `Host` falsa que apunta a otro sitio | A02:2025 | `EnlaceRestablecimiento` | El enlace se arma con `config('app.url')`, nunca con la petición | `CorreosRestablecimientoTest::test_el_enlace_usa_app_url_aunque_el_host_sea_otro` |
 | TM13 | Information disclosure: la URL con un token vigente queda en el historial de un navegador compartido (`no-store` no lo evita) | A07:2025 | broker | El token deja de servir al usarlo, al pedir otro o a los 60 minutos. Residuo aceptado por el usuario el 2026-10-28 (`/analyze` A30): quien abra ese historial antes de que pase una de las tres cosas puede usarlo, igual que quien tenga el buzón | `RecuperarContrasenaTest::test_rechaza_un_enlace_usado`, `…_sustituido`, `…_caducado` |
 | TM14 | Information disclosure: el correo escrito queda en el flash de la sesión, guardada en un archivo sin cifrar | A02:2025 | `solicitar`, `enviada` | El flash dura una petición: «Revisa tu correo» lo muestra y desaparece. El cifrado de las sesiones en producción queda fuera: sigue pendiente en `docs/security.md` (objetivo 2) | `RecuperarContrasenaTest::test_el_correo_no_queda_en_la_sesion_tras_mostrarlo` |
+| TM15 | Elevation of privilege: con una sesión ajena, cambiar el correo del perfil y dirigir el enlace a otro buzón (CA13) | A07:2025 | `PerfilController::update` | Pedir la contraseña actual si el correo cambia; una cuenta sin contraseña no puede cambiarlo (D21) | `PerfilCambioCorreoTest` |
+| TM16 | Denial of service: agotar la cuota de Gmail o bombardear un buzón, invalidando sus enlaces (CA14) | A06:2025 | `solicitar` | Topes de 5 por cuenta por hora y 200 al día, antes de crear el token (D22) | `RecuperarContrasenaAbusoTest::test_cinco_enlaces_por_cuenta_por_hora`, `…_doscientos_enlaces_al_dia` |
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
@@ -195,6 +197,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
 | CA10 (abuso): enlace adivinado, alterado o de otra cuenta → rechazo | broker | `…_rechaza_un_token_alterado`, `…_el_token_de_una_cuenta_no_cambia_la_contrasena_de_otra` |
 | CA11 (abuso): desactivada → sin correo, el enlace previo no sirve, sigue sin entrar | credenciales con `activo` | `…_una_cuenta_desactivada_no_recibe_correo`, `…_una_cuenta_desactivada_no_puede_restablecer` |
 | CA12: auditoría en el registro de la 020, sin contraseña ni enlace | transacción, `Auditoria` | `RecuperarContrasenaAuditoriaTest::test_el_restablecimiento_queda_registrado` (actor y sujeto, acción, resultado, fecha; `campos` sin valores, `detalle` sin token), `…_sin_registro_la_contrasena_no_cambia` |
+| CA13 (abuso): el correo del perfil solo cambia con la contraseña actual | `PerfilController::update`, `cliente/perfil.blade.php` | `PerfilCambioCorreoTest` |
+| CA14 (abuso): 5 enlaces por cuenta por hora y 200 al día, con el mismo mensaje | `solicitar`, `config/acceso.php` | `RecuperarContrasenaAbusoTest::test_cinco_enlaces_por_cuenta_por_hora`, `…_doscientos_enlaces_al_dia` |
 | RNF: WCAG 2.1 AA a 320, 390 y 1440 px, avisos con texto | vistas, `acceso.css` | `RecuperarContrasenaVistasTest::test_roles_de_los_avisos_y_errores` · manual: `medir.mjs` sobre la build (puertas `G-contraste`, `G-toque`, `G-foco`, `G-reducido`, `G-sin-js`) |
 | RNF: diferencia de medias menor de 300 ms en 20 solicitudes | `afterResponse()` | `…_la_respuesta_tarda_lo_mismo_con_y_sin_cuenta` |
 | RNF: entrega en menos de 5 minutos en producción | SMTP de Gmail | verificación manual: T095 |
@@ -215,6 +219,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
 | TM12: enlace envenenado por `Host` | `EnlaceRestablecimiento` | `CorreosRestablecimientoTest::test_el_enlace_usa_app_url_aunque_el_host_sea_otro` |
 | TM13: token vigente en el historial del navegador | broker | `RecuperarContrasenaTest::test_rechaza_un_enlace_usado`, `…_sustituido`, `…_caducado` |
 | TM14: el correo escrito en la sesión | `solicitar`, `enviada` | `RecuperarContrasenaTest::test_el_correo_no_queda_en_la_sesion_tras_mostrarlo` |
+| TM15: cambiar el correo con una sesión ajena | `PerfilController::update` | `PerfilCambioCorreoTest` |
+| TM16: agotar la cuota o bombardear un buzón | `solicitar` | `RecuperarContrasenaAbusoTest::test_cinco_enlaces_por_cuenta_por_hora`, `…_doscientos_enlaces_al_dia` |
 
 ## Observabilidad
 - **Logs nuevos:** `restablecimiento.correo_fallido`, nivel `error`.
@@ -405,6 +411,10 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
   - Sin dependencias nuevas. Las pantallas de la recuperación siguen sin JavaScript (TM7).
   - Los correos adoptan el mismo estilo (decisión del usuario, 2026-11-03), con los valores copiados de los tokens (D9) y el mismo contenido. `linear-gradient` va en `background-image` sobre un `background-color` de respaldo `--p800`, para los clientes que no dibujan degradados. El enlace sigue armado desde `APP_URL` (TM12).
   - Tests: `RecuperarContrasenaVistasTest::test_el_acceso_usa_el_estilo_anterior_del_login`; `test_roles_de_los_avisos_y_errores` cambia los decorativos que comprueba, porque el troquel ya no existe; `CorreosRestablecimientoTest::test_los_correos_usan_el_estilo_del_login`.
+
+- **D21 · Contraseña actual para cambiar el correo** (`/review` R4, decisión del usuario, 2026-11-03; RS9.b): `PerfilController::update` exige `password_actual` solo si el correo cambia, sin distinguir mayúsculas, con el error junto al campo y sin guardar nada del formulario. Una cuenta sin contraseña (Google) no puede cambiarlo y el error le dice que cree una en la misma página.
+  - Residuo aceptado: quien tenga una sesión ajena de una cuenta de Google puede crear la contraseña desde el perfil sin más comprobación (RS5.c, ya registrado) y luego cambiar el correo. Sin límite de intentos en estos formularios, como ya pasa en `updatePassword`.
+- **D22 · Topes de envío** (`/review` R5, decisión del usuario, 2026-11-03): `config/acceso.php` añade `enlaces_por_cuenta_por_hora` (5) y `enlaces_por_dia` (200). Se comprueban en el trabajo tras la respuesta (TM1), antes de `sendResetLink`, así que superarlos no crea token ni invalida el vigente; solo cuentan los envíos hechos. Sobre el tope diario se escribe `restablecimiento.tope_diario`, sin datos. El aviso de contraseña cambiada no se limita: solo sale tras un restablecimiento válido.
 
 ## Impacto en arquitectura
 - `docs/architecture.md` (T090):

@@ -150,6 +150,16 @@ Formato:
   - nota: 2026-11-03 — construida. T043 pasa, con los 8 tests de `CorreosRestablecimientoTest` y los 17 de `RecuperarContrasenaVistasTest` en verde. `evaluate.mjs`, «correo-enlace» y «correo-aviso» a 320 y 390 px: puertas 11/11 y KPIs 5/5 (K3, K8). No se probó en clientes de correo reales; sin degradado, la cabecera queda en `--p800`.
   - nota: 2026-11-03 — falta la verificación manual del usuario: los dos correos, junto con T021 y T022
   - nota: 2026-11-03 — verificación manual OK 2026-11-03 (usuario): revisó los correos, pidió quitar el lema y dijo «sigue».
+- [ ] T045 [P] Añadir a `SesionVigenteTest` `test_con_la_cuenta_abierta_en_ese_navegador_se_ve_el_exito`, leyendo la cuenta de nuevo en cada petición (`Auth::forgetGuards()`) y siguiendo la redirección hasta ver «Tu contraseña cambió» — añadida por /review: R1 — tests/Feature/SesionVigenteTest.php — hecho cuando: falla porque el mensaje se pierde — cubre: CA3 — depende: T039
+- [ ] T046 Cerrar en `restablecer` la sesión de la cuenta restablecida antes de redirigir con el mensaje — añadida por /review: R1 — app/Http/Controllers/RecuperarContrasenaController.php — hecho cuando: T045 pasa y `SesionVigenteTest` sigue en verde — cubre: CA3, CA7 — depende: T045
+- [ ] T047 [P] Añadir a `RecuperarContrasenaAbusoTest` `test_la_espera_con_un_enlace_invalido_pide_esperar` (token bien formado que no vale, más de 5 intentos: «Espera un minuto» y un solo `role="alert"`) — añadida por /review: R2 — tests/Feature/RecuperarContrasenaAbusoTest.php — hecho cuando: falla porque la pantalla no pide esperar — cubre: CA9 — depende: T039
+- [ ] T048 Mostrar el aviso de espera en la vista `caducado` cuando llega con el flash `espera`, y añadir su estado a la vista previa — añadida por /review: R2 — app/Http/Controllers/RecuperarContrasenaController.php, resources/views/auth/recuperar/caducado.blade.php, app/Http/Controllers/DisenioAccesoController.php — hecho cuando: T047 pasa y `evaluate.mjs` pasa «caducado-espera» a 320, 390 y 1440 px — cubre: CA9 — depende: T047
+- [ ] T049 [P] Añadir a `RecuperarContrasenaVistasTest` `test_el_foco_va_al_primer_campo_con_error` (pedir y contraseña nueva; sin error, sin `autofocus`) — añadida por /review: R3 — tests/Feature/RecuperarContrasenaVistasTest.php — hecho cuando: falla porque ningún campo lleva `autofocus` — cubre: CA4 — depende: T039
+- [ ] T050 Poner `autofocus` en el primer campo con error de las vistas de pedir y de contraseña nueva — añadida por /review: R3 — resources/views/auth/recuperar/solicitud.blade.php, resources/views/auth/recuperar/nueva.blade.php — hecho cuando: T049 pasa y `evaluate.mjs` pasa «pedir» y «nueva» — cubre: CA4 — depende: T049
+- [ ] T051 [P] Escribir `PerfilCambioCorreoTest`: sin contraseña o con una incorrecta el correo no cambia y el error sale junto al campo; con la correcta cambia; sin cambiar el correo no la pide; cambiar solo mayúsculas no la pide; una cuenta sin contraseña no puede cambiarlo; y la cadena completa: el enlace no llega al buzón de quien no conoce la contraseña — añadida por /review: R4 — tests/Feature/PerfilCambioCorreoTest.php — hecho cuando: los casos del control fallan porque el correo cambia sin contraseña — cubre: CA13 — depende: T039
+- [ ] T052 Exigir la contraseña actual en `PerfilController::update` si el correo cambia (D21) y añadir el campo y el aviso a la vista del perfil — añadida por /review: R4 — app/Http/Controllers/PerfilController.php, resources/views/cliente/perfil.blade.php — hecho cuando: T051 pasa, los tests del perfil siguen en verde y queda comprobado rompiendo el control · verificación manual: el usuario confirma el formulario del perfil a 390 y 1440 px — cubre: CA13 — depende: T051
+- [ ] T053 [P] Añadir a `RecuperarContrasenaAbusoTest` `test_cinco_enlaces_por_cuenta_por_hora` (el sexto: misma respuesta, sin correo y el enlace vigente sigue valiendo; pasada la hora, vuelve a enviar) y `test_doscientos_enlaces_al_dia` (con el tope bajado por configuración; pasado el día, vuelve a enviar; y el log sin datos) — añadida por /review: R5 — tests/Feature/RecuperarContrasenaAbusoTest.php — hecho cuando: fallan porque se envía por encima de los topes — cubre: CA14 — depende: T039
+- [ ] T054 Aplicar los topes de D22 en el trabajo tras la respuesta de `solicitar`, y documentar el log y la configuración — añadida por /review: R5 — app/Http/Controllers/RecuperarContrasenaController.php, config/acceso.php, docs/observability.md — hecho cuando: T053 pasa, `test_la_respuesta_tarda_lo_mismo_con_y_sin_cuenta` sigue en verde y queda comprobado rompiendo el control — cubre: CA14 — depende: T053
 
 ## Integración y documentación
 - [x] T040 [P] Registrar las rutas nuevas, el `noindex` del login y los layouts; `AGENTS.md` es ruta protegida: pide la aprobación explícita del usuario antes de editarlo y la nota la recoge (`/analyze` A18) — docs/seo.md, AGENTS.md — hecho cuando: `docs/seo.md` lista `/contrasena/olvidada`, `/contrasena/enviada` y `/contrasena/nueva/{token}` como no indexables; SE2.a pasa a `mitigada` (la versión se completa en `/release`): `/login` lleva `noindex` y `/registro/contacto` sin los datos de Google redirige a `/registro`, así que nunca se sirve a un buscador (decisión del usuario, 2026-10-28); SE2.b sigue `pendiente` (objetivo de SEO), así que SE2 queda atendida **parcialmente**; y `AGENTS.md` pasa de «dos layouts» a tres (`app`, `publico` y `acceso`, D12; «el acceso sigue con su propio HTML» se cambia: el login y la recuperación usan `acceso`) y añade `SesionVigente` y `app/Mail` al mapa — depende: T025, T032, T033
@@ -170,7 +180,7 @@ Formato:
   - `deployment.md`: `RECUPERAR_CONTRASENA` en la tabla de variables (por defecto `false`; en producción, `true` tras T095), la migración expand y el `log_format` enmascarado del token.
   - `observability.md`: evento `contrasena_restablecida` (modo crítico) y log `restablecimiento.correo_fallido`. La corrección de «No existe registro de auditoría» que registra altas, roles, activación y cambios de contraseña sigue pendiente: la 041 cubre solo el restablecimiento y el resto va en la 021. La del query string en el log de acceso de producción sigue pendiente (→ objetivo 3): el formato nuevo enmascara solo el token; se anota que el vigilante ya lee ese formato. En la brecha de los logs de nginx se anota la excepción acotada a P8 del `error_log` (escribe el token cuando PHP falla), cuyo destino es la rotación y retención de OB8.b, que sigue pendiente (`/analyze` A28).
   - nota: 2026-11-03 — `RECUPERAR_CONTRASENA` y la migración expand en `deployment.md`; `contrasena_restablecida`, `restablecimiento.correo_fallido` y el `log_format` enmascarado en `observability.md`. OB1.f y OB8.a siguen pendientes; OB8.b recoge la excepción acotada a P8 del `error_log` (A28).
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: 2026-11-03 — hecho: spec en `implemented` y fila de `docs/specs/README.md`.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -191,16 +201,18 @@ Formato:
 |---|---|---|
 | CA1 | T010, T017 | T024, T025, T026, T027, T033, T034 |
 | CA2 | T010, T016 | T020, T021, T023, T027 |
-| CA3 | T011 | T029, T033 |
-| CA4 | T011 | T029 |
+| CA3 | T011, T045 | T029, T033, T046 |
+| CA4 | T011, T049 | T029, T050 |
 | CA5 | T011 | T029 |
 | CA6 | T011 | T023, T029 |
 | CA7 | T011, T014, T015, T016, T017 | T005, T020, T022, T029, T031, T032 |
 | CA8 | T012 | T027 |
-| CA9 | T012, T017 | T026, T027, T028, T029 |
+| CA9 | T012, T017, T047 | T026, T027, T028, T029, T048 |
 | CA10 | T013 | T029 |
 | CA11 | T013 | T027, T029 |
 | CA12 | T014 | T030 |
+| CA13 | T051 | T052 |
+| CA14 | T053 | T054 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -218,6 +230,8 @@ Formato:
 | TM12 | T021 | T016 |
 | TM13 | T029 | T011 |
 | TM14 | T027 | T010 |
+| TM15 | T052 | T051 |
+| TM16 | T054 | T053 |
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
