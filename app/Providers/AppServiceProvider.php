@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Auditoria\AlmacenAuditoria;
+use App\Auditoria\AlmacenAuditoriaBaseDatos;
+use App\Auditoria\Auditoria;
 use App\Autorizacion\CambiarEstadoCita;
 use App\Autorizacion\GestionPersonal;
 use App\Autorizacion\ReprogramarCita;
@@ -20,7 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Registro de auditoría (spec 020): un solo almacén y un solo servicio por ejecución, para que
+        // el request_id generado fuera de HTTP se reutilice. Los tests sustituyen el almacén.
+        $this->app->bind(AlmacenAuditoria::class, AlmacenAuditoriaBaseDatos::class);
+        $this->app->singleton(Auditoria::class);
     }
 
     /**

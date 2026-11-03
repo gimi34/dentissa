@@ -5,6 +5,49 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-01
+
+### Added
+- Página de inicio pública en la dirección principal: presentación de la clínica con «Agendar mi
+  primera cita», el estado «¿Está abierto ahora?», «Sobre nosotros», las categorías de servicios,
+  la semana de la consulta y la sección «Visítanos» con dirección, horario, teléfono, mapa y
+  «Cómo llegar» (spec 038).
+- Página `/servicios` con todos los servicios activos del catálogo, agrupados por categoría, sin
+  precios (spec 038).
+- Las dos páginas se ven completas sin JavaScript, funcionan de 320 a 1440 px con el dedo, el
+  ratón o el teclado, respetan la preferencia de reducir el movimiento y llevan su título y su
+  descripción para los buscadores (spec 038).
+
+### Changed
+- Quien abre la dirección principal sin sesión ve la página de inicio en lugar de ir directo al
+  inicio de sesión; con sesión, sigue yendo a su panel (spec 038).
+- Solo la página de inicio puede mostrar contenido de Google Maps (el mapa de la clínica); el resto
+  de las pantallas sigue sin poder mostrar contenido de otros sitios (spec 038).
+
+## [0.12.0] - 2026-10-31
+
+### Added
+- Registro de auditoría: queda constancia de quién hizo qué, sobre qué recurso, cuándo, desde
+  dónde y con qué resultado, sin datos personales ni de salud en claro. Nadie puede modificar ni
+  borrar un evento, tampoco un admin ni la propia aplicación (spec 020).
+- Consulta del registro en `/admin/auditoria`, solo para el admin: filtros por actor, acción, tipo
+  e identificador de recurso y rango de fechas, del más reciente al más antiguo (spec 020).
+- Los accesos denegados quedan registrados, también cuando se responden como «no encontrado» para
+  no revelar que el recurso existe (spec 020).
+- Cada respuesta lleva un identificador de petición (`X-Request-Id`) que comparten los registros
+  técnicos y los eventos de auditoría de esa petición (spec 020).
+- Purga mensual de los eventos de más de 5 años, con un servicio nuevo de tareas programadas en
+  producción (spec 020).
+
+### Changed
+- Si el registro de auditoría no puede escribirse, las acciones sobre datos clínicos y la consulta
+  del registro no se realizan y se muestra un error genérico; en producción se avisa por correo al
+  responsable, sin datos del evento (spec 020).
+
+### Security
+- `follow-redirects` 1.16.2, que corrige un aviso alto (GHSA-mrwp-f3q8-3g9p) en el entorno de
+  desarrollo (chore 2026-10-30-chore-follow-redirects-1.16.2).
+
 ### Changed — flujo AI-DD actualizado a 1.19.0
 - Validador 1.19.0: acta de diseño por criterios (`exploration: loop`), `criterios.json` y aviso a
   las specs abiertas con interfaz sin "Criterios de diseño". Desaparece `aidd.py deal`.

@@ -7,6 +7,7 @@ use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
 use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
+use App\Auditoria\Auditoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -72,7 +73,9 @@ class ClienteCitasController extends Controller
     public function show(string $id, EstadosCita $estados)
     {
         $paciente = $this->pacienteActual();
-        abort_unless($paciente, 404);
+        if (! $paciente) {
+            $this->noEncontrada($id);
+        }
 
         $cita = DB::table('citas')
             ->join('personal', 'citas.dentista_id', '=', 'personal.id')
@@ -95,7 +98,7 @@ class ClienteCitasController extends Controller
             ->first();
 
         if (! $cita) {
-            abort(404);
+            $this->noEncontrada($id);
         }
 
         $cita = $this->conPuedeCancelar($cita, $estados);
@@ -193,7 +196,9 @@ class ClienteCitasController extends Controller
     private function citaDelPaciente(string $id): object
     {
         $paciente = $this->pacienteActual();
-        abort_unless($paciente, 404);
+        if (! $paciente) {
+            $this->noEncontrada($id);
+        }
 
         $cita = DB::table('citas')
             ->join('personal', 'citas.dentista_id', '=', 'personal.id')
@@ -213,9 +218,26 @@ class ClienteCitasController extends Controller
             )
             ->first();
 
-        abort_unless($cita, 404);
+        if (! $cita) {
+            $this->noEncontrada($id);
+        }
 
         return $cita;
+    }
+
+    /**
+     * La cita no es del paciente: si existe, la oculta con el mismo 404 pero deja su evento
+     * `denegado_404`; si no existe, es un 404 sin evento (spec 020, CA4; D4, A66).
+     */
+    private function noEncontrada(string $id): never
+    {
+        // El id guardado, no el de la ruta: la colación PAD SPACE encuentra `<id> ` (/review R5).
+        $guardado = DB::table('citas')->where('id', $id)->value('id');
+        if ($guardado !== null) {
+            app(Auditoria::class)->denegar(request()->route()?->getName() ?? 'ruta_sin_nombre', 'citas', $guardado, 'denegado_404');
+        }
+
+        abort(404);
     }
 
     /** Motivo por el que el paciente no puede mover la cita, o null si puede (A6). */

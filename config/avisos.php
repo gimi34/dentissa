@@ -25,6 +25,10 @@ return [
     // cuenta (CA2).
     'umbral_fallos' => 10,
 
+    // Spec 020 (CA14): más de 0 eventos de auditoría que no se pudieron guardar
+    // (líneas auditoria.fallo del canal seguridad) en la ventana; basta uno.
+    'umbral_auditoria' => 0,
+
     'ventana_minutos' => 5,
 
     // Como mucho un correo por tipo de aviso en este tiempo (CA4).

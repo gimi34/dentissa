@@ -1,4 +1,4 @@
-{{-- Spec 032 (CA5): solo tipo, recuentos, horas y cómo consultar; ningún dato de los logs. --}}
+{{-- Spec 032 (CA5) y 020 (CA14, TM16): solo tipo, recuentos, horas y cómo consultar; ningún dato de los logs. --}}
 Dentissa: {{ $titulo }}
 
 @if ($tipo === 'prueba')
@@ -12,6 +12,9 @@ En 5 minutos hubo más de 10 desde un mismo origen o contra una misma cuenta. El
 @elseif ($tipo === 'formato')
 {{ $recuento }} líneas del log de acceso de nginx no tienen el formato esperado entre las {{ $desdeTexto }} y las {{ $hastaTexto }} (hora de la clínica, {{ $zona }}).
 Mientras no se corrija, el aviso de errores del servidor no puede contar las respuestas.
+@elseif ($tipo === 'auditoria')
+{{ $recuento }} eventos de auditoría no se pudieron guardar entre las {{ $desdeTexto }} y las {{ $hastaTexto }} (hora de la clínica, {{ $zona }}).
+Cada uno es un acceso o un cambio sin rastro; las acciones sobre datos clínicos se detuvieron con un error.
 @endif
 @if ($anteriorTexto)
 Son los acumulados desde el aviso anterior, de las {{ $anteriorTexto }}: entre medias no se envió ningún correo de este tipo.
@@ -24,5 +27,7 @@ Cómo consultar el detalle en el servidor (por SSH, en /opt/dentissa/app):
 - Errores de la aplicación: docker compose -f docker-compose.prod.yml exec app tail -n 100 storage/logs/laravel.log
 @elseif ($tipo === 'accesos')
 - Fallos de acceso (huellas, sin IP ni correo): docker compose -f docker-compose.prod.yml exec app tail -n 50 storage/logs/seguridad-{{ $dia }}.log
+@elseif ($tipo === 'auditoria')
+- Eventos no guardados (líneas auditoria.fallo, sin datos del evento): docker compose -f docker-compose.prod.yml exec app grep auditoria.fallo storage/logs/seguridad-{{ $dia }}.log
 @endif
 - Más detalle: deploy/README.md, sección de avisos.

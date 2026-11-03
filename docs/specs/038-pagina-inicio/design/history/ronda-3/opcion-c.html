@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentissa — Opción C · La línea de abound</title>
+<style id="viewer">
+:root { --ui-bg: #f6f7f8; --ui-panel: #fff; --ui-text: #1d2125; --ui-muted: #5b636b; --ui-line: #d9dde1; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ui-bg); color: var(--ui-text); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.v-wrap { max-width: 1520px; margin: 0 auto; padding: 0 20px; }
+.v-head { padding: 32px 0 20px; border-bottom: 1px solid var(--ui-line); }
+.v-head h1 { margin: 0 0 6px; font-size: 26px; }
+.v-muted { color: var(--ui-muted); }
+.v-toc ul { display: flex; flex-wrap: wrap; gap: 18px; margin: 0; padding: 12px 0; list-style: none; border-bottom: 1px solid var(--ui-line); }
+.v-toc a { color: var(--ui-muted); text-decoration: none; }
+h2.v-h { margin: 36px 0 12px; font-size: 20px; }
+.v-idea dt { font-weight: 600; margin-top: 10px; }
+.v-idea dd { margin: 2px 0 0; max-width: 100ch; }
+.v-marcos { display: flex; gap: 20px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+.v-frame { margin: 0; flex: none; }
+.v-frame figcaption { color: var(--ui-muted); margin-bottom: 6px; }
+.v-frame iframe { display: block; border: 1px solid var(--ui-line); background: #fff; }
+.v-tabla { border-collapse: collapse; background: var(--ui-panel); }
+.v-tabla th, .v-tabla td { border: 1px solid var(--ui-line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.v-ok { color: #1e7a3c; font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="v-head"><div class="v-wrap">
+  <p class="v-muted">Dentissa · spec 038 · /design-spec 038, ronda 3 con el motor creativo de AI-DD 1.16.0 (semilla del reparto 371542)</p>
+  <h1>Opción C · «La línea de abound»</h1>
+  <p>Página de prueba a ancho real: <a href="opcion-c-pagina.html">opcion-c-pagina.html</a> (ábrela y recórrela: escenas, entradas y la cosa viva funcionan sin red).</p>
+</div></header>
+<nav class="v-toc" aria-label="Contenido de la opción"><div class="v-wrap"><ul>
+  <li><a href="#idea">Idea</a></li><li><a href="#pantallas">Pantallas</a></li><li><a href="#movimiento">Movimiento</a></li><li><a href="#color">Contraste</a></li><li><a href="#compartir">Al compartir</a></li></ul></div></nav>
+<main class="v-wrap">
+<h2 class="v-h" id="idea">Idea</h2>
+<dl class="v-idea"><dt>Modo y registro</dt><dd>Persuadir · <strong>firme</strong> · estrategia de color <strong>comprometida</strong> (cabecera, velo de la portada, marquesina y pie en rosa: ~35 % de la superficie). Escena física: alguien en el móvil, en la calle o en el trabajo, a cualquier hora, decidiendo si llama o agenda.</dd>
+<dt>Idea</dt><dd>En esta página, <strong>el letrero de horario de la puerta de Av. Insurgentes</strong> se convierte en <strong>una franja viva que dice si la consulta está abierta ahora, pasa por la página en tipo grande y vuelve en la ubicación y el pie</strong>. La portada es la de abound: la consulta en grande y el mensaje encima.</dd>
+<dt>Inventario</dt><dd>1 · el nombre «Melissa López N.» y su logo de la muela con la M; 2 · el lugar: Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich. (ciudad del puerto, el mapa lo enseña); 3 · el horario de la puerta: lunes a viernes 9:00–20:00, sábados 9:00–14:00; 4 · la promesa del «Sobre nosotros»: te explicamos qué, cuánto dura y qué opciones tienes; 5 · la agenda en línea «para que no tengas que llamar en horario de trabajo»; 6 · las 7 categorías activas y sus 15 servicios; 7 · el teléfono 753 000 0000; 8 · el rosa de la marca y la bata azul de la foto; 9 · el sillón y la luz de la consulta (la foto); 10 · la tarjeta de cita que se lleva el paciente. Familias: lugar (2, 9), ritual y tiempo (3, 5, 10), oficio y catálogo (4, 6), marca (1, 7, 8).</dd>
+<dt>Jugada y escena</dt><dd>Escena <code>hoja-sobre-imagen</code> (CSS, sin script): la portada a sangre queda fija una pantalla y «Sobre nosotros» sube encima como una hoja. Jugada <code>marquesina</code>: «Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00 · Agenda en línea a cualquier hora» en tipo grande, despacio, entre servicios y ubicación (decorativa: el horario está en el texto).</dd>
+<dt>Cosa viva</dt><dd>«¿Abierto ahora?»: con el horario real y la hora de Lázaro Cárdenas dice «Abierto ahora · cierra a las 20:00» o «Cerrado ahora · abre el lunes a las 9:00», junto a «Agendar mi primera cita». Sin JavaScript se lee el horario completo.</dd>
+<dt>Plenitud</dt><dd>Titular de portada fluido de 40 a 96 px (≥ 5× el cuerpo), interlineado 0.98 y −0.03em; foto a sangre (la de abound, ver riesgo); tarjetas de las 7 categorías con su número de tratamientos; ubicación completa; pie con el nombre a todo el ancho.</dd>
+<dt>Pruebas</dt><dd>Competidor: otra clínica del centro sin agenda en línea no puede decir «abierto ahora… o agenda a cualquier hora»; una con agenda sí, así que la idea se apoya también en el nombre, el lugar y el horario reales. Cinco segundos: titular, «Agendar mi primera cita» y si está abierta ahora, en la primera pantalla. Vecino: la opción B (placa sobre fondo claro) y el panel del paciente (Roboto, barra lateral): ninguno tiene portada a sangre ni capítulos de color. Inspección: 0 FAIL; avisos defendidos en la crítica.</dd></dl>
+<p class="v-muted"><strong>Riesgo asumido:</strong> foto de banco de abound (dentista y paciente que no son la consulta; origen y licencia sin confirmar): se presenta como ambiente, sin decir que es el equipo, y se cambia por una foto real cuando la haya; tarjetas con icono (rozan el cliché «tríada de tarjetas»: aquí son 7 categorías reales del catálogo, con su número de tratamientos); marquesina (decorativa, una sola).</p>
+<h2 class="v-h" id="pantallas">Pantallas · página de inicio a 320, 390, 900 y 1440 px</h2>
+<p class="v-muted">Cada marco es la página de prueba real (desplázate dentro). <code>/servicios</code> mantiene la estructura aprobada con la cabecera, el pie, los botones en píldora y el título centrado de esta opción.</p>
+<div class="v-marcos"><figure class="v-frame" id="opcion-c-pagina-320"><figcaption>320 px</figcaption><iframe src="opcion-c-pagina.html" width="320" height="1500" title="Página de prueba a 320 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-c-pagina-390"><figcaption>390 px</figcaption><iframe src="opcion-c-pagina.html" width="390" height="1500" title="Página de prueba a 390 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-c-pagina-900"><figcaption>900 px</figcaption><iframe src="opcion-c-pagina.html" width="900" height="1300" title="Página de prueba a 900 px" loading="lazy"></iframe></figure><figure class="v-frame" id="opcion-c-pagina-1440"><figcaption>1440 px</figcaption><iframe src="opcion-c-pagina.html" width="1440" height="1100" title="Página de prueba a 1440 px" loading="lazy"></iframe></figure></div>
+<h2 class="v-h" id="movimiento">Movimiento</h2>
+<p><strong>M-1 · escena <code>hoja-sobre-imagen</code></strong> — filtro: una vez por visita, explica el paso de la portada al contenido. Portada <code>position: sticky</code> 100svh y «Sobre nosotros» con fondo y <code>z-index</code> mayor que sube encima; sin script. Reducido, sin JS y teléfono: igual (es desplazamiento nativo). Coste: 0 kB.</p>
+<p><strong>M-2 · jugada <code>marquesina</code></strong> — filtro: decorativa, una franja; tipo de 34 a 80 px, <code>translateX(-50%)</code> lineal en <code>--duration-marquesina</code> (48 s), se para con el puntero; con movimiento reducido no se mueve. <code>aria-hidden</code>: el horario está en el texto.</p>
+<p><strong>M-3 · entradas por sección</strong> — títulos <code>line</code>, párrafos <code>rise</code>, tarjetas una a una (escalonado 80 ms, cuatro pasos como máximo), mapa desde una máscara; una sola vez al llegar al 88 % de la ventana, <code>--duration-reveal</code> 800 ms con <code>--ease-expo</code>. Sin JS y con movimiento reducido, todo visible desde el principio.</p>
+<p><strong>M-4 · respuesta</strong> — botones que ceden al pulsar (<code>scale(0.97)</code>, 150 ms) y tarjetas que cambian borde, sombra e icono con el puntero o el foco (sin levantarse). Táctil: el foco basta.</p>
+<p><strong>M-5 · cosa viva</strong> — «¿Abierto ahora?» (sin animación). Coste total del script común: ~1.5 kB.</p>
+<h2 class="v-h" id="color">Contraste</h2>
+<table class="v-tabla"><thead><tr><th>Par</th><th>Contraste</th><th>Mínimo</th><th></th></tr></thead><tbody><tr><td>Titular y texto de la portada: blanco sobre el velo (82 %, peor caso sobre la pared blanca)</td><td>6.41:1</td><td>texto</td><td class="v-ok">cumple</td></tr><tr><td>«prioridad.» en --p200 sobre el velo (peor caso)</td><td>4.06:1</td><td>texto grande (≥ 3:1)</td><td class="v-ok">cumple</td></tr><tr><td>Parte del titular sobre el degradado del velo (≈ 61 % en el 75 % del ancho)</td><td>≥ 3.6:1</td><td>texto grande (≥ 3:1)</td><td class="v-ok">cumple</td></tr><tr><td>«Abierto ahora»: --p600 sobre blanco</td><td>7.00:1</td><td>texto</td><td class="v-ok">cumple</td></tr><tr><td>Botón principal: blanco sobre --p500 · cabecera: blanco sobre --p500</td><td>5.42:1</td><td>texto</td><td class="v-ok">cumple</td></tr><tr><td>Marquesina: --p100 sobre --p600 · pie: blanco sobre --p600</td><td>6.05:1 · 7.00:1</td><td>texto</td><td class="v-ok">cumple</td></tr><tr><td>Tarjeta: texto sobre blanco · --p600 sobre blanco · icono --p600 sobre --p100</td><td>21.00:1 · 7.00:1 · 6.05:1</td><td>texto / no texto</td><td class="v-ok">cumple</td></tr><tr><td>Borde del botón secundario y de la tarjeta con foco: --border-control sobre blanco</td><td>3.93:1</td><td>no texto (≥ 3:1)</td><td class="v-ok">cumple</td></tr></tbody></table>
+<h2 class="v-h" id="compartir">Al compartir</h2>
+<p class="v-muted">Sin Open Graph ni imagen para compartir: fuera de alcance de la 038 (SE6 en <code>docs/seo.md</code>). Los íconos del sitio siguen en SE5.</p>
+</main>
+</body>
+</html>

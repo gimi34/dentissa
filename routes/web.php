@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitasController;
 use App\Http\Controllers\ClienteCitasController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DisenioAuditoriaController;
 use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PacientesController;
+use App\Http\Controllers\PaginasPublicasController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\RegisterController;
@@ -26,19 +29,18 @@ Route::post('/registro/contacto', [RegisterController::class, 'contactoStore'])-
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:google')->name('auth.google.callback');
 
-// ── Raíz ────────────────────────────────────────────────────────────────
-Route::get('/', function () {
-    if (auth()->check()) {
-        return match (auth()->user()->rol) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'dentista' => redirect()->route('dentista.dashboard'),
-            'asistente' => redirect()->route('asistente.dashboard'),
-            default => redirect()->route('cliente.dashboard'),
-        };
-    }
+// ── Páginas públicas (spec 038) ─────────────────────────────────────────
+Route::get('/', [PaginasPublicasController::class, 'inicio'])->name('inicio');
+Route::get('/servicios', [PaginasPublicasController::class, 'servicios'])->name('servicios.publicos');
 
-    return redirect('/login');
-});
+// ── Vista previa del diseño (spec 020, D19) ─────────────────────────────
+// Solo en local (TM15): datos de muestra, sin sesión ni base, para medir con design/medir.mjs.
+if (app()->environment('local')) {
+    Route::get('/_disenio/020/{pantalla}', [DisenioAuditoriaController::class, 'show'])
+        ->where('pantalla', implode('|', DisenioAuditoriaController::PANTALLAS))
+        ->withoutMiddleware('web')
+        ->name('disenio.020');
+}
 
 // ── Admin ───────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -87,6 +89,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Placeholders
     Route::get('/reportes', fn () => view('placeholder', ['titulo' => 'Reportes']))->name('reportes');
+
+    // Registro de auditoría (spec 020): solo consulta, sin rutas de modificación (CA2).
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
 
     // Usuarios
     // El orden importa: Laravel resuelve por orden de registro, así que

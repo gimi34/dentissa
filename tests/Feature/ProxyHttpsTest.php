@@ -60,9 +60,10 @@ class ProxyHttpsTest extends TestCase
         $this->assertSame('https://'.$this->host(), $respuesta->getContent());
     }
 
+    /** Spec 038 (D10): con la página de inicio, `/` ya no redirige; la redirección se prueba con `/admin`. */
     public function test_detras_del_proxy_las_redirecciones_salen_en_https(): void
     {
-        $respuesta = $this->withHeaders(['X-Forwarded-Proto' => 'https'])->get('/');
+        $respuesta = $this->withHeaders(['X-Forwarded-Proto' => 'https'])->get('/admin');
 
         $respuesta->assertRedirect('https://'.$this->host().'/login');
     }
@@ -106,7 +107,7 @@ class ProxyHttpsTest extends TestCase
         $respuesta = $this->withHeaders([
             'X-Forwarded-Proto' => 'https',
             'X-Forwarded-Port' => '9999',
-        ])->get('/');
+        ])->get('/admin');
 
         $this->assertStringNotContainsString(':9999', (string) $respuesta->headers->get('Location'));
         $this->assertStringEndsWith('://'.$this->host().'/login', (string) $respuesta->headers->get('Location'));

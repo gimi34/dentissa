@@ -54,6 +54,19 @@ main() {
 
     paso "Obteniendo ${ref}"
     git fetch --tags origin
+
+    # Spec 020 (D22, A68; /review R4, R17): el scheduler de la versión instalada se para con su
+    # propio Compose después del fetch (si el fetch falla, sigue en marcha) y antes del checkout,
+    # para que no escriba en la base mientras se cambia de versión. Si no se puede leer la lista
+    # de servicios, la vuelta se detiene. Una versión de destino sin scheduler lo pierde con
+    # --remove-orphans.
+    local servicios
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml (¿faltan archivos en /opt/dentissa/entorno?)"
+    if grep -qxF scheduler <<< "${servicios}"; then
+        paso "Parando el scheduler de la versión instalada"
+        "${compose[@]}" stop scheduler
+    fi
+
     git -c advice.detachedHead=false checkout "${ref}"
 
     # Una versión anterior a la 032 no tiene el vigilante: el temporizador
@@ -69,13 +82,18 @@ main() {
     if [[ "${opcion}" == "--sin-levantar" ]]; then
         paso "Parando app y web; db queda lista para cargar la copia (restaurar.sh)"
         "${compose[@]}" stop app web
-        "${compose[@]}" up -d db
+        "${compose[@]}" up -d --remove-orphans db
         esperar_db
         return 0
     fi
 
-    paso "Levantando app y web"
-    "${compose[@]}" up -d app web
+    paso "Levantando app, web y el scheduler"
+    # La lista de la versión de destino, ya con su checkout.
+    servicios="$("${compose[@]}" config --services)" || error "no se pudo leer docker-compose.prod.yml de ${ref}"
+    "${compose[@]}" up -d --remove-orphans app web
+    if grep -qxF scheduler <<< "${servicios}"; then
+        "${compose[@]}" up -d scheduler
+    fi
 
     paso "Cachés"
     "${compose[@]}" exec -T -u www-data app php artisan config:cache

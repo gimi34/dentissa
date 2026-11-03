@@ -700,6 +700,101 @@ class VigilanteTest extends TestCase
     }
 
     /** Ejecuta `$prueba` con el canal `seguridad` leído a través de {@see FlujoParcial}. */
+    /**
+     * Spec 020 (D16): línea `auditoria.fallo` del canal `seguridad`, con la forma que escribe
+     * `Auditoria` cuando no puede guardar un evento: claves fijas y el `Context` en `extra`.
+     */
+    private function escribirFalloDeAuditoria(int $cuantos = 1): void
+    {
+        $momento = CarbonImmutable::now();
+        $linea = json_encode([
+            'message' => 'auditoria.fallo',
+            'context' => ['accion' => 'expediente_consultado', 'critico' => true, 'error' => 'QueryException HY000'],
+            'level' => 400,
+            'level_name' => 'ERROR',
+            'channel' => 'seguridad',
+            'datetime' => $momento->format('Y-m-d\TH:i:s.uP'),
+            'extra' => ['request_id' => '7c1e5b0a-3f2d-4e8b-9a61-0d4c2b7e9f13', 'actor_id' => '3800c172-24e3-11f1-8967-0045e2e7d554'],
+        ]);
+
+        File::append($this->carpeta.'/seguridad-'.$momento->format('Y-m-d').'.log', str_repeat($linea."\n", $cuantos));
+    }
+
+    /** Spec 020, CA14: un solo evento que no se pudo guardar ya avisa. */
+    public function test_un_fallo_de_auditoria_avisa_por_correo(): void
+    {
+        $this->iniciar();
+        $this->escribirFalloDeAuditoria();
+
+        $this->assertTrue($this->vigilar());
+
+        Mail::assertSentCount(1);
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'auditoria'
+            && $aviso->recuento === 1
+            && $aviso->hasTo(self::DESTINO));
+    }
+
+    /** Spec 020, CA14: el mismo silencio de 30 minutos por tipo, con los acumulados al acabar. */
+    public function test_los_avisos_de_auditoria_respetan_el_silencio(): void
+    {
+        $this->iniciar();
+        $this->escribirFalloDeAuditoria();
+        $this->vigilar();
+
+        $this->travel(10)->minutes();
+        $this->escribirFalloDeAuditoria(2);
+        $this->vigilar();
+        Mail::assertSentCount(1);
+
+        $this->travel(21)->minutes();
+        $this->vigilar();
+
+        Mail::assertSentCount(2);
+        Mail::assertSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'auditoria'
+            && $aviso->recuento === 2
+            && $aviso->anterior !== null);
+    }
+
+    /**
+     * Spec 020 (D16): hoy el vigilante cuenta como fallo de acceso cualquier línea del canal, y una
+     * de auditoría inflaría el recuento del aviso de accesos.
+     */
+    public function test_un_fallo_de_auditoria_no_cuenta_como_fallo_de_acceso(): void
+    {
+        $this->iniciar();
+        $this->escribirFallos(11);
+        $this->escribirFalloDeAuditoria(3);
+
+        $this->vigilar();
+
+        $this->assertAvisoDeAccesos(11);
+        Mail::assertNotSent(AvisoProduccion::class, fn (AvisoProduccion $aviso) => $aviso->tipo === 'accesos' && $aviso->recuento !== 11);
+    }
+
+    /** Spec 020, TM16: el correo no lleva nada de la línea ni del evento. */
+    public function test_el_aviso_de_auditoria_no_lleva_datos_del_evento(): void
+    {
+        $this->iniciar();
+        $this->escribirFalloDeAuditoria();
+
+        $this->vigilar();
+
+        $enviados = 0;
+        Mail::assertSent(AvisoProduccion::class, function (AvisoProduccion $aviso) use (&$enviados) {
+            if ($aviso->tipo !== 'auditoria') {
+                return false;
+            }
+            $enviados++;
+            $texto = $aviso->envelope()->subject."\n".$aviso->render();
+            foreach (['expediente_consultado', 'QueryException', 'HY000', '7c1e5b0a', '3800c172', 'critico'] as $prohibido) {
+                $this->assertStringNotContainsString($prohibido, $texto);
+            }
+
+            return true;
+        });
+        $this->assertSame(1, $enviados);
+    }
+
     private function conSeguridadIlegible(string $archivo, callable $prueba): void
     {
         stream_wrapper_register('parcial', FlujoParcial::class);

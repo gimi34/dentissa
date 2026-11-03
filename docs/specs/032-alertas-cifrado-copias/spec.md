@@ -125,3 +125,4 @@ Ninguna.
 | 2026-10-25 | Vuelve a approved: `/review` r2 changes_requested (R23–R29, tareas T063–T072) | `/review 032 --rerun` |
 | 2026-10-25 | Implementada de nuevo: correcciones de /review r2 (T063–T072) con sus tests en verde (422 en la suite) | `/implement 032` |
 | 2026-10-27 | Liberada en v0.11.0 (review r3 approved; EX3 aprobada por el responsable) | `/release 032` |
+| 2026-10-31 | Comportamiento modificado por 020 en v0.12.0: el vigilante avisa también de `auditoria` (020 CA14) y `volver.sh` y `restaurar.sh` paran el `scheduler` antes de cargar una copia | /release |

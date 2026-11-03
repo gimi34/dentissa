@@ -16,7 +16,7 @@
 <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
 <aside class="sidebar" id="menu-principal" aria-label="Menú">
     <div class="sidebar-logo">
-        <img src="{{ asset('images/logo-icon.png') }}" alt="Melissa López N.">
+        <img src="{{ asset('images/logo-icon.png') }}" alt="Melissa López N." data-origen="propia">
         {{-- En el móvil la imagen desaparece sobre el panel blanco: el logo se pinta con una máscara (spec 033, A9; spec 034, D10). --}}
         <span class="sidebar-marca" role="img" aria-label="Melissa López N."></span>
         <button type="button" class="menu-cerrar" aria-label="Cerrar menú">
@@ -80,6 +80,14 @@
                     <path d="M16 3.5a4 4 0 0 1 0 7M20 20c0-3-1.8-5.5-4-6.5"/>
                 </svg>
                 Usuarios
+            </a>
+            {{-- Spec 020: la última entrada de la barra, para no desplazar ninguna otra. --}}
+            <a href="/admin/auditoria" class="nav-item {{ request()->is('admin/auditoria*') ? 'active' : '' }}" @if(request()->is('admin/auditoria*')) aria-current="page" @endif>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+                Auditoría
             </a>
 
         @elseif(auth()->user()->rol === 'dentista')

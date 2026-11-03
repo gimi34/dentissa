@@ -1,6 +1,6 @@
 ---
 status: inferred
-updated: 2026-10-16
+updated: 2026-10-20
 ---
 
 # SEO técnico de Dentissa
@@ -10,18 +10,27 @@ cómo se ve al compartirlo (`shared/contract.md` → "SEO técnico"). Los temas 
 en `shared/seo-checklist.md`; aquí van las reglas del sitio, el estado de cada ruta y las brechas.
 No incluye palabras clave, estrategia de contenido ni enlaces externos.
 
-Dentissa es una app privada de gestión de la clínica. Lo único público es el acceso y el registro de
-pacientes. Se indexa solo el registro (decisión del usuario, 2026-10-16; la fila de `/registro` del inventario), que invita a los pacientes
-a crear su cuenta; el resto queda tras el inicio de sesión.
+Dentissa es una app privada de gestión de la clínica. Lo público es la página de inicio (`/`) y la
+lista de servicios (`/servicios`), desde la spec 038, más el acceso y el registro de pacientes. Se
+indexan `/registro` (decisión del usuario, 2026-10-16), `/` y `/servicios` (decisión del usuario en la
+spec 038, 2026-10-20), que presentan la clínica e invitan a crear la cuenta; el resto queda tras el
+inicio de sesión.
 
 ## Reglas del sitio
 - URL canónica: https://dentissa.app · variante única: sin `www` (`www.dentissa.app` no resuelve;
-  comprobado el 2026-10-16) y sin barra final. `http://` redirige a `https://` con `301` (nginx de
-  producción; `deploy/verificar.sh` lo comprueba).
+  comprobado el 2026-10-16) y sin barra final, salvo la raíz, cuya canónica es
+  `https://dentissa.app/` (spec 038, `/analyze` A17). `http://` redirige a `https://` con `301` (nginx
+  de producción; `deploy/verificar.sh` lo comprueba con `/admin` desde la spec 038).
 - Idiomas: es (un solo idioma; `<html lang="es">` en todas las vistas).
 - Renderizado: ssr — Laravel con Blade renderiza en el servidor el HTML completo de cada ruta; no
   depende de JavaScript.
-- Se indexa: `/registro` (decisión del usuario, 2026-10-16).
+- Se indexa: `/registro` (decisión del usuario, 2026-10-16), `/` y `/servicios` (spec 038,
+  decisión del usuario, 2026-10-20).
+- JavaScript: `/` y `/servicios` cargan un solo script propio, `public/js/publico.js` (≈ 8 kB, con
+  `defer`), que solo añade la pastilla, la fila de hoy, las entradas y la escena: el contenido llega
+  entero en el HTML del servidor y se lee sin él (spec 038, D16). `/` incrusta el mapa de Google
+  (`iframe` perezoso), cuyo JavaScript es de terceros y no cuenta para el límite de P10: excepción
+  aceptada por el usuario en el plan de la 038 (2026-10-20).
 - No se indexa: `/login` (inicio de sesión; decisión del usuario, 2026-10-16, conforme a
   `shared/seo-checklist.md` §2), `/registro/contacto` (paso con sesión), la 404, `/up` (salud) y
   todas las rutas tras inicio de sesión — mecanismo: `noindex` en meta (pendiente, SE2); las rutas
@@ -43,7 +52,8 @@ permiso del usuario, con `GET` a https://dentissa.app (solo códigos de estado y
 
 | Ruta | Indexable | Título | Descripción | Canónica | `h1` | Open Graph | Datos estructurados | Evidencia |
 |---|---|---|---|---|---|---|---|---|
-| `/` | no (redirige) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `302` a `/login` en local y en producción (`routes/web.php:30`) |
+| `/` | sí (spec 038) | ✅ «Dentissa · Tu sonrisa, nuestra prioridad» | ✅ propia | ✅ `https://dentissa.app/` | ✅ uno («Tu sonrisa, nuestra prioridad.») | ➖ (fuera de alcance, SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` sin sesión (con sesión, `302` al panel del rol) · `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` · `resources/views/publico/inicio.blade.php` |
+| `/servicios` | sí (spec 038) | ✅ «Servicios · Dentissa» | ✅ propia | ✅ `https://dentissa.app/servicios` | ✅ uno («Nuestros servicios») | ➖ (SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` con y sin sesión · `PaginasPublicasTest` · `resources/views/publico/servicios.blade.php` |
 | `/registro` | sí | ✅ «Dentissa · Crear cuenta» | ❌ sin `<meta name="description">` | ❌ sin `<link rel="canonical">` | ✅ uno («Únete a nuestra comunidad») | ❌ | ❌ | `curl -s /registro` · `resources/views/auth/register.blade.php:6,33`; `200` en producción |
 | `/login` | no (inicio de sesión) | ✅ «Dentissa · Iniciar sesión» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ❌ sin `noindex` (`curl -s /login`; sin `X-Robots-Tag`) · `resources/views/auth/login.blade.php:6` |
 | `/registro/contacto` | no (paso con sesión) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `302` a `/registro` sin sesión |
@@ -71,7 +81,7 @@ Correcciones:
 ### SE3 · media — Sin `sitemap.xml` y `robots.txt` sin sitemap
 Evidencia: `/sitemap.xml` → `404` en local y en producción; `public/robots.txt` sin línea `Sitemap:`.
 Correcciones:
-- SE3.a `sitemap.xml` con la única ruta indexable (`https://dentissa.app/registro`) — estado: pendiente
+- SE3.a `sitemap.xml` con las rutas indexables (`https://dentissa.app/registro`, `https://dentissa.app/` y `https://dentissa.app/servicios`, spec 038) — estado: pendiente
 - SE3.b `Sitemap: https://dentissa.app/sitemap.xml` en `robots.txt` — estado: pendiente
 
 ### SE4 · baja — Sin página 404 propia

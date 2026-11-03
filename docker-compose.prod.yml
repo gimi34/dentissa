@@ -16,6 +16,8 @@ services:
       context: .
       dockerfile: docker/prod/Dockerfile
       target: app
+    # Spec 020 (D2): nombre fijo de la imagen que se construye, para que el scheduler la reutilice.
+    image: dentissa-prod-app:produccion
     restart: unless-stopped
     env_file:
       - ${DENTISSA_ENV_DIR:-/opt/dentissa/entorno}/app.env
@@ -24,6 +26,29 @@ services:
       - ./docker/nginx/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
       # Spec 032 (D10): el vigilante cuenta las respuestas 5xx del log de acceso.
       - nginx_logs:/var/log/nginx:ro
+    networks:
+      - produccion
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Spec 020 (D2, TM14): la purga mensual del registro de auditoría. La misma imagen que app, sin
+  # construir otra ni descargarla, con www-data, solo app.env, la misma configuración de PHP y sin
+  # puertos. Se reinicia solo, como app (030 CA9). Solo programa auditoria:purgar.
+  scheduler:
+    image: dentissa-prod-app:produccion
+    pull_policy: never
+    restart: unless-stopped
+    user: www-data
+    command: ["php", "artisan", "schedule:work"]
+    # /review 020 R23: un proceso de consola no necesita capacidades ni escalar privilegios.
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    env_file:
+      - ${DENTISSA_ENV_DIR:-/opt/dentissa/entorno}/app.env
+    volumes:
+      - storage:/var/www/storage
+      - ./docker/nginx/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
     networks:
       - produccion
     depends_on:

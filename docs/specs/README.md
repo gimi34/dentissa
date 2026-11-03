@@ -26,7 +26,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
-| 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | approved | — | — (2026-09-28) |
+| 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | released (v0.12.0) | — | — (2026-09-28) |
 | 024 | [dependencias-seguras](024-dependencias-seguras/spec.md) | Transversal | released (v0.1.0) | — | — (2026-09-29) |
 | 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | released (v0.2.0) | — | — (2026-09-29) |
 | 026 | [estados-cita](026-estados-cita/spec.md) | Agenda | released (v0.3.0) | — | — (2026-10-02) |
@@ -39,6 +39,9 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 033 | [movil-paciente](033-movil-paciente/spec.md) | Transversal | released (v0.7.0) | — | — (2026-10-11) |
 | 034 | [movil-personal](034-movil-personal/spec.md) | Transversal | released (v0.8.0) | — | — (2026-10-12) |
 | 035 | [movil-pacientes-expedientes](035-movil-pacientes-expedientes/spec.md) | Transversal | released (v0.9.0) | — | — (2026-10-19) |
+| 038 | [pagina-inicio](038-pagina-inicio/spec.md) | Transversal | implemented | — | — (2026-10-20) |
+| 039 | [galeria-trabajos](039-galeria-trabajos/spec.md) | Transversal | approved | — | — (2026-10-20) |
+| 040 | [promociones](040-promociones/spec.md) | Transversal | approved | — | — (2026-10-20) |
 | 041 | [recuperar-contrasena](041-recuperar-contrasena/spec.md) | Identidad | approved | — | — (2026-10-27) |
 | 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
 
