@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
@@ -52,13 +54,13 @@ class PerfilController extends Controller
                     ->withInput($request->except('contrasena_correo'));
             }
 
-            if (! Hash::check((string) ($data['contrasena_correo'] ?? ''), $user->password_hash)) {
-                $mensaje = filled($data['contrasena_correo'] ?? null)
-                    ? 'La contraseña actual no es correcta.'
-                    : 'Escribe tu contraseña actual para cambiar el correo.';
+            $error = blank($data['contrasena_correo'] ?? null)
+                ? 'Escribe tu contraseña actual para cambiar el correo.'
+                : $this->errorDeContrasenaActual($user, $data['contrasena_correo']);
 
+            if ($error !== null) {
                 return back()
-                    ->withErrors(['contrasena_correo' => $mensaje])
+                    ->withErrors(['contrasena_correo' => $error])
                     ->withInput($request->except('contrasena_correo'));
             }
         }
@@ -109,8 +111,8 @@ class PerfilController extends Controller
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
-        if ($user->password_hash && ! Hash::check($data['password_actual'], $user->password_hash)) {
-            return back()->withErrors(['password_actual' => 'La contraseña actual no es correcta.']);
+        if ($user->password_hash && ($error = $this->errorDeContrasenaActual($user, $data['password_actual'])) !== null) {
+            return back()->withErrors(['password_actual' => $error]);
         }
 
         DB::table('usuarios')->where('id', $user->id)->update([
@@ -119,5 +121,28 @@ class PerfilController extends Controller
         ]);
 
         return back()->with('success', 'Tu contraseña fue actualizada.');
+    }
+
+    /**
+     * Spec 041, D23 (/review R32): 5 fallos por minuto por cuenta, compartidos por los dos formularios. Pasado
+     * el límite no se comprueba ni la correcta, para que la respuesta no revele si acertó.
+     */
+    private function errorDeContrasenaActual(Usuario $user, string $contrasena): ?string
+    {
+        $clave = 'perfil-contrasena:'.$user->id;
+
+        if (RateLimiter::tooManyAttempts($clave, 5)) {
+            return 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.';
+        }
+
+        if (Hash::check($contrasena, $user->password_hash)) {
+            RateLimiter::clear($clave);
+
+            return null;
+        }
+
+        RateLimiter::hit($clave, 60);
+
+        return 'La contraseña actual no es correcta.';
     }
 }

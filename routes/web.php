@@ -39,7 +39,7 @@ if (config('acceso.recuperar_contrasena')) {
         Route::get('/olvidada', 'solicitudForm')->name('solicitud');
         Route::post('/olvidada', 'solicitar')->middleware('throttle:solicitar-enlace')->name('solicitar');
         Route::get('/enviada', 'enviada')->name('enviada');
-        Route::get('/nueva/{token}', 'nuevaForm')->name('nueva');
+        Route::get('/nueva/{token}', 'nuevaForm')->middleware('throttle:abrir-enlace')->name('nueva');
         Route::post('/nueva', 'restablecer')->middleware('throttle:fijar-contrasena')->name('restablecer');
     });
 }
