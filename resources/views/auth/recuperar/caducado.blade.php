@@ -13,10 +13,17 @@
         <h1 class="form-title">Este enlace ya no sirve</h1>
         <p class="form-subtitle">Tu contraseña no cambió.</p>
     </div>
-    <div class="alert alert-error" role="alert">
-        @include('auth.recuperar.partes.icono-error')
-        <span>Pasaron más de 60 minutos, ya se usó o pediste uno más nuevo.</span>
-    </div>
+    @if($espera ?? false)
+        <div class="alert alert-espera" role="alert">
+            @include('auth.recuperar.partes.icono-espera')
+            <span><strong>Demasiados intentos.</strong>Espera un minuto y vuelve a intentarlo.</span>
+        </div>
+    @else
+        <div class="alert alert-error" role="alert">
+            @include('auth.recuperar.partes.icono-error')
+            <span>Pasaron más de 60 minutos, ya se usó o pediste uno más nuevo.</span>
+        </div>
+    @endif
     <a class="btn-submit" href="{{ route('contrasena.solicitud') }}">Pedir un enlace nuevo</a>
     <p class="enlace-volver"><a class="forgot-link" href="{{ route('login') }}">Volver a iniciar sesión</a></p>
     <dl class="talon">

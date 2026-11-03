@@ -26,7 +26,7 @@
             <label class="field-label" for="clave">Contraseña nueva</label>
             <div class="field-wrap">
                 @include('auth.recuperar.partes.icono-clave')
-                <input class="field @error('password') error @enderror" id="clave" name="password" type="password" autocomplete="new-password" required aria-describedby="clave-ayuda @error('password') clave-error @enderror" @error('password') aria-invalid="true" @enderror>
+                <input class="field @error('password') error @enderror" id="clave" name="password" type="password" autocomplete="new-password" required aria-describedby="clave-ayuda @error('password') clave-error @enderror" @error('password') autofocus aria-invalid="true" @enderror>
             </div>
             <p class="field-ayuda" id="clave-ayuda">Al menos 8 caracteres.</p>
             @error('password')
@@ -37,7 +37,7 @@
             <label class="field-label" for="clave2">Repite la contraseña</label>
             <div class="field-wrap">
                 @include('auth.recuperar.partes.icono-clave')
-                <input class="field @error('password_confirmation') error @enderror" id="clave2" name="password_confirmation" type="password" autocomplete="new-password" required @error('password_confirmation') aria-invalid="true" aria-describedby="clave2-error" @enderror>
+                <input class="field @error('password_confirmation') error @enderror" id="clave2" name="password_confirmation" type="password" autocomplete="new-password" required @if($errors->has('password_confirmation') && ! $errors->has('password')) autofocus @endif @error('password_confirmation') aria-invalid="true" aria-describedby="clave2-error" @enderror>
             </div>
             @error('password_confirmation')
                 <div class="error-msg" id="clave2-error">@include('auth.recuperar.partes.icono-error'){{ $message }}</div>

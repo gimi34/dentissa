@@ -15,7 +15,7 @@ use Illuminate\Support\ViewErrorBag;
  */
 class DisenioAccesoController extends Controller
 {
-    public const PANTALLAS = 'pedir|enviado|nueva|nueva-espera|caducado|espera|exito|correo-enlace|correo-aviso';
+    public const PANTALLAS = 'pedir|enviado|nueva|nueva-espera|caducado|caducado-espera|espera|exito|correo-enlace|correo-aviso';
 
     private const CORREO = 'paciente@correo.com';
 
@@ -37,6 +37,7 @@ class DisenioAccesoController extends Controller
             ]),
             'nueva-espera' => view('auth.recuperar.nueva', $this->datosDeNueva() + ['espera' => true]),
             'caducado' => view('auth.recuperar.caducado'),
+            'caducado-espera' => view('auth.recuperar.caducado', ['espera' => true]),
             'exito' => $this->exito(),
             'correo-enlace' => $this->correo(new EnlaceRestablecimiento($this->cuenta(), self::TOKEN)),
             'correo-aviso' => $this->correo(new ContrasenaCambiada($this->cuenta())),

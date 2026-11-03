@@ -8,6 +8,7 @@ use App\Models\Usuario;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -88,7 +89,7 @@ class RecuperarContrasenaController extends Controller
         $usuario = is_string($cuenta) ? $this->cuentaDelEnlace($cuenta, $token) : null;
 
         if ($usuario === null) {
-            return view('auth.recuperar.caducado');
+            return view('auth.recuperar.caducado', ['espera' => $request->session()->has('espera')]);
         }
 
         return view('auth.recuperar.nueva', [
@@ -174,6 +175,14 @@ class RecuperarContrasenaController extends Controller
                 Log::error('restablecimiento.correo_fallido', ['error' => class_basename($e)]);
             }
         })->afterResponse();
+
+        // /review R1: si este navegador tenía abierta la cuenta, la sesión se cierra aquí. Si no, `SesionVigente`
+        // la vaciaría al llegar a /login, y el mensaje de éxito con ella (CA3).
+        if ($request->user()?->is($usuario)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return redirect('/login')->with('contrasena_cambiada', true);
     }

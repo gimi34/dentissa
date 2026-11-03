@@ -22,7 +22,7 @@
             <label class="field-label" for="correo">Correo electrónico de tu cuenta</label>
             <div class="field-wrap">
                 @include('auth.recuperar.partes.icono-correo')
-                <input class="field @error('email') error @enderror" id="correo" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" value="{{ old('email') }}" required @error('email') aria-invalid="true" aria-describedby="correo-error" @enderror>
+                <input class="field @error('email') error @enderror" id="correo" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" value="{{ old('email') }}" required @error('email') autofocus aria-invalid="true" aria-describedby="correo-error" @enderror>
             </div>
             @error('email')
                 <div class="error-msg" id="correo-error">@include('auth.recuperar.partes.icono-error'){{ $message }}</div>
