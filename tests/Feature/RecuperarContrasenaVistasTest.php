@@ -342,6 +342,28 @@ class RecuperarContrasenaVistasTest extends TestCase
         }
     }
 
+    /** /review R10: el foco lee el error enlazado al campo; el aviso de arriba solo lo repite a la vista. */
+    public function test_el_login_anuncia_el_error_una_sola_vez(): void
+    {
+        foreach ([
+            'email' => ['email' => 'nadie@example.test', 'password' => 'una-contrasena-cualquiera'],
+            'password' => ['email' => 'nadie@example.test', 'password' => ''],
+        ] as $campo => $datos) {
+            $this->flushSession();
+            Cache::flush();
+            $this->from('/login')->post('/login', $datos);
+            $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+
+            $enfocados = $xpath->query('//input[@autofocus]');
+            $this->assertSame(1, $enfocados->length, "Con error en {$campo}: un campo enfocado.");
+            $this->assertSame($campo, $enfocados->item(0)->getAttribute('name'));
+            $this->assertSame($campo.'-error', $enfocados->item(0)->getAttribute('aria-describedby'), 'El error va enlazado al campo.');
+            $this->assertSame(1, $xpath->query('//*[@id="'.$campo.'-error"]')->length);
+            $this->assertSame(0, $xpath->query('//*[@role="alert"]')->length, 'Sin un segundo anuncio.');
+            $this->assertSame('true', $xpath->query('//*[contains(@class, "alert-error")]')->item(0)?->getAttribute('aria-hidden'), 'El aviso se sigue viendo, oculto al lector.');
+        }
+    }
+
     public function test_la_espera_desactiva_el_boton(): void
     {
         foreach ($this->html(['pedir' => 'solicitudEnEspera', 'contraseña nueva' => 'nuevaEnEspera']) as $nombre => $html) {

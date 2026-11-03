@@ -122,6 +122,17 @@ class PerfilCambioCorreoTest extends TestCase
         $this->assertStringContainsString('Para cambiar el correo, crea primero una contraseña', $html);
     }
 
+    /** /review R33: el error ya dice lo mismo que la ayuda. */
+    public function test_la_ayuda_no_se_repite_con_el_error(): void
+    {
+        $usuario = $this->crearUsuario(['password_hash' => null, 'google_id' => 'google-'.Str::random(10)]);
+
+        $this->guardar($usuario, ['email' => 'otro.buzon@example.test']);
+        $html = $this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, 'Para cambiar el correo, crea primero una contraseña'));
+    }
+
     /** La cadena que motiva R4: el enlace no puede llegar al buzón de quien no conoce la contraseña. */
     public function test_con_una_sesion_ajena_el_enlace_no_llega_a_otro_buzon(): void
     {
