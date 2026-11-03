@@ -205,9 +205,10 @@ Formato:
   - `deployment.md`: `RECUPERAR_CONTRASENA` en la tabla de variables (por defecto `false`; en producción, `true` tras T095), la migración expand y el `log_format` enmascarado del token.
   - `observability.md`: evento `contrasena_restablecida` (modo crítico) y log `restablecimiento.correo_fallido`. La corrección de «No existe registro de auditoría» que registra altas, roles, activación y cambios de contraseña sigue pendiente: la 041 cubre solo el restablecimiento y el resto va en la 021. La del query string en el log de acceso de producción sigue pendiente (→ objetivo 3): el formato nuevo enmascara solo el token; se anota que el vigilante ya lee ese formato. En la brecha de los logs de nginx se anota la excepción acotada a P8 del `error_log` (escribe el token cuando PHP falla), cuyo destino es la rotación y retención de OB8.b, que sigue pendiente (`/analyze` A28).
   - nota: 2026-11-03 — `RECUPERAR_CONTRASENA` y la migración expand en `deployment.md`; `contrasena_restablecida`, `restablecimiento.correo_fallido` y el `log_format` enmascarado en `observability.md`. OB1.f y OB8.a siguen pendientes; OB8.b recoge la excepción acotada a P8 del `error_log` (A28).
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
   - nota: 2026-11-03 — hecho: spec en `implemented` y fila de `docs/specs/README.md`.
   - nota: 2026-11-03 — hecho de nuevo tras /review ronda 1: spec en `implemented` y fila de `docs/specs/README.md`.
+  - nota: 2026-11-03 — hecho de nuevo tras T055–T060: spec en `implemented` y fila de `docs/specs/README.md`. Suite 702 en verde (12 009 aserciones), Pint limpio en 21 PHP, escáneres sin críticas ni altas y `medir.mjs` en verde.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación — no hay staging (objetivo 5): estas comprobaciones se hacen en producción en el paso 3 del Rollout, dentro de T097, con el interruptor encendido y una cuenta de prueba:

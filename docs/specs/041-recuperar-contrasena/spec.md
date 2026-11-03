@@ -1,7 +1,7 @@
 ---
 id: 041
 slug: recuperar-contrasena
-status: approved
+status: implemented
 created: 2026-10-27
 extends: [001]
 ---
