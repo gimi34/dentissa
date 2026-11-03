@@ -5,7 +5,7 @@ body { margin: 0; padding: 0; background-color: #FDF5F8; color: #000000; font-fa
 .correo-exterior { padding: 16px; }
 .correo { max-width: 480px; background-color: #FFFFFF; border-radius: 10px; }
 /* Sin degradado (Outlook), la cabecera se queda en el color de respaldo. */
-.correo-cab { background-color: #72243E; background-image: linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%); padding: 28px 20px; border-radius: 10px 10px 0 0; text-align: center; }
+.correo-cab { color: #FFFFFF; background-color: #72243E; background-image: linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%); padding: 28px 20px; border-radius: 10px 10px 0 0; text-align: center; }
 .correo-logo { display: block; width: 140px; height: auto; margin: 0 auto; }
 .correo-cuerpo { padding: 28px 20px 16px; }
 h1 { margin: 0 0 16px; color: #000000; font-size: 28px; font-weight: 600; line-height: 1.15; }
