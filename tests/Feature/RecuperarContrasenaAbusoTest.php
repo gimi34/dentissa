@@ -270,6 +270,21 @@ class RecuperarContrasenaAbusoTest extends TestCase
         }
     }
 
+    /** /review R2: probar enlaces en masa también pide esperar, aunque el enlace no valga (CA9). */
+    public function test_la_espera_con_un_enlace_invalido_pide_esperar(): void
+    {
+        $usuario = $this->crearUsuario();
+        $datos = ['token' => Str::random(64), 'cuenta' => $usuario->id, 'password' => 'contrasena-nueva-segura', 'password_confirmation' => 'contrasena-nueva-segura'];
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->fijar($datos);
+        }
+        $html = $this->followingRedirects()->post(self::RESTABLECER, $datos)->assertOk()->getContent();
+
+        $this->assertStringContainsString('Espera un minuto', $html, 'La pantalla pide esperar.');
+        $this->assertSame(1, substr_count($html, 'role="alert"'), 'Un solo aviso.');
+    }
+
     public function test_ningun_log_contiene_el_correo_el_token_ni_la_contrasena(): void
     {
         $logs = CapturaLogs::instalar();

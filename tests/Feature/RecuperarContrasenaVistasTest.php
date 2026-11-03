@@ -312,6 +312,36 @@ class RecuperarContrasenaVistasTest extends TestCase
         }
     }
 
+    /** /review R3: tras un error, el foco va al primer campo con error y el lector de pantalla lo anuncia. */
+    public function test_el_foco_va_al_primer_campo_con_error(): void
+    {
+        foreach ($this->html(['pedir' => 'solicitud', 'contraseña nueva' => 'nueva']) as $nombre => $html) {
+            $this->assertSame(0, $this->xpath($html)->query('//input[@autofocus]')->length, "{$nombre}: sin error, sin autofocus.");
+        }
+
+        $this->flushSession();
+        Cache::flush();
+        $this->post(self::SOLICITUD, ['email' => 'no-es-un-correo']);
+        $enfocados = $this->xpath($this->get(self::SOLICITUD)->assertOk()->getContent())->query('//input[@autofocus]');
+        $this->assertSame(1, $enfocados->length, 'Pedir: un campo enfocado.');
+        $this->assertSame('email', $enfocados->item(0)->getAttribute('name'));
+
+        $usuario = $this->crearUsuario();
+        $token = Password::broker()->createToken($usuario);
+        $direccion = self::RESTABLECER.'/'.$token.'?cuenta='.$usuario->id;
+        foreach ([
+            'password' => ['password' => '1234567', 'password_confirmation' => 'otra-distinta'],
+            'password_confirmation' => ['password' => 'contrasena-valida-larga', 'password_confirmation' => 'otra-distinta'],
+        ] as $esperado => $datos) {
+            $this->flushSession();
+            Cache::flush();
+            $this->post(self::RESTABLECER, ['token' => $token, 'cuenta' => $usuario->id] + $datos);
+            $enfocados = $this->xpath($this->get($direccion)->assertOk()->getContent())->query('//input[@autofocus]');
+            $this->assertSame(1, $enfocados->length, "Con error en {$esperado}: un campo enfocado.");
+            $this->assertSame($esperado, $enfocados->item(0)->getAttribute('name'));
+        }
+    }
+
     public function test_la_espera_desactiva_el_boton(): void
     {
         foreach ($this->html(['pedir' => 'solicitudEnEspera', 'contraseña nueva' => 'nuevaEnEspera']) as $nombre => $html) {

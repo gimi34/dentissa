@@ -78,6 +78,28 @@ class SesionVigenteTest extends TestCase
     }
 
     /** El restablecimiento completo, por el enlace y desde otro equipo sin sesión. */
+    /** /review R1: el mensaje de éxito no se pierde si ese mismo navegador tenía abierta la cuenta (CA3). */
+    public function test_con_la_cuenta_abierta_en_ese_navegador_se_ve_el_exito(): void
+    {
+        $usuario = $this->crearUsuario();
+        $this->entrarConContrasena($usuario);
+        $token = Password::broker()->createToken($usuario);
+        $this->app['auth']->forgetGuards();
+
+        $this->post('/contrasena/nueva', [
+            'token' => $token,
+            'cuenta' => $usuario->id,
+            'password' => self::NUEVA,
+            'password_confirmation' => self::NUEVA,
+        ])->assertRedirect(url('/login'));
+        $this->assertGuest();
+        $this->assertSame(1, (int) $usuario->fresh()->version_sesion, 'La versión de la cuenta subió.');
+
+        // Como en un servidor real, la cuenta se lee de nuevo en cada petición.
+        $this->app['auth']->forgetGuards();
+        $this->get('/login')->assertOk()->assertSee('Tu contraseña cambió.');
+    }
+
     private function restablecer(Usuario $usuario): void
     {
         $this->otroEquipo();
