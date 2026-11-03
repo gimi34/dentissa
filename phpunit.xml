@@ -52,5 +52,6 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="RECUPERAR_CONTRASENA" value="true"/>
     </php>
 </phpunit>

@@ -1,0 +1,203 @@
+/* Spec 041 · acceso: inicio de sesión y recuperación de contraseña, con el aspecto que tenía el inicio de
+   sesión antes de esta spec (D20, decisión del usuario, 2026-11-03): panel de marca a la izquierda desde
+   769 px y formulario sobre blanco; en el teléfono, solo el formulario. Solo tokens de system.md 1.11.0,
+   declarados aquí como hace auth.css, y la Roboto propia. Lo único que cambia de aquel login es lo que
+   exige WCAG 2.1 AA (P9): borde del campo, foco, botón en --p500 y zonas de toque de 44 px. */
+:root {
+  --p50: #FDF5F8;
+  --p100: #FBEAF0;
+  --p200: #F4C0D1;
+  --p300: #ED93B1;
+  --p400: #D4537E;
+  --p500: #B83C65;
+  --p600: #993556;
+  --p800: #72243E;
+  --text: #000000;
+  --border: #F0DCE4;
+  --white: #FFFFFF;
+  --red: #A32D2D;
+  --red-bg: #FCEBEB;
+  --green-texto: #137A5A;
+  --green-bg: #E1F5EE;
+  --amber: #854F0B;
+  --amber-bg: #FAEEDA;
+  --border-control: var(--p400);
+  --focus-ring: var(--p600);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --radius-sm: 8px;
+  --radius-acceso: 10px;
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 10px;
+  --space-5: 14px;
+  --space-6: 16px;
+  --space-7: 20px;
+  --space-8: 28px;
+  --space-detalle: 18px;
+  --touch-min: 44px;
+  --icon-md: 18px;
+  --text-meta: 13px;
+  --text-publico-small: 15px;
+  --leading-publico: 1.5;
+  --leading-titulo: 1.15;
+  --leading-publico-h2: 1.25;
+  --leading-acceso-panel: 1.7;
+  --tracking-titulo: -0.01em;
+  --tracking-campo: 0.02em;
+  --weight-regular: 400;
+  --weight-strong: 500;
+  --weight-bold: 600;
+  --font-acceso: Roboto, system-ui, sans-serif;
+  --text-acceso-titulo: 28px;
+  --text-acceso-lema: 30px;
+  --text-acceso: 14px;
+  --text-acceso-small: 12px;
+  --acceso-panel-fondo: linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%);
+  --acceso-panel-sub: rgba(255, 255, 255, 0.7);
+  --acceso-circulo: rgba(255, 255, 255, 0.08);
+  --acceso-panel-sub-ancho: 340px;
+  --acceso-panel-pad-y: 48px;
+  --acceso-panel-pad-x: 52px;
+  --acceso-form-ancho: 400px;
+  --acceso-cabecera-pie: 32px;
+  --acceso-campo-sangria: 42px;
+  --logo-acceso-w: 310px;
+  --sombra-boton-acceso: 0 4px 16px rgba(212, 83, 126, 0.3);
+  --duration-respuesta: 150ms;
+  --duration-entrada: 0.45s;
+  --ease-clinico: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/roboto/roboto-latin-wght-normal.woff2') format('woff2');
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-acceso); color: var(--text); background: var(--white); min-height: 100vh; display: flex; }
+
+/* Panel de marca: solo desde 769 px. */
+.panel-left { display: none; }
+.panel-right { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: var(--acceso-cabecera-pie) var(--space-8); background: var(--p50); }
+.form-container { width: 100%; max-width: var(--acceso-form-ancho); animation: entrada-acceso var(--duration-entrada) ease both; }
+
+@media (min-width: 769px) {
+  .panel-left { width: 48%; flex-shrink: 0; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: var(--acceso-panel-pad-y) var(--acceso-panel-pad-x); background: var(--acceso-panel-fondo); }
+  .panel-right { background: var(--white); }
+}
+
+/* Círculos decorativos: su tamaño y su posición no son espaciados del sistema, solo adornan el panel. */
+.panel-left::before, .panel-left::after, .deco-circle { content: ""; position: absolute; border-radius: 50%; border: var(--border-width) solid var(--acceso-circulo); }
+.panel-left::before { width: 500px; height: 500px; top: -160px; right: -160px; }
+.panel-left::after { width: 340px; height: 340px; bottom: -80px; left: -80px; }
+.deco-1 { width: 220px; height: 220px; top: 30%; left: -60px; }
+.deco-2 { width: 120px; height: 120px; top: 20%; right: 60px; }
+.deco-3 { width: 80px; height: 80px; bottom: 25%; right: 40px; }
+
+.panel-illustration { position: relative; z-index: 2; flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-8) 0; }
+.panel-illustration img { display: block; width: var(--logo-acceso-w); max-width: 100%; height: var(--logo-acceso-w); object-fit: contain; object-position: center; }
+.panel-copy { position: relative; z-index: 2; }
+.panel-tagline { font-size: var(--text-acceso-lema); font-weight: var(--weight-strong); color: var(--white); line-height: var(--leading-publico-h2); margin-bottom: var(--space-5); letter-spacing: var(--tracking-titulo); }
+.panel-tagline em { font-style: italic; color: var(--p200); }
+.panel-sub { font-size: var(--text-acceso); color: var(--acceso-panel-sub); line-height: var(--leading-acceso-panel); max-width: var(--acceso-panel-sub-ancho); }
+
+/* Encabezado */
+.form-header { margin-bottom: var(--acceso-cabecera-pie); }
+.form-title { font-size: var(--text-acceso-titulo); font-weight: var(--weight-bold); margin-bottom: var(--space-2); letter-spacing: var(--tracking-titulo); line-height: var(--leading-titulo); text-wrap: balance; }
+.form-subtitle { font-size: var(--text-acceso); line-height: var(--leading-publico); text-wrap: pretty; }
+
+/* Campos */
+.field-group { margin-bottom: var(--space-detalle); }
+.field-label { display: block; font-size: var(--text-acceso-small); font-weight: var(--weight-strong); margin-bottom: var(--space-2); letter-spacing: var(--tracking-campo); }
+.field-wrap { position: relative; }
+.field-icon { position: absolute; left: var(--space-5); top: 50%; transform: translateY(-50%); width: var(--space-6); height: var(--space-6); color: var(--p300); pointer-events: none; }
+.field { width: 100%; min-height: var(--touch-min); padding: 0 var(--space-5) 0 var(--acceso-campo-sangria); border: var(--border-width) solid var(--border-control); border-radius: var(--radius-acceso); font: inherit; font-size: var(--text-acceso); color: var(--text); background: var(--p50); transition: background var(--duration-respuesta) var(--ease-clinico); }
+.field:focus { background: var(--white); }
+.field.error { border-color: var(--red); border-width: var(--border-width-strong); background: var(--red-bg); }
+.field-ayuda { font-size: var(--text-acceso-small); margin-top: var(--space-1); }
+.error-msg { font-size: var(--text-acceso-small); color: var(--red); margin-top: var(--space-1); display: flex; align-items: flex-start; gap: var(--space-1); }
+.error-msg svg { width: var(--space-6); height: var(--space-6); flex-shrink: 0; }
+
+/* Ver la contraseña (D19): mejora progresiva, sin JavaScript no aparece. */
+.field-con-ojo { padding-right: var(--touch-min); }
+.ver-clave { position: absolute; top: 0; right: 0; width: var(--touch-min); height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--radius-acceso); color: var(--p500); cursor: pointer; }
+.ver-clave:hover { color: var(--p600); }
+.ver-clave[hidden] { display: none; }
+.ver-clave svg { width: var(--space-6); height: var(--space-6); }
+.ver-clave[aria-pressed="true"] .ojo-abierto, .ver-clave[aria-pressed="false"] .ojo-cerrado { display: none; }
+
+/* Recordarme y ¿Olvidaste tu contraseña? */
+.remember-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 var(--space-3); margin-bottom: var(--space-3); }
+.remember-label { display: inline-flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min); font-size: var(--text-acceso); cursor: pointer; }
+/* Casilla con zona de toque de 44 px: el cuadro de 18 px es de un solo trazo, igual en los cuatro lados, y al
+   marcarla no se rellena: lleva la palomita (el estado no depende solo del color). */
+.remember-label input { appearance: none; flex-shrink: 0; display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); margin: 0 calc(var(--border-width) - var(--space-5)); background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
+.remember-label input::before, .remember-label input::after { content: ""; grid-area: 1 / 1; box-sizing: border-box; }
+.remember-label input::before { width: var(--icon-md); height: var(--icon-md); background: var(--white); border: var(--border-width) solid var(--border-control); border-radius: var(--space-1); }
+.remember-label input:checked::before { border-color: var(--p500); }
+.remember-label input:checked::after { width: var(--space-2); height: var(--space-4); margin-top: calc(var(--border-width) * -2); border: solid var(--p500); border-width: 0 var(--border-width-strong) var(--border-width-strong) 0; transform: rotate(45deg); }
+.remember-label input:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -4); }
+.forgot-link { display: inline-flex; align-items: center; min-height: var(--touch-min); font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--p500); text-decoration: none; }
+.forgot-link:hover { color: var(--p600); text-decoration: underline; }
+.enlace-volver { margin-top: var(--space-3); }
+
+/* Botones. M-1: respuesta de los botones, sin movimiento si se pide reducirlo. */
+.btn-submit { width: 100%; min-height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--space-7); background: var(--p500); color: var(--white); border: 0; border-radius: var(--radius-acceso); font: inherit; font-size: var(--text-publico-small); font-weight: var(--weight-strong); text-decoration: none; cursor: pointer; transition: background var(--duration-respuesta) var(--ease-clinico), transform var(--duration-respuesta) var(--ease-clinico); }
+.btn-submit:hover { background: var(--p600); box-shadow: var(--sombra-boton-acceso); }
+.btn-submit:active { transform: scale(.99); }
+/* Botón mientras dura la espera: no invita a pulsar. */
+.btn-submit[disabled] { background: var(--p100); color: var(--p800); border: var(--border-width) solid var(--border); box-shadow: none; transform: none; cursor: not-allowed; }
+.btn-google { width: 100%; min-height: var(--touch-min); display: flex; align-items: center; justify-content: center; gap: var(--space-4); padding: 0 var(--space-5); background: var(--white); color: var(--text); border: var(--border-width) solid var(--border); border-radius: var(--radius-acceso); font-size: var(--text-acceso); font-weight: var(--weight-strong); text-decoration: none; transition: background var(--duration-respuesta) var(--ease-clinico); }
+.btn-google:hover { background: var(--p50); }
+.btn-google svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+
+/* Separador y registro */
+.divider { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-7) 0; font-size: var(--text-acceso-small); }
+.divider::before, .divider::after { content: ""; flex: 1; border-top: var(--border-width) solid var(--border); }
+.register-link { text-align: center; font-size: var(--text-acceso); line-height: var(--leading-publico); }
+.register-link a, .en-texto { color: var(--p500); font-weight: var(--weight-strong); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.ver-clave:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -1); }
+
+/* Avisos */
+.alert { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-5); margin-bottom: var(--space-7); border-radius: var(--radius-sm); border: var(--border-width) solid currentColor; font-size: var(--text-acceso); line-height: var(--leading-publico); }
+.alert svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+.alert strong { display: block; }
+.alert-error { background: var(--red-bg); color: var(--red); }
+.alert-exito { background: var(--green-bg); color: var(--green-texto); }
+.alert-espera { background: var(--amber-bg); color: var(--amber); }
+
+/* Bloque «Vale hasta»: lo que manda en «Revisa tu correo». */
+.vale-bloque { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-6); margin-bottom: var(--space-3); background: var(--p50); border-radius: var(--radius-acceso); }
+.vale-etiqueta { font-size: var(--text-acceso-small); font-weight: var(--weight-strong); letter-spacing: var(--tracking-campo); }
+.vale-hora { font-size: var(--text-acceso-titulo); font-weight: var(--weight-bold); color: var(--p800); line-height: var(--leading-titulo); }
+.vale-bloque p { font-size: var(--text-acceso); line-height: var(--leading-publico); text-wrap: pretty; }
+
+/* Datos de abajo: el enlace, la cuenta y el teléfono de la consulta. */
+.talon { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-6); margin-top: var(--space-6); padding-top: var(--space-6); border-top: var(--border-width) solid var(--border); font-size: var(--text-meta); line-height: var(--leading-publico); }
+.talon dt { font-weight: var(--weight-strong); }
+.talon dd { text-wrap: pretty; overflow-wrap: anywhere; }
+.tel { white-space: nowrap; }
+/* Teléfono estrecho: etiqueta encima de su valor. */
+@media (max-width: 400px) {
+  .talon { grid-template-columns: 1fr; gap: 0; }
+  .talon dd + dt { margin-top: var(--space-3); }
+}
+
+@keyframes entrada-acceso {
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-container { animation: none; }
+  .btn-submit, .btn-google, .field { transition: none; }
+  .btn-submit:active { transform: none; }
+}

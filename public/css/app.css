@@ -514,6 +514,9 @@ tr:hover td { background: var(--p50); }
 /* Ayuda y error de campo (antes en citas.css). */
 .field-hint { font-size: var(--text-small); color: var(--text-light); margin-top: var(--space-1); }
 .field-hint-error { color: var(--red); }
+/* Spec 041 (CA13): la contraseña para cambiar el correo del perfil. */
+.perfil-contrasena-correo { margin-top: var(--space-5); }
+.perfil-ayuda-correo { color: var(--text); }
 
 /* Día del horario: una fila por día de la semana en la ficha del dentista. */
 .horario-dia {

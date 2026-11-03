@@ -57,10 +57,11 @@ Nunca escribas secretos en el código, los logs ni los docs.
   métodos CRUD en inglés y helpers en español camelCase.
 - Rutas en `routes/web.php`, agrupadas por rol con `middleware(['auth','role:X'])->prefix('X')->name('X.')`.
   El grupo `cliente` solo lleva `auth` y pone `role:cliente` ruta a ruta (RS2.a en docs/security.md).
-- Vistas en `resources/views/<modulo>/` en kebab-case, con dos layouts: `layouts/app.blade.php` para la
-  app y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038, con
+- Vistas en `resources/views/<modulo>/` en kebab-case, con tres layouts: `layouts/app.blade.php` para la
+  app, `layouts/acceso.blade.php` para el inicio de sesión y la recuperación de contraseña (spec 041, con
+  `public/css/acceso.css`) y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038, con
   `public/css/publico.css` y `public/js/publico.js` con `defer`; la página está completa sin él). El
-  acceso sigue con su propio HTML.
+  registro sigue con su propio HTML y `auth.css`.
 - Código nuevo: validación en servidor con `$request->validate()` y las reglas en la clase de
   dominio (`reglasDeEntrada()` en `app/Agenda/`) o en un helper del controlador; autorización con
   Gates sobre clases de `app/Autorizacion/` registrados en `AppServiceProvider` (ADR 0003); SQL con
@@ -85,11 +86,12 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
 | `app/Listeners/` | fallos de acceso al canal `seguridad` (spec 032) y actor del `Context` de los logs (spec 020) |
 | `app/Rules/`, `app/Console/Commands/` | regla `HoraFinPosterior`; comando `dentissa:rotar-credenciales` |
-| `app/Http/Middleware/` | `RoleMiddleware` (rol), `PreventBackHistory` (no-cache) |
+| `app/Http/Middleware/` | `RoleMiddleware` (rol), `PreventBackHistory` (no-cache), `SesionVigente` (cierra las sesiones de una cuenta que restableció su contraseña; spec 041) |
+| `app/Mail/` | `AvisoProduccion` (spec 032), `EnlaceRestablecimiento` y `ContrasenaCambiada` (spec 041), con sus plantillas en `resources/views/correos/` |
 | `app/Models/` | `Usuario` (auth), `Servicio`; `User` es un resto sin uso |
 | `routes/web.php` | todas las rutas |
 | `resources/views/` | vistas Blade por módulo |
-| `public/css/`, `public/js/` | CSS real de la aplicación (`publico.css`, páginas públicas, spec 038); `menu.js` y `filtros.js` (specs 033 y 034) |
+| `public/css/`, `public/js/` | CSS real de la aplicación (`publico.css`, páginas públicas, spec 038); `menu.js` y `filtros.js` (specs 033 y 034); `acceso.css` y `acceso.js`, el botón para ver la contraseña (spec 041) |
 | `public/fonts/` | `newsreader/` y `montserrat/` (páginas públicas, spec 038) y `roboto/` (spec 020), autoalojadas, cada una con su `OFL.txt` |
 | `database/dentissa.sql` | volcado con el esquema del dominio y datos ficticios |
 | `database/migrations/` | infraestructura + 3 migraciones de julio y 2 de octubre de 2026 (specs 026 y 028) |

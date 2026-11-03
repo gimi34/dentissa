@@ -32,9 +32,11 @@ inicio de sesión.
   (`iframe` perezoso), cuyo JavaScript es de terceros y no cuenta para el límite de P10: excepción
   aceptada por el usuario en el plan de la 038 (2026-10-20).
 - No se indexa: `/login` (inicio de sesión; decisión del usuario, 2026-10-16, conforme a
-  `shared/seo-checklist.md` §2), `/registro/contacto` (paso con sesión), la 404, `/up` (salud) y
-  todas las rutas tras inicio de sesión — mecanismo: `noindex` en meta (pendiente, SE2); las rutas
-  privadas ya redirigen sin sesión.
+  `shared/seo-checklist.md` §2), `/contrasena/olvidada`, `/contrasena/enviada` y
+  `/contrasena/nueva/{token}` (spec 041; esta última lleva además `no-referrer`), `/registro/contacto`
+  (paso con sesión), la 404, `/up` (salud) y todas las rutas tras inicio de sesión — mecanismo: `noindex`
+  en meta en `/login` y en la recuperación (`layouts/acceso.blade.php`, spec 041); en la 404 y `/up`,
+  pendiente (SE2.b); las rutas privadas ya redirigen sin sesión.
 - Páginas de error: 404 genérica de Laravel, en inglés (SE4); rutas privadas sin sesión →
   redirección `302` a `/login` (comprobado en local y en producción); fuera del sitemap.
 - Archivos generados: `robots.txt` estático en `public/` (permite todo y no declara sitemap);
@@ -55,7 +57,8 @@ permiso del usuario, con `GET` a https://dentissa.app (solo códigos de estado y
 | `/` | sí (spec 038) | ✅ «Dentissa · Tu sonrisa, nuestra prioridad» | ✅ propia | ✅ `https://dentissa.app/` | ✅ uno («Tu sonrisa, nuestra prioridad.») | ➖ (fuera de alcance, SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` sin sesión (con sesión, `302` al panel del rol) · `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` · `resources/views/publico/inicio.blade.php` |
 | `/servicios` | sí (spec 038) | ✅ «Servicios · Dentissa» | ✅ propia | ✅ `https://dentissa.app/servicios` | ✅ uno («Nuestros servicios») | ➖ (SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` con y sin sesión · `PaginasPublicasTest` · `resources/views/publico/servicios.blade.php` |
 | `/registro` | sí | ✅ «Dentissa · Crear cuenta» | ❌ sin `<meta name="description">` | ❌ sin `<link rel="canonical">` | ✅ uno («Únete a nuestra comunidad») | ❌ | ❌ | `curl -s /registro` · `resources/views/auth/register.blade.php:6,33`; `200` en producción |
-| `/login` | no (inicio de sesión) | ✅ «Dentissa · Iniciar sesión» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ❌ sin `noindex` (`curl -s /login`; sin `X-Robots-Tag`) · `resources/views/auth/login.blade.php:6` |
+| `/login` | no (inicio de sesión) | ✅ «Dentissa · Iniciar sesión» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ✅ `noindex` desde `layouts/acceso.blade.php` (spec 041) |
+| `/contrasena/olvidada`, `/contrasena/enviada`, `/contrasena/nueva/{token}` (spec 041) | no (acceso; la última lleva un secreto) | ✅ «Dentissa · Recuperar acceso», «Dentissa · Revisa tu correo», «Dentissa · Contraseña nueva» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ✅ `noindex`; solo existen con `RECUPERAR_CONTRASENA=true` |
 | `/registro/contacto` | no (paso con sesión) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `302` a `/registro` sin sesión |
 | rutas privadas (`/admin`, `/cliente`…) | no (tras inicio de sesión) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `302` a `/login` sin sesión, en local y en producción |
 | 404 | no (página de error) | genérica «Not Found» (inglés) | ➖ | ➖ | ➖ | ➖ | ➖ | `404` real en local y en producción (`/pagina-que-no-existe`) |
@@ -75,7 +78,7 @@ Correcciones:
 Evidencia: `/login` responde `200` sin `<meta name="robots">` ni cabecera `X-Robots-Tag`; `/up`
 responde `200` con HTML y tampoco lo lleva.
 Correcciones:
-- SE2.a `noindex` en `/login` (y en `/registro/contacto`, si alguna vez se sirve sin redirigir) — estado: pendiente
+- SE2.a `noindex` en `/login` (y en `/registro/contacto`, si alguna vez se sirve sin redirigir) — estado: mitigada (spec 041; la versión se completa en `/release`): `/login` lleva `noindex` y `/registro/contacto` sin los datos de Google redirige a `/registro`, así que nunca se sirve a un buscador (decisión del usuario, 2026-10-28)
 - SE2.b `noindex` en la 404 propia (SE4) y `X-Robots-Tag: noindex` en `/up` — estado: pendiente
 
 ### SE3 · media — Sin `sitemap.xml` y `robots.txt` sin sitemap

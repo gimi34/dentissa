@@ -143,6 +143,8 @@ fuera del repositorio y del chat).
   (`deploy/volver.sh <tag anterior>`) no necesita revertirla ni restaurar la copia; las entradas de
   reprogramación siguen en la tabla y la versión anterior las muestra como un cambio de estado sin
   fechas.
+- Spec 041: la migración `version_sesion_en_usuarios` solo añade `usuarios.version_sesion` con valor por
+  defecto 0 (expand). La versión anterior ignora la columna, así que la vuelta atrás no la revierte.
 - Spec 020: la migración `create_auditoria_table` crea la tabla `auditoria` y sus triggers
   `auditoria_sin_update` y `auditoria_sin_delete` con el usuario de la aplicación (`dentissa_app`,
   sin root): MariaDB 10.11 sin binlog no exige `SUPER` para crear triggers, y `dentissa_app` tiene
@@ -226,6 +228,7 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
 | QUEUE_CONNECTION, FILESYSTEM_DISK | ✓ | — | — | `.env` (sin uso real hoy) |
 | MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS, MAIL_FROM_NAME (spec 032) | ✓ (`MAIL_MAILER=log`) | — | ✓ (`smtp`, `smtp.gmail.com`, `465`, cuenta de Gmail solo para enviar, contraseña de aplicación) | `.env` · `app.env` |
 | AVISOS_CORREO (destino de los avisos; spec 032) | vacío | — | ✓ | `.env` · `app.env` |
+| RECUPERAR_CONTRASENA (recuperar la contraseña por correo; por defecto `false`; spec 041) | opcional | `true` en `phpunit.xml` | `false` al desplegar; `true` tras la prueba de T095, con `aplicar-entorno.sh app` | `.env` · `app.env` |
 | DENTISSA_CLAVE_PUBLICA (clave pública de las copias; por defecto `/opt/dentissa/entorno/copias.pub.asc`; spec 032) | — | — | opcional | entorno del shell que ejecuta `respaldar.sh`, `cifrar-copias-antiguas.sh`, `preparar-vigilancia.sh` y `verificar.sh` |
 | DENTISSA_APP (clon del servidor que usa `restaurar.sh` desde el PC; por defecto `/opt/dentissa/app`; spec 032) | — | — | opcional | Git Bash del PC del responsable |
 | MARIADB_PASSWORD, MARIADB_ROOT_PASSWORD | — | — | ✓ | `db.env` en el servidor (solo el servicio `db`) |

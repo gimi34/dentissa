@@ -6,6 +6,7 @@ use App\Http\Middleware\ContextoActor;
 use App\Http\Middleware\IdentificadorPeticion;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SesionVigente;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -40,12 +41,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // Correlación (spec 020, D5): el X-Request-Id de cada respuesta, también las de error, y el
         // actor de los logs al empezar cada petición con sesión.
         $middleware->prepend(IdentificadorPeticion::class);
+        // Spec 041 (CA7, TM8): antes de ContextoActor, para que una sesión que se cierra no quede como
+        // actor de los logs de esa petición (/analyze A19).
         $middleware->appendToGroup('web', [
+            SesionVigente::class,
             ContextoActor::class,
         ]);
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+
+        // Spec 041 (TM15): las contraseñas del perfil no se guardan en la sesión si falla la validación.
+        $exceptions->dontFlash(['contrasena_correo', 'password_actual']);
 
         // Modo crítico del registro de auditoría (spec 020, CA11; TM7): la acción se detiene con
         // una página 503 genérica, también con APP_DEBUG=true, y no se reporta (el aviso lo da la

@@ -1,0 +1,23 @@
+/* Spec 041 (D9, D17, D20): hoja de los correos del acceso, con el estilo del inicio de sesión. Los clientes de
+   correo no entienden var(), así que copia los valores de los tokens de system.md; un test exige que cada uno
+   sea el de un token. CssToInlineStyles la pasa a estilos en línea al enviar; las plantillas no llevan style="". */
+body { margin: 0; padding: 0; background-color: #FDF5F8; color: #000000; font-family: Roboto, system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+.correo-exterior { padding: 16px; }
+.correo { max-width: 480px; background-color: #FFFFFF; border-radius: 10px; }
+/* Sin degradado (Outlook), la cabecera se queda en el color de respaldo. */
+.correo-cab { color: #FFFFFF; background-color: #72243E; background-image: linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%); padding: 28px 20px; border-radius: 10px 10px 0 0; text-align: center; }
+.correo-logo { display: block; width: 140px; height: auto; margin: 0 auto; }
+.correo-cuerpo { padding: 28px 20px 16px; }
+h1 { margin: 0 0 16px; color: #000000; font-size: 28px; font-weight: 600; line-height: 1.15; }
+p { margin: 0 0 16px; font-size: 14px; line-height: 1.5; }
+.correo-boton { margin: 0 0 16px; }
+.btn-primario { display: block; padding: 14px 20px; border-radius: 10px; background-color: #B83C65; color: #FFFFFF; font-size: 15px; font-weight: 500; text-align: center; text-decoration: none; }
+.url { color: #B83C65; font-size: 12px; overflow-wrap: anywhere; word-break: break-all; }
+.linea-celda { padding: 0 20px; }
+.linea { border-top: 1px solid #F0DCE4; }
+.talon-celda { padding: 16px 20px 20px; border-radius: 0 0 10px 10px; }
+.talon { margin: 0; font-size: 13px; line-height: 1.5; }
+dt { margin: 0; color: #000000; font-weight: 500; }
+dd { margin: 0 0 8px; }
+.tel { white-space: nowrap; }
+.rango { white-space: nowrap; }

@@ -5,6 +5,26 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-03
+
+### Added
+- Recuperar la contraseña por correo desde «¿Olvidaste tu contraseña?»: un enlace personal válido 60 minutos y de un
+  solo uso, y un aviso por correo cuando la contraseña cambia. Se enciende con `RECUPERAR_CONTRASENA` (spec 041).
+- Las cuentas creadas con Google pueden crear una contraseña con ese enlace y siguen entrando con Google (spec 041).
+
+### Changed
+- Cambiar el correo del perfil pide la contraseña actual; una cuenta sin contraseña tiene que crearla antes (spec 041).
+- El inicio de sesión y las pantallas de recuperación comparten su aspecto, con la letra servida desde la propia
+  aplicación, y no se indexan en buscadores (spec 041).
+
+### Security
+- Restablecer la contraseña cierra todas las sesiones abiertas de la cuenta y queda en el registro de auditoría (spec 041).
+- Límites contra el abuso: un correo por cuenta por minuto y 5 por hora, 200 al día en total, 5 intentos por minuto por
+  origen, 30 aperturas de enlace por minuto y 5 fallos de contraseña por minuto en el perfil. La respuesta no revela si
+  un correo tiene cuenta (spec 041).
+- Las contraseñas del perfil ya no quedan en la sesión si falla la validación, y el enlace no aparece en el log de
+  acceso de nginx (spec 041).
+
 ## [0.13.0] - 2026-11-01
 
 ### Added

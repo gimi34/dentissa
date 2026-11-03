@@ -51,7 +51,7 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 ## Módulos
 | Módulo | Ruta | Responsabilidad | Depende de |
 |---|---|---|---|
-| Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php` | Login con correo, logout, OAuth con Google. Límite de intentos (spec 030): el login cuenta fallos por correo e IP (5 por minuto, `RateLimiter` en el controlador) y la vuelta de Google pasa por el limitador `google`; los dos rechazos emiten `Lockout` | `usuarios`, Socialite, caché (limitadores) |
+| Autenticación | `app/Http/Controllers/AuthController.php`, `GoogleAuthController.php`, `RecuperarContrasenaController.php` | Login con correo, logout, OAuth con Google. Recuperar la contraseña (spec 041): `PasswordBroker` sobre `password_reset_tokens`, enlace por correo tras responder (`afterResponse()`), `usuarios.version_sesion` y `SesionVigente`; solo con `RECUPERAR_CONTRASENA=true`. Límite de intentos (spec 030): el login cuenta fallos por correo e IP (5 por minuto, `RateLimiter` en el controlador) y la vuelta de Google pasa por el limitador `google`; los dos rechazos emiten `Lockout` | `usuarios`, Socialite, caché (limitadores) |
 | Registro | `app/Http/Controllers/RegisterController.php` | Autorregistro de pacientes en dos pasos y asignación automática de dentista; `POST /registro` y `/registro/contacto` pasan por el limitador `registro` (5 por minuto por IP, spec 030) | `usuarios`, `pacientes`, `personal`, caché (limitadores) |
 | Paneles | `app/Http/Controllers/DashboardController.php` | Un panel por rol; el del paciente ofrece «Reprogramar» y «Cancelar» de la próxima cita solo con 24 horas o más, con `app/Agenda/EstadosCita.php` (spec 028) | `citas`, `pacientes`, `personal`, `usuarios`, `servicios`, `asistente_dentista`, el aviso de plazo de `ClienteCitasController` |
 | Agenda (personal) | `app/Http/Controllers/CitasController.php` | Listado, alta, detalle, estado, notas, reprogramación y cancelación de citas con alcance por rol (vía `app/Autorizacion/AlcanceClinico.php`); el alta delega la regla de agenda en `app/Agenda/ReservaCitas.php`, el cambio de estado y "eliminar" en `app/Agenda/EstadosCita.php`, y la reprogramación en `app/Agenda/ReprogramacionCitas.php` (spec 028) | `citas`, `horarios_dentista`, `historial_citas`, `servicios`, `expedientes` |
@@ -69,7 +69,7 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Páginas públicas | `app/Http/Controllers/PaginasPublicasController.php` | `/` (página de inicio; con sesión, `panelDelRol()` redirige al panel) y `/servicios`, sin parámetros, con `Servicio::porCategoria()` (solo activos: nombre, descripción y categoría, en una consulta) y el contacto de `config/clinica.php` (spec 038) | `servicios` |
 | Usuarios | `app/Http/Controllers/UsuarioController.php` | Administración de cuentas y roles | `usuarios` |
 | Perfil | `app/Http/Controllers/PerfilController.php` | Perfil y contraseña del cliente | `usuarios`, `pacientes` |
-| Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php`, `IdentificadorPeticion.php`, `ContextoActor.php` | Rol por grupo de rutas; cabeceras no-cache. Spec 020: `IdentificadorPeticion` (global) reutiliza el `X-Request-Id` si es un UUID o genera uno, lo pone en el `Context` y lo devuelve en toda respuesta; `ContextoActor` (al final del grupo `web`) pone o quita el actor de los logs al empezar cada petición | `usuarios.rol`, `Context` de Laravel |
+| Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php`, `IdentificadorPeticion.php`, `ContextoActor.php`, `SesionVigente.php` | Rol por grupo de rutas; cabeceras no-cache. Spec 041: `SesionVigente` (grupo `web`, antes de `ContextoActor`) cierra la sesión cuya versión es menor que `usuarios.version_sesion`. Spec 020: `IdentificadorPeticion` (global) reutiliza el `X-Request-Id` si es un UUID o genera uno, lo pone en el `Context` y lo devuelve en toda respuesta; `ContextoActor` (al final del grupo `web`) pone o quita el actor de los logs al empezar cada petición | `usuarios.rol`, `Context` de Laravel |
 | Auditoría | `app/Auditoria/` (`Auditoria`, `AlmacenAuditoria` y `AlmacenAuditoriaBaseDatos`, `RegistroCentralDenegaciones`, `AuditoriaNoDisponible`, `AccesoDenegadoAuditado`), `app/Listeners/ActualizarActorDelContexto.php`, `AuditoriaController`, `routes/console.php` (`auditoria:purgar`) | Registro de auditoría común (spec 020, [ADR 0004](adr/0004-registro-auditoria-mariadb.md)): `Auditoria::registrar()` y `denegar()` son el único punto de registro; actor de la sesión o de un `Usuario` comprobado, IP y `request_id` de la petición, solo identificadores y nombres de campo; modo crítico con fallo cerrado (página 503 genérica). Las denegaciones las registra el callback `respond` de `withExceptions` (403 y 404 de Gates con `denyAsNotFound`). Un fallo al escribir deja `auditoria.fallo` en el canal `seguridad`. Consulta en `/admin/auditoria`, solo para el admin y solo lectura; purga mensual de lo de más de 5 años en el servicio `scheduler` | tabla `auditoria`, canal `seguridad`, `Context` |
 | Límites de intentos | `app/Providers/AppServiceProvider.php` (limitadores `registro` y `google`), `AuthController::login`, `routes/web.php` (`throttle:`) | 5 intentos por minuto; mismo mensaje en los tres casos, que no revela si la cuenta existe (spec 030, CA8) | caché (`CACHE_STORE=database` en producción) |
 | Proxy | `bootstrap/app.php` (`trustProxies`) | Detrás de nginx y el túnel, Laravel solo confía en `X-Forwarded-Proto` (URL y redirecciones en https); la IP real la pone nginx en `REMOTE_ADDR` (spec 030, D3) | — |
@@ -136,16 +136,18 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   la ruta en Google Maps en otra pestaña (`noopener noreferrer`). Sin clave de API.
 - Correo saliente (spec 032): avisos de producción por el SMTP de Gmail (`smtp.gmail.com:465`, TLS
   implícito) con una cuenta que solo sirve para enviar, hacia `AVISOS_CORREO`; variables `MAIL_*` y
-  `AVISOS_CORREO` en `app.env`. Local usa `MAIL_MAILER=log`.
+  `AVISOS_CORREO` en `app.env`. Local usa `MAIL_MAILER=log`. Desde la spec 041 (ADR 0008), la misma
+  cuenta envía a las cuentas `EnlaceRestablecimiento` y `ContrasenaCambiada`.
 - UptimeRobot (spec 032, plan gratuito): comprueba `https://<dominio>/up` cada 5 minutos desde fuera
   y avisa por correo al caer y al volver, también con el servidor apagado. No recibe datos.
 - No hay colas, almacenamiento de archivos ni APIs HTTP salientes en uso.
 
 ## Frontend
 - Componentes y organización: vistas Blade por módulo en `resources/views/<modulo>/`, archivos en
-  kebab-case, dos layouts: `layouts/app.blade.php` para la app y `layouts/publico.blade.php` para
-  las páginas públicas `/` y `/servicios` (spec 038: cabecera y pie propios, menú `<details>` sin
-  JavaScript, `app.css` por los tokens y `publico.css`); las vistas de acceso tienen su propio HTML
+  kebab-case, tres layouts: `layouts/app.blade.php` para la app, `layouts/acceso.blade.php` para el
+  inicio de sesión y la recuperación de contraseña (spec 041, con `acceso.css`; `acceso.js` solo en el
+  inicio de sesión, para ver la contraseña) y `layouts/publico.blade.php` para las páginas públicas `/` y `/servicios` (spec 038: cabecera y pie propios, menú `<details>` sin
+  JavaScript, `app.css` por los tokens y `publico.css`); el registro tiene su propio HTML
   con `auth.css`; parciales en `partials/` y en `<modulo>/partials/`. Sin componentes `<x-…>`. En
   pacientes, personal y usuarios, `edit` reutiliza `create` con `@include`; servicios tiene su
   propio formulario de edición.

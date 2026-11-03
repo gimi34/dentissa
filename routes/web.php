@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitasController;
 use App\Http\Controllers\ClienteCitasController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DisenioAccesoController;
 use App\Http\Controllers\DisenioAuditoriaController;
 use App\Http\Controllers\ExpedientesController;
 use App\Http\Controllers\GoogleAuthController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\PaginasPublicasController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ServiciosController;
 use App\Http\Controllers\UsuarioController;
@@ -29,6 +31,19 @@ Route::post('/registro/contacto', [RegisterController::class, 'contactoStore'])-
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:google')->name('auth.google.callback');
 
+// ── Recuperar la contraseña (spec 041) ──────────────────────────────────
+// Solo con el interruptor encendido (D8). Grupo web: CSRF y no-store (TM10, TM11). Los limitadores
+// cuentan los envíos; abrir el enlace no gasta intentos (D15).
+if (config('acceso.recuperar_contrasena')) {
+    Route::prefix('contrasena')->name('contrasena.')->controller(RecuperarContrasenaController::class)->group(function () {
+        Route::get('/olvidada', 'solicitudForm')->name('solicitud');
+        Route::post('/olvidada', 'solicitar')->middleware('throttle:solicitar-enlace')->name('solicitar');
+        Route::get('/enviada', 'enviada')->name('enviada');
+        Route::get('/nueva/{token}', 'nuevaForm')->middleware('throttle:abrir-enlace')->name('nueva');
+        Route::post('/nueva', 'restablecer')->middleware('throttle:fijar-contrasena')->name('restablecer');
+    });
+}
+
 // ── Páginas públicas (spec 038) ─────────────────────────────────────────
 Route::get('/', [PaginasPublicasController::class, 'inicio'])->name('inicio');
 Route::get('/servicios', [PaginasPublicasController::class, 'servicios'])->name('servicios.publicos');
@@ -40,6 +55,11 @@ if (app()->environment('local')) {
         ->where('pantalla', implode('|', DisenioAuditoriaController::PANTALLAS))
         ->withoutMiddleware('web')
         ->name('disenio.020');
+
+    // Spec 041 (D11): cada pantalla y cada correo con los datos de muestra de c7. Acepta el «.html» de medir.mjs.
+    Route::get('/_disenio/041/{pantalla}', [DisenioAccesoController::class, 'show'])
+        ->where('pantalla', '('.DisenioAccesoController::PANTALLAS.')(\.html)?')
+        ->name('disenio.041');
 }
 
 // ── Admin ───────────────────────────────────────────────────────────────

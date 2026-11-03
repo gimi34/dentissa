@@ -57,7 +57,7 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
 | Lectura de datos sensibles (ficha de paciente, expediente) | sí | actor, recurso, fecha |
 | Cambio de datos sensibles (paciente, expediente, notas de cita, estado de cita) | sí | actor, recurso, campos cambiados (sin valores), fecha |
 | Cambio de permisos o roles | sí | actor, sujeto, antes → después, fecha |
-| Alta, activación/desactivación de cuentas y cambio de contraseña | sí | actor, sujeto, acción, fecha |
+| Alta, activación/desactivación de cuentas y cambio de contraseña | sí | actor, sujeto, acción, fecha. El restablecimiento ya se registra como `contrasena_restablecida`, en modo crítico (spec 041); el resto, en la 021 |
 | Lectura del propio registro de auditoría | sí | actor, filtro consultado, fecha |
 
 - Almacenamiento: tabla propia en MariaDB (propuesta `auditoria`), **solo anexado**: la
@@ -84,7 +84,14 @@ no llevan datos personales, IPs, correos de cuentas ni secretos.
 | Cola de trabajos atascada | no aplica (no hay jobs) | — |
 
 El vigilante lee el log de acceso en formato `combined`: si un cambio de `log_format` (OB8.a) lo
-cambia, hay que ajustar `App\Avisos\Vigilante`; mientras tanto, el aviso de formato lo detecta.
+cambia, hay que ajustar `App\Avisos\Vigilante`; mientras tanto, el aviso de formato lo detecta. El
+`log_format dentissa_enmascarado` de la spec 041 es `combined` con el token de restablecimiento
+enmascarado en la petición y en el Referer: el vigilante lo lee igual.
+
+La recuperación de contraseña escribe dos logs nuevos: `restablecimiento.correo_fallido` (nivel
+`error`), con solo la clase del error en `error`, y `restablecimiento.tope_diario` (nivel `warning`, sin
+datos), al superar los 200 enlaces del día; si aparece, revisar si hay abuso. `request_id` y `actor_id`
+llegan por el `Context`.
 
 ## Brechas
 <!-- Cada brecha con ID `OB<n>`, prioridad, correcciones `OB<n>.<letra>` y enlace al roadmap. -->
@@ -100,7 +107,7 @@ Correcciones:
 - OB1.c Registrar los accesos denegados (403) de middleware, controladores y Policies — estado: mitigada (v0.12.0)
 - OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente
 - OB1.e Registrar cambios de pacientes, expedientes, notas y estado de citas (campos, sin valores) — estado: pendiente
-- OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente
+- OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente (→ 021). La spec 041 cubre solo el restablecimiento (`contrasena_restablecida`)
 - OB1.g Retención de 5 años con purga programada (`routes/console.php`) — estado: mitigada (v0.12.0)
 - OB1.h Pantalla de consulta solo para admin que audita su propia lectura — estado: mitigada (v0.12.0)
 
@@ -169,8 +176,8 @@ registra». Evidencia: `docker/nginx/dentissa.prod.conf` (`access_log` sin `log_
 `PacientesController.php` y `ExpedientesController.php` (`index`).
 
 Correcciones:
-- OB8.a El log de acceso de producción no guarda el query string (o lo enmascara) — estado: pendiente (→ objetivo 3). Al hacerlo, ajustar `App\Avisos\Vigilante`, que lee el formato `combined` (spec 032, /analyze A36)
-- OB8.b Rotación con retención definida de `dentissa-access.log`, `dentissa-error.log` y `laravel.log` en producción — estado: pendiente (→ objetivo 3)
+- OB8.a El log de acceso de producción no guarda el query string (o lo enmascara) — estado: pendiente (→ objetivo 3). Al hacerlo, ajustar `App\Avisos\Vigilante`, que lee el formato `combined` (spec 032, /analyze A36). El formato de la spec 041 enmascara solo el token de restablecimiento, no el query string, y el vigilante ya lo lee
+- OB8.b Rotación con retención definida de `dentissa-access.log`, `dentissa-error.log` y `laravel.log` en producción — estado: pendiente (→ objetivo 3). Es el destino de la excepción acotada a P8 de la spec 041: el `error_log` de nginx escribe el token de restablecimiento cuando PHP falla (502/504) y su formato no se puede configurar (/analyze 041 A28)
 - OB8.c Revisar en el servidor los registros ya guardados y purgar los que contengan búsquedas — estado: pendiente (la ejecuta el responsable en el servidor)
 
 ### OB9 · Baja — PHP de producción con la configuración por defecto y logs de php-fpm volátiles

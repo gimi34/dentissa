@@ -1,0 +1,514 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Mail\ContrasenaCambiada;
+use App\Mail\EnlaceRestablecimiento;
+use App\Models\Usuario;
+use DOMDocument;
+use DOMXPath;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
+use Tests\Feature\Concerns\ReglasCss;
+use Tests\Feature\Concerns\TokensAcceso;
+use Tests\TestCase;
+
+/**
+ * Spec 041: el HTML que devuelve el servidor en el acceso y lo que usa del sistema de diseño.
+ *
+ *  - Descubribilidad (P10, SE2.a): `noindex` en las pantallas nuevas y en el login; la página del
+ *    token no envía `Referer` (TM7) ni se guarda en caché (TM11); sin recursos de otros sitios.
+ *  - Estilo (D20): el acceso conserva el aspecto del inicio de sesión anterior a la 041.
+ *  - Accesibilidad y estados (CA1, CA7, CA9): roles de los avisos, errores enlazados, un solo `h1`,
+ *    el botón desactivado en espera y el teléfono de `clinica.contacto` en el talón (D16).
+ *  - P9 (D9, D13, D17): sin estilos en línea, tokens de `acceso.css` iguales a los del sistema, todo
+ *    `var()` con su token, sin literales fuera de `:root`, y los correos solo con valores de tokens.
+ *  - La vista previa del diseño solo existe en local (D11).
+ *
+ * El comportamiento en un navegador real (contraste, toque, desbordamiento) lo mide `design/medir.mjs`.
+ */
+class RecuperarContrasenaVistasTest extends TestCase
+{
+    use DatabaseTransactions, ReglasCss, TokensAcceso;
+
+    private const SOLICITUD = '/contrasena/olvidada';
+
+    private const ENVIADA = '/contrasena/enviada';
+
+    private const RESTABLECER = '/contrasena/nueva';
+
+    private const HOJA = 'css/acceso.css';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Cache::flush();
+    }
+
+    private function crearUsuario(): Usuario
+    {
+        return Usuario::create([
+            'nombre' => 'Persona',
+            'apellido' => 'De Pruebas',
+            'email' => 'vistas.'.Str::lower(Str::random(10)).'@example.test',
+            'rol' => 'cliente',
+            'telefono' => '555-0000',
+            'activo' => 1,
+            'password_hash' => Hash::make('contrasena-anterior'),
+        ]);
+    }
+
+    private function xpath(string $html): DOMXPath
+    {
+        $documento = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $documento->loadHTML('<?xml encoding="utf-8"?>'.$html);
+        libxml_clear_errors();
+
+        return new DOMXPath($documento);
+    }
+
+    private function conClase(DOMXPath $xpath, string $clase): \DOMNodeList
+    {
+        return $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " '.$clase.' ")]');
+    }
+
+    private function solicitud(): TestResponse
+    {
+        return $this->get(self::SOLICITUD)->assertOk();
+    }
+
+    private function enviada(): TestResponse
+    {
+        Mail::fake();
+        $this->post(self::SOLICITUD, ['email' => 'alguien@example.test'])->assertRedirect(self::ENVIADA);
+
+        return $this->get(self::ENVIADA)->assertOk();
+    }
+
+    private function nueva(): TestResponse
+    {
+        $usuario = $this->crearUsuario();
+
+        return $this->get(self::RESTABLECER.'/'.Password::broker()->createToken($usuario).'?cuenta='.$usuario->id)->assertOk();
+    }
+
+    private function caducado(): TestResponse
+    {
+        return $this->get(self::RESTABLECER.'/'.Str::random(64).'?cuenta='.$this->crearUsuario()->id)->assertOk();
+    }
+
+    private function solicitudEnEspera(): TestResponse
+    {
+        Mail::fake();
+        for ($i = 0; $i < 6; $i++) {
+            $this->post(self::SOLICITUD, ['email' => 'no-es-un-correo']);
+        }
+
+        return $this->get(self::SOLICITUD)->assertOk();
+    }
+
+    private function nuevaEnEspera(): TestResponse
+    {
+        $usuario = $this->crearUsuario();
+        $token = Password::broker()->createToken($usuario);
+        for ($i = 0; $i < 6; $i++) {
+            $this->post(self::RESTABLECER, ['token' => $token, 'cuenta' => $usuario->id, 'password' => 'corta', 'password_confirmation' => 'corta']);
+        }
+
+        return $this->get(self::RESTABLECER.'/'.$token.'?cuenta='.$usuario->id)->assertOk();
+    }
+
+    /** @return array<string, string> método de esta clase de cada pantalla nueva */
+    private function pantallasNuevas(): array
+    {
+        return [
+            'pedir' => 'solicitud',
+            'revisa tu correo' => 'enviada',
+            'contraseña nueva' => 'nueva',
+            'enlace que ya no sirve' => 'caducado',
+            'pedir en espera' => 'solicitudEnEspera',
+            'contraseña nueva en espera' => 'nuevaEnEspera',
+        ];
+    }
+
+    /**
+     * Cada pantalla, empezando con la sesión y los limitadores limpios.
+     *
+     * @return array<string, string> nombre → HTML
+     */
+    private function html(array $pantallas): array
+    {
+        $paginas = [];
+        foreach ($pantallas as $nombre => $metodo) {
+            $this->flushSession();
+            Cache::flush();
+            $paginas[$nombre] = $this->{$metodo}()->getContent();
+        }
+
+        return $paginas;
+    }
+
+    /** @return array<string, string> nombre → HTML, con el login */
+    private function todas(): array
+    {
+        $paginas = $this->html($this->pantallasNuevas());
+        $this->flushSession();
+        $paginas['inicio de sesión'] = $this->get('/login')->assertOk()->getContent();
+
+        return $paginas;
+    }
+
+    private function assertNoSeIndexa(string $html, string $nombre): void
+    {
+        $meta = $this->xpath($html)->query('//head/meta[@name="robots"]')->item(0);
+        $this->assertNotNull($meta, "{$nombre}: lleva meta robots.");
+        $this->assertStringContainsString('noindex', $meta->getAttribute('content'), "{$nombre}: no se indexa.");
+    }
+
+    public function test_las_pantallas_nuevas_no_se_indexan(): void
+    {
+        foreach ($this->html($this->pantallasNuevas()) as $nombre => $html) {
+            $this->assertNoSeIndexa($html, $nombre);
+        }
+    }
+
+    public function test_el_login_no_se_indexa(): void
+    {
+        $this->assertNoSeIndexa($this->get('/login')->assertOk()->getContent(), 'inicio de sesión');
+    }
+
+    public function test_la_pagina_del_token_no_envia_referer(): void
+    {
+        foreach ($this->html(['contraseña nueva' => 'nueva', 'enlace que ya no sirve' => 'caducado', 'en espera' => 'nuevaEnEspera']) as $nombre => $html) {
+            $this->assertSame(1, preg_match('/<meta\s+name="referrer"\s+content="no-referrer"\s*\/?>/', $html, $meta, PREG_OFFSET_CAPTURE), "{$nombre}: lleva no-referrer (TM7).");
+            $posicion = $meta[0][1];
+            foreach (['<link', '<script', '<img'] as $recurso) {
+                $primero = strpos($html, $recurso);
+                $this->assertTrue($primero === false || $posicion < $primero, "{$nombre}: no-referrer va antes de cualquier {$recurso}.");
+            }
+        }
+    }
+
+    public function test_sin_recursos_externos(): void
+    {
+        $propio = parse_url(url('/'), PHP_URL_HOST);
+
+        foreach ($this->todas() as $nombre => $html) {
+            $this->assertStringNotContainsString('fonts.googleapis.com', $html, "{$nombre}: sin Google Fonts.");
+            $xpath = $this->xpath($html);
+            foreach (['//link/@href', '//script/@src', '//img/@src', '//iframe/@src'] as $consulta) {
+                foreach ($xpath->query($consulta) as $atributo) {
+                    $host = parse_url($atributo->value, PHP_URL_HOST);
+                    $this->assertTrue($host === null || $host === $propio, "{$nombre}: {$atributo->value} es de otro sitio.");
+                }
+            }
+        }
+
+        $this->assertFileExists(public_path(self::HOJA));
+        $this->assertDoesNotMatchRegularExpression('#url\(\s*[\'"]?(https?:)?//#', file_get_contents(public_path(self::HOJA)), 'acceso.css no carga nada de otro sitio.');
+    }
+
+    public function test_sin_estilos_en_linea(): void
+    {
+        foreach ($this->todas() as $nombre => $html) {
+            $xpath = $this->xpath($html);
+            $this->assertSame(0, $xpath->query('//*[@style]')->length, "{$nombre}: sin style=\"\".");
+            $this->assertSame(0, $xpath->query('//style')->length, "{$nombre}: sin <style>.");
+        }
+    }
+
+    public function test_sin_javascript(): void
+    {
+        foreach ($this->html($this->pantallasNuevas()) as $nombre => $html) {
+            $xpath = $this->xpath($html);
+            $this->assertSame(0, $xpath->query('//script')->length, "{$nombre}: sin <script> (G-sin-js, TM7).");
+            $this->assertSame(0, $xpath->query('//*[@onclick or @onsubmit or @onchange]')->length, "{$nombre}: sin manejadores en línea.");
+        }
+
+        // D19: el inicio de sesión solo carga el script del ojo, propio y con defer.
+        $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+        $scripts = $xpath->query('//script');
+        $this->assertSame(1, $scripts->length, 'Un solo script.');
+        $this->assertStringContainsString('/js/acceso.js', $scripts->item(0)->getAttribute('src'));
+        $this->assertTrue($scripts->item(0)->hasAttribute('defer'), 'Con defer.');
+        $this->assertSame('', trim($scripts->item(0)->textContent), 'Sin código en línea.');
+        $this->assertSame(0, $xpath->query('//*[@onclick or @onsubmit or @onchange]')->length, 'Sin manejadores en línea.');
+    }
+
+    /** D20: el acceso conserva el aspecto que tenía el inicio de sesión antes de la 041. */
+    public function test_el_acceso_usa_el_estilo_anterior_del_login(): void
+    {
+        foreach ($this->todas() as $nombre => $html) {
+            $xpath = $this->xpath($html);
+            foreach (['panel-left', 'panel-illustration', 'panel-tagline', 'panel-sub', 'panel-right', 'form-container'] as $clase) {
+                $this->assertSame(1, $this->conClase($xpath, $clase)->length, "{$nombre}: lleva .{$clase}.");
+            }
+            foreach (['carnet', 'carnet-cuerpo', 'troquel', 'franja', 'etiqueta'] as $clase) {
+                $this->assertSame(0, $this->conClase($xpath, $clase)->length, "{$nombre}: sin .{$clase}, del estilo c7.");
+            }
+            $this->assertSame('Tu sonrisa,nuestra prioridad', trim($this->conClase($xpath, 'panel-tagline')->item(0)->textContent), "{$nombre}: el lema de antes.");
+            $this->assertSame(1, $xpath->query('//aside[contains(@class, "panel-left")]//img[@alt!=""]')->length, "{$nombre}: el logo del panel.");
+            $this->assertSame(1, $xpath->query('//h1[contains(@class, "form-title")]')->length, "{$nombre}: el título es el h1.");
+        }
+
+        $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+        $this->assertSame(1, $xpath->query('//a[contains(@class, "btn-google")]/*[local-name()="svg"]')->length, 'Google con su logo.');
+        $this->assertSame(2, $this->conClase($xpath, 'field-icon')->length, 'Un icono por campo.');
+        $this->assertSame('••••••••', $xpath->query('//input[@id="password"]')->item(0)->getAttribute('placeholder'));
+    }
+
+    public function test_el_login_tiene_el_boton_de_ver_la_contrasena(): void
+    {
+        $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+
+        $botones = $xpath->query('//input[@id="password"]/following-sibling::button[contains(@class, "ver-clave")]');
+        $this->assertSame(1, $botones->length, 'El botón va junto al campo de la contraseña.');
+        $boton = $botones->item(0);
+        $this->assertSame('button', $boton->getAttribute('type'), 'No envía el formulario.');
+        $this->assertTrue($boton->hasAttribute('hidden'), 'Sin JavaScript no aparece (D19).');
+        $this->assertSame('Mostrar contraseña', $boton->getAttribute('aria-label'));
+        $this->assertSame('false', $boton->getAttribute('aria-pressed'));
+        $this->assertSame('password', $boton->getAttribute('aria-controls'));
+    }
+
+    public function test_roles_de_los_avisos_y_errores(): void
+    {
+        foreach ($this->todas() as $nombre => $html) {
+            $this->assertSame(1, $this->xpath($html)->query('//h1')->length, "{$nombre}: un solo h1.");
+        }
+
+        $paginas = $this->html($this->pantallasNuevas());
+        $this->assertSame(1, $this->xpath($paginas['revisa tu correo'])->query('//*[@role="status"]')->length, '«Revisa tu correo» con role="status".');
+        foreach (['enlace que ya no sirve', 'pedir en espera', 'contraseña nueva en espera'] as $nombre) {
+            $this->assertSame(1, $this->xpath($paginas[$nombre])->query('//*[@role="alert"]')->length, "{$nombre}: role=\"alert\".");
+        }
+
+        // Errores junto a su campo: el del campo se enlaza con aria-describedby.
+        $usuario = $this->crearUsuario();
+        $token = Password::broker()->createToken($usuario);
+        Cache::flush();
+        $this->post(self::RESTABLECER, ['token' => $token, 'cuenta' => $usuario->id, 'password' => '1234567', 'password_confirmation' => 'otra-distinta']);
+        $xpath = $this->xpath($this->get(self::RESTABLECER.'/'.$token.'?cuenta='.$usuario->id)->assertOk()->getContent());
+        $entrada = $xpath->query('//input[@name="password"]')->item(0);
+        $this->assertSame('true', $entrada->getAttribute('aria-invalid'));
+        $ids = preg_split('/\s+/', trim($entrada->getAttribute('aria-describedby')));
+        $errores = array_filter($ids, fn ($id) => $xpath->query('//*[@id="'.$id.'" and contains(@class, "error")]')->length === 1);
+        $this->assertNotEmpty($errores, 'El error del campo está enlazado.');
+        $ayudas = array_filter($ids, fn ($id) => str_contains((string) $xpath->query('//*[@id="'.$id.'"]')->item(0)?->textContent, 'Al menos 8 caracteres'));
+        $this->assertNotEmpty($ayudas, 'Y la ayuda «Al menos 8 caracteres».');
+        // Decorativos ocultos para el lector de pantalla (D20): los círculos del panel y el icono del campo.
+        foreach (['deco-circle', 'field-icon'] as $clase) {
+            $decorativos = $this->conClase($xpath, $clase);
+            $this->assertGreaterThan(0, $decorativos->length, "Hay {$clase}.");
+            foreach ($decorativos as $decorativo) {
+                $this->assertSame('true', $decorativo->getAttribute('aria-hidden'), "{$clase} con aria-hidden.");
+            }
+        }
+    }
+
+    /** /review R3: tras un error, el foco va al primer campo con error y el lector de pantalla lo anuncia. */
+    public function test_el_foco_va_al_primer_campo_con_error(): void
+    {
+        foreach ($this->html(['pedir' => 'solicitud', 'contraseña nueva' => 'nueva']) as $nombre => $html) {
+            $this->assertSame(0, $this->xpath($html)->query('//input[@autofocus]')->length, "{$nombre}: sin error, sin autofocus.");
+        }
+
+        $this->flushSession();
+        Cache::flush();
+        $this->post(self::SOLICITUD, ['email' => 'no-es-un-correo']);
+        $enfocados = $this->xpath($this->get(self::SOLICITUD)->assertOk()->getContent())->query('//input[@autofocus]');
+        $this->assertSame(1, $enfocados->length, 'Pedir: un campo enfocado.');
+        $this->assertSame('email', $enfocados->item(0)->getAttribute('name'));
+
+        $usuario = $this->crearUsuario();
+        $token = Password::broker()->createToken($usuario);
+        $direccion = self::RESTABLECER.'/'.$token.'?cuenta='.$usuario->id;
+        foreach ([
+            'password' => ['password' => '1234567', 'password_confirmation' => 'otra-distinta'],
+            'password_confirmation' => ['password' => 'contrasena-valida-larga', 'password_confirmation' => 'otra-distinta'],
+        ] as $esperado => $datos) {
+            $this->flushSession();
+            Cache::flush();
+            $this->post(self::RESTABLECER, ['token' => $token, 'cuenta' => $usuario->id] + $datos);
+            $enfocados = $this->xpath($this->get($direccion)->assertOk()->getContent())->query('//input[@autofocus]');
+            $this->assertSame(1, $enfocados->length, "Con error en {$esperado}: un campo enfocado.");
+            $this->assertSame($esperado, $enfocados->item(0)->getAttribute('name'));
+        }
+    }
+
+    /** /review R10: el foco lee el error enlazado al campo; el aviso de arriba solo lo repite a la vista. */
+    public function test_el_login_anuncia_el_error_una_sola_vez(): void
+    {
+        foreach ([
+            'email' => ['email' => 'nadie@example.test', 'password' => 'una-contrasena-cualquiera'],
+            'password' => ['email' => 'nadie@example.test', 'password' => ''],
+        ] as $campo => $datos) {
+            $this->flushSession();
+            Cache::flush();
+            $this->from('/login')->post('/login', $datos);
+            $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+
+            $enfocados = $xpath->query('//input[@autofocus]');
+            $this->assertSame(1, $enfocados->length, "Con error en {$campo}: un campo enfocado.");
+            $this->assertSame($campo, $enfocados->item(0)->getAttribute('name'));
+            $this->assertSame($campo.'-error', $enfocados->item(0)->getAttribute('aria-describedby'), 'El error va enlazado al campo.');
+            $this->assertSame(1, $xpath->query('//*[@id="'.$campo.'-error"]')->length);
+            $this->assertSame(0, $xpath->query('//*[@role="alert"]')->length, 'Sin un segundo anuncio.');
+            $this->assertSame('true', $xpath->query('//*[contains(@class, "alert-error")]')->item(0)?->getAttribute('aria-hidden'), 'El aviso se sigue viendo, oculto al lector.');
+        }
+    }
+
+    public function test_la_espera_desactiva_el_boton(): void
+    {
+        foreach ($this->html(['pedir' => 'solicitudEnEspera', 'contraseña nueva' => 'nuevaEnEspera']) as $nombre => $html) {
+            $xpath = $this->xpath($html);
+            $botones = $xpath->query('//form//button[@type="submit"]');
+            $this->assertSame(1, $botones->length, "{$nombre}: un botón de enviar.");
+            $this->assertTrue($botones->item(0)->hasAttribute('disabled'), "{$nombre}: el botón queda desactivado (CA9).");
+            $this->assertStringContainsString('Disponible en un minuto', $botones->item(0)->textContent);
+            $this->assertStringContainsString('Espera un minuto', (string) $xpath->query('//*[@role="alert"]')->item(0)?->textContent);
+        }
+    }
+
+    public function test_el_talon_muestra_el_telefono_configurado(): void
+    {
+        config(['clinica.contacto.telefono' => '999 111 2222']);
+
+        foreach ($this->html($this->pantallasNuevas()) as $nombre => $html) {
+            if (str_contains($nombre, 'contraseña nueva')) {
+                continue; // Su talón habla del enlace: el diseño no pone ahí el teléfono.
+            }
+            $talon = (string) $this->xpath($html)->query('//dl[contains(@class, "talon")]')->item(0)?->textContent;
+            $this->assertStringContainsString('999 111 2222', $talon, "{$nombre}: el teléfono sale de clinica.contacto (D16).");
+            $this->assertStringNotContainsString('753 000 0000', $html, "{$nombre}: sin el teléfono escrito en la vista.");
+        }
+    }
+
+    public function test_la_pagina_del_token_no_se_guarda_en_cache(): void
+    {
+        foreach (['nueva', 'caducado', 'nuevaEnEspera'] as $metodo) {
+            $this->flushSession();
+            Cache::flush();
+            $this->assertStringContainsString('no-store', (string) $this->{$metodo}()->headers->get('Cache-Control'), "{$metodo}: no-store (TM11).");
+        }
+    }
+
+    /** @return array<string, string> tokens declarados en `:root` de `acceso.css`, resueltos */
+    private function tokensDeLaHoja(): array
+    {
+        $this->assertFileExists(public_path(self::HOJA));
+        $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents(public_path(self::HOJA)));
+        $this->assertSame(1, preg_match('/:root\s*\{(.*?)\}/s', $css, $root), 'acceso.css declara sus tokens en :root.');
+        preg_match_all('/(--[\w-]+)\s*:\s*([^;]+);/', $root[1], $pares, PREG_SET_ORDER);
+
+        $crudos = [];
+        foreach ($pares as [, $nombre, $valor]) {
+            $crudos[$nombre] = trim(preg_replace('/\s+/', ' ', $valor));
+        }
+
+        return array_map(fn (string $valor) => preg_match('/^var\((--[\w-]+)\)$/', $valor, $m) ? ($crudos[$m[1]] ?? $valor) : $valor, $crudos);
+    }
+
+    public function test_los_tokens_del_acceso_son_los_de_system_md(): void
+    {
+        $sistema = file_get_contents(base_path('docs/design/system.md'));
+        $delSistema = $this->tokensDelSistema();
+        $tokens = $this->tokensDeLaHoja();
+
+        foreach (array_keys(self::TOKENS_SOLO_DEL_ACCESO) as $nuevo) {
+            $this->assertArrayHasKey($nuevo, $tokens, "acceso.css declara {$nuevo}.");
+        }
+        foreach (self::TOKENS_SOLO_DEL_ACCESO as $nombre => $valor) {
+            $this->assertStringContainsString($nombre, $sistema, "system.md recoge {$nombre}.");
+            $this->assertStringContainsString($valor, $sistema, "system.md da a {$nombre} el valor {$valor}.");
+        }
+        foreach ($tokens as $nombre => $valor) {
+            $this->assertArrayHasKey($nombre, $delSistema, "{$nombre} no es un token del sistema.");
+            $this->assertSame($delSistema[$nombre], $valor, "{$nombre} tiene otro valor que en el sistema.");
+            $enElSistema = str_contains($sistema, $nombre) || (str_starts_with($nombre, '--space-') && str_contains($sistema, '--space-1'));
+            $this->assertTrue($enElSistema, "system.md no recoge {$nombre}.");
+        }
+    }
+
+    public function test_cada_var_del_acceso_tiene_su_token(): void
+    {
+        $tokens = $this->tokensDeLaHoja();
+        $this->assertNotEmpty($tokens);
+        $fuentes = [public_path(self::HOJA), resource_path('views/layouts/acceso.blade.php'), resource_path('views/auth/login.blade.php')];
+        foreach (glob(resource_path('views/auth/recuperar/*.blade.php')) as $vista) {
+            $fuentes[] = $vista;
+        }
+
+        foreach ($fuentes as $fuente) {
+            $this->assertFileExists($fuente);
+            preg_match_all('/var\((--[\w-]+)\)/', file_get_contents($fuente), $usados);
+            foreach (array_unique($usados[1]) as $usado) {
+                $this->assertArrayHasKey($usado, $tokens, basename($fuente).": var({$usado}) sin token en acceso.css (D13).");
+            }
+        }
+    }
+
+    public function test_acceso_css_sin_literales_fuera_de_root(): void
+    {
+        // El comprobador: falla con un literal fuera de las exenciones y pasa con ellas (D17, A29).
+        foreach (['15.5px', '#123456', 'rgba(0, 0, 0, 0.1)', '1px solid var(--border)', 'calc(var(--space-6) + 3px)'] as $literal) {
+            $this->assertFalse($this->usaSoloTokens($literal), "{$literal} es un literal.");
+        }
+        foreach (['var(--p600)', '0', 'auto', 'none', 'transparent', '100%', '1fr', 'calc(var(--space-8) * 2.5)', 'var(--border-width) dashed var(--p200)', 'linear-gradient(145deg, var(--p600), var(--p800))'] as $valido) {
+            $this->assertTrue($this->usaSoloTokens($valido), "{$valido} usa solo tokens.");
+        }
+
+        $this->assertFileExists(public_path(self::HOJA));
+        $revisadas = 0;
+        // analizarCss deja fuera las @font-face (A35) y las condiciones de @media (D17).
+        foreach ($this->reglasCss(self::HOJA) as [$selector, $cuerpo]) {
+            if ($selector === ':root') {
+                continue;
+            }
+            foreach ($this->declaracionesRevisadas($cuerpo) as [$propiedad, $valor]) {
+                $revisadas++;
+                $this->assertTrue($this->usaSoloTokens($valor), "{$selector} { {$propiedad}: {$valor} } tiene un literal.");
+            }
+        }
+        $this->assertGreaterThan(20, $revisadas, 'La hoja declara colores, tamaños y espacios.');
+    }
+
+    public function test_los_valores_de_los_correos_son_tokens(): void
+    {
+        $usuario = $this->crearUsuario();
+
+        foreach ([
+            'enlace' => [new EnlaceRestablecimiento($usuario, Str::random(64)), 'correos/enlace-restablecimiento.blade.php'],
+            'aviso' => [new ContrasenaCambiada($usuario), 'correos/contrasena-cambiada.blade.php'],
+        ] as $nombre => [$correo, $vista]) {
+            // Las plantillas no llevan style=""; el HTML enviado los lleva, de la hoja (D9).
+            foreach ([$vista, 'correos/marco-acceso.blade.php'] as $plantilla) {
+                $this->assertFileExists(resource_path('views/'.$plantilla));
+                $this->assertStringNotContainsString('style=', file_get_contents(resource_path('views/'.$plantilla)), "{$plantilla}: sin style=\"\".");
+            }
+
+            $html = $correo->render();
+            $estilos = $this->xpath($html)->query('//*[@style]');
+            $this->assertGreaterThan(5, $estilos->length, "{$nombre}: la hoja se pasó a estilos en línea.");
+            foreach ($estilos as $elemento) {
+                foreach ($this->declaracionesRevisadas($elemento->getAttribute('style')) as [$propiedad, $valor]) {
+                    $this->assertTrue($this->esValorDeToken($valor), "{$nombre}: {$propiedad}: {$valor} no es el valor de un token (D9).");
+                }
+            }
+        }
+    }
+
+    public function test_la_vista_previa_no_existe_fuera_de_local(): void
+    {
+        $this->assertFalse($this->app->environment('local'));
+
+        $this->get('/_disenio/041/pedir')->assertNotFound();
+        $this->get('/_disenio/041/correo-enlace')->assertNotFound();
+    }
+}

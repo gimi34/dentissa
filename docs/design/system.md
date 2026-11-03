@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.10.0
+version: 1.11.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-10-31
+updated: 2026-11-03
 ---
 
 # Sistema de diseño de Dentissa
@@ -121,6 +121,14 @@ Tokens de tamaño (spec 020): `--text-acceso-titulo` (28px), `--text-acceso` (14
 `--text-acceso-destacado` (16.8px), del error genérico; interlineado: `--leading-publico` (1.5) y
 `--leading-titulo` (1.15); espaciado de letras: `--tracking-etiqueta` (0.08em) y `--tracking-titulo`
 (-0.01em).
+
+Acceso (spec 041, 1.11.0; [diseño](../specs/041-recuperar-contrasena/design.md), D20): familia
+`--font-acceso` (`Roboto, system-ui, sans-serif`, la Roboto autoalojada de `public/fonts/roboto/`, sin
+Google Fonts), `--text-acceso-small` (12px, etiquetas y letra pequeña), `--text-acceso-lema` (30px, el lema
+del panel), `--leading-acceso-panel` (1.7, la frase del panel) y `--tracking-campo` (0.02em, etiquetas). El inicio de sesión y la
+recuperación de contraseña usan además `--text-acceso-titulo` y `--text-acceso` (020), `--text-meta`
+(etiquetas, ayuda y error de campo) y `--leading-publico`. Ninguno de los que usa el acceso se retira
+mientras lo use.
 
 Tokens de tamaño (spec 027): `--text-body` (13.5px) y `--text-small` (11.5px); (spec 033)
 `--text-meta` (13px, migas de pan) y `--text-marca` (16px; sin uso desde la spec 034, que cambia la marca de
@@ -255,6 +263,15 @@ UTC, integridad `sha512-weuGsCirGVWBWqpt6YUp0yLThTe4G8YO4…`, igual a la del re
     `--acceso-solape` (56px, lo que la tarjeta sube sobre la franja), `--acceso-panel-pad` (56px,
     relleno del panel del escritorio) y `--acceso-lado-pad` (42px, relleno vertical del lado de la
     tarjeta en el escritorio).
+- **Spec 041 (acceso, 1.11.0, D20):** los valores del inicio de sesión anterior a la spec, llevados a tokens:
+  `--acceso-panel-fondo` (`linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%)`), `--acceso-panel-sub`
+  (`rgba(255, 255, 255, 0.7)`), `--acceso-circulo` (`rgba(255, 255, 255, 0.08)`), `--acceso-panel-sub-ancho` (340px), `--acceso-panel-pad-y` (48px),
+  `--acceso-panel-pad-x` (52px), `--acceso-form-ancho` (400px), `--acceso-cabecera-pie` (32px),
+  `--acceso-campo-sangria` (42px), `--radius-acceso` (10px), `--logo-acceso-w` (310px), `--sombra-boton-acceso`
+  (`0 4px 16px rgba(212, 83, 126, 0.3)`) y `--duration-entrada` (0.45s). Usa además `--space-detalle` y
+  `--text-publico-small` (botón principal), y `--green-texto` (aviso de éxito), que trajeron la 020 y la 038.
+  No se retiran mientras el acceso los use. Su punto de corte es 769 px (formulario solo en el teléfono, panel
+  al 48 % en el escritorio), solo en la condición de `@media`.
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -637,6 +654,32 @@ Componentes de 1.8.0 (ronda 3, opción C «La línea de abound» con la ubicaci�
   columnas se apilan. Títulos de columna `h2` en `--text-publico` y `--weight-bold`; enlaces blancos y
   subrayados, con alto ≥ `--touch-min`, y foco `--focus-ring-inverso`.
 
+### Acceso: panel y formulario (spec 041, 1.11.0, D20)
+Inicio de sesión y recuperación de contraseña, en `layouts/acceso.blade.php` con `public/css/acceso.css`
+([diseño](../specs/041-recuperar-contrasena/design.md)), con el aspecto del inicio de sesión anterior a la
+spec. Exclusivos de estas pantallas:
+- **Panel de marca:** desde 769 px, panel al 48 % con `--acceso-panel-fondo`, círculos decorativos
+  (`aria-hidden`), el logo, el lema «Tu sonrisa, nuestra prioridad» y su frase, igual en todas las pantallas.
+  Por debajo de 769 px no se muestra.
+- **Formulario:** ancho máximo `--acceso-form-ancho`, sobre `--white` en el escritorio y `--p50` en el teléfono.
+  Un solo `h1`, el título del formulario.
+- **Datos de abajo (`.talon`):** `dl` de etiqueta en negrita y valor en `--text-meta`, bajo una línea `--border`;
+  apila etiqueta y valor por debajo de 400 px. Lleva el teléfono de la consulta (`config('clinica.contacto')`).
+- **Bloque «Vale hasta»:** fondo `--p50`, la etiqueta, la hora en `--p800` al tamaño del título y la
+  instrucción.
+- **Botón primario del acceso:** `--p500` (hover `--p600`), blanco encima (5,42:1; sobre `--p400` era
+  3,93:1, DS1). Movimiento M-1 abajo.
+- **Botón en espera:** desactivado (`disabled`, sin foco), `--p100` con texto `--p800` y borde `--border`,
+  con «Disponible en un minuto»; el aviso de «Demasiados intentos» explica cuánto esperar.
+- **Campos del acceso:** icono `--p300` decorativo, fondo `--p50`, radio `--radius-acceso` y borde
+  `--border-control` (`--p400`, ≥ 3:1); etiqueta, ayuda y error en `--text-acceso-small`; error enlazado con `aria-describedby` y `aria-invalid`.
+- **Casilla:** cuadro visible de 18px (`--icon-md`), de un solo trazo `--border-control` y radio `--space-1`, con
+  zona de toque de 44px (`--touch-min`). Marcada no se rellena: lleva una palomita `--p500` (decisión del usuario, 2026-11-03).
+- **Ver la contraseña (solo en el inicio de sesión):** botón de 44px (`--touch-min`) dentro del campo, con
+  el icono del ojo en `--p500` y `aria-pressed`; mejora progresiva, sin JavaScript no aparece.
+- **Avisos:** «Revisa tu correo» y el éxito del login con `role="status"`; enlace que ya no sirve y
+  demasiados intentos con `role="alert"`.
+
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
 - agendada → pink (`--p600` sobre `--p100`, 6.05:1);
@@ -698,6 +741,8 @@ SHA-256 de cada archivo.
 | `--stagger` (spec 038, 1.8.0) | `80ms` | Escalonado entre partes de una entrada (cuatro pasos como máximo) |
 | `--duration-marquesina` (spec 038, 1.8.0; retirado en 1.9.0) | `48s` | Una vuelta de la franja del horario |
 | `--ease-in-out` (spec 038, 1.9.0) | `cubic-bezier(0.77, 0, 0.175, 1)` | El trazo del diente (M-2) |
+| `--duration-respuesta` (spec 041, 1.11.0) | `150ms` | Respuesta de los botones del acceso (M-1 de la 041) |
+| `--ease-clinico` (spec 041, 1.11.0) | `cubic-bezier(0.2, 0.7, 0.2, 1)` | Curva de esa respuesta |
 | (sin token) | `all 0.15s` | Hover de botones, menú y accesos rápidos (`translateY(-1px)` en `.quick-action`) |
 | (sin token) | animaciones `fadeUp` y `modalIn` | Entrada del acceso y del registro, y diálogos |
 
@@ -716,6 +761,10 @@ firma (la franja del horario), entradas por sección que cambian con el contenid
 tarjetas una a una, mapa desde una máscara) con la clase `is-in` que pone el script común
 `public/js/publico.js`, y respuesta bajo la mano (botones que ceden, tarjetas que cambian borde,
 sombra e icono).
+
+Acceso (spec 041, 1.11.0): solo la respuesta de los botones (M-1), `transform: scale(0.98)` y el color
+de fondo con `--duration-respuesta` y `--ease-clinico`, en `:active`; sin transición con movimiento
+reducido y sin JavaScript.
 
 ## Pantallas principales
 
@@ -879,6 +928,8 @@ Estados: `capturada` · `sin captura (motivo)` · `no accesible (motivo)`.
   `prefers-reduced-motion: reduce` y lo que oculta, solo con JavaScript; un solo script propio
   (`public/js/publico.js`, con `defer`) y la página completa sin él; nada se presenta como el equipo;
   las promociones (040) sin cintillo, contadores ni colores de oferta.
+- Acceso (spec 041, 1.11.0): el inicio de sesión y la recuperación comparten el panel y el formulario; sin
+  JavaScript ni recursos de otros sitios (Roboto propia); `noindex` en todas sus pantallas; un solo `h1`.
 - Antes, páginas públicas (1.8.0, rediseño de la ronda 3; sustituida por la regla anterior): una escena y una franja como máximo
   por página; entradas que cambian con el contenido, nunca el mismo fundido en todo; nada se levanta al
   pasar el puntero; la foto solo bajo un velo de la marca; un solo script propio
@@ -941,3 +992,5 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-31 | brecha | La 038 y la 020 numeraron por separado las versiones 1.7.0 y 1.8.0 en ramas paralelas, y comparten `--leading-publico` y `--sombra-tarjeta-alta` con el mismo valor | Al fusionar `main` en la 038 se conservan las entradas de las dos specs bajo 1.7.0 y 1.8.0, con una sola declaración de cada token compartido; la versión siguiente es 1.9.0 (ronda 5 de la 038, T046) | usuario (/analyze 038 A35 y A36, T033) |
 | 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 5 de las páginas públicas (spec 038, «La ventana del diente»)? | Versión 1.9.0, superficie «Sitio público»: `--font-display` (Cormorant Garamond) y `--font-publica` en Montserrat (sustituye a Lexend); `--text-display`, `--text-statement`, `--text-seccion`, `--text-indice`, `--text-firma` y `--text-lead` (fluidos); `--shadow-soft`, `--ease-in-out`, `--page-ancho`, `--gutter` y `--space-seccion-publica`; componentes botón en píldora (principal, tinta y fantasma), pastilla de estado, promesa, índice de categorías, tarjeta de la agenda, cabecera pública con «Menú» y pie; los pares de contraste de la ronda 5; reglas de uso. Se retiran Lexend, los velos, `--text-portada`, `--text-marquesina`, `--leading-portada`, `--tracking-portada`, `--sombra-tarjeta`, `--icono-tarjeta` y `--duration-marquesina` y los componentes de la ronda 3 (portada, tarjeta de categoría y franja); `--sombra-tarjeta-alta` y `--leading-publico` se quedan por la 020 | usuario (spec 038, design.md de la ronda 5 y plan D19–D21) |
 | 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 6 de la 038 (motor por criterios, candidato `c5`)? | Versión 1.10.0: `--font-display` pasa a Newsreader (Cormorant Garamond corre las tildes); componentes «Etiqueta», «Cita destacada», «Pasos en línea», «Semana de la consulta» e índice con número; la arcada y la escena «consulta» (exclusivos de `/`); el menú del móvil solo con el icono de hamburguesa; el ancho del logo de la cabecera; se retiran la promesa en tarjetas, la tarjeta con el diente y la ventana del diente | usuario (spec 038, design.md de la ronda 6 y plan D23) |
+| 2026-11-03 | diseño | ¿Qué incorpora el sistema para el acceso y la recuperación de contraseña (spec 041)? | Versión 1.11.0: tokens `--font-acceso` (Roboto autoalojada), `--text-acceso-small`, `--duration-respuesta` y `--ease-clinico`; componentes del acceso (marco con franja y panel con degradado `--p600 → --p800`, carnet, troquel, talón, bloque «Vale hasta», botón en espera, casilla de 44 px); botón primario del acceso en `--p500`, borde de campos `--border-control` y etiquetas a `--text-meta`; M-1. Los tokens que ya estaban (`--text-acceso-titulo`, `--text-acceso`, `--acceso-form-max` de la 020; `--green-texto`, `--text-publico`, `--leading-publico`, `--radius-pill` y `--sombra-tarjeta-alta` de la 038) no se duplican y no se retiran mientras el acceso los use | usuario (spec 041, design.md `c7`, plan D13 y D18) |
+| 2026-11-03 | diseño | El usuario prefiere el estilo anterior del acceso al carnet de `c7` (spec 041, D20) | Dentro de 1.11.0, aún sin liberar: sale el carnet (franja, tarjeta y troquel) y entran el panel y el formulario del login anterior, con sus valores como tokens; se mantienen el contraste, el foco y el toque que pide P9 | usuario |

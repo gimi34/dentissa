@@ -35,6 +35,14 @@
                     <input type="email" name="email" value="{{ old('email', $user->email) }}"
                            class="field {{ $errors->has('email') ? 'field-error' : '' }}" required>
                     @error('email')<div class="field-hint field-hint-error">{{ $message }}</div>@enderror
+                    @if($user->password_hash)
+                        <label class="field-label perfil-contrasena-correo" for="contrasena_correo">Contraseña actual, solo si cambias el correo</label>
+                        <input type="password" id="contrasena_correo" name="contrasena_correo" autocomplete="current-password"
+                               class="field {{ $errors->has('contrasena_correo') ? 'field-error' : '' }}" @error('contrasena_correo') aria-invalid="true" aria-describedby="contrasena-correo-error" autofocus @enderror>
+                        @error('contrasena_correo')<div class="field-hint field-hint-error" id="contrasena-correo-error">{{ $message }}</div>@enderror
+                    @elseif(! $errors->has('email'))
+                        <div class="field-hint perfil-ayuda-correo">Para cambiar el correo, crea primero una contraseña en esta página.</div>
+                    @endif
                 </div>
                 <div>
                     <label class="field-label">Teléfono celular</label>
