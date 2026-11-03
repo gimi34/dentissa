@@ -27,6 +27,7 @@ use Tests\TestCase;
  *  - El aviso (CA7): sin enlace de restablecimiento, con «¿No fuiste tú?» y el contacto de
  *    `clinica.contacto` (D16).
  *  - Los dos tienen versión de texto y su hoja solo lleva valores de tokens (D9, D17).
+ *  - Tienen el estilo del login (D20).
  *  - Un fallo del correo solo registra la clase del error (TM6).
  */
 class CorreosRestablecimientoTest extends TestCase
@@ -197,6 +198,26 @@ class CorreosRestablecimientoTest extends TestCase
             }
         }
         $this->assertGreaterThan(10, $revisadas, 'La hoja declara colores, tamaños y espacios.');
+    }
+
+    /** D20: los correos adoptan el estilo del login. */
+    public function test_los_correos_usan_el_estilo_del_login(): void
+    {
+        $usuario = $this->crearUsuario();
+
+        foreach ([
+            'enlace' => new EnlaceRestablecimiento($usuario, Str::random(64)),
+            'aviso' => new ContrasenaCambiada($usuario),
+        ] as $nombre => $correo) {
+            [$html] = $this->renderizar($correo);
+            $this->assertStringNotContainsString('troquel', $html, "{$nombre}: sin el troquel de c7.");
+            $this->assertStringContainsString('linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%)', $html, "{$nombre}: el degradado del panel.");
+            $this->assertMatchesRegularExpression('/class="correo-cab"[^>]*background-color: #72243E/', $html, "{$nombre}: color de respaldo sin degradado.");
+            $this->assertStringContainsString('Tu sonrisa,', $html, "{$nombre}: el lema del login.");
+        }
+
+        [$html] = $this->renderizar(new EnlaceRestablecimiento($usuario, Str::random(64)));
+        $this->assertMatchesRegularExpression('/class="btn-primario"[^>]*display: block[^>]*border-radius: 10px/', $html, 'Botón ancho, con el radio del login.');
     }
 
     public function test_un_fallo_del_correo_solo_registra_la_clase(): void
