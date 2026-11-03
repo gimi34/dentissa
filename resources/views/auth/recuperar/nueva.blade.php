@@ -8,38 +8,47 @@
 
 @section('titulo', 'Contraseña nueva')
 
-@section('carnet')
-    <form class="carnet-cuerpo" method="POST" action="{{ route('contrasena.restablecer') }}">
+@section('contenido')
+    <div class="form-header">
+        <h1 class="form-title">Elige tu contraseña nueva</h1>
+    </div>
+    @if($espera)
+        <div class="alert alert-espera" role="alert">
+        @include('auth.recuperar.partes.icono-espera')
+        <span><strong>Demasiados intentos.</strong>Espera un minuto y vuelve a intentarlo.</span>
+    </div>
+    @endif
+    <form method="POST" action="{{ route('contrasena.restablecer') }}">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
         <input type="hidden" name="cuenta" value="{{ $cuenta }}">
-        <span class="etiqueta">Contraseña nueva</span>
-        <h1>Elige tu contraseña nueva</h1>
-        @if($espera)
-            <div class="aviso aviso-espera" role="alert"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg><span><strong>Demasiados intentos.</strong>Espera un minuto y vuelve a intentarlo.</span></div>
-        @endif
-        <div class="campo @error('password') error @enderror">
-            <label for="clave">Contraseña nueva</label>
-            <input id="clave" name="password" type="password" autocomplete="new-password" required aria-describedby="clave-ayuda @error('password') clave-error @enderror" @error('password') aria-invalid="true" @enderror>
-            <span class="ayuda" id="clave-ayuda">Al menos 8 caracteres.</span>
+        <div class="field-group">
+            <label class="field-label" for="clave">Contraseña nueva</label>
+            <div class="field-wrap">
+                @include('auth.recuperar.partes.icono-clave')
+                <input class="field @error('password') error @enderror" id="clave" name="password" type="password" autocomplete="new-password" required aria-describedby="clave-ayuda @error('password') clave-error @enderror" @error('password') aria-invalid="true" @enderror>
+            </div>
+            <p class="field-ayuda" id="clave-ayuda">Al menos 8 caracteres.</p>
             @error('password')
-                <span class="msg-error" id="clave-error"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>{{ $message }}</span>
+                <div class="error-msg" id="clave-error">@include('auth.recuperar.partes.icono-error'){{ $message }}</div>
             @enderror
         </div>
-        <div class="campo @error('password_confirmation') error @enderror">
-            <label for="clave2">Repite la contraseña</label>
-            <input id="clave2" name="password_confirmation" type="password" autocomplete="new-password" required @error('password_confirmation') aria-invalid="true" aria-describedby="clave2-error" @enderror>
+        <div class="field-group">
+            <label class="field-label" for="clave2">Repite la contraseña</label>
+            <div class="field-wrap">
+                @include('auth.recuperar.partes.icono-clave')
+                <input class="field @error('password_confirmation') error @enderror" id="clave2" name="password_confirmation" type="password" autocomplete="new-password" required @error('password_confirmation') aria-invalid="true" aria-describedby="clave2-error" @enderror>
+            </div>
             @error('password_confirmation')
-                <span class="msg-error" id="clave2-error"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>{{ $message }}</span>
+                <div class="error-msg" id="clave2-error">@include('auth.recuperar.partes.icono-error'){{ $message }}</div>
             @enderror
         </div>
         @if($espera)
-            <button class="btn btn-espera" type="submit" disabled>Disponible en un minuto</button>
+            <button class="btn-submit" type="submit" disabled>Disponible en un minuto</button>
         @else
-            <button class="btn btn-primario" type="submit">Guardar contraseña</button>
+            <button class="btn-submit" type="submit">Guardar contraseña</button>
         @endif
     </form>
-    <div class="troquel" aria-hidden="true"></div>
     <dl class="talon">
         <dt>Cuenta</dt><dd>{{ $correo }}</dd>
         <dt>Vale hasta</dt><dd>Hasta las {{ $hora }}.</dd>

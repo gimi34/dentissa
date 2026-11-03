@@ -3,19 +3,17 @@
 
 @section('titulo', 'Revisa tu correo')
 
-@section('carnet')
-    <div class="carnet-cuerpo">
-        <span class="etiqueta">Enlace pedido</span>
-        <h1>Revisa tu correo</h1>
-        <p class="sub" role="status">Si <b>{{ $correo }}</b> es de una cuenta activa, te llegará un enlace en unos minutos.</p>
-        <div class="vale-bloque">
-            <span class="etiqueta">Vale hasta las</span>
-            <span class="hora">{{ $hora }}</span>
-            <p>Abre el correo de Dentissa y pulsa «Elegir contraseña nueva».</p>
-        </div>
-        <a class="enlace" href="{{ route('login') }}">Volver a iniciar sesión</a>
+@section('contenido')
+    <div class="form-header">
+        <h1 class="form-title">Revisa tu correo</h1>
+        <p class="form-subtitle" role="status">Si <b>{{ $correo }}</b> es de una cuenta activa, te llegará un enlace en unos minutos.</p>
     </div>
-    <div class="troquel" aria-hidden="true"></div>
+    <div class="vale-bloque">
+        <span class="vale-etiqueta">Vale hasta las</span>
+        <span class="vale-hora">{{ $hora }}</span>
+        <p>Abre el correo de Dentissa y pulsa «Elegir contraseña nueva».</p>
+    </div>
+    <p class="enlace-volver"><a class="forgot-link" href="{{ route('login') }}">Volver a iniciar sesión</a></p>
     <dl class="talon">
         <dt>¿No llegó?</dt><dd><p>Revisa la carpeta de spam o <a class="en-texto" href="{{ route('contrasena.solicitud') }}">pide otro enlace</a>.</p></dd>
         <dt>¿Sin correo?</dt><dd>Llama a la consulta: <span class="tel">{{ config('clinica.contacto.telefono') }}</span></dd>

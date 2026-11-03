@@ -8,16 +8,17 @@
 
 @section('titulo', 'Este enlace ya no sirve')
 
-@section('carnet')
-    <div class="carnet-cuerpo">
-        <span class="etiqueta">Enlace vencido</span>
-        <h1>Este enlace ya no sirve</h1>
-        <div class="aviso aviso-error" role="alert"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Pasaron más de 60 minutos, ya se usó o pediste uno más nuevo.</span></div>
-        <p class="sub">Tu contraseña no cambió.</p>
-        <a class="btn btn-primario" href="{{ route('contrasena.solicitud') }}">Pedir un enlace nuevo</a>
-        <a class="enlace" href="{{ route('login') }}">Volver a iniciar sesión</a>
+@section('contenido')
+    <div class="form-header">
+        <h1 class="form-title">Este enlace ya no sirve</h1>
+        <p class="form-subtitle">Tu contraseña no cambió.</p>
     </div>
-    <div class="troquel" aria-hidden="true"></div>
+    <div class="alert alert-error" role="alert">
+        @include('auth.recuperar.partes.icono-error')
+        <span>Pasaron más de 60 minutos, ya se usó o pediste uno más nuevo.</span>
+    </div>
+    <a class="btn-submit" href="{{ route('contrasena.solicitud') }}">Pedir un enlace nuevo</a>
+    <p class="enlace-volver"><a class="forgot-link" href="{{ route('login') }}">Volver a iniciar sesión</a></p>
     <dl class="talon">
         <dt>¿Sin correo?</dt><dd>Llama a la consulta: <span class="tel">{{ config('clinica.contacto.telefono') }}</span></dd>
     </dl>
