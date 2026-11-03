@@ -9,10 +9,10 @@ use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
@@ -53,8 +53,13 @@ class RecuperarContrasenaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        RateLimiter::clear('solicitar-enlace');
-        RateLimiter::clear('fijar-contrasena');
+        $this->limpiarLimitadores();
+    }
+
+    /** Los limitadores guardan su cuenta en el caché (`array` en los tests) con la clave md5(nombre.origen). */
+    private function limpiarLimitadores(): void
+    {
+        Cache::flush();
     }
 
     private function enlace(Usuario $usuario, string $token): string
@@ -69,7 +74,7 @@ class RecuperarContrasenaTest extends TestCase
 
     private function restablecer(Usuario $usuario, string $token, array $cambios = [])
     {
-        RateLimiter::clear('fijar-contrasena');
+        $this->limpiarLimitadores();
 
         return $this->post(self::RESTABLECER, array_merge([
             'token' => $token,
@@ -153,7 +158,7 @@ class RecuperarContrasenaTest extends TestCase
         Mail::fake();
 
         foreach (['cliente', 'asistente', 'dentista', 'admin'] as $rol) {
-            RateLimiter::clear('solicitar-enlace');
+            $this->limpiarLimitadores();
             $usuario = $this->crearUsuario($rol);
 
             $this->from(self::SOLICITUD)->post(self::SOLICITUD, ['email' => $usuario->email])
@@ -175,7 +180,7 @@ class RecuperarContrasenaTest extends TestCase
 
         // Pedir el enlace: correo requerido, con formato RFC y de hasta 255 caracteres.
         foreach (['' => 'vacío', 'no-es-un-correo' => 'sin formato', str_repeat('a', 250).'@example.test' => 'de más de 255'] as $correo => $caso) {
-            RateLimiter::clear('solicitar-enlace');
+            $this->limpiarLimitadores();
             $this->from(self::SOLICITUD)->post(self::SOLICITUD, ['email' => $correo])
                 ->assertRedirect(self::SOLICITUD)
                 ->assertSessionHasErrors('email');
@@ -371,7 +376,7 @@ class RecuperarContrasenaTest extends TestCase
     {
         $this->assertEnlaceYaNoSirve($this->get($this->enlace($usuario, $token))->assertOk()->getContent());
 
-        RateLimiter::clear('fijar-contrasena');
+        $this->limpiarLimitadores();
         $respuesta = $this->followingRedirects()->post(self::RESTABLECER, [
             'token' => $token,
             'cuenta' => $usuario->id,
