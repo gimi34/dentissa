@@ -27,7 +27,8 @@ updated: 2026-10-18
 - Mecanismo de autenticación: sesión propia de Laravel (guard `web`, driver `session`) sobre
   `App\Models\Usuario`; `Auth::attempt` con `activo=1` y `session()->regenerate()`; logout por
   POST con invalidación. Google OAuth con Socialite (flujo con `state`). Registro público crea
-  siempre rol `cliente`. No hay recuperación de contraseña ni verificación de correo.
+  siempre rol `cliente`. Recuperación de contraseña por correo (spec 041): token de un solo uso con hash,
+  60 minutos, solo cuentas activas y sesiones cerradas al restablecer. No hay verificación de correo.
 - Modelo de autorización: rol único por usuario (`usuarios.rol`: cliente, asistente, dentista,
   admin). Regla de negocio deseada: dentista → sus pacientes asignados o con cita con él;
   asistente → los pacientes de sus dentistas asignados; solo el dentista autor (o admin) edita un
@@ -57,6 +58,8 @@ updated: 2026-10-18
 | `GET/POST /login` | HTTP público | no | 5 fallos por minuto por correo e IP (spec 030) |
 | `GET/POST /registro`, `/registro/contacto` | HTTP público | no | los `POST` de las dos rutas, 5 por minuto por IP (spec 030); los `GET`, sin límite; sin captcha |
 | `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
+| `GET/POST /contrasena/olvidada`, `GET /contrasena/enviada` (spec 041, con `RECUPERAR_CONTRASENA=true`) | HTTP público | no | el `POST`, 5 por minuto por origen y un correo por cuenta y minuto; misma respuesta haya cuenta o no |
+| `GET /contrasena/nueva/{token}`, `POST /contrasena/nueva` (spec 041, con `RECUPERAR_CONTRASENA=true`) | HTTP público | token de un solo uso de esa cuenta | el `POST`, 5 por minuto por origen; `no-referrer`, `no-store` y el token enmascarado en el log de acceso de nginx |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `GET /`, `GET /servicios` | HTTP público | no (con sesión, `/` redirige al panel del rol) | Páginas públicas (spec 038): sin parámetros; solo el catálogo activo (nombre, descripción y categoría), escapado (TM1, TM2), con una consulta por petición. Sin límite propio: riesgo aceptado TM6 de la 038 (Cloudflare delante, spec 030). `/` incrusta el mapa de Google: `frame-src https://www.google.com` solo en `/` (`docker/nginx/seguridad/marcos.conf`), y el navegador del visitante pide el mapa a Google al acercarse (`loading="lazy"`), enviando solo el dominio de origen (`referrerpolicy`); la página lo avisa («El mapa lo sirve Google.», TM4) |
@@ -68,7 +71,7 @@ updated: 2026-10-18
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
 | SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
 | Temporizador `dentissa-vigilar` (systemd, cada minuto) | tarea programada | cuenta de despliegue | `php artisan dentissa:vigilar` en `app` como `www-data`: lee el log de acceso de nginx (montado en solo lectura) y el canal `seguridad`, y envía avisos por correo; sin entrada externa propia (spec 032, ADR 0007) |
-| Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar los avisos; los correos no llevan datos personales ni secretos (spec 032, TM7, TM13) |
+| Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar. Los avisos no llevan datos personales ni secretos (spec 032, TM7, TM13). Desde la spec 041 (ADR 0008) también envía a las cuentas el enlace de restablecimiento, que equivale a una credencial mientras está vigente, y el aviso de contraseña cambiada |
 
 | `GET /admin/auditoria` | HTTP | sí, `role:admin` | consulta del registro de auditoría, solo lectura; filtros validados (identificadores, nombres y fechas `AAAA-MM-DD`); la propia consulta queda registrada (spec 020) |
 | `GET /_disenio/020/{pantalla}` | HTTP, solo `APP_ENV=local` | no | vista previa del diseño con datos inventados, sin sesión ni base; no existe en producción (spec 020, TM15; exención de P3 aceptada) |
@@ -92,9 +95,10 @@ nuevas de la 020 no llevan estilos ni scripts en línea.
   escritas en `docker-compose.yml` y `phpunit.xml`. En producción (spec 030): `app.env`, `db.env` y
   `tunnel.env` en `/opt/dentissa/entorno` del servidor (carpeta 700, archivos 600, fuera del clon,
   excluidos de git y de la imagen); cada servicio lee solo el suyo (ver [deployment.md](deployment.md)).
-- Avisos de producción (spec 032): `MAIL_USERNAME` y `MAIL_PASSWORD` de `app.env` son la contraseña
-  de aplicación de una **cuenta de Gmail solo para enviar**, sin otros datos ni reenvíos (TM13): una
-  contraseña de aplicación da acceso a todo el buzón de su cuenta. `verificar.sh` comprueba que
+- Avisos de producción (spec 032) y correos de la recuperación de contraseña (spec 041, ADR 0008):
+  `MAIL_USERNAME` y `MAIL_PASSWORD` de `app.env` son la contraseña de aplicación de una **cuenta de Gmail
+  solo para enviar**, sin otros datos ni reenvíos (TM13): una contraseña de aplicación da acceso a todo
+  el buzón de su cuenta, que desde la 041 guarda en «Enviados» los enlaces de restablecimiento. `verificar.sh` comprueba que
   están definidas, sin el texto de ejemplo y con TLS (puerto 465), sin mostrar los valores.
 - Copias de la base (spec 032, ADR 0007): cifradas (`.sql.gz.gpg`) para la clave del responsable. En
   el servidor solo está la **clave pública** (`/opt/dentissa/entorno/copias.pub.asc`, 600). La
@@ -242,14 +246,14 @@ Correcciones:
 - RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: mitigada (v0.10.0)
 - RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: mitigada (v0.10.0)
 - RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
-- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05)
+- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05). El inicio de sesión ya no tiene `style=""` ni scripts incrustados (spec 041)
 
 ### RS9 · Media — Sesión y email no protegidos al cambiar credenciales (A07 Authentication Failures)
 Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar el email del
 perfil no pide reautenticación ni verificación. Evidencia: `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS9.a `Auth::logoutOtherDevices()` (o borrado de sesiones) y regeneración de sesión al cambiar la contraseña — estado: pendiente
+- RS9.a `Auth::logoutOtherDevices()` (o borrado de sesiones) y regeneración de sesión al cambiar la contraseña — estado: pendiente (→ objetivo 2). El restablecimiento ya cierra las sesiones con `usuarios.version_sesion` y `SesionVigente` (spec 041): esa pieza sirve para el cambio desde el perfil, subiendo la versión
 - RS9.b Pedir la contraseña actual para cambiar el email — estado: pendiente
 
 ### RS10 · Media — Contraseña generada viaja en claro en la sesión (A04 Cryptographic Failures)
