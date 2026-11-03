@@ -6,6 +6,7 @@ use App\Http\Middleware\ContextoActor;
 use App\Http\Middleware\IdentificadorPeticion;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SesionVigente;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -40,7 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Correlación (spec 020, D5): el X-Request-Id de cada respuesta, también las de error, y el
         // actor de los logs al empezar cada petición con sesión.
         $middleware->prepend(IdentificadorPeticion::class);
+        // Spec 041 (CA7, TM8): antes de ContextoActor, para que una sesión que se cierra no quede como
+        // actor de los logs de esa petición (/analyze A19).
         $middleware->appendToGroup('web', [
+            SesionVigente::class,
             ContextoActor::class,
         ]);
 
