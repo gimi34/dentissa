@@ -173,6 +173,63 @@ class RecuperarContrasenaAbusoTest extends TestCase
         Mail::assertSent(EnlaceRestablecimiento::class, 2);
     }
 
+    /** Pide desde otro origen y pasado el minuto del broker: solo cuenta el tope que se prueba. */
+    private function pedirMasTarde(string $correo, int $vez)
+    {
+        $this->travel(61)->seconds();
+
+        return $this->pedir($correo, "10.0.{$vez}.1");
+    }
+
+    /** /review R5 (CA14, TM16): el sexto enlace de la hora no se envía ni invalida el vigente. */
+    public function test_cinco_enlaces_por_cuenta_por_hora(): void
+    {
+        Mail::fake();
+        $usuario = $this->crearUsuario();
+
+        for ($vez = 0; $vez < 5; $vez++) {
+            $this->pedirMasTarde($usuario->email, $vez)->assertRedirect(self::ENVIADA);
+        }
+        Mail::assertSent(EnlaceRestablecimiento::class, 5);
+        $vigente = DB::table('password_reset_tokens')->where('email', $usuario->email)->value('token');
+
+        $this->pedirMasTarde($usuario->email, 5)->assertRedirect(self::ENVIADA);
+        Mail::assertSent(EnlaceRestablecimiento::class, 5);
+        $this->assertSame($vigente, DB::table('password_reset_tokens')->where('email', $usuario->email)->value('token'), 'El enlace vigente sigue valiendo.');
+
+        $this->travel(1)->hours();
+        $this->pedir($usuario->email, '10.0.6.1')->assertRedirect(self::ENVIADA);
+        Mail::assertSent(EnlaceRestablecimiento::class, 6);
+    }
+
+    /** /review R5 (CA14, TM16): el tope diario protege la cuota de Gmail, y deja una señal sin datos. */
+    public function test_doscientos_enlaces_al_dia(): void
+    {
+        $this->assertSame(200, config('acceso.enlaces_por_dia'));
+        $logs = CapturaLogs::instalar();
+        Mail::fake();
+        config(['acceso.enlaces_por_dia' => 2]);
+        $primera = $this->crearUsuario();
+        $segunda = $this->crearUsuario();
+        $tercera = $this->crearUsuario();
+
+        $this->pedir($primera->email, '10.1.0.1');
+        $this->pedir($segunda->email, '10.1.1.1');
+        Mail::assertSent(EnlaceRestablecimiento::class, 2);
+
+        $this->pedir($tercera->email, '10.1.2.1')->assertRedirect(self::ENVIADA);
+        Mail::assertSent(EnlaceRestablecimiento::class, 2);
+        Mail::assertNotSent(EnlaceRestablecimiento::class, fn ($correo) => $correo->hasTo($tercera->email));
+        $this->assertSame(0, DB::table('password_reset_tokens')->where('email', $tercera->email)->count(), 'Sin token.');
+        $this->assertStringContainsString('restablecimiento.tope_diario', $logs->comoTexto());
+        $this->assertStringNotContainsString($tercera->email, $logs->comoTexto(), 'La señal no lleva el correo.');
+
+        $this->travel(1)->days();
+        config(['acceso.enlaces_por_dia' => 200]);
+        $this->pedir($tercera->email, '10.1.3.1')->assertRedirect(self::ENVIADA);
+        Mail::assertSent(EnlaceRestablecimiento::class, fn ($correo) => $correo->hasTo($tercera->email));
+    }
+
     public function test_cinco_solicitudes_por_minuto_por_origen(): void
     {
         Mail::fake();
