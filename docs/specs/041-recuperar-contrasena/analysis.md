@@ -1,61 +1,51 @@
 ---
 result: pass
-round: 4
+round: 5
 mode: delta
 constitution_version: 1.3.0
 date: 2026-11-03
 spec_sha: 8456cad72e93
-plan_sha: 59b68afcd107
-tasks_sha: d9621fa63c44
+plan_sha: a45387038603
+tasks_sha: 0c5657c11092
 ---
 
 # Análisis · 041 Recuperar contraseña
 
 ## Resumen
-Ronda delta sobre `/plan 041 --fix` y `/tasks 041 --fix` (D18, cc66cc9): la puesta al día tras
-liberar la 020 (v0.12.0) y la 038 (v0.13.0). Sin subagente (vía ligera, decisión del usuario,
-2026-11-03): releídas desde cero las secciones cambiadas del plan y las tareas, y comprobado contra
-`main` lo que D18 da por hecho. La spec, la constitución, el diseño `c7` y el modelo de amenazas no
-cambiaron. Resultado `pass`, con un hallazgo BAJO aceptado como nota.
+Ronda delta sobre `/design-spec 041 --fix`, `/plan 041 --fix` y `/tasks 041 --fix` (D19): el usuario
+conserva el botón del ojo en el inicio de sesión. Sin subagente (vía ligera, decisión del usuario,
+2026-11-03): releídas D19, T036 y T037, y comprobado contra el código lo que dan por hecho. La spec,
+los criterios y el modelo de amenazas no cambian. Resultado `pass`, con un hallazgo BAJO aceptado como
+nota.
 Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 1
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 12 / 12 (CA7 sin T006: lo cubren T005, T020, T022, T029, T031 y T032) |
+| Criterios con tarea de test e implementación | 12 / 12 (sin cambios) |
 | Amenazas con control y test | 14 / 14 (sin cambios) |
-| Principios de la constitución evaluados | 10 / 10 (P1, P6, P8 y P9 tocados por el delta) |
+| Principios de la constitución evaluados | 10 / 10 (P2, P9 y P10 tocados por el delta) |
 
-## Lo comprobado contra `main` (2026-11-03)
-- D1, D2: `aidd.py status` da la 020 `released` (v0.12.0); `Auditoria::registrar()` acepta
-  `?Usuario $actor` y saca `actor_id` y `actor_rol` del actor pasado (`app/Auditoria/Auditoria.php:47-66`);
-  el TM10 de la 020 lo recoge (plan de la 020, TM10 y A51). T002 lo vuelve a comprobar.
-- D10: `public/fonts/roboto/roboto-latin-wght-normal.woff2` y `OFL.txt` están, con su `@font-face`
-  en `errores.css` (020 D18, «la Roboto que ya verificó la 041»). T003 obsoleta con razón.
-- D13: en `app.css`, `--green-texto` `#137A5A`, `--text-publico` 17px, `--leading-publico` 1.5,
-  `--radius-pill` 999px, `--sombra-tarjeta-alta` `0 14px 32px rgba(114, 36, 62, 0.16)`,
-  `--text-acceso-titulo` 28px, `--text-acceso` 14px y `--acceso-form-max` 480px: los valores de
-  `c7` (`design.md` → Cambios a incorporar). Faltan `--font-acceso`, `--text-acceso-small`,
-  `--duration-respuesta` y `--ease-clinico`, los que pide T001. `system.md` está en 1.10.0.
-- D14: el `map` de marcos de la 038 está en `docker/nginx/seguridad/marcos.conf`
-  (`$dentissa_frame_src`, incluido al principio de `dentissa.conf` y `dentissa.prod.conf`); T035 ya
-  pide nombres de variable distintos. `AGENTS.md` dice «dos layouts», como recoge T040.
-- D16: `config('clinica.contacto')` existe con `753 000 0000`; la spec no fija el número (K8 pide
-  «el teléfono de la clínica»), así que el cambio de teléfono no contradice ningún criterio. T006
-  obsoleta con razón; T022 lee de esa clave.
-- Dependencias: ninguna tarea abierta depende ya de T003 ni de T006; sin ciclos (`validate` sin errores).
+## Lo comprobado (2026-11-03)
+- TM7: el script solo se carga en el inicio de sesión. `nueva` y `caducado`, las de la URL del token,
+  siguen sin JavaScript, y T036 lo exige con `test_sin_javascript`.
+- P2: T036 escribe los tests antes que T037, que depende de ella.
+- P9: los estilos van en `acceso.css`, cubiertos por los tests de tokens de T017, sin valores nuevos.
+- P10: archivo propio y CSP vigente (`script-src 'self'`), sin recursos de otros sitios.
+- K9 y `G-sin-js`: `c7/exito.html` remedido con el ojo, puertas 12/12 y KPIs 5/5. Sin JavaScript el botón
+  no aparece y el contenido está completo.
+- Sin dependencias nuevas. T037 toca 3 archivos.
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A20 | BAJA (aceptado, nota de T003) | resuelto por obsolescencia | T003 obsoleta (D18): la 020 copió el mismo archivo con la verificación de `agent-security.md` §2 (020 D18). Sin nota pendiente |
-| A19, A22, A31–A35 | aceptados | siguen vigentes | Sus tareas (T010–T012, T017, T024, T028, T029, T031, T032, T042) no cambiaron salvo las dependencias de T024 y T029 |
+| A19, A22, A31–A36 | aceptados | siguen vigentes | Sus tareas no cambiaron por D19 |
 | A23 | aceptado → spec | sigue vigente | Sin cambios en la spec |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A36 | Inconsistencia | BAJA | `tasks.md` → Constitution Check, fila P9 | Sigue diciendo que T001 «incorpora a `main` … los cinco tokens de la 038», que ya están (T001 y D13 corregidos) | Nota de T001 (ver «Aceptados») |
+| A37 | Hueco | BAJA | `tasks.md` → T040 | El mapa de `AGENTS.md` lista los scripts de `public/js/` y T040 no menciona `acceso.js` | Nota de T040 (ver «Aceptados») |
 
 ## Decisiones pendientes del usuario
 Ninguna.
@@ -77,3 +67,4 @@ Aceptados por el usuario el 2026-10-28 (ronda 3):
 
 Aceptados (vía ligera, decisión del usuario del 2026-11-03 de no pedir otra vuelta de plan y tareas por lo BAJO):
 - **A36** → nota de T001: la fila P9 del Constitution Check de `tasks.md` describe T001 como antes de D18; T001 incorpora solo lo que falta y anota los ocho tokens que ya están.
+- **A37** → nota de T040: el mapa de `AGENTS.md` añade `acceso.js` a `public/js/` (spec 041, D19).

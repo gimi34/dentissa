@@ -54,7 +54,8 @@ con el actor opcional que la 020 ya liberó (D2, D18).
 | `public/css/acceso.css` (nuevo) | Tokens del sistema más los del acceso en `:root`, como `auth.css`, y los componentes del carnet. El login deja `auth.css`, que sigue sirviendo al registro (`register`, `registro-contacto`); su sección `.page-login` se borra. | Medio: el login cambia de aspecto |
 | `public/fonts/roboto/` | Sin cambios: el archivo y su `OFL.txt` ya están en `main` (los copió la 020); `acceso.css` los usa (D10) | — |
 | `resources/views/layouts/acceso.blade.php` (nuevo) | Carcasa común: franja con el logo en el teléfono, panel de marca en el escritorio (con su texto por pantalla) y tarjeta. `noindex` en todas sus pantallas, también en el login (SE2.a). Una sección de cabecera para que las vistas servidas en la URL del token pongan `no-referrer` antes de cualquier recurso. Roboto propia, sin JavaScript. | Bajo |
-| `resources/views/auth/login.blade.php` | Pasa al layout de acceso, con `noindex` (SE2.a, decisión del usuario, 2026-10-28). El enlace «¿Olvidaste tu contraseña?» va a `route('contrasena.solicitud')` cuando el interruptor está encendido; si no, no se muestra. Aviso de éxito con `role="status"`. Lema como párrafo y un solo `h1`. Sin estilos en línea ni Google Fonts. El comportamiento del login no cambia. | Medio: vista de la spec 001 |
+| `resources/views/auth/login.blade.php` | Pasa al layout de acceso, con `noindex` (SE2.a, decisión del usuario, 2026-10-28). El enlace «¿Olvidaste tu contraseña?» va a `route('contrasena.solicitud')` cuando el interruptor está encendido; si no, no se muestra. Aviso de éxito con `role="status"`. Lema como párrafo y un solo `h1`. Sin estilos en línea ni Google Fonts. Conserva el botón para ver la contraseña (D19). El comportamiento del login no cambia. | Medio: vista de la spec 001 |
+| `public/js/acceso.js` (nuevo) | Solo en el inicio de sesión, con `defer`: muestra el botón de ver la contraseña y cambia el tipo del campo (D19) | Bajo |
 | `resources/views/auth/recuperar/` (nuevo) | `solicitud` (pedir y su estado «Demasiados intentos» con el botón desactivado), `enviada`, `nueva` (con errores junto al campo y su estado de espera, D15) y `caducado`. `nueva` y `caducado` ponen `no-referrer` antes de cualquier recurso | Bajo |
 | `app/Http/Controllers/RecuperarContrasenaController.php` (nuevo) | `solicitudForm`, `solicitar`, `enviada`, `nuevaForm` y `restablecer` (Contratos) | Medio: flujo de autenticación |
 | `routes/web.php` | Cinco rutas bajo `/contrasena`, que solo se registran con `config('acceso.recuperar_contrasena')` (D8), y una ruta de vista previa solo en `local` (D11). Los limitadores van solo en los dos `POST` (D15) | Bajo |
@@ -116,7 +117,8 @@ con el actor opcional que la 020 ya liberó (D2, D18).
   - login con el aviso de éxito (`role="status"`);
   - los dos correos.
 
-  Las pantallas no usan JavaScript y tienen un solo `h1`. A 320, 390 y 1440 px se miden con
+  Las pantallas no usan JavaScript, salvo el botón de ver la contraseña del inicio de sesión (D19), y
+  tienen un solo `h1`. A 320, 390 y 1440 px se miden con
   `design/medir.mjs` (`criterios.json`, K1–K12 y las 12 puertas) sobre la build.
 - **Pendientes del evaluador** (`design.md` → Resultado): las tareas de cada pantalla los aplican y
   vuelven a medir:
@@ -389,6 +391,12 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
     estado de la vista previa.
 - **D16 · Datos de la clínica en los correos y el talón** (`/analyze` A15, A27): una sola fuente, `config('clinica.contacto')`, que ya existe en `main` (038). El teléfono es el ficticio `753 000 0000` (`tel:+527530000000`) para toda la app (decisión del usuario, 2026-10-31, que sustituye la del 2026-10-28 de usar el real `753 162 5220`; la página de inicio anterior ya no existe) y el horario `['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00']`. El correo, el aviso y el talón leen de `config('clinica.contacto')`, sin texto fijo en las vistas.
 - **D18 · Puesta al día tras la 020 y la 038** (`/plan 041 --fix`, 2026-11-02; vía ligera, decisión del usuario, 2026-10-31): con las dos liberadas, la 041 ya no trae la parte del contrato de auditoría (D2), Roboto (D10), los tokens ya presentes (D13) ni la clave `contacto` (D16). En las tareas: T003 y T006 quedan obsoletas, T001 se reduce a lo que falta y T002 solo comprueba. Nada cambia en los criterios, el diseño `c7` ni el modelo de amenazas.
+
+- **D19 · Ver la contraseña en el inicio de sesión** (`/design-spec 041 --fix`, decisión del usuario, 2026-11-03): el login actual tiene el botón del ojo y `c7` lo quitaba para no usar JavaScript; el usuario lo conserva.
+  - Mejora progresiva en `public/js/acceso.js`, propio y con `defer`, sin manejadores en línea: el botón nace con `hidden` y solo el script lo muestra, así que sin JavaScript no hay un botón que no hace nada.
+  - Solo en el inicio de sesión. Las pantallas de la recuperación, y sobre todo las de la URL del token, siguen sin JavaScript (TM7).
+  - Sin dependencias nuevas. K9 (≤ 100 kB) y `G-sin-js` siguen cumpliéndose.
+  - Tests: `RecuperarContrasenaVistasTest::test_el_login_tiene_el_boton_de_ver_la_contrasena`, `…_sin_javascript` (las pantallas nuevas sin ningún script; el login, solo `acceso.js`) y `tests/js/acceso.test.mjs`.
 
 ## Impacto en arquitectura
 - `docs/architecture.md` (T090):

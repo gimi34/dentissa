@@ -9,7 +9,7 @@ accepted: c7             # candidato aceptado
 score: 88                # puntuación del aceptado
 system_version: 1.8.0
 created: 2026-10-27
-updated: 2026-10-27
+updated: 2026-11-03
 ---
 
 # Diseño · 041 Recuperar contraseña
@@ -119,6 +119,9 @@ Sin ancho intermedio: no hay filas de elementos.
     instrucción.
   - **Botón en espera:** desactivado, `--p100` con texto `--p800` y borde `--border`, con el texto
     «Disponible en un minuto».
+  - **Ver la contraseña** (solo en el inicio de sesión, refinado el 2026-11-03): botón de 44 × 44 px
+    (`--touch-min`) dentro del campo, a la derecha, con el icono del ojo en `--p600` (`--icon-md`) y
+    `aria-pressed`. Es mejora progresiva: sin JavaScript no aparece y el campo sigue igual.
 
 ## Cambios a incorporar al sistema
 
@@ -137,6 +140,7 @@ Sin ancho intermedio: no hay filas de elementos.
 | Botón en espera (desactivado) | fijo | — | — | «Demasiados intentos» no debe invitar a pulsar (evaluador, c5 y c6) |
 | Casilla con zona de toque de 44 px (cuadro visible de 20 px) | fijo | — | — | `G-toque` (c1) |
 | Roboto autoalojada (variable, OFL 1.1), sin Google Fonts | fijo | — | — | Recursos externos (`G-red`) y privacidad; como Lexend en la 038 |
+| Ver la contraseña en el inicio de sesión: botón de 44 px con el ojo, mejora progresiva | fijo | — | — | El login actual lo tiene y el usuario lo conserva (refinado, 2026-11-03) |
 
 ## Movimiento
 
@@ -161,6 +165,8 @@ c2 tenía además «el talón crece» en «Revisa tu correo»; se quitó en c3 p
   `role="alert"`; el error del campo enlazado con `aria-describedby`. Las regiones de estado siguen
   `references/spec-mode.md` §6 en la implementación.
 - **Botón en espera:** `disabled` (no recibe foco); el aviso explica cuánto esperar.
+- **Ver la contraseña:** botón con `aria-label="Mostrar contraseña"`, `aria-pressed` y `aria-controls`;
+  el icono va con `aria-hidden`.
 - **Enlace en el texto del talón** («pide otro enlace»): enlace dentro de un párrafo, exento del
   tamaño de toque (WCAG 2.5.8).
 - **Decorativos ocultos:** troquel e íconos de los avisos con `aria-hidden`.
@@ -177,3 +183,4 @@ c2 tenía además «el talón crece» en «Revisa tu correo»; se quitó en c3 p
 | 2026-10-27 | diseño | Presupuesto agotado (5) sin candidato sobre el umbral; mejor c4 con 78 | Dos candidatos más (presupuesto 7) desde c4, corrigiendo sus tres problemas | usuario |
 | 2026-10-27 | diseño | Resultado del ciclo | `c7` aceptado con 88/100 | /design-spec |
 | 2026-10-27 | diseño | ¿Se aprueba el acta? | Aprobada | usuario |
+| 2026-11-03 | refinado | `c7` quitaba el botón del ojo del inicio de sesión para no usar JavaScript. ¿Se conserva? | Se conserva, solo en el inicio de sesión y como mejora progresiva: un archivo propio con `defer`; sin él, la contraseña se escribe igual. Las pantallas de la recuperación siguen sin JavaScript. `c7/exito.html` remedido: puertas 12/12 y KPIs 5/5 (`.ai/inspect/041-c7-ojo/`). Ningún criterio cambia: K9 pide ≤ 100 kB y `G-sin-js`, que todo el contenido esté sin JavaScript | usuario |

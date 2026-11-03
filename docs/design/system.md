@@ -670,6 +670,8 @@ Inicio de sesión y recuperación de contraseña, en `layouts/acceso.blade.php` 
 - **Campos del acceso:** borde `--border-control` (`--p400`, ≥ 3:1); etiqueta, ayuda y error en
   `--text-meta`; error enlazado con `aria-describedby` y `aria-invalid`.
 - **Casilla:** cuadro visible de 20px con zona de toque de 44px (`--touch-min`).
+- **Ver la contraseña (solo en el inicio de sesión):** botón de 44px (`--touch-min`) dentro del campo, con
+  el icono del ojo en `--p600` (`--icon-md`) y `aria-pressed`; mejora progresiva, sin JavaScript no aparece.
 - **Avisos:** «Revisa tu correo» y el éxito del login con `role="status"`; enlace que ya no sirve y
   demasiados intentos con `role="alert"`.
 
