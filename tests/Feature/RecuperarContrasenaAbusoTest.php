@@ -343,6 +343,23 @@ class RecuperarContrasenaAbusoTest extends TestCase
         $this->assertSame(1, substr_count($html, 'role="alert"'), 'Un solo aviso.');
     }
 
+    /** /review R26 (D23): abrir enlaces en masa no ocupa el servidor comprobando tokens. */
+    public function test_abrir_enlaces_tiene_limite_por_origen(): void
+    {
+        $direccion = self::RESTABLECER.'/'.Str::random(64).'?cuenta='.$this->crearUsuario()->id;
+
+        for ($i = 0; $i < 30; $i++) {
+            $this->get($direccion)->assertOk();
+        }
+
+        $respuesta = $this->get($direccion)->assertStatus(429);
+        $this->assertStringContainsString('Espera un minuto', $respuesta->getContent(), 'La pantalla pide esperar.');
+        $this->assertStringContainsString('name="referrer" content="no-referrer"', $respuesta->getContent());
+        $this->assertStringContainsString('no-store', (string) $respuesta->headers->get('Cache-Control'));
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.2.0.1'])->get($direccion)->assertOk();
+    }
+
     public function test_ningun_log_contiene_el_correo_el_token_ni_la_contrasena(): void
     {
         $logs = CapturaLogs::instalar();

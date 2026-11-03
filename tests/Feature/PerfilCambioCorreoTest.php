@@ -133,6 +133,44 @@ class PerfilCambioCorreoTest extends TestCase
         $this->assertSame(1, substr_count($html, 'Para cambiar el correo, crea primero una contraseña'));
     }
 
+    /** /review R32 (D23): con una sesión ajena no se puede adivinar la contraseña a base de intentos. */
+    public function test_cinco_fallos_por_minuto_al_cambiar_el_correo(): void
+    {
+        $usuario = $this->crearUsuario();
+        $original = $usuario->email;
+        $cambio = ['email' => 'nuevo.buzon@example.test'];
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->guardar($usuario, $cambio + ['contrasena_correo' => 'no-es-la-contrasena'])->assertSessionHasErrors('contrasena_correo');
+        }
+
+        // Ni la correcta se comprueba: la respuesta no revela si acertó.
+        $this->guardar($usuario, $cambio + ['contrasena_correo' => self::CONTRASENA])
+            ->assertSessionHasErrors(['contrasena_correo' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
+        $this->assertSame($original, $usuario->fresh()->email);
+
+        $this->travel(61)->seconds();
+        $this->guardar($usuario, $cambio + ['contrasena_correo' => self::CONTRASENA])->assertSessionHasNoErrors();
+        $this->assertSame('nuevo.buzon@example.test', $usuario->fresh()->email);
+    }
+
+    public function test_el_limite_se_comparte_con_el_cambio_de_contrasena(): void
+    {
+        $usuario = $this->crearUsuario();
+        $anterior = $usuario->password_hash;
+        $datos = ['password' => 'contrasena-nueva-larga', 'password_confirmation' => 'contrasena-nueva-larga'];
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->actingAs($usuario)->from(self::PERFIL)->put(self::PERFIL.'/password', $datos + ['password_actual' => 'no-es-la-contrasena'])
+                ->assertSessionHasErrors('password_actual');
+        }
+
+        $this->actingAs($usuario)->from(self::PERFIL)->put(self::PERFIL.'/password', $datos + ['password_actual' => self::CONTRASENA])
+            ->assertSessionHasErrors(['password_actual' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
+        $this->assertSame($anterior, $usuario->fresh()->password_hash);
+        $this->guardar($usuario, ['email' => 'nuevo.buzon@example.test', 'contrasena_correo' => self::CONTRASENA])->assertSessionHasErrors('contrasena_correo');
+    }
+
     /** La cadena que motiva R4: el enlace no puede llegar al buzón de quien no conoce la contraseña. */
     public function test_con_una_sesion_ajena_el_enlace_no_llega_a_otro_buzon(): void
     {
