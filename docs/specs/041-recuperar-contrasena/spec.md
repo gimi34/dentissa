@@ -1,7 +1,8 @@
 ---
 id: 041
 slug: recuperar-contrasena
-status: implemented
+status: released
+released: v0.14.0 (2026-11-03)
 created: 2026-10-27
 extends: [001]
 ---
@@ -165,3 +166,4 @@ primera pantalla 25, sistema 25, lectura 15, plantilla 10 (ver "Decisiones").
 | 2026-11-03 | /review ronda 1: `changes_requested`; CA3 y CA9 se reabren (R1, R2), y se añaden CA13 y CA14 (R4, R5) | /review |
 | 2026-11-03 | Implementada de nuevo con T045–T054; /review ronda 2: `approved` | /review |
 | 2026-11-03 | El usuario corrige antes de liberar 7 menores de la review (R7, R8, R10, R16, R26, R32, R33) | usuario |
+| 2026-11-03 | Liberada en v0.14.0; recuperación encendida en producción y probada por el usuario | /release |

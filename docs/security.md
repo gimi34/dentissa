@@ -257,7 +257,7 @@ perfil no pide reautenticación ni verificación. Evidencia: `PerfilController.p
 
 Correcciones:
 - RS9.a `Auth::logoutOtherDevices()` (o borrado de sesiones) y regeneración de sesión al cambiar la contraseña — estado: pendiente (→ objetivo 2). El restablecimiento ya cierra las sesiones con `usuarios.version_sesion` y `SesionVigente` (spec 041): esa pieza sirve para el cambio desde el perfil, subiendo la versión
-- RS9.b Pedir la contraseña actual para cambiar el email — estado: pendiente
+- RS9.b Pedir la contraseña actual para cambiar el email — estado: mitigada (v0.14.0, spec 041 CA13): con 5 fallos por minuto; queda la contraseña creada en el perfil de una cuenta de Google con una sesión ajena (041/R32, RS5.c)
 
 ### RS10 · Media — Contraseña generada viaja en claro en la sesión (A04 Cryptographic Failures)
 Al dar de alta pacientes o personal sin contraseña, la generada se guarda en el flash de sesión
