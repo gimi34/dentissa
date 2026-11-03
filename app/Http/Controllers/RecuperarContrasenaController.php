@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password as ReglaContrasena;
 use Illuminate\View\View;
@@ -59,7 +60,7 @@ class RecuperarContrasenaController extends Controller
         // es la misma (CA8, CA9). TM6: del fallo solo se registra la clase del error.
         dispatch(function () use ($correo) {
             try {
-                Password::sendResetLink(['email' => $correo, 'activo' => 1]);
+                self::enviarEnlaceDentroDeLosTopes($correo);
             } catch (Throwable $e) {
                 Log::error('restablecimiento.correo_fallido', ['error' => class_basename($e)]);
             }
@@ -185,6 +186,37 @@ class RecuperarContrasenaController extends Controller
         }
 
         return redirect('/login')->with('contrasena_cambiada', true);
+    }
+
+    /**
+     * D22 (CA14, TM16): superar un tope no crea token ni invalida el vigente. Solo cuentan los envíos
+     * hechos, no los que frena la espera de un minuto del broker.
+     */
+    private static function enviarEnlaceDentroDeLosTopes(string $correo): void
+    {
+        $usuario = Usuario::where('email', $correo)->where('activo', 1)->first();
+
+        if ($usuario === null) {
+            return;
+        }
+
+        $porCuenta = 'restablecimiento:cuenta:'.$usuario->id;
+        $porDia = 'restablecimiento:dia';
+
+        if (RateLimiter::tooManyAttempts($porCuenta, config('acceso.enlaces_por_cuenta_por_hora'))) {
+            return;
+        }
+
+        if (RateLimiter::tooManyAttempts($porDia, config('acceso.enlaces_por_dia'))) {
+            Log::warning('restablecimiento.tope_diario');
+
+            return;
+        }
+
+        if (Password::sendResetLink(['email' => $correo, 'activo' => 1]) === Password::RESET_LINK_SENT) {
+            RateLimiter::hit($porCuenta, 3600);
+            RateLimiter::hit($porDia, 86400);
+        }
     }
 
     /**

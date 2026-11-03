@@ -58,7 +58,7 @@ updated: 2026-10-18
 | `GET/POST /login` | HTTP público | no | 5 fallos por minuto por correo e IP (spec 030) |
 | `GET/POST /registro`, `/registro/contacto` | HTTP público | no | los `POST` de las dos rutas, 5 por minuto por IP (spec 030); los `GET`, sin límite; sin captcha |
 | `GET /auth/google`, `/auth/google/callback` | HTTP público | no | vincula cuentas por email; la vuelta, 5 por minuto por IP (spec 030) |
-| `GET/POST /contrasena/olvidada`, `GET /contrasena/enviada` (spec 041, con `RECUPERAR_CONTRASENA=true`) | HTTP público | no | el `POST`, 5 por minuto por origen y un correo por cuenta y minuto; misma respuesta haya cuenta o no |
+| `GET/POST /contrasena/olvidada`, `GET /contrasena/enviada` (spec 041, con `RECUPERAR_CONTRASENA=true`) | HTTP público | no | el `POST`, 5 por minuto por origen, un correo por cuenta y minuto, 5 por cuenta y hora y 200 al día; misma respuesta haya cuenta o no |
 | `GET /contrasena/nueva/{token}`, `POST /contrasena/nueva` (spec 041, con `RECUPERAR_CONTRASENA=true`) | HTTP público | token de un solo uso de esa cuenta | el `POST`, 5 por minuto por origen; `no-referrer`, `no-store` y el token enmascarado en el log de acceso de nginx |
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |

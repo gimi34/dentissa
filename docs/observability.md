@@ -88,8 +88,10 @@ cambia, hay que ajustar `App\Avisos\Vigilante`; mientras tanto, el aviso de form
 `log_format dentissa_enmascarado` de la spec 041 es `combined` con el token de restablecimiento
 enmascarado en la petición y en el Referer: el vigilante lo lee igual.
 
-La recuperación de contraseña escribe un solo log nuevo, `restablecimiento.correo_fallido` (nivel
-`error`), con solo la clase del error en `error`; `request_id` y `actor_id` llegan por el `Context`.
+La recuperación de contraseña escribe dos logs nuevos: `restablecimiento.correo_fallido` (nivel
+`error`), con solo la clase del error en `error`, y `restablecimiento.tope_diario` (nivel `warning`, sin
+datos), al superar los 200 enlaces del día; si aparece, revisar si hay abuso. `request_id` y `actor_id`
+llegan por el `Context`.
 
 ## Brechas
 <!-- Cada brecha con ID `OB<n>`, prioridad, correcciones `OB<n>.<letra>` y enlace al roadmap. -->

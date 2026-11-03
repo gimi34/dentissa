@@ -16,4 +16,19 @@ return [
 
     'recuperar_contrasena' => (bool) env('RECUPERAR_CONTRASENA', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Topes de enlaces de restablecimiento
+    |--------------------------------------------------------------------------
+    |
+    | Spec 041 (CA14, plan D22). Además del límite por minuto: protegen un buzón
+    | de que lo bombardeen y la cuota de la cuenta de Gmail, que también envía los
+    | avisos de producción. El exceso recibe el mismo mensaje genérico, sin correo.
+    |
+    */
+
+    'enlaces_por_cuenta_por_hora' => 5,
+
+    'enlaces_por_dia' => 200,
+
 ];
