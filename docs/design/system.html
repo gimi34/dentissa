@@ -220,6 +220,23 @@
   @font-face { font-family: "Montserrat"; font-weight: 400; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-400-normal.woff2") format("woff2"); }
   @font-face { font-family: "Montserrat"; font-weight: 500; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-500-normal.woff2") format("woff2"); }
   @font-face { font-family: "Montserrat"; font-weight: 600; font-display: swap; src: url("../../public/fonts/montserrat/montserrat-latin-600-normal.woff2") format("woff2"); }
+  /* 1.11.0 (spec 041): muestras del acceso con su carnet. */
+  .opt .a-marco { display: grid; grid-template-columns: minmax(0, 48fr) minmax(0, 52fr); max-width: 900px; border-radius: var(--radius-lg); overflow: hidden; font-family: var(--font-acceso); }
+  .opt .a-panel { background: linear-gradient(160deg, var(--color-accent-text), var(--color-p800)); color: var(--color-surface); padding: var(--acceso-panel-pad); display: grid; align-content: end; font-size: var(--text-acceso-destacado); line-height: var(--leading-publico); }
+  .opt .a-lado { background: var(--color-bg); padding: var(--acceso-lado-pad) var(--space-7); display: grid; place-items: center; }
+  .opt .a-carnet { background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--sombra-tarjeta-alta); width: 100%; max-width: var(--acceso-form-max); }
+  .opt .a-cuerpo { padding: var(--space-7); display: grid; gap: var(--space-5); }
+  .opt .a-cuerpo h4 { margin: 0; font-size: var(--text-acceso-titulo); font-weight: var(--weight-strong); color: var(--color-text); }
+  .opt .a-troquel { border-top: var(--border-width-strong) dashed var(--color-p200); margin: 0 var(--space-5); }
+  .opt .a-talon { margin: 0; padding: var(--space-5) var(--space-7); display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-5); font-size: var(--text-meta); }
+  .opt .a-talon dt { color: var(--color-accent-text); font-weight: var(--weight-bold); }
+  .opt .a-talon dd { margin: 0; }
+  .opt .a-vale { background: var(--color-bg); padding: var(--space-5); border-radius: var(--radius-sm); display: grid; gap: var(--space-1); font-size: var(--text-acceso); }
+  .opt .a-vale strong { color: var(--color-p800); font-size: var(--text-acceso-titulo); }
+  .opt .a-boton { min-height: var(--touch-min); border: 0; border-radius: var(--radius-pill); background: var(--color-link); color: var(--color-surface); font: inherit; font-weight: var(--weight-strong); }
+  .opt .a-espera { min-height: var(--touch-min); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-pill); background: var(--color-p100); color: var(--color-p800); font: inherit; }
+  .opt .a-campo { display: grid; gap: var(--space-1); font-size: var(--text-meta); }
+  .opt .a-campo input { min-height: var(--touch-min); border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm); padding: 0 var(--space-4); font: inherit; font-size: var(--text-acceso); }
   .opt .p-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); }
   .opt .p-placa { background: var(--color-surface); border: var(--border-width-strong) solid var(--color-accent-text); border-radius: var(--radius-md);
                   padding: var(--space-7); display: grid; gap: var(--space-5); max-width: 360px; }
@@ -388,6 +405,9 @@
     --logo-franja-w: 104px; --logo-panel-w: 260px; /* spec 020, logo del error genérico */
     --tracking-etiqueta: 0.08em; --tracking-titulo: -0.01em; --leading-titulo: 1.15; --text-acceso-destacado: 16.8px; /* spec 020, 1.8.0 */
     --acceso-franja-pie: 70px; --acceso-solape: 56px; --acceso-panel-pad: 56px; --acceso-lado-pad: 42px; /* spec 020, 1.8.0 */
+    --font-acceso: Roboto, system-ui, sans-serif; --text-acceso-small: 12px; /* spec 041, 1.11.0 */
+    --duration-respuesta: 150ms; --ease-clinico: cubic-bezier(0.2, 0.7, 0.2, 1); /* spec 041, 1.11.0 */
+    --color-p800: #72243E; /* --p800 de app.css, para las muestras del acceso (spec 041) */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
     --font-publica: "Montserrat", ui-sans-serif, system-ui, sans-serif; /* spec 038, 1.9.0 (antes Lexend) */
     --font-display: "Newsreader", ui-serif, Georgia, serif; /* spec 038, 1.10.0 (en 1.9.0, Cormorant Garamond) */
@@ -770,6 +790,29 @@
           <label class="t-small" for="m-035-campo">Teléfono</label><br>
           <input id="m-035-campo" class="m-campo-035" type="tel" value="5550102">
         </div>
+      </div>
+    </div></div>
+    <h3 id="acceso-041">Acceso: marco y carnet (spec 041, 1.11.0)</h3>
+    <p class="v-note">Muestra viva del marco del acceso a partir de 769 px (panel con degradado <code>--p600 → --p800</code>
+      y carnet sobre <code>--p50</code>) con los tokens de 1.11.0 (<code>--font-acceso</code>, <code>--text-acceso-small</code>,
+      <code>--duration-respuesta</code>, <code>--ease-clinico</code>) y los que ya estaban (<code>--acceso-form-max</code>,
+      <code>--text-acceso-titulo</code>, <code>--sombra-tarjeta-alta</code>, <code>--radius-pill</code>). Por debajo de 769 px, el
+      panel se cambia por una franja <code>--p800</code> con el logo (<a href="../specs/041-recuperar-contrasena/design.md">diseño</a>,
+      <code>c7</code>). Los botones ceden con <code>scale(0.98)</code> en <code>:active</code> (M-1), sin transición con movimiento reducido.</p>
+    <div class="v-stage"><div class="opt">
+      <div class="a-marco">
+        <div class="a-panel"><p>Vuelve a entrar en un par de minutos. Te mandamos un enlace a tu correo.</p></div>
+        <div class="a-lado"><div class="a-carnet">
+          <div class="a-cuerpo">
+            <h4>Revisa tu correo</h4>
+            <div class="a-vale"><span>Vale hasta</span><strong>10:42</strong><span>Si no llega, revisa la carpeta de spam.</span></div>
+            <label class="a-campo">Correo electrónico <input type="email" value="paciente@ejemplo.com"></label>
+            <button class="a-boton" type="button">Enviar enlace</button>
+            <button class="a-espera" type="button" disabled>Disponible en un minuto</button>
+          </div>
+          <div class="a-troquel" aria-hidden="true"></div>
+          <dl class="a-talon"><dt>Caduca</dt><dd>En 60 minutos</dd><dt>Ayuda</dt><dd>753 000 0000</dd></dl>
+        </div></div>
       </div>
     </div></div>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
