@@ -40,7 +40,7 @@
                         <input type="password" id="contrasena_correo" name="contrasena_correo" autocomplete="current-password"
                                class="field {{ $errors->has('contrasena_correo') ? 'field-error' : '' }}" @error('contrasena_correo') aria-invalid="true" aria-describedby="contrasena-correo-error" autofocus @enderror>
                         @error('contrasena_correo')<div class="field-hint field-hint-error" id="contrasena-correo-error">{{ $message }}</div>@enderror
-                    @else
+                    @elseif(! $errors->has('email'))
                         <div class="field-hint perfil-ayuda-correo">Para cambiar el correo, crea primero una contraseña en esta página.</div>
                     @endif
                 </div>

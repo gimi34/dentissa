@@ -25,7 +25,8 @@
     </div>
 
     @if($errors->any())
-        <div class="alert alert-error" role="alert">
+        {{-- /review R10: si el error es de un campo, el foco ya lo lee enlazado a ese campo. --}}
+        <div class="alert alert-error" @if($errors->has('email') || $errors->has('password')) aria-hidden="true" @else role="alert" @endif>
             @include('auth.recuperar.partes.icono-error')
             <span>{{ $errors->first() }}</span>
         </div>
@@ -38,7 +39,7 @@
             <label class="field-label" for="email">Correo electrónico</label>
             <div class="field-wrap">
                 @include('auth.recuperar.partes.icono-correo')
-                <input class="field @error('email') error @enderror" id="email" name="email" type="email" value="{{ old('email') }}" placeholder="tu@correo.com" autocomplete="email" autofocus @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+                <input class="field @error('email') error @enderror" id="email" name="email" type="email" value="{{ old('email') }}" placeholder="tu@correo.com" autocomplete="email" @unless($errors->has('password') && ! $errors->has('email')) autofocus @endunless @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
             </div>
             @error('email')
                 <div class="error-msg" id="email-error">@include('auth.recuperar.partes.icono-error'){{ $message }}</div>
@@ -49,7 +50,7 @@
             <label class="field-label" for="password">Contraseña</label>
             <div class="field-wrap">
                 @include('auth.recuperar.partes.icono-clave')
-                <input class="field field-con-ojo @error('password') error @enderror" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+                <input class="field field-con-ojo @error('password') error @enderror" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" @if($errors->has('password') && ! $errors->has('email')) autofocus @endif @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
                 <button class="ver-clave" type="button" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="password" hidden>
                     <svg class="ojo-abierto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     <svg class="ojo-cerrado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M1 1l22 22"/></svg>
