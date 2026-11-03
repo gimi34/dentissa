@@ -132,6 +132,7 @@ primera pantalla 25, sistema 25, lectura 15, plantilla 10 (ver "Decisiones").
 | 2026-10-27 | diseño | Resultado del ciclo de /design-spec | Presupuesto agotado sin candidato sobre el umbral; mejor `c4` (78/100), acta en [design.md](design.md) | /design-spec |
 | 2026-10-27 | diseño | ¿Qué hacer con el presupuesto agotado? | Dos candidatos más desde `c4` (presupuesto 7) | usuario |
 | 2026-10-27 | diseño | Resultado del ciclo ampliado | `c7` aceptado con 88/100; acta en [design.md](design.md) | /design-spec |
+| 2026-11-03 | diseño | Al ver `c7` construido, el usuario prefiere el estilo anterior | Estilo del login anterior a la 041 en el login y la recuperación, con las puertas y KPIs de estos criterios; acta en [design.md](design.md) | usuario |
 
 ## Notas para /plan
 - El enlace del login es `href="#"` en `resources/views/auth/login.blade.php:129`; la tabla `password_reset_tokens` existe sin rutas (`docs/specs/README.md`).
@@ -149,3 +150,4 @@ primera pantalla 25, sistema 25, lectura 15, plantilla 10 (ver "Decisiones").
 | 2026-10-27 | Aprobada; se quitan las menciones a la 042, descartada | usuario |
 | 2026-10-27 | Sección "Criterios de diseño" (AI-DD 1.19.0) | /design-spec 041 |
 | 2026-10-27 | Diseño aprobado (`design.md`, `c7`) | usuario |
+| 2026-11-03 | Vuelve el estilo anterior del login, en lugar de `c7` (`design.md`, plan D20) | usuario |

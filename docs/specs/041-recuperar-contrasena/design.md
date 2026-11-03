@@ -5,8 +5,8 @@ exploration: loop        # loop: ciclo por criterios · none: sin diseño nuevo 
 threshold: 80            # puntuación mínima de la rúbrica (de .ai/project.yaml → design)
 floor: 3                 # nota mínima de cada punto de la rúbrica
 budget: 7                # candidatos como máximo (5 + 2 por decisión del usuario)
-accepted: c7             # candidato aceptado
-score: 88                # puntuación del aceptado
+accepted: none           # el usuario volvió al estilo anterior: ver "Resultado" y "Decisiones" (2026-11-03)
+score: none              # c7 sacó 88; el estilo anterior no pasó por la rúbrica
 system_version: 1.8.0
 created: 2026-10-27
 updated: 2026-11-03
@@ -38,7 +38,7 @@ el mejor anterior.
 | `c4` | 96/96 | 42/42 | 78 | descartado: bajo el umbral; «Revisa tu correo» sin un bloque dominante, teléfono repetido en panel y talón a 1440 px, texto de apoyo pequeño | `.ai/inspect/041-c4/resumen.md` |
 | `c5` | 96/96 | 42/42 | 75 | descartado: mejor jerarquía que c4, peor en sistema y lectura (talón vacío a 1440 px, pares del talón sin separación, botón activo en «Demasiados intentos») | `.ai/inspect/041-c5/resumen.md` |
 | `c6` | 96/96 | 42/42 | 78 | descartado: bajo el umbral, mejor que c4 en jerarquía y sistema; botón activo en «Demasiados intentos», panel con el lema comercial, talón críptico en «Pedir» | `.ai/inspect/041-c6/resumen.md` |
-| `c7` | 96/96 | 42/42 | **88** | **aceptado** | `.ai/inspect/041-c7/resumen.md` |
+| `c7` | 96/96 | 42/42 | **88** | descartado: lo eligió el ciclo y el usuario lo aprobó, pero al verlo construido prefirió el estilo anterior (2026-11-03) | `.ai/inspect/041-c7/resumen.md` |
 
 c2 y c3 se fotografiaron sin Roboto (el entorno de medición usaba una letra de reemplazo de un solo
 peso); desde c4 la letra va incrustada y el KPI K12 comprueba que carga. c6 y c7 salen del
@@ -46,8 +46,30 @@ presupuesto ampliado por el usuario.
 
 ## Resultado
 
-**`c7`**, aceptado con 88/100 (umbral 80, ningún punto bajo 3). Páginas:
-`design/candidatos/c7/*.html`.
+**Estilo anterior del inicio de sesión** (decisión del usuario, 2026-11-03; plan D20). Al ver `c7`
+construido, el usuario prefirió el aspecto que tenía el login antes de esta spec: se conserva en el
+login y lo adoptan las pantallas de la recuperación. La referencia es `login.blade.php` y `auth.css`
+del commit `7c472bf`; no hay candidato nuevo ni pasó por la rúbrica, porque lo decide el usuario. Sí
+pasa las puertas y los KPIs de `criterios.json`, medidos sobre la build (nota de T039 en `tasks.md`).
+
+Lo único que cambia respecto a aquel login es lo que exige la constitución (P9, WCAG 2.1 AA):
+
+| Elemento | Antes | Ahora | Motivo |
+|---|---|---|---|
+| Borde del campo | `--border` | `--border-control` (`--p400`) | Con `--border` no llega a 3:1 |
+| Foco | Halo `--p300` | Contorno `--focus-ring` (`--p600`) | Con `--p300` no llega a 3:1 |
+| Botón principal | `--p400` (hover `--p500`) | `--p500` (hover `--p600`) | Blanco sobre `--p400` es 3,93:1 |
+| Ojo y enlace «¿Olvidaste…?» | `--p300` · 13 px sin zona de toque | `--p500` · 44 px | Contraste y `G-toque` |
+| Alto de campos y casilla | 43 px · 16 px | 44 px con `--touch-min` | `G-toque` |
+| Texto del panel | Blanco al 60 % | Blanco al 70 % | 4,5:1 también en pantallas bajas |
+| Letra | Roboto de Google Fonts | Roboto autoalojada | `G-red`, la misma letra |
+| Entrada del formulario | Sube y aparece | Solo sube | `G-sin-js`: el contenido siempre se ve |
+| Títulos | Lema `h1`, título `h2` | Lema `p`, título `h1` | Un solo `h1` (SE2.a); se ve igual |
+
+Sin cambios: los dos correos conservan su marco de `c7`, porque no había un estilo anterior.
+
+Resultado original del ciclo, que se conserva como registro: `c7`, aceptado con 88/100 (umbral 80,
+ningún punto bajo 3). Páginas: `design/candidatos/c7/*.html`.
 
 | Puerta o KPI | Objetivo | Medido en c7 | |
 |---|---|---|---|
@@ -89,6 +111,9 @@ Ninguna. El logo (`public/images/logo-main.png`) es propio (`data-origen="propia
 
 ## Pantallas
 
+Desde el 2026-11-03 las pantallas se miden sobre la build (`/_disenio/041/`); las rutas de `c7` quedan
+como registro. Los correos siguen siendo los de `c7`.
+
 | Pantalla y estado | Ancho menor | Ancho mayor | Criterios |
 |---|---|---|---|
 | Pedir el enlace | `candidatos/c7/pedir.html` a 320 y 390 | a 1440 | CA1 |
@@ -107,21 +132,23 @@ Sin ancho intermedio: no hay filas de elementos.
 - **Del sistema:** campo (etiqueta, ayuda, error con `aria-invalid` y `aria-describedby`), botón
   primario y secundario, enlace, avisos de error, éxito y espera (`role="alert"` o `role="status"`),
   marca (logo).
-- **Exclusivos de estas pantallas:**
-  - **Carnet:** tarjeta blanca (`--radius`, `--sombra-tarjeta-alta`) con cuerpo, troquel y talón.
-    En el teléfono va montada sobre una franja `--p800` con el logo; en el escritorio, sobre `--p50`
-    junto al panel de marca.
-  - **Troquel:** línea discontinua `--p200` con dos muescas del color del fondo. Es decorativo
-    (`aria-hidden`).
-  - **Talón:** lista `dl` de etiqueta (`--p600`, negrita) y valor, en `--text-meta`. Apila etiqueta
-    y valor por debajo de 400 px. Lleva el teléfono de la consulta: es el único sitio donde aparece.
+- **Exclusivos de estas pantallas (D20):**
+  - **Panel de marca:** desde 769 px, panel al 48 % con el degradado y los círculos del login anterior,
+    el logo, el lema «Tu sonrisa, nuestra prioridad» y su frase, igual en todas las pantallas. En el
+    teléfono no se muestra: solo el formulario sobre `--p50`.
+  - **Formulario:** ancho máximo `--acceso-form-ancho`, sobre `--white` en el escritorio. Campos con
+    icono a la izquierda, fondo `--p50` y radio `--radius-acceso`.
+  - **Datos de abajo (`talon`):** lista `dl` de etiqueta y valor, en `--text-meta`, bajo una línea
+    `--border`. Apila etiqueta y valor por debajo de 400 px. Lleva el teléfono de la consulta.
   - **Bloque «Vale hasta»:** `--p50` con la etiqueta, la hora en `--p800` al tamaño del titular y la
     instrucción.
   - **Botón en espera:** desactivado, `--p100` con texto `--p800` y borde `--border`, con el texto
     «Disponible en un minuto».
   - **Ver la contraseña** (solo en el inicio de sesión, refinado el 2026-11-03): botón de 44 × 44 px
-    (`--touch-min`) dentro del campo, a la derecha, con el icono del ojo en `--p600` (`--icon-md`) y
-    `aria-pressed`. Es mejora progresiva: sin JavaScript no aparece y el campo sigue igual.
+    (`--touch-min`) dentro del campo, a la derecha, con el icono del ojo en `--p500` y `aria-pressed`.
+    Es mejora progresiva: sin JavaScript no aparece y el campo sigue igual.
+  - **Logo de Google:** sus cuatro colores son los de la marca de Google, fuera del sistema; solo en
+    el botón «Continuar con Google».
 
 ## Cambios a incorporar al sistema
 
@@ -133,16 +160,20 @@ Sin ancho intermedio: no hay filas de elementos.
 | `--duration-respuesta` · `--ease-clinico` | fijo | 150 ms · `cubic-bezier(.2, .7, .2, 1)` | — | Respuesta de los botones (M-1) |
 | Botón primario del acceso en `--p500` (hover `--p600`) | fijo | — | — | Blanco sobre `--p400` es 3.93:1 (DS1); sobre `--p500`, 5.42:1 |
 | Borde de los campos del acceso en `--p400` (`--border-control`) | fijo | — | — | El borde actual no llega a 3:1 |
-| Etiquetas, ayuda y error de campo a `--text-meta` (13 px) | fijo | — | — | Legibilidad (evaluador, c2 y c4) |
-| Panel de marca del acceso: degradado `--p600 → --p800` | corte 769 px | oculto (franja `--p800`) | panel al 48 % | El login actual usa dos tonos fuera del sistema (`#7a1f3a`, `#4B1528`) |
-| Marco del acceso: franja con el logo en el teléfono, tarjeta sobre `--p50` en el escritorio, también en el inicio de sesión | corte 769 px | franja + tarjeta | panel + tarjeta | Continuidad: el login con el aviso de éxito debe parecer el mismo lugar (evaluador, c2) |
-| Texto del panel en las pantallas de recuperación: «Vuelve a entrar en un par de minutos…» (el login conserva su lema) | corte 769 px | — | panel | El panel habla del paso (evaluador, c6) |
+| Etiquetas, ayuda y error de campo a `--text-acceso-small` (12 px) | fijo | — | — | El tamaño del login anterior (D20) |
+| Panel de marca del acceso: `--acceso-panel-fondo` (degradado del login anterior), `--acceso-panel-sub`, `--acceso-panel-sub-ancho`, `--acceso-circulo`, `--acceso-panel-pad-y` y `-x`, `--logo-acceso-w`, `--text-acceso-lema`, `--leading-acceso-panel` | corte 769 px | oculto | panel al 48 % | Valores del login anterior, llevados a tokens (D20) |
+| Formulario del acceso: `--acceso-form-ancho`, `--acceso-cabecera-pie`, `--acceso-campo-sangria`, `--radius-acceso`, `--tracking-campo`, `--sombra-boton-acceso`, `--duration-entrada` | fijo | — | — | Igual (D20) |
 | Botón en espera (desactivado) | fijo | — | — | «Demasiados intentos» no debe invitar a pulsar (evaluador, c5 y c6) |
-| Casilla con zona de toque de 44 px (cuadro visible de 20 px) | fijo | — | — | `G-toque` (c1) |
+| Casilla con zona de toque de 44 px (cuadro visible de 16 px) | fijo | — | — | `G-toque` (c1) |
 | Roboto autoalojada (variable, OFL 1.1), sin Google Fonts | fijo | — | — | Recursos externos (`G-red`) y privacidad; como Lexend en la 038 |
 | Ver la contraseña en el inicio de sesión: botón de 44 px con el ojo, mejora progresiva | fijo | — | — | El login actual lo tiene y el usuario lo conserva (refinado, 2026-11-03) |
 
 ## Movimiento
+
+### M-2 — Entrada del formulario (D20)
+- **Propósito y frecuencia:** la del login anterior; una vez por página.
+- **Elementos y propiedades:** `transform: translateY` desde 16 px · **Duración:** `--duration-entrada`.
+- **Reducido:** sin animación · **Sin JavaScript:** CSS puro. Sin `opacity`: el contenido siempre se ve.
 
 ### M-1 — Respuesta de los botones
 - **Propósito y frecuencia:** confirmar que la pulsación se recibió; varias veces por visita.
@@ -158,9 +189,9 @@ c2 tenía además «el talón crece» en «Revisa tu correo»; se quitó en c3 p
 
 - **Contraste, toque y foco:** medidos por `evaluate.mjs` (`G-contraste`, `G-toque`, `G-foco`) en
   las ocho páginas.
-- **Encabezados y estructura:** un `h1` por página (el título del carnet; en el inicio de sesión,
-  «Bienvenido de vuelta», y el lema del panel pasa a párrafo). `main` para el carnet, `header` para
-  la franja y `aside` para el panel.
+- **Encabezados y estructura:** un `h1` por página (el título del formulario; en el inicio de sesión,
+  «Bienvenido de vuelta», y el lema del panel es un párrafo). `main` para el formulario y `aside` para
+  el panel.
 - **Avisos:** «Revisa tu correo» con `role="status"`; enlace caducado y demasiados intentos con
   `role="alert"`; el error del campo enlazado con `aria-describedby`. Las regiones de estado siguen
   `references/spec-mode.md` §6 en la implementación.
@@ -169,7 +200,7 @@ c2 tenía además «el talón crece» en «Revisa tu correo»; se quitó en c3 p
   el icono va con `aria-hidden`.
 - **Enlace en el texto del talón** («pide otro enlace»): enlace dentro de un párrafo, exento del
   tamaño de toque (WCAG 2.5.8).
-- **Decorativos ocultos:** troquel e íconos de los avisos con `aria-hidden`.
+- **Decorativos ocultos:** círculos del panel e íconos de campos y avisos con `aria-hidden`.
 
 ## Decisiones
 
@@ -184,3 +215,4 @@ c2 tenía además «el talón crece» en «Revisa tu correo»; se quitó en c3 p
 | 2026-10-27 | diseño | Resultado del ciclo | `c7` aceptado con 88/100 | /design-spec |
 | 2026-10-27 | diseño | ¿Se aprueba el acta? | Aprobada | usuario |
 | 2026-11-03 | refinado | `c7` quitaba el botón del ojo del inicio de sesión para no usar JavaScript. ¿Se conserva? | Se conserva, solo en el inicio de sesión y como mejora progresiva: un archivo propio con `defer`; sin él, la contraseña se escribe igual. Las pantallas de la recuperación siguen sin JavaScript. `c7/exito.html` remedido: puertas 12/12 y KPIs 5/5 (`.ai/inspect/041-c7-ojo/`). Ningún criterio cambia: K9 pide ≤ 100 kB y `G-sin-js`, que todo el contenido esté sin JavaScript | usuario |
+| 2026-11-03 | refinado | Al ver `c7` construido: «no me gustó el nuevo estilo, me gusta más el anterior». ¿Qué se conserva? | Se vuelve al estilo del login anterior a la 041, en el login y en la recuperación; sin rúbrica, por debajo del umbral por decisión del usuario, y con las puertas y KPIs de `criterios.json`. Se mantienen los cambios que exige P9 (ver «Resultado»). Los correos siguen como `c7` | usuario |

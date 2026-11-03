@@ -10,7 +10,7 @@ use Illuminate\Support\ViewErrorBag;
 
 /**
  * Vista previa del diseño de la 041 (D11, D15). Solo se registra en local: cada pantalla y cada
- * correo con los datos de muestra de `c7`, para medir con `design/medir.mjs` los estados que
+ * correo con los datos de muestra del diseño, para medir con `design/medir.mjs` los estados que
  * dependen de la sesión (enviado, espera, éxito) o de un token.
  */
 class DisenioAccesoController extends Controller

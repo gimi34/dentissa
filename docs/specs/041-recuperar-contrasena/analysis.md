@@ -1,23 +1,22 @@
 ---
 result: pass
-round: 5
+round: 6
 mode: delta
 constitution_version: 1.3.0
 date: 2026-11-03
-spec_sha: 8456cad72e93
-plan_sha: a45387038603
-tasks_sha: 0c5657c11092
+spec_sha: 8989e97cff33
+plan_sha: ad4ca33550e5
+tasks_sha: 0faf529fd94e
 ---
 
 # Análisis · 041 Recuperar contraseña
 
 ## Resumen
-Ronda delta sobre `/design-spec 041 --fix`, `/plan 041 --fix` y `/tasks 041 --fix` (D19): el usuario
-conserva el botón del ojo en el inicio de sesión. Sin subagente (vía ligera, decisión del usuario,
-2026-11-03): releídas D19, T036 y T037, y comprobado contra el código lo que dan por hecho. La spec,
-los criterios y el modelo de amenazas no cambian. Resultado `pass`, con un hallazgo BAJO aceptado como
-nota.
-Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 1
+Ronda delta sobre `/design-spec 041 --fix`, `/plan 041 --fix` y `/tasks 041 --fix` (D20): al ver `c7`
+construido, el usuario vuelve al estilo anterior del inicio de sesión. Sin subagente (vía ligera, decisión
+del usuario, 2026-11-03): releídas D20, T038 y T039, y comprobado contra el código lo que dan por hecho. Los
+criterios de aceptación, los criterios de diseño y el modelo de amenazas no cambian. Resultado `pass`.
+Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0
 
 ## Cobertura
 | Métrica | Valor |
@@ -27,25 +26,24 @@ Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 1
 | Principios de la constitución evaluados | 10 / 10 (P2, P9 y P10 tocados por el delta) |
 
 ## Lo comprobado (2026-11-03)
-- TM7: el script solo se carga en el inicio de sesión. `nueva` y `caducado`, las de la URL del token,
-  siguen sin JavaScript, y T036 lo exige con `test_sin_javascript`.
-- P2: T036 escribe los tests antes que T037, que depende de ella.
-- P9: los estilos van en `acceso.css`, cubiertos por los tests de tokens de T017, sin valores nuevos.
-- P10: archivo propio y CSP vigente (`script-src 'self'`), sin recursos de otros sitios.
-- K9 y `G-sin-js`: `c7/exito.html` remedido con el ojo, puertas 12/12 y KPIs 5/5. Sin JavaScript el botón
-  no aparece y el contenido está completo.
-- Sin dependencias nuevas. T037 toca 3 archivos.
+- P2: T038 escribe los tests antes que T039, que depende de ella. Fallan por la razón esperada.
+- P9: los valores del login anterior pasan a tokens de `system.md`, sin estilos en línea y sin literales
+  fuera de `:root` en las propiedades que revisa D17. Se conservan los cambios de contraste, foco y toque.
+  El antiguo `.page-login` no vuelve a `auth.css`, que no cumple P9.
+- P10: un solo `h1` (el lema pasa a párrafo), `noindex` y Roboto propia, sin Google Fonts.
+- TM7: las pantallas de la recuperación siguen sin JavaScript; `test_sin_javascript` no cambia.
+- Criterios de diseño: las puertas y los KPIs se repiten sobre la build. La rúbrica no se aplica: la decisión
+  es del usuario y queda en «Decisiones» de `design.md`, con `accepted: none`.
+- T039 toca más de 3 archivos por una razón anotada: el cambio de la sección del layout rompe las vistas.
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A19, A22, A31–A36 | aceptados | siguen vigentes | Sus tareas no cambiaron por D19 |
-| A23 | aceptado → spec | sigue vigente | Sin cambios en la spec |
+| A19, A22, A31–A37 | aceptados | siguen vigentes | Sus tareas no cambian de comportamiento por D20 |
+| A23 | aceptado → spec | sigue vigente | La spec solo añade su decisión y su Historial |
 
 ## Hallazgos nuevos
-| ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
-|---|---|---|---|---|---|
-| A37 | Hueco | BAJA | `tasks.md` → T040 | El mapa de `AGENTS.md` lista los scripts de `public/js/` y T040 no menciona `acceso.js` | Nota de T040 (ver «Aceptados») |
+Ninguno.
 
 ## Decisiones pendientes del usuario
 Ninguna.

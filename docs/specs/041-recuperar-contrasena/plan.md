@@ -398,6 +398,13 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
   - Sin dependencias nuevas. K9 (≤ 100 kB) y `G-sin-js` siguen cumpliéndose.
   - Tests: `RecuperarContrasenaVistasTest::test_el_login_tiene_el_boton_de_ver_la_contrasena`, `…_sin_javascript` (las pantallas nuevas sin ningún script; el login, solo `acceso.js`) y `tests/js/acceso.test.mjs`.
 
+- **D20 · Vuelve el estilo anterior del login** (`/design-spec 041 --fix`, decisión del usuario, 2026-11-03): al ver `c7` construido, el usuario prefiere el aspecto que tenía el inicio de sesión. Sustituye lo visual de D12 y de las notas sobre `c7`; el comportamiento, las rutas, los tests de seguridad y el modelo de amenazas no cambian.
+  - `layouts/acceso.blade.php` lleva el panel y el formulario del login de `7c472bf`, con la misma frase en todas las pantallas. En el teléfono, solo el formulario, sin franja. La sección de contenido pasa de `carnet` a `contenido`.
+  - `acceso.css` sigue siendo la hoja del acceso y `auth.css` no recupera `.page-login`: P9 pide tokens y ningún literal nuevo, así que los valores de aquel login pasan a tokens de `system.md`, que recoge `TokensAcceso`. Los círculos decorativos conservan su tamaño y posición como literales: no son espaciados del sistema y no los revisa D17.
+  - Se conservan los cambios de `design.md` que exige P9 (contraste, foco y zona de toque) y las condiciones de la 041: un `h1`, `noindex`, sin estilos en línea y Roboto propia.
+  - Sin dependencias nuevas. Las pantallas de la recuperación siguen sin JavaScript (TM7). Los correos no cambian.
+  - Tests: `RecuperarContrasenaVistasTest::test_el_acceso_usa_el_estilo_anterior_del_login`; `test_roles_de_los_avisos_y_errores` cambia los decorativos que comprueba, porque el troquel ya no existe.
+
 ## Impacto en arquitectura
 - `docs/architecture.md` (T090):
   - fila «Autenticación»: recuperación de contraseña, broker, versión de sesión, `SesionVigente`;
