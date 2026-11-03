@@ -1,47 +1,49 @@
 ---
 spec: 041-recuperar-contrasena
-verdict: changes_requested
-round: 1
+verdict: approved
+round: 2
 date: 2026-11-03
-base: 7c472bf
-head: 541eaa2
+base: 541eaa2
+head: 1ef68aa
 human_signoff: no requerido
 ---
 
 # Review · 041 Recuperar contraseña
 
 ## Resumen
-`changes_requested`: dos criterios de aceptación no se cumplen en un caso concreto (R1 y R2). El usuario decide
-corregir además los tres importantes (R3, R4 y R5). Los menores van al roadmap, según el proceso ligero acordado
-para la entrega. Revisores independientes por encargo; accesibilidad y SEO en un mismo subagente, y sin los
-plugins `design:*`, que la sesión no ofrece.
-Conteo: bloqueante 2 · importante 3 · menor 26
+`approved`: los cinco hallazgos de la ronda 1 están corregidos, con su test y comprobados, y no aparece ningún
+bloqueante ni importante nuevo. Ronda `--rerun` hecha sin subagentes, releyendo el código desde cero, porque el
+diff de código es de 29,5 KB. El usuario confirmó el formulario del perfil.
+Conteo: bloqueante 0 · importante 0 · menor 28 (aceptados)
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `php artisan test` | ✅ 683 en verde, 11 833 aserciones (sin línea base de fallos) |
-| `pint --test` sobre los 19 PHP del diff | ✅ |
+| `php artisan test` | ✅ 697 en verde, 11 922 aserciones (sin línea base de fallos) |
+| `pint --test` sobre los 21 PHP del diff | ✅ |
 | `node --test tests/js/` | ✅ 14 en verde |
 | `npm run build` | no ejecutado: Vite no está instalado en este worktree; el diff no toca `package*`, `vite.config.js` ni `resources/js` o `resources/css` |
 | `aidd.py validate` | ✅ 0 errores |
-| `evaluate.mjs` con `criterios.json` sobre la build | ✅ las ocho páginas y «nueva-espera», 11 puertas y sus KPIs; `G-red` no se mide sobre URL y la cubre `test_sin_recursos_externos` |
+| `evaluate.mjs` con `criterios.json` sobre la build | ✅ las ocho páginas, «nueva-espera» y «caducado-espera», 11 puertas y sus KPIs; `G-red` no se mide sobre URL y la cubre `test_sin_recursos_externos` |
+| Flujo real por nginx y PHP-FPM | ✅ correo, enlace, error junto al campo, restablecer, otra sesión cerrada, entra con la nueva y no con la anterior, enlace usado rechazado, evento de auditoría y token fuera del log de acceso |
 
 ## Criterios de aceptación
 | CA | Test | Estado | Nota |
 |---|---|---|---|
 | CA1 | `RecuperarContrasenaTest::test_el_login_enlaza_a_recuperar`, `…_la_pantalla_de_solicitud_tiene_volver` | ✅ | |
 | CA2 | `…_una_cuenta_activa_recibe_el_enlace`, `CorreosRestablecimientoTest::test_el_correo_del_enlace_tiene_caducidad_y_aviso` | ✅ | La entrega real la comprueba T095. Ver R24 |
-| CA3 | `…_restablece_y_vuelve_al_login_con_exito`, `…_entra_con_la_nueva_y_no_con_la_anterior` | ❌ | Sin mensaje de éxito si ese navegador tenía abierta la cuenta (R1) |
+| CA3 | `…_restablece_y_vuelve_al_login_con_exito`, `…_entra_con_la_nueva_y_no_con_la_anterior`, `SesionVigenteTest::test_con_la_cuenta_abierta_en_ese_navegador_se_ve_el_exito` | ✅ | R1 corregido |
 | CA4 | `…_rechaza_menos_de_ocho_caracteres`, `…_rechaza_confirmacion_distinta_junto_al_campo` | ✅ | |
 | CA5 | `…_rechaza_un_enlace_caducado`, `…_usado`, `…_sustituido` | ✅ | |
 | CA6 | `…_una_cuenta_de_google_crea_su_contrasena_y_sigue_con_google` | ✅ | |
 | CA7 | `SesionVigenteTest::test_restablecer_cierra_las_otras_sesiones` y siguientes | ✅ | |
 | CA8 | `RecuperarContrasenaAbusoTest::test_misma_respuesta_…`, `…_la_respuesta_tarda_lo_mismo_…` | ✅ | Lo protege la aserción de 0 tokens antes de terminar (R15) |
-| CA9 | `…_un_correo_por_cuenta_por_minuto`, `…_cinco_…`, `…_la_espera_desactiva_el_boton` | ❌ | Con un enlace bien formado pero inválido, la pantalla no pide esperar (R2) |
+| CA9 | `…_un_correo_por_cuenta_por_minuto`, `…_cinco_…`, `…_la_espera_desactiva_el_boton`, `…_la_espera_con_un_enlace_invalido_pide_esperar` | ✅ | R2 corregido |
 | CA10 | `…_rechaza_un_token_alterado`, `…_el_token_de_una_cuenta_no_cambia_…` | ✅ | |
 | CA11 | `…_una_cuenta_desactivada_no_recibe_correo`, `…_no_puede_restablecer` | ✅ | |
 | CA12 | `RecuperarContrasenaAuditoriaTest::test_el_restablecimiento_queda_registrado` | ✅ | |
+| CA13 | `PerfilCambioCorreoTest` | ✅ | Comprobado rompiendo el control; residuo en R32 |
+| CA14 | `RecuperarContrasenaAbusoTest::test_cinco_enlaces_por_cuenta_por_hora`, `…_doscientos_enlaces_al_dia` | ✅ | Comprobado rompiendo el control |
 
 ## Conformidad con el plan
 - Cambios fuera del plan: ninguno. Los archivos que `scope.md` da sin tarea están cubiertos: `.gitleaksignore` (T042), `DisenioAccesoController` (D11), `auth/recuperar/partes/` (T039) y `TokensAcceso` (T017, T038).
@@ -64,10 +66,10 @@ Conteo: bloqueante 2 · importante 3 · menor 26
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks v8.21.2 (47 commits) | ✅ 0 hallazgos con `.gitleaksignore`; sin la lista, 2 falsos positivos en `b9eb4aa` (contraseña ficticia de un test) |
+| gitleaks v8.21.2 (55 commits) | ✅ 0 hallazgos con `.gitleaksignore`; sin la lista, 2 falsos positivos en `b9eb4aa` (contraseña ficticia de un test) |
 | semgrep `p/php` | ✅ 0 hallazgos |
 | `composer audit` + `npm audit` | crít: 0 · alta: 0 · media: 1 (`symfony/mime` CVE-2026-45070, línea base; no explotable en este flujo, R28) |
-| trivy `fs` HIGH, CRITICAL | 1 alta, DS-0002 (sin `USER` no root) en `docker/prod/Dockerfile`, que este diff no toca. Con la imagen `latest`; la CI usa 0.57.1 y no bloquea. No es de esta spec |
+| trivy `fs` HIGH, CRITICAL | No repetido: esta ronda no toca dependencias ni imágenes. Ronda 1: 1 alta, DS-0002 (sin `USER` no root) en `docker/prod/Dockerfile`, que el diff no toca; con la imagen `latest`; la CI usa 0.57.1 y no bloquea |
 
 | Tema OWASP | Resultado | Evidencia |
 |---|---|---|
@@ -76,15 +78,15 @@ Conteo: bloqueante 2 · importante 3 · menor 26
 | A03:2025 Cadena de suministro | ✅ | Sin cambios en lockfiles |
 | A04:2025 Criptografía y datos | ✅ | bcrypt y token con hash; residuo en R25 |
 | A05:2025 Inyección | ✅ | Bindings y `{{ }}`; semgrep confirmado |
-| A06:2025 Diseño inseguro | ❌ | Sin tope de correos por hora ni por día (R5) |
-| A07:2025 Autenticación | ❌ | Cambio de correo del perfil sin contraseña, encadenado con la recuperación (R4) |
+| A06:2025 Diseño inseguro | ✅ | Topes de 5 por cuenta y hora y 200 al día, antes de crear el token (R5) |
+| A07:2025 Autenticación | ✅ | El correo del perfil pide la contraseña actual y esta no queda en la sesión (R4); residuo en R32 |
 | A08:2025 Integridad | ✅ | CSRF del grupo `web` |
 | A09:2025 Registro y auditoría | ✅ | Evento crítico y logs sin datos; sin señal de abuso (R27) |
 | A10:2025 Errores | ✅ | Falla cerrado: token inválido → «caducado»; auditoría caída → 503 y rollback |
 
 ## Observabilidad
 - Eventos de auditoría de la spec emitidos y probados: sí, `contrasena_restablecida` (`RecuperarContrasenaAuditoriaTest`).
-- Datos sensibles en logs del código tocado: ninguno; los `Log::` llevan solo la clase del error, y el log de acceso de nginx enmascara el token.
+- Datos sensibles en logs del código tocado: ninguno; los `Log::` llevan solo la clase del error o ningún dato (`restablecimiento.tope_diario`), y el log de acceso de nginx enmascara el token.
 - `request_id` presente en los logs nuevos: sí, por el `Context` de la 020.
 
 ## SEO
@@ -99,14 +101,20 @@ Conteo: bloqueante 2 · importante 3 · menor 26
 | Rendimiento | no determinado | No medido en esta ronda |
 - Sección "Descubribilidad" del plan aplicada: sí, con `test_las_pantallas_nuevas_no_se_indexan` y `test_el_login_no_se_indexa`.
 
+## Seguimiento de la ronda 1
+| ID | Estado | Evidencia |
+|---|---|---|
+| R1 | corregido | T045, T046: `RecuperarContrasenaController::restablecer` cierra la sesión de esa cuenta; `test_con_la_cuenta_abierta_en_ese_navegador_se_ve_el_exito` |
+| R2 | corregido | T047, T048: aviso de espera en `caducado`; `test_la_espera_con_un_enlace_invalido_pide_esperar`; `evaluate.mjs` «caducado-espera» |
+| R3 | corregido | T049, T050: `autofocus` en el primer campo con error; `test_el_foco_va_al_primer_campo_con_error` |
+| R4 | corregido | T051, T052: `PerfilCambioCorreoTest`, comprobado rompiendo `Hash::check`, la condición y `dontFlash`; formulario confirmado por el usuario |
+| R5 | corregido | T053, T054: `test_cinco_enlaces_por_cuenta_por_hora`, `test_doscientos_enlaces_al_dia`, comprobados rompiendo cada tope |
+
 ## Hallazgos
 | ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
 |---|---|---|---|---|
-| R1 | bloqueante | `RecuperarContrasenaController.php:178`, `SesionVigente.php:27-32` | CA3: si el navegador que restablece tiene abierta esa cuenta, la contraseña cambia pero el mensaje de éxito se pierde: `SesionVigente` vacía la sesión al llegar a `/login`. Reproducido con una prueba temporal: el segundo `GET /login` no muestra «Tu contraseña cambió» | Cerrar esa sesión en `restablecer` antes de redirigir |
-| R2 | bloqueante | `AppServiceProvider.php:87`, `RecuperarContrasenaController.php:90-91` | CA9: superado el límite al fijar, con un enlace bien formado pero inválido, la pantalla dice «Este enlace ya no sirve» y no pide esperar. Reproducido. El límite sí se aplica | Mostrar el aviso de espera en `caducado` |
-| R3 | importante | `auth/recuperar/solicitud.blade.php`, `nueva.blade.php` | Tras un error de validación, un lector de pantalla no lo anuncia: sin foco ni región viva. Reproducido: sin `role="alert"` ni `autofocus` | Foco en el primer campo con error |
-| R4 | importante | `PerfilController.php:48` | Cambiar el correo no pide contraseña (RS9.b). Con una sesión ajena, se dirige el enlace a otro buzón y se deja fuera al dueño, que no recibe aviso | Pedir la contraseña actual (decisión del usuario) |
-| R5 | importante | `AppServiceProvider.php:76`, `config/auth.php:101` | Sin tope por hora ni por día: se puede agotar la cuota de Gmail, que comparte los avisos de producción, o bombardear un buzón e invalidar sus enlaces | 5 enlaces por cuenta por hora y 200 al día en total |
+| R32 | menor | `PerfilController.php:48` | Residuos de D21: con una sesión ajena de una cuenta de Google se puede crear la contraseña en el perfil y cambiar luego el correo (RS5.c), y los campos de contraseña del perfil no tienen límite de intentos | Reautenticar al crear la contraseña y añadir un limitador |
+| R33 | menor | `resources/views/cliente/perfil.blade.php:43` | En una cuenta sin contraseña, al intentar cambiar el correo, el error repite la ayuda que hay debajo | Ocultar la ayuda si hay error |
 | R6 | menor | `public/css/acceso.css:141,145,146` | Medidas de la casilla con cuentas sobre tokens que no significan eso | Tokens con nombre |
 | R7 | menor | `tests/Feature/CorreosRestablecimientoTest.php:93` | La cabecera `Host` falsa no llega a la petición; la protección la prueba otra aserción | Pedir con URL absoluta |
 | R8 | menor | `resources/views/correos/acceso.css:8` | Con imágenes bloqueadas, el `alt` del logo sale en negro sobre la cabecera guinda | `color: #FFFFFF` en `.correo-cab` |
@@ -140,9 +148,10 @@ Conteo: bloqueante 2 · importante 3 · menor 26
 - Interruptor: existe y está apagado por defecto.
 - Docs actualizadas (architecture, deployment): sí (T090, T091).
 - SCA: sin críticas ni altas.
-- Cobertura de riesgos: RS9.b pasa a estar dentro de esta spec (CA13); su estado lo actualiza `/release`.
+- Cobertura de riesgos: RS9.b está dentro de esta spec e implementada (CA13); su estado lo actualiza `/release`.
 
 ## Tareas añadidas
+De la ronda 1, todas hechas:
 - T045, T046 ← R1
 - T047, T048 ← R2
 - T049, T050 ← R3
@@ -177,3 +186,5 @@ Aceptados por el proceso ligero para la entrega (decisión del usuario, 2026-10-
 - **R29** → roadmap: test de contraste en la CI
 - **R30** → roadmap: destino perdido con la sesión anulada
 - **R31** → roadmap: fila del layout en el plan
+- **R32** → roadmap: residuos de D21, contraseña creada en el perfil de una cuenta de Google y sin límite de intentos
+- **R33** → roadmap: ayuda repetida en el perfil de una cuenta sin contraseña
