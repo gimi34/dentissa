@@ -6,8 +6,8 @@ namespace Tests\Feature\Concerns;
  * Spec 041 (P9, plan D9 y D17): qué valores admite el acceso. Lo usan los tests de la hoja de los
  * correos (`CorreosRestablecimientoTest`) y de `acceso.css` (`RecuperarContrasenaVistasTest`).
  *
- * Los tokens salen de `:root` en `app.css`, más los cuatro que `system.md` 1.11.0 añade solo para
- * el acceso, que los comprueba `test_los_tokens_del_acceso_son_los_de_system_md`.
+ * Los tokens salen de `:root` en `app.css`, más los que `system.md` 1.11.0 añade solo para el
+ * acceso, que los comprueba `test_los_tokens_del_acceso_son_los_de_system_md`.
  */
 trait TokensAcceso
 {
@@ -17,6 +17,23 @@ trait TokensAcceso
         '--text-acceso-small' => '12px',
         '--duration-respuesta' => '150ms',
         '--ease-clinico' => 'cubic-bezier(0.2, 0.7, 0.2, 1)',
+        // D20: los valores del inicio de sesión anterior a la 041.
+        '--acceso-panel-fondo' => 'linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%)',
+        '--acceso-panel-sub' => 'rgba(255, 255, 255, 0.7)',
+        '--acceso-circulo' => 'rgba(255, 255, 255, 0.08)',
+        '--acceso-panel-sub-ancho' => '340px',
+        '--acceso-panel-pad-y' => '48px',
+        '--acceso-panel-pad-x' => '52px',
+        '--acceso-form-ancho' => '400px',
+        '--acceso-cabecera-pie' => '32px',
+        '--acceso-campo-sangria' => '42px',
+        '--radius-acceso' => '10px',
+        '--text-acceso-lema' => '30px',
+        '--leading-acceso-panel' => '1.7',
+        '--tracking-campo' => '0.02em',
+        '--logo-acceso-w' => '310px',
+        '--sombra-boton-acceso' => '0 4px 16px rgba(212, 83, 126, 0.3)',
+        '--duration-entrada' => '0.45s',
     ];
 
     /** D17: propiedades revisadas (fuera de `:root`). Los atributos HTML de las tablas no son CSS. */

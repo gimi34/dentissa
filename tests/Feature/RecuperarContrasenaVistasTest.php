@@ -23,6 +23,7 @@ use Tests\TestCase;
  *
  *  - Descubribilidad (P10, SE2.a): `noindex` en las pantallas nuevas y en el login; la página del
  *    token no envía `Referer` (TM7) ni se guarda en caché (TM11); sin recursos de otros sitios.
+ *  - Estilo (D20): el acceso conserva el aspecto del inicio de sesión anterior a la 041.
  *  - Accesibilidad y estados (CA1, CA7, CA9): roles de los avisos, errores enlazados, un solo `h1`,
  *    el botón desactivado en espera y el teléfono de `clinica.contacto` en el talón (D16).
  *  - P9 (D9, D13, D17): sin estilos en línea, tokens de `acceso.css` iguales a los del sistema, todo
@@ -70,6 +71,11 @@ class RecuperarContrasenaVistasTest extends TestCase
         libxml_clear_errors();
 
         return new DOMXPath($documento);
+    }
+
+    private function conClase(DOMXPath $xpath, string $clase): \DOMNodeList
+    {
+        return $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " '.$clase.' ")]');
     }
 
     private function solicitud(): TestResponse
@@ -235,6 +241,28 @@ class RecuperarContrasenaVistasTest extends TestCase
         $this->assertSame(0, $xpath->query('//*[@onclick or @onsubmit or @onchange]')->length, 'Sin manejadores en línea.');
     }
 
+    /** D20: el acceso conserva el aspecto que tenía el inicio de sesión antes de la 041. */
+    public function test_el_acceso_usa_el_estilo_anterior_del_login(): void
+    {
+        foreach ($this->todas() as $nombre => $html) {
+            $xpath = $this->xpath($html);
+            foreach (['panel-left', 'panel-illustration', 'panel-tagline', 'panel-sub', 'panel-right', 'form-container'] as $clase) {
+                $this->assertSame(1, $this->conClase($xpath, $clase)->length, "{$nombre}: lleva .{$clase}.");
+            }
+            foreach (['carnet', 'carnet-cuerpo', 'troquel', 'franja', 'etiqueta'] as $clase) {
+                $this->assertSame(0, $this->conClase($xpath, $clase)->length, "{$nombre}: sin .{$clase}, del estilo c7.");
+            }
+            $this->assertSame('Tu sonrisa,nuestra prioridad', trim($this->conClase($xpath, 'panel-tagline')->item(0)->textContent), "{$nombre}: el lema de antes.");
+            $this->assertSame(1, $xpath->query('//aside[contains(@class, "panel-left")]//img[@alt!=""]')->length, "{$nombre}: el logo del panel.");
+            $this->assertSame(1, $xpath->query('//h1[contains(@class, "form-title")]')->length, "{$nombre}: el título es el h1.");
+        }
+
+        $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
+        $this->assertSame(1, $xpath->query('//a[contains(@class, "btn-google")]/*[local-name()="svg"]')->length, 'Google con su logo.');
+        $this->assertSame(2, $this->conClase($xpath, 'field-icon')->length, 'Un icono por campo.');
+        $this->assertSame('••••••••', $xpath->query('//input[@id="password"]')->item(0)->getAttribute('placeholder'));
+    }
+
     public function test_el_login_tiene_el_boton_de_ver_la_contrasena(): void
     {
         $xpath = $this->xpath($this->get('/login')->assertOk()->getContent());
@@ -274,8 +302,14 @@ class RecuperarContrasenaVistasTest extends TestCase
         $this->assertNotEmpty($errores, 'El error del campo está enlazado.');
         $ayudas = array_filter($ids, fn ($id) => str_contains((string) $xpath->query('//*[@id="'.$id.'"]')->item(0)?->textContent, 'Al menos 8 caracteres'));
         $this->assertNotEmpty($ayudas, 'Y la ayuda «Al menos 8 caracteres».');
-        // Decorativos ocultos: el troquel, para el lector de pantalla.
-        $this->assertSame('true', $xpath->query('//*[contains(@class, "troquel")]')->item(0)?->getAttribute('aria-hidden'));
+        // Decorativos ocultos para el lector de pantalla (D20): los círculos del panel y el icono del campo.
+        foreach (['deco-circle', 'field-icon'] as $clase) {
+            $decorativos = $this->conClase($xpath, $clase);
+            $this->assertGreaterThan(0, $decorativos->length, "Hay {$clase}.");
+            foreach ($decorativos as $decorativo) {
+                $this->assertSame('true', $decorativo->getAttribute('aria-hidden'), "{$clase} con aria-hidden.");
+            }
+        }
     }
 
     public function test_la_espera_desactiva_el_boton(): void
