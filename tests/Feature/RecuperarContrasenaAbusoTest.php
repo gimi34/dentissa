@@ -204,9 +204,9 @@ class RecuperarContrasenaAbusoTest extends TestCase
             $this->fijar($datos)->assertRedirect(url($this->enlace($usuario, $token)))->assertSessionHasErrors('password');
         }
         // El sexto ve la espera, con el token y la cuenta del formulario y nunca la contraseña.
-        $sexto = $this->fijar(array_merge($datos, ['password' => 'contrasena-valida-1', 'password_confirmation' => 'contrasena-valida-1']));
+        $sexto = $this->fijar(array_merge($datos, ['password' => 'contrasena-valida-larga', 'password_confirmation' => 'contrasena-valida-larga']));
         $sexto->assertRedirect(url($this->enlace($usuario, $token)));
-        $this->assertStringNotContainsString('contrasena-valida-1', json_encode(session()->all()), 'La contraseña no queda en la sesión.');
+        $this->assertStringNotContainsString('contrasena-valida-larga', json_encode(session()->all()), 'La contraseña no queda en la sesión.');
         $this->assertTrue(Hash::check('contrasena-anterior', $usuario->fresh()->password_hash), 'La contraseña no cambió.');
         // Otro origen no está limitado.
         $this->fijar($datos, '10.0.0.9')->assertSessionHasErrors('password');
