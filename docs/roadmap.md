@@ -37,8 +37,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     (`everyMinute()->withoutOverlapping()`) y retirar el temporizador `dentissa-vigilar` va en una
     **spec propia**, para no tener dos mecanismos (032 D11, /analyze A20 y A39; decisión del
     usuario, 2026-10-28);
-  - al retomar la 038, su vuelta atrás es a la versión de la 032 (v0.11.0) y no a v0.10.0 (032 D15,
-    /analyze A25).
+  - ~~al retomar la 038, su vuelta atrás es a la versión de la 032 (v0.11.0) y no a v0.10.0 (032 D15,
+    /analyze A25)~~ resuelto: la 038 salió en v0.13.0, después de la 020; su vuelta atrás es a v0.12.0.
   - aceptados sin tarea de `/review` (deuda menor, liberada en v0.11.0):
     - vigilante: 032/R10 se queda atrás sin avisar con más de 50 MiB/min de log de acceso; 032/R12 lo
       pendiente del silencio puede nacer con un evento que no cumple la condición; 032/R16 `&` entre
@@ -73,6 +73,25 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     a la izquierda (`calc(2 * var(--x))`);
   - ~~020/R8 `npm audit` de la 020 depende de la chore de `follow-redirects` 1.16.2~~ resuelto en
     v0.12.0 (chore 2026-10-30-chore-follow-redirects-1.16.2, PR #55).
+- Spec 038 (2026-11-01), aceptados sin tarea de `/review` (deuda menor, liberada en v0.13.0). Los de la
+  ronda 3 (R9–R29) se refieren a la composición de esa ronda, sustituida por la ronda 6 (`c5`): al
+  retomarlos, comprobar primero si siguen aplicando.
+  - código y tests: 038/R9 trait de tests de las páginas públicas (`xpath()`, `crearServicio()`, alta
+    de usuario); 038/R10 sacar `panelDelRol()` del controlador (modelo o `app/Autorizacion/`);
+    038/R43 el horario en texto calculado una vez y el domingo sacado de `horario_semanal`;
+  - diseño y CSS: 038/R11 `--green-texto` se usa con la 039 y la 040; 038/R25 tokens de tamaño propios
+    para logo, mapa, placa y menú en lugar de múltiplos de `--touch-min`; 038/R26 simplificar las
+    reglas de foco de `publico.css`; 038/R36 proporciones de la arcada (5:6 y máximo a 900 px) y de la
+    escena quieta (16:9, 4:5 en el móvil) como en `c5`, con tokens; 038/R37 literales `vw`, `svh` y
+    `deg` de `publico.css` como tokens o excepción declarada, y `literalesPublicos()` que los detecte;
+  - accesibilidad: 038/R17 y 038/R44 el nombre accesible del enlace del logo con la marca (WCAG
+    2.5.3); 038/R19 enlace «Saltar al contenido» en el layout público; 038/R20 `aria-current="page"`
+    en la navegación pública; 038/R29 `id` y `aria-labelledby` en los `h2` del aviso y del pie;
+    038/R40 la pastilla sin `aria-live` inútil y sin el `<li>` vacío sin JavaScript;
+  - textos de la spec (cambian criterios): 038/R12 aclarar dónde se ve el horario de CA5; 038/R22
+    título del aviso más descriptivo que «Aviso de la puerta»; 038/R28 título de `/servicios` más
+    descriptivo;
+  - seguridad: 038/R15 `sandbox` en el `iframe` del mapa, probando que sigue funcionando.
 - P10 de la constitución dice «(hoy solo `/registro`)»: desde la spec 038 también se indexan `/` y
   `/servicios`. Enmienda PATCH pendiente de la decisión del usuario, junto con la excepción del
   JavaScript de terceros del mapa de Google en `/` (spec 038, `/analyze` A17).
