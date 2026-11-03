@@ -1141,4 +1141,88 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertLessThan($this->posicion($volver, 'git fetch --tags origin', 'volver.sh obtiene las versiones.'), $antes, 'La comprobación va antes de git.');
         $this->assertStringContainsString($comprobacion, $this->ordenes('deploy/restaurar.sh'), 'La misma expresión que restaurar.sh.');
     }
+
+    /** @return array<string, array{0: string}> las dos configuraciones de nginx (spec 041, D7) */
+    public static function confNginx(): array
+    {
+        return [
+            'local' => ['docker/nginx/dentissa.conf'],
+            'producción' => ['docker/nginx/dentissa.prod.conf'],
+        ];
+    }
+
+    /**
+     * Aplica a un texto el `map` de la conf: la expresión y su resultado, tal como nginx los lee.
+     * Comprueba que la variable por defecto es la original, para no perder las demás peticiones.
+     */
+    private function aplicarMap(string $conf, string $origen, string $texto): string
+    {
+        $patron = '/^map \$'.$origen.' \$(\w+) \{\n\s*default \$'.$origen.';\n\s*"~([^"\n]+)"\s+"([^"\n]+)";\n\}/m';
+        $this->assertSame(1, preg_match($patron, $conf, $m), "Falta el map de \${$origen} (D7).");
+
+        return preg_replace('#'.str_replace('#', '\#', $m[2]).'#', str_replace(['$1', '$2'], ['${1}', '${2}'], $m[3]), $texto);
+    }
+
+    /** Variable que el `map` de un origen deja enmascarada. */
+    private function variableEnmascarada(string $conf, string $origen): string
+    {
+        $this->assertSame(1, preg_match('/^map \$'.$origen.' \$(\w+) \{/m', $conf, $m), "Falta el map de \${$origen} (D7).");
+
+        return $m[1];
+    }
+
+    #[DataProvider('confNginx')]
+    public function test_nginx_enmascara_el_token_de_restablecimiento(string $ruta): void
+    {
+        $conf = $this->leer($ruta);
+        $peticion = $this->variableEnmascarada($conf, 'request');
+        $referer = $this->variableEnmascarada($conf, 'http_referer');
+        $this->assertNotSame('dentissa_frame_src', $peticion, 'Con otro nombre que el map de marcos de la 038 (D14).');
+
+        // Igual a `combined`, con la petición y el Referer enmascarados: el vigilante de la 032 lo lee igual.
+        $combined = '$remote_addr - $remote_user [$time_local] "$'.$peticion.'" $status $body_bytes_sent "$'.$referer.'" "$http_user_agent"';
+        $this->assertSame(1, preg_match('/^log_format (\w+) \'([^\'\n]+)\';/m', $conf, $formato), 'Falta el log_format.');
+        $this->assertSame($combined, $formato[2], 'El formato es el de combined.');
+        $this->assertMatchesRegularExpression('#^\s*access_log\s+\S+\s+'.$formato[1].';#m', $conf, 'El access_log usa ese formato.');
+
+        $token = str_repeat('a1B2', 16);
+        $cuenta = '019a2b3c-4d5e-7f60-8a9b-0c1d2e3f4a5b';
+        $this->assertSame(
+            "GET /contrasena/nueva/***?cuenta={$cuenta} HTTP/2.0",
+            $this->aplicarMap($conf, 'request', "GET /contrasena/nueva/{$token}?cuenta={$cuenta} HTTP/2.0"),
+            'La línea de ejemplo queda sin el token.',
+        );
+        $this->assertSame('GET /contrasena/nueva HTTP/2.0', $this->aplicarMap($conf, 'request', 'GET /contrasena/nueva HTTP/2.0'), 'El POST no lleva token: no cambia.');
+        $this->assertSame('GET /citas/nueva/abc HTTP/2.0', $this->aplicarMap($conf, 'request', 'GET /citas/nueva/abc HTTP/2.0'), 'Otras rutas no cambian.');
+    }
+
+    #[DataProvider('confNginx')]
+    public function test_nginx_enmascara_el_token_en_el_referer(string $ruta): void
+    {
+        $conf = $this->leer($ruta);
+        $referer = $this->variableEnmascarada($conf, 'http_referer');
+
+        $this->assertDoesNotMatchRegularExpression('/^log_format [^\n]*\$http_referer/m', $conf, 'El formato no usa el Referer sin enmascarar.');
+        $this->assertMatchesRegularExpression('/^log_format [^\n]*\$'.$referer.'/m', $conf, 'Usa el enmascarado (D7).');
+
+        $token = str_repeat('a1B2', 16);
+        $this->assertSame(
+            'https://dentissa.app/contrasena/nueva/***?cuenta=019a2b3c',
+            $this->aplicarMap($conf, 'http_referer', "https://dentissa.app/contrasena/nueva/{$token}?cuenta=019a2b3c"),
+        );
+        $this->assertSame('https://dentissa.app/login', $this->aplicarMap($conf, 'http_referer', 'https://dentissa.app/login'));
+    }
+
+    public function test_el_repo_no_tiene_contrasena_de_correo(): void
+    {
+        $archivos = ['.env.example', 'phpunit.xml', 'docker-compose.yml', 'docker-compose.prod.yml', 'deploy/README.md'];
+
+        foreach ($archivos as $archivo) {
+            preg_match_all('/^\s*(?:-\s*)?MAIL_PASSWORD\s*[=:]\s*(.*)$/m', $this->leer($archivo), $valores);
+            foreach ($valores[1] as $valor) {
+                // Vacío, null, una referencia a la variable o el marcador <…> de la plantilla (P5).
+                $this->assertMatchesRegularExpression('/^(|null|"?\$\{[^}]*\}"?|<[^>]*>)\s*$/', $valor, "{$archivo}: MAIL_PASSWORD lleva un valor.");
+            }
+        }
+    }
 }
