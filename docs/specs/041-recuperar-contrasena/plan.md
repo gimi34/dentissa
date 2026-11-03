@@ -402,8 +402,9 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
   - `layouts/acceso.blade.php` lleva el panel y el formulario del login de `7c472bf`, con la misma frase en todas las pantallas. En el teléfono, solo el formulario, sin franja. La sección de contenido pasa de `carnet` a `contenido`.
   - `acceso.css` sigue siendo la hoja del acceso y `auth.css` no recupera `.page-login`: P9 pide tokens y ningún literal nuevo, así que los valores de aquel login pasan a tokens de `system.md`, que recoge `TokensAcceso`. Los círculos decorativos conservan su tamaño y posición como literales: no son espaciados del sistema y no los revisa D17.
   - Se conservan los cambios de `design.md` que exige P9 (contraste, foco y zona de toque) y las condiciones de la 041: un `h1`, `noindex`, sin estilos en línea y Roboto propia.
-  - Sin dependencias nuevas. Las pantallas de la recuperación siguen sin JavaScript (TM7). Los correos no cambian.
-  - Tests: `RecuperarContrasenaVistasTest::test_el_acceso_usa_el_estilo_anterior_del_login`; `test_roles_de_los_avisos_y_errores` cambia los decorativos que comprueba, porque el troquel ya no existe.
+  - Sin dependencias nuevas. Las pantallas de la recuperación siguen sin JavaScript (TM7).
+  - Los correos adoptan el mismo estilo (decisión del usuario, 2026-11-03), con los valores copiados de los tokens (D9) y el mismo contenido. `linear-gradient` va en `background-image` sobre un `background-color` de respaldo `--p800`, para los clientes que no dibujan degradados. El enlace sigue armado desde `APP_URL` (TM12).
+  - Tests: `RecuperarContrasenaVistasTest::test_el_acceso_usa_el_estilo_anterior_del_login`; `test_roles_de_los_avisos_y_errores` cambia los decorativos que comprueba, porque el troquel ya no existe; `CorreosRestablecimientoTest::test_los_correos_usan_el_estilo_del_login`.
 
 ## Impacto en arquitectura
 - `docs/architecture.md` (T090):

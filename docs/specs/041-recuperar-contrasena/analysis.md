@@ -1,21 +1,20 @@
 ---
 result: pass
-round: 6
+round: 7
 mode: delta
 constitution_version: 1.3.0
 date: 2026-11-03
 spec_sha: 8989e97cff33
-plan_sha: ad4ca33550e5
-tasks_sha: 0faf529fd94e
+plan_sha: 1e843bb0e45a
+tasks_sha: cd8dbac0f789
 ---
 
 # Análisis · 041 Recuperar contraseña
 
 ## Resumen
-Ronda delta sobre `/design-spec 041 --fix`, `/plan 041 --fix` y `/tasks 041 --fix` (D20): al ver `c7`
-construido, el usuario vuelve al estilo anterior del inicio de sesión. Sin subagente (vía ligera, decisión
-del usuario, 2026-11-03): releídas D20, T038 y T039, y comprobado contra el código lo que dan por hecho. Los
-criterios de aceptación, los criterios de diseño y el modelo de amenazas no cambian. Resultado `pass`.
+Ronda delta sobre la ampliación de D20 a los correos (T043 y T044), a petición del usuario. Sin subagente (vía
+ligera, decisión del usuario, 2026-11-03). El contenido de los correos, los criterios y el modelo de amenazas no
+cambian. Resultado `pass`.
 Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0
 
 ## Cobertura
@@ -23,24 +22,19 @@ Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0
 |---|---|
 | Criterios con tarea de test e implementación | 12 / 12 (sin cambios) |
 | Amenazas con control y test | 14 / 14 (sin cambios) |
-| Principios de la constitución evaluados | 10 / 10 (P2, P9 y P10 tocados por el delta) |
+| Principios de la constitución evaluados | 10 / 10 (P2 y P9 tocados por el delta) |
 
 ## Lo comprobado (2026-11-03)
-- P2: T038 escribe los tests antes que T039, que depende de ella. Fallan por la razón esperada.
-- P9: los valores del login anterior pasan a tokens de `system.md`, sin estilos en línea y sin literales
-  fuera de `:root` en las propiedades que revisa D17. Se conservan los cambios de contraste, foco y toque.
-  El antiguo `.page-login` no vuelve a `auth.css`, que no cumple P9.
-- P10: un solo `h1` (el lema pasa a párrafo), `noindex` y Roboto propia, sin Google Fonts.
-- TM7: las pantallas de la recuperación siguen sin JavaScript; `test_sin_javascript` no cambia.
-- Criterios de diseño: las puertas y los KPIs se repiten sobre la build. La rúbrica no se aplica: la decisión
-  es del usuario y queda en «Decisiones» de `design.md`, con `accepted: none`.
-- T039 toca más de 3 archivos por una razón anotada: el cambio de la sección del layout rompe las vistas.
+- P2: T043 escribe el test antes que T044, que depende de ella.
+- P9 y D9: la hoja sigue con valores de tokens; lo exige `test_los_valores_de_los_correos_son_tokens`.
+- TM12: el enlace y el logo siguen saliendo de `APP_URL`; T044 no toca las clases `Mailable`.
+- T044 toca 2 archivos. Sin dependencias nuevas.
 
 ## Seguimiento de rondas anteriores
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
-| A19, A22, A31–A37 | aceptados | siguen vigentes | Sus tareas no cambian de comportamiento por D20 |
-| A23 | aceptado → spec | sigue vigente | La spec solo añade su decisión y su Historial |
+| A19, A22, A31–A37 | aceptados | siguen vigentes | Sus tareas no cambian de comportamiento |
+| A23 | aceptado → spec | sigue vigente | Sin cambios en la spec |
 
 ## Hallazgos nuevos
 Ninguno.

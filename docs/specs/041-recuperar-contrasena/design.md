@@ -66,7 +66,9 @@ Lo único que cambia respecto a aquel login es lo que exige la constitución (P9
 | Entrada del formulario | Sube y aparece | Solo sube | `G-sin-js`: el contenido siempre se ve |
 | Títulos | Lema `h1`, título `h2` | Lema `p`, título `h1` | Un solo `h1` (SE2.a); se ve igual |
 
-Sin cambios: los dos correos conservan su marco de `c7`, porque no había un estilo anterior.
+Los dos correos no tenían un estilo anterior: adoptan el del login (decisión del usuario, 2026-11-03), con cabecera
+guinda, logo y lema, botón ancho y una línea fina sobre los datos de abajo. En Outlook, que no dibuja degradados, la
+cabecera queda en `--p800`.
 
 Resultado original del ciclo, que se conserva como registro: `c7`, aceptado con 88/100 (umbral 80,
 ningún punto bajo 3). Páginas: `design/candidatos/c7/*.html`.
@@ -112,7 +114,7 @@ Ninguna. El logo (`public/images/logo-main.png`) es propio (`data-origen="propia
 ## Pantallas
 
 Desde el 2026-11-03 las pantallas se miden sobre la build (`/_disenio/041/`); las rutas de `c7` quedan
-como registro. Los correos siguen siendo los de `c7`.
+como registro.
 
 | Pantalla y estado | Ancho menor | Ancho mayor | Criterios |
 |---|---|---|---|
@@ -147,6 +149,9 @@ Sin ancho intermedio: no hay filas de elementos.
   - **Ver la contraseña** (solo en el inicio de sesión, refinado el 2026-11-03): botón de 44 × 44 px
     (`--touch-min`) dentro del campo, a la derecha, con el icono del ojo en `--p500` y `aria-pressed`.
     Es mejora progresiva: sin JavaScript no aparece y el campo sigue igual.
+  - **Correos:** tarjeta `--white` de hasta 480 px sobre `--p50`, cabecera con `--acceso-panel-fondo` (color de
+    respaldo `--p800`), logo y lema, y botón ancho en `--p500` con `--radius-acceso`. Valores copiados de los
+    tokens (D9), como antes.
   - **Logo de Google:** sus cuatro colores son los de la marca de Google, fuera del sistema; solo en
     el botón «Continuar con Google».
 
@@ -215,4 +220,4 @@ c2 tenía además «el talón crece» en «Revisa tu correo»; se quitó en c3 p
 | 2026-10-27 | diseño | Resultado del ciclo | `c7` aceptado con 88/100 | /design-spec |
 | 2026-10-27 | diseño | ¿Se aprueba el acta? | Aprobada | usuario |
 | 2026-11-03 | refinado | `c7` quitaba el botón del ojo del inicio de sesión para no usar JavaScript. ¿Se conserva? | Se conserva, solo en el inicio de sesión y como mejora progresiva: un archivo propio con `defer`; sin él, la contraseña se escribe igual. Las pantallas de la recuperación siguen sin JavaScript. `c7/exito.html` remedido: puertas 12/12 y KPIs 5/5 (`.ai/inspect/041-c7-ojo/`). Ningún criterio cambia: K9 pide ≤ 100 kB y `G-sin-js`, que todo el contenido esté sin JavaScript | usuario |
-| 2026-11-03 | refinado | Al ver `c7` construido: «no me gustó el nuevo estilo, me gusta más el anterior». ¿Qué se conserva? | Se vuelve al estilo del login anterior a la 041, en el login y en la recuperación; sin rúbrica, por debajo del umbral por decisión del usuario, y con las puertas y KPIs de `criterios.json`. Se mantienen los cambios que exige P9 (ver «Resultado»). Los correos siguen como `c7` | usuario |
+| 2026-11-03 | refinado | Al ver `c7` construido: «no me gustó el nuevo estilo, me gusta más el anterior». ¿Qué se conserva? | Se vuelve al estilo del login anterior a la 041, en el login y en la recuperación; sin rúbrica, por debajo del umbral por decisión del usuario, y con las puertas y KPIs de `criterios.json`. Se mantienen los cambios que exige P9 (ver «Resultado»). Los correos adoptan el mismo estilo, a petición del usuario | usuario |
