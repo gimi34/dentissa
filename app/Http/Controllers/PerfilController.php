@@ -37,10 +37,31 @@ class PerfilController extends Controller
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
+            'contrasena_correo' => ['nullable', 'string', 'max:255'],
         ], [
             'email.unique' => 'Este correo ya está en uso por otra cuenta.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
+
+        // Spec 041, CA13 (TM15, RS9.b): el enlace de restablecimiento va a este correo, así que cambiarlo
+        // pide la contraseña actual. Una cuenta sin contraseña tiene que crearla antes.
+        if (Str::lower($data['email']) !== Str::lower($user->email)) {
+            if (! $user->password_hash) {
+                return back()
+                    ->withErrors(['email' => 'Para cambiar el correo, crea primero una contraseña en esta página.'])
+                    ->withInput($request->except('contrasena_correo'));
+            }
+
+            if (! Hash::check((string) ($data['contrasena_correo'] ?? ''), $user->password_hash)) {
+                $mensaje = filled($data['contrasena_correo'] ?? null)
+                    ? 'La contraseña actual no es correcta.'
+                    : 'Escribe tu contraseña actual para cambiar el correo.';
+
+                return back()
+                    ->withErrors(['contrasena_correo' => $mensaje])
+                    ->withInput($request->except('contrasena_correo'));
+            }
+        }
 
         DB::table('usuarios')->where('id', $user->id)->update([
             'nombre' => $data['nombre'],

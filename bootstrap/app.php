@@ -51,6 +51,9 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
+        // Spec 041 (TM15): las contraseñas del perfil no se guardan en la sesión si falla la validación.
+        $exceptions->dontFlash(['contrasena_correo', 'password_actual']);
+
         // Modo crítico del registro de auditoría (spec 020, CA11; TM7): la acción se detiene con
         // una página 503 genérica, también con APP_DEBUG=true, y no se reporta (el aviso lo da la
         // línea auditoria.fallo del canal seguridad).
