@@ -24,7 +24,7 @@ de Google para no recordar otra contraseña.
 - [x] CA1 · Dado un usuario activo con contraseña, cuando envía `POST /login` con credenciales correctas, entonces se regenera la sesión y se le redirige al panel de su rol.
 - [ ] CA2 · Dado un usuario con `activo=0`, cuando envía credenciales correctas, entonces el login se rechaza con un error en el formulario.
 - [ ] CA3 · Dadas credenciales incorrectas, cuando se envía el login, entonces vuelve al formulario con error y sin sesión.
-- [x] CA4 · Dado un visitante sin sesión, cuando abre `/`, entonces se le redirige a `/login`.
+- [x] CA4 · Dado un visitante sin sesión, cuando abre `/`, entonces se le redirige a `/login`. → reemplazado por 038 CA1
 - [ ] CA5 · Dado un usuario autenticado, cuando abre `/`, entonces se le redirige al panel de su rol (`/admin`, `/dentista`, `/asistente` o `/cliente`).
 - [ ] CA6 · Dado un usuario con `google_id` vinculado, cuando completa el callback de Google, entonces inicia sesión y va a su panel.
 - [ ] CA7 · Dado un correo de Google sin cuenta, cuando completa el callback, entonces sus datos se guardan en sesión y se le envía a `/registro/contacto` (spec 002).
@@ -74,3 +74,4 @@ Eventos requeridos en `docs/observability.md`.
 | 2026-10-20 | Corregido por la ficha 2026-10-20-fix-raiz-al-login en v0.10.0 (CA4) | /release |
 | 2026-10-20 | CA4 reemplazado por la 038 CA1: sin sesión, `/` muestra la página de inicio pública (con sesión, cada rol sigue yendo a su panel); el test de CA4 pasa a `ExampleTest::test_el_visitante_sin_sesion_ve_la_pagina_de_inicio` y `PaginaInicioTest`. Rige al liberar la 038 | /implement 038 (T041) |
 | 2026-10-27 | Anotado por 032 en v0.11.0: el canal `seguridad` registra los fallos de acceso para los avisos; no es el registro de auditoría de CA9, que sigue → 020/021 (032 /analyze A48) | /release |
+| 2026-11-02 | Comportamiento modificado por 038 en v0.13.0: sin sesión, `/` muestra la página de inicio pública (CA4 → 038 CA1) | /release |
