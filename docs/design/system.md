@@ -673,7 +673,8 @@ spec. Exclusivos de estas pantallas:
   con «Disponible en un minuto»; el aviso de «Demasiados intentos» explica cuánto esperar.
 - **Campos del acceso:** icono `--p300` decorativo, fondo `--p50`, radio `--radius-acceso` y borde
   `--border-control` (`--p400`, ≥ 3:1); etiqueta, ayuda y error en `--text-acceso-small`; error enlazado con `aria-describedby` y `aria-invalid`.
-- **Casilla:** cuadro visible de 16px con zona de toque de 44px (`--touch-min`).
+- **Casilla:** cuadro visible de 18px (`--icon-md`), de un solo trazo `--border-control` y radio `--space-1`, con
+  zona de toque de 44px (`--touch-min`). Marcada no se rellena: lleva una palomita `--p500` (decisión del usuario, 2026-11-03).
 - **Ver la contraseña (solo en el inicio de sesión):** botón de 44px (`--touch-min`) dentro del campo, con
   el icono del ojo en `--p500` y `aria-pressed`; mejora progresiva, sin JavaScript no aparece.
 - **Avisos:** «Revisa tu correo» y el éxito del login con `role="status"`; enlace que ya no sirve y

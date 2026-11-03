@@ -164,7 +164,7 @@ Sin ancho intermedio: no hay filas de elementos.
 | Panel de marca del acceso: `--acceso-panel-fondo` (degradado del login anterior), `--acceso-panel-sub`, `--acceso-panel-sub-ancho`, `--acceso-circulo`, `--acceso-panel-pad-y` y `-x`, `--logo-acceso-w`, `--text-acceso-lema`, `--leading-acceso-panel` | corte 769 px | oculto | panel al 48 % | Valores del login anterior, llevados a tokens (D20) |
 | Formulario del acceso: `--acceso-form-ancho`, `--acceso-cabecera-pie`, `--acceso-campo-sangria`, `--radius-acceso`, `--tracking-campo`, `--sombra-boton-acceso`, `--duration-entrada` | fijo | — | — | Igual (D20) |
 | Botón en espera (desactivado) | fijo | — | — | «Demasiados intentos» no debe invitar a pulsar (evaluador, c5 y c6) |
-| Casilla con zona de toque de 44 px (cuadro visible de 16 px) | fijo | — | — | `G-toque` (c1) |
+| Casilla con zona de toque de 44 px (cuadro de 18 px de un solo trazo; marcada, palomita sin relleno) | fijo | — | — | `G-toque` (c1); el usuario pide lados iguales y que no se rellene (2026-11-03) |
 | Roboto autoalojada (variable, OFL 1.1), sin Google Fonts | fijo | — | — | Recursos externos (`G-red`) y privacidad; como Lexend en la 038 |
 | Ver la contraseña en el inicio de sesión: botón de 44 px con el ojo, mejora progresiva | fijo | — | — | El login actual lo tiene y el usuario lo conserva (refinado, 2026-11-03) |
 

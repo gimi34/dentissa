@@ -136,9 +136,13 @@ body { font-family: var(--font-acceso); color: var(--text); background: var(--wh
 /* Recordarme y ¿Olvidaste tu contraseña? */
 .remember-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 var(--space-3); margin-bottom: var(--space-3); }
 .remember-label { display: inline-flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min); font-size: var(--text-acceso); cursor: pointer; }
-/* Casilla con zona de toque de 44 px; el cuadro visible (16 px) se dibuja con dos fondos. */
-.remember-label input { appearance: none; width: var(--touch-min); height: var(--touch-min); margin: 0 calc(var(--space-5) * -1); cursor: pointer; border-radius: var(--radius-sm); background: linear-gradient(var(--white), var(--white)) center / var(--space-5) var(--space-5) no-repeat, linear-gradient(var(--p400), var(--p400)) center / var(--space-6) var(--space-6) no-repeat; }
-.remember-label input:checked { background: linear-gradient(var(--p500), var(--p500)) center / var(--space-6) var(--space-6) no-repeat; }
+/* Casilla con zona de toque de 44 px: el cuadro de 18 px es de un solo trazo, igual en los cuatro lados, y al
+   marcarla no se rellena: lleva la palomita (el estado no depende solo del color). */
+.remember-label input { appearance: none; flex-shrink: 0; display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); margin: 0 calc(var(--border-width) - var(--space-5)); background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
+.remember-label input::before, .remember-label input::after { content: ""; grid-area: 1 / 1; box-sizing: border-box; }
+.remember-label input::before { width: var(--icon-md); height: var(--icon-md); background: var(--white); border: var(--border-width) solid var(--border-control); border-radius: var(--space-1); }
+.remember-label input:checked::before { border-color: var(--p500); }
+.remember-label input:checked::after { width: var(--space-2); height: var(--space-4); margin-top: calc(var(--border-width) * -2); border: solid var(--p500); border-width: 0 var(--border-width-strong) var(--border-width-strong) 0; transform: rotate(45deg); }
 .remember-label input:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -4); }
 .forgot-link { display: inline-flex; align-items: center; min-height: var(--touch-min); font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--p500); text-decoration: none; }
 .forgot-link:hover { color: var(--p600); text-decoration: underline; }
