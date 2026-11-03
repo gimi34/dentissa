@@ -105,7 +105,15 @@ MAIL_PASSWORD=<contraseña de aplicación, sin espacios>
 MAIL_FROM_ADDRESS=<cuenta de envío>@gmail.com
 MAIL_FROM_NAME=Dentissa
 AVISOS_CORREO=<tu correo de siempre>
+RECUPERAR_CONTRASENA=false
 ```
+
+> **Recuperar la contraseña (spec 041):** `RECUPERAR_CONTRASENA` empieza en `false`: las rutas de
+> `/contrasena` no existen y el inicio de sesión no muestra el enlace. Se enciende después de desplegar,
+> para la prueba con una cuenta de prueba (correo en menos de 5 minutos, restablecer, sesión cerrada en
+> otro navegador, evento de auditoría y log de nginx sin token): pon `true` y aplícalo con
+> `bash deploy/aplicar-entorno.sh app` (§10). Si algo falla, `false` y el mismo comando quitan el flujo
+> sin desplegar.
 
 > **Correo de los avisos (spec 032):** crea una **cuenta de Gmail nueva, solo
 > para enviar los avisos**, sin otros datos ni reenvíos, y no la uses para nada
