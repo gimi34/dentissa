@@ -1,7 +1,7 @@
 ---
 id: 041
 slug: recuperar-contrasena
-status: approved
+status: implemented
 created: 2026-10-27
 extends: [001]
 ---
@@ -23,18 +23,18 @@ olvido es una cita que no se agenda o un turno de trabajo que empieza sin acceso
 - Como titular de una cuenta, quiero que al restablecer mi contraseña se cierren las sesiones abiertas y se me avise para que quien conociera la anterior pierda el acceso y yo me entere si no fui yo.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un visitante en el inicio de sesión, cuando pulsa «¿Olvidaste tu contraseña?», entonces llega a una pantalla donde escribe su correo para pedir el enlace, con una forma visible de volver al inicio de sesión.
-- [ ] CA2 · Dado el correo de una cuenta activa, de cualquier rol, cuando pide el enlace, entonces la pantalla muestra el mensaje de confirmación genérico y en menos de 5 minutos llega a ese buzón (también en producción) un correo en español de Dentissa con un enlace personal de restablecimiento, que indica que caduca en 60 minutos y que puede ignorarse si no lo pidió.
-- [ ] CA3 · Dado un enlace vigente, cuando la persona escribe una contraseña nueva de al menos 8 caracteres y la misma confirmación, entonces la contraseña se reemplaza, vuelve al inicio de sesión con un mensaje de éxito, puede entrar con la nueva y ya no con la anterior.
-- [ ] CA4 · Dada una contraseña nueva de menos de 8 caracteres, o una confirmación que no coincide, cuando la envía, entonces se rechaza con el error junto al campo, la contraseña no cambia y el enlace sigue sirviendo mientras esté vigente.
-- [ ] CA5 · Dado un enlace caducado (más de 60 minutos), ya usado o sustituido por otro pedido después, cuando se abre o se envía, entonces se rechaza con un mensaje que lo explica y ofrece pedir uno nuevo, y la contraseña no cambia.
-- [ ] CA6 · Dada una cuenta creada con Google y sin contraseña, cuando pide el enlace y fija una contraseña, entonces puede entrar con su correo y esa contraseña, y sigue pudiendo entrar con Google.
-- [ ] CA7 · Dado un restablecimiento completado, cuando termina, entonces se cierran todas las sesiones abiertas de esa cuenta en cualquier equipo y llega a su correo un aviso de que la contraseña cambió, sin enlace de restablecimiento y con la indicación de contactar a la clínica si no fue la persona.
-- [ ] CA8 (abuso) · Como atacante, escribo correos para averiguar cuáles tienen cuenta → la pantalla responde con el mismo mensaje, el mismo código de respuesta y un tiempo de respuesta indistinguible (margen en "Requisitos no funcionales") para un correo con cuenta activa, con cuenta desactivada o sin cuenta; solo la cuenta activa recibe correo.
-- [ ] CA9 (abuso) · Como atacante, pido muchos enlaces para inundar el buzón de alguien o pruebo correos y enlaces en masa → se limita: como mucho un correo de restablecimiento por cuenta por minuto (el exceso recibe el mismo mensaje genérico, sin correo) y 5 envíos por minuto por dirección de origen tanto al pedir el enlace como al fijar la contraseña; al superar este último, la pantalla pide esperar.
-- [ ] CA10 (abuso) · Como atacante, intento adivinar un enlace, alterarlo o usar el enlace de una cuenta para cambiar la contraseña de otra → se rechaza como en CA5; un enlace solo cambia la contraseña de la cuenta a la que se envió.
-- [ ] CA11 (abuso) · Como usuario desactivado, pido un enlace o uso uno recibido antes de la desactivación → no recibo correo (con el mensaje genérico de CA8), el enlace no cambia la contraseña y la cuenta sigue sin poder entrar.
-- [ ] CA12 · Dado un restablecimiento completado, cuando termina, entonces queda registrado en el registro de auditoría de la spec 020: la cuenta como actor y sujeto, la acción «restablecimiento de contraseña», el resultado y la fecha, sin la contraseña ni el enlace.
+- [x] CA1 · Dado un visitante en el inicio de sesión, cuando pulsa «¿Olvidaste tu contraseña?», entonces llega a una pantalla donde escribe su correo para pedir el enlace, con una forma visible de volver al inicio de sesión.
+- [x] CA2 · Dado el correo de una cuenta activa, de cualquier rol, cuando pide el enlace, entonces la pantalla muestra el mensaje de confirmación genérico y en menos de 5 minutos llega a ese buzón (también en producción) un correo en español de Dentissa con un enlace personal de restablecimiento, que indica que caduca en 60 minutos y que puede ignorarse si no lo pidió.
+- [x] CA3 · Dado un enlace vigente, cuando la persona escribe una contraseña nueva de al menos 8 caracteres y la misma confirmación, entonces la contraseña se reemplaza, vuelve al inicio de sesión con un mensaje de éxito, puede entrar con la nueva y ya no con la anterior.
+- [x] CA4 · Dada una contraseña nueva de menos de 8 caracteres, o una confirmación que no coincide, cuando la envía, entonces se rechaza con el error junto al campo, la contraseña no cambia y el enlace sigue sirviendo mientras esté vigente.
+- [x] CA5 · Dado un enlace caducado (más de 60 minutos), ya usado o sustituido por otro pedido después, cuando se abre o se envía, entonces se rechaza con un mensaje que lo explica y ofrece pedir uno nuevo, y la contraseña no cambia.
+- [x] CA6 · Dada una cuenta creada con Google y sin contraseña, cuando pide el enlace y fija una contraseña, entonces puede entrar con su correo y esa contraseña, y sigue pudiendo entrar con Google.
+- [x] CA7 · Dado un restablecimiento completado, cuando termina, entonces se cierran todas las sesiones abiertas de esa cuenta en cualquier equipo y llega a su correo un aviso de que la contraseña cambió, sin enlace de restablecimiento y con la indicación de contactar a la clínica si no fue la persona.
+- [x] CA8 (abuso) · Como atacante, escribo correos para averiguar cuáles tienen cuenta → la pantalla responde con el mismo mensaje, el mismo código de respuesta y un tiempo de respuesta indistinguible (margen en "Requisitos no funcionales") para un correo con cuenta activa, con cuenta desactivada o sin cuenta; solo la cuenta activa recibe correo.
+- [x] CA9 (abuso) · Como atacante, pido muchos enlaces para inundar el buzón de alguien o pruebo correos y enlaces en masa → se limita: como mucho un correo de restablecimiento por cuenta por minuto (el exceso recibe el mismo mensaje genérico, sin correo) y 5 envíos por minuto por dirección de origen tanto al pedir el enlace como al fijar la contraseña; al superar este último, la pantalla pide esperar.
+- [x] CA10 (abuso) · Como atacante, intento adivinar un enlace, alterarlo o usar el enlace de una cuenta para cambiar la contraseña de otra → se rechaza como en CA5; un enlace solo cambia la contraseña de la cuenta a la que se envió.
+- [x] CA11 (abuso) · Como usuario desactivado, pido un enlace o uso uno recibido antes de la desactivación → no recibo correo (con el mensaje genérico de CA8), el enlace no cambia la contraseña y la cuenta sigue sin poder entrar.
+- [x] CA12 · Dado un restablecimiento completado, cuando termina, entonces queda registrado en el registro de auditoría de la spec 020: la cuenta como actor y sujeto, la acción «restablecimiento de contraseña», el resultado y la fecha, sin la contraseña ni el enlace.
 
 ## Fuera de alcance
 - Que quien se registra con Google tenga que crear su contraseña en el alta: se especificó como spec 042 y el usuario la descartó (2026-10-27); esas cuentas siguen naciendo sin contraseña y pueden crearla con esta spec (CA6).
@@ -151,3 +151,4 @@ primera pantalla 25, sistema 25, lectura 15, plantilla 10 (ver "Decisiones").
 | 2026-10-27 | Sección "Criterios de diseño" (AI-DD 1.19.0) | /design-spec 041 |
 | 2026-10-27 | Diseño aprobado (`design.md`, `c7`) | usuario |
 | 2026-11-03 | Vuelve el estilo anterior del login, en lugar de `c7` (`design.md`, plan D20) | usuario |
+| 2026-11-03 | Implementada: todos los criterios con su test en verde | /implement |
