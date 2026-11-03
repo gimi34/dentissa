@@ -17,7 +17,7 @@
     </div>
     <div class="troquel" aria-hidden="true"></div>
     <dl class="talon">
-        <dt>¿No llegó?</dt><dd>Revisa la carpeta de spam o <a class="en-texto" href="{{ route('contrasena.solicitud') }}">pide otro enlace</a>.</dd>
+        <dt>¿No llegó?</dt><dd><p>Revisa la carpeta de spam o <a class="en-texto" href="{{ route('contrasena.solicitud') }}">pide otro enlace</a>.</p></dd>
         <dt>¿Sin correo?</dt><dd>Llama a la consulta: <span class="tel">{{ config('clinica.contacto.telefono') }}</span></dd>
     </dl>
 @endsection
