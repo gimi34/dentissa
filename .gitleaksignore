@@ -1,0 +1,4 @@
+# Spec 041 (T042, decisión del usuario, 2026-11-03): falso positivo de generic-api-key. Es una contraseña
+# ficticia de un test, ya cambiada en el código actual; el commit sigue en el historial de la rama.
+# La huella lleva el hash del commit: si se reescribe el historial, deja de aplicar y hay que quitarla.
+b9eb4aa9f82cf5fd9a376d831b57f5832589c7b9:tests/Feature/RecuperarContrasenaAbusoTest.php:generic-api-key:204
