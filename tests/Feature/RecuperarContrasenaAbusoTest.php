@@ -28,6 +28,8 @@ use Tests\TestCase;
  *    gasta; al pasar el límite, la pantalla del formulario en espera, sin bucles ni errores con
  *    entradas malformadas (/analyze A24, A25, A34).
  *  - Logs (TM6, P8): ningún registro lleva el correo, el token ni la contraseña.
+ *  - Enlaces ajenos o alterados (CA10, TM3, TM4) y cuentas desactivadas (CA11, TM5): se rechazan
+ *    como un enlace caducado y la contraseña no cambia.
  *
  * Los limitadores guardan su cuenta en el caché (`array` en los tests): `limpiarLimitadores()` lo
  * vacía entre casos, porque su clave es `md5(nombre.origen)` y no el nombre del limitador.
@@ -284,5 +286,83 @@ class RecuperarContrasenaAbusoTest extends TestCase
         foreach ([$usuario->email, $token, 'contrasena-nueva-segura', 'Zx9qw7k'] as $dato) {
             $this->assertStringNotContainsString($dato, $texto, 'Ningún log lleva el correo, el token ni la contraseña (TM6).');
         }
+    }
+
+    /** Envía el formulario con ese token y esa cuenta y devuelve la pantalla final. */
+    private function intentarFijar(string $token, string $cuenta): string
+    {
+        $this->limpiarLimitadores();
+
+        return $this->followingRedirects()->post(self::RESTABLECER, [
+            'token' => $token,
+            'cuenta' => $cuenta,
+            'password' => 'contrasena-del-atacante',
+            'password_confirmation' => 'contrasena-del-atacante',
+        ])->getContent();
+    }
+
+    private function assertEnlaceYaNoSirve(string $html): void
+    {
+        $xpath = $this->xpath($html);
+        $this->assertSame('Este enlace ya no sirve', trim($xpath->query('//h1')->item(0)?->textContent ?? ''));
+    }
+
+    private function assertSinCambios(Usuario $usuario): void
+    {
+        $this->assertTrue(Hash::check('contrasena-anterior', (string) $usuario->fresh()->password_hash), 'La contraseña no cambió.');
+        $this->assertFalse(Hash::check('contrasena-del-atacante', (string) $usuario->fresh()->password_hash));
+    }
+
+    public function test_rechaza_un_token_alterado(): void
+    {
+        $usuario = $this->crearUsuario();
+        $token = Password::broker()->createToken($usuario);
+
+        foreach ([substr($token, 0, -1).($token[-1] === 'a' ? 'b' : 'a'), strrev($token), Str::random(64)] as $alterado) {
+            $this->assertEnlaceYaNoSirve($this->get($this->enlace($usuario, $alterado))->assertOk()->getContent());
+            $this->assertEnlaceYaNoSirve($this->intentarFijar($alterado, $usuario->id));
+        }
+        $this->assertSinCambios($usuario);
+    }
+
+    public function test_el_token_de_una_cuenta_no_cambia_la_contrasena_de_otra(): void
+    {
+        $atacante = $this->crearUsuario();
+        $victima = $this->crearUsuario();
+        $tokenDelAtacante = Password::broker()->createToken($atacante);
+
+        // TM4: el token de A con la cuenta de B no sirve, ni para B ni para A.
+        $this->assertEnlaceYaNoSirve($this->get($this->enlace($victima, $tokenDelAtacante))->assertOk()->getContent());
+        $this->assertEnlaceYaNoSirve($this->intentarFijar($tokenDelAtacante, $victima->id));
+        $this->assertSinCambios($victima);
+        $this->assertSinCambios($atacante);
+    }
+
+    public function test_una_cuenta_desactivada_no_recibe_correo(): void
+    {
+        Mail::fake();
+        $desactivada = $this->crearUsuario(['activo' => 0]);
+
+        $this->pedir($desactivada->email)->assertRedirect(self::ENVIADA);
+        $this->get(self::ENVIADA)->assertOk()->assertSee('Revisa tu correo');
+
+        Mail::assertNothingSent();
+        $this->assertSame(0, DB::table('password_reset_tokens')->where('email', $desactivada->email)->count(), 'Ni se crea un token.');
+    }
+
+    public function test_una_cuenta_desactivada_no_puede_restablecer(): void
+    {
+        $usuario = $this->crearUsuario();
+        $token = Password::broker()->createToken($usuario);
+        // El enlace se pidió antes de desactivar la cuenta.
+        $usuario->forceFill(['activo' => 0])->save();
+
+        $this->assertEnlaceYaNoSirve($this->get($this->enlace($usuario, $token))->assertOk()->getContent());
+        $this->assertEnlaceYaNoSirve($this->intentarFijar($token, $usuario->id));
+        $this->assertSinCambios($usuario);
+
+        // Y sigue sin poder entrar (CA11).
+        $this->post('/login', ['email' => $usuario->email, 'password' => 'contrasena-anterior']);
+        $this->assertGuest();
     }
 }
