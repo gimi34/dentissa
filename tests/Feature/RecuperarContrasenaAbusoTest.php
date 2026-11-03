@@ -278,13 +278,13 @@ class RecuperarContrasenaAbusoTest extends TestCase
         $this->pedir($usuario->email)->assertRedirect(self::ENVIADA);
         $token = Password::broker()->createToken($usuario);
         $this->limpiarLimitadores();
-        $this->fijar(['token' => $token, 'cuenta' => $usuario->id, 'password' => 'Zx9qw7k', 'password_confirmation' => 'Zx9qw7k']);
+        $this->fijar(['token' => $token, 'cuenta' => $usuario->id, 'password' => 'corta77', 'password_confirmation' => 'corta77']);
         $this->limpiarLimitadores();
         $this->fijar(['token' => $token, 'cuenta' => $usuario->id, 'password' => 'contrasena-nueva-segura', 'password_confirmation' => 'contrasena-nueva-segura'])
             ->assertRedirect(url('/login'));
 
         $texto = $logs->comoTexto();
-        foreach ([$usuario->email, $token, 'contrasena-nueva-segura', 'Zx9qw7k'] as $dato) {
+        foreach ([$usuario->email, $token, 'contrasena-nueva-segura', 'corta77'] as $dato) {
             $this->assertStringNotContainsString($dato, $texto, 'Ningún log lleva el correo, el token ni la contraseña (TM6).');
         }
     }
