@@ -213,7 +213,7 @@ class CorreosRestablecimientoTest extends TestCase
             $this->assertStringNotContainsString('troquel', $html, "{$nombre}: sin el troquel de c7.");
             $this->assertStringContainsString('linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%)', $html, "{$nombre}: el degradado del panel.");
             $this->assertMatchesRegularExpression('/class="correo-cab"[^>]*background-color: #72243E/', $html, "{$nombre}: color de respaldo sin degradado.");
-            $this->assertStringContainsString('Tu sonrisa,', $html, "{$nombre}: el lema del login.");
+            $this->assertStringNotContainsString('Tu sonrisa', $html, "{$nombre}: sin el lema, decisión del usuario.");
         }
 
         [$html] = $this->renderizar(new EnlaceRestablecimiento($usuario, Str::random(64)));

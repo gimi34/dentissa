@@ -13,7 +13,7 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr><td class="correo-exterior" align="center">
         <table role="presentation" class="correo" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr><td class="correo-cab"><img class="correo-logo" src="{{ rtrim(config('app.url'), '/') }}/images/logo-main.png" alt="Melissa López N. · Odontología integral" width="140" height="102" data-origen="propia"><p class="correo-lema">Tu sonrisa,<br>nuestra <em>prioridad</em></p></td></tr>
+            <tr><td class="correo-cab"><img class="correo-logo" src="{{ rtrim(config('app.url'), '/') }}/images/logo-main.png" alt="Melissa López N. · Odontología integral" width="140" height="102" data-origen="propia"></td></tr>
             <tr><td class="correo-cuerpo">
                 @yield('cuerpo')
             </td></tr>

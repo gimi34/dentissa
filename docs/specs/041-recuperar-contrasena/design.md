@@ -67,7 +67,7 @@ Lo único que cambia respecto a aquel login es lo que exige la constitución (P9
 | Títulos | Lema `h1`, título `h2` | Lema `p`, título `h1` | Un solo `h1` (SE2.a); se ve igual |
 
 Los dos correos no tenían un estilo anterior: adoptan el del login (decisión del usuario, 2026-11-03), con cabecera
-guinda, logo y lema, botón ancho y una línea fina sobre los datos de abajo. En Outlook, que no dibuja degradados, la
+guinda y logo, sin el lema, botón ancho y una línea fina sobre los datos de abajo. En Outlook, que no dibuja degradados, la
 cabecera queda en `--p800`.
 
 Resultado original del ciclo, que se conserva como registro: `c7`, aceptado con 88/100 (umbral 80,
@@ -150,7 +150,7 @@ Sin ancho intermedio: no hay filas de elementos.
     (`--touch-min`) dentro del campo, a la derecha, con el icono del ojo en `--p500` y `aria-pressed`.
     Es mejora progresiva: sin JavaScript no aparece y el campo sigue igual.
   - **Correos:** tarjeta `--white` de hasta 480 px sobre `--p50`, cabecera con `--acceso-panel-fondo` (color de
-    respaldo `--p800`), logo y lema, y botón ancho en `--p500` con `--radius-acceso`. Valores copiados de los
+    respaldo `--p800`), logo y botón ancho en `--p500` con `--radius-acceso`. Valores copiados de los
     tokens (D9), como antes.
   - **Logo de Google:** sus cuatro colores son los de la marca de Google, fuera del sistema; solo en
     el botón «Continuar con Google».
