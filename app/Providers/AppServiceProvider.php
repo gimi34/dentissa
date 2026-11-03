@@ -11,9 +11,11 @@ use App\Autorizacion\ReprogramarCita;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RecuperarContrasenaController;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -64,6 +66,10 @@ class AppServiceProvider extends ServiceProvider
                     'email' => AuthController::mensajeDemasiadosIntentos((int) $headers['Retry-After']),
                 ]);
             }));
+
+        // Spec 041 (CA7, TM8): cada sesión guarda la versión con la que entró, también al entrar con
+        // Google. Convive con el listener de la 020 que pone el actor en el Context (/analyze A19).
+        Event::listen(Login::class, fn (Login $evento) => session()->put('version_sesion', (int) $evento->user->version_sesion));
 
         // Spec 041 (CA9, D15): 5 envíos por minuto por origen, válidos o no. Al pasar el límite, la pantalla
         // del formulario en espera, nunca la URL limitada ni datos sin comprobar: esto corre antes de validar.
