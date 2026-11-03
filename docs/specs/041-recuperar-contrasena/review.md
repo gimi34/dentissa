@@ -1,25 +1,25 @@
 ---
 spec: 041-recuperar-contrasena
 verdict: approved
-round: 2
+round: 3
 date: 2026-11-03
-base: 541eaa2
-head: 1ef68aa
+base: 1ef68aa
+head: f6a9f79
 human_signoff: no requerido
 ---
 
 # Review · 041 Recuperar contraseña
 
 ## Resumen
-`approved`: los cinco hallazgos de la ronda 1 están corregidos, con su test y comprobados, y no aparece ningún
-bloqueante ni importante nuevo. Ronda `--rerun` hecha sin subagentes, releyendo el código desde cero, porque el
-diff de código es de 29,5 KB. El usuario confirmó el formulario del perfil.
-Conteo: bloqueante 0 · importante 0 · menor 28 (aceptados)
+`approved`: el usuario decidió corregir 7 menores antes de liberar (R7, R8, R10, R16, R26, R32 y R33). Están hechos,
+con su test y comprobados rompiendo lo que protegen, sin bloqueantes ni importantes nuevos. Ronda `--rerun` sin
+subagentes, por el tamaño del diff. T059 detectó y T060 corrigió que la respuesta del límite nuevo salía sin `no-store`.
+Conteo: bloqueante 0 · importante 0 · menor 22 (aceptados)
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `php artisan test` | ✅ 697 en verde, 11 922 aserciones (sin línea base de fallos) |
+| `php artisan test` | ✅ 702 en verde, 12 009 aserciones (sin línea base de fallos) |
 | `pint --test` sobre los 21 PHP del diff | ✅ |
 | `node --test tests/js/` | ✅ 14 en verde |
 | `npm run build` | no ejecutado: Vite no está instalado en este worktree; el diff no toca `package*`, `vite.config.js` ni `resources/js` o `resources/css` |
@@ -66,7 +66,7 @@ Conteo: bloqueante 0 · importante 0 · menor 28 (aceptados)
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks v8.21.2 (55 commits) | ✅ 0 hallazgos con `.gitleaksignore`; sin la lista, 2 falsos positivos en `b9eb4aa` (contraseña ficticia de un test) |
+| gitleaks v8.21.2 (64 commits) | ✅ 0 hallazgos con `.gitleaksignore`; sin la lista, 2 falsos positivos en `b9eb4aa` (contraseña ficticia de un test) |
 | semgrep `p/php` | ✅ 0 hallazgos |
 | `composer audit` + `npm audit` | crít: 0 · alta: 0 · media: 1 (`symfony/mime` CVE-2026-45070, línea base; no explotable en este flujo, R28) |
 | trivy `fs` HIGH, CRITICAL | No repetido: esta ronda no toca dependencias ni imágenes. Ronda 1: 1 alta, DS-0002 (sin `USER` no root) en `docker/prod/Dockerfile`, que el diff no toca; con la imagen `latest`; la CI usa 0.57.1 y no bloquea |
@@ -79,7 +79,7 @@ Conteo: bloqueante 0 · importante 0 · menor 28 (aceptados)
 | A04:2025 Criptografía y datos | ✅ | bcrypt y token con hash; residuo en R25 |
 | A05:2025 Inyección | ✅ | Bindings y `{{ }}`; semgrep confirmado |
 | A06:2025 Diseño inseguro | ✅ | Topes de 5 por cuenta y hora y 200 al día, antes de crear el token (R5) |
-| A07:2025 Autenticación | ✅ | El correo del perfil pide la contraseña actual y esta no queda en la sesión (R4); residuo en R32 |
+| A07:2025 Autenticación | ✅ | El correo del perfil pide la contraseña actual, con 5 fallos por minuto, y esta no queda en la sesión (R4, R32); residuo en R32 |
 | A08:2025 Integridad | ✅ | CSRF del grupo `web` |
 | A09:2025 Registro y auditoría | ✅ | Evento crítico y logs sin datos; sin señal de abuso (R27) |
 | A10:2025 Errores | ✅ | Falla cerrado: token inválido → «caducado»; auditoría caída → 503 y rollback |
@@ -101,31 +101,31 @@ Conteo: bloqueante 0 · importante 0 · menor 28 (aceptados)
 | Rendimiento | no determinado | No medido en esta ronda |
 - Sección "Descubribilidad" del plan aplicada: sí, con `test_las_pantallas_nuevas_no_se_indexan` y `test_el_login_no_se_indexa`.
 
-## Seguimiento de la ronda 1
+## Seguimiento de las rondas anteriores
 | ID | Estado | Evidencia |
 |---|---|---|
 | R1 | corregido | T045, T046: `RecuperarContrasenaController::restablecer` cierra la sesión de esa cuenta; `test_con_la_cuenta_abierta_en_ese_navegador_se_ve_el_exito` |
 | R2 | corregido | T047, T048: aviso de espera en `caducado`; `test_la_espera_con_un_enlace_invalido_pide_esperar`; `evaluate.mjs` «caducado-espera» |
 | R3 | corregido | T049, T050: `autofocus` en el primer campo con error; `test_el_foco_va_al_primer_campo_con_error` |
 | R4 | corregido | T051, T052: `PerfilCambioCorreoTest`, comprobado rompiendo `Hash::check`, la condición y `dontFlash`; formulario confirmado por el usuario |
+| R7, R16 | corregido | T055: el host falso llega a la petición y el test de logs provoca un registro; comprobados rompiendo |
+| R8 | corregido | T055, T056: `.correo-cab` fija el color del `alt` |
+| R10, R33 | corregido | T057, T058: un solo anuncio del error en el login; la ayuda del perfil no se repite |
+| R26 | corregido | T059, T060: `abrir-enlace`, 30 por minuto por origen, con `no-store` en su respuesta (TM11) |
+| R32 | corregido en parte | T059, T060: 5 fallos por minuto por cuenta en los dos formularios del perfil. Queda la creación de contraseña en cuentas de Google |
 | R5 | corregido | T053, T054: `test_cinco_enlaces_por_cuenta_por_hora`, `test_doscientos_enlaces_al_dia`, comprobados rompiendo cada tope |
 
 ## Hallazgos
 | ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
 |---|---|---|---|---|
-| R32 | menor | `PerfilController.php:48` | Residuos de D21: con una sesión ajena de una cuenta de Google se puede crear la contraseña en el perfil y cambiar luego el correo (RS5.c), y los campos de contraseña del perfil no tienen límite de intentos | Reautenticar al crear la contraseña y añadir un limitador |
-| R33 | menor | `resources/views/cliente/perfil.blade.php:43` | En una cuenta sin contraseña, al intentar cambiar el correo, el error repite la ayuda que hay debajo | Ocultar la ayuda si hay error |
+| R32 | menor | `PerfilController.php:96` | Residuo de D21: con una sesión ajena de una cuenta de Google se puede crear la contraseña en el perfil y cambiar luego el correo (RS5.c) | Reautenticar al crear la contraseña |
 | R6 | menor | `public/css/acceso.css:141,145,146` | Medidas de la casilla con cuentas sobre tokens que no significan eso | Tokens con nombre |
-| R7 | menor | `tests/Feature/CorreosRestablecimientoTest.php:93` | La cabecera `Host` falsa no llega a la petición; la protección la prueba otra aserción | Pedir con URL absoluta |
-| R8 | menor | `resources/views/correos/acceso.css:8` | Con imágenes bloqueadas, el `alt` del logo sale en negro sobre la cabecera guinda | `color: #FFFFFF` en `.correo-cab` |
 | R9 | menor | `resources/views/correos/acceso.css` (`.btn-primario`) | Outlook ignora el relleno de un `a` en bloque y reduce el botón | Botón con celda de tabla |
-| R10 | menor | `auth/login.blade.php` | Con error de credenciales, el mismo texto se anuncia hasta tres veces | Un solo anuncio |
 | R11 | menor | `public/css/acceso.css:154`, `docs/design/system.md:765` | El botón cede a `scale(.99)` y el sistema dice 0.98 | Alinearlos |
 | R12 | menor | `public/css/acceso.css:89,165,196` | Literales que el test no revisa: `3px`, `16px`, `ease` | Tokens |
 | R13 | menor | `public/css/acceso.css:51` | `--weight-regular` sin uso | Quitarlo |
 | R14 | menor | `tests/Feature/RecuperarContrasenaVistasTest.php:376-382` | El valor del token se busca en todo `system.md`, no en su línea | Buscar el par en la misma línea |
 | R15 | menor | `tests/Feature/RecuperarContrasenaAbusoTest.php:156` | El umbral de 300 ms con `Mail::fake()` apenas discrimina; protege la aserción de la línea 153 | Declararlo así en el plan |
-| R16 | menor | `tests/Feature/RecuperarContrasenaAbusoTest.php:273-287` | El test de logs no comprueba que se capturó algo | `assertNotEmpty` |
 | R17 | menor | `public/css/auth.css:3` | El comentario aún cita `login.blade.php` | Actualizarlo |
 | R18 | menor | `app/Mail/*.php` | Paso a estilos en línea y cálculo de la hora duplicados; `CssToInlineStyles` es transitiva (D9) | Código común |
 | R19 | menor | `auth/recuperar/*`, `correos/enlace-*` | «60 minutos» escrito a mano y la vigencia en `config` | Pasarlo como variable |
@@ -135,7 +135,6 @@ Conteo: bloqueante 0 · importante 0 · menor 28 (aceptados)
 | R23 | menor | `CorreosRestablecimientoTest.php:179-202`, `RecuperarContrasenaVistasTest.php` | Comprobador de tokens repetido en dos tests | Un solo comprobador |
 | R24 | menor | `tests/Feature/RecuperarContrasenaTest.php:72` | Ningún test sigue el enlace del correo enviado ni comprueba el asunto | Test de punta a punta |
 | R25 | menor | `config/session.php:50` | Al abrir el enlace, el token queda en `_previous.url` de la sesión sin cifrar | RS10.c y ampliar TM14 |
-| R26 | menor | `routes/web.php:42` | El GET del enlace no tiene límite y puede ejecutar bcrypt | Limitador amplio |
 | R27 | menor | `AppServiceProvider.php:76` | Las esperas de los limitadores nuevos no dejan señal | Línea en el canal `seguridad` |
 | R28 | menor | `composer.lock:4671` | `symfony/mime` sigue con CVE-2026-45070 (media) y la CI no lo señala | `/chore` |
 | R29 | menor | `tests/Feature/RecuperarContrasenaVistasTest.php:33` | El contraste no tiene test en la CI: lo mide `evaluate.mjs`. El revisor lo marcó importante; se baja porque P9 fija esa verificación en `/review` y pasa | Test con `contraste()` |
@@ -157,20 +156,19 @@ De la ronda 1, todas hechas:
 - T049, T050 ← R3
 - T051, T052 ← R4
 - T053, T054 ← R5
+- T055, T056 ← R7, R8, R16
+- T057, T058 ← R10, R33
+- T059, T060 ← R26, R32
 
 ## Aceptados sin tarea
 Aceptados por el proceso ligero para la entrega (decisión del usuario, 2026-10-31):
 - **R6** → roadmap: medidas de la casilla con cuentas sobre tokens
-- **R7** → roadmap: el test de TM12 no envía el `Host` falso
-- **R8** → roadmap: `alt` del logo ilegible con imágenes bloqueadas en los correos
 - **R9** → roadmap: botón del correo en Outlook
-- **R10** → roadmap: anuncio repetido del error en el login
 - **R11** → roadmap: `scale` del botón distinto del sistema
 - **R12** → roadmap: literales fuera de lo que revisa el test
 - **R13** → roadmap: `--weight-regular` sin uso
 - **R14** → roadmap: test de tokens busca en todo `system.md`
 - **R15** → roadmap: umbral de 300 ms poco discriminante
-- **R16** → roadmap: test de logs sin comprobar que capturó algo
 - **R17** → roadmap: comentario de `auth.css`
 - **R18** → roadmap: duplicación en los correos y dependencia transitiva
 - **R19** → roadmap: «60 minutos» escrito a mano
@@ -180,11 +178,9 @@ Aceptados por el proceso ligero para la entrega (decisión del usuario, 2026-10-
 - **R23** → roadmap: comprobador de tokens repetido
 - **R24** → roadmap: test de punta a punta del enlace del correo
 - **R25** → roadmap: token en `_previous.url` de la sesión
-- **R26** → roadmap: GET del enlace sin límite
 - **R27** → roadmap: señal de abuso de los limitadores
 - **R28** → roadmap: `symfony/mime` CVE-2026-45070
 - **R29** → roadmap: test de contraste en la CI
 - **R30** → roadmap: destino perdido con la sesión anulada
 - **R31** → roadmap: fila del layout en el plan
-- **R32** → roadmap: residuos de D21, contraseña creada en el perfil de una cuenta de Google y sin límite de intentos
-- **R33** → roadmap: ayuda repetida en el perfil de una cuenta sin contraseña
+- **R32** → roadmap: contraseña creada en el perfil de una cuenta de Google con una sesión ajena (RS5.c)
