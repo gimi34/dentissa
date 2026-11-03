@@ -90,8 +90,8 @@ class CorreosRestablecimientoTest extends TestCase
         $usuario = $this->crearUsuario();
 
         // Por la petición, con una cabecera Host falsa (TM12).
-        $this->withHeader('Host', 'sitio-malicioso.example')
-            ->post('/contrasena/olvidada', ['email' => $usuario->email]);
+        // Con URL absoluta el host falso llega de verdad a la petición: `withHeader` no lo cambia (R7).
+        $this->post('http://sitio-malicioso.example/contrasena/olvidada', ['email' => $usuario->email]);
 
         Mail::assertSent(EnlaceRestablecimiento::class, function (EnlaceRestablecimiento $correo) use ($usuario) {
             [$html, $texto] = $this->renderizar($correo);
@@ -212,6 +212,7 @@ class CorreosRestablecimientoTest extends TestCase
             [$html] = $this->renderizar($correo);
             $this->assertStringNotContainsString('troquel', $html, "{$nombre}: sin el troquel de c7.");
             $this->assertStringContainsString('linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%)', $html, "{$nombre}: el degradado del panel.");
+            $this->assertMatchesRegularExpression('/class="correo-cab"[^>]*[; "]color: #FFFFFF/', $html, "{$nombre}: el alt del logo se lee con las imágenes bloqueadas (R8).");
             $this->assertMatchesRegularExpression('/class="correo-cab"[^>]*background-color: #72243E/', $html, "{$nombre}: color de respaldo sin degradado.");
             $this->assertStringNotContainsString('Tu sonrisa', $html, "{$nombre}: sin el lema, decisión del usuario.");
         }

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\Support\CapturaLogs;
 use Tests\TestCase;
 
@@ -346,6 +347,8 @@ class RecuperarContrasenaAbusoTest extends TestCase
     {
         $logs = CapturaLogs::instalar();
         $usuario = $this->crearUsuario();
+        // Un fallo de correo con el dato en su mensaje: así el flujo escribe de verdad en los logs (R16).
+        Mail::shouldReceive('to')->andThrow(new TransportException('Fallo SMTP con '.$usuario->email));
 
         $this->pedir($usuario->email)->assertRedirect(self::ENVIADA);
         $token = Password::broker()->createToken($usuario);
@@ -356,6 +359,7 @@ class RecuperarContrasenaAbusoTest extends TestCase
             ->assertRedirect(url('/login'));
 
         $texto = $logs->comoTexto();
+        $this->assertStringContainsString('restablecimiento.correo_fallido', $texto, 'El flujo escribió en los logs: hay algo que comprobar.');
         foreach ([$usuario->email, $token, 'contrasena-nueva-segura', 'corta77'] as $dato) {
             $this->assertStringNotContainsString($dato, $texto, 'Ningún log lleva el correo, el token ni la contraseña (TM6).');
         }
