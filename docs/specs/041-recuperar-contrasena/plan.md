@@ -26,47 +26,47 @@ grupo `web` cierra en su siguiente petición toda sesión con una versión antig
 versión (abierta antes del despliegue) cuenta como versión 0. Funciona también con las cuentas de
 Google sin contraseña, a las que el `AuthenticateSession` de Laravel no vigila.
 
-El diseño `c7` se hizo sobre el `system.md` 1.8.0 de la rama de la 038, en pausa; `main` está en
-1.6.0. La 041 no espera a la 038: la primera tarea lleva a `main` todos los tokens que usan las
-pantallas, también los cinco que vienen de la 038 (D13, D14).
+El diseño `c7` se hizo sobre el `system.md` 1.8.0 de la rama de la 038. Hoy `main` está en 1.10.0,
+con la 020 (v0.12.0) y la 038 (v0.13.0) liberadas: ya trae Roboto, los cinco tokens de la 038 que
+usa `c7` y tres del acceso. La primera tarea añade solo lo que falta (D13, D18).
 
-El restablecimiento y su evento de auditoría (spec 020, modo crítico) van en la misma transacción.
-La 020 se implementa antes y su contrato gana un actor opcional (decisión del usuario, 2026-10-27).
+El restablecimiento y su evento de auditoría (spec 020, modo crítico) van en la misma transacción,
+con el actor opcional que la 020 ya liberó (D2, D18).
 
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste | Cómo se verifica |
 |---|---|---|---|
-| P1 Spec aprobada antes de código | ✅ | Spec 041 y `design.md` aprobados el 2026-10-27. `/implement 041` empieza después de liberar la 020 (D1). | manual: `aidd.py status` antes de `/implement` |
+| P1 Spec aprobada antes de código | ✅ | Spec 041 y `design.md` aprobados el 2026-10-27. La 020 ya está liberada (v0.12.0, 2026-10-31; D1). | manual: `aidd.py status` antes de `/implement` |
 | P2 Test que falla antes y pasa después | ✅ | Todo comportamiento nuevo lleva un test Feature que hoy falla: rutas, broker, limitadores, versión de sesión, correos, auditoría y la configuración de nginx. El tiempo de CA8 se mide en un test sobre el kernel HTTP sin la fase de terminación (D6). | test: ver Trazabilidad |
 | P3 Autorización en servidor | ✅ | Rutas públicas sin rol: la autorización es tener el token de esa cuenta. El broker lo compara con el hash guardado para la cuenta del enlace; un token de otra cuenta, alterado, caducado o ya usado se rechaza (CA5, CA10). Las cuentas desactivadas no reciben enlace ni pueden usarlo (CA11). Sin cambios en roles ni Gates. | test: `RecuperarContrasenaAbusoTest::test_el_token_de_una_cuenta_no_cambia_la_contrasena_de_otra`, `…_rechaza_un_token_alterado`, `…_una_cuenta_desactivada_no_puede_restablecer` |
 | P4 Entrada validada y SQL con bindings | ✅ | `$request->validate()`: correo (`required`, `email:rfc`, `max:255`), token (`required`, `string`, `max:255`), cuenta (`required`, `uuid`), contraseña (`required`, `string`, `min:8`, `max:255`) y confirmación (`required`, `same:password`). Solo Eloquent y el broker, sin SQL crudo. | test: `RecuperarContrasenaTest::test_valida_cada_campo` · lint: semgrep `p/php` |
 | P5 Nada sensible en el repo | ✅ | La cuenta de Gmail sigue en `app.env` (spec 032). El interruptor `RECUPERAR_CONTRASENA` no es un secreto. Ningún token ni contraseña de ejemplo real en tests o docs. | lint: gitleaks |
-| P6 Sin vulnerabilidades críticas/altas | ✅ | Sin cambios en `composer.json`, `composer.lock` ni los archivos de npm: el broker, `Mail` y `afterResponse()` son de Laravel. Los correos usan directamente `CssToInlineStyles`, una dependencia transitiva que ya está en el lock, declarada y verificada en D9. Roboto se copia como archivo (OFL 1.1), no como dependencia (D10). Línea base del 2026-10-27: `composer audit --locked` y `npm audit --audit-level=high` sin avisos; EX2 vigente para las imágenes. | lint: `composer audit --locked`, `npm audit --audit-level=high` en CI y `/release` |
+| P6 Sin vulnerabilidades críticas/altas | ✅ | Sin cambios en `composer.json`, `composer.lock` ni los archivos de npm: el broker, `Mail` y `afterResponse()` son de Laravel. Los correos usan directamente `CssToInlineStyles`, una dependencia transitiva que ya está en el lock, declarada y verificada en D9. Roboto ya está en `main` como archivo (OFL 1.1; la copió la 020), no como dependencia (D10). Línea base del 2026-11-02: `composer audit --locked` sin críticas ni altas (1 media, `symfony/mime` CVE-2026-45070, que no bloquea P6) y `npm audit --audit-level=high` sin avisos; EX2 vigente para las imágenes. | lint: `composer audit --locked`, `npm audit --audit-level=high` en CI y `/release` |
 | P7 Auditoría de datos sensibles | ✅ | El restablecimiento completado registra `contrasena_restablecida` en el almacén solo anexado de la 020: actor y sujeto, la cuenta; resultado `exito`; fecha, IP y `request_id`. Modo crítico, en la misma transacción que el cambio: si no se puede registrar, la contraseña no cambia (CA12, D5). Las solicitudes de enlace y los enlaces inválidos no son eventos obligatorios (spec, "Auditoría"). | test: `RecuperarContrasenaAuditoriaTest::test_el_restablecimiento_queda_registrado`, `…_sin_registro_la_contrasena_no_cambia` |
-| P8 Correlación y logs limpios | ❌ aceptado: el `error_log` de nginx escribe la petición y el Referer, con el token, cuando PHP falla (502/504); su formato no se puede configurar. Acotado a ese log y a esos fallos: el token es de un solo uso y caduca en 60 minutos, y el log solo existe en el servidor. Destino: rotación y retención de logs (OB8.b, objetivo 3) — aprobado por el usuario el 2026-10-28 (`/analyze` A28). El resto cumple: `request_id` y `actor_id` llegan por el middleware y el `Context` de la 020, que se libera antes. El único log nuevo, `restablecimiento.correo_fallido`, lleva solo la clase del error. nginx escribe `/contrasena/nueva/***` en lugar del token, en la petición y en el Referer, en local y en producción (D7). Residuos declarados en «Riesgos»: el mailer `log` de local y la `QueryException` de OB4.a (decisión del usuario, 2026-10-28). | test: `RecuperarContrasenaAbusoTest::test_ningun_log_contiene_el_correo_el_token_ni_la_contrasena`, `ConfiguracionProduccionTest::test_nginx_enmascara_el_token_de_restablecimiento`, `…_nginx_enmascara_el_token_en_el_referer` · manual: revisión de cada `Log::` del diff y, tras el despliegue, `dentissa-error.log` (Observabilidad) |
-| P9 La interfaz usa solo el sistema de diseño | ✅ | Las pantallas siguen `design.md` (`c7`). La primera tarea lleva a `system.md` y `system.html` de `main` los «Cambios a incorporar al sistema» y los cinco tokens de la 038 que usa `c7` (D13); la versión se fija al fusionar. `acceso.css` usa solo tokens: ningún literal fuera de `:root` y ningún `var(--x)` sin token en `system.md`. El login pierde sus estilos en línea, los dos tonos fuera del sistema y Google Fonts. Los correos copian en su hoja los valores de los tokens, porque los clientes de correo no entienden `var()`; un test exige que cada valor de esa hoja sea el de un token de `system.md` (D9, decisión del usuario, 2026-10-28). Las propiedades revisadas y las exenciones están en D17. WCAG 2.1 AA con `evaluate.mjs` sobre la build. | test: `RecuperarContrasenaVistasTest::test_los_tokens_del_acceso_son_los_de_system_md`, `…_acceso_css_sin_literales_fuera_de_root`, `…_los_valores_de_los_correos_son_tokens`, `…_sin_estilos_en_linea` · manual: `design/medir.mjs` sobre la build (Trazabilidad) |
+| P8 Correlación y logs limpios | ❌ aceptado: el `error_log` de nginx escribe la petición y el Referer, con el token, cuando PHP falla (502/504); su formato no se puede configurar. Acotado a ese log y a esos fallos: el token es de un solo uso y caduca en 60 minutos, y el log solo existe en el servidor. Destino: rotación y retención de logs (OB8.b, objetivo 3) — aprobado por el usuario el 2026-10-28 (`/analyze` A28). El resto cumple: `request_id` y `actor_id` llegan por el middleware y el `Context` de la 020, liberada en v0.12.0. El único log nuevo, `restablecimiento.correo_fallido`, lleva solo la clase del error. nginx escribe `/contrasena/nueva/***` en lugar del token, en la petición y en el Referer, en local y en producción (D7). Residuos declarados en «Riesgos»: el mailer `log` de local y la `QueryException` de OB4.a (decisión del usuario, 2026-10-28). | test: `RecuperarContrasenaAbusoTest::test_ningun_log_contiene_el_correo_el_token_ni_la_contrasena`, `ConfiguracionProduccionTest::test_nginx_enmascara_el_token_de_restablecimiento`, `…_nginx_enmascara_el_token_en_el_referer` · manual: revisión de cada `Log::` del diff y, tras el despliegue, `dentissa-error.log` (Observabilidad) |
+| P9 La interfaz usa solo el sistema de diseño | ✅ | Las pantallas siguen `design.md` (`c7`). La primera tarea lleva a `system.md` y `system.html` los «Cambios a incorporar al sistema» que aún no están en `main`, en la versión 1.11.0 (D13). `acceso.css` usa solo tokens: ningún literal fuera de `:root` y ningún `var(--x)` sin token en `system.md`. El login pierde sus estilos en línea, los dos tonos fuera del sistema y Google Fonts. Los correos copian en su hoja los valores de los tokens, porque los clientes de correo no entienden `var()`; un test exige que cada valor de esa hoja sea el de un token de `system.md` (D9, decisión del usuario, 2026-10-28). Las propiedades revisadas y las exenciones están en D17. WCAG 2.1 AA con `evaluate.mjs` sobre la build. | test: `RecuperarContrasenaVistasTest::test_los_tokens_del_acceso_son_los_de_system_md`, `…_acceso_css_sin_literales_fuera_de_root`, `…_los_valores_de_los_correos_son_tokens`, `…_sin_estilos_en_linea` · manual: `design/medir.mjs` sobre la build (Trazabilidad) |
 | P10 Rutas indexables descubribles | ✅ | Las rutas nuevas y `/login` no son indexables: `<meta name="robots" content="noindex">` desde el layout de acceso, y fuera del sitemap, que hoy no existe (`docs/seo.md`). Con eso queda hecha SE2.a (decisión del usuario, 2026-10-28). Toda respuesta servida en la URL del token no carga recursos de otros sitios y lleva `<meta name="referrer" content="no-referrer">` antes de cualquier recurso. | test: `RecuperarContrasenaVistasTest::test_las_pantallas_nuevas_no_se_indexan`, `…_el_login_no_se_indexa`, `…_la_pagina_del_token_no_envia_referer` |
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
-| `docs/design/system.md`, `system.html` | Primera tarea: los cambios de `design.md` (tokens `--font-acceso`, `--text-acceso-*`, `--acceso-form-max`, `--duration-respuesta`, `--ease-clinico`; carnet, troquel, talón, bloque «Vale hasta», botón en espera, casilla de 44 px, panel con degradado del sistema, marco del acceso) y los cinco tokens de la 038 que usa `c7`, con el mismo nombre y valor (D13). La versión es la siguiente libre al fusionar (D14). | Medio: conflicto con la 038 (D14) |
+| `docs/design/system.md`, `system.html` | Primera tarea: los cambios de `design.md` que aún no están en `main` (tokens `--font-acceso`, `--text-acceso-small`, `--duration-respuesta`, `--ease-clinico`; carnet, troquel, talón, bloque «Vale hasta», botón en espera, casilla de 44 px, panel con degradado del sistema, marco del acceso), en la versión 1.11.0. Los cinco tokens de la 038 y `--text-acceso-titulo`, `--text-acceso` y `--acceso-form-max` (020) ya están, con los valores de `c7`: se anota que el acceso también los usa (D13). | Bajo |
 | `public/css/acceso.css` (nuevo) | Tokens del sistema más los del acceso en `:root`, como `auth.css`, y los componentes del carnet. El login deja `auth.css`, que sigue sirviendo al registro (`register`, `registro-contacto`); su sección `.page-login` se borra. | Medio: el login cambia de aspecto |
-| `public/fonts/roboto/` (nuevo) | `roboto-latin-wght-normal.woff2` (variable, de `@fontsource-variable/roboto` 5.2.5) con su `OFL.txt` (D10) | Bajo |
+| `public/fonts/roboto/` | Sin cambios: el archivo y su `OFL.txt` ya están en `main` (los copió la 020); `acceso.css` los usa (D10) | — |
 | `resources/views/layouts/acceso.blade.php` (nuevo) | Carcasa común: franja con el logo en el teléfono, panel de marca en el escritorio (con su texto por pantalla) y tarjeta. `noindex` en todas sus pantallas, también en el login (SE2.a). Una sección de cabecera para que las vistas servidas en la URL del token pongan `no-referrer` antes de cualquier recurso. Roboto propia, sin JavaScript. | Bajo |
 | `resources/views/auth/login.blade.php` | Pasa al layout de acceso, con `noindex` (SE2.a, decisión del usuario, 2026-10-28). El enlace «¿Olvidaste tu contraseña?» va a `route('contrasena.solicitud')` cuando el interruptor está encendido; si no, no se muestra. Aviso de éxito con `role="status"`. Lema como párrafo y un solo `h1`. Sin estilos en línea ni Google Fonts. El comportamiento del login no cambia. | Medio: vista de la spec 001 |
 | `resources/views/auth/recuperar/` (nuevo) | `solicitud` (pedir y su estado «Demasiados intentos» con el botón desactivado), `enviada`, `nueva` (con errores junto al campo y su estado de espera, D15) y `caducado`. `nueva` y `caducado` ponen `no-referrer` antes de cualquier recurso | Bajo |
 | `app/Http/Controllers/RecuperarContrasenaController.php` (nuevo) | `solicitudForm`, `solicitar`, `enviada`, `nuevaForm` y `restablecer` (Contratos) | Medio: flujo de autenticación |
 | `routes/web.php` | Cinco rutas bajo `/contrasena`, que solo se registran con `config('acceso.recuperar_contrasena')` (D8), y una ruta de vista previa solo en `local` (D11). Los limitadores van solo en los dos `POST` (D15) | Bajo |
-| `config/clinica.php` | Clave `contacto` con la misma forma que en la 038 (`telefono`, `telefono_enlace` y `horario`), con el teléfono real de la página de inicio actual (D16) | Bajo: punto de fusión con la 038 (D14) |
+| `config/clinica.php` | Sin cambios: la clave `contacto` ya existe (038), con el teléfono ficticio `753 000 0000` y el horario; los correos la leen (D16) | — |
 | `config/acceso.php` (nuevo), `.env.example` | `recuperar_contrasena` ← `RECUPERAR_CONTRASENA` (por defecto `false`) | Bajo |
 | `app/Providers/AppServiceProvider.php` | Limitadores `solicitar-enlace` y `fijar-contrasena`: 5 envíos por minuto por `AuthController::origenLimite`. La respuesta lleva a la pantalla del formulario en estado de espera: «pedir», conservando el correo; «contraseña nueva», con el token y la cuenta del formulario y nunca la contraseña (D15). Listener de `Login` que guarda `version_sesion` en la sesión. | Bajo |
 | `app/Http/Middleware/SesionVigente.php` (nuevo) + `bootstrap/app.php` | Grupo `web`. Con sesión iniciada, una sesión sin versión guardada (de antes del despliegue) cuenta como versión 0. Si la versión de la sesión es menor que `usuarios.version_sesion`, cierra la sesión, la invalida y redirige a `/login`; si no, guarda la versión y sigue (D4) | Medio: corre en cada petición autenticada |
 | `database/migrations/2026_10_27_000000_version_sesion_en_usuarios.php` (nuevo) | `usuarios.version_sesion` `int unsigned not null default 0` (solo expand) | Bajo |
 | `app/Models/Usuario.php` | `sendPasswordResetNotification($token)` envía `EnlaceRestablecimiento`; `version_sesion` como `integer` | Bajo |
 | `app/Mail/EnlaceRestablecimiento.php`, `app/Mail/ContrasenaCambiada.php` (nuevos) + `resources/views/correos/` | Correos HTML con versión de texto. El enlace se arma desde `config('app.url')` y la hora de caducidad va en `clinica.zona_horaria`. El correo del enlace lleva además la dirección de respaldo completa (la URL, partida en líneas). El teléfono y el horario salen de `config('clinica.contacto')` (D16). El aviso no lleva enlace de restablecimiento. Su hoja copia los valores de los tokens y se pasa a estilos en línea con `CssToInlineStyles` (D9). | Medio: primer correo a las cuentas |
-| `app/Auditoria/Auditoria.php` (spec 020) | Parámetro opcional `?Usuario $actor` en `registrar()`, añadido con `/plan 020 --fix` antes de implementar la 020. Ese fix actualiza el control TM10 de la 020 según lo que pide D2. La 041 solo lo usa. | Medio: cambia un control de seguridad de la 020 (D2) |
-| `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | Dos `map` (contexto `http`) que cambian el token de `/contrasena/nueva/…` por `***` en la petición y en el Referer, y `log_format` igual a `combined` con los dos campos enmascarados. El vigilante de la 032 sigue leyendo el mismo formato. Convive con el `map` de marcos de la 038 (D14). | Medio: ruta protegida de despliegue (con confirmación) |
+| `app/Auditoria/Auditoria.php` (spec 020) | Sin cambios: `registrar()` ya acepta `?Usuario $actor` (020 D15, v0.12.0), con `actor_id` y `actor_rol` sacados del actor pasado. La 041 solo lo usa (D2). | — |
+| `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | Dos `map` (contexto `http`) que cambian el token de `/contrasena/nueva/…` por `***` en la petición y en el Referer, y `log_format` igual a `combined` con los dos campos enmascarados. El vigilante de la 032 sigue leyendo el mismo formato. Convive con el `map` de marcos de la 038 (`docker/nginx/seguridad/marcos.conf`, variable `$dentissa_frame_src`), con nombres de variable distintos (D14). | Medio: ruta protegida de despliegue (con confirmación) |
 | `deploy/` (plantilla de `app.env` en `deploy/README.md`) | `RECUPERAR_CONTRASENA=true`, que se enciende tras comprobar el correo en producción (Rollout) | Bajo |
 | `tests/Feature/` | `RecuperarContrasenaTest`, `RecuperarContrasenaAbusoTest`, `RecuperarContrasenaAuditoriaTest`, `RecuperarContrasenaVistasTest`, `CorreosRestablecimientoTest`, `SesionVigenteTest`; casos nuevos en `ConfiguracionProduccionTest` | — |
 
@@ -254,8 +254,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
   - Apagado: las rutas no existen (404) y el login no muestra el enlace.
   - El aspecto nuevo del login no depende del interruptor.
 - **Prerrequisitos:**
-  1. `/plan 020 --fix` (actor opcional, D2) y `/tasks 020 --fix`.
-  2. Implementar y liberar la 020 antes que la 041 (D1).
+  1. ~~`/plan 020 --fix` (actor opcional, D2) y `/tasks 020 --fix`~~ hecho.
+  2. ~~Implementar y liberar la 020 antes que la 041 (D1)~~ hecho: v0.12.0, 2026-10-31.
   3. La cuenta de Gmail de la 032 en `app.env`, ya configurada.
 - **Orden del despliegue:**
   1. `bash deploy/desplegar.sh <tag>` aplica la migración (`version_sesion`, expand) y la imagen de `web` con el `log_format` nuevo, con el interruptor apagado.
@@ -275,8 +275,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
 
 ## Decisiones (→ ADR si son arquitectónicas)
 - **D0 · Tamaño:** la spec se mantiene junta con sus 12 criterios: pedir, fijar y sus protecciones no se liberan por separado sin dejar un hueco (decisión del usuario, 2026-10-27).
-- **D1 · Orden:** la 020 se implementa y libera antes que la 041 (decisión del usuario, 2026-10-27).
-- **D2 · Actor de auditoría sin sesión:** se amplía el contrato de la 020 con un parámetro opcional `?Usuario $actor` en `registrar()`. Por defecto, `Auth::user()`. Va con `/plan 020 --fix` antes de implementar la 020 (decisión del usuario, 2026-10-27).
+- **D1 · Orden:** la 020 se implementa y libera antes que la 041 (decisión del usuario, 2026-10-27). Cumplido: v0.12.0, 2026-10-31.
+- **D2 · Actor de auditoría sin sesión:** se amplía el contrato de la 020 con un parámetro opcional `?Usuario $actor` en `registrar()`. Por defecto, `Auth::user()`. Va con `/plan 020 --fix` antes de implementar la 020 (decisión del usuario, 2026-10-27). Cumplido en la 020 (D15, v0.12.0): `actor_id` y `actor_rol` salen del actor pasado; T002 lo comprueba.
   - Alternativas descartadas: sesión solo en memoria (frágil), actor vacío (no cumple CA12).
   - Qué debe cumplir el contrato, porque cambia el control TM10 de la 020 (el actor nunca sale de
     la petición) (`/analyze` A9):
@@ -334,6 +334,7 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
     (`CorreosRestablecimientoTest`). Fallan con un literal fuera de las exenciones y pasan con ellas.
 - **D10 · Roboto propia:**
   - `roboto-latin-wght-normal.woff2` de `@fontsource-variable/roboto` 5.2.5, licencia OFL 1.1, con `OFL.txt`, en `public/fonts/roboto/`.
+    Ya está en `main`: la copió la 020 con esta misma verificación (020 D18); la 041 no la vuelve a copiar.
   - Se copia el archivo, no se añade la dependencia.
   - Verificación de `shared/agent-security.md` §2:
     - paquete publicado por el proyecto Fontsource, con millones de descargas semanales;
@@ -342,8 +343,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
     - descargado con `npm pack --ignore-scripts` el 2026-10-27.
   - Quita la petición a Google Fonts del login.
 - **D11 · Vista previa del diseño solo en local:** `/_disenio/041/{pantalla}` se registra solo con `APP_ENV=local`, para que `medir.mjs` mida los estados que dependen de la sesión (enviado, espera, éxito) y de un token. Test: `RecuperarContrasenaVistasTest::test_la_vista_previa_no_existe_fuera_de_local`.
-- **D12 · Layout de acceso:** `layouts/acceso.blade.php` se suma a `layouts/app.blade.php`, el único que hay hoy en `main` (la 038 añade `publico`, D14). Lo usan el login y la recuperación; el registro sigue con su HTML hasta que una spec lo toque.
-- **D13 · Sistema de diseño en `main`:** `c7` se diseñó sobre el `system.md` 1.8.0 de la rama de la 038 (`design.md`, `system_version`), y `main` está en 1.6.0. La 041 es independiente de la 038 (decisión del usuario, 2026-10-28, `/analyze` A1). La primera tarea lleva a `main`:
+- **D12 · Layout de acceso:** `layouts/acceso.blade.php` se suma a `layouts/app.blade.php` y a `layouts/publico.blade.php` (038). El error genérico de la 020 (`errors/auditoria-no-disponible`) sigue con su HTML. Lo usan el login y la recuperación; el registro sigue con su HTML hasta que una spec lo toque.
+- **D13 · Sistema de diseño en `main`:** `c7` se diseñó sobre el `system.md` 1.8.0 de la rama de la 038 (`design.md`, `system_version`). Hoy `main` está en 1.10.0 y ya tiene los cinco tokens de la 038 de la lista de abajo y `--text-acceso-titulo`, `--text-acceso` y `--acceso-form-max` (020), con los mismos valores (comprobado el 2026-11-02, D18). La primera tarea sube a 1.11.0 y añade solo lo que falta; para los que ya están, anota que el acceso también los usa. Lo que pedía originalmente:
   - los tokens y componentes de «Cambios a incorporar al sistema» de `design.md`;
   - los cinco tokens de la 038 que usan las pantallas de `c7`, con el mismo nombre y valor que en
     la 038, para que la fusión no choque:
@@ -356,7 +357,7 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
     Cada uno se anota en `system.md` con la 041 como motivo.
   - Test: ningún `var(--x)` de `acceso.css` ni de las vistas del acceso sin su token en
     `system.md`.
-- **D14 · Relación con la 038 (en pausa, rama `feature/038-pagina-inicio`)** (decisión del usuario, 2026-10-28, `/analyze` A2): la 041 no espera a la 038. La que se fusione después resuelve estos puntos:
+- **D14 · Relación con la 038** (decisión del usuario, 2026-10-28, `/analyze` A2). La 038 se liberó primero (v0.13.0, 2026-11-01), así que la 041 resuelve estos puntos al implementarse (D18): `system.md` sube a 1.11.0; los `map` de nginx conviven con el de `seguridad/marcos.conf`; `public/fonts/` no cambia; `AGENTS.md` lista los tres layouts; la 001 anota el cambio del login; `contacto` ya existe. Lo que se acordó entonces:
   - **`system.md` y `system.html`:** cada una toma la siguiente versión libre al fusionar, en lugar
     de «1.9.0». La 038 no puede retirar ninguno de los cinco tokens de D13 mientras el acceso
     los use, aunque su ronda 5 da `--sombra-tarjeta-alta` por «sin uso».
@@ -386,11 +387,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
   - «contraseña nueva» en espera reutiliza el aviso y el botón en espera de «demasiados intentos»
     (`design.md` → Componentes), sin componentes ni valores nuevos. Se mide con `medir.mjs` como
     estado de la vista previa.
-- **D16 · Datos de la clínica en los correos y el talón** (`/analyze` A15, A27): `config/clinica.php` gana la clave `contacto` con la misma forma que en la rama de la 038, para que la fusión deje una sola fuente (decisión del usuario, 2026-10-28):
-  - `telefono` `753 162 5220` y `telefono_enlace` `tel:+527531625220`: el teléfono real que publica hoy la página de inicio (`resources/views/landing/index.blade.php`), no el de relleno de la 038 (`753 000 0000`);
-  - `horario`: `['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00']`, el de la página de inicio con la forma de la 038.
-
-  Las demás claves de la 038 (`direccion`, `horario_semanal`) llegan con ella. El correo, el aviso y el talón leen de `config('clinica.contacto')`, sin texto fijo en las vistas.
+- **D16 · Datos de la clínica en los correos y el talón** (`/analyze` A15, A27): una sola fuente, `config('clinica.contacto')`, que ya existe en `main` (038). El teléfono es el ficticio `753 000 0000` (`tel:+527530000000`) para toda la app (decisión del usuario, 2026-10-31, que sustituye la del 2026-10-28 de usar el real `753 162 5220`; la página de inicio anterior ya no existe) y el horario `['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00']`. El correo, el aviso y el talón leen de `config('clinica.contacto')`, sin texto fijo en las vistas.
+- **D18 · Puesta al día tras la 020 y la 038** (`/plan 041 --fix`, 2026-11-02; vía ligera, decisión del usuario, 2026-10-31): con las dos liberadas, la 041 ya no trae la parte del contrato de auditoría (D2), Roboto (D10), los tokens ya presentes (D13) ni la clave `contacto` (D16). En las tareas: T003 y T006 quedan obsoletas, T001 se reduce a lo que falta y T002 solo comprueba. Nada cambia en los criterios, el diseño `c7` ni el modelo de amenazas.
 
 ## Impacto en arquitectura
 - `docs/architecture.md` (T090):
@@ -415,8 +413,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
 - **Las pantallas del acceso cambian el aspecto del login (spec 001):**
   - tests existentes que leen el HTML del login, como `GoogleVueltaFallidaTest` y `LimiteIntentosTest`, que se revisan en la tarea del login;
   - `medir.mjs` sobre la build.
-- **Dependencia de la 020:** si su implementación se retrasa, la 041 espera (D1). La tarea de auditoría es la única que la usa: el resto puede probarse con el doble de la 020.
-- **Conflictos con la 038** (en pausa): `system.md`, nginx, `public/fonts/`, `AGENTS.md` y la spec 001. Los puntos de fusión y lo que se comprueba están en D14.
+- **Dependencia de la 020:** resuelta, liberada en v0.12.0 (D1, D18).
+- **Convivencia con la 038** (liberada): el `map` de nginx de los marcos y `AGENTS.md`. Tras los cambios de nginx, `nginx -t`, `ConfiguracionProduccionTest` y `CabecerasSeguridadTest` en verde (D14).
 - **Residuos de P8 declarados** (decisión del usuario, 2026-10-28, `/analyze` A13):
   - **En local**, `MAIL_MAILER=log` escribe el correo completo, con el enlace y su token, en
     `laravel.log`. Se acepta solo en local, con datos ficticios. En producción el mailer es SMTP, y
