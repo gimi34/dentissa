@@ -1,7 +1,8 @@
 ---
 id: 038
 slug: pagina-inicio
-status: implemented
+status: released
+released: v0.13.0 (2026-11-01)
 created: 2026-10-20
 extends: [001, 031]
 ---
@@ -237,3 +238,4 @@ Ninguna.
 | 2026-11-01 | Implementada de nuevo con la ronda 6 de diseño (D23, `c5`): T033–T039, T059, T087–T089; suite 613 en verde, `evaluate.mjs` con los criterios de diseño en verde | /implement 038 |
 | 2026-11-01 | Vuelve a approved: `/review` r4 changes_requested (R32–R35 y los menores R38, R39, R41 y R42; tareas T003 y T006–T008) | `/review 038 --rerun` |
 | 2026-11-01 | Vuelve a implemented: correcciones de `/review` r4 (T003, T006–T008: pastilla del pie de foto, horario exacto de CA5 en la ubicación, pares de contraste de la ronda 6 y menores); suite 613 en verde | /implement 038 |
+| 2026-11-02 | Liberada en v0.13.0 (producción el 2026-11-02, aprobada por el responsable) | /release |

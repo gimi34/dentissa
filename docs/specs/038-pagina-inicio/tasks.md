@@ -273,13 +273,18 @@ ronda 5 en lo visual. Se construye sobre lo implementado en T046–T058: rutas, 
   - nota: 2026-11-01 — vuelve a implemented tras la ronda 6 de diseño (D23): T033–T039, T059 y T087–T089 hechas; CA1–CA10 siguen marcados (sus tests en verde: suite 613); docs/specs/README.md ya la tenía en implemented.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: el proyecto no tiene staging (`docs/deployment.md`); las comprobaciones de producción van en T097
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
+- [x] T095 Desplegar a staging y verificar criterios de aceptación — no aplica: el proyecto no tiene staging (`docs/deployment.md`); las comprobaciones de producción van en T097
+  - nota: 2026-11-01 — no aplica: sin staging. Antes de liberar: `composer audit` sin críticas ni altas (1 media conocida, `symfony/mime` CVE-2026-45070) y `npm audit` 0; PR #59 fusionado (6b16af4); tag v0.13.0 subido.
+- [x] T096 Aprobación humana para producción
+  - nota: aprobado por gimi34 (responsable) el 2026-11-01 01:20 para v0.13.0 («desplegar v0.13.0 a producción»); PR #59 fusionado por el usuario (6b16af4; el estado del CI no se pudo consultar desde aquí, sin `gh`); tag v0.13.0 subido. Excepciones vigentes que aplican: EX2 y EX3.
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout)
   - `deploy/desplegar.sh v0.11.0` (o la versión que toque) y `deploy/verificar.sh` sin fallos nuevos: `/` 200 con el mapa admitido, `/servicios` sin marcos externos y `/admin` redirige a `https://…/login`
   - en https://dentissa.app/: la página de inicio contra `design/opcion-a.html#opcion-a-pagina-1440` y en un móvil (`#opcion-a-pagina-390`), la escena de la ventana, «¿Está abierto ahora?» con la hora de Lázaro Cárdenas y la fila de hoy, el mapa visible, la consola sin bloqueos de la política, el teléfono y «Cómo llegar» funcionan
   - sin 5xx nuevos en `dentissa-access.log` en los 15 minutos siguientes
-- [ ] T098 Marcar spec como `released`
+  - nota: A40, A48 — la versión se fijó en `/release 038`: v0.13.0, la siguiente menor tras v0.12.0 (no v0.11.0); la verificación en producción se hizo contra `design/candidatos/c5.html` (1440 y 390) y la escena `consulta`, no contra `opcion-a.html` ni la escena de la ventana.
+  - nota: 2026-11-02 — desplegada v0.13.0 por el responsable (gimi34) con `deploy/desplegar.sh v0.13.0` desde la v0.12.0 y `deploy/verificar.sh` sin fallos; comprobado en https://dentissa.app/ con el diseño de la ronda 6 (`c5`, que sustituye a la `opcion-a` que cita esta tarea): `/` sin sesión con la página de inicio y con sesión al panel, `/servicios`, «¿Está abierto ahora?» y la fila de hoy, el mapa y la foto de la consulta, el teléfono y «Cómo llegar», la consola sin bloqueos de la política y sin 5xx nuevos en 15 minutos: «todo está bien» (usuario). Vuelta atrás, si hiciera falta: `deploy/volver.sh v0.12.0`.
+- [x] T098 Marcar spec como `released`
+  - nota: 2026-11-02 — spec released (v0.13.0), README actualizado; sin riesgos `RS`/`OB`/`RD`/`SE` con correcciones dentro de la spec. Aceptados de `/review` (rondas 1–5) en el roadmap con su clave 038/R…. Specs extendidas 001 (CA4 reemplazado por 038 CA1) y 031 (CA1 ampliado por 038 CA7) con su fila de Historial.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
