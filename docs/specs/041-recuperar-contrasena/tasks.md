@@ -172,6 +172,12 @@ Formato:
   - nota: 2026-11-03 — fallan por la razón esperada: se envía por encima de los topes y `acceso.enlaces_por_dia` no existe.
 - [x] T054 Aplicar los topes de D22 en el trabajo tras la respuesta de `solicitar`, y documentar el log y la configuración — añadida por /review: R5 — app/Http/Controllers/RecuperarContrasenaController.php, config/acceso.php, docs/observability.md — hecho cuando: T053 pasa, `test_la_respuesta_tarda_lo_mismo_con_y_sin_cuenta` sigue en verde y queda comprobado rompiendo el control — cubre: CA14 — depende: T053
   - nota: 2026-11-03 — T053 pasa y `test_la_respuesta_tarda_lo_mismo_con_y_sin_cuenta` sigue en verde. Comprobado rompiendo: sin el tope por cuenta falla `test_cinco_enlaces_por_cuenta_por_hora`; sin el diario, `test_doscientos_enlaces_al_dia`. Archivo extra: la fila de `docs/security.md`.
+- [ ] T055 [P] Hacer que los tests prueben lo que dicen y añadir el del `alt`: `test_el_enlace_usa_app_url_aunque_el_host_sea_otro` pide con URL absoluta (R7), `test_ningun_log_contiene_el_correo_el_token_ni_la_contrasena` provoca un fallo de correo y comprueba que hay registro (R16) y `test_los_correos_usan_el_estilo_del_login` exige el color del `alt` (R8) — añadida por /review: R7, R8, R16 — tests/Feature/CorreosRestablecimientoTest.php, tests/Feature/RecuperarContrasenaAbusoTest.php — hecho cuando: R8 falla porque la cabecera no fija el color, y R7 y R16 quedan comprobados rompiendo lo que protegen — cubre: CA2, CA8 — depende: T054
+- [ ] T056 Fijar el color de la cabecera de los correos, para el `alt` del logo — añadida por /review: R8 — resources/views/correos/acceso.css — hecho cuando: T055 pasa y `evaluate.mjs` pasa los dos correos — cubre: CA2, CA7 — depende: T055
+- [ ] T057 [P] Añadir `test_el_login_anuncia_el_error_una_sola_vez` a `RecuperarContrasenaVistasTest` (el foco va al campo con error, enlazado con su mensaje, y el aviso de arriba queda oculto al lector) y a `PerfilCambioCorreoTest` que la ayuda no se repite con el error (R33) — añadida por /review: R10, R33 — tests/Feature/RecuperarContrasenaVistasTest.php, tests/Feature/PerfilCambioCorreoTest.php — hecho cuando: fallan porque el aviso lleva `role="alert"` y la ayuda sale con el error — cubre: CA3, CA13 — depende: T054
+- [ ] T058 Anunciar una sola vez el error del login, sin cambiar su aspecto, y no repetir la ayuda del perfil — añadida por /review: R10, R33 — resources/views/auth/login.blade.php, resources/views/cliente/perfil.blade.php — hecho cuando: T057 pasa y `evaluate.mjs` pasa «éxito» — cubre: CA3, CA13 — depende: T057
+- [ ] T059 [P] Añadir `test_abrir_enlaces_tiene_limite_por_origen` a `RecuperarContrasenaAbusoTest` (el intento 31 da 429, pide esperar y sigue sin referer ni caché; otro origen entra) y a `PerfilCambioCorreoTest` los 5 fallos por minuto, compartidos entre el correo y el cambio de contraseña — añadida por /review: R26, R32 — tests/Feature/RecuperarContrasenaAbusoTest.php, tests/Feature/PerfilCambioCorreoTest.php — hecho cuando: fallan porque no hay límite — cubre: CA9, CA13 — depende: T054
+- [ ] T060 Añadir el limitador `abrir-enlace` y el de fallos de contraseña del perfil (D23) — añadida por /review: R26, R32 — app/Providers/AppServiceProvider.php, routes/web.php, app/Http/Controllers/PerfilController.php — hecho cuando: T059 pasa, los demás tests siguen en verde y queda comprobado rompiendo cada límite — cubre: CA9, CA13 — depende: T059
 
 ## Integración y documentación
 - [x] T040 [P] Registrar las rutas nuevas, el `noindex` del login y los layouts; `AGENTS.md` es ruta protegida: pide la aprobación explícita del usuario antes de editarlo y la nota la recoge (`/analyze` A18) — docs/seo.md, AGENTS.md — hecho cuando: `docs/seo.md` lista `/contrasena/olvidada`, `/contrasena/enviada` y `/contrasena/nueva/{token}` como no indexables; SE2.a pasa a `mitigada` (la versión se completa en `/release`): `/login` lleva `noindex` y `/registro/contacto` sin los datos de Google redirige a `/registro`, así que nunca se sirve a un buscador (decisión del usuario, 2026-10-28); SE2.b sigue `pendiente` (objetivo de SEO), así que SE2 queda atendida **parcialmente**; y `AGENTS.md` pasa de «dos layouts» a tres (`app`, `publico` y `acceso`, D12; «el acceso sigue con su propio HTML» se cambia: el login y la recuperación usan `acceso`) y añade `SesionVigente` y `app/Mail` al mapa — depende: T025, T032, T033
@@ -193,7 +199,7 @@ Formato:
   - `deployment.md`: `RECUPERAR_CONTRASENA` en la tabla de variables (por defecto `false`; en producción, `true` tras T095), la migración expand y el `log_format` enmascarado del token.
   - `observability.md`: evento `contrasena_restablecida` (modo crítico) y log `restablecimiento.correo_fallido`. La corrección de «No existe registro de auditoría» que registra altas, roles, activación y cambios de contraseña sigue pendiente: la 041 cubre solo el restablecimiento y el resto va en la 021. La del query string en el log de acceso de producción sigue pendiente (→ objetivo 3): el formato nuevo enmascara solo el token; se anota que el vigilante ya lee ese formato. En la brecha de los logs de nginx se anota la excepción acotada a P8 del `error_log` (escribe el token cuando PHP falla), cuyo destino es la rotación y retención de OB8.b, que sigue pendiente (`/analyze` A28).
   - nota: 2026-11-03 — `RECUPERAR_CONTRASENA` y la migración expand en `deployment.md`; `contrasena_restablecida`, `restablecimiento.correo_fallido` y el `log_format` enmascarado en `observability.md`. OB1.f y OB8.a siguen pendientes; OB8.b recoge la excepción acotada a P8 del `error_log` (A28).
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
   - nota: 2026-11-03 — hecho: spec en `implemented` y fila de `docs/specs/README.md`.
   - nota: 2026-11-03 — hecho de nuevo tras /review ronda 1: spec en `implemented` y fila de `docs/specs/README.md`.
 
@@ -214,18 +220,18 @@ Formato:
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T010, T017 | T024, T025, T026, T027, T033, T034 |
-| CA2 | T010, T016 | T020, T021, T023, T027 |
-| CA3 | T011, T045 | T029, T033, T046 |
+| CA2 | T010, T016, T055 | T020, T021, T023, T027, T056 |
+| CA3 | T011, T045, T057 | T029, T033, T046, T058 |
 | CA4 | T011, T049 | T029, T050 |
 | CA5 | T011 | T029 |
 | CA6 | T011 | T023, T029 |
 | CA7 | T011, T014, T015, T016, T017 | T005, T020, T022, T029, T031, T032 |
 | CA8 | T012 | T027 |
-| CA9 | T012, T017, T047 | T026, T027, T028, T029, T048 |
+| CA9 | T012, T017, T047, T059 | T026, T027, T028, T029, T048, T060 |
 | CA10 | T013 | T029 |
 | CA11 | T013 | T027, T029 |
 | CA12 | T014 | T030 |
-| CA13 | T051 | T052 |
+| CA13 | T051, T057, T059 | T052, T058, T060 |
 | CA14 | T053 | T054 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |

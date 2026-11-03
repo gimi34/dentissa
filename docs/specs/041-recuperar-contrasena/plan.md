@@ -416,6 +416,8 @@ Flujo: visitante → nginx (Cloudflare) → `RecuperarContrasenaController` → 
   - Residuo aceptado: quien tenga una sesión ajena de una cuenta de Google puede crear la contraseña desde el perfil sin más comprobación (RS5.c, ya registrado) y luego cambiar el correo. Sin límite de intentos en estos formularios, como ya pasa en `updatePassword`.
 - **D22 · Topes de envío** (`/review` R5, decisión del usuario, 2026-11-03): `config/acceso.php` añade `enlaces_por_cuenta_por_hora` (5) y `enlaces_por_dia` (200). Se comprueban en el trabajo tras la respuesta (TM1), antes de `sendResetLink`, así que superarlos no crea token ni invalida el vigente; solo cuentan los envíos hechos. Sobre el tope diario se escribe `restablecimiento.tope_diario`, sin datos. El aviso de contraseña cambiada no se limita: solo sale tras un restablecimiento válido.
 
+- **D23 · Límites de intentos que faltaban** (`/review` R26 y R32, decisión del usuario, 2026-11-03): matiza D15. Abrir un enlace tiene su propio limitador, `abrir-enlace`, de 30 por minuto por origen, distinto del de los envíos: pasado, la vista `caducado` en espera con 429 y sin comprobar el token, que es lo costoso. Las contraseñas del perfil admiten 5 fallos por minuto por cuenta, compartidos entre el correo y el cambio de contraseña; pasado ese límite, ni la correcta se comprueba.
+
 ## Impacto en arquitectura
 - `docs/architecture.md` (T090):
   - fila «Autenticación»: recuperación de contraseña, broker, versión de sesión, `SesionVigente`;
