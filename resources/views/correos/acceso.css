@@ -1,0 +1,22 @@
+/* Spec 041 (D9, D17): hoja de los correos del acceso. Los clientes de correo no entienden var(), así
+   que copia los valores de los tokens de system.md; un test exige que cada uno sea el de un token.
+   CssToInlineStyles la pasa a estilos en línea al enviar; las plantillas no llevan style="". */
+body { margin: 0; padding: 0; background-color: #FDF5F8; color: #000000; font-family: Roboto, system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+.correo-exterior { padding: 16px; }
+.correo { max-width: 480px; background-color: #FFFFFF; border-radius: 12px; }
+.correo-cab { background-color: #72243E; padding: 16px 20px 20px; border-radius: 12px 12px 0 0; }
+.correo-logo { display: block; width: 104px; height: auto; }
+.correo-cuerpo { padding: 28px 20px 16px; }
+h1 { margin: 0 0 16px; color: #000000; font-size: 28px; font-weight: 600; line-height: 1.15; }
+p { margin: 0 0 16px; font-size: 14px; line-height: 1.5; }
+.correo-boton { margin: 0 0 16px; }
+.btn-primario { display: inline-block; padding: 14px 20px; border-radius: 8px; background-color: #B83C65; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none; }
+.url { color: #993556; font-size: 12px; overflow-wrap: anywhere; word-break: break-all; }
+.troquel-celda { padding: 0 16px; }
+.troquel { border-top: 2px dashed #F4C0D1; }
+.talon-celda { padding: 16px 20px 20px; background-color: #FDF5F8; border-radius: 0 0 12px 12px; }
+.talon { margin: 0; font-size: 13px; line-height: 1.5; }
+dt { margin: 0; color: #993556; font-weight: 600; }
+dd { margin: 0 0 8px; }
+.tel { white-space: nowrap; }
+.rango { white-space: nowrap; }

@@ -98,10 +98,12 @@ trait TokensAcceso
     private function usaSoloTokens(string $valor): bool
     {
         $resto = preg_replace('/var\(--[\w-]+\)/', '', $valor);
-        $resto = preg_replace('/\b(calc|linear-gradient)\(|\)|,|\*|\/|(?<![\w.])-?\d*\.?\d+(deg)?(?![\w.%])|\b(center|no-repeat)\b/', ' ', $resto);
+        $resto = preg_replace('/calc\([\s\d.*\/+-]*\)/', '', $resto);
+        $resto = preg_replace('/linear-gradient\(\s*(\d+deg)?[\s,]*\)/', '', $resto);
+        $resto = preg_replace('/[,\/]|\b(center|no-repeat|background|transform)\b/', ' ', $resto);
 
         foreach (preg_split('/\s+/', trim($resto), -1, PREG_SPLIT_NO_EMPTY) as $parte) {
-            if (! preg_match(self::VALOR_EXENTO, $parte) && ! preg_match('/^(background|color|transform)$/', $parte)) {
+            if (! preg_match(self::VALOR_EXENTO, $parte)) {
                 return false;
             }
         }

@@ -9,7 +9,6 @@ use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -204,13 +203,21 @@ class CorreosRestablecimientoTest extends TestCase
     {
         $logs = CapturaLogs::instalar();
         $usuario = $this->crearUsuario();
-        $error = new TransportException('Fallo SMTP con '.$usuario->email);
-        Mail::shouldReceive('to')->andThrow($error);
+        Mail::shouldReceive('to')->andThrow(new TransportException('Fallo SMTP con '.$usuario->email));
 
         // Al pedir el enlace: la respuesta no cambia.
         $this->post('/contrasena/olvidada', ['email' => $usuario->email])->assertRedirect('/contrasena/enviada');
+
+        $this->assertSoloLaClaseDelError($logs, $usuario);
+    }
+
+    public function test_un_fallo_del_aviso_solo_registra_la_clase(): void
+    {
+        $logs = CapturaLogs::instalar();
+        $usuario = $this->crearUsuario();
+        Mail::shouldReceive('to')->andThrow(new TransportException('Fallo SMTP con '.$usuario->email));
+
         // Al avisar del cambio: la contraseña ya cambió y el restablecimiento termina.
-        Cache::flush();
         $this->post('/contrasena/nueva', [
             'token' => Password::broker()->createToken($usuario),
             'cuenta' => $usuario->id,
@@ -218,12 +225,16 @@ class CorreosRestablecimientoTest extends TestCase
             'password_confirmation' => 'contrasena-nueva-segura',
         ])->assertRedirect(url('/login'));
 
+        $this->assertTrue(Hash::check('contrasena-nueva-segura', $usuario->fresh()->password_hash));
+        $this->assertSoloLaClaseDelError($logs, $usuario);
+    }
+
+    private function assertSoloLaClaseDelError(CapturaLogs $logs, Usuario $usuario): void
+    {
         $fallos = array_values(array_filter($logs->registros(), fn (array $r) => $r['mensaje'] === 'restablecimiento.correo_fallido'));
-        $this->assertCount(2, $fallos, 'Un registro por cada correo que falló.');
-        foreach ($fallos as $fallo) {
-            $this->assertSame('error', $fallo['nivel']);
-            $this->assertSame(['error' => 'TransportException'], $fallo['contexto'], 'Solo la clase corta del error (P8).');
-        }
+        $this->assertCount(1, $fallos, 'Un registro por el correo que falló.');
+        $this->assertSame('error', $fallos[0]['nivel']);
+        $this->assertSame(['error' => 'TransportException'], $fallos[0]['contexto'], 'Solo la clase corta del error (P8).');
         $this->assertStringNotContainsString($usuario->email, $logs->comoTexto(), 'Sin el correo (TM6).');
     }
 }
