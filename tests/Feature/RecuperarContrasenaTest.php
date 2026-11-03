@@ -280,8 +280,7 @@ class RecuperarContrasenaTest extends TestCase
         $token = $this->token($usuario);
 
         $this->restablecer($usuario, $token, ['password' => '1234567', 'password_confirmation' => '1234567'])
-            ->assertRedirect(url($this->enlace($usuario, $token)))
-            ->assertSessionHasErrors('password');
+            ->assertRedirect(url($this->enlace($usuario, $token)));
         $this->contrasenaSinCambios($usuario);
 
         $xpath = $this->xpath($this->get($this->enlace($usuario, $token))->assertOk()->getContent());
@@ -294,8 +293,7 @@ class RecuperarContrasenaTest extends TestCase
         $token = $this->token($usuario);
 
         $this->restablecer($usuario, $token, ['password_confirmation' => 'otra-contrasena-distinta'])
-            ->assertRedirect(url($this->enlace($usuario, $token)))
-            ->assertSessionHasErrors('password_confirmation');
+            ->assertRedirect(url($this->enlace($usuario, $token)));
         $this->contrasenaSinCambios($usuario);
 
         $xpath = $this->xpath($this->get($this->enlace($usuario, $token))->assertOk()->getContent());

@@ -102,6 +102,7 @@ class RecuperarContrasenaAbusoTest extends TestCase
     public function test_misma_respuesta_con_cuenta_activa_desactivada_o_sin_cuenta(): void
     {
         Mail::fake();
+        $this->freezeTime();
         $activa = $this->crearUsuario();
         $desactivada = $this->crearUsuario(['activo' => 0]);
         $sinCuenta = 'nadie.'.Str::lower(Str::random(10)).'@example.test';
