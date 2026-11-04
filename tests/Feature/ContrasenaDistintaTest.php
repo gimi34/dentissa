@@ -220,5 +220,139 @@ class ContrasenaDistintaTest extends TestCase
 
         $this->restablecer($usuario, $this->token($usuario), self::ACTUAL)->assertSessionHasErrors(['password' => self::MENSAJE]);
         $this->assertSinContrasenaEnLaSesion(self::ACTUAL);
+
+        // En el perfil (T011).
+        $this->flushSession();
+        $paciente = $this->crearUsuario();
+        $this->cambiar($paciente, self::ACTUAL, self::ACTUAL)->assertSessionHasErrors(['password' => self::MENSAJE]);
+        $this->assertSinContrasenaEnLaSesion(self::ACTUAL);
+    }
+
+    // ── Cambio desde el perfil ───────────────────────────────────────────────────────────────────
+
+    private const PERFIL = '/cliente/perfil';
+
+    private function cambiar(Usuario $usuario, ?string $actual, string $nueva, ?string $confirmacion = null)
+    {
+        $datos = ['password' => $nueva, 'password_confirmation' => $confirmacion ?? $nueva];
+        if ($actual !== null) {
+            $datos['password_actual'] = $actual;
+        }
+
+        return $this->actingAs($usuario)->from(self::PERFIL)->put(self::PERFIL.'/password', $datos);
+    }
+
+    public function test_el_personal_no_puede_cambiar_la_contrasena_por_el_perfil(): void
+    {
+        foreach (['admin', 'dentista', 'asistente'] as $rol) {
+            $usuario = $this->crearUsuario(['rol' => $rol]);
+
+            $this->cambiar($usuario, self::ACTUAL, 'otra-contrasena-nueva')->assertForbidden();
+            $this->assertContrasena($usuario, self::ACTUAL, "{$rol}: su contraseña no cambia (CA8).");
+        }
+    }
+
+    public function test_perfil_con_la_actual_se_rechaza_junto_al_campo(): void
+    {
+        $usuario = $this->crearUsuario();
+
+        $this->cambiar($usuario, self::ACTUAL, self::ACTUAL)
+            ->assertRedirect(self::PERFIL)
+            ->assertSessionHasErrors(['password' => self::MENSAJE])
+            ->assertSessionMissing('success');
+        $this->assertContrasena($usuario, self::ACTUAL);
+
+        $html = $this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/name="password"[^>]*>\s*<div[^>]*field-hint-error[^>]*>'.preg_quote(self::MENSAJE, '/').'/u', $html, 'El mensaje sale junto al campo de la contraseña nueva.');
+    }
+
+    public function test_una_diferencia_minima_se_acepta_en_el_perfil(): void
+    {
+        foreach (['Contrasena-actual-larga', self::ACTUAL.' '] as $nueva) {
+            Cache::flush();
+            $usuario = $this->crearUsuario();
+
+            $this->cambiar($usuario, self::ACTUAL, $nueva)->assertSessionHasNoErrors()->assertSessionHas('success');
+            $this->assertContrasena($usuario, $nueva, "«{$nueva}» se acepta como distinta (CA3).");
+        }
+    }
+
+    public function test_una_cuenta_sin_contrasena_crea_la_suya_en_el_perfil(): void
+    {
+        $usuario = $this->crearUsuario(['password_hash' => null, 'google_id' => 'google-'.Str::random(12)]);
+
+        $this->cambiar($usuario, null, self::ACTUAL)->assertSessionHasNoErrors()->assertSessionHas('success');
+        $this->assertContrasena($usuario, self::ACTUAL, 'La cuenta sin contraseña crea la suya (CA4).');
+    }
+
+    public function test_los_errores_de_siempre_van_antes_en_el_perfil(): void
+    {
+        // /analyze A12: la nueva es la actual y además rompe otra regla.
+        $usuario = $this->crearUsuario();
+        $this->cambiar($usuario, self::ACTUAL, self::ACTUAL, 'otra-confirmacion')
+            ->assertSessionHasErrors(['password' => 'Las contraseñas no coinciden.']);
+        $this->assertContrasena($usuario, self::ACTUAL);
+
+        $this->flushSession();
+        Cache::flush();
+        $heredada = $this->crearUsuario(['password_hash' => Hash::make('corta77')]);
+        $this->cambiar($heredada, 'corta77', 'corta77')
+            ->assertSessionHasErrors(['password' => 'La contraseña debe tener al menos 8 caracteres.']);
+    }
+
+    public function test_perfil_sin_la_actual_correcta_no_revela_si_es_igual(): void
+    {
+        $usuario = $this->crearUsuario();
+
+        $this->cambiar($usuario, 'no-es-la-actual', self::ACTUAL)
+            ->assertSessionHasErrors('password_actual')
+            ->assertSessionDoesntHaveErrors('password');
+        $this->assertContrasena($usuario, self::ACTUAL);
+    }
+
+    public function test_perfil_con_el_limite_agotado_no_revela_si_es_igual(): void
+    {
+        $usuario = $this->crearUsuario();
+        for ($i = 0; $i < 5; $i++) {
+            $this->cambiar($usuario, 'no-es-la-actual', 'otra-contrasena-nueva')->assertSessionHasErrors('password_actual');
+        }
+
+        $this->cambiar($usuario, self::ACTUAL, self::ACTUAL)
+            ->assertSessionHasErrors(['password_actual' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.'])
+            ->assertSessionDoesntHaveErrors('password');
+    }
+
+    public function test_perfil_el_error_queda_asociado_al_campo_y_con_el_foco(): void
+    {
+        $usuario = $this->crearUsuario();
+
+        // Cada campo de «Cambiar contraseña» con su etiqueta asociada.
+        $xpath = $this->xpath($this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent());
+        foreach (['password_actual', 'password', 'password_confirmation'] as $nombre) {
+            $campo = $xpath->query('//input[@name="'.$nombre.'"]')->item(0);
+            $id = $campo?->getAttribute('id');
+            $this->assertNotEmpty($id, "{$nombre}: el campo tiene id.");
+            $this->assertSame(1, $xpath->query('//label[@for="'.$id.'"]')->length, "{$nombre}: su etiqueta apunta al campo.");
+        }
+
+        // Con error en la actual, el foco va a la actual; con error en la nueva, a la nueva.
+        foreach ([
+            'password_actual' => ['no-es-la-actual', 'otra-contrasena-nueva'],
+            'password' => [self::ACTUAL, 'corta'],
+        ] as $esperado => [$actual, $nueva]) {
+            Cache::flush();
+            $this->flushSession();
+            $this->cambiar($usuario, $actual, $nueva)->assertSessionHasErrors($esperado);
+            $xpath = $this->xpath($this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent());
+
+            $enfocados = $xpath->query('//*[@autofocus]');
+            $this->assertSame(1, $enfocados->length, "{$esperado}: un solo autofocus en la página.");
+            $this->assertSame($esperado, $enfocados->item(0)->getAttribute('name'));
+            $campo = $xpath->query('//input[@name="'.$esperado.'"]')->item(0);
+            $this->assertSame('true', $campo->getAttribute('aria-invalid'), "{$esperado}: aria-invalid.");
+            $error = $xpath->query('//*[@id="'.$campo->getAttribute('aria-describedby').'"]')->item(0);
+            $this->assertNotNull($error, "{$esperado}: aria-describedby apunta a su mensaje.");
+            $this->assertStringContainsString('field-hint-error', $error->getAttribute('class'));
+        }
     }
 }
