@@ -39,6 +39,8 @@ class ContrasenaDistintaTest extends TestCase
         parent::setUp();
         // Los limitadores guardan su cuenta en el caché (`array` en los tests).
         Cache::flush();
+        // La sesión empieza aquí para que el error de un envío llegue a la pantalla que se abre después.
+        $this->flushSession();
     }
 
     private function crearUsuario(array $datos = []): Usuario
@@ -110,9 +112,9 @@ class ContrasenaDistintaTest extends TestCase
         $usuario = $this->crearUsuario();
         $token = $this->token($usuario);
 
-        $this->restablecer($usuario, $token, self::ACTUAL)
-            ->assertRedirect(url($this->enlace($usuario, $token)))
-            ->assertSessionHasErrors(['password' => self::MENSAJE]);
+        // El texto exacto se comprueba en la pantalla: `assertSessionHasErrors` con valores consume los
+        // errores de la sesión antes de abrirla.
+        $this->restablecer($usuario, $token, self::ACTUAL)->assertRedirect(url($this->enlace($usuario, $token)));
         $this->assertContrasena($usuario, self::ACTUAL);
 
         $xpath = $this->xpath($this->get($this->enlace($usuario, $token))->assertOk()->getContent());
