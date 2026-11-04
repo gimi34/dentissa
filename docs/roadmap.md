@@ -73,6 +73,25 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     a la izquierda (`calc(2 * var(--x))`);
   - ~~020/R8 `npm audit` de la 020 depende de la chore de `follow-redirects` 1.16.2~~ resuelto en
     v0.12.0 (chore 2026-10-30-chore-follow-redirects-1.16.2, PR #55).
+- Spec 041 (2026-11-03), liberada en v0.14.0:
+  - limpieza del interruptor `RECUPERAR_CONTRASENA`, encendido en producción desde el 2026-11-03: quitarlo
+    del código y de `app.env` en una versión posterior; la migración `version_sesion` es solo expand y no
+    tiene fase contract;
+  - pruebas pendientes en producción de T095: CA8, el tiempo de respuesta con y sin cuenta, y el número de
+    tokens en `dentissa-error.log` (excepción A28);
+  - aceptados sin tarea de `/review` (deuda menor): 041/R6 medidas de la casilla con cuentas sobre tokens;
+    041/R9 botón del correo en Outlook; 041/R11 `scale` del botón distinto del sistema; 041/R12 literales
+    fuera de lo que revisa el test; 041/R13 `--weight-regular` sin uso; 041/R14 el test de tokens busca en
+    todo `system.md`; 041/R15 umbral de 300 ms poco discriminante; 041/R17 comentario de `auth.css`;
+    041/R18 duplicación en los correos y dependencia transitiva de `CssToInlineStyles`; 041/R19 «60
+    minutos» escrito a mano; 041/R20 bloque de espera duplicado; 041/R21 UUID validado de dos maneras;
+    041/R22 variable `$caso` sin usar; 041/R23 comprobador de tokens repetido; 041/R24 test de punta a
+    punta del enlace del correo; 041/R25 token en `_previous.url` de la sesión (con RS10.c); 041/R27 señal
+    de abuso de los limitadores; 041/R28 `symfony/mime` CVE-2026-45070, con un `/chore`; 041/R29 test de
+    contraste en la CI; 041/R30 destino perdido con la sesión anulada; 041/R31 fila del layout en el plan;
+    041/R32 contraseña creada en el perfil de una cuenta de Google con una sesión ajena (RS5.c);
+  - ~~041/R7, 041/R8, 041/R10, 041/R16, 041/R26 y 041/R33~~ resueltos en v0.14.0 (T055–T060); 041/R32 en
+    parte (límite de fallos en el perfil).
 - Spec 038 (2026-11-01), aceptados sin tarea de `/review` (deuda menor, liberada en v0.13.0). Los de la
   ronda 3 (R9–R29) se refieren a la composición de esa ronda, sustituida por la ronda 6 (`c5`): al
   retomarlos, comprobar primero si siguen aplicando.

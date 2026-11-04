@@ -78,7 +78,7 @@ Correcciones:
 Evidencia: `/login` responde `200` sin `<meta name="robots">` ni cabecera `X-Robots-Tag`; `/up`
 responde `200` con HTML y tampoco lo lleva.
 Correcciones:
-- SE2.a `noindex` en `/login` (y en `/registro/contacto`, si alguna vez se sirve sin redirigir) — estado: mitigada (spec 041; la versión se completa en `/release`): `/login` lleva `noindex` y `/registro/contacto` sin los datos de Google redirige a `/registro`, así que nunca se sirve a un buscador (decisión del usuario, 2026-10-28)
+- SE2.a `noindex` en `/login` (y en `/registro/contacto`, si alguna vez se sirve sin redirigir) — estado: mitigada (v0.14.0, spec 041): `/login` lleva `noindex` y `/registro/contacto` sin los datos de Google redirige a `/registro`, así que nunca se sirve a un buscador (decisión del usuario, 2026-10-28)
 - SE2.b `noindex` en la 404 propia (SE4) y `X-Robots-Tag: noindex` en `/up` — estado: pendiente
 
 ### SE3 · media — Sin `sitemap.xml` y `robots.txt` sin sitemap

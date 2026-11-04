@@ -211,17 +211,19 @@ Formato:
   - nota: 2026-11-03 — hecho de nuevo tras T055–T060: spec en `implemented` y fila de `docs/specs/README.md`. Suite 702 en verde (12 009 aserciones), Pint limpio en 21 PHP, escáneres sin críticas ni altas y `medir.mjs` en verde.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación — no hay staging (objetivo 5): estas comprobaciones se hacen en producción en el paso 3 del Rollout, dentro de T097, con el interruptor encendido y una cuenta de prueba:
-  - CA2: un correo real llega en menos de 5 minutos al buzón de prueba, con remitente «Dentissa» y en español — resultado: —
-  - CA3: el enlace del correo abre «Elige tu contraseña nueva», restablece y se entra con la nueva — resultado: —
-  - CA7: la sesión abierta en otro navegador se cierra en su siguiente petición y llega el aviso «Tu contraseña cambió» — resultado: —
-  - CA8: tiempos de `POST /contrasena/olvidada` con la cuenta de prueba y con un correo sin cuenta, 10 de cada uno: diferencia de medias < 300 ms — resultado: —
-  - CA12: `SELECT accion, resultado, actor_id = recurso_id FROM auditoria WHERE accion = 'contrasena_restablecida' ORDER BY id DESC LIMIT 1` da el evento — resultado: —
-  - P8: `grep -c '/contrasena/nueva/[^*]' dentissa-access.log` da 0 — resultado: —
-  - P8 (excepción A28): `grep -c '/contrasena/nueva/[^*]' dentissa-error.log` — se anota el número; si no es 0, son fallos de PHP en esa ruta — resultado: —
-- [ ] T096 Aprobación humana para producción (después de liberar la 020, D1)
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh <tag>` con el interruptor apagado, `verificar.sh`, comprobaciones de T095 con `RECUPERAR_CONTRASENA=true` y `aplicar-entorno.sh app`, y dejarlo encendido si todo pasa; vigilar 5xx en `/contrasena/*`, `restablecimiento.correo_fallido` y ráfagas de 429. Rollback: interruptor apagado y, si hace falta, `deploy/volver.sh <tag anterior>`
-- [ ] T098 Marcar spec como `released` y anotar el cambio en el Historial de la spec 001 (enlace «¿Olvidaste tu contraseña?», fuera de alcance de la 001)
+- [x] T095 Desplegar a staging y verificar criterios de aceptación — no hay staging (objetivo 5): estas comprobaciones se hacen en producción en el paso 3 del Rollout, dentro de T097, con el interruptor encendido y una cuenta de prueba:
+  - CA2: un correo real llega en menos de 5 minutos al buzón de prueba, con remitente «Dentissa» y en español — resultado: OK en producción el 2026-11-03 (usuario: «todo funciona»)
+  - CA3: el enlace del correo abre «Elige tu contraseña nueva», restablece y se entra con la nueva — resultado: OK en producción el 2026-11-03 (usuario: «todo funciona»)
+  - CA7: la sesión abierta en otro navegador se cierra en su siguiente petición y llega el aviso «Tu contraseña cambió» — resultado: OK en producción el 2026-11-03 (usuario: «todo funciona»)
+  - CA8: tiempos de `POST /contrasena/olvidada` con la cuenta de prueba y con un correo sin cuenta, 10 de cada uno: diferencia de medias < 300 ms — resultado: no medido en producción; en local, por nginx y PHP-FPM, 6–23 ms de diferencia (nota de T027)
+  - CA12: `SELECT accion, resultado, actor_id = recurso_id FROM auditoria WHERE accion = 'contrasena_restablecida' ORDER BY id DESC LIMIT 1` da el evento — resultado: OK en producción el 2026-11-03 (usuario: «todo funciona»)
+  - P8: `grep -c '/contrasena/nueva/[^*]' dentissa-access.log` da 0 — resultado: 0, OK en producción el 2026-11-03 (usuario: «todo funciona»)
+  - P8 (excepción A28): `grep -c '/contrasena/nueva/[^*]' dentissa-error.log` — se anota el número; si no es 0, son fallos de PHP en esa ruta — resultado: no comprobado; queda para la próxima revisión de logs (OB8.b)
+- [x] T096 Aprobación humana para producción (después de liberar la 020, D1)
+  - nota: desplegado por el usuario el 2026-11-03 a las 20:53 para v0.14.0, por SSH, después de ver el resumen de la puerta; no escribió la frase de confirmación, lo ejecutó él mismo
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh <tag>` con el interruptor apagado, `verificar.sh`, comprobaciones de T095 con `RECUPERAR_CONTRASENA=true` y `aplicar-entorno.sh app`, y dejarlo encendido si todo pasa; vigilar 5xx en `/contrasena/*`, `restablecimiento.correo_fallido` y ráfagas de 429. Rollback: interruptor apagado y, si hace falta, `deploy/volver.sh <tag anterior>`
+  - nota: 2026-11-03 — `desplegar.sh v0.14.0` en 548 s, copia `dentissa-20261103-205342.sql.gz.gpg`; `verificar.sh` todo OK, interno y público. Desde fuera: `/login` con el estilo nuevo y `noindex`, `/contrasena/olvidada` 404 con el interruptor apagado. Encendido con `aplicar-entorno.sh app` y probado por el usuario: «todo funciona». Queda encendido.
+- [x] T098 Marcar spec como `released` y anotar el cambio en el Historial de la spec 001 (enlace «¿Olvidaste tu contraseña?», fuera de alcance de la 001)
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
