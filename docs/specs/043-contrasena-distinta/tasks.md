@@ -60,6 +60,10 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
   - nota: ids `contrasena-actual`, `contrasena-nueva` y `contrasena-confirmacion`, con su `label for`; mensajes `contrasena-actual-error` y `contrasena-nueva-error`. Se añadió también `autocomplete` (`current-password`, `new-password`), solo atributos. El test de accesibilidad fallaba antes («el campo tiene id») y pasa después; `PerfilCambioCorreoTest` sigue en verde. Archivo extra justificado: `ContrasenaDistintaTest`, que abre la página sin aserciones de sesión previas, porque consumen los errores.
 - [x] T024 Añadir `->middleware('role:cliente')` a la ruta `cliente.perfil.password` (plan D8) — routes/web.php — hecho cuando: pasa `test_el_personal_no_puede_cambiar_la_contrasena_por_el_perfil`, siguen en verde los tests del perfil con un cliente y `PerfilCambioCorreoTest`, y quitar el middleware un momento hace fallar el test del personal (CA8, TM5) — cubre: CA8 — depende: T011
   - nota: comprobado rompiendo: sin `role:cliente`, `test_el_personal_no_puede_cambiar_la_contrasena_por_el_perfil` falla (302 en lugar de 403) y pasa al restaurarlo (CA8, TM5). Los tests del perfil con un cliente y `PerfilCambioCorreoTest` siguen en verde (29 tests).
+- [ ] T025 Comprobar que la contraseña guardada no cambia comparando la cadena de `password_hash` antes y después (`assertSame`) en cada caso de `ContrasenaDistintaTest` que envía la actual como nueva (CA1, CA2, CA5, CA6 y CA7) — tests/Feature/ContrasenaDistintaTest.php — hecho cuando: los tests pasan y, rompiendo un momento `PerfilController::updatePassword` para que guarde la nueva antes de devolver el error «distinta», `…_perfil_con_la_actual_se_rechaza_junto_al_campo` falla — cubre: CA2 — depende: T021
+  - nota: añadida por /review: R1
+- [ ] T026 Añadir a `…_perfil_el_error_queda_asociado_al_campo_y_con_el_foco` el caso con error en la actual y en la nueva a la vez (actual vacía y nueva corta): un solo `autofocus`, en `password_actual`, y `password` con `aria-invalid` y `aria-describedby` hacia su mensaje — tests/Feature/ContrasenaDistintaTest.php — hecho cuando: el test pasa y quitar un momento el `@unless($errors->has('password_actual'))` de `cliente/perfil.blade.php` lo hace fallar (dos `autofocus`); revisión de accesibilidad: solo cambia el test — cubre: CA2 — depende: T022
+  - nota: añadida por /review: R2
 
 ## Integración y documentación
 - [x] T023 Pasar la verificación final: suite completa, Pint sobre los 4 PHP tocados (los dos controladores, `routes/web.php` y el test), gitleaks sobre el diff, semgrep `p/php`, `composer audit --locked`, `npm audit --audit-level=high` y revisión de que el diff no tiene `Log::` nuevos — sin archivos — hecho cuando: todo en verde y la única media de `composer audit` es la de la línea base (`symfony/mime`) — depende: T022, T024
@@ -69,7 +73,7 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
   - nota: el plan no preveía cambios, pero `docs/architecture.md` decía que `role:cliente` va ruta a ruta solo en cancelar y reprogramar: ahora incluye el cambio de contraseña del perfil (spec 043). Sin otros cambios de estructura.
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas — sin cambios (plan, Observabilidad y Rollout). En `docs/security.md`, RS2.a anota la ruta del cambio de contraseña del perfil con `role:cliente` (spec 043) y sigue pendiente; en `docs/roadmap.md` → Pendientes, `TrimStrings` recorta `password_actual` y `contrasena_correo` (043/A8)
   - nota: `deployment.md` y `observability.md` sin cambios (sin variables, logs, eventos ni métricas nuevos). `security.md`: RS2.a anota `PUT /cliente/perfil/password` con `role:cliente` (spec 043) y sigue `pendiente`. `roadmap.md` → Pendientes: 043/A8.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con la cuenta del usuario y sin escribir ninguna contraseña en ningún documento:
@@ -82,7 +86,7 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T010 | T020 |
-| CA2 | T011 | T021, T022 |
+| CA2 | T011, T025, T026 | T021, T022 |
 | CA3 | T010, T011 | T020, T021 |
 | CA4 | T010, T011 | T020, T021 |
 | CA5 | T010, T011 | T020, T021 |
@@ -108,4 +112,4 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
-| Error asociado al campo y foco en el primero con error | T011 (perfil), T010 (recuperación), T022 |
+| Error asociado al campo y foco en el primero con error | T011 (perfil), T010 (recuperación), T022, T026 |
