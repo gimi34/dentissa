@@ -43,9 +43,12 @@ class ContrasenaDistintaTest extends TestCase
         $this->flushSession();
     }
 
+    /** Hash guardado al crear cada cuenta, para comprobar que un rechazo no lo reescribe (/review R1). */
+    private array $hashes = [];
+
     private function crearUsuario(array $datos = []): Usuario
     {
-        return Usuario::create(array_merge([
+        $usuario = Usuario::create(array_merge([
             'nombre' => 'Persona',
             'apellido' => 'De Pruebas',
             'email' => 'distinta.'.Str::lower(Str::random(10)).'@example.test',
@@ -54,6 +57,18 @@ class ContrasenaDistintaTest extends TestCase
             'activo' => 1,
             'password_hash' => Hash::make(self::ACTUAL),
         ], $datos));
+        $this->hashes[$usuario->id] = $usuario->password_hash;
+
+        return $usuario;
+    }
+
+    /**
+     * La contraseña guardada es la misma cadena que al crear la cuenta. `Hash::check` con la actual no
+     * basta: daría true aunque se hubiera guardado de nuevo, con otra sal, la misma contraseña.
+     */
+    private function assertContrasenaIntacta(Usuario $usuario, string $mensaje = 'La contraseña guardada no cambió.'): void
+    {
+        $this->assertSame($this->hashes[$usuario->id], $usuario->fresh()->password_hash, $mensaje);
     }
 
     private function enlace(Usuario $usuario, string $token): string
@@ -115,7 +130,7 @@ class ContrasenaDistintaTest extends TestCase
         // El texto exacto se comprueba en la pantalla: `assertSessionHasErrors` con valores consume los
         // errores de la sesión antes de abrirla.
         $this->restablecer($usuario, $token, self::ACTUAL)->assertRedirect(url($this->enlace($usuario, $token)));
-        $this->assertContrasena($usuario, self::ACTUAL);
+        $this->assertContrasenaIntacta($usuario);
 
         $xpath = $this->xpath($this->get($this->enlace($usuario, $token))->assertOk()->getContent());
         $this->assertSame(self::MENSAJE, $this->texto($xpath, '//*[@id="clave-error"]'), 'El mensaje sale junto al campo de la contraseña nueva.');
@@ -133,6 +148,7 @@ class ContrasenaDistintaTest extends TestCase
         $this->restablecer($usuario, $this->token($usuario), self::ACTUAL)->assertSessionHasErrors('password');
 
         $this->assertSame(0, (int) $usuario->fresh()->version_sesion, 'No se cierra ninguna sesión.');
+        $this->assertContrasenaIntacta($usuario);
         Mail::assertNotSent(ContrasenaCambiada::class);
         $this->assertSame(0, DB::table('auditoria')->where('accion', 'contrasena_restablecida')->where('recurso_id', $usuario->id)->count(), 'No se registra un restablecimiento.');
     }
@@ -182,7 +198,7 @@ class ContrasenaDistintaTest extends TestCase
         $this->restablecer($usuario, $this->token($usuario), self::ACTUAL, 'otra-confirmacion')
             ->assertSessionHasErrors(['password_confirmation' => 'Las dos contraseñas no coinciden.'])
             ->assertSessionDoesntHaveErrors('password');
-        $this->assertContrasena($usuario, self::ACTUAL);
+        $this->assertContrasenaIntacta($usuario);
     }
 
     public function test_los_rechazos_cuentan_para_el_limite_del_enlace(): void
@@ -198,7 +214,7 @@ class ContrasenaDistintaTest extends TestCase
         $this->restablecer($usuario, $token, 'otra-contrasena-nueva')
             ->assertRedirect(url($this->enlace($usuario, $token)))
             ->assertSessionHas('espera', true);
-        $this->assertContrasena($usuario, self::ACTUAL);
+        $this->assertContrasenaIntacta($usuario);
     }
 
     public function test_con_un_enlace_de_otra_cuenta_nunca_se_compara(): void
@@ -212,8 +228,8 @@ class ContrasenaDistintaTest extends TestCase
         $respuesta->assertOk()->assertSessionHasNoErrors();
         $this->assertSame('Este enlace ya no sirve', $this->texto($this->xpath($respuesta->getContent()), '//h1'), 'El enlace se rechaza antes de comparar (TM3).');
         $this->assertStringNotContainsString(self::MENSAJE, $respuesta->getContent());
-        $this->assertContrasena($a, self::ACTUAL);
-        $this->assertContrasena($b, 'contrasena-de-la-otra');
+        $this->assertContrasenaIntacta($a);
+        $this->assertContrasenaIntacta($b);
     }
 
     public function test_la_contrasena_rechazada_no_queda_en_la_sesion(): void
@@ -260,7 +276,7 @@ class ContrasenaDistintaTest extends TestCase
 
         // El texto exacto se comprueba en la pantalla (ver el caso de la recuperación).
         $this->cambiar($usuario, self::ACTUAL, self::ACTUAL)->assertRedirect(self::PERFIL);
-        $this->assertContrasena($usuario, self::ACTUAL);
+        $this->assertContrasenaIntacta($usuario);
 
         $html = $this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/name="password"[^>]*>\s*<div[^>]*field-hint-error[^>]*>'.preg_quote(self::MENSAJE, '/').'/u', $html, 'El mensaje sale junto al campo de la contraseña nueva.');
@@ -292,7 +308,7 @@ class ContrasenaDistintaTest extends TestCase
         $usuario = $this->crearUsuario();
         $this->cambiar($usuario, self::ACTUAL, self::ACTUAL, 'otra-confirmacion')
             ->assertSessionHasErrors(['password' => 'Las contraseñas no coinciden.']);
-        $this->assertContrasena($usuario, self::ACTUAL);
+        $this->assertContrasenaIntacta($usuario);
 
         $this->flushSession();
         Cache::flush();
@@ -308,7 +324,7 @@ class ContrasenaDistintaTest extends TestCase
         $this->cambiar($usuario, 'no-es-la-actual', self::ACTUAL)
             ->assertSessionHasErrors('password_actual')
             ->assertSessionDoesntHaveErrors('password');
-        $this->assertContrasena($usuario, self::ACTUAL);
+        $this->assertContrasenaIntacta($usuario);
     }
 
     public function test_perfil_con_el_limite_agotado_no_revela_si_es_igual(): void
