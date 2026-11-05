@@ -5,6 +5,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-11-05
+
+### Changed
+- Al restablecer la contraseña con el enlace del correo o al cambiarla desde el perfil, la nueva tiene que ser distinta
+  de la actual: si es la misma, aparece «Elige una contraseña distinta de la actual» junto al campo y no cambia nada. En
+  el perfil, el aviso solo sale después de escribir bien la contraseña actual. Las cuentas creadas con Google, que no
+  tienen contraseña, siguen igual (spec 043).
+- En «Cambiar contraseña» del perfil, cada campo tiene su etiqueta asociada y el foco va al primer campo con error
+  (spec 043).
+
+### Security
+- Solo los pacientes pueden usar el cambio de contraseña de su perfil; el personal recibe un acceso denegado y cambia la
+  suya con «¿Olvidaste tu contraseña?» (spec 043).
+- `symfony/mime` 7.4.22 corrige CVE-2026-45070, una inyección de cabeceras en los correos (chore 2026-11-05-symfony-mime-7.4.22).
+
 ## [0.14.0] - 2026-11-03
 
 ### Added
