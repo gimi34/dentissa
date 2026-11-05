@@ -372,5 +372,18 @@ class ContrasenaDistintaTest extends TestCase
             $this->assertNotNull($error, "{$esperado}: aria-describedby apunta a su mensaje.");
             $this->assertStringContainsString('field-hint-error', $error->getAttribute('class'));
         }
+
+        // /review R2: con error en la actual y en la nueva a la vez, el foco va solo a la actual.
+        Cache::flush();
+        $this->flushSession();
+        $this->cambiar($usuario, '', 'corta')->assertRedirect(self::PERFIL);
+        $xpath = $this->xpath($this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent());
+
+        $enfocados = $xpath->query('//*[@autofocus]');
+        $this->assertSame(1, $enfocados->length, 'Los dos con error: un solo autofocus en la página.');
+        $this->assertSame('password_actual', $enfocados->item(0)->getAttribute('name'));
+        $nueva = $xpath->query('//input[@name="password"]')->item(0);
+        $this->assertSame('true', $nueva->getAttribute('aria-invalid'), 'La nueva sigue marcada con error.');
+        $this->assertNotNull($xpath->query('//*[@id="'.$nueva->getAttribute('aria-describedby').'"]')->item(0), 'La nueva sigue unida a su mensaje.');
     }
 }

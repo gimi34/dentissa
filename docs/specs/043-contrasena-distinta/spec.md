@@ -1,7 +1,7 @@
 ---
 id: 043
 slug: contrasena-distinta
-status: approved
+status: implemented
 created: 2026-11-03
 extends: [011, 041]
 ---
