@@ -119,24 +119,25 @@
 
             @if($user->password_hash)
                 <div style="margin-bottom:16px">
-                    <label class="field-label">Contraseña actual <span style="color:var(--p500)">*</span></label>
-                    <input type="password" name="password_actual"
-                           class="field {{ $errors->has('password_actual') ? 'field-error' : '' }}" required>
-                    @error('password_actual')<div class="field-hint field-hint-error">{{ $message }}</div>@enderror
+                    {{-- Spec 043 (D6): etiqueta asociada y, con error, el campo unido a su mensaje y con el foco. --}}
+                    <label class="field-label" for="contrasena-actual">Contraseña actual <span style="color:var(--p500)">*</span></label>
+                    <input type="password" id="contrasena-actual" name="password_actual" autocomplete="current-password"
+                           class="field {{ $errors->has('password_actual') ? 'field-error' : '' }}" required @error('password_actual') aria-invalid="true" aria-describedby="contrasena-actual-error" autofocus @enderror>
+                    @error('password_actual')<div class="field-hint field-hint-error" id="contrasena-actual-error">{{ $message }}</div>@enderror
                 </div>
             @endif
 
             <div class="grid-2">
                 <div>
-                    <label class="field-label">Nueva contraseña <span style="color:var(--p500)">*</span></label>
-                    <input type="password" name="password"
+                    <label class="field-label" for="contrasena-nueva">Nueva contraseña <span style="color:var(--p500)">*</span></label>
+                    <input type="password" id="contrasena-nueva" name="password" autocomplete="new-password"
                            class="field {{ $errors->has('password') ? 'field-error' : '' }}"
-                           placeholder="Mín. 8 caracteres" required>
-                    @error('password')<div class="field-hint field-hint-error">{{ $message }}</div>@enderror
+                           placeholder="Mín. 8 caracteres" required @error('password') aria-invalid="true" aria-describedby="contrasena-nueva-error" @unless($errors->has('password_actual')) autofocus @endunless @enderror>
+                    @error('password')<div class="field-hint field-hint-error" id="contrasena-nueva-error">{{ $message }}</div>@enderror
                 </div>
                 <div>
-                    <label class="field-label">Confirmar contraseña <span style="color:var(--p500)">*</span></label>
-                    <input type="password" name="password_confirmation" class="field"
+                    <label class="field-label" for="contrasena-confirmacion">Confirmar contraseña <span style="color:var(--p500)">*</span></label>
+                    <input type="password" id="contrasena-confirmacion" name="password_confirmation" class="field" autocomplete="new-password"
                            placeholder="Repite la contraseña" required>
                 </div>
             </div>

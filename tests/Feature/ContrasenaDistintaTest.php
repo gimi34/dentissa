@@ -343,7 +343,8 @@ class ContrasenaDistintaTest extends TestCase
         ] as $esperado => [$actual, $nueva]) {
             Cache::flush();
             $this->flushSession();
-            $this->cambiar($usuario, $actual, $nueva)->assertSessionHasErrors($esperado);
+            // Sin aserciones de sesión antes de abrir la página: consumen los errores.
+            $this->cambiar($usuario, $actual, $nueva)->assertRedirect(self::PERFIL);
             $xpath = $this->xpath($this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent());
 
             $enfocados = $xpath->query('//*[@autofocus]');
