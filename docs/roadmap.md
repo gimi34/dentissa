@@ -73,6 +73,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     a la izquierda (`calc(2 * var(--x))`);
   - ~~020/R8 `npm audit` de la 020 depende de la chore de `follow-redirects` 1.16.2~~ resuelto en
     v0.12.0 (chore 2026-10-30-chore-follow-redirects-1.16.2, PR #55).
+- 2026-11-11, vencimiento de EX4 (`docs/security.md`): `/chore` que sube `symfony/http-foundation`, `symfony/http-kernel` y
+  `symfony/routing` a la 7.4.23 (ese día cumple 7 días), quita `config.audit.ignore` de `composer.json` y retira EX4.
 - Spec 041 (2026-11-03), liberada en v0.14.0:
   - limpieza del interruptor `RECUPERAR_CONTRASENA`, encendido en producción desde el 2026-11-03: quitarlo
     del código y de `app.env` en una versión posterior; la migración `version_sesion` es solo expand y no
@@ -87,7 +89,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     minutos» escrito a mano; 041/R20 bloque de espera duplicado; 041/R21 UUID validado de dos maneras;
     041/R22 variable `$caso` sin usar; 041/R23 comprobador de tokens repetido; 041/R24 test de punta a
     punta del enlace del correo; 041/R25 token en `_previous.url` de la sesión (con RS10.c); 041/R27 señal
-    de abuso de los limitadores; 041/R28 `symfony/mime` CVE-2026-45070, con un `/chore`; 041/R29 test de
+    de abuso de los limitadores; ~~041/R28 `symfony/mime` CVE-2026-45070~~ (resuelto el 2026-11-05: `symfony/mime` 7.4.22, ficha
+    `2026-11-05-chore-symfony-mime-7.4.22`); 041/R29 test de
     contraste en la CI; 041/R30 destino perdido con la sesión anulada; 041/R31 fila del layout en el plan;
     041/R32 contraseña creada en el perfil de una cuenta de Google con una sesión ajena (RS5.c);
   - ~~041/R7, 041/R8, 041/R10, 041/R16, 041/R26 y 041/R33~~ resueltos en v0.14.0 (T055–T060); 041/R32 en

@@ -82,6 +82,16 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "ignore": {
+                "PKSA-24ph-xkrh-y79j": "EX4 en docs/security.md, vence el 2026-11-11: corregido en Symfony 7.4.23, que aun no cumple los 7 dias de antiguedad",
+                "PKSA-pr6q-2w5s-kzzf": "EX4 en docs/security.md, vence el 2026-11-11: corregido en Symfony 7.4.23, que aun no cumple los 7 dias de antiguedad",
+                "PKSA-nxjs-s6hn-vb6m": "EX4 en docs/security.md, vence el 2026-11-11: corregido en Symfony 7.4.23, que aun no cumple los 7 dias de antiguedad",
+                "PKSA-b2gg-vk1g-6d5q": "EX4 en docs/security.md, vence el 2026-11-11: corregido en Symfony 7.4.23, que aun no cumple los 7 dias de antiguedad",
+                "PKSA-3gxv-7xhq-mgmz": "EX4 en docs/security.md, vence el 2026-11-11: corregido en Symfony 7.4.23, que aun no cumple los 7 dias de antiguedad",
+                "PKSA-y8c5-1b7f-r1gj": "EX4 en docs/security.md, vence el 2026-11-11: corregido en Symfony 7.4.23, que aun no cumple los 7 dias de antiguedad"
+            }
         }
     },
     "minimum-stability": "stable",
