@@ -258,14 +258,13 @@ class ContrasenaDistintaTest extends TestCase
     {
         $usuario = $this->crearUsuario();
 
-        $this->cambiar($usuario, self::ACTUAL, self::ACTUAL)
-            ->assertRedirect(self::PERFIL)
-            ->assertSessionHasErrors(['password' => self::MENSAJE])
-            ->assertSessionMissing('success');
+        // El texto exacto se comprueba en la pantalla (ver el caso de la recuperación).
+        $this->cambiar($usuario, self::ACTUAL, self::ACTUAL)->assertRedirect(self::PERFIL);
         $this->assertContrasena($usuario, self::ACTUAL);
 
         $html = $this->actingAs($usuario)->get(self::PERFIL)->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/name="password"[^>]*>\s*<div[^>]*field-hint-error[^>]*>'.preg_quote(self::MENSAJE, '/').'/u', $html, 'El mensaje sale junto al campo de la contraseña nueva.');
+        $this->assertStringNotContainsString('Tu contraseña fue actualizada.', $html, 'Sin aviso de éxito.');
     }
 
     public function test_una_diferencia_minima_se_acepta_en_el_perfil(): void
