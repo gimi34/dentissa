@@ -1,36 +1,28 @@
 ---
 spec: 043-contrasena-distinta
-verdict: changes_requested
-round: 1
+verdict: approved
+round: 2
 date: 2026-11-05
-base: 9dba9ac
-head: cb4325c
+base: cb4325c
+head: d674e03
 human_signoff: no requerido
 ---
 
 # Review · 043 La contraseña nueva tiene que ser distinta de la actual
 
 ## Resumen
-`changes_requested`. El código cumple CA1–CA8 y el requisito no funcional, sin bloqueantes. Hay dos
-hallazgos importantes, los dos en tests que no prueban del todo lo que dicen (R1, R2). El usuario
-decide corregirlos antes de liberar, con T025 y T026, que solo tocan el test.
-
-Revisaron tres subagentes de contexto limpio:
-- A (spec, perfil `critical`);
-- C+D (constitución y calidad, perfil `standard`), que también hizo la revisión de accesibilidad,
-  porque la única vista del diff es la del perfil;
-- S (seguridad, perfil `critical`).
-
-No hay `design.md` (la spec no tiene pantallas nuevas), así que no se ejecuta `evaluate.mjs`. El
-rango incluye la fusión de `main` con el `/chore` de `symfony/mime` (PR #63): `composer.json` y
-`composer.lock` son de ese PR.
-Conteo: bloqueante 0 · importante 2 · menor 7
+`approved`. R1 y R2 están corregidos con T025 y T026, que solo tocan el test, y cada uno se comprobó
+rompiendo lo que protege. No aparece ningún hallazgo nuevo. Esta ronda `--rerun` la hice sin
+subagentes, releyendo desde cero el diff de `cb4325c..d674e03`, que solo cambia
+`ContrasenaDistintaTest` (38 líneas). Trivy ya se ejecutó. Los siete menores de la ronda 1 quedan
+aceptados para el roadmap. La ronda 1 está en [history/review.r1.md](history/review.r1.md).
+Conteo: bloqueante 0 · importante 0 · menor 7 (aceptados)
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `php artisan test` (suite completa, tras fusionar `main`) | ✅ 719 en verde, 12 140 aserciones (línea base 702, sin fallos) |
-| `ContrasenaDistintaTest` | ✅ 17 en verde, ejecutado varias veces en `/implement` |
+| `php artisan test` (suite completa, con T025 y T026) | ✅ 719 en verde, 12 148 aserciones (línea base 702, sin fallos) |
+| `ContrasenaDistintaTest` | ✅ 17 en verde (139 aserciones), ejecutado varias veces en `/implement` y en esta ronda |
 | `pint --test` sobre los 4 PHP del diff | ✅ |
 | `python .ai/bin/aidd.py validate docs/specs/043-contrasena-distinta` | ✅ 0 errores |
 | build (`npm run build`) | ➖ no aplica: el diff no toca assets |
@@ -39,14 +31,14 @@ Conteo: bloqueante 0 · importante 2 · menor 7
 | CA | Test | Estado | Nota |
 |---|---|---|---|
 | CA1 | `ContrasenaDistintaTest::test_restablecer_con_la_actual_se_rechaza_junto_al_campo`, `…_no_cierra_sesiones_ni_avisa_ni_audita`, `…_tras_el_rechazo_el_enlace_sigue_sirviendo` | ✅ | |
-| CA2 | `…_perfil_con_la_actual_se_rechaza_junto_al_campo` | ⚠ | Cumple; «no cambia» se comprueba con la misma contraseña enviada (R1) |
+| CA2 | `…_perfil_con_la_actual_se_rechaza_junto_al_campo` | ✅ | R1 corregido: el hash guardado se compara con `assertSame` (T025) |
 | CA3 | `…_una_diferencia_minima_se_acepta_en_la_recuperacion`, `…_en_el_perfil` | ✅ | Datos solo ASCII; límite de 72 bytes en R8 |
 | CA4 | `…_una_cuenta_sin_contrasena_fija_la_suya_por_el_enlace`, `…_crea_la_suya_en_el_perfil` | ✅ | |
 | CA5 | `…_los_errores_de_siempre_van_antes_en_la_recuperacion`, `…_en_el_perfil` | ✅ | El primer subcaso de la recuperación es débil (R3) |
 | CA6 | `…_perfil_sin_la_actual_correcta_no_revela_si_es_igual`, `…_perfil_con_el_limite_agotado_no_revela_si_es_igual` | ✅ | |
 | CA7 | `…_los_rechazos_cuentan_para_el_limite_del_enlace` | ✅ | El residuo es por origen y no por enlace (R9) |
 | CA8 | `…_el_personal_no_puede_cambiar_la_contrasena_por_el_perfil` | ✅ | Paciente permitido en los de CA2 y CA3 |
-| RNF | `…_perfil_el_error_queda_asociado_al_campo_y_con_el_foco`; recuperación en el de CA1 | ⚠ | Sin caso de error en la actual y en la nueva a la vez (R2) |
+| RNF | `…_perfil_el_error_queda_asociado_al_campo_y_con_el_foco`; recuperación en el de CA1 | ✅ | R2 corregido: caso con los dos errores a la vez (T026) |
 
 ## Conformidad con el plan
 - Cambios fuera del plan: ninguno de esta spec.
@@ -58,7 +50,7 @@ Conteo: bloqueante 0 · importante 2 · menor 7
 | Principio | Resultado | Evidencia |
 |---|---|---|
 | P1 Spec aprobada antes de código | ✅ | Spec, plan y tareas aprobados el 2026-11-04 y `/analyze` r2 `pass` antes de T010 |
-| P2 Test que falla antes y pasa después | ⚠ | Cada control comprobado rompiéndolo (notas de T020, T021 y T024). R1 y R2: dos aserciones que no fallarían con lo protegido roto |
+| P2 Test que falla antes y pasa después | ✅ | Cada control comprobado rompiéndolo (notas de T020, T021, T024, T025 y T026); R1 y R2 corregidos |
 | P3 Autorización en servidor | ✅ | `routes/web.php:192` lleva `role:cliente`, y `RoleMiddleware` responde `abort(403)`. Test del denegado (admin, dentista y asistente) y del permitido. En la recuperación, la comparación usa la cuenta que validó el token |
 | P4 Entrada validada | ✅ | La comparación va después de las reglas de siempre; `after()` solo actúa sin errores; sin SQL nuevo |
 | P5 Nada sensible en el repo | ✅ | gitleaks sin fugas; contraseñas de prueba ficticias |
@@ -75,7 +67,7 @@ Conteo: bloqueante 0 · importante 2 · menor 7
 | semgrep 1.99.0 `p/php` (PHP del diff) | ✅ 0 hallazgos |
 | `composer audit --locked` (comando de la CI) | ✅ código 0. Crít: 0 · alta: 0 · media: 0 abiertas (la de `symfony/mime` se corrigió en PR #63). Sin gravedad: 6, ignoradas por EX4 |
 | `npm audit --audit-level=high` | ✅ 0 |
-| trivy 0.57.1 `fs` HIGH, CRITICAL | ❌ no se ejecutó: falló la descarga de su base de datos (`mirror.gcr.io`, `unexpected EOF`). Se reintenta en `--rerun`. Esta spec no toca imágenes ni Dockerfile |
+| trivy 0.57.1 `fs` HIGH, CRITICAL | ✅ código 0 con `--exit-code 1`: ninguna alta ni crítica. En la ronda 1 falló la descarga de la base de datos; repetido en esta ronda |
 
 | Tema OWASP | Resultado | Evidencia |
 |---|---|---|
@@ -94,11 +86,15 @@ Conteo: bloqueante 0 · importante 2 · menor 7
 - Datos sensibles en logs del código tocado: ninguno; no hay `Log::` nuevos.
 - `request_id` presente en los logs nuevos: no aplica.
 
+## Seguimiento de la ronda 1
+| ID | Estado | Evidencia |
+|---|---|---|
+| R1 | corregido | T025: `assertContrasenaIntacta` compara con `assertSame` el hash guardado al crear la cuenta en los nueve casos que envían la actual. Si `updatePassword` guarda la nueva antes de devolver «distinta», el test de CA2 falla |
+| R2 | corregido | T026: caso con la actual vacía y la nueva corta: un solo `autofocus`, en `password_actual`. Sin el `@unless` de la vista, hay dos y el test falla |
+
 ## Hallazgos
 | ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
 |---|---|---|---|---|
-| R1 | importante | `tests/Feature/ContrasenaDistintaTest.php:263` (y 118, 185, 295, 311) | Después de enviar la actual como nueva, `assertContrasena($usuario, self::ACTUAL)` no demuestra que la contraseña no se guardó: `Hash::check(ACTUAL)` da true aunque el controlador hubiera hecho el `UPDATE` con otra sal. En el perfil nada más lo cubre; en CA1 lo cubre `version_sesion`. | Guardar `password_hash` antes del envío y comprobar con `assertSame` que la cadena sigue siendo la misma, en cada caso que envía la actual. |
-| R2 | importante | `tests/Feature/ContrasenaDistintaTest.php:343-359`; `resources/views/cliente/perfil.blade.php:135` | Ningún caso tiene error en la actual y en la nueva a la vez, así que el `@unless($errors->has('password_actual'))` del `autofocus` de `password` no se ejerce. Si se quitara, habría dos `autofocus` y el test seguiría en verde. | Añadir un caso con los dos errores (actual vacía y nueva corta): un solo `autofocus`, en `password_actual`, y `password` con `aria-invalid` y `aria-describedby`. |
 | R3 | menor | `tests/Feature/ContrasenaDistintaTest.php:175-176` | En el primer subcaso de CA5 de la recuperación, `assertSessionHasErrors([clave => valor])` solo comprueba que el mensaje está entre los de `password`; pasaría aunque también saliera «distinta». Hoy el segundo subcaso detecta la rotura. | Comprobar en la pantalla que `#clave-error` contiene solo el error de longitud. |
 | R4 | menor | `tests/Feature/ContrasenaDistintaTest.php:351` | El test de accesibilidad del perfil prueba el error de `password` con la regla de longitud (`'corta'`), no con «distinta», el error que añade la 043. | Añadir al bucle el caso de la actual repetida, con el mensaje exacto en `#contrasena-nueva-error`. |
 | R5 | menor | `tests/Feature/ContrasenaDistintaTest.php:~268` | La comprobación de CA2 en la pantalla usa una regex que depende del orden de los atributos y del marcado que sigue al campo. | Usar `xpath` sobre `#contrasena-nueva-error`, como en la recuperación. |
@@ -119,6 +115,7 @@ Conteo: bloqueante 0 · importante 2 · menor 7
 - SCA: ninguna crítica ni alta abierta; EX4 vigente hasta el 2026-11-11.
 
 ## Tareas añadidas
+De la ronda 1, las dos hechas:
 - T025 ← R1
 - T026 ← R2
 
