@@ -44,6 +44,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 040 | [promociones](040-promociones/spec.md) | Transversal | approved | — | — (2026-10-20) |
 | 041 | [recuperar-contrasena](041-recuperar-contrasena/spec.md) | Identidad | released (v0.14.0) | — | — (2026-10-27) |
 | 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
+| 043 | [contrasena-distinta](043-contrasena-distinta/spec.md) | Identidad | implemented | — | — (2026-11-03) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·

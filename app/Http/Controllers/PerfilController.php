@@ -115,6 +115,11 @@ class PerfilController extends Controller
             return back()->withErrors(['password_actual' => $error]);
         }
 
+        // Spec 043 (D2): solo después de acreditar la actual, para que el mensaje no revele si se adivinó.
+        if ($user->password_hash && Hash::check($data['password'], $user->password_hash)) {
+            return back()->withErrors(['password' => 'Elige una contraseña distinta de la actual']);
+        }
+
         DB::table('usuarios')->where('id', $user->id)->update([
             'password_hash' => Hash::make($data['password']),
             'actualizado_en' => now(),

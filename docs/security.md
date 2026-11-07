@@ -183,7 +183,7 @@ El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usar
 Evidencia: `routes/web.php:147`, `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; reprogramar del paciente, `GET` y `PATCH /cliente/citas/{id}/reprogramar`, con `role:cliente`: spec 028; resto del grupo → spec 015)
+- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; reprogramar del paciente, `GET` y `PATCH /cliente/citas/{id}/reprogramar`, con `role:cliente`: spec 028; cambio de contraseña del perfil, `PUT /cliente/perfil/password`, con `role:cliente`: spec 043; resto del grupo → spec 015)
 - RS2.b `PerfilController::update` no crea ficha de paciente para usuarios que no son cliente — estado: pendiente
 
 ### RS3 · Alta — Usuarios desactivados conservan su sesión (A07 Authentication Failures)

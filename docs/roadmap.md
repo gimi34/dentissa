@@ -95,6 +95,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     041/R32 contraseña creada en el perfil de una cuenta de Google con una sesión ajena (RS5.c);
   - ~~041/R7, 041/R8, 041/R10, 041/R16, 041/R26 y 041/R33~~ resueltos en v0.14.0 (T055–T060); 041/R32 en
     parte (límite de fallos en el perfil).
+- Spec 043 (2026-11-05): 043/A8 `TrimStrings` recorta `password_actual` y `contrasena_correo`; una contraseña que empieza o
+  acaba con un espacio (posible al fijarla por la recuperación) no se puede acreditar en el perfil. Anterior a la 043; posible `/fix`.
 - Spec 038 (2026-11-01), aceptados sin tarea de `/review` (deuda menor, liberada en v0.13.0). Los de la
   ronda 3 (R9–R29) se refieren a la composición de esa ronda, sustituida por la ronda 6 (`c5`): al
   retomarlos, comprobar primero si siguen aplicando.

@@ -134,6 +134,15 @@ class RecuperarContrasenaController extends Controller
             'password_confirmation.same' => 'Las dos contraseñas no coinciden.',
         ]);
 
+        // Spec 043 (D1, D4): sin otros errores, la nueva no puede ser la actual de la cuenta del enlace, ya
+        // validada por el token. `Hash::check` solo distingue los primeros 72 bytes (A13) y da false sin hash.
+        $validador->after(function ($validador) use ($usuario) {
+            if ($validador->errors()->isEmpty() && $usuario->password_hash
+                && Hash::check((string) $validador->getData()['password'], $usuario->password_hash)) {
+                $validador->errors()->add('password', 'Elige una contraseña distinta de la actual');
+            }
+        });
+
         // Nunca back(): con no-referrer el POST no lleva Referer (/analyze A26).
         if ($validador->fails()) {
             return redirect()->route('contrasena.nueva', ['token' => $token, 'cuenta' => $cuenta])->withErrors($validador);

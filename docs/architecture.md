@@ -82,8 +82,8 @@ plazo de `ClienteCitasController` y `AppServiceProvider` usa `AuthController::or
 mensaje de demasiados intentos. Fuera de los controladores, `RegistrarFalloAcceso` usa
 `AuthController::origenLimite` y `sujetoLimite` (spec 032). El resto se acopla a través del esquema compartido. Los mismos
 controladores sirven a varios roles bajo prefijos `/admin`, `/dentista`, `/asistente`; `/cliente`
-tiene su propio grupo, que solo exige `auth` (`role:cliente` va ruta a ruta en cancelar y
-reprogramar; RS2.a). Otras rutas: `/` redirige según el rol, `/admin/reportes` sirve
+tiene su propio grupo, que solo exige `auth` (`role:cliente` va ruta a ruta en cancelar,
+reprogramar y el cambio de contraseña del perfil, spec 043; RS2.a). Otras rutas: `/` redirige según el rol, `/admin/reportes` sirve
 `placeholder.blade.php`, `/admin/auditoria` es la consulta del registro de auditoría (spec 020), `/_disenio/020/{pantalla}` es una vista previa del diseño que solo existe con `APP_ENV=local`, y `/up` es la ruta de salud que comprueba `deploy/verificar.sh`.
 
 ## Flujo principal
