@@ -59,7 +59,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
   El grupo `cliente` solo lleva `auth` y pone `role:cliente` ruta a ruta (RS2.a en docs/security.md).
 - Vistas en `resources/views/<modulo>/` en kebab-case, con tres layouts: `layouts/app.blade.php` para la
   app, `layouts/acceso.blade.php` para el inicio de sesión y la recuperación de contraseña (spec 041, con
-  `public/css/acceso.css`) y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038, con
+  `public/css/acceso.css`) y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038; `/galeria`, spec 039; con
   `public/css/publico.css` y `public/js/publico.js` con `defer`; la página está completa sin él). El
   registro sigue con su propio HTML y `auth.css`.
 - Código nuevo: validación en servidor con `$request->validate()` y las reglas en la clase de
@@ -80,10 +80,11 @@ Nunca escribas secretos en el código, los logs ni los docs.
 ## Mapa del repositorio
 | Ruta | Contenido |
 |---|---|
-| `app/Http/Controllers/` | 13 controladores (más el `Controller` base; `PaginasPublicasController`, spec 038) con casi toda la lógica (ver docs/architecture.md) |
+| `app/Http/Controllers/` | 14 controladores (más el `Controller` base; `PaginasPublicasController`, spec 038; `FotosGaleriaController`, spec 039) con casi toda la lógica (ver docs/architecture.md) |
 | `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación y horario (specs 025–028) |
 | `app/Autorizacion/` | alcance del personal y Gates de citas y de personal (ADR 0003) |
 | `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
+| `app/Galeria/` | galería de trabajos: `ProcesadorFoto` (dos WebP sin datos de la cámara) y `Galeria` (publicar, mover y quitar con auditoría), con el disco `galeria` en `storage/app/galeria` (spec 039, ADR 0009) |
 | `app/Listeners/` | fallos de acceso al canal `seguridad` (spec 032) y actor del `Context` de los logs (spec 020) |
 | `app/Rules/`, `app/Console/Commands/` | regla `HoraFinPosterior`; comando `dentissa:rotar-credenciales` |
 | `app/Http/Middleware/` | `RoleMiddleware` (rol), `PreventBackHistory` (no-cache), `SesionVigente` (cierra las sesiones de una cuenta que restableció su contraseña; spec 041) |
