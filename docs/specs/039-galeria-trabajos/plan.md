@@ -42,7 +42,7 @@ La interfaz construye el candidato `c3` aprobado (`design.md`):
 | P9 La interfaz usa solo el sistema de diseño | ✅ | La primera tarea aplica a `system.md` (1.12.0) y `system.html` los «Cambios a incorporar al sistema» de `design.md` (`--foto-ratio`, `--carrusel-foto-w`, `--thumb-w` y los componentes). Las pantallas usan solo tokens. WCAG 2.1 AA medido con `evaluate.mjs` y `design/criterios.json` | test: `GaleriaCssTest` (sin literales en las reglas nuevas de `publico.css` y `app.css`; tokens nuevos en `system.md`) · manual: `evaluate.mjs` con `design/medir.mjs` sobre la build, y `node docs/design/capturar.mjs --medir` (toca `layouts/app.blade.php`) |
 | P10 Las rutas indexables son descubribles | ✅ | `/galeria` es indexable: contenido en el HTML del servidor, título y descripción propios, una canónica absoluta desde `seo.site_url`, sin `noindex` y ≤ 100 kB de JavaScript. Ver Descubribilidad | test: `PaginaGaleriaTest::test_metadatos_de_galeria`, `PaginasPublicasTest` (título y descripción únicos con `/galeria`) · manual: Lighthouse SEO ≥ 90 en `/review` |
 
-Conteo: ✅ 10 · ➖ 0 · ❌ 0.
+Conteo: 10 cumplen, ninguno no aplica y ninguno se viola.
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
