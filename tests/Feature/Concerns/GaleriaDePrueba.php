@@ -127,6 +127,17 @@ trait GaleriaDePrueba
         return $this->subida($this->codificar($imagen, 'jpg', 90), 'grano.jpg');
     }
 
+    /**
+     * Un JPEG válido de más de `$bytes` bytes: relleno tras el final de la imagen, que el tipo y
+     * las medidas no ven. Así solo falla la regla del peso.
+     */
+    protected function jpgPesado(int $bytes = 5300000): UploadedFile
+    {
+        $jpeg = $this->codificar($this->lienzoPartido(800, 600), 'jpg');
+
+        return $this->subida($jpeg.str_repeat("\0", max(0, $bytes - strlen($jpeg))), 'pesada.jpg');
+    }
+
     /** Un archivo de texto que se hace pasar por foto. */
     protected function textoComoJpg(): UploadedFile
     {
