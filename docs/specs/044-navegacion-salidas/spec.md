@@ -1,7 +1,7 @@
 ---
 id: 044
 slug: navegacion-salidas
-status: draft
+status: approved
 created: 2026-11-08
 extends: [001, 002, 012, 038, 041]
 ---
@@ -139,3 +139,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | CA5 reemplaza 038 CA2 (inicio con sesión); CA8 conserva la explicación concreta; vuelve a `draft` | Contradicción hallada en /plan 044, resuelta por el usuario |
 | 2026-11-08 | Aprobada de nuevo | Aprobación del usuario |
 | 2026-11-08 | CA5 reemplaza también 001 CA5; CA6, CA9 y CA10 precisados; excepción P7 del logout; RNF de las páginas de error acotado; vuelve a `draft` | /analyze r1: A2, A4, A5, A8, A9, A11 (decisiones del usuario) |
+| 2026-11-08 | Aprobada de nuevo | Aprobación del usuario |
