@@ -26,7 +26,7 @@ olvido es una cita que no se agenda o un turno de trabajo que empieza sin acceso
 ## Criterios de aceptación
 - [x] CA1 · Dado un visitante en el inicio de sesión, cuando pulsa «¿Olvidaste tu contraseña?», entonces llega a una pantalla donde escribe su correo para pedir el enlace, con una forma visible de volver al inicio de sesión.
 - [x] CA2 · Dado el correo de una cuenta activa, de cualquier rol, cuando pide el enlace, entonces la pantalla muestra el mensaje de confirmación genérico y en menos de 5 minutos llega a ese buzón (también en producción) un correo en español de Dentissa con un enlace personal de restablecimiento, que indica que caduca en 60 minutos y que puede ignorarse si no lo pidió.
-- [x] CA3 · Dado un enlace vigente, cuando la persona escribe una contraseña nueva de al menos 8 caracteres y la misma confirmación, entonces la contraseña se reemplaza, vuelve al inicio de sesión con un mensaje de éxito, puede entrar con la nueva y ya no con la anterior.
+- [x] CA3 · Dado un enlace vigente, cuando la persona escribe una contraseña nueva de al menos 8 caracteres y la misma confirmación, entonces la contraseña se reemplaza, vuelve al inicio de sesión con un mensaje de éxito, puede entrar con la nueva y ya no con la anterior. → reemplazado en parte por 043 CA1 (la nueva tiene que ser distinta de la actual)
 - [x] CA4 · Dada una contraseña nueva de menos de 8 caracteres, o una confirmación que no coincide, cuando la envía, entonces se rechaza con el error junto al campo, la contraseña no cambia y el enlace sigue sirviendo mientras esté vigente.
 - [x] CA5 · Dado un enlace caducado (más de 60 minutos), ya usado o sustituido por otro pedido después, cuando se abre o se envía, entonces se rechaza con un mensaje que lo explica y ofrece pedir uno nuevo, y la contraseña no cambia.
 - [x] CA6 · Dada una cuenta creada con Google y sin contraseña, cuando pide el enlace y fija una contraseña, entonces puede entrar con su correo y esa contraseña, y sigue pudiendo entrar con Google.
@@ -167,3 +167,4 @@ primera pantalla 25, sistema 25, lectura 15, plantilla 10 (ver "Decisiones").
 | 2026-11-03 | Implementada de nuevo con T045–T054; /review ronda 2: `approved` | /review |
 | 2026-11-03 | El usuario corrige antes de liberar 7 menores de la review (R7, R8, R10, R16, R26, R32, R33) | usuario |
 | 2026-11-03 | Liberada en v0.14.0; recuperación encendida en producción y probada por el usuario | /release |
+| 2026-11-07 | Comportamiento modificado por 043 en v0.14.1: la contraseña nueva tiene que ser distinta de la actual (reemplaza en parte CA3, amplía CA4) | /release |

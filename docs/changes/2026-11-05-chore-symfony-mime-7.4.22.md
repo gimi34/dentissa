@@ -1,10 +1,11 @@
 ---
 lane: chore
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released             # open → done → released · escalated (→ escalated_to)
 base: b9fb733                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: []                  # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir
 escalated_to: null           # NNN de la spec si el cambio se escaló al flujo completo
+released: v0.14.1 (2026-11-07)
 ---
 
 # Chore: `symfony/mime` 7.4.22 y excepción EX4 para los avisos de Symfony del 2026-11-04

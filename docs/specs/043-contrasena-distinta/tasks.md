@@ -78,11 +78,17 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
 - [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con la cuenta del usuario y sin escribir ninguna contraseña en ningún documento:
-  - CA1: pedir un enlace y escribir la contraseña actual → «Elige una contraseña distinta de la actual» junto al campo; después fijar otra y entrar con ella — resultado: —
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh v0.14.1`, `verificar.sh` y la comprobación de T095; vigilar 5xx en `/contrasena/nueva` y `/cliente/perfil/password`. Rollback: `deploy/desplegar.sh v0.14.0`
-- [ ] T098 Marcar spec como `released` y anotar el cambio en el Historial de las specs 011 y 041
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con la cuenta del usuario y sin escribir ninguna contraseña en ningún documento:
+  - CA1: pedir un enlace y escribir la contraseña actual → «Elige una contraseña distinta de la actual» junto al campo; después fijar otra y entrar con ella — resultado: el usuario confirma el 2026-11-07 en producción que se rechaza la misma contraseña (sin ninguna contraseña en los documentos)
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-07 17:25 para v0.14.1
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh v0.14.1`, `verificar.sh` y la comprobación de T095; vigilar 5xx en `/contrasena/nueva` y `/cliente/perfil/password`. Rollback: `deploy/desplegar.sh v0.14.0`
+  - nota: el primer intento del 2026-11-07 se detuvo en «el clon tiene cambios sin confirmar» sin tocar nada: dos archivos vacíos sin seguimiento (`Verificación`, del 2026-11-03, y `t}\`, del 2026-11-05), creados al pegar texto en la terminal. El usuario los revisó y borró, y desplegó la v0.14.1 (tag sobre `3188f3e`)
+  - nota: el rollback correcto es `deploy/volver.sh v0.14.0` (`docs/deployment.md` → Rollback), sin copia porque no hay migraciones; el texto de la tarea decía `desplegar.sh`
+  - nota: A15 — la compatibilidad es total para pacientes; el personal recibe 403 en `PUT /cliente/perfil/password` (CA8)
+- [x] T098 Marcar spec como `released` y anotar el cambio en el Historial de las specs 011 y 041
+  - nota: A14 — el Historial de la 011 dice que CA8 de la 043 aplica `role:cliente` solo a `PUT /cliente/perfil/password` y que 011 CA7 (`PUT /cliente/perfil`) sigue pendiente (RS2.a, RS2.b → spec 015)
+  - nota: R8 — CA3 de la spec dice ahora «72 bytes (72 caracteres sin acentos)»
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

@@ -57,3 +57,4 @@ Hoy no se registran cambios de perfil ni de contraseña. Eventos requeridos en `
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-11-07 | Comportamiento modificado por 043 en v0.14.1: la contraseña nueva del perfil tiene que ser distinta de la actual (amplía CA3), y CA8 de la 043 exige `role:cliente` solo en `PUT /cliente/perfil/password`; CA7 (`PUT /cliente/perfil`) sigue pendiente (→ spec 015) | /release |

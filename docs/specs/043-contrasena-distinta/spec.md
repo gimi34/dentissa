@@ -1,8 +1,9 @@
 ---
 id: 043
 slug: contrasena-distinta
-status: implemented
+status: released
 created: 2026-11-03
+released: v0.14.1 (2026-11-07)
 extends: [011, 041]
 ---
 
@@ -25,7 +26,7 @@ resto de las pantallas del paciente sigue igual (→ spec 015).
 ## Criterios de aceptación
 - [x] CA1 · Dado un enlace de restablecimiento vigente de una cuenta con contraseña, cuando la persona escribe como nueva, con la misma confirmación, exactamente la contraseña actual, entonces se rechaza con «Elige una contraseña distinta de la actual» junto al campo de la contraseña nueva, el foco va a ese campo, la contraseña no cambia, no se cierra ninguna sesión, no llega el aviso de contraseña cambiada y el enlace sigue sirviendo mientras esté vigente (reemplaza en parte 041 CA3 y amplía 041 CA4).
 - [x] CA2 · Dado un paciente con contraseña en su perfil, cuando escribe su contraseña actual correcta y como nueva, con la misma confirmación, esa misma contraseña, entonces se rechaza con «Elige una contraseña distinta de la actual» junto al campo de la contraseña nueva y la contraseña no cambia (amplía 011 CA3).
-- [x] CA3 · Dada una contraseña nueva que difiere de la actual en cualquiera de sus primeros 72 caracteres, también solo en una mayúscula o en un espacio, cuando se envía por el enlace o desde el perfil y cumple las demás reglas, entonces se acepta como hasta ahora.
+- [x] CA3 · Dada una contraseña nueva que difiere de la actual en cualquiera de sus primeros 72 bytes (72 caracteres sin acentos), también solo en una mayúscula o en un espacio, cuando se envía por el enlace o desde el perfil y cumple las demás reglas, entonces se acepta como hasta ahora.
 - [x] CA4 · Dada una cuenta sin contraseña (creada con Google), cuando fija una por el enlace o la crea desde el perfil, entonces nunca aparece «Elige una contraseña distinta de la actual» y se acepta como hasta ahora (041 CA6 y 011 CA4 sin cambios).
 - [x] CA5 · Dada una contraseña nueva demasiado corta o una confirmación que no coincide, cuando se envía, entonces se muestran los errores de siempre y no el de «distinta de la actual»: la comparación solo se hace con una contraseña que cumple las demás reglas.
 - [x] CA6 (abuso) · Como alguien que usa una sesión ajena en el perfil, escribo una contraseña actual equivocada y como nueva una que sospecho que es la actual, para averiguarlo → solo sale el error de la contraseña actual, con el límite de 5 fallos por minuto de la 041; el mensaje «distinta de la actual» solo aparece después de escribir bien la actual.
@@ -93,3 +94,6 @@ error que ya usan la pantalla de contraseña nueva de la 041 y el perfil (sistem
 | 2026-11-04 | CA8 (rol de paciente en el cambio de contraseña del perfil), «Cobertura de riesgos» con RS2, CA3 con el límite de 72 caracteres | /analyze ronda 1: A1, A7, A11 |
 | 2026-11-04 | Aprobada de nuevo, con spec, plan y tareas | usuario |
 | 2026-11-05 | Implementada: CA1–CA8 con sus tests en verde | /implement |
+| 2026-11-05 | /review ronda 1: `changes_requested` (R1, R2 → T025, T026); ronda 2: `approved` | /review |
+| 2026-11-07 | CA3 dice «72 bytes (72 caracteres sin acentos)», el límite real de bcrypt | /review R8 |
+| 2026-11-07 | Liberada en v0.14.1; comprobada en producción por el usuario | /release |
