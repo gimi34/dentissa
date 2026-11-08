@@ -18,6 +18,7 @@ use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ServiciosController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Middleware\PreventBackHistory;
 
 // ── Auth ────────────────────────────────────────────────────────────────
 Route::get('/login', [AuthController::class,  'loginForm'])->name('login');
@@ -48,6 +49,11 @@ if (config('acceso.recuperar_contrasena')) {
 // ── Páginas públicas (spec 038) ─────────────────────────────────────────
 Route::get('/', [PaginasPublicasController::class, 'inicio'])->name('inicio');
 Route::get('/servicios', [PaginasPublicasController::class, 'servicios'])->name('servicios.publicos');
+// Spec 039: la galería y cada foto. La foto va sin PreventBackHistory, que pisaría su
+// Cache-Control (plan → «Entrega de las fotos», /analyze A1).
+Route::get('/galeria', [PaginasPublicasController::class, 'galeria'])->name('galeria.publica');
+Route::get('/galeria/fotos/{foto}/{ancho}', [PaginasPublicasController::class, 'foto'])->name('galeria.foto')
+    ->whereUuid('foto')->whereIn('ancho', ['800', '1600'])->withoutMiddleware(PreventBackHistory::class);
 
 // ── Vista previa del diseño (spec 020, D19) ─────────────────────────────
 // Solo en local (TM15): datos de muestra, sin sesión ni base, para medir con design/medir.mjs.
