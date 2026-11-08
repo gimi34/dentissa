@@ -1,7 +1,7 @@
 ---
 spec: 039-galeria-trabajos
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 039 Galería de trabajos
