@@ -118,3 +118,9 @@
 .btn-quitar { color: var(--red); border-color: var(--red); }
 .btn-quitar:hover { background: var(--red-bg); }
 .foto-tarjeta__estado svg { color: var(--p600); }
+
+/* c3 refinado · La casilla de consentimiento solo aparece al responder «Sí» (sin :has(), siempre visible). */
+.campo-paciente:not(:has(input[value="si"]:checked)) + .consentimiento { display: none; }
+/* c3 refinado · El diálogo de quitar respeta el margen lateral y el radio de las tarjetas. */
+.modal-overlay { box-sizing: border-box; padding-inline: var(--space-4); }
+.modal-box.card { border-radius: var(--radius); }

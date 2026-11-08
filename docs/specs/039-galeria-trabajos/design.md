@@ -1,11 +1,11 @@
 ---
 spec: 039-galeria-trabajos
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: loop        # loop: ciclo por criterios · none: sin diseño nuevo (motivo en "Resultado")
 threshold: 80            # puntuación mínima de la rúbrica (de .ai/project.yaml → design)
 floor: 3                 # nota mínima de cada punto de la rúbrica
 budget: 5                # candidatos como máximo
-accepted: c3             # pendiente de la decisión del usuario sobre K11 en el inicio (ver Resultado y Decisiones)
+accepted: c3             # con K11 del inicio aceptado por el usuario como anterior a la 039 (Decisiones)
 score: 80                # puntuación del aceptado
 system_version: 1.11.0
 created: 2026-11-07
@@ -39,7 +39,7 @@ solo vio las capturas y comparó con el mejor anterior.
 |---|---|---|---|---|---|
 | `c1` | 92/96 | 40/42 | — | descartado: `G-toque` en las cuatro pantallas de la gestión (radios y casilla de 16 px); K5 («Subir foto» también era el título del formulario, debajo de la primera pantalla a 320 y 390 px); K11 en el inicio | `.ai/inspect/039-c1/resumen.md` |
 | `c2` | 96/96 | 41/42 | 75 | descartado: rúbrica por debajo de 80 (jerarquía 4, primera pantalla 4, sistema 4, lectura 4, plantilla 3, riqueza 3). Problemas: el mosaico de `/galeria` dejaba huecos; el selector de archivo nativo y sin error propio; «Quitar» con relleno en cada tarjeta | `.ai/inspect/039-c2/` |
-| `c3` | 96/96 | 41/42 | 80 | aceptado si el usuario acepta K11 (ver Resultado) | `.ai/inspect/039-c3/` |
+| `c3` | 96/96 | 41/42 | 80 | aceptado (K11 del inicio, anterior a la 039, aceptado por el usuario); refinado con las tres observaciones del evaluador y medido de nuevo: 96/96 y 41/42 | `.ai/inspect/039-c3/` |
 
 ## Resultado
 
@@ -51,7 +51,8 @@ El que falla es **K11 en el inicio** (CLS 0.212). No lo causa esta spec: la pág
 sin la sección nueva y sin el mapa, da el mismo 0.212. A los 300 ms, `publico.js` escribe la pastilla
 «¿Está abierto ahora?» encima del titular sin reservarle sitio y empuja hacia abajo el `h1` y la
 arcada; además, las fuentes cambian al cargar. La sección «Nuestros trabajos» no añade
-desplazamientos: `/galeria` da 0.003. Aceptar `c3` con K11 así es decisión del usuario (Decisiones).
+desplazamientos: `/galeria` da 0.003. El usuario aceptó `c3` con K11 así, y el desplazamiento se corrige
+aparte con un `/fix` de la 038 (Decisiones).
 
 Páginas: `design/candidatos/c3/`.
 
@@ -83,14 +84,14 @@ Páginas: `design/candidatos/c3/`.
 | Diferencia frente a una plantilla | 15 | 3 | El numeral serif enlaza con la lista numerada de servicios, pero la estructura (carrusel con «Anterior» y «Siguiente», mosaico con una foto grande) es la habitual |
 | Riqueza visual y movimiento | 10 | 3 | `carrusel-1440-no-preference-durante.png`: la foto se desliza con su pie; con movimiento reducido el cambio es inmediato, y sin JavaScript se ven todas desplazando a mano. Fondo de la banda plano |
 
-Observaciones del evaluador, sin cambiar la nota. Se pueden pasar a `/implement` con `--fix` antes de
-`/plan`, si el usuario lo pide:
-1. En el escritorio, el panel del carrusel deja un hueco encima del pie (`align-items: end`) y la foto
-   siguiente no asoma.
-2. A 390 px, el diálogo «¿Quitar esta foto?» toca los bordes, sin el margen lateral ni el radio de las
-   tarjetas.
-3. La casilla de consentimiento se ve antes de responder la pregunta del paciente. Solo se oculta al
-   marcar «No».
+Observaciones del evaluador, sin cambiar la nota. Están aplicadas a `c3` como `refinado`, por decisión
+del usuario al aprobar el acta, y `c3` se volvió a medir: 96/96 puertas y 41/42 KPIs.
+1. En el escritorio, el panel del carrusel dejaba un hueco encima del pie y la foto siguiente no asomaba.
+   → El panel se centra junto a la foto y `--carrusel-foto-w` pasa a 90 % desde 900 px.
+2. A 390 px, el diálogo «¿Quitar esta foto?» tocaba los bordes. → Ahora lleva un margen lateral de
+   `--space-4` y el radio `--radius` de las tarjetas.
+3. La casilla de consentimiento se veía antes de responder la pregunta del paciente. → Ahora solo
+   aparece al marcar «Sí» (CSS `:has()`; sin soporte, se ve siempre).
 
 ## Imágenes de muestra
 
@@ -132,7 +133,7 @@ el administrador y, sin fotos, oculta el carrusel (CA3).
 | Token, componente o regla | Modo | Valor (menor) | Valor (mayor) | Motivo |
 |---|---|---|---|---|
 | `--foto-ratio` | fijo | `4 / 3` | — | Las fotos se recortan a esta proporción al publicarlas: no hay saltos (CLS) y el mosaico alinea |
-| `--carrusel-foto-w` | corte 560 y 900 px | `86%` · `72%` desde 560 px | `100%` desde 900 px | Una foto principal; en el móvil asoma el borde de la siguiente |
+| `--carrusel-foto-w` | corte 560 y 900 px | `86%` · `72%` desde 560 px | `90%` desde 900 px | Una foto principal (en el escritorio, la lámina con su panel) y el borde de la siguiente, que dice que la fila sigue |
 | `--thumb-w` | fijo | `120px` | — | Miniatura de la tarjeta de la gestión |
 | Componentes «Carrusel de trabajos», «Foto de trabajo», «Mosaico de `/galeria`», «Galería vacía» (superficie pública, `publico.css`) | — | — | — | Ver Componentes |
 | Componentes «Tarjeta de foto», «Pregunta del paciente», «Consentimiento», «Selector de archivo», «Aviso de error» (dentro de `.formulario-accesible`, `app.css`) | — | — | — | Ver Componentes. Los radios y la casilla de 44 px generalizan el patrón de `.remember-label` (spec 041) |
@@ -174,6 +175,8 @@ No hay colores nuevos: `criterios.json → tokens.colors` no cambia.
 | 2026-11-07 | diseño | La ronda 1 se diseñó con la página de inicio de la opción B, que la 038 sustituyó | Nuevo ciclo con los criterios K1–K13 de la spec | usuario |
 | 2026-11-07 | implícita | La barra lateral del layout del administrador no cumple contraste (DS1, DS4) y el layout carga Roboto de Google Fonts; nada de eso es de la 039 | En las pantallas de la gestión, `medir.mjs` quita la barra lateral de la copia medida (`quitar`) y `G-red` admite `fonts.googleapis.com` y `fonts.gstatic.com`. Lo que diseña la 039 se mide entero | `docs/design/system.md` (DS1, DS4) · `resources/views/layouts/app.blade.php` |
 | 2026-11-07 | implícita | El mapa de Google pesa 2,5 MB y trae 1,8 MB de JavaScript | K9 y K10 del inicio se miden con el mapa en blanco (`sin_iframes`), como en la 038 | spec 038, RNF y `design-spec` de la 038 |
-| 2026-11-07 | contradicción | K11 (CLS ≤ 0,1) falla en el inicio con 0,212, igual en la página actual sin la 039: lo causan la pastilla de `publico.js` y el cambio de fuentes | pendiente del usuario | `.ai/inspect/039-control/` · medición con `PerformanceObserver` |
+| 2026-11-07 | contradicción | K11 (CLS ≤ 0,1) falla en el inicio con 0,212, igual en la página actual sin la 039: lo causan la pastilla de `publico.js` y el cambio de fuentes | Se acepta `c3` con K11 anotado como anterior a la 039; el desplazamiento se corrige aparte con un `/fix` de la 038 (reservar el sitio de la pastilla y estabilizar las fuentes) | usuario |
 | 2026-11-07 | supuesto | Textos que la spec no fija | «Hecho en la consulta», «Algunos tratamientos que terminamos aquí.», «Fotos de tratamientos hechos en la consulta.», «Volver al inicio», «Galería de trabajos», «Nueva foto», «Publicar foto», «Elige la foto que quieres publicar.», «No se publicó la foto. Corrige lo marcado y vuelve a subirla.», «Sin pacientes en la foto», «Consentimiento declarado por {nombre} el {fecha}», «Arriba», «Abajo», «¿Quitar esta foto?» con su explicación | razonable; se confirman al aprobar |
 | 2026-11-07 | supuesto | Selector de archivo: ¿control propio o nativo? | Nativo con el botón de la app (`::file-selector-button`). Su texto sigue el idioma del navegador; en las capturas sale en inglés porque el Chromium de Docker está en inglés | `evaluate.mjs` mide el foco en el propio control; un control oculto con el foco en la etiqueta no lo mostraría |
+| 2026-11-07 | refinado | Tres observaciones del evaluador: el hueco del panel del carrusel en el escritorio, el diálogo de quitar sin margen a 390 px y la casilla de consentimiento visible antes de responder | Aplicadas a `c3` y medidas de nuevo (96/96 puertas, 41/42 KPIs) | usuario |
+| 2026-11-07 | diseño | ¿Se aprueba el acta? | Aprobada, con `c3` refinado | usuario |

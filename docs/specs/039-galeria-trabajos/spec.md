@@ -176,6 +176,7 @@ Ninguna.
 | 2026-10-20 | supuesto | Comportamiento del carrusel | Una foto principal a la vez con «Anterior», «Siguiente» y «Foto n de N», sin avance automático; sin JavaScript se desplaza a mano | WCAG 2.2.2 (P9) |
 | 2026-10-20 | supuesto | Título y descripción de `/galeria` | Los de CA6 | razonable; se confirman al aprobar |
 | 2026-11-07 | diseño | El diseño de la ronda 1 se hizo con la página de inicio de la opción B, que la 038 sustituyó (ronda 6, `c5`) | Nuevo ciclo `/design-spec 039` con los criterios de «Criterios de diseño» (`sistema` con peso 25 para que encaje en la página actual); la ronda 1 se archiva | usuario |
+| 2026-11-07 | diseño | Diseño de la ronda 2 | Acta aprobada: `c3` (80/100), refinado con las tres observaciones del evaluador. K11 del inicio (CLS de la página actual) aceptado como anterior a la 039, con un `/fix` de la 038 aparte: [design.md](design.md) | usuario |
 
 ## Notas para /plan
 - Las fotos subidas no van al repositorio. En producción necesitan un volumen persistente

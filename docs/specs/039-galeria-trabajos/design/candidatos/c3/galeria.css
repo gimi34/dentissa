@@ -7,7 +7,7 @@
     --carrusel-foto-w: 86%;
 }
 @media (min-width: 560px) { :root { --carrusel-foto-w: 72%; } }
-@media (min-width: 900px) { :root { --carrusel-foto-w: 100%; } }
+@media (min-width: 900px) { :root { --carrusel-foto-w: 90%; } }
 
 /* Nuestros trabajos: banda --p100 entre el avance de servicios y la agenda. */
 .pub-trabajos { background: var(--p100); }
@@ -145,4 +145,10 @@
 }
 @media (max-width: 899px) {
     .pub-mosaico > li:first-child { grid-column: auto; }
+}
+
+/* c3 refinado · El panel se centra junto a la foto (sin hueco encima del pie) y asoma la lámina siguiente. */
+@media (min-width: 900px) {
+    .pub-carrusel .pub-trabajo { align-items: center; }
+    .pub-carrusel .pub-trabajo figcaption { padding: 0; }
 }
