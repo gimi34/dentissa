@@ -99,7 +99,9 @@ class PaginaGaleriaTest extends TestCase
         }
         $volver = $xpath->query('//main//a[normalize-space()="Volver al inicio"]');
         $this->assertSame(1, $volver->length);
-        $this->assertSame('/', parse_url($volver->item(0)->getAttribute('href'), PHP_URL_PATH));
+        // url('/') no lleva la barra final: una ruta vacía también es la raíz.
+        $this->assertSame('/', parse_url($volver->item(0)->getAttribute('href'), PHP_URL_PATH) ?? '/');
+        $this->assertNull(parse_url($volver->item(0)->getAttribute('href'), PHP_URL_QUERY), 'Sin parámetros.');
     }
 
     public function test_vacia_muestra_el_aviso(): void

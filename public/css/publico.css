@@ -747,3 +747,92 @@ body.publico button:focus-visible {
 @keyframes pub-trazo { to { stroke-dashoffset: 0; } }
 @keyframes pub-asentar { from { opacity: 0; transform: scale(1.06); } }
 @keyframes pub-subir { to { transform: none; } }
+
+/* Spec 039 · Galería de trabajos (candidato c3, design.md; system.md 1.12.0). Los cortes de c3 (desde
+   560 y 900 px) se escriben al revés, con 899 y 559 px, como el resto de la hoja.
+   --foto-ratio (fijo): las fotos se recortan a 4:3 al publicarlas, así no hay saltos (CLS).
+   --carrusel-foto-w (con cortes): 90 % desde 900 px, 72 % desde 560 px y 86 % por debajo. */
+:root {
+    --foto-ratio: 4 / 3;
+    --carrusel-foto-w: 90%;
+}
+
+/* Foto de trabajo: la misma en el carrusel y en /galeria. */
+.pub-trabajo { margin: 0; }
+.pub-trabajo__foto {
+    aspect-ratio: var(--foto-ratio);
+    overflow: hidden;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-soft);
+}
+.pub-trabajo__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pub-trabajo figcaption { display: grid; gap: var(--space-2); padding-top: var(--space-5); max-width: var(--measure); }
+.pub-trabajo__n {
+    color: var(--p600);
+    font-size: var(--text-publico-small);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-etiqueta);
+    text-transform: uppercase;
+}
+/* Número de la foto: grande en Newsreader como el índice de servicios (decorativo, aria-hidden). */
+.pub-trabajo__num {
+    display: none;
+    font-family: var(--font-display);
+    font-size: var(--text-indice);
+    font-weight: var(--weight-strong);
+    line-height: var(--leading-publico-h1);
+    color: var(--p600);
+}
+
+/* /galeria: mosaico de tres columnas; la 01 ocupa dos columnas y el alto de las dos de su lado. */
+.pub-mosaico {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
+    align-items: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.pub-mosaico > li:first-child { grid-column: span 2; grid-row: span 2; display: flex; }
+.pub-mosaico > li:first-child .pub-trabajo { display: flex; flex-direction: column; width: 100%; }
+.pub-mosaico > li:first-child .pub-trabajo__foto { flex: 1; aspect-ratio: auto; min-height: 0; }
+.pub-mosaico .pub-trabajo__num { display: block; grid-row: 1 / span 2; font-size: var(--text-publico-h3); }
+.pub-mosaico .pub-trabajo figcaption { grid-template-columns: auto 1fr; align-items: baseline; column-gap: var(--space-4); }
+.pub-mosaico .pub-trabajo__n,
+.pub-mosaico .pub-trabajo__desc { grid-column: 2; }
+.pub-galeria__vacia {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-7);
+    padding: var(--space-8);
+    border: var(--border-width) dashed var(--p400);
+    border-radius: var(--radius-lg);
+    background: var(--p100);
+}
+.pub-galeria__vacia p { font-family: var(--font-display); font-size: var(--text-lead); }
+
+/* Solo para el lector de pantalla: la región de estado del carrusel. */
+.pub-solo-lector {
+    position: absolute;
+    width: var(--border-width);
+    height: var(--border-width);
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+    :root { --carrusel-foto-w: 72%; }
+    .pub-mosaico { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pub-mosaico > li:first-child { grid-column: auto; grid-row: auto; display: block; }
+    .pub-mosaico > li:first-child .pub-trabajo { display: block; }
+    .pub-mosaico > li:first-child .pub-trabajo__foto { flex: none; aspect-ratio: var(--foto-ratio); }
+}
+@media (max-width: 559px) {
+    :root { --carrusel-foto-w: 86%; }
+    .pub-mosaico { grid-template-columns: minmax(0, 1fr); }
+}
+/* Fin spec 039 (galería) */
