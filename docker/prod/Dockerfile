@@ -17,10 +17,13 @@ RUN echo "Refresco del sistema: ${REFRESCO_SISTEMA}" \
     && apt-get update && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
     libpng-dev \
+    libjpeg62-turbo-dev \
+    libwebp-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
     unzip \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo_mysql \
     mbstring \
