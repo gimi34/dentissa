@@ -1,6 +1,6 @@
 ---
 spec: 039-galeria-trabajos
-status: draft   # draft | approved | blocked
+status: approved   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-07
 ---
@@ -259,7 +259,7 @@ Casos de abuso de la spec:
   - el uso de memoria de `app` al subir una foto grande.
 
 ## Decisiones (→ ADR si son arquitectónicas)
-- **D1 · Procesado con GD ampliado (→ ADR 0009, `proposed`).** GD ya está instalado, pero sin JPEG ni
+- **D1 · Procesado con GD ampliado (→ ADR 0009, `accepted`).** GD ya está instalado, pero sin JPEG ni
   WebP.
   - Opciones: ampliar GD; Imagick; una librería de Composer (como Intervention Image, que necesita GD
     o Imagick de todas formas).
@@ -320,7 +320,7 @@ Casos de abuso de la spec:
 - `docs/observability.md`: los eventos de la galería.
 - `docs/seo.md`: la fila de `/galeria`.
 - `AGENTS.md`, mapa del repositorio (ruta protegida, con aprobación al implementar): `app/Galeria/`.
-- ADR 0009 pasa a `accepted` al aprobar el plan.
+- ADR 0009 `accepted` (plan aprobado por el usuario el 2026-11-07).
 
 ## Riesgos y mitigaciones
 - **Paquetes nuevos en la imagen (`libjpeg`, `libwebp`) con vulnerabilidades.** `trivy` en `/review`
