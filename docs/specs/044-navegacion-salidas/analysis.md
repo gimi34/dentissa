@@ -1,62 +1,62 @@
 ---
 result: fail
-round: 1
-mode: full
+round: 2
+mode: delta
 constitution_version: 1.3.0
 date: 2026-11-08
-spec_sha: 9cfd3dba4499
-plan_sha: 295b798f8b48
-tasks_sha: 8acb06b9de49
+spec_sha: 29289b146172
+plan_sha: f718c850ad58
+tasks_sha: 8ce460087bc8
 ---
 
 # Análisis · 044 Salidas de las pantallas
 
 ## Resumen
-`fail`: no hay hallazgos críticos, pero hay seis altos que obligarían a rehacer trabajo en `/implement`.
-Son estos: la ruta de reserva cambiaría a 405 lo que hoy responde 404 (A1); el 429 de Laravel no lo
-produce hoy ningún límite (A2); dos contratos de specs extendidas se rompen sin declararlo (A3, A4); el
-logout se modifica sin la excepción P7 registrada (A5); y los umbrales de P9 solo se verifican a mano (A6).
-Análisis hecho por un subagente independiente; cada hallazgo alto se comprobó después en el archivo citado.
-Conteo: CRÍTICA 0 · ALTA 6 · MEDIA 3 · BAJA 6
+`fail`. De los quince hallazgos de la ronda 1 quedan resueltos trece; A9 sigue abierto, rebajado a BAJA,
+y A1 se resolvió pero con efectos nuevos. El efecto alto es A16: la ruta de reserva GET rompe un test de
+rutas de la spec 010 que ninguna tarea cambia. Las demás correcciones abren ajustes medios y bajos
+(A17–A22). Análisis delta hecho por un subagente independiente; A16 y A21 se comprobaron en los archivos.
+Conteo (nuevos): CRÍTICA 0 · ALTA 1 · MEDIA 3 · BAJA 3
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 12 / 12 (CA10 sin test viable por A2; CA11 incompleto por A1) |
-| Amenazas con control y test | 7 / 7 (TM3 y TM6 incompletos por A1, A7 y A8) |
-| Principios de la constitución evaluados | 10 / 10 (con hallazgo: P2 por A2, P7 por A5, P9 por A6) |
+| Criterios con tarea de test e implementación | 12 / 12 |
+| Amenazas con control y test | 7 / 7 |
+| Principios de la constitución evaluados | 10 / 10 (P2 con A19 y A22; P7 y P9 desalineados en `tasks.md`, A20) |
 
 ## Seguimiento de rondas anteriores
-Primera ronda.
+| ID | Severidad | Estado | Evidencia |
+|---|---|---|---|
+| A1 | ALTA | resuelto con efecto nuevo (→ A16, A17, A18) | plan D3, Contratos y T029 con dos rutas de reserva y `test_cualquier_verbo_a_una_direccion_inexistente_sigue_en_404`; las dos rutas conviven por verbo y `withoutMiddleware('web')` ya se usa en `routes/web.php` |
+| A2 | ALTA | resuelto | CA10 preventiva, supuesto y Decisiones; T013 con ruta de prueba y `test_los_limites_actuales_siguen_con_su_propio_aviso` |
+| A3 | ALTA | resuelto | T020 cambia `RecuperarContrasenaVistasTest`; plan → Cambios por módulo y Descubribilidad; T098 |
+| A4 | ALTA | resuelto | CA5 «reemplaza 038 CA2 y 001 CA5»; Decisiones; T098 |
+| A5 | ALTA | resuelto con efecto nuevo (→ A20) | plan P7 «❌ aceptado … — aprobado por el usuario el 2026-11-08»; spec → Auditoría y Decisiones; T091 al roadmap |
+| A6 | ALTA | resuelto con efecto nuevo (→ A19, A20) | plan P9 con `NavegacionSalidasCssTest`; T014 |
+| A7 | MEDIA | resuelto | plan P8, TM3, T013 y T033 coinciden |
+| A8 | MEDIA | resuelto | RNF acotado; plan → Riesgos; T091 |
+| A9 | MEDIA | abierto (rebajado a BAJA) | CA6 ya dice lo que se marca, pero T027 no tiene la verificación con un lector de pantalla |
+| A10 | BAJA | resuelto | Contratos («control nuevo») y T011 |
+| A11 | BAJA | resuelto | CA9, `design.md` y T031 dicen «Ir a la página de inicio» |
+| A12 | BAJA | resuelto | T091 |
+| A13 | BAJA | resuelto | plan → Riesgos, aceptado |
+| A14 | BAJA | resuelto | T010 y T021 |
+| A15 | BAJA | resuelto | plan P1 |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A1 | Inconsistencia | ALTA | plan D3, «Cambios por módulo» (`routes/web.php`); T029; CA11 | `Route::fallback` solo registra GET (`Router::fallback`), y la búsqueda de verbos alternativos sí tiene en cuenta la ruta de reserva. Con ella, un POST, PUT, PATCH o DELETE a una dirección inexistente pasaría a 405 con la página de Laravel. Eso rompe CA11 y `RecuperarContrasenaTest::test_con_el_interruptor_apagado_no_hay_rutas_ni_enlace` (`post(...)->assertNotFound()`, líneas 440 y 443) | `/plan 044 --fix A1`: cualquier verbo a una dirección inexistente sigue respondiendo 404 con la página propia (test nuevo en `PaginasErrorTest` con POST y DELETE; `RecuperarContrasenaTest` sin cambios) |
-| A2 | Inconsistencia / Cobertura | ALTA | spec CA10 y Decisiones (supuesto de las páginas de error); T013 (`test_demasiados_intentos_explica_que_esperar`); T031 | Ningún límite de la app produce hoy el 429 de Laravel: `registro` responde `back()->withErrors` (`AppServiceProvider.php:52-56`), el login usa `back()` y `abrir-enlace` ya tiene su propia vista 429. El test descrito recibiría un 302 | Decisión del usuario → `/specify --edit` (CA10 y el supuesto) y `/tasks 044 --fix A2`: el 429 propio se prueba con una ruta de prueba que lance la excepción de límite, y un test confirma que el 429 de `abrir-enlace` no cambia |
-| A3 | Inconsistencia (extends 041) | ALTA | T020 (`alt=""` del logo); plan → Descubribilidad («tests de la 041 sin cambios») | `RecuperarContrasenaVistasTest::test_el_acceso_usa_el_estilo_anterior_del_login` (línea 256) exige `//aside[contains(@class,"panel-left")]//img[@alt!=""]` = 1 en cada pantalla de acceso; con el logo-enlace y `alt=""` falla, y ninguna tarea lo cambia | `/plan 044 --fix A3` y `/tasks 044 --fix A3`: una tarea cambia ese test para que exija el nombre accesible del enlace («Ir a la página de inicio»), se declara como cambio del contrato de la 041 y T098 lo anota en su Historial |
-| A4 | Inconsistencia (extends 001) | ALTA | spec CA5 y Decisiones; T098 | `001-autenticacion/spec.md:28`, CA5: «usuario autenticado abre `/` → se le redirige al panel», sigue vigente y 044 CA5 lo contradice; la spec solo declara «reemplaza 038 CA2» | `/specify --edit`: CA5 también reemplaza 001 CA5 (fila en Decisiones) · `/tasks 044 --fix A4`: T098 marca 001 CA5 `→ reemplazado por 044 CA5` |
-| A5 | Constitución P7 | ALTA | plan → Constitution Check P7; spec → Auditoría | P7 exige auditar los logouts y T026 modifica `logout()`; el plan pone ✅ con «la spec lo deja fuera» sin una excepción registrada con motivo, usuario y destino (precedente: «Excepción P7 de la spec 030», `roadmap.md`) | Decisión del usuario: excepción P7 con destino OB1.b, o el evento de logout dentro de la 044 con su test → `/plan 044 --fix A5` (+ `/tasks` si entra el evento) |
-| A6 | Constitución P9 | ALTA | T020–T031, T040; CA1/K1, K5; RNF de accesibilidad | Los umbrales comprobables (toque ≥ 44 px, sin desborde a 320 px, «Volver al inicio» sin desplazarse, sin `style=""` nuevos) solo se verifican a mano. `capturar.mjs --medir` no cubre las siete pantallas de acceso ni las cinco de error | `/plan 044 --fix A6` y `/tasks 044 --fix A6`: comprobación automática de que cada enlace nuevo declara el alto `--touch-min` (patrón de `MovilPacienteTest::assertDeclara`) y de que las vistas tocadas no ganan `style=""` (test sobre las vistas) |
-| A7 | Ambigüedad | MEDIA | `design.md` (`.codigo` solo en la 500); plan P8; T033 («el identificador en las cinco páginas») | No queda claro si el identificador va en el cuerpo de todas las páginas de error. En la 404 rompería `DenegacionesAuditadasTest::test_la_cita_ajena_y_la_inexistente_responden_igual` (compara el contenido, líneas 161-169) y debilitaría TM3 | `/plan 044 --fix A7` · `/tasks 044 --fix A7`: cabecera `X-Request-Id` en las cinco páginas; identificador en el cuerpo solo en la 500; cuerpo de la 404 igual en cada petición (test existente y caso de `PaginasErrorTest`) |
-| A8 | Cobertura RNF / TM6 | MEDIA | RNF «sin sesión ni base»; T013 (`test_pintar_la_500_no_consulta_la_base`) | El test mide solo la plantilla. En el camino completo, `RegistroCentralDenegaciones::registrar` llama a `Auth::user()` antes de mirar el código; con una sesión con usuario y la base caída podría lanzar dentro de `respond` (así desde la 020) | Decisión del usuario: probar el camino completo, o acotar el RNF a la plantilla y llevar el riesgo al roadmap |
-| A9 | Ambigüedad | MEDIA | spec CA6, `design.md` K4; T012, T027 | «Se anuncia a los lectores de pantalla» solo se comprueba con `role="status"`, y una región viva presente en la carga no se anuncia de forma fiable | `/specify --edit`: CA6 dice lo que se mide (mensaje de estado legible por lectores de pantalla) · verificación manual con NVDA en T027 |
-| A10 | Inconsistencia | BAJA | plan → Contratos, fila `GET /registro/contacto` con sesión | Hoy `contactoForm()` no comprueba la sesión: con sesión y `google_registro` muestra el formulario. T025 añade un control nuevo | `/plan 044 --fix A10` · `/tasks 044 --fix A10`: el test cubre `/registro/contacto` con y sin `google_registro` |
-| A11 | Terminología | BAJA | spec CA9 («Volver al inicio») frente a `design.md`, fila 419, y T031 («Ir a la página de inicio») | El texto literal del enlace difiere según el documento | `/specify --edit` · `/tasks 044 --fix A11`: un solo texto literal en spec, diseño y tests |
-| A12 | Cobertura documental | BAJA | T091 | Quedarían desfasados `seo.md` (`/` «con sesión, 302 al panel»; «404 genérica… SE4») y `roadmap.md` (SE4.a en Pendientes) | `/tasks 044 --fix A12`: incluirlos en T091 |
-| A13 | Seguridad | BAJA | plan → Modelo de amenazas; D3 | Con la ruta de reserva, cada GET a una dirección inexistente abre sesión (archivo de sesión y `Set-Cookie`); un rastreo de bots crea archivos de sesión | `/plan 044 --fix A13`: fila TM (consumo de recursos) con su control o su aceptación |
-| A14 | Inconsistencia | BAJA | T021; CA2 | T021 no exige `alt=""` en la imagen del logo del registro, a diferencia de T020; podría quedar un nombre accesible duplicado | `/tasks 044 --fix A14`: el test de CA2 comprueba en el registro y en completar el registro que el nombre accesible es exactamente «Ir a la página de inicio» |
-| A15 | Inconsistencia | BAJA | plan → Constitution Check P1 | Dice «`design.md` y este plan, pendientes de aprobación», pero ya están `approved` (1dc0313) | `/plan 044 --fix A15` |
+| A16 | Inconsistencia (contrato de otra spec) | ALTA | plan D3; T029 | Con la ruta de reserva GET, `AdminUsuariosRutasTest::test_un_identificador_sin_forma_de_uuid_no_resuelve_a_show` (spec 010, líneas 79-85) deja de recibir `NotFoundHttpException` de `Route::getRoutes()->match()`, porque responde la ruta de reserva; por HTTP sigue siendo 404, pero el test cae y ninguna tarea lo cambia | `/plan 044 --fix A16` y `/tasks 044 --fix A16`: un identificador sin forma de UUID no llega a `@show` y responde 404 (el test de la 010 lo comprueba así, en la tarea de la ruta de reserva); cambio del test declarado y anotado en el Historial de la 010 (T098) |
+| A17 | Inconsistencia (contrato no declarado) | MEDIA | plan → Contratos; D3; CA11 | Con una reserva para cada verbo, un verbo equivocado sobre una ruta que existe pasa de 405 a 404 (p. ej. `GET /logout`), y `OPTIONS` sobre una ruta existente pasa de 200 a 404. Los tests actuales aceptan 404 o 405 | `/plan 044 --fix A17`: declarar el cambio con su decisión; caso de `PaginasErrorTest` con `GET /logout` que fija el código |
+| A18 | Orden de tareas / Cobertura | MEDIA | T040; D3; T095, T097 | T040 se cierra antes del despliegue y exige un `curl` posterior a él; la única comprobación de que un POST sin token a una dirección inexistente da 404 (y no 419) no está en T095/T097 | `/tasks 044 --fix A18`: el `curl -X POST` va a T095/T097; T040 sin ese requisito |
+| A19 | Constitución P2 | MEDIA | T014; T020, T021, T023, T027, T028; tasks → Constitution Check P2 | T014 va después de las tareas que implementan sus reglas y ninguna depende de ella, así que no puede fallar antes; `auth.css` no define `--touch-min` y T021 no dice qué tokens copia | `/tasks 044 --fix A19`: T014 antes de las tareas de interfaz, que dependen de ella y la incluyen en su «hecho cuando»; T021 nombra los tokens que copia, con `--touch-min` |
+| A20 | Inconsistencia (tareas vs plan) | BAJA | tasks → Constitution Check P7, P9 | No reflejan la excepción P7 ni el test de P9 del plan | `/tasks 044 --fix A20` |
+| A21 | Formato | BAJA | plan → Contratos | Las filas nuevas de la tabla no llevan la sangría de la viñeta y cortan la tabla | `/plan 044 --fix A21` |
+| A22 | Constitución P2 (caracterización) | BAJA | T013; plan P2 | `test_los_limites_actuales_siguen_con_su_propio_aviso` es de caracterización sin control que se rompa anotado ni entrada en la lista de P2 | `/plan 044 --fix A22` y `/tasks 044 --fix A22`: romper el `->response()` de `registro` y anotarlo |
 
 ## Decisiones pendientes del usuario
-- **A5 (P7, logout):** (a) registrar una excepción P7 de la 044, con destino OB1.b del objetivo 3 (los
-  eventos de login y logout juntos), como la de la 030; (b) añadir a la 044 el evento de auditoría del
-  logout con su test.
-- **A2 (429):** (a) mantener la página 429 como preventiva, para cualquier límite futuro que use la
-  respuesta de Laravel, y reescribir CA10 y el supuesto; (b) quitar la 429 de la spec.
-- **A8 (fallo de la base):** (a) acotar el RNF a la plantilla (que no consulta la base) y llevar al
-  roadmap el riesgo de la 020 en `RegistroCentralDenegaciones`; (b) probar y arreglar el camino completo
-  dentro de la 044.
+Ninguna. A17 se resuelve en el plan como decisión técnica: un verbo equivocado responde 404, que no revela qué verbos acepta una dirección.
 
 ## Aceptados
-Ninguno todavía.
+Ninguno.
