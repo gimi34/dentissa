@@ -2,9 +2,12 @@
 spec: 039-galeria-trabajos
 plan: plan.md
 status: approved
+impl_base: cf2a57d
 ---
 
 # Tareas · 039 Galería de trabajos
+
+- nota: línea base 2026-11-08 — suite completa con 719 tests en verde (12148 aserciones), sin fallos previos.
 
 Formato:
 `- [ ] T### [P] <verbo + qué> — <archivos> — hecho cuando: <criterio> — cubre: CA# — depende: T###`
@@ -43,7 +46,8 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | P10 Rutas indexables descubribles | ✅ | `/galeria` con título, descripción, canónica y un solo script (T027); T014 lo prueba y T030 pasa Lighthouse | test: T014 · manual: Lighthouse SEO ≥ 90 en T030 |
 
 ## Preparación
-- [ ] T001 Aplicar los «Cambios a incorporar al sistema» de `design.md` a `system.md` (versión 1.12.0, tokens `--foto-ratio`, `--carrusel-foto-w` y `--thumb-w` con su modo, componentes de la superficie pública y de `.formulario-accesible`, entrada «Galería» del menú y su fila en Decisiones) y a `system.html` — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los tres tokens y los nueve componentes de `design.md` → Componentes están documentados con sus valores y estados, `version: 1.12.0`, y `criterios.json → tokens.colors` sigue igual (no hay colores nuevos)
+- [x] T001 Aplicar los «Cambios a incorporar al sistema» de `design.md` a `system.md` (versión 1.12.0, tokens `--foto-ratio`, `--carrusel-foto-w` y `--thumb-w` con su modo, componentes de la superficie pública y de `.formulario-accesible`, entrada «Galería» del menú y su fila en Decisiones) y a `system.html` — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los tres tokens y los nueve componentes de `design.md` → Componentes están documentados con sus valores y estados, `version: 1.12.0`, y `criterios.json → tokens.colors` sigue igual (no hay colores nuevos)
+  - nota: system.md 1.12.0 con los tres tokens, los nueve componentes, `.pub-solo-lector`, la entrada del menú, M-1 y su fila en Decisiones; system.html con los tokens y una muestra viva (`#galeria-039`). `criterios.json → tokens.colors` sin cambios. Los 135 tests que leen system.md siguen en verde.
 - [ ] T002 Compilar GD con JPEG y WebP en las dos imágenes (`libjpeg62-turbo-dev`, `libwebp-dev`, `docker-php-ext-configure gd --with-jpeg --with-webp`; `Dockerfile` es ruta protegida, aprobada en el plan D1) y reconstruir el contenedor de desarrollo — `Dockerfile`, `docker/prod/Dockerfile` — hecho cuando: en `dentissa_app`, `gd_info()` da `JPEG Support` y `WebP Support` verdaderos, y `docker build -f docker/prod/Dockerfile --target app .` termina y su `php -r 'print_r(gd_info());'` da lo mismo; `trivy image --severity HIGH,CRITICAL` sobre la imagen `app` de local y la de producción, antes y después del cambio, sin avisos altos o críticos nuevos o, si los hay, corregidos o registrados por el usuario como excepción en `docs/security.md`, con la diferencia en la nota de la tarea (/analyze A3)
 - [ ] T003 [P] Aceptar cuerpos de hasta 6 MB en nginx (`client_max_body_size 6m;` en el `server`) — `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` — hecho cuando: tras `docker compose restart nginx`, un `POST` de 5,5 MB a `http://localhost:8000/admin/galeria` sin sesión responde 302 o 419, no 413 (`curl -s -o /dev/null -w '%{http_code}' --data-binary @archivo`)
 - [ ] T004 [P] Crear la tabla `galeria_fotos` (columnas de Contratos y datos, `bytes_pequena` incluida; `id` y `consentimiento_usuario_id` como `char(36)`, plan D18; `posicion` única, FK `consentimiento_usuario_id` con `nullOnDelete`), el modelo `GaleriaFoto` (UUID, `creado_en` y `actualizado_en`, orden por `posicion`) y el disco `galeria` en `storage/app/galeria` sin URL pública — `database/migrations/2026_11_07_000000_create_galeria_fotos_table.php`, `app/Models/GaleriaFoto.php`, `config/filesystems.php` — hecho cuando: `php artisan migrate` pasa en `dentissa` y en `dentissa_test`, y `migrate:rollback --step=1` la quita y se vuelve a aplicar sin errores
