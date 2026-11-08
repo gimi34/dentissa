@@ -1,14 +1,25 @@
 @extends('layouts.app')
 @section('title', 'Pacientes')
 
+@php
+    // Alta de pacientes: solo admin y asistente tienen ruta (routes/web.php); el dentista no.
+    $rutaAlta = match (auth()->user()->rol) {
+        'admin' => route('admin.pacientes.create'),
+        'asistente' => route('asistente.pacientes.create'),
+        default => null,
+    };
+@endphp
+
 @section('topbar-actions')
-    <a href="{{ route(auth()->user()->rol === 'admin' ? 'admin.pacientes.create' : 'asistente.pacientes.create') }}"
+    @if($rutaAlta)
+    <a href="{{ $rutaAlta }}"
        class="btn btn-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         Nuevo paciente
     </a>
+    @endif
 @endsection
 
 @section('content')
@@ -212,9 +223,11 @@
                 <circle cx="9" cy="7" r="4"/>
             </svg>
             <p>No se encontraron pacientes</p>
-            <a href="{{ route('admin.pacientes.create') }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
+            @if($rutaAlta)
+            <a href="{{ $rutaAlta }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
                 Registrar primer paciente
             </a>
+            @endif
         </div>
     @endif
 </div>
