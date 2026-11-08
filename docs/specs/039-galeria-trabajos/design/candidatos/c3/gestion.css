@@ -15,7 +15,7 @@
     grid-template-columns: var(--thumb-w) minmax(0, 1fr);
     gap: var(--space-4) var(--space-5);
     padding: var(--space-4);
-    border: var(--border-width) solid var(--border);
+    border: var(--border-width) solid var(--border-control);
     border-radius: var(--radius-sm);
     background: var(--white);
 }
@@ -106,7 +106,7 @@
     min-height: var(--touch-min);
     margin-right: var(--space-4);
     padding: 0 var(--space-5);
-    border: var(--border-width) solid var(--p200);
+    border: var(--border-width) solid var(--border-control);
     border-radius: var(--radius-sm);
     background: var(--white);
     color: var(--p600);
@@ -124,3 +124,6 @@
 /* c3 refinado · El diálogo de quitar respeta el margen lateral y el radio de las tarjetas. */
 .modal-overlay { box-sizing: border-box; padding-inline: var(--space-4); }
 .modal-box.card { border-radius: var(--radius); }
+
+/* c3 refinado (2026-11-08, /implement T030): bordes de la tarjeta y del botón del archivo con --border-control,
+   el contraste de 3:1 que pide .formulario-accesible (spec 028) a todo borde. */

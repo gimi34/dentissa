@@ -35,7 +35,7 @@ class MovilPacienteTest extends TestCase
 
     /** Enlaces del menú por rol (con «Auditoría» de la spec 020 en el de admin). */
     private const SECCIONES = [
-        'admin' => ['Home', 'Citas', 'Pacientes', 'Personal', 'Servicios', 'Reportes', 'Usuarios', 'Auditoría'],
+        'admin' => ['Home', 'Citas', 'Pacientes', 'Personal', 'Servicios', 'Galería', 'Reportes', 'Usuarios', 'Auditoría'], // Galería: spec 039
         'dentista' => ['Home', 'Mis Citas', 'Pacientes', 'Expedientes'],
         'asistente' => ['Home', 'Mis Doctores', 'Citas', 'Pacientes'],
         'cliente' => ['Inicio', 'Mis Citas', 'Agendar Cita', 'Mi Perfil'],
