@@ -133,3 +133,74 @@ test('sin el botón de pausa ni escribirPastilla (D21)', () => {
     assert.equal(publico.escribirPastilla, undefined);
     assert.doesNotMatch(CODIGO, /marquesina/, 'el script ya no conoce la franja');
 });
+
+/*
+ * Spec 039 (T018; CA1, RNF de accesibilidad; M-1): el carrusel de «Nuestros trabajos». Dos funciones
+ * puras, `fotoVecina(actual, paso, total)` y `textoEstado(hijos)`, y el montaje sobre un carrusel
+ * falso con el marcado de `c3/inicio.html`. Sin avance automático (WCAG 2.2.2).
+ */
+const oculto = (texto) => ({ textContent: texto, getAttribute: (a) => (a === 'aria-hidden' ? 'true' : null) });
+const visible = (texto) => ({ textContent: texto, getAttribute: () => null });
+
+test('la foto vecina da la vuelta en los dos sentidos (039)', () => {
+    const { fotoVecina } = cargar().DentissaPublico;
+    assert.equal(fotoVecina(0, 1, 6), 1);
+    assert.equal(fotoVecina(2, -1, 6), 1);
+    assert.equal(fotoVecina(5, 1, 6), 0, 'de la última a la primera');
+    assert.equal(fotoVecina(0, -1, 6), 5, 'de la primera a la última');
+    assert.equal(fotoVecina(0, 1, 1), 0, 'con una sola foto se queda');
+    assert.equal(fotoVecina(Number.NaN, 1, 6), 0, 'datos que no valen: la primera');
+});
+
+test('el texto de estado no lee el numeral decorativo (039)', () => {
+    const { textoEstado } = cargar().DentissaPublico;
+    assert.equal(textoEstado([oculto('02'), visible('Foto 2 de 6'), visible('  Corona de\n porcelana  en un premolar. ')]), 'Foto 2 de 6 Corona de porcelana en un premolar.');
+    assert.equal(textoEstado([]), '');
+});
+
+/** Un carrusel falso con tres fotos, con los selectores de `c3/inicio.html`. */
+function carruselFalso() {
+    const enlace = () => ({ href: '', setAttribute(k, v) { if (k === 'href') this.href = v; }, addEventListener(t, f) { this[t] = f; } });
+    const items = [1, 2, 3].map((n) => ({
+        id: `trabajo-${n}`,
+        offsetLeft: (n - 1) * 300,
+        classList: { toggle() {} },
+        querySelector: (s) => (s === 'figcaption' ? { children: [oculto(`0${n}`), visible(`Foto ${n} de 3`), visible(`Trabajo ${n}`)] } : null),
+    }));
+    const ventana = { scrollLeft: 0, desplazado: [], scrollTo(o) { this.desplazado.push(o); }, addEventListener() {} };
+    const partes = { '.pub-carrusel__ventana': ventana, '[data-anterior]': enlace(), '[data-siguiente]': enlace(), '[data-estado]': { textContent: '' } };
+    const carrusel = { querySelector: (s) => partes[s] ?? null, querySelectorAll: (s) => (s === '.pub-carrusel__lista > li' ? items : []) };
+    const falso = documentoFalso();
+    falso.document.querySelectorAll = (s) => (s === '[data-carrusel]' ? [carrusel] : []);
+    return { falso, partes, ventana };
+}
+
+test('el carrusel apunta a las vecinas, anuncia la foto y no avanza solo (039)', () => {
+    const { falso, partes, ventana } = carruselFalso();
+    let temporizadores = 0;
+    const contar = () => { temporizadores++; return 0; };
+    cargar({ document: falso.document, matchMedia: () => ({ matches: false }), setTimeout: contar, setInterval: contar });
+
+    assert.equal(partes['[data-siguiente]'].href, '#trabajo-2');
+    assert.equal(partes['[data-anterior]'].href, '#trabajo-3', 'desde la primera, «Anterior» va a la última');
+    assert.equal(partes['[data-estado]'].textContent, '', 'la región de estado empieza vacía');
+    assert.equal(temporizadores, 0, 'ningún temporizador al montar: no avanza solo');
+
+    partes['[data-siguiente]'].click({ preventDefault() {} });
+    assert.equal(partes['[data-estado]'].textContent, 'Foto 2 de 3 Trabajo 2', 'anuncia la foto sin el numeral');
+    assert.equal(ventana.desplazado.at(-1).left, 300);
+    assert.equal(ventana.desplazado.at(-1).behavior, 'smooth');
+    assert.equal(partes['[data-siguiente]'].href, '#trabajo-3');
+    assert.equal(partes['[data-anterior]'].href, '#trabajo-1');
+    assert.equal(temporizadores, 0, 'pulsar tampoco programa un avance');
+    assert.doesNotMatch(CODIGO, /setInterval/, 'el script no tiene ningún avance periódico');
+});
+
+test('con movimiento reducido el carrusel salta sin animar (039)', () => {
+    const { falso, partes, ventana } = carruselFalso();
+    cargar({ document: falso.document, matchMedia: (q) => ({ matches: q === '(prefers-reduced-motion: reduce)' }), setTimeout: () => 0 });
+
+    partes['[data-anterior]'].click({ preventDefault() {} });
+    assert.equal(ventana.desplazado.at(-1).behavior, 'auto');
+    assert.equal(ventana.desplazado.at(-1).left, 600, 'de la primera a la última');
+});
