@@ -66,6 +66,13 @@
                 </svg>
                 Servicios
             </a>
+            {{-- Spec 039 (CA13): la galería de trabajos, solo en el menú del admin. --}}
+            <a href="/admin/galeria" class="nav-item {{ request()->is('admin/galeria*') ? 'active' : '' }}" @if(request()->is('admin/galeria*')) aria-current="page" @endif>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/>
+                </svg>
+                Galería
+            </a>
             <span class="nav-label">Análisis</span>
             <a href="/admin/reportes" class="nav-item {{ request()->is('admin/reportes*') ? 'active' : '' }}" @if(request()->is('admin/reportes*')) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
