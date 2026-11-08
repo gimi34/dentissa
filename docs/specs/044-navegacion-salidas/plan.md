@@ -35,7 +35,7 @@ por el grupo `web`, así la página sabe si hay sesión. Un middleware global a�
 | P9 Sistema de diseño | ✅ | Solo tokens de `system.md` 1.11.0; los componentes nuevos (`design.md` → Cambios) entran en `system.md`/`system.html` 1.12.0 en la primera tarea. Sin `style=""` nuevos: `register.blade.php` y `registro-contacto.blade.php` tienen estilos en línea y Google Fonts **previos** (código previo, deuda DS) que no se amplían. WCAG 2.1 AA | manual: `/review` contra `system.html`; `node docs/design/capturar.mjs --medir` (se toca `layouts/app.blade.php`); verificación del usuario a 320, 390 y 1440 px |
 | P10 Rutas indexables descubribles | ✅ | `/` y `/registro` siguen indexables, con el mismo título, descripción y canónica, y sin `noindex`; `noindex` en las páginas de error y `X-Robots-Tag` en `/up` | test: `PaginasErrorTest` (CA7, CA12) + `PaginasPublicasTest` sin cambios; manual: Lighthouse SEO de `/` y `/registro` en `/review` |
 
-Resultado: 10 ✅ · 0 ➖ · 0 ❌.
+Resultado: 10 ✅, ningún principio sin aplicar y ninguna violación.
 
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
