@@ -1,6 +1,7 @@
 ---
 lane: fix
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released             # open → done → released · escalated (→ escalated_to)
+released: v0.14.2 (2026-11-08)
 base: cb9a0a0                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: []                  # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir
@@ -75,6 +76,17 @@ estado vacío lleva fija la ruta del admin. Los dos enlaces llevan, por tanto, a
   - H2 (menor, aceptado): la vista calcula el rol dos veces (`$rutaAlta` arriba y `$base` en cada
     fila).
   - H3 (ficha sin terminar): la review leyó una versión anterior; ya está completa.
+- Liberación v0.14.2 (`/release --changes`, 2026-11-08):
+  - Puerta de seguridad: `composer audit` limpio salvo los 6 avisos de Symfony de EX4 (vigente
+    hasta el 2026-11-11); `npm audit` y `trivy` sin hallazgos altos ni críticos.
+  - Fusiones: PR #66 (arreglo) y PR #67 (release, `924aaeb`); tag `v0.14.2` sobre `b4fe118`.
+  - Aprobación: gimi34, el 2026-11-08, con la frase «desplegar v0.14.2 a producción».
+  - Despliegue: `deploy/desplegar.sh v0.14.2` en 160 s (anterior v0.14.1; copia
+    `dentissa-20261108-184430.sql.gz.gpg`).
+  - Verificación: `verificar.sh --interna` y `verificar.sh` con «Verificación: todo OK», incluida
+    la dirección pública (`/up` 200, `/`, `/servicios`, 301 a https y cabeceras).
+  - Pendiente: la comprobación manual del usuario en producción (el dentista sin «Nuevo
+    paciente»; el asistente abre su alta).
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
