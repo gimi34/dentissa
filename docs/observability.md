@@ -37,6 +37,10 @@ cubierta.
   contraseñas generadas, tokens de sesión y OAuth, secretos, cuerpos completos de petición y
   valores enlazados de consultas SQL. Cómo se enmascara: TODO(init) (propuesto: registrar solo
   IDs de recurso y redactar los bindings de `QueryException` en `withExceptions`).
+- Spec 039 (galería), dos avisos `warning` con el `request_id` del `Context`, sin nombre ni ruta de
+  archivo y sin la descripción: `galeria.procesado_fallido` (`tipo_detectado`, `bytes`) cuando GD no
+  puede leer una foto subida, y `galeria.archivo_no_borrado` (`foto_id`, `ancho`) por cada archivo
+  que no se pudo borrar después de quitar una foto (queda un archivo que nadie sirve).
 
 ## Correlación
 - Identificador por petición: cabecera `X-Request-Id`; se acepta del cliente si es un UUID válido
@@ -59,6 +63,7 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
 | Cambio de permisos o roles | sí | actor, sujeto, antes → después, fecha |
 | Alta, activación/desactivación de cuentas y cambio de contraseña | sí | actor, sujeto, acción, fecha. El restablecimiento ya se registra como `contrasena_restablecida`, en modo crítico (spec 041); el resto, en la 021 |
 | Lectura del propio registro de auditoría | sí | actor, filtro consultado, fecha |
+| Publicar, mover y quitar una foto de la galería (spec 039, CA16) | sí | `galeria_foto_publicada`, `galeria_foto_movida` y `galeria_foto_quitada`, en modo crítico: actor, recurso `galeria_foto` y su UUID, resultado, fecha y `detalle` con `con_paciente` y `posicion` (y `direccion` al mover); nunca la descripción ni la imagen. El 403 de otro rol, `acceso_denegado` del registro central |
 
 - Almacenamiento: tabla propia en MariaDB (propuesta `auditoria`), **solo anexado**: la
   aplicación solo inserta; nadie, tampoco un administrador, modifica ni borra entradas desde la

@@ -181,6 +181,10 @@ Cifradas desde la spec 032 ([ADR 0007](adr/0007-copias-cifradas-y-avisos.md)):
   segunda copia de la clave: mismas filas y `CHECKSUM TABLE` en las 14 tablas no volátiles.
 - `deploy/cifrar-copias-antiguas.sh`: cifra las copias en claro anteriores a la 032 y borra las
   originales (`shred -u`); se ejecutó en el ensayo (9 copias).
+- Spec 039: las fotos de la galería (`storage/app/galeria`, en el volumen `storage`) **no** entran en
+  las copias (D4, decisión del usuario, 2026-11-07). La base sí guarda sus filas y las declaraciones de
+  consentimiento; si se pierde el volumen, las fotos responden 404 hasta que el admin las vuelva a
+  subir (RD10).
 
 ## Rollback
 1. Para dejar la aplicación sin exposición al instante:
@@ -265,7 +269,13 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   secreta, llavero del servidor sin claves secretas, ninguna copia en claro en
   `/var/backups/dentissa` ni en la carpeta personal, y que `app` lee el log de acceso. Desde la
   spec 020, también el `scheduler` en marcha, «Tareas programadas» con `auditoria:purgar` y
-  «Entorno aplicado» en los cinco servicios.
+  «Entorno aplicado» en los cinco servicios. Desde la spec 039, con y sin `--interna`, la sección
+  «Galería (spec 039)»: GD de `app` con JPEG y WebP (las imágenes de `app` compilan GD con
+  `libjpeg62-turbo` y `libwebp`, ADR 0009), `storage/app/galeria` (o `storage/app`, antes de la
+  primera foto) escribible por `www-data` y `client_max_body_size 6m` en `web` (fotos de hasta 5 MB).
+- Galería (spec 039): publicar una foto de prueba sin pacientes, verla en `/` y en `/galeria`, anotar
+  las cabeceras de `/galeria/fotos/<id>/800` desde fuera (`Cache-Control: no-cache, private`, `ETag` y
+  `cf-cache-status` distinto de `HIT`), quitarla y comprobar que su dirección responde 404.
 - Correlación y auditoría (spec 020): una petición con un `X-Request-Id` válido lo devuelve en la
   respuesta; tras entrar como dentista a `/admin`, el admin encuentra en `/admin/auditoria` el
   `acceso_denegado` con ese `request_id` y la acción solicitada `admin.dashboard`.
@@ -370,3 +380,12 @@ solo vigila los Compose. Evidencia: `.github/workflows/ai-dd.yml`.
 
 Correcciones:
 - RD9.a Fijar la imagen de MariaDB del CI a la misma versión que local y producción — estado: pendiente (→ objetivo 5)
+
+### RD10 · Media — Las fotos de la galería no tienen copia
+Detectado en la spec 039 (plan D4, decisión del usuario, 2026-11-07). Las fotos publicadas viven en el
+volumen `storage` (`storage/app/galeria`) y `deploy/respaldar.sh` solo copia la base. Si se pierde el
+volumen, se pierden las fotos (no sus filas ni las declaraciones de consentimiento) y su dirección
+responde 404 hasta que el admin las vuelva a subir. Evidencia: `deploy/respaldar.sh`, ADR 0009.
+
+Correcciones:
+- RD10.a Incluir `storage/app/galeria` en las copias cifradas (o documentar cómo se restauran las fotos) — estado: pendiente (→ roadmap, spec 039 D4)
