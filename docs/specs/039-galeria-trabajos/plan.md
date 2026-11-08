@@ -1,6 +1,6 @@
 ---
 spec: 039-galeria-trabajos
-status: draft   # draft | approved | blocked
+status: approved   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-07
 ---
@@ -417,8 +417,8 @@ Casos de abuso de la spec:
 - `docs/observability.md`: los eventos de la galería.
 - `docs/seo.md`: la fila de `/galeria`.
 - `AGENTS.md`, mapa del repositorio (ruta protegida, con aprobación al implementar): `app/Galeria/`.
-- ADR 0009 vuelve a `proposed` con las correcciones de /analyze A1 y A6 (dos medidas, revalidación y
-  `noindex`), y pasa a `accepted` al aprobar el plan.
+- ADR 0009 `accepted` (plan aprobado por el usuario el 2026-11-08), con las correcciones de /analyze A1 y A6 (dos medidas, revalidación y
+  `noindex`).
 
 ## Riesgos y mitigaciones
 - **Paquetes nuevos en la imagen (`libjpeg`, `libwebp`) con vulnerabilidades.** `trivy image` sobre
