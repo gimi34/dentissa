@@ -1,6 +1,6 @@
 ---
 id: 0009
-status: accepted
+status: proposed
 date: 2026-11-07
 ---
 
@@ -37,7 +37,7 @@ Proyecto académico, sin presupuesto.
 - **Entrega:** la aplicación sirve cada foto por `GET /galeria/fotos/{foto}/{ancho}`, con el UUID y
   `800` o `1600` como parámetros. Cabeceras:
   - `Content-Type: image/webp` y `X-Content-Type-Options: nosniff`;
-  - `Cache-Control: no-cache` con `ETag`: se revalida en cada visita y responde 304 si no cambió
+  - `Cache-Control: no-cache, private` con `ETag`: se revalida en cada visita y responde 304 si no cambió
     (decisión del usuario, 2026-11-08, /analyze 039 A1). La ruta va sin el middleware
     `PreventBackHistory`, que pisaría esa cabecera;
   - `X-Robots-Tag: noindex` en las fotos con paciente (decisión del usuario, 2026-11-08, A10).
@@ -64,7 +64,9 @@ Proyecto académico, sin presupuesto.
 
 ## Consecuencias
 - Las imágenes de `app` llevan dos bibliotecas del sistema más. `trivy` las revisa en `/review` y en
-  `/release`; si aparece una vulnerabilidad alta sin corrección, se trata como en EX2.
+  `/release`, además de `trivy image` antes y después de añadirlas. EX2 no las cubre: un aviso alto o
+  crítico nuevo se corrige o lo registra el usuario como excepción propia en `docs/security.md`
+  (/analyze 039 A25).
 - Es necesario reconstruir el contenedor de desarrollo (`docker compose build app`) para que los tests
   con imágenes JPG falsas funcionen en local; la CI ya usa `setup-php` con GD completo.
 - nginx tiene que aceptar cuerpos de hasta 6 MB (`client_max_body_size`; hoy rige el valor por

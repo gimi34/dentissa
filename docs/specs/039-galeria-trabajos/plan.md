@@ -1,6 +1,6 @@
 ---
 spec: 039-galeria-trabajos
-status: approved   # draft | approved | blocked
+status: draft   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-07
 ---
@@ -53,7 +53,7 @@ Conteo: 10 cumplen, ninguno no aplica y ninguno se viola.
 | `config/filesystems.php` | Disco `galeria`: `local`, raíz `storage_path('app/galeria')`, sin URL pública | Bajo |
 | `database/migrations/2026_11_07_000000_create_galeria_fotos_table.php` (nuevo) | Tabla `galeria_fotos` (Contratos y datos); solo *expand* | Bajo |
 | `app/Models/GaleriaFoto.php` (nuevo) | Modelo con UUID, `creado_en` y `actualizado_en`, orden por `posicion`, relación con la cuenta que declaró el consentimiento | Bajo |
-| `app/Galeria/ProcesadorFoto.php` (nuevo) | `procesar(UploadedFile): FotoProcesada` (bytes de los dos WebP, ancho y alto del grande). Pasos, en este orden para acotar la memoria (D9): decodificar; calcular el rectángulo 4:3 centrado con las medidas ya giradas según la orientación EXIF; recortar y reducir en un solo `imagecopyresampled` a 1600 × 1200 como mucho; liberar la imagen original; girar o voltear la reducida; derivar de ella la de 800 × 600 como mucho. Codifica el grande con calidad 82, 72, 62 y 52; si a 52 pesa más de 500 kB, reduce las medidas a 0,8 veces (manteniendo 4:3) y repite, así que el tope es estricto. El pequeño, de `min(800, ancho)` px, con 82, 72, 62, 52, 42, 32 y 22 hasta 60 kB o menos; si ni con 22 llega (solo pasa con imágenes parecidas al ruido), se queda con el de calidad 22 (D15). Lanza `FotoNoProcesable` si GD no la puede leer | Medio: memoria con fotos grandes (pico de unos 160 MB con 6000 × 6000, con `memory_limit` 256M) |
+| `app/Galeria/ProcesadorFoto.php` (nuevo) | `procesar(UploadedFile): FotoProcesada` (bytes de los dos WebP, ancho y alto del grande). Pasos, en este orden para acotar la memoria (D9): decodificar; calcular el rectángulo 4:3 centrado con las medidas ya giradas según la orientación EXIF; recortar y reducir en un solo `imagecopyresampled` a 1600 × 1200 como mucho (1200 × 1600 si la orientación es 5, 6, 7 u 8, porque aún no está girada; /analyze A28); liberar la imagen original; girar o voltear la reducida; derivar de ella la de 800 × 600 como mucho. Codifica el grande con calidad 82, 72, 62 y 52; si a 52 pesa más de 500 kB, reduce las medidas a 0,8 veces (manteniendo 4:3) y repite, así que el tope es estricto. El pequeño, de `min(800, ancho)` px, con 82, 72, 62, 52, 42, 32 y 22 hasta 60 kB o menos; si ni con 22 llega (solo pasa con imágenes parecidas al ruido), se queda con el de calidad 22 (D15). Lanza `FotoNoProcesable` si GD no la puede leer | Medio: memoria con fotos grandes (pico de unos 160 MB con 6000 × 6000, con `memory_limit` 256M) |
 | `app/Galeria/Galeria.php` (nuevo) | Operaciones con transacción: `publicar(...)` (límite de 12 con `lockForUpdate`, posición al final, consentimiento, los dos archivos y auditoría), `mover(foto, ±1)` (intercambia con la vecina) y `quitar(foto)` (borra la fila, compacta posiciones, borra los dos archivos después del *commit* y, si un borrado falla, deja el log `galeria.archivo_no_borrado`) | Medio: archivos y fila tienen que quedar coherentes si algo falla |
 | `app/Autorizacion/GestionGaleria.php` (nuevo) y `app/Providers/AppServiceProvider.php` | Gate `gestionar-galeria` (`rol === 'admin'`), registrado como los demás (ADR 0003). La 014 también toca `AppServiceProvider`: solo se añade una línea | Bajo |
 | `app/Http/Controllers/FotosGaleriaController.php` (nuevo) | `index` (lista, formulario y, con `{foto}` en la ruta de quitar, el diálogo abierto), `store`, `subir`, `bajar`, `confirmarQuitar`, `destroy`; `reglasDeSubida()` y los mensajes de CA11 y CA12 | Medio |
@@ -67,7 +67,7 @@ Conteo: 10 cumplen, ninguno no aplica y ninguno se viola.
 | `public/css/app.css` | Tarjeta de foto, pregunta del paciente, consentimiento, selector de archivo y aviso de error, dentro de `.formulario-accesible` (de `c3/gestion.css`) | Bajo |
 | `public/js/publico.js` y `tests/js/publico.test.mjs` | Carrusel (de `c3/galeria.js`) en el mismo script, para seguir con un solo script propio por ruta; la función que elige la foto vecina se exporta para su test | Bajo |
 | `docs/design/system.md`, `docs/design/system.html` | Versión 1.12.0 con los cambios de `design.md` | Bajo |
-| `deploy/verificar.sh` y `tests/Feature/ConfiguracionProduccionTest.php` | Tres comprobaciones nuevas en producción (D17): GD de `app` con JPEG y WebP (`gd_info()`), `storage/app/galeria` escribible por `www-data` (o su padre `storage/app` si aún no existe) y `client_max_body_size 6m` en la configuración de `web` (`nginx -T`). El test lee el script, como los de cabeceras | Bajo |
+| `deploy/verificar.sh` y `tests/Feature/ConfiguracionProduccionTest.php` | Tres comprobaciones nuevas en producción (D17): GD de `app` con JPEG y WebP (`gd_info()`), `storage/app/galeria` escribible por `www-data` (o su padre `storage/app` si aún no existe) y `client_max_body_size 6m` en la configuración de `web` (`nginx -T`). Van en una sección propia, `== Galería (spec 039)`, que corre con y sin `--interna`. Usan `-u www-data` en `app`, `ok` y `fallo` como el resto, y dejan sin cambios el bloque de configuración de 16 comprobaciones y su test (/analyze A26). El test lee el script, como los de cabeceras | Bajo |
 | `tests/Feature/Galeria/*Test.php`, `tests/Unit/Galeria/ProcesadorFotoTest.php` (nuevos), `tests/Feature/PaginasPublicasTest.php`, `tests/Feature/PaginasPublicasCssTest.php` (`VISTAS`) | Ver Estrategia de pruebas | — |
 
 ## Contratos y datos
@@ -92,7 +92,7 @@ Conteo: 10 cumplen, ninguno no aplica y ninguno se viola.
 | Método y ruta | Nombre | Quién | Respuesta |
 |---|---|---|---|
 | `GET /galeria` | `galeria.publica` | todos (CA7: igual con sesión) | 200 con el mosaico o el estado vacío |
-| `GET /galeria/fotos/{foto}/{ancho}` (`ancho`: `800` o `1600`) | `galeria.foto` | todos | 200 `image/webp` con las cabeceras de «Entrega de las fotos» · 304 sin cuerpo si `If-None-Match` coincide con el `ETag` · 404 si la foto no existe (también si se acaba de quitar), si `{foto}` no es un UUID o si `{ancho}` es otro valor |
+| `GET /galeria/fotos/{foto}/{ancho}` (`ancho`: `800` o `1600`) | `galeria.foto` | todos | 200 `image/webp` con las cabeceras de «Entrega de las fotos» · 304 sin cuerpo si `If-None-Match` coincide con el `ETag` · 404 si la foto no existe (también si se acaba de quitar), si `{foto}` no es un UUID, si `{ancho}` es otro valor o si la fila existe pero falta su archivo en el disco (volumen perdido, D4), en este último caso sin 500 ni log con la ruta (/analyze A27) |
 | `GET /admin/galeria` | `admin.galeria.index` | admin | 200 |
 | `POST /admin/galeria` | `admin.galeria.store` | admin | 302 a la lista con «Foto publicada.» · 302 atrás con errores (CA11, CA12), sin guardar nada |
 | `PATCH /admin/galeria/{foto}/subir` y `/bajar` | `admin.galeria.subir`, `admin.galeria.bajar` | admin | 302 a la lista; en el extremo, sin cambios |
@@ -105,8 +105,10 @@ por la spec 020. Sin sesión: 302 al inicio de sesión.
 **Entrega de las fotos** (decisiones del usuario, 2026-11-08, /analyze A1, A6, A7 y A10):
 - Cabeceras de cada 200:
   - `Content-Type: image/webp`, `X-Content-Type-Options: nosniff`;
-  - `Cache-Control: no-cache` (el navegador revalida en cada visita: 304 si sigue igual, 404 en
-    cuanto se quita, así que CA10 se cumple al instante);
+  - `Cache-Control: no-cache, private`: el navegador revalida en cada visita (304 si sigue igual,
+    404 en cuanto se quita, así que CA10 se cumple al instante), y ninguna caché compartida la
+    guarda. Symfony añade `private` a un `no-cache` solo, así que ese es el valor exacto que sale
+    (/analyze A21);
   - `ETag: "<id>-<ancho>"`, porque el contenido de un archivo nunca cambia;
   - `X-Robots-Tag: noindex` solo si `con_paciente`.
 - La ruta va sin `PreventBackHistory`. Así no pisa `Cache-Control`, y su `withHeaders()` no se
@@ -114,7 +116,7 @@ por la spec 020. Sin sesión: 302 al inicio de sesión.
 - `img` de cada foto: `src` de 800, `srcset="<800> <min(800, ancho)>w, <1600> <ancho>w"`, `width`
   y `height` del grande. `sizes` por sitio:
   - carrusel de `/`: `(min-width: 900px) 53vw, (min-width: 560px) 72vw, 86vw`;
-  - primera foto del mosaico: `(min-width: 1200px) 800px, (min-width: 900px) 66vw, (min-width: 800px) 800px, 100vw`;
+  - primera foto del mosaico: `(min-width: 1200px) 800px, (min-width: 900px) 66vw, (min-width: 560px) 50vw, 100vw` (por debajo de 900 px ya no ocupa dos columnas: `c3/galeria.css`, /analyze A22);
   - resto del mosaico: `(min-width: 900px) 33vw, (min-width: 560px) 50vw, 100vw`.
 
   Los cortes son los de `c3/galeria.css`. Con densidad 1 y hasta 1440 px, todas las fotos piden la
@@ -183,6 +185,8 @@ APP1 con EXIF y GPS sintéticos en un JPEG).
   `.ai/inspect/039-fotos.php` (no versionado, en `.gitignore`) se ejecuta con
   `php artisan tinker` dentro del contenedor, en dos modos:
   - `publicar`: con `Galeria::publicar`, sube las seis fotos con las descripciones de `criterios.json`.
+  - `publicar 12`: además, seis fotos más con grano realista, hasta llegar a 12, para medir K9 en su
+    caso límite en `/` y `/galeria` (/analyze A23).
     Son imágenes con grano realista generadas con GD; la 2 lleva paciente, con el consentimiento
     declarado por la cuenta de admin de prueba.
   - `retirar`: las quita con `Galeria::quitar`.
@@ -201,7 +205,7 @@ APP1 con EXIF y GPS sintéticos en un JPEG).
 | TM5 | XSS almacenado por la descripción | A05:2025 | vistas públicas y gestión | salida escapada de Blade en el pie y en `alt`; el JS escribe con `textContent` | `PaginaGaleriaTest::test_la_descripcion_se_muestra_como_texto` (CA15) · `CarruselInicioTest` (mismo caso en `/`) · `GestionGaleriaTest::test_la_descripcion_se_muestra_como_texto_en_la_gestion` (tarjeta y diálogo de quitar; /analyze A9) |
 | TM6 | Path traversal o enumeración en `/galeria/fotos/{foto}` | A01:2025 | entrega | `whereUuid` y `GaleriaFoto` resuelto por Eloquent; la ruta del archivo sale del `id` de la fila | `PaginaGaleriaTest::test_una_direccion_que_no_es_una_foto_responde_404` (`../`, texto, UUID inexistente) |
 | TM7 | Repudiation: nadie responde de una foto con paciente publicada | A09:2025 | publicación | declaración con cuenta, nombre copiado y fecha (CA9); evento `galeria_foto_publicada` crítico con `con_paciente` | `GestionGaleriaTest::test_la_declaracion_muestra_quien_y_cuando` · `AuditoriaGaleriaTest` |
-| TM8 | Information disclosure: una foto quitada (consentimiento retirado) sigue accesible | A01:2025 | baja y entrega | se borran la fila y los dos archivos; la dirección da 404. `Cache-Control: no-cache` con `ETag`: navegadores y cachés compartidas revalidan en cada visita, y Cloudflare no la guarda (sin extensión y con `no-cache`; T095 anota `cf-cache-status`). Las fotos con paciente llevan `X-Robots-Tag: noindex`, para que un buscador de imágenes no las conserve (D16) | `GestionGaleriaTest::test_la_foto_quitada_deja_de_abrirse` (CA10: 404 en las dos medidas) · `PaginaGaleriaTest::test_la_foto_se_sirve_con_revalidacion` (cabeceras exactas, 304 con `If-None-Match`) · `PaginaGaleriaTest::test_solo_las_fotos_con_paciente_llevan_noindex` |
+| TM8 | Information disclosure: una foto quitada (consentimiento retirado) sigue accesible | A01:2025 | baja y entrega | se borran la fila y los dos archivos; la dirección da 404. `Cache-Control: no-cache, private` con `ETag`: el navegador revalida en cada visita y las cachés compartidas no la guardan, y Cloudflare no la guarda (sin extensión y con `no-cache`; T095 anota `cf-cache-status`). Las fotos con paciente llevan `X-Robots-Tag: noindex`, para que un buscador de imágenes no las conserve (D16) | `GestionGaleriaTest::test_la_foto_quitada_deja_de_abrirse` (CA10: 404 en las dos medidas) · `PaginaGaleriaTest::test_la_foto_se_sirve_con_revalidacion` (cabeceras exactas, 304 con `If-None-Match`) · `PaginaGaleriaTest::test_solo_las_fotos_con_paciente_llevan_noindex` |
 | TM9 | Tampering: CSRF en subir, mover o quitar | A01:2025 | formularios de gestión | el middleware CSRF de Laravel, activo en el grupo `web`; cada formulario lleva `@csrf` | `GestionGaleriaTest::test_los_formularios_llevan_token_csrf` (el token en el HTML; Laravel lo desactiva en los tests) |
 
 Casos de abuso de la spec:
@@ -232,7 +236,7 @@ Casos de abuso de la spec:
 | CA16: publicar, mover y quitar quedan registrados (quién, acción, foto, si hay paciente, cuándo, resultado, sin descripción ni imagen); el 403 con sesión, como acceso denegado | `Galeria` (`Auditoria::registrar`, crítico), `RegistroCentralDenegaciones` (existente) | `AuditoriaGaleriaTest::test_publicar_mover_y_quitar_quedan_registrados`, `::test_el_evento_no_lleva_la_descripcion`, `::test_si_la_auditoria_falla_no_se_publica_nada`, `::test_el_acceso_denegado_queda_registrado` |
 | RNF: WCAG 2.1 AA; el carrusel no se mueve solo y anuncia la foto | vistas, `publico.js` | `CarruselInicioTest::test_la_region_de_estado_esta_montada_y_vacia`, `publico.test.mjs`. verificación manual: puertas de `medir.mjs` y recorrido con teclado contra `c3` |
 | RNF: `/galeria` indexable, Lighthouse SEO ≥ 90, JavaScript ≤ 100 kB, contenido en el HTML del servidor | `galeria.blade.php` | `PaginaGaleriaTest::test_metadatos_de_galeria`, `::test_solo_carga_el_script_publico_con_defer`. verificación manual: K10 de `medir.mjs` y Lighthouse en `/review` |
-| RNF: cada foto ≤ 500 kB; las de fuera de pantalla con carga diferida | `ProcesadorFoto`, `_trabajo.blade.php` | `ProcesadorFotoTest::test_el_grande_pesa_como_mucho_500_kb` (también con ruido), `::test_el_pequeno_de_una_foto_realista_pesa_como_mucho_60_kb`, `CarruselInicioTest::test_todas_las_fotos_del_carrusel_cargan_en_diferido`, `PaginaGaleriaTest::test_solo_las_tres_primeras_cargan_sin_esperar`, `::test_cada_foto_ofrece_las_dos_medidas` (`src` de 800, `srcset` con los dos descriptores y `sizes` de Contratos). verificación manual: K9 de `medir.mjs` en `/` y `/galeria` con 12 fotos con grano realista |
+| RNF: cada foto ≤ 500 kB; las de fuera de pantalla con carga diferida | `ProcesadorFoto`, `_trabajo.blade.php` | `ProcesadorFotoTest::test_el_grande_pesa_como_mucho_500_kb` (también con ruido), `::test_el_pequeno_de_una_foto_realista_pesa_como_mucho_60_kb`, `CarruselInicioTest::test_todas_las_fotos_del_carrusel_cargan_en_diferido`, `PaginaGaleriaTest::test_solo_las_tres_primeras_cargan_sin_esperar`, `::test_cada_foto_ofrece_las_dos_medidas` (`src` de 800, `srcset` con los dos descriptores y `sizes` de Contratos). verificación manual: K9 de `medir.mjs` en `/` y `/galeria` con 12 fotos con grano realista (`publicar 12` de «Datos de medición») |
 | Comprobación en producción (spec → Notas para /plan; D17) | `deploy/verificar.sh` | `ConfiguracionProduccionTest::test_verificar_comprueba_lo_que_necesita_la_galeria` (GD con JPEG y WebP, directorio escribible y `client_max_body_size 6m`). verificación manual: `verificar.sh` en verde tras el deploy (T097) |
 | TM1 | ver CA13 | `GestionGaleriaAccesoTest` |
 | TM2 | `ProcesadorFoto`, `PaginasPublicasController::foto` | ver Modelo de amenazas |
@@ -253,8 +257,9 @@ Casos de abuso de la spec:
     corresponde a ninguna fila) y `ancho` (`800` o `1600`). Se emite si, después del *commit* de
     `quitar`, el disco no puede borrar un archivo (/analyze A2). Test:
     `GestionGaleriaTest::test_si_no_se_puede_borrar_el_archivo_queda_el_aviso`: el disco falso
-    devuelve `false` al borrar, la foto queda quitada y hay un solo log, sin la ruta ni la
-    descripción.
+    devuelve `false` en los dos borrados, la foto queda quitada y hay exactamente dos logs, uno por
+    archivo (`ancho` 800 y 1600), sin la ruta ni la descripción. Regla: un log por archivo que no se
+    pueda borrar (/analyze A24).
 - **Eventos de auditoría** (`Auditoria::registrar`, crítico, dentro de la transacción de `Galeria`):
   - `galeria_foto_publicada`, `galeria_foto_movida` y `galeria_foto_quitada`;
   - resultado `exito`, `recurso_tipo` `galeria_foto` y `recurso_id` el UUID;
@@ -269,7 +274,7 @@ Casos de abuso de la spec:
 - **Cómo se verifica tras el deploy:**
   1. Publicar una foto de prueba sin paciente y comprobar que se ve en `/` y en `/galeria`.
   2. En `/admin/auditoria`, ver `galeria_foto_publicada` con el `request_id` de la petición.
-  3. Anotar las cabeceras de `/galeria/fotos/<id>/800` desde fuera: `Cache-Control: no-cache`,
+  3. Anotar las cabeceras de `/galeria/fotos/<id>/800` desde fuera: `Cache-Control: no-cache, private`,
      `ETag` y `cf-cache-status` distinto de `HIT`.
   4. Quitar la foto y comprobar que su dirección responde 404.
   5. Revisar `dentissa-error.log` (sin 413) y `laravel.log` (sin `galeria.procesado_fallido` ni
@@ -386,7 +391,7 @@ Casos de abuso de la spec:
   (T091).
 - **D17 · `verificar.sh` (decisión del usuario, 2026-11-08, /analyze A11).** Entra en la 039: GD de
   `app` con JPEG y WebP, `storage/app/galeria` (o `storage/app`) escribible por `www-data` y
-  `client_max_body_size 6m` en `web`. Atiende la pregunta de las Notas para /plan de la spec.
+  `client_max_body_size 6m` en `web`, en la sección propia de Cambios por módulo (/analyze A26). Atiende la pregunta de las Notas para /plan de la spec.
 - **D18 · Identificadores `char(36)` (/analyze A8).** `id` y `consentimiento_usuario_id` como
   `char(36)`, igual que `usuarios.id` y las migraciones existentes.
 - **D10 · Descripción de 160 caracteres como mucho.** La spec deja fuera los textos largos por foto;
