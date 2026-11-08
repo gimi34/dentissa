@@ -107,6 +107,44 @@
     </section>
 @endif
 
+{{-- Spec 039 (CA1, CA3, CA4; design.md `c3`): «Nuestros trabajos», solo si hay fotos. Sin JavaScript la fila
+     se desplaza a mano y «Anterior» y «Siguiente» son enlaces a cada foto; con él, publico.js los mueve y la
+     región de estado anuncia la foto. Todas las fotos en diferido: la sección queda muy por debajo de la
+     primera pantalla (/analyze A7). --}}
+@if ($fotos->isNotEmpty())
+    <section class="pub-sec pub-trabajos" id="trabajos" aria-labelledby="t-trabajos">
+        <div class="pub-wrap">
+            <div class="pub-services__head">
+                <div>
+                    <span class="pub-etiqueta">Hecho en la consulta</span>
+                    <h2 id="t-trabajos" data-reveal="mask">Nuestros trabajos</h2>
+                    <p data-reveal>Algunos tratamientos que terminamos aquí.</p>
+                </div>
+                <a class="c-btn c-btn--secondary" href="{{ url('/galeria') }}" data-reveal>Ver toda la galería <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            </div>
+            <div class="pub-carrusel" data-carrusel>
+                <div class="pub-carrusel__ventana" tabindex="0" role="region" aria-label="Fotos de nuestros trabajos">
+                    <ol class="pub-carrusel__lista" role="list">
+                        @foreach ($fotos as $foto)
+                            <li id="trabajo-{{ $loop->iteration }}">@include('publico._trabajo', [
+                                'foto' => $foto,
+                                'total' => $fotos->count(),
+                                'sizes' => '(min-width: 900px) 53vw, (min-width: 560px) 72vw, 86vw',
+                                'diferida' => true,
+                            ])</li>
+                        @endforeach
+                    </ol>
+                </div>
+                <div class="pub-carrusel__controles">
+                    <a class="c-btn c-btn--secondary" href="#trabajo-{{ $fotos->count() }}" data-anterior><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Anterior</a>
+                    <p class="pub-solo-lector" role="status" data-estado></p>
+                    <a class="c-btn c-btn--secondary" href="#trabajo-{{ $fotos->count() > 1 ? 2 : 1 }}" data-siguiente>Siguiente <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </div>
+        </div>
+    </section>
+@endif
+
 <section class="pub-book" aria-labelledby="t-agenda">
     <div class="pub-wrap">
         <div class="pub-book__card" data-reveal>

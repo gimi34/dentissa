@@ -836,3 +836,63 @@ body.publico button:focus-visible {
     .pub-mosaico { grid-template-columns: minmax(0, 1fr); }
 }
 /* Fin spec 039 (galería) */
+
+/* Spec 039 · Carrusel «Nuestros trabajos» en la página de inicio (c3): una banda --p100 entre el avance de
+   servicios y la agenda. La fila se desplaza dentro de su ventana (nunca la página); sin JavaScript, a mano.
+   Desde 900 px cada foto es una lámina con la foto (7) y su panel (5). */
+.pub-trabajos { background: var(--p100); }
+.pub-trabajos + .pub-book { padding-top: var(--space-seccion); }
+.pub-carrusel__ventana {
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--space-5);
+    scrollbar-color: var(--p400) var(--p100);
+}
+.pub-carrusel__ventana:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+.pub-carrusel__lista { display: flex; gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
+.pub-carrusel__lista > li { flex: 0 0 var(--carrusel-foto-w); scroll-snap-align: start; }
+.pub-carrusel__controles {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-top: var(--space-7);
+    padding-top: var(--space-6);
+    border-top: var(--border-width) solid var(--text);
+}
+.pub-carrusel__controles .c-btn { background: var(--white); }
+.pub-carrusel .pub-trabajo {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-8);
+    align-items: center;
+}
+.pub-carrusel .pub-trabajo figcaption { gap: var(--space-4); padding: 0; }
+.pub-carrusel .pub-trabajo__num { display: block; }
+.pub-carrusel .pub-trabajo__desc { font-family: var(--font-display); font-size: var(--text-lead); line-height: var(--leading-publico-h2); }
+
+@media (max-width: 899px) {
+    .pub-carrusel .pub-trabajo { display: block; }
+    .pub-carrusel .pub-trabajo figcaption { gap: var(--space-2); padding: var(--space-5) 0 0; }
+    .pub-carrusel .pub-trabajo__num { display: none; }
+    .pub-carrusel .pub-trabajo__desc { font-family: inherit; font-size: inherit; line-height: inherit; }
+}
+@media (max-width: 559px) {
+    .pub-carrusel__controles .c-btn { padding: 0 var(--space-5); }
+}
+
+/* M-1 · Cambio de foto: la foto actual se asienta. El desplazamiento suave lo pide publico.js (`smooth`, o
+   `auto` con movimiento reducido); sin JavaScript, los enlaces saltan a cada foto. */
+@media (prefers-reduced-motion: no-preference) {
+    .js .pub-carrusel__lista > li .pub-trabajo__foto img {
+        transform: scale(1.04);
+        transition: transform var(--duration-reveal) var(--ease-expo);
+    }
+    .js .pub-carrusel__lista > li.is-actual .pub-trabajo__foto img { transform: none; }
+}
+/* Fin spec 039 (carrusel) */
