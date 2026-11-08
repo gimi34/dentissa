@@ -1,7 +1,7 @@
 ---
 id: 039
 slug: galeria-trabajos
-status: approved
+status: implemented
 created: 2026-10-20
 extends: [038]
 ---
@@ -25,60 +25,60 @@ de forma que se reconozca al paciente lo expondría.
 
 ## Criterios de aceptación
 ### Páginas públicas
-- [ ] CA1 · Dada una galería con fotos, cuando un visitante abre `/`, entonces ve, después del
+- [x] CA1 · Dada una galería con fotos, cuando un visitante abre `/`, entonces ve, después del
   avance de servicios, un carrusel con las fotos en el orden fijado por el administrador, cada una
   con su descripción visible, botones «Anterior» y «Siguiente» que se usan con el teclado, «Foto n
   de N», sin avance automático, y un enlace «Ver toda la galería» a `/galeria`.
-- [ ] CA2 · Dada una galería con fotos, cuando un visitante abre `/galeria`, entonces ve todas las
+- [x] CA2 · Dada una galería con fotos, cuando un visitante abre `/galeria`, entonces ve todas las
   fotos publicadas en el mismo orden, cada una con su descripción, y un enlace de vuelta al inicio;
   con la galería vacía ve «Aún no hay fotos de nuestros trabajos.».
-- [ ] CA3 · Dada una galería sin fotos, cuando un visitante abre `/`, entonces ni el carrusel ni el
+- [x] CA3 · Dada una galería sin fotos, cuando un visitante abre `/`, entonces ni el carrusel ni el
   enlace a la galería aparecen (ni recuadros vacíos ni marcadores de «Foto»).
-- [ ] CA4 · Dado un visitante con JavaScript desactivado, cuando abre `/` o `/galeria`, entonces
+- [x] CA4 · Dado un visitante con JavaScript desactivado, cuando abre `/` o `/galeria`, entonces
   ve todas las fotos (en el carrusel, desplazándolo a mano) con su descripción, y los enlaces
   funcionan.
-- [ ] CA5 · Dado un visitante en una pantalla de 320 a 1440 px de ancho, cuando recorre el carrusel
+- [x] CA5 · Dado un visitante en una pantalla de 320 a 1440 px de ancho, cuando recorre el carrusel
   o `/galeria` con el dedo, el ratón o solo el teclado, entonces la página no se desplaza en
   horizontal, cada control mide al menos 44 px, el foco se ve, y si pidió reducir el movimiento
   el carrusel cambia de foto sin animación.
-- [ ] CA6 · Dado un buscador o un visitante, cuando pide `/galeria`, entonces la respuesta trae en
+- [x] CA6 · Dado un buscador o un visitante, cuando pide `/galeria`, entonces la respuesta trae en
   el HTML del servidor el título «Nuestros trabajos · Dentissa», la descripción «Fotos de
   tratamientos hechos en la consulta Dentissa en Lázaro Cárdenas.», una sola dirección canónica
   absoluta y ninguna indicación de no indexar; título y descripción son distintos de los de las
   demás rutas públicas.
-- [ ] CA7 · Dado un usuario con sesión de cualquier rol, cuando abre `/galeria`, entonces la ve
+- [x] CA7 · Dado un usuario con sesión de cualquier rol, cuando abre `/galeria`, entonces la ve
   igual que un visitante.
 
 ### Gestión
-- [ ] CA8 · Dado un administrador, cuando sube una foto en JPG, PNG o WebP de hasta 5 MB con su
+- [x] CA8 · Dado un administrador, cuando sube una foto en JPG, PNG o WebP de hasta 5 MB con su
   descripción e indica que no aparece ningún paciente, entonces la foto se publica en el carrusel y
   en `/galeria`, con esa descripción como texto alternativo, en la última posición.
-- [ ] CA9 · Dado un administrador, cuando sube una foto e indica que aparece la boca o los dientes
+- [x] CA9 · Dado un administrador, cuando sube una foto e indica que aparece la boca o los dientes
   de un paciente, entonces solo se publica si marca «Tengo el consentimiento escrito del paciente
   para publicar esta foto y no se le puede reconocer»; la gestión muestra junto a esa foto quién
   declaró el consentimiento y cuándo.
-- [ ] CA10 · Dado un administrador con varias fotos subidas, cuando cambia su orden o quita una
+- [x] CA10 · Dado un administrador con varias fotos subidas, cuando cambia su orden o quita una
   (tras confirmarlo), entonces el carrusel y `/galeria` muestran las fotos en el nuevo orden y sin
   la quitada en la siguiente visita, y la foto quitada deja de poder abrirse por su dirección.
-- [ ] CA11 · Dado un administrador, cuando intenta subir una foto sin descripción, sin decir si
+- [x] CA11 · Dado un administrador, cuando intenta subir una foto sin descripción, sin decir si
   aparece un paciente o con paciente y sin marcar el consentimiento, entonces se rechaza con el
   mensaje «Escribe una descripción de la foto.», «Indica si en la foto aparece un paciente.» o
   «Marca que tienes el consentimiento escrito del paciente.», según el caso, y no se publica nada.
 
 ### Abuso
-- [ ] CA12 (abuso) · Dado un administrador, cuando sube un archivo que no es una imagen aunque
+- [x] CA12 (abuso) · Dado un administrador, cuando sube un archivo que no es una imagen aunque
   termine en `.jpg`, una imagen de otro formato, una de más de 5 MB o una cuando ya hay 12 fotos,
   entonces se rechaza con un mensaje que dice el motivo y no se publica ni se guarda nada.
-- [ ] CA13 (abuso) · Dado un dentista, un asistente, un paciente o un visitante sin sesión, cuando
+- [x] CA13 (abuso) · Dado un dentista, un asistente, un paciente o un visitante sin sesión, cuando
   intenta abrir la gestión de la galería o enviar directamente una subida, un cambio de orden o una
   baja, entonces se le niega (sin sesión, al inicio de sesión) y la galería no cambia.
-- [ ] CA14 (abuso) · Dada una foto con su ubicación u otros datos incrustados por la cámara,
+- [x] CA14 (abuso) · Dada una foto con su ubicación u otros datos incrustados por la cámara,
   cuando se publica, entonces la versión que descarga un visitante no conserva esos datos.
-- [ ] CA15 (abuso) · Dada una descripción con etiquetas o código, cuando una página pública la
+- [x] CA15 (abuso) · Dada una descripción con etiquetas o código, cuando una página pública la
   muestra, entonces aparece como texto literal y no se ejecuta nada.
 
 ### Auditoría
-- [ ] CA16 · Dado un administrador, cuando publica una foto, cambia su orden o la quita, entonces
+- [x] CA16 · Dado un administrador, cuando publica una foto, cambia su orden o la quita, entonces
   queda registrado quién lo hizo, qué acción, sobre qué foto, si en ella aparece un paciente, cuándo
   y con qué resultado, sin la descripción ni la imagen; y cuando alguien con sesión sin permiso
   intenta gestionar la galería (CA13), queda registrado como acceso denegado.
