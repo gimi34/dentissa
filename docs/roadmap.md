@@ -97,6 +97,12 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     parte (límite de fallos en el perfil).
 - Spec 043 (2026-11-05): 043/A8 `TrimStrings` recorta `password_actual` y `contrasena_correo`; una contraseña que empieza o
   acaba con un espacio (posible al fijarla por la recuperación) no se puede acreditar en el perfil. Anterior a la 043; posible `/fix`.
+  - aceptados sin tarea de `/review` (deuda menor, liberada en v0.14.1): 043/R3 subcaso de CA5 de la recuperación que solo
+    comprueba que el mensaje está entre los de `password`; 043/R4 el test de accesibilidad del perfil no prueba el error
+    «distinta»; 043/R5 regex en el test de CA2 del perfil en lugar de `xpath`; 043/R6 «Mín. 8 caracteres» solo como
+    `placeholder` en el perfil (anterior a la 043); 043/R7 mensaje duplicado en dos controladores; 043/R8 «72 caracteres»
+    frente a 72 bytes (texto de CA3 corregido en el cierre); 043/R9 el residuo de TM2 es por origen, no por enlace: posible
+    límite por cuenta en `fijar-contrasena`.
 - Spec 038 (2026-11-01), aceptados sin tarea de `/review` (deuda menor, liberada en v0.13.0). Los de la
   ronda 3 (R9–R29) se refieren a la composición de esa ronda, sustituida por la ronda 6 (`c5`): al
   retomarlos, comprobar primero si siguen aplicando.
