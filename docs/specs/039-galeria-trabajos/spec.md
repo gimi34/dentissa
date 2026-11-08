@@ -77,6 +77,12 @@ de forma que se reconozca al paciente lo expondría.
 - [ ] CA15 (abuso) · Dada una descripción con etiquetas o código, cuando una página pública la
   muestra, entonces aparece como texto literal y no se ejecuta nada.
 
+### Auditoría
+- [ ] CA16 · Dado un administrador, cuando publica una foto, cambia su orden o la quita, entonces
+  queda registrado quién lo hizo, qué acción, sobre qué foto, si en ella aparece un paciente, cuándo
+  y con qué resultado, sin la descripción ni la imagen; y cuando alguien con sesión sin permiso
+  intenta gestionar la galería (CA13), queda registrado como acceso denegado.
+
 ## Fuera de alcance
 - Fotos de las instalaciones o de la entrada (decisión del usuario: solo trabajos).
 - Carrusel que avanza solo, comparador interactivo de antes y después, álbumes, vídeos, filtros
@@ -106,12 +112,13 @@ de forma que se reconozca al paciente lo expondría.
     ejecute en una página pública → se muestra como texto (CA15).
 
 ## Auditoría
-- Publicar una foto con paciente es una escritura de datos de salud (`sensitive_write`). Esta spec
-  guarda quién declaró el consentimiento y cuándo (CA9). El registro formal de auditoría (almacén
-  solo-anexado, con resultado e identificador de petición) queda para la spec 022, como en la 026 y
-  la 028 (excepción P7).
-- El intento denegado de gestionar la galería (CA13) es un `access_denied`. Su registro formal
-  queda para la spec 021, igual que en las specs 026, 028 y 030 (excepción P7).
+- Publicar una foto con paciente es una escritura de datos de salud (`sensitive_write`); publicar
+  una sin paciente, reordenar y quitar son cambios del contenido público. Todos quedan en el registro
+  de auditoría que trajo la spec 020 (CA16), además de la declaración de quién y cuándo junto a la
+  foto (CA9).
+- El intento denegado de gestionar la galería por alguien con sesión (CA13) es un `access_denied`:
+  queda registrado como cualquier acceso denegado desde la spec 020 (CA16). Un visitante sin sesión
+  va al inicio de sesión y no deja evento, porque no hay a quién atribuirlo.
 
 ## Diseño
 Ronda 2 con `/design-spec 039` (2026-11-07), por criterios y sobre la página de inicio actual (038,
@@ -171,12 +178,14 @@ Ninguna.
 | 2026-10-20 | brecha | ¿Carrusel o galería completa en la página de inicio? | Carrusel en `/` y todas las fotos en `/galeria` | usuario (`/design-spec 038`, ronda 1) |
 | 2026-10-20 | brecha | Galería dentro de la 038 o aparte | Spec propia, separada de la 038 | usuario |
 | 2026-10-20 | diseño | Diseño de la página | Diseñada en la 038 (opción B, ronda 2): [design.md](design.md) | usuario (`/design-spec 038`) |
-| 2026-10-20 | implícita | Registro formal del acceso denegado y de la escritura de salud | Specs 021 y 022, excepción P7 como en 026/028/030 | `docs/specs/028-reprogramar-citas/spec.md` → Auditoría |
+| 2026-10-20 | implícita | Registro formal del acceso denegado y de la escritura de salud | Specs 021 y 022, excepción P7 como en 026/028/030 (sustituida el 2026-11-07, abajo) | `docs/specs/028-reprogramar-citas/spec.md` → Auditoría |
 | 2026-10-20 | supuesto | Límites de la galería | JPG, PNG o WebP, ≤ 5 MB por archivo subido, máximo 12 fotos | razonable para una clínica y el disco del servidor |
 | 2026-10-20 | supuesto | Comportamiento del carrusel | Una foto principal a la vez con «Anterior», «Siguiente» y «Foto n de N», sin avance automático; sin JavaScript se desplaza a mano | WCAG 2.2.2 (P9) |
 | 2026-10-20 | supuesto | Título y descripción de `/galeria` | Los de CA6 | razonable; se confirman al aprobar |
 | 2026-11-07 | diseño | El diseño de la ronda 1 se hizo con la página de inicio de la opción B, que la 038 sustituyó (ronda 6, `c5`) | Nuevo ciclo `/design-spec 039` con los criterios de «Criterios de diseño» (`sistema` con peso 25 para que encaje en la página actual); la ronda 1 se archiva | usuario |
 | 2026-11-07 | diseño | Diseño de la ronda 2 | Acta aprobada: `c3` (80/100), refinado con las tres observaciones del evaluador. K11 del inicio (CLS de la página actual) aceptado como anterior a la 039, con un `/fix` de la 038 aparte: [design.md](design.md) | usuario |
+| 2026-11-07 | brecha | Tamaño: 16 criterios; podría dividirse en gestión y `/galeria` por un lado y el carrusel del inicio por otro | Se mantiene junta: las piezas solo tienen valor juntas y así hay una sola vuelta de plan, análisis y review | usuario (`/plan 039`) |
+| 2026-11-07 | brecha | La spec 020 (v0.12.0) ya tiene el registro de auditoría y audita los accesos denegados; la sección Auditoría remitía a las specs 021 y 022 | Publicar, reordenar y quitar fotos se registran en ese registro, y el acceso denegado con sesión queda registrado (CA16); sin excepción P7 | usuario (`/plan 039`) |
 
 ## Notas para /plan
 - Las fotos subidas no van al repositorio. En producción necesitan un volumen persistente
@@ -199,4 +208,7 @@ Ninguna.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-20 | Spec aprobada (`approved`) con los supuestos de Decisiones | Aprobación del usuario |
+| 2026-11-07 | Diseño de la ronda 2 aprobado (`design.md`) | `/design-spec 039` |
+| 2026-11-07 | Vuelve a `draft`: Auditoría con el registro de la spec 020 y CA16 | Decisión del usuario en `/plan 039` |
+| 2026-11-07 | Aprobada de nuevo (`approved`) con CA16 | usuario |
 | 2026-10-20 | Spec creada en `draft`, separada de la 038 | División decidida por el usuario al añadir promociones |
