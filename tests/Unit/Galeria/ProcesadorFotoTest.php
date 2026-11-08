@@ -79,7 +79,7 @@ class ProcesadorFotoTest extends TestCase
 
     public function test_el_pequeno_de_una_foto_realista_pesa_como_mucho_60_kb(): void
     {
-        $r = $this->procesador()->procesar($this->fotoConGrano(3000, 2250));
+        $r = $this->procesador()->procesar($this->fotoConGrano(1600, 1200));
 
         $this->assertSame(800, $this->medidas($r->pequena)[0]);
         $this->assertLessThanOrEqual(self::TOPE_PEQUENA, strlen($r->pequena), 'El pequeño de una foto con grano pesa 60 kB o menos.');
