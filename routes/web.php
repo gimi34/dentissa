@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisenioAccesoController;
 use App\Http\Controllers\DisenioAuditoriaController;
 use App\Http\Controllers\ExpedientesController;
+use App\Http\Controllers\FotosGaleriaController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\PaginasPublicasController;
@@ -112,6 +113,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Registro de auditoría (spec 020): solo consulta, sin rutas de modificación (CA2).
     Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+
+    // Galería de trabajos (spec 039; CA8–CA13): además de role:admin, cada acción comprueba el
+    // Gate gestionar-galeria. Quitar pide confirmación en una página (D7).
+    Route::controller(FotosGaleriaController::class)->prefix('galeria')->name('galeria.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::patch('/{foto}/subir', 'subir')->name('subir')->whereUuid('foto');
+        Route::patch('/{foto}/bajar', 'bajar')->name('bajar')->whereUuid('foto');
+        Route::get('/{foto}/quitar', 'confirmarQuitar')->name('quitar')->whereUuid('foto');
+        Route::delete('/{foto}', 'destroy')->name('destroy')->whereUuid('foto');
+    });
 
     // Usuarios
     // El orden importa: Laravel resuelve por orden de registro, así que
