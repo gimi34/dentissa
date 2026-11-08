@@ -894,6 +894,33 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertStringContainsString('config --services', substr($tras, $incompleta, $levantar - $incompleta), 'Lee la lista justo antes de levantar.');
     }
 
+    /**
+     * Spec 039 (D17, T032; /analyze A11, A26): verificar.sh comprueba lo que necesita la galería en
+     * una sección propia, «Galería (spec 039)», que corre con y sin `--interna` y queda fuera del
+     * bloque de 16 comprobaciones de configuración: GD de app con JPEG y WebP, el directorio de las
+     * fotos (o su padre, si aún no hay ninguna) escribible por www-data y nginx con 6 MB.
+     */
+    public function test_verificar_comprueba_lo_que_necesita_la_galeria(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+        $inicio = strpos($script, 'echo "== Galería (spec 039)"');
+        $this->assertNotFalse($inicio, 'verificar.sh tiene la sección de la galería.');
+
+        $fin = strpos($script, 'echo "==', $inicio + 1);
+        $seccion = substr($script, $inicio, ($fin === false ? strlen($script) : $fin) - $inicio);
+        $primeraExterna = strpos($script, 'if [[ "${modo}" != "--interna" ]]; then');
+        $this->assertLessThan($primeraExterna, $inicio, 'Corre también con --interna.');
+        $this->assertGreaterThan(strpos($script, 'de 16 comprobaciones"'), $inicio, 'Fuera del bloque de configuración de 16.');
+        $this->assertStringNotContainsString('--interna', $seccion, 'No depende del modo.');
+
+        $this->assertMatchesRegularExpression('/"\$\{php\[@\]\}" -r .*gd_info\(\).*"JPEG Support".*"WebP Support"/s', $seccion, 'GD de app con JPEG y WebP, como www-data.');
+        $this->assertMatchesRegularExpression('/"\$\{compose\[@\]\}" exec -T -u www-data app test -w storage\/app\/galeria/', $seccion, 'El directorio de las fotos, escribible por www-data.');
+        $this->assertMatchesRegularExpression('/"\$\{compose\[@\]\}" exec -T -u www-data app test -w storage\/app\b(?!\/)/', $seccion, 'O su padre, antes de la primera foto.');
+        $this->assertMatchesRegularExpression('/"\$\{compose\[@\]\}" exec -T web nginx -T 2> ?\/dev\/null \| grep -q .client_max_body_size 6m;/', $seccion, 'nginx acepta 6 MB.');
+        $this->assertGreaterThanOrEqual(3, preg_match_all('/^\s+ok "/m', $seccion), 'Cada comprobación dice OK…');
+        $this->assertGreaterThanOrEqual(3, preg_match_all('/^\s+fallo "/m', $seccion), '…o FALLO, y suma al contador.');
+    }
+
     /** Spec 020 (CA5): verificar.sh comprueba que el scheduler está en marcha y programa la purga. */
     public function test_verificar_comprueba_el_scheduler(): void
     {
