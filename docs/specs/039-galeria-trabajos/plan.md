@@ -383,7 +383,7 @@ Casos de abuso de la spec:
   `X-Robots-Tag: noindex` en `/galeria/fotos/*` cuando `con_paciente`. Un buscador de imágenes no
   las guarda ni las sigue mostrando después de retirar el consentimiento. Las demás se pueden
   indexar. Riesgo residual (el buscador puede tardar en procesar la cabecera) en `docs/security.md`
-  (T090).
+  (T091).
 - **D17 · `verificar.sh` (decisión del usuario, 2026-11-08, /analyze A11).** Entra en la 039: GD de
   `app` con JPEG y WebP, `storage/app/galeria` (o `storage/app`) escribible por `www-data` y
   `client_max_body_size 6m` en `web`. Atiende la pregunta de las Notas para /plan de la spec.
