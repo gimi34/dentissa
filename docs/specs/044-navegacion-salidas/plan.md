@@ -1,6 +1,6 @@
 ---
 spec: 044-navegacion-salidas
-status: approved   # draft | approved | blocked
+status: draft   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-08
 ---
@@ -25,7 +25,7 @@ por el grupo `web`, así la página sabe si hay sesión. Un middleware global a�
 | Principio | Resultado | Justificación / ajuste | Cómo se verifica |
 |---|---|---|---|
 | P1 Spec aprobada antes de código | ✅ | Spec 044 aprobada (de nuevo tras /analyze r1), `design.md` y este plan aprobados; `tasks.md` aprobado antes de `/implement` | manual: `python .ai/bin/aidd.py status` |
-| P2 Test que falla antes y pasa después | ✅ | Cada CA con su test (Trazabilidad); de caracterización, marcados como tales, CA3 (enlace sin gastar), CA4 (sin cuenta), CA8 (auditoría) y la parte de CA11 sobre los códigos | test: Trazabilidad; `/implement` anota el fallo previo o la rotura comprobada |
+| P2 Test que falla antes y pasa después | ✅ | Cada CA con su test (Trazabilidad); de caracterización, marcados como tales, CA3 (enlace sin gastar), CA4 (sin cuenta), CA8 (auditoría), la parte de CA11 sobre los códigos y los límites actuales de CA10 (se comprueba rompiendo el `->response()` de `registro`, /analyze A22) | test: Trazabilidad; `/implement` anota el fallo previo o la rotura comprobada |
 | P3 Autorización en el servidor | ✅ | No hay endpoints nuevos con datos; la ruta de reserva solo responde 404. Los controles por rol no cambian: la página 403 solo cambia el aspecto, con el mismo código y el mismo mensaje del Gate | test: `PaginasErrorTest::test_la_denegacion_por_rol_sigue_siendo_403_con_su_mensaje` + `EstadosCitaRolesTest` y `DenegacionesAuditadasTest` sin cambios |
 | P4 Entrada validada y SQL con bindings | ✅ | No hay entrada nueva. En Blade solo la salida escapada (dobles llaves), también para el mensaje del permiso en la 403; sin salida sin escapar | lint: `semgrep` sobre lo tocado; test: TM2 |
 | P5 Nada sensible en el repositorio | ✅ | Sin secretos ni datos | lint: `gitleaks detect --no-banner` |
@@ -59,6 +59,7 @@ Resultado: 10 ✅, ningún principio sin aplicar y ninguna violación.
 | `tests/Feature/NavegacionSalidasTest.php` (nuevo) | CA1–CA6 | — |
 | `tests/Feature/PaginasErrorTest.php` (nuevo) | CA7–CA12 y TM1–TM7 | — |
 | `tests/Feature/PaginaInicioTest.php` | El test de la redirección con sesión (038 CA2) pasa a comprobar la página con «Ir a mi panel» | — |
+| `tests/Feature/AdminUsuariosRutasTest.php` | `test_un_identificador_sin_forma_de_uuid_no_resuelve_a_show` comprueba que la dirección no resuelve a `UsuarioController@show` y responde 404, en lugar de esperar la excepción de `match()` (D3, /analyze A16) | — |
 | `tests/Feature/RecuperarContrasenaVistasTest.php` | `test_el_acceso_usa_el_estilo_anterior_del_login` exige el logo dentro del enlace con nombre accesible «Ir a la página de inicio» en lugar de una imagen con `alt` no vacío: cambio del contrato de la 041 (/analyze A3; T098 lo anota en su Historial) | — |
 | `tests/Feature/NavegacionSalidasCssTest.php` (nuevo) | Comprobaciones automáticas de P9 (/analyze A6): alto `--touch-min` declarado en `.enlace-inicio` (acceso y registro), `.enlace-secundario` y la entrada de la barra lateral; reglas nuevas sin literales; ningún `style=""` nuevo en las vistas tocadas (las del registro conservan los que ya tenían) | — |
 | `docs/design/system.md`, `docs/design/system.html` | 1.12.0 con los componentes de `design.md` → Cambios; DS7 parcialmente resuelta (páginas de error) | — |
@@ -71,9 +72,10 @@ Resultado: 10 ✅, ningún principio sin aplicar y ninguna violación.
   | `GET /` con sesión | 302 al panel del rol | 200, página de inicio con «Ir a mi panel» |
   | `POST /logout` | 302 a `/login` | 302 a `/` con el flash `sesion_cerrada` |
   | `GET /registro` con sesión | 302 a `/` (y de ahí al panel) | 302 directo al panel del rol |
-| `GET /registro/contacto` con sesión | sin comprobación: con `google_registro` muestra el formulario; sin él, 302 a `/registro` | 302 directo al panel del rol, con o sin `google_registro` (control nuevo) |
+  | `GET /registro/contacto` con sesión | sin comprobación: con `google_registro` muestra el formulario; sin él, 302 a `/registro` | 302 directo al panel del rol, con o sin `google_registro` (control nuevo) |
   | Dirección inexistente, GET o HEAD | 404 «Not Found» de Laravel, sin sesión | 404 con `errors/404`, pasando por `web` |
-| Dirección inexistente, POST, PUT, PATCH, DELETE u OPTIONS | 404 «Not Found» de Laravel | 404 con `errors/404`, sin el grupo `web` (sin sesión; sin la comprobación CSRF, que daría 419) |
+  | Dirección inexistente, POST, PUT, PATCH, DELETE u OPTIONS | 404 «Not Found» de Laravel | 404 con `errors/404`, sin el grupo `web` (sin sesión; sin la comprobación CSRF, que daría 419) |
+  | Verbo equivocado sobre una dirección que existe (p. ej. `GET /logout`), y `OPTIONS` | 405 (y 200 con `Allow` en `OPTIONS`) | 404 con `errors/404` (D3: no revela qué verbos acepta la dirección; los tests actuales ya aceptan 404 o 405) |
   | 403, 419, 429, 500 | páginas de Laravel en inglés | las mismas respuestas con `errors/{403,419,429,500}` |
   | `GET /up` | 200 sin `X-Robots-Tag` | 200 con `X-Robots-Tag: noindex` |
 - **Texto de la 403:** se muestra `$exception->getMessage()` solo si no está vacío y no es el genérico
@@ -132,7 +134,7 @@ La spec toca la autenticación (cierre de sesión) y las respuestas de error y d
 | CA8: 403 propia con la explicación, panel e inicio; sigue auditada | `errors/403` | Feature `PaginasErrorTest::test_la_denegacion_por_rol_sigue_siendo_403_con_su_mensaje` (`/admin` como dentista y la cancelación de `EstadosCitaRolesTest` con su mensaje) y `::test_el_acceso_denegado_sigue_en_la_auditoria` (caracterización) |
 | CA9: 419 «La página caducó» con sus dos salidas | `errors/419` | Feature `PaginasErrorTest::test_un_formulario_caducado_ofrece_volver_a_iniciar_sesion` (ruta de prueba que lanza `TokenMismatchException`) |
 | CA10: 429 y 500 en español con enlace al inicio y la misma respuesta | `errors/429`, `errors/500` | Feature `PaginasErrorTest::test_demasiados_intentos_explica_que_esperar` (ruta de prueba que lanza la excepción de límite: la 429 es preventiva, /analyze A2) y `::test_los_limites_actuales_siguen_con_su_propio_aviso` (`throttle:registro` sigue volviendo al formulario con su mensaje y `abrir-enlace` con su propia vista) y `::test_la_500_no_muestra_detalles_internos` |
-| CA11 (abuso): destinos fijos; sin detalles internos; mismos códigos | todos los enlaces nuevos, `errors/*`, `routes/web.php` | Feature `PaginasErrorTest::test_cualquier_verbo_a_una_direccion_inexistente_sigue_en_404` (GET, POST y DELETE; `RecuperarContrasenaTest` sin cambios), `::test_los_enlaces_de_vuelta_ignoran_un_destino_externo`, `::test_la_404_no_muestra_el_mensaje_de_la_excepcion`, `::test_la_404_de_un_recurso_ajeno_es_igual_a_la_de_uno_inexistente` |
+| CA11 (abuso): destinos fijos; sin detalles internos; mismos códigos | todos los enlaces nuevos, `errors/*`, `routes/web.php` | Feature `PaginasErrorTest::test_cualquier_verbo_a_una_direccion_inexistente_sigue_en_404` (GET, POST y DELETE; `RecuperarContrasenaTest` sin cambios), `::test_un_verbo_equivocado_responde_404` (`GET /logout`, A17), `AdminUsuariosRutasTest` (A16), `::test_los_enlaces_de_vuelta_ignoran_un_destino_externo`, `::test_la_404_no_muestra_el_mensaje_de_la_excepcion`, `::test_la_404_de_un_recurso_ajeno_es_igual_a_la_de_uno_inexistente` |
 | CA12: `/up` con `X-Robots-Tag: noindex` y 200 | `NoIndexarSalud`, `bootstrap/app.php` | Feature `PaginasErrorTest::test_la_comprobacion_de_salud_no_se_indexa` |
 | TM1: redirección abierta por un destino de vuelta | enlaces de vuelta, `logout()`, `RegisterController` | Feature `PaginasErrorTest::test_los_enlaces_de_vuelta_ignoran_un_destino_externo` |
 | TM2: detalles internos en las páginas de error | `errors/*` | Feature `PaginasErrorTest::test_la_500_no_muestra_detalles_internos` y `::test_la_404_no_muestra_el_mensaje_de_la_excepcion` |
@@ -202,6 +204,13 @@ La spec toca la autenticación (cierre de sesión) y las respuestas de error y d
   siguen funcionando. Comprobación: tests con GET, POST y DELETE a una dirección inexistente (404 y la
   página propia), `RecuperarContrasenaTest` sin cambios y, tras el despliegue, `curl -X POST` a una
   dirección inexistente (404), porque en los tests la comprobación CSRF está desactivada.
+  Efectos asumidos (/analyze r2): (1) con una reserva para cada verbo, un verbo equivocado sobre una
+  dirección que existe pasa de 405 a 404, y `OPTIONS` de 200 a 404; se acepta porque no revela qué
+  verbos acepta cada dirección y la app no tiene clientes que usen `OPTIONS` (A17; test con `GET
+  /logout`). (2) `Route::getRoutes()->match()` ya no lanza `NotFoundHttpException` para una dirección
+  sin ruta: responde la de reserva. `AdminUsuariosRutasTest::test_un_identificador_sin_forma_de_uuid_no_resuelve_a_show`
+  (spec 010) pasa a comprobar lo mismo de otra forma: la dirección no resuelve a `UsuarioController@show`
+  y responde 404 por HTTP (A16; cambio del test anotado en el Historial de la 010).
 - **D4 · Sesión en las páginas de error.** `auth()->hasUser()` (el usuario ya resuelto por `auth` o por
   `ContextoActor`) en lugar de `auth()->check()`, que podría consultar la base durante un fallo de esta
   (TM6).
