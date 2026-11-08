@@ -1,0 +1,324 @@
+{
+  "spec": "039-galeria-trabajos",
+  "mode": "persuadir",
+  "widths": [
+    320,
+    390,
+    900,
+    1440
+  ],
+  "threshold": 80,
+  "floor": 3,
+  "budget": 5,
+  "tokens": {
+    "colors": [
+      "#000000",
+      "#137A5A",
+      "#185FA5",
+      "#1D9E75",
+      "#4B1528",
+      "#72243E",
+      "#7A1F3A",
+      "#854F0B",
+      "#8B4B61",
+      "#993556",
+      "#9B8290",
+      "#A32D2D",
+      "#B83C65",
+      "#C75078",
+      "#D4537E",
+      "#E1F5EE",
+      "#E6F1FB",
+      "#ED93B1",
+      "#F0DCE4",
+      "#F4C0D1",
+      "#FAEEDA",
+      "#FBEAF0",
+      "#FCEBEB",
+      "#FDF0F4",
+      "#FDF5F8",
+      "#FFFFFF"
+    ]
+  },
+  "gates": {
+    "contrast": 4.5,
+    "touch": 44,
+    "external_hosts": [
+      "www.google.com"
+    ]
+  },
+  "pantallas": {
+    "inicio": {
+      "file": "inicio.html",
+      "sin_iframes": [
+        "K9",
+        "K10"
+      ]
+    },
+    "galeria": {
+      "file": "galeria.html"
+    },
+    "galeria-vacia": {
+      "file": "galeria-vacia.html"
+    },
+    "gestion": {
+      "file": "gestion.html",
+      "widths": [
+        320,
+        390,
+        1440
+      ],
+      "mode": "operar",
+      "gates": {
+        "external_hosts": [
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ]
+      },
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    },
+    "gestion-error": {
+      "file": "gestion-error.html",
+      "widths": [
+        320,
+        390,
+        1440
+      ],
+      "mode": "operar",
+      "gates": {
+        "external_hosts": [
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ]
+      },
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    },
+    "gestion-consentimiento": {
+      "file": "gestion-consentimiento.html",
+      "widths": [
+        320,
+        390,
+        1440
+      ],
+      "mode": "operar",
+      "gates": {
+        "external_hosts": [
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ]
+      },
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    },
+    "gestion-quitar": {
+      "file": "gestion-quitar.html",
+      "widths": [
+        320,
+        390,
+        1440
+      ],
+      "mode": "operar",
+      "gates": {
+        "external_hosts": [
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ]
+      },
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    }
+  },
+  "kpis": [
+    {
+      "id": "K1",
+      "pantalla": "inicio",
+      "name": "Orden de las secciones",
+      "type": "order",
+      "texts": [
+        "Ver todos los servicios",
+        "Ver toda la galería",
+        "Cómo llegar"
+      ],
+      "ca": "CA1"
+    },
+    {
+      "id": "K2",
+      "pantalla": "inicio",
+      "name": "Textos del carrusel",
+      "type": "visible",
+      "texts": [
+        "Anterior",
+        "Siguiente",
+        "Foto 1 de 6",
+        "Ver toda la galería",
+        "Resina en un incisivo, antes y después.",
+        "Corona de porcelana en un premolar.",
+        "Carillas en los cuatro incisivos superiores.",
+        "Prótesis parcial removible, recién salida del laboratorio.",
+        "Modelo de yeso para planear una ortodoncia.",
+        "Blanqueamiento: el tono antes y después."
+      ],
+      "ca": "CA1, CA4"
+    },
+    {
+      "id": "K3",
+      "pantalla": "galeria",
+      "name": "Título en la primera pantalla",
+      "type": "above_fold",
+      "text": "Nuestros trabajos",
+      "ca": "CA2, CA6"
+    },
+    {
+      "id": "K3b",
+      "pantalla": "galeria",
+      "name": "Vuelta al inicio y descripciones",
+      "type": "visible",
+      "texts": [
+        "Volver al inicio",
+        "Resina en un incisivo, antes y después.",
+        "Corona de porcelana en un premolar.",
+        "Carillas en los cuatro incisivos superiores.",
+        "Prótesis parcial removible, recién salida del laboratorio.",
+        "Modelo de yeso para planear una ortodoncia.",
+        "Blanqueamiento: el tono antes y después."
+      ],
+      "ca": "CA2"
+    },
+    {
+      "id": "K4",
+      "pantalla": "galeria-vacia",
+      "name": "Galería vacía",
+      "type": "visible",
+      "texts": [
+        "Aún no hay fotos de nuestros trabajos.",
+        "Volver al inicio"
+      ],
+      "ca": "CA2"
+    },
+    {
+      "id": "K5",
+      "pantalla": "gestion",
+      "name": "Subir foto sin desplazarse",
+      "type": "above_fold",
+      "text": "Subir foto",
+      "ca": "CA8"
+    },
+    {
+      "id": "K6",
+      "pantalla": "gestion",
+      "name": "Declaración en la tarjeta de la foto",
+      "type": "visible",
+      "texts": [
+        "Consentimiento declarado por"
+      ],
+      "ca": "CA9"
+    },
+    {
+      "id": "K6b",
+      "pantalla": "gestion-consentimiento",
+      "name": "Casilla de consentimiento",
+      "type": "visible",
+      "texts": [
+        "Tengo el consentimiento escrito del paciente para publicar esta foto y no se le puede reconocer"
+      ],
+      "ca": "CA9"
+    },
+    {
+      "id": "K7",
+      "pantalla": "gestion-error",
+      "name": "Errores sin descripción y sin indicar paciente",
+      "type": "visible",
+      "texts": [
+        "Escribe una descripción de la foto.",
+        "Indica si en la foto aparece un paciente."
+      ],
+      "ca": "CA11"
+    },
+    {
+      "id": "K7b",
+      "pantalla": "gestion-consentimiento",
+      "name": "Error sin consentimiento",
+      "type": "visible",
+      "texts": [
+        "Marca que tienes el consentimiento escrito del paciente."
+      ],
+      "ca": "CA11"
+    },
+    {
+      "id": "K8",
+      "pantalla": "gestion-quitar",
+      "name": "Confirmación al quitar",
+      "type": "visible",
+      "texts": [
+        "¿Quitar esta foto?",
+        "Quitar",
+        "Cancelar"
+      ],
+      "ca": "CA10"
+    },
+    {
+      "id": "K9",
+      "pantalla": "*",
+      "name": "Peso de la primera visita",
+      "type": "max_bytes",
+      "value": 1000000,
+      "ca": "RNF, P10"
+    },
+    {
+      "id": "K10",
+      "pantalla": "*",
+      "name": "JavaScript de la ruta",
+      "type": "max_js_bytes",
+      "value": 102400,
+      "ca": "P10"
+    },
+    {
+      "id": "K11",
+      "pantalla": "*",
+      "name": "Estabilidad visual",
+      "type": "max_cls",
+      "value": 0.1,
+      "ca": "modo"
+    },
+    {
+      "id": "K12",
+      "pantalla": "inicio",
+      "name": "Líneas de cada titular",
+      "type": "max_heading_lines",
+      "value": 3,
+      "ca": "modo persuadir"
+    },
+    {
+      "id": "K12b",
+      "pantalla": "galeria",
+      "name": "Líneas de cada titular",
+      "type": "max_heading_lines",
+      "value": 3,
+      "ca": "modo persuadir"
+    },
+    {
+      "id": "K12c",
+      "pantalla": "gestion",
+      "name": "Líneas de cada titular",
+      "type": "max_heading_lines",
+      "value": 2,
+      "ca": "modo operar"
+    },
+    {
+      "id": "K13",
+      "pantalla": "*",
+      "name": "Imágenes de muestra",
+      "type": "max_samples",
+      "value": 0,
+      "ca": "criterios §7"
+    }
+  ],
+  "rubric": {
+    "weights": {
+      "jerarquia": 20,
+      "primera_pantalla": 15,
+      "sistema": 25,
+      "lectura": 15,
+      "plantilla": 15,
+      "riqueza": 10
+    }
+  }
+}

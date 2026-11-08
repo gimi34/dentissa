@@ -1,0 +1,120 @@
+/* c3 · Gestión de la galería (spec 039), dentro de .formulario-accesible (para "Cambios a incorporar al sistema").
+   --thumb-w (fijo, 120px): miniatura de la tarjeta de foto. Reutiliza --foto-ratio de la superficie pública. */
+:root { --thumb-w: 120px; --foto-ratio: 4 / 3; }
+.topbar-actions.formulario-accesible .btn { min-height: var(--touch-min); }
+.galeria-gestion { display: grid; gap: var(--space-6); }
+.galeria-gestion__intro { margin: 0; color: var(--text); font-size: var(--text-body); }
+.galeria-gestion__intro a { color: var(--p600); font-weight: var(--weight-strong); }
+.galeria-gestion__grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-6); align-items: start; }
+.galeria-gestion h2 { margin: 0 0 var(--space-5); font-size: var(--text-marca); font-weight: var(--weight-strong); color: var(--text); }
+.galeria-gestion .btn { min-height: var(--touch-min); }
+
+.foto-lista { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.foto-tarjeta {
+    display: grid;
+    grid-template-columns: var(--thumb-w) minmax(0, 1fr);
+    gap: var(--space-4) var(--space-5);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+}
+.foto-tarjeta__img { display: block; width: 100%; height: auto; aspect-ratio: var(--foto-ratio); object-fit: cover; border-radius: var(--radius-sm); background: var(--p100); }
+.foto-tarjeta__pos { color: var(--p600); font-size: var(--text-small); font-weight: var(--weight-bold); }
+.foto-tarjeta__desc { margin: var(--space-1) 0 var(--space-2); color: var(--text); font-size: var(--text-body); }
+.foto-tarjeta__estado { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--text); font-size: var(--text-small); }
+.foto-tarjeta__estado svg { flex: none; width: var(--icon-md); height: var(--icon-md); color: var(--green-texto); }
+.foto-tarjeta__acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+
+.galeria-form .ayuda { margin: 0; color: var(--text); font-size: var(--text-small); }
+.galeria-form textarea.field { resize: vertical; }
+.galeria-form .field[aria-invalid="true"] { border-color: var(--red); }
+.campo-paciente { margin: 0 0 var(--space-5); padding: 0; border: 0; }
+.campo-paciente legend { margin-bottom: var(--space-2); padding: 0; color: var(--text); font-size: var(--text-small); font-weight: var(--weight-strong); }
+.opcion { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min); color: var(--text); font-size: var(--text-body); }
+.opcion input { width: var(--space-6); height: var(--space-6); margin: 0; accent-color: var(--border-control); }
+.consentimiento {
+    display: grid;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--p50);
+}
+.consentimiento .campo-casilla { align-items: flex-start; min-height: var(--touch-min); color: var(--text); font-size: var(--text-body); font-weight: var(--weight-strong); }
+.campo-paciente:has(input[value="no"]:checked) + .consentimiento { display: none; }
+.campo-error { margin: 0; color: var(--red); font-size: var(--text-small); font-weight: var(--weight-strong); }
+.aviso-error { margin-bottom: var(--space-5); padding: var(--space-4); border: var(--border-width) solid var(--red); border-radius: var(--radius-sm); background: var(--red-bg); color: var(--text); font-size: var(--text-body); }
+.aviso-error p { margin: 0; }
+.modal-box h2 { margin: 0 0 var(--space-3); font-size: var(--text-marca); color: var(--text); }
+.modal-box p { margin: 0 0 var(--space-6); color: var(--text); font-size: var(--text-body); }
+.modal-box .acciones-fila { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-3); }
+.modal-box .btn { min-height: var(--touch-min); }
+
+@media (max-width: 899px) {
+    .galeria-gestion__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 559px) {
+    .foto-tarjeta { grid-template-columns: minmax(0, 1fr); }
+    .foto-tarjeta__img { width: var(--thumb-w); }
+}
+
+/* c2 · Radios y casilla con zona de toque de 44 px (patrón de .remember-label, spec 041): el control mide
+   --touch-min y dibuja un círculo o un cuadro de --icon-md de un solo trazo; marcado, punto o palomita
+   (el estado no depende solo del color). */
+.opcion { gap: 0; }
+.opcion input,
+.consentimiento .campo-casilla input {
+    appearance: none;
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    margin: 0 0 0 calc(var(--space-3) * -1);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+.opcion input::before,
+.consentimiento .campo-casilla input::before,
+.consentimiento .campo-casilla input::after,
+.opcion input::after { content: ""; grid-area: 1 / 1; box-sizing: border-box; }
+.opcion input::before { width: var(--icon-md); height: var(--icon-md); background: var(--white); border: var(--border-width) solid var(--border-control); border-radius: var(--radius-pill); }
+.opcion input:checked::before { border-color: var(--p500); }
+.opcion input:checked::after { width: var(--space-3); height: var(--space-3); border-radius: var(--radius-pill); background: var(--p500); }
+.consentimiento .campo-casilla { gap: 0; }
+.consentimiento .campo-casilla input::before { width: var(--icon-md); height: var(--icon-md); background: var(--white); border: var(--border-width) solid var(--border-control); border-radius: var(--space-1); }
+.consentimiento .campo-casilla input:checked::before { border-color: var(--p500); }
+.consentimiento .campo-casilla input:checked::after { width: var(--space-2); height: var(--space-4); margin-top: calc(var(--border-width) * -2); border: solid var(--p500); border-width: 0 var(--border-width-strong) var(--border-width-strong) 0; transform: rotate(45deg); }
+.consentimiento .campo-casilla input[aria-invalid="true"]::before { border-color: var(--red); }
+.opcion input:focus-visible,
+.consentimiento .campo-casilla input:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -4); }
+.consentimiento .campo-casilla { align-items: flex-start; }
+.consentimiento .campo-casilla input { margin-top: calc((var(--touch-min) - var(--icon-md)) / -2 + var(--space-1)); }
+
+/* c2 · Acciones de la tarjeta: en el móvil, una fila a partes iguales. */
+@media (max-width: 559px) {
+    .foto-tarjeta__acciones { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+    .foto-tarjeta__acciones .btn { justify-content: center; padding: 0 var(--space-2); }
+}
+
+/* c3 · Selector de archivo: el control nativo (su texto sigue el idioma del navegador) con el botón de la app. */
+.galeria-form .campo-archivo { padding: var(--space-2); color: var(--text); font-size: var(--text-body); }
+.galeria-form .campo-archivo::file-selector-button {
+    min-height: var(--touch-min);
+    margin-right: var(--space-4);
+    padding: 0 var(--space-5);
+    border: var(--border-width) solid var(--p200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--p600);
+    font: inherit;
+    font-weight: var(--weight-strong);
+    cursor: pointer;
+}
+.galeria-form .campo-archivo:hover::file-selector-button { background: var(--p100); }
+.btn-quitar { color: var(--red); border-color: var(--red); }
+.btn-quitar:hover { background: var(--red-bg); }
+.foto-tarjeta__estado svg { color: var(--p600); }

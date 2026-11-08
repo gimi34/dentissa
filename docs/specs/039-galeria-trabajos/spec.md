@@ -114,10 +114,43 @@ de forma que se reconozca al paciente lo expondría.
   queda para la spec 021, igual que en las specs 026, 028 y 030 (excepción P7).
 
 ## Diseño
-Se diseña junto con la página de inicio en `/design-spec 038`: el carrusel dentro de `/`, la página
-`/galeria`, el estado sin fotos y la gestión del administrador (subir con descripción, la pregunta
-del paciente y la casilla de consentimiento, ordenar, quitar con confirmación y mensajes de error).
+Ronda 2 con `/design-spec 039` (2026-11-07), por criterios y sobre la página de inicio actual (038,
+`c5` «arcada»): el carrusel dentro de `/`, la página `/galeria`, el estado sin fotos y la gestión del
+administrador (subir con descripción, la pregunta del paciente y la casilla de consentimiento,
+ordenar, quitar con confirmación y mensajes de error). La ronda 1 (diseñada dentro de la 038, opción
+B, ronda 2) queda en [design/history/ronda-1/](design/history/ronda-1/design.md).
 Sistema: [docs/design/system.md](../../design/system.md). Documento de diseño: [design.md](design.md).
+
+## Criterios de diseño
+Modo: `/` y `/galeria` persuadir · gestión operar · umbral 80 · mínimo por punto 3 · presupuesto 5
+candidatos (`.ai/project.yaml → design`). Se miden con `evaluate.mjs`, pantalla por pantalla con
+`design/medir.mjs`, a 320, 390, 900 y 1440 px las públicas y a 320, 390 y 1440 px la gestión
+([design/criterios.json](design/criterios.json)). Cada candidato parte de la página de inicio actual
+con el carrusel añadido; las fotos son dibujos propios (`data-origen="dibujada"`) con descripciones
+de ejemplo hasta que el administrador suba las reales.
+
+| ID | Pantalla | Qué se mide | Objetivo | Sale de |
+|---|---|---|---|---|
+| K1 | `/` | Orden de las secciones | «Ver todos los servicios» → «Ver toda la galería» → «Cómo llegar» | CA1 |
+| K2 | `/` | Textos del carrusel | «Anterior», «Siguiente», «Foto 1 de 6», «Ver toda la galería» y las descripciones | CA1, CA4 |
+| K3 | `/galeria` | Título y vuelta | «Nuestros trabajos» en la primera pantalla; «Volver al inicio» y las descripciones | CA2, CA6 |
+| K4 | `/galeria` vacía | Texto exacto | «Aún no hay fotos de nuestros trabajos.» | CA2 |
+| K5 | gestión | Acción principal | «Subir foto» sin desplazarse | CA8 |
+| K6 | gestión | Consentimiento | la casilla de CA9 y «Consentimiento declarado por» en la tarjeta de la foto | CA9 |
+| K7 | gestión con error | Mensajes de CA11 | los tres, visibles | CA11 |
+| K8 | gestión al quitar | Confirmación | «¿Quitar esta foto?», «Quitar» y «Cancelar» | CA10 |
+| K9 | todas | Peso de la primera visita | ≤ 1 MB, con las fotos fuera de pantalla en carga diferida | RNF, P10 |
+| K10 | todas | JavaScript de la ruta | ≤ 100 kB | P10 |
+| K11 | todas | Estabilidad visual (CLS) | ≤ 0.1 | modo |
+| K12 | todas | Líneas de cada titular (`h1`–`h3`) | ≤ 3 en las públicas, ≤ 2 en la gestión | modo |
+| K13 | todas | Imágenes de muestra | 0 | criterios §7 |
+
+Puertas: las de `design-spec/references/criterios.md` §2; `G-red` admite solo `www.google.com` (el
+mapa de `/`). CA4, CA5 y CA15 los cubren las puertas (`G-sin-js`, `G-desborde`, `G-toque`, `G-foco`,
+`G-reducido`); CA3 es la página de inicio actual sin cambios; CA7 y CA12–CA14 no se ven en el diseño
+(los prueban sus tests). Rúbrica: `jerarquia` 20, `primera_pantalla` 15, `sistema` 25, `lectura` 15,
+`plantilla` 15, `riqueza` 10. Movimiento: solo el cambio de foto del carrusel, sin avance
+automático y sin animación con movimiento reducido.
 
 ## Requisitos no funcionales
 - Accesibilidad: WCAG 2.1 AA (P9). El carrusel no se mueve solo (WCAG 2.2.2) y anuncia qué foto se
@@ -142,6 +175,7 @@ Ninguna.
 | 2026-10-20 | supuesto | Límites de la galería | JPG, PNG o WebP, ≤ 5 MB por archivo subido, máximo 12 fotos | razonable para una clínica y el disco del servidor |
 | 2026-10-20 | supuesto | Comportamiento del carrusel | Una foto principal a la vez con «Anterior», «Siguiente» y «Foto n de N», sin avance automático; sin JavaScript se desplaza a mano | WCAG 2.2.2 (P9) |
 | 2026-10-20 | supuesto | Título y descripción de `/galeria` | Los de CA6 | razonable; se confirman al aprobar |
+| 2026-11-07 | diseño | El diseño de la ronda 1 se hizo con la página de inicio de la opción B, que la 038 sustituyó (ronda 6, `c5`) | Nuevo ciclo `/design-spec 039` con los criterios de «Criterios de diseño» (`sistema` con peso 25 para que encaje en la página actual); la ronda 1 se archiva | usuario |
 
 ## Notas para /plan
 - Las fotos subidas no van al repositorio. En producción necesitan un volumen persistente

@@ -1,0 +1,109 @@
+/* c1 · Componentes de la 039 en la superficie pública (para "Cambios a incorporar al sistema").
+   --foto-ratio (fijo, 4 / 3): las fotos se recortan a esta proporción al publicarlas, así no hay saltos (CLS).
+   --carrusel-foto-w (punto de corte): 86 % · 72 % desde 560 px · 62 % desde 900 px; una foto principal y el
+   borde de la siguiente, que dice que la fila sigue. */
+:root {
+    --foto-ratio: 4 / 3;
+    --carrusel-foto-w: 86%;
+}
+@media (min-width: 560px) { :root { --carrusel-foto-w: 72%; } }
+@media (min-width: 900px) { :root { --carrusel-foto-w: 62%; } }
+
+/* Nuestros trabajos: banda --p100 entre el avance de servicios y la agenda. */
+.pub-trabajos { background: var(--p100); }
+.pub-trabajos + .pub-book { padding-top: var(--space-seccion); }
+
+/* Carrusel: la fila se desplaza dentro de su ventana (nunca la página); sin JavaScript, a mano. */
+.pub-carrusel__ventana {
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--space-5);
+    scrollbar-color: var(--p400) var(--p100);
+}
+.pub-carrusel__ventana:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+.pub-carrusel__lista { display: flex; gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
+.pub-carrusel__lista > li { flex: 0 0 var(--carrusel-foto-w); scroll-snap-align: start; }
+.pub-carrusel__controles {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-top: var(--space-7);
+    padding-top: var(--space-6);
+    border-top: var(--border-width) solid var(--text);
+}
+.pub-carrusel__controles .c-btn { background: var(--white); }
+
+/* Foto de trabajo: la misma en el carrusel y en /galeria. */
+.pub-trabajo { margin: 0; }
+.pub-trabajo__foto {
+    aspect-ratio: var(--foto-ratio);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-soft);
+}
+.pub-trabajo__foto img { width: 100%; height: 100%; object-fit: cover; }
+.pub-trabajo figcaption { display: grid; gap: var(--space-2); padding-top: var(--space-5); max-width: var(--measure); }
+.pub-trabajo__n {
+    color: var(--p600);
+    font-size: var(--text-publico-small);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-etiqueta);
+    text-transform: uppercase;
+}
+
+/* /galeria: mosaico de tres columnas, la primera foto a doble ancho. */
+.pub-mosaico {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
+    align-items: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.pub-mosaico > li:first-child { grid-column: span 2; }
+.pub-galeria__vacia {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-7);
+    padding: var(--space-8);
+    border: var(--border-width) dashed var(--p400);
+    border-radius: var(--radius-lg);
+    background: var(--p100);
+}
+.pub-galeria__vacia p { font-family: var(--font-display); font-size: var(--text-lead); }
+
+.pub-solo-lector {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+    .pub-mosaico { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 559px) {
+    .pub-mosaico { grid-template-columns: minmax(0, 1fr); }
+    .pub-mosaico > li:first-child { grid-column: auto; }
+    .pub-carrusel__controles .c-btn { padding: 0 var(--space-5); }
+}
+
+/* M-1 · Cambio de foto: desplazamiento suave y la foto actual se asienta; con movimiento reducido, salto directo. */
+@media (prefers-reduced-motion: no-preference) {
+    .pub-carrusel__ventana { scroll-behavior: smooth; }
+    .js .pub-carrusel__lista > li .pub-trabajo__foto img {
+        transform: scale(1.04);
+        transition: transform var(--duration-reveal) var(--ease-expo);
+    }
+    .js .pub-carrusel__lista > li.is-actual .pub-trabajo__foto img { transform: none; }
+}
