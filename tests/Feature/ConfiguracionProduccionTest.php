@@ -906,9 +906,10 @@ class ConfiguracionProduccionTest extends TestCase
         $inicio = strpos($script, 'echo "== Galería (spec 039)"');
         $this->assertNotFalse($inicio, 'verificar.sh tiene la sección de la galería.');
 
-        $fin = strpos($script, 'echo "==', $inicio + 1);
-        $seccion = substr($script, $inicio, ($fin === false ? strlen($script) : $fin) - $inicio);
+        // La sección acaba en la siguiente sección o en el siguiente bloque que depende del modo.
         $primeraExterna = strpos($script, 'if [[ "${modo}" != "--interna" ]]; then');
+        $fin = min(array_filter([strpos($script, 'echo "==', $inicio + 1), strpos($script, 'if [[ "${modo}"', $inicio)], fn ($p) => $p !== false) ?: [strlen($script)]);
+        $seccion = substr($script, $inicio, $fin - $inicio);
         $this->assertLessThan($primeraExterna, $inicio, 'Corre también con --interna.');
         $this->assertGreaterThan(strpos($script, 'de 16 comprobaciones"'), $inicio, 'Fuera del bloque de configuración de 16.');
         $this->assertStringNotContainsString('--interna', $seccion, 'No depende del modo.');

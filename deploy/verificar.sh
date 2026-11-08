@@ -298,6 +298,32 @@ PY
         fi
     done
 
+    # Spec 039 (D17; /analyze A11, A26): lo que necesita la galería de trabajos, con y sin
+    # --interna y fuera del bloque de configuración. La carpeta de las fotos se crea con la
+    # primera foto: hasta entonces basta con que www-data pueda escribir en storage/app.
+    echo "== Galería (spec 039)"
+    if "${php[@]}" -r '$g = gd_info(); exit(! empty($g["JPEG Support"]) && ! empty($g["WebP Support"]) ? 0 : 1);' 2> /dev/null; then
+        ok "GD de app lee y escribe JPEG y WebP"
+    else
+        fallo "GD de app sin JPEG o sin WebP (docker/prod/Dockerfile, ADR 0009)"
+    fi
+    if "${compose[@]}" exec -T -u www-data app test -d storage/app/galeria; then
+        if "${compose[@]}" exec -T -u www-data app test -w storage/app/galeria; then
+            ok "storage/app/galeria escribible por www-data"
+        else
+            fallo "storage/app/galeria no es escribible por www-data"
+        fi
+    elif "${compose[@]}" exec -T -u www-data app test -w storage/app; then
+        ok "storage/app escribible por www-data (la carpeta de la galería se crea con la primera foto)"
+    else
+        fallo "storage/app no es escribible por www-data"
+    fi
+    if "${compose[@]}" exec -T web nginx -T 2> /dev/null | grep -q 'client_max_body_size 6m;'; then
+        ok "nginx acepta fotos de hasta 6 MB"
+    else
+        fallo "nginx sin client_max_body_size 6m (docker/nginx/dentissa.prod.conf)"
+    fi
+
     if [[ "${modo}" != "--interna" ]]; then
         echo "== Avisos y copias (spec 032)"
         if systemctl is-active --quiet dentissa-vigilar.timer; then
