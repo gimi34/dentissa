@@ -338,6 +338,17 @@ class GestionGaleriaTest extends TestCase
         $this->assertStringContainsString('Guarda el documento firmado', $xpath->query('//*[@id="consentimiento-ayuda"]')->item(0)?->textContent ?? '');
     }
 
+    public function test_la_ayuda_de_la_foto_avisa_del_limite_de_los_png(): void
+    {
+        // /review R37 (CA12): el límite de 4000 px de los PNG se dice antes de subir, en la ayuda que
+        // el campo de la foto enlaza con aria-describedby.
+        $xpath = $this->xpath($this->actingAs($this->admin)->get(route('admin.galeria.index'))->assertOk()->getContent());
+
+        $campo = $xpath->query('//input[@id="foto"]')->item(0);
+        $this->assertContains('foto-ayuda', explode(' ', $campo->getAttribute('aria-describedby')));
+        $this->assertStringContainsString('PNG hasta 4000 píxeles por lado', $xpath->query('//*[@id="foto-ayuda"]')->item(0)?->textContent ?? '');
+    }
+
     public function test_los_formularios_llevan_token_csrf(): void
     {
         $foto = $this->foto(1);

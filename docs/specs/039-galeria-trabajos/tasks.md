@@ -186,8 +186,9 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T055 Quitar `aria-modal` de la descripción del diálogo de quitar en el diseño de la spec y en el sistema, como decisión `refinado` — `docs/specs/039-galeria-trabajos/design.md`, `docs/design/system.md` — hecho cuando: los dos describen el diálogo como página de confirmación sin `aria-modal`, con la fila de `refinado` en `design.md`
   - nota: añadida por /review: R34, R35
   - nota: 2026-11-09 — design.md («Accesibilidad → Formulario»): página de confirmación con `role="dialog"`, nombre y descripción, sin `aria-modal`, contenido inerte y foco en «Cancelar»; fila `refinado` en Decisiones. system.md: la misma descripción del diálogo de quitar. `validate` sin errores.
-- [ ] T056 Escribir en `GestionGaleriaTest` que la ayuda del campo de la foto dice «PNG hasta 4000 píxeles por lado» — `tests/Feature/Galeria/GestionGaleriaTest.php` — hecho cuando: falla hoy — cubre: CA12
+- [x] T056 Escribir en `GestionGaleriaTest` que la ayuda del campo de la foto dice «PNG hasta 4000 píxeles por lado» — `tests/Feature/Galeria/GestionGaleriaTest.php` — hecho cuando: falla hoy — cubre: CA12
   - nota: añadida por /review: R37
+  - nota: 2026-11-09 — `test_la_ayuda_de_la_foto_avisa_del_limite_de_los_png`: el campo enlaza `foto-ayuda` y la ayuda dice «PNG hasta 4000 píxeles por lado». Falla hoy en esa aserción (la ayuda solo dice «JPG, PNG o WebP, hasta 5 MB»).
 - [ ] T057 Añadir a la ayuda del campo de la foto el límite de los PNG, y a la spec la decisión (fila en Decisiones e Historial, con la fecha de la decisión del usuario) — `resources/views/galeria/index.blade.php`, `docs/specs/039-galeria-trabajos/spec.md` — hecho cuando: T056 pasa y `aidd.py validate` no da errores — cubre: CA8, CA12 — depende: T056, T052
   - nota: añadida por /review: R37
 
