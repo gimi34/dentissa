@@ -695,8 +695,9 @@ candidatos: componentes del sistema, sin tokens nuevos).
   (spec 033), antes del nombre y «Cerrar sesión».
 - **Aviso del sitio público** (`.pub-aviso`, en `publico.css`): franja bajo la cabecera con fondo
   `--p50`, borde inferior `--border`, texto `--text` en `--text-publico-small`, palomita `--p600`
-  (`aria-hidden`) y relleno `--space-3`/`--space-4`. `role="status"`; no se cierra solo. Hoy, solo
-  «Has cerrado sesión».
+  (`aria-hidden`) y relleno `--space-3`/`--space-4`. `role="status"`; con JavaScript se retira solo a los
+  6 s con un fundido de `--duration-base` (`publico.js`; con movimiento reducido, sin fundido) y sin él se
+  queda. Hoy, solo «Has cerrado sesión».
 - **Página de error** (plantilla común sobre el error genérico de la 020, `errores.css`): franja con el
   logo en el teléfono y panel de marca desde 769 px, `.etiqueta` «Error NNN · …», un solo `h1`, `.sub`,
   la acción principal `.btn-primario` y los enlaces secundarios; `.codigo` con el identificador de la
