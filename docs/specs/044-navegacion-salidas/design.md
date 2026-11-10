@@ -38,8 +38,8 @@ Ninguna.
 
 | Pantalla y estado | Ancho menor (320/390) | Ancho mayor (1440) | Criterios |
 |---|---|---|---|
-| Acceso (inicio de sesión, pedir enlace, enviado, caducado, contraseña nueva) | «← Volver al inicio» encima del título del formulario (el panel de marca no se ve) | el mismo enlace arriba del formulario; el logo del panel de marca es enlace | CA1, CA2 |
-| Contraseña nueva | debajo del talón, «Volver a iniciar sesión» (`.enlace-volver`, como en «Revisa tu correo») | igual | CA3 |
+| Inicio de sesión | «← Volver al inicio» encima del título del formulario (el panel de marca no se ve) | el mismo enlace arriba del formulario; el logo del panel de marca es enlace | CA1, CA2 |
+| Recuperación (pedir enlace, enviado, caducado, contraseña nueva) | «← Volver a iniciar sesión» encima del título, sin repetirlo abajo | igual; el logo del panel de marca lleva a la página de inicio | CA1, CA2, CA3 |
 | Registro y completar el registro con Google | «← Volver al inicio» encima del formulario | igual; el logo del panel izquierdo es enlace | CA1, CA2, CA4 |
 | Barra lateral del panel (cuatro roles) | dentro del menú del móvil, al final de las secciones | al final de las secciones, bajo la etiqueta «Sitio» | CA5 |
 | Página de inicio con sesión | cabecera con «Ir a mi panel» (ya existe); los botones de cuenta del cuerpo llevan al panel | igual | CA5 |
@@ -116,4 +116,5 @@ Ninguno.
 | 2026-11-08 | diseño | Ciclo de candidatos | Sin exploración (`exploration: none`): componentes del sistema y validación en pantalla del usuario | usuario (spec 044) |
 | 2026-11-08 | diseño | Dónde va «Volver al inicio» en el móvil, donde el panel de marca no se ve | Primer elemento del formulario, a todos los anchos; el logo-enlace es un extra del escritorio | razonable (CA1) |
 | 2026-11-08 | diseño | Aspecto de las páginas de error | La carcasa del error genérico de la 020: ya es la página de error de la marca, lleva `noindex`, solo usa recursos propios y no necesita sesión ni base de datos | `docs/specs/020-…/design.md` (c4/error.html), RNF de la spec |
+| 2026-11-09 | refinado | Salida de arriba en la recuperación de contraseña (verificación de T020) | «← Volver a iniciar sesión», con el mismo componente `.enlace-inicio`; se quita el «Volver a iniciar sesión» de abajo | usuario |
 | 2026-11-08 | diseño | Botones de cuenta de la página de inicio con sesión | Pasan a «Ir a mi panel», para que ningún texto prometa registrarse a quien ya tiene cuenta | razonable (CA5; contracts-by-type → «Qué ve cada rol») |

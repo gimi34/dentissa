@@ -25,9 +25,9 @@ tiene que usar el botón Atrás o escribir la dirección. La spec atiende la bre
 - Como cualquiera que llega a una página de error, quiero entender qué pasó y tener a dónde ir, sin quedarme en un callejón sin salida.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un visitante en cualquiera de las pantallas de acceso (inicio de sesión, registro, completar el registro con Google, pedir el enlace de recuperación, enlace enviado, enlace caducado y contraseña nueva), cuando la abre a 320, 390 o 1440 px de ancho, entonces ve sin desplazarse un enlace «Volver al inicio» que lleva a la página de inicio.
+- [ ] CA1 · Dado un visitante en cualquiera de las pantallas de acceso, cuando la abre a 320, 390 o 1440 px de ancho, entonces ve sin desplazarse, como primer enlace del formulario, la salida de esa pantalla: «Volver al inicio», que lleva a la página de inicio, en el inicio de sesión, el registro y completar el registro con Google; y «Volver a iniciar sesión», que lleva al inicio de sesión, en las cuatro de recuperación de contraseña (pedir el enlace, enlace enviado, enlace caducado y contraseña nueva), sin repetirlo más abajo.
 - [ ] CA2 · Dado un visitante en esas pantallas, cuando el logo de la clínica está visible, entonces es un enlace a la página de inicio cuyo nombre para lectores de pantalla es «Ir a la página de inicio».
-- [ ] CA3 · Dado un visitante en «Contraseña nueva», cuando decide no seguir, entonces tiene además «Volver a iniciar sesión»; salir por cualquiera de los dos enlaces no cambia la contraseña ni gasta el enlace del correo, que sigue valiendo hasta que caduque.
+- [ ] CA3 · Dado un visitante en «Contraseña nueva», cuando decide no seguir, entonces tiene «Volver a iniciar sesión»; salir no cambia la contraseña ni gasta el enlace del correo, que sigue valiendo hasta que caduque.
 - [ ] CA4 · Dado alguien que está completando el registro con Google (pantalla de contacto), cuando pulsa «Volver al inicio», entonces llega a la página de inicio sin que se cree ninguna cuenta; si después vuelve a registrarse con Google, empieza de nuevo sin datos a medias.
 - [ ] CA5 · Dado un usuario con sesión de cualquier rol (administración, dentista, asistente o paciente), cuando abre la navegación de su panel (barra lateral en escritorio, menú en el móvil), entonces encuentra «Página de inicio», que lleva a la página de inicio sin cerrar la sesión; desde allí, «Ir a mi panel» lo devuelve a su panel. Con sesión, la página de inicio se muestra con «Ir a mi panel» en la cabecera en lugar de llevar al panel (reemplaza 038 CA2 y 001 CA5); al iniciar sesión se sigue entrando directo al panel de cada rol.
 - [ ] CA6 · Dado un usuario con sesión, cuando cierra sesión, entonces llega a la página de inicio con el aviso «Has cerrado sesión», marcado como mensaje de estado para que los lectores de pantalla lo lean al llegar a la página; la cabecera ofrece «Iniciar sesión» y «Crear cuenta», y el botón Atrás del navegador no vuelve a mostrar datos del panel.
@@ -123,6 +123,7 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | brecha | P7 exige auditar los logouts y la 044 cambia `logout()` (/analyze A5) | Excepción P7: el evento de logout llega con los listeners de autenticación de `docs/observability.md` (objetivo 3), junto con los de inicio de sesión; la 044 no quita ningún evento | usuario |
 | 2026-11-08 | brecha | Página 429 sin ningún camino real hoy (/analyze A2) | Se mantiene como preventiva; CA10 lo dice | usuario |
 | 2026-11-08 | brecha | Con la base caída, una denegación podría no llegar a su página por la auditoría de la 020 (/analyze A8) | El requisito se limita a la plantilla; el riesgo de `RegistroCentralDenegaciones` va al roadmap | usuario |
+| 2026-11-09 | brecha | En la recuperación de contraseña, ¿la salida de arriba lleva al inicio o al inicio de sesión? (verificación de T020) | Las cuatro pantallas de recuperación llevan arriba «Volver a iniciar sesión» y pierden el de abajo; en el escritorio el logo sigue llevando a la página de inicio | usuario (2026-11-09, /implement 044) |
 | 2026-11-08 | implícita | Indexación | Inicio y registro indexables; acceso, errores y salud no | `docs/seo.md`, `.ai/project.yaml → seo` |
 
 ## Notas para /plan
@@ -140,3 +141,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | Aprobada de nuevo | Aprobación del usuario |
 | 2026-11-08 | CA5 reemplaza también 001 CA5; CA6, CA9 y CA10 precisados; excepción P7 del logout; RNF de las páginas de error acotado; vuelve a `draft` | /analyze r1: A2, A4, A5, A8, A9, A11 (decisiones del usuario) |
 | 2026-11-08 | Aprobada de nuevo | Aprobación del usuario |
+| 2026-11-09 | CA1 y CA3: la recuperación de contraseña sale al inicio de sesión | Decisión del usuario al verificar T020 (/implement 044); aprobada por el usuario |

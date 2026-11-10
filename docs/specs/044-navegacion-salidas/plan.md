@@ -40,11 +40,12 @@ Resultado: 10 ✅, ningún principio sin aplicar y ninguna violación.
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
-| `resources/views/layouts/acceso.blade.php` | Primer elemento de `.form-container`: enlace `.enlace-inicio` a `route('inicio')` con flecha; el logo del panel de marca dentro de un enlace a `route('inicio')` con `aria-label="Ir a la página de inicio"` y la imagen con `alt=""` | bajo: lo heredan las cinco pantallas del acceso |
+| `resources/views/layouts/acceso.blade.php` | Primer elemento de `.form-container`: enlace `.enlace-inicio` con flecha, a `route('inicio')` («Volver al inicio») o, si la vista declara la sección `volver` con `login`, a `route('login')` («Volver a iniciar sesión») (D11); el logo del panel de marca dentro de un enlace a `route('inicio')` con `aria-label="Ir a la página de inicio"` y la imagen con `alt=""` | bajo: lo heredan las cinco pantallas del acceso |
 | `public/css/acceso.css` | `.enlace-inicio` y el foco del logo-enlace, solo con tokens | bajo |
 | `resources/views/auth/register.blade.php`, `resources/views/auth/registro-contacto.blade.php` | El mismo `.enlace-inicio` al principio de `.form-container`; el logo de `.panel-illustration` como enlace (CA2) | bajo: HTML propio con deuda previa |
 | `public/css/auth.css` | `.enlace-inicio` del registro; `auth.css` no tiene los tokens de espacio y toque: se añaden a su `:root` **con los mismos valores** de `app.css` (`--touch-min`, `--space-4`, `--icon-md`, `--text-meta`, `--weight-strong`, `--focus-ring*`), sin valores nuevos | bajo |
-| `resources/views/auth/recuperar/nueva.blade.php` | «Volver a iniciar sesión» (`.enlace-volver`) bajo el talón; conserva `<meta name="referrer" content="no-referrer">` | bajo |
+| `resources/views/auth/recuperar/nueva.blade.php` | Declara la sección `volver` con `login` (D11): «Volver a iniciar sesión» arriba; conserva `<meta name="referrer" content="no-referrer">` | bajo |
+| `resources/views/auth/recuperar/{solicitud,enviada,caducado}.blade.php` | Declaran la sección `volver` con `login` y quitan su «Volver a iniciar sesión» de abajo (D11) | bajo: `RecuperarContrasenaTest::test_la_pantalla_de_solicitud_tiene_volver` sigue en verde (un solo enlace con ese texto, al login) |
 | `resources/views/layouts/app.blade.php` | Al final de `.sidebar-nav`, fuera de los `@if` de rol: `.nav-label` «Sitio» y `.nav-item` «Página de inicio» con icono de casa | medio: toca el menú del móvil (spec 033) → `capturar.mjs --medir` |
 | `app/Http/Controllers/PaginasPublicasController.php` | `inicio()` deja de redirigir con sesión (reemplaza 038 CA2) | medio: cambia un contrato que asierta `PaginaInicioTest` |
 | `resources/views/publico/inicio.blade.php` | Con sesión, `.pub-acceso` y los botones «Agendar mi primera cita» y «Crear mi cuenta» pasan a «Ir a mi panel» (`$panel` del layout) | bajo |
@@ -124,9 +125,9 @@ La spec toca la autenticación (cierre de sesión) y las respuestas de error y d
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: «Volver al inicio» en las siete pantallas de acceso | `layouts/acceso`, `acceso.css`, `register`, `registro-contacto`, `auth.css` | Feature `NavegacionSalidasTest::test_las_pantallas_de_acceso_empiezan_por_volver_al_inicio` (data provider con las siete; el enlace es el primer `<a>` de `.form-container`) · verificación manual: sin desplazarse a 320, 390 y 1440 px en cada pantalla, contra `design.md` → Pantallas |
+| CA1: la salida de cada pantalla de acceso como primer enlace (inicio en tres; inicio de sesión en las cuatro de recuperación, sin repetirlo) | `layouts/acceso`, `acceso.css`, `register`, `registro-contacto`, `auth.css` | Feature `NavegacionSalidasTest::test_las_pantallas_de_acceso_empiezan_por_su_salida` (data provider con las siete; el enlace es el primer `<a>` de `.form-container`) · verificación manual: sin desplazarse a 320, 390 y 1440 px en cada pantalla, contra `design.md` → Pantallas |
 | CA2: el logo es enlace con «Ir a la página de inicio» | `layouts/acceso`, `register`, `registro-contacto` | Feature `NavegacionSalidasTest::test_el_logo_del_acceso_lleva_al_inicio_con_nombre_accesible` · verificación manual: foco visible en el escritorio |
-| CA3: «Contraseña nueva» con «Volver a iniciar sesión»; salir no gasta el enlace | `auth/recuperar/nueva` | Feature `NavegacionSalidasTest::test_contrasena_nueva_ofrece_volver_a_iniciar_sesion` y `::test_salir_de_contrasena_nueva_no_gasta_el_enlace` (caracterización: el token sigue abriendo el formulario y la contraseña no cambia; comprobado rompiendo la validez del token) |
+| CA3: «Contraseña nueva» con «Volver a iniciar sesión»; salir no gasta el enlace | `layouts/acceso`, `auth/recuperar/nueva` | Feature `NavegacionSalidasTest::test_contrasena_nueva_ofrece_volver_a_iniciar_sesion` y `::test_salir_de_contrasena_nueva_no_gasta_el_enlace` (caracterización: el token sigue abriendo el formulario y la contraseña no cambia; comprobado rompiendo la validez del token) |
 | CA4: salir del registro con Google no crea cuenta; volver a empezar no arrastra datos | `registro-contacto` | Feature `NavegacionSalidasTest::test_salir_del_registro_con_google_no_crea_cuenta` (caracterización: sin fila nueva en `usuarios`) y `::test_volver_a_entrar_con_google_reemplaza_los_datos_anteriores` |
 | CA5: «Página de inicio» en el panel de los cuatro roles; `/` con sesión muestra la página con «Ir a mi panel» | `layouts/app`, `PaginasPublicasController`, `publico/inicio`, `RegisterController` | Feature `NavegacionSalidasTest::test_el_panel_de_cada_rol_enlaza_la_pagina_de_inicio` (cuatro roles), `::test_la_pagina_de_inicio_con_sesion_ofrece_ir_a_mi_panel` (cabecera, `.pub-acceso` y los dos botones), `::test_el_registro_con_sesion_lleva_al_panel`; `PaginaInicioTest` (antes 038 CA2) actualizado · verificación manual: la entrada dentro del menú del móvil a 320 y 390 px, y `capturar.mjs --medir` |
 | CA6: cerrar sesión lleva al inicio con «Has cerrado sesión»; Atrás no muestra el panel | `AuthController`, `layouts/publico`, `publico.css` | Feature `NavegacionSalidasTest::test_cerrar_sesion_lleva_al_inicio_con_el_aviso_una_sola_vez` (302 a `/`, aviso con `role="status"`, cabecera con «Iniciar sesión» y «Crear cuenta», sin aviso al recargar) y `::test_tras_cerrar_sesion_el_panel_no_se_sirve_de_cache` · verificación manual: aviso en la primera pantalla a los tres anchos |
@@ -224,6 +225,10 @@ La spec toca la autenticación (cierre de sesión) y las respuestas de error y d
 - **D8 · Tokens en `auth.css`.** El registro no carga `app.css`; los tokens que usa `.enlace-inicio` se
   copian a su `:root` con los mismos valores (sin valores nuevos, P9). Unificar el registro con el acceso
   es deuda aparte (DS).
+- **D11 · Salida de la recuperación de contraseña** (decisión del usuario, 2026-11-09, al verificar T020). Las
+  cuatro pantallas de recuperación salen al inicio de sesión: el layout del acceso pinta «Volver a iniciar sesión»
+  cuando la vista declara la sección `volver` con `login` (destino fijo, TM1) y esas vistas quitan su enlace de
+  abajo. En el escritorio, el logo sigue llevando a la página de inicio.
 - **D9 · Tamaño de la spec.** 12 criterios y 5 specs extendidas, por encima del aviso; se mantiene junta
   porque el usuario ya la dividió en 044/045/046 (decisión del usuario, 2026-11-08). Con los archivos
   leídos: unos 20 archivos de código y vistas en 4 zonas (acceso, panel, sitio público, errores).
