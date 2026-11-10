@@ -73,8 +73,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     a la izquierda (`calc(2 * var(--x))`);
   - ~~020/R8 `npm audit` de la 020 depende de la chore de `follow-redirects` 1.16.2~~ resuelto en
     v0.12.0 (chore 2026-10-30-chore-follow-redirects-1.16.2, PR #55).
-- 2026-11-11, vencimiento de EX4 (`docs/security.md`): `/chore` que sube `symfony/http-foundation`, `symfony/http-kernel` y
-  `symfony/routing` a la 7.4.23 (ese día cumple 7 días), quita `config.audit.ignore` de `composer.json` y retira EX4.
+- ~~2026-11-11, vencimiento de EX4 (`docs/security.md`): `/chore` que sube `symfony/http-foundation`, `symfony/http-kernel` y
+  `symfony/routing` a la 7.4.23, quita `config.audit.ignore` de `composer.json` y retira EX4~~ hecho el 2026-11-10
+  (chore 2026-11-10-chore-symfony-7.4.23; un día antes de los 7 de antigüedad, por decisión del usuario).
 - Spec 041 (2026-11-03), liberada en v0.14.0:
   - limpieza del interruptor `RECUPERAR_CONTRASENA`, encendido en producción desde el 2026-11-03: quitarlo
     del código y de `app.env` en una versión posterior; la migración `version_sesion` es solo expand y no
