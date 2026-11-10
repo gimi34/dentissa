@@ -1,7 +1,7 @@
 ---
 id: 044
 slug: navegacion-salidas
-status: approved
+status: implemented
 created: 2026-11-08
 extends: [001, 002, 012, 038, 041]
 ---
