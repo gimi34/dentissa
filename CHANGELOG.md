@@ -5,6 +5,29 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-10
+
+### Added
+- Las pantallas de acceso tienen una salida arriba del formulario: «Volver al inicio» en el inicio de sesión y el
+  registro, y «Volver a iniciar sesión» en las de recuperar la contraseña. En pantalla ancha, el logo del panel lleva a
+  la página de inicio (spec 044).
+- En el panel de todos los roles, «Ver sitio web» lleva a la página pública sin cerrar la sesión (spec 044).
+- Páginas de error propias en español, con la marca y a dónde ir: página no encontrada, acceso denegado (con la
+  explicación del permiso cuando la hay), página caducada, demasiados intentos y fallo del servidor (spec 044).
+
+### Changed
+- Con la sesión iniciada, la página de inicio se ve normal y sus botones de cuenta dicen «Ir a mi panel»; al entrar se
+  sigue yendo directo al panel (spec 044).
+- Cerrar sesión lleva a la página de inicio con el aviso «Has cerrado sesión», que desaparece solo a los pocos segundos
+  y lo leen los lectores de pantalla (spec 044).
+- Con la sesión iniciada, el registro lleva al panel (spec 044).
+
+### Security
+- Las páginas de error no muestran detalles internos y no se indexan en buscadores; la comprobación de salud tampoco
+  (spec 044).
+- Symfony 7.4.23 (`http-foundation`, `http-kernel` y `routing`) corrige seis avisos publicados el 2026-11-04, entre
+  ellos CVE-2026-118514 y CVE-2026-118516; se retira la excepción EX4 (chore 2026-11-10-symfony-7.4.23).
+
 ## [0.14.2] - 2026-11-08
 
 ### Fixed
