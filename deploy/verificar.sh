@@ -318,10 +318,10 @@ PY
     else
         fallo "storage/app no es escribible por www-data"
     fi
-    if "${compose[@]}" exec -T web nginx -T 2> /dev/null | grep -q 'client_max_body_size 6m;'; then
-        ok "nginx acepta fotos de hasta 6 MB"
+    if "${compose[@]}" exec -T web nginx -T 2> /dev/null | grep -q 'client_max_body_size 20m;'; then
+        ok "nginx acepta cuerpos de hasta 20 MB (la validación limita las fotos a 5 MB)"
     else
-        fallo "nginx sin client_max_body_size 6m (docker/nginx/dentissa.prod.conf)"
+        fallo "nginx sin client_max_body_size 20m (docker/nginx/dentissa.prod.conf)"
     fi
 
     if [[ "${modo}" != "--interna" ]]; then
