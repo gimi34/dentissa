@@ -91,7 +91,7 @@
                     <label class="field-label" for="foto">Foto</label>
                     @if($error('foto'))<p class="campo-error" id="foto-error">{{ $error('foto') }}</p>@endif
                     <input class="field campo-archivo" type="file" id="foto" name="foto" accept="image/jpeg,image/png,image/webp" aria-describedby="{{ $describe('foto', 'foto-ayuda') }}" @if($error('foto')) aria-invalid="true" @endif>
-                    <p class="ayuda" id="foto-ayuda">JPG, PNG o WebP, hasta 5 MB. Se publica sin los datos de la cámara.</p>
+                    <p class="ayuda" id="foto-ayuda">JPG, PNG o WebP, hasta 5 MB; PNG hasta 4000 píxeles por lado. Se publica sin los datos de la cámara.</p>
                 </div>
                 <div class="campo">
                     <label class="field-label" for="descripcion">Descripción</label>

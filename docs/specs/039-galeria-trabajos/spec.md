@@ -186,6 +186,7 @@ Ninguna.
 | 2026-11-07 | diseño | Diseño de la ronda 2 | Acta aprobada: `c3` (80/100), refinado con las tres observaciones del evaluador. K11 del inicio (CLS de la página actual) aceptado como anterior a la 039, con un `/fix` de la 038 aparte: [design.md](design.md) | usuario |
 | 2026-11-07 | brecha | Tamaño: 16 criterios; podría dividirse en gestión y `/galeria` por un lado y el carrusel del inicio por otro | Se mantiene junta: las piezas solo tienen valor juntas y así hay una sola vuelta de plan, análisis y review | usuario (`/plan 039`) |
 | 2026-11-07 | brecha | La spec 020 (v0.12.0) ya tiene el registro de auditoría y audita los accesos denegados; la sección Auditoría remitía a las specs 021 y 022 | Publicar, reordenar y quitar fotos se registran en ese registro, y el acceso denegado con sesión queda registrado (CA16); sin excepción P7 | usuario (`/plan 039`) |
+| 2026-11-09 | brecha | Un PNG de 6000 × 6000 px agota la memoria del servidor al procesarlo (/review R1); el límite no estaba en la spec ni en la ayuda del campo (/review R37) | Los PNG se aceptan hasta 4000 píxeles por lado (JPG y WebP, hasta 6000); uno mayor se rechaza con su motivo (CA12) y la ayuda del campo lo dice antes de subir (CA8) | usuario (`/review 039` R1, R37) |
 
 ## Notas para /plan
 - Las fotos subidas no van al repositorio. En producción necesitan un volumen persistente
@@ -211,4 +212,5 @@ Ninguna.
 | 2026-11-07 | Diseño de la ronda 2 aprobado (`design.md`) | `/design-spec 039` |
 | 2026-11-07 | Vuelve a `draft`: Auditoría con el registro de la spec 020 y CA16 | Decisión del usuario en `/plan 039` |
 | 2026-11-07 | Aprobada de nuevo (`approved`) con CA16 | usuario |
+| 2026-11-09 | Decisiones: PNG hasta 4000 píxeles por lado, también en la ayuda del campo de la foto | Decisión del usuario en `/review 039` (R1, R37) |
 | 2026-10-20 | Spec creada en `draft`, separada de la 038 | División decidida por el usuario al añadir promociones |
