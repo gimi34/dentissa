@@ -43,7 +43,7 @@ Ninguna.
 | Registro y completar el registro con Google | «← Volver al inicio» encima del formulario | igual; el logo del panel izquierdo es enlace | CA1, CA2, CA4 |
 | Barra lateral del panel (cuatro roles) | dentro del menú del móvil, al final de las secciones | al final de las secciones, bajo la etiqueta «Sitio» | CA5 |
 | Página de inicio con sesión | cabecera con «Ir a mi panel» (ya existe); los botones de cuenta del cuerpo llevan al panel | igual | CA5 |
-| Página de inicio tras cerrar sesión | aviso «Has cerrado sesión» bajo la cabecera, encima de la portada | igual | CA6 |
+| Página de inicio tras cerrar sesión | aviso «Has cerrado sesión» al principio de `<main>`, bajo la cabecera y encima de la portada | igual | CA6 |
 | Páginas de error (404, 403, 419, 429, 500) | carcasa del error genérico (spec 020): franja con el logo, etiqueta «Error NNN · …», `h1`, una frase, la acción principal y los enlaces secundarios debajo | igual, con el panel de marca | CA7–CA10 |
 
 ### Qué ve quien tiene sesión en la página de inicio (CA5)
@@ -87,9 +87,9 @@ añade a `system.md` y `system.html` (versión 1.12.0):
 | Token, componente o regla | Modo | Valor (menor) | Valor (mayor) | Motivo |
 |---|---|---|---|---|
 | Enlace «Volver al inicio» (`.enlace-inicio`, acceso y registro) | fijo | icono flecha `--icon-md` + texto en `--text-meta`, `--weight-strong`, `--p500` (hover `--p600` subrayado), alto `--touch-min`, margen inferior `--space-4`; primer elemento del formulario | — | CA1: visible sin desplazarse en todas las pantallas, también donde el panel de marca no se ve |
-| Logo-enlace del panel de marca | fijo | el logo dentro de un enlace con `aria-label="Ir a la página de inicio"` (la imagen con `alt=""`); foco con el anillo de foco del sistema | — | CA2 |
+| Logo-enlace del panel de marca | fijo | el logo dentro de un enlace con `aria-label="Ir a la página de inicio"` (la imagen con `alt=""`); foco con el anillo inverso (`--focus-ring-inverso`, blanco): sobre el panel `--p600 → --p800` el del sistema no llega a 3:1 (/review R1) | — | CA2 |
 | Entrada «Ver sitio web» de la barra lateral | fijo | `.nav-label` «Sitio» + `.nav-item` con icono de globo, al final de `.sidebar-nav` | — | CA5 |
-| Aviso del sitio público (`.pub-aviso`) | fijo | franja bajo la cabecera, fondo `--p50`, borde inferior `--border`, texto `--text` en `--text-publico-small`, icono de palomita `--p600`, relleno `--space-3`/`--space-4`; `role="status"`; con JavaScript se retira solo a los 6 s (M-1); sin él, se queda | — | CA6 |
+| Aviso del sitio público (`.pub-aviso`) | fijo | franja bajo la cabecera, fondo `--p50`, borde inferior `--border`, texto `--text` en `--text-publico-small`, icono de palomita `--p600`, relleno `--space-3`/`--space-4`; al principio de `<main>`; el texto en un `<span role="status">` y el icono fuera; con JavaScript el texto se vacía y se vuelve a escribir a los 250 ms para que se anuncie, y se retira solo a los 6 s (M-1); sin él, se queda (/review R2, R8) | — | CA6 |
 | Página de error (plantilla común sobre el error genérico de la 020) | fijo | `.etiqueta` «Error NNN · …», `h1`, `.sub`, acción principal `.btn-primario`; `.codigo` con el identificador de la petición solo en la 500; el logo de la franja y del panel como enlace a la página de inicio | — | CA7–CA10; cierra la parte de páginas de error de DS7 |
 | Enlace secundario del error (`.enlace-secundario`, `errores.css`) | fijo | `--text-meta`, `--weight-strong`, `--p500` (hover `--p600` subrayado), alto `--touch-min`, en fila con `--space-4` de separación y en columna por debajo de 400 px | — | CA7, CA8: «Iniciar sesión», «Crear cuenta», «Ir a mi panel» |
 
@@ -98,7 +98,7 @@ añade a `system.md` y `system.html` (versión 1.12.0):
 ### M-1 — Retirada del aviso «Has cerrado sesión»
 - **Propósito y frecuencia:** que el aviso no se quede fijo en la página; una vez, tras cerrar sesión.
 - **Disparador:** carga; a los 6 s (`publico.js`), una sola vez.
-- **Elementos y propiedades:** `.pub-aviso`, `opacity` 1 → 0 · **Duración y curva:** `--duration-base` / `--ease-out` · al terminar, `hidden`.
+- **Elementos y propiedades:** `.pub-aviso`, `opacity` 1 → 0 · **Duración y curva:** `--duration-base` / `--ease-out` · al terminar (`transitionend` o un respaldo de 400 ms, /review R6), `hidden`.
 - **Reducido:** se oculta a los 6 s sin fundido (también sin la clase `js` de la 038) · **Sin JavaScript:** el aviso se queda visible · **Táctil:** igual.
 - **Coste:** unos 0,6 kB sin comprimir en `publico.js`, dentro del presupuesto de 100 kB de JavaScript por ruta (P10).
 
@@ -108,7 +108,9 @@ añade a `system.md` y `system.html` (versión 1.12.0):
   en el acceso; `--text` sobre `--p50` en el aviso); los enlaces nuevos con `--touch-min`; foco
   visible del sistema. Se revisan en `/review` contra `system.html` y con `capturar.mjs --medir`.
 - **Encabezados y estructura:** cada página de error con un solo `h1`; el aviso de sesión cerrada no
-  es un encabezado y se anuncia con `role="status"` sin mover el foco.
+  es un encabezado: su texto va en una región `role="status"` que `publico.js` vacía y vuelve a escribir tras la
+  carga, porque una región viva que ya trae su texto al cargar no se anuncia de forma fiable (/review R2); no
+  mueve el foco.
 - **Teclado:** «Volver al inicio» es el primer enlace del formulario (después del logo en el
   escritorio); en la barra lateral, «Ver sitio web» va después de las secciones del rol y antes de
   «Cerrar sesión».
@@ -123,5 +125,6 @@ añade a `system.md` y `system.html` (versión 1.12.0):
 | 2026-11-08 | diseño | Aspecto de las páginas de error | La carcasa del error genérico de la 020: ya es la página de error de la marca, lleva `noindex`, solo usa recursos propios y no necesita sesión ni base de datos | `docs/specs/020-…/design.md` (c4/error.html), RNF de la spec |
 | 2026-11-09 | refinado | Salida de arriba en la recuperación de contraseña (verificación de T020) | «← Volver a iniciar sesión», con el mismo componente `.enlace-inicio`; se quita el «Volver a iniciar sesión» de abajo | usuario |
 | 2026-11-09 | refinado | Nombre de la entrada de la barra lateral (verificación de T023) | «Ver sitio web» con icono de globo, para no confundirla con «Home»/«Inicio» del panel | usuario |
+| 2026-11-10 | refinado | /review R1, R2, R6, R8: foco del logo-enlace invisible sobre el panel; aviso que no se anuncia; fundido sin respaldo; aviso fuera de un landmark | Foco inverso en el logo-enlace; texto del aviso en un `<span role="status">` que `publico.js` reescribe; respaldo del fundido; aviso al principio de `<main>` | usuario (decisión de corregir en /review) |
 | 2026-11-09 | refinado | ¿El aviso «Has cerrado sesión» se queda fijo? (verificación de T027) | Se retira solo a los 6 s con un fundido (M-1); sin JavaScript se queda | usuario |
 | 2026-11-08 | diseño | Botones de cuenta de la página de inicio con sesión | Pasan a «Ir a mi panel», para que ningún texto prometa registrarse a quien ya tiene cuenta | razonable (CA5; contracts-by-type → «Qué ve cada rol») |

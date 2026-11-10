@@ -132,7 +132,8 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T044 Unir los dos docblocks seguidos de `SECCIONES` en `MovilPacienteTest` — `tests/Feature/MovilPacienteTest.php` — hecho cuando: un solo docblock y `MovilPacienteTest` en verde
   - nota: 2026-11-10 — un solo docblock; `MovilPacienteTest` en verde.
   - nota: añadida por /review: R18
-- [ ] T045 Actualizar `design.md` con el anuncio del aviso (región vacía que llena `publico.js`, copia en `<noscript>`, dentro de `<main>`) y el foco inverso del logo-enlace sobre el panel oscuro — `docs/specs/044-navegacion-salidas/design.md` — hecho cuando: Pantallas, Componentes, M-1 y Accesibilidad dicen lo que hace el código de T038 y T041 — cubre: CA2, CA6 — depende: T038, T041
+- [x] T045 Actualizar `design.md` con el anuncio del aviso (región vacía que llena `publico.js`, copia en `<noscript>`, dentro de `<main>`) y el foco inverso del logo-enlace sobre el panel oscuro — `docs/specs/044-navegacion-salidas/design.md` — hecho cuando: Pantallas, Componentes, M-1 y Accesibilidad dicen lo que hace el código de T038 y T041 — cubre: CA2, CA6 — depende: T038, T041
+  - nota: 2026-11-10 — Pantallas, Cambios a incorporar (logo-enlace y aviso), M-1 y Accesibilidad al día con T038 y T041, con su fila en Decisiones.
   - nota: añadida por /review: R1, R2
 
 ## Verificación final
