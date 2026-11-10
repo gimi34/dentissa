@@ -111,6 +111,24 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T033 Comprobar los casos de `PaginasErrorTest` que cruzan varias tareas (la cabecera `X-Request-Id` en las cinco páginas de error y el identificador en el cuerpo solo en la 500, A7, y `test_los_enlaces_de_vuelta_ignoran_un_destino_externo` en todas las salidas); si uno falla, se corrige en la tarea de la vista que lo cubre (T020–T032), que se reabre con una nota — sin archivos propios — hecho cuando: `PaginasErrorTest` pasa entero dos veces seguidas — cubre: CA7, CA8, CA9, CA10, CA11 — depende: T020, T021, T022, T026, T029, T030, T031, T032
   - nota: 2026-11-09 — `PaginasErrorTest` entero (16 tests) en verde dos veces seguidas; no hizo falta reabrir ninguna tarea.
 
+## Correcciones de /review r1
+- [ ] T037 Endurecer `NavegacionSalidasCssTest`: el foco de `.logo-enlace` en `acceso.css`, `auth.css` y `errores.css` usa `--focus-ring-inverso` (R1); `reglasNuevas()` incluye `.logo-enlace`, `.enlaces-secundarios`, `.enlace-inicio svg`, `.pub-aviso svg` y sus `:hover` y `:focus-visible` (R14); se comparan con `app.css` los diez tokens copiados en `auth.css` (R15); `ESTILOS_PREVIOS` incluye `auth/recuperar/solicitud`, `enviada` y `caducado` con su recuento (R16) — `tests/Feature/NavegacionSalidasCssTest.php` — hecho cuando: el caso del foco falla hoy en `acceso.css` y `auth.css` (usan `--focus-ring`), el resto pasa, y se ejecuta dos veces seguidas — cubre: CA2
+  - nota: añadida por /review: R1, R14, R15, R16
+- [ ] T038 Dar a `.logo-enlace:focus-visible` el foco inverso en `acceso.css` y `auth.css` (`--focus-ring-inverso` en su `:root`, con el valor de `app.css`) y precisarlo en `system.md` (logo-enlace: «sobre el panel oscuro, el foco inverso») — `public/css/acceso.css`, `public/css/auth.css`, `docs/design/system.md` — hecho cuando: T037 pasa entero y `RecuperarContrasenaVistasTest` sigue en verde · verificación manual: con Tab, el foco del logo se ve sobre el panel en el inicio de sesión y en el registro a 1440 px — cubre: CA2 — depende: T037
+  - nota: añadida por /review: R1
+- [ ] T039 Tests del aviso que se anuncia: en `tests/js/publico.test.mjs`, la región `role="status"` llega vacía con el texto en `data-aviso`, `publico.js` lo escribe tras la carga (un único cambio), y un temporizador de respaldo la oculta si no llega `transitionend` (R2, R6); en `NavegacionSalidasTest`, el aviso es una región `role="status"` dentro de `<main>` con `data-aviso="Has cerrado sesión"` y su copia en `<noscript>` (R2, R8), y «Iniciar sesión» y «Crear cuenta» se buscan solo en `header.pub-bar` (R10) — `tests/js/publico.test.mjs`, `tests/Feature/NavegacionSalidasTest.php` — hecho cuando: los casos nuevos fallan por la razón esperada (el texto viene en el HTML, el aviso está fuera de `<main>`, sin respaldo) y se ejecutan dos veces — cubre: CA6
+  - nota: añadida por /review: R2, R6, R8, R10
+- [ ] T041 Montar el aviso vacío dentro de `<main>` con `data-aviso` y su copia en `<noscript>`; que `publico.js` escriba el texto tras la carga, lo oculte con respaldo si no llega `transitionend` y consulte `matchMedia` una sola vez; y que `.pub-aviso` use el relleno documentado `--space-3`/`--space-4` — `resources/views/layouts/publico.blade.php`, `public/js/publico.js`, `public/css/publico.css` — hecho cuando: T039 pasa, `PaginasPublicasCssTest` y `NavegacionSalidasCssTest` siguen en verde · verificación manual: con NVDA, al llegar a la página tras cerrar sesión se anuncia «Has cerrado sesión»; sin JavaScript el aviso se ve — cubre: CA6 — depende: T039
+  - nota: añadida por /review: R2, R6, R7, R8, R19
+- [ ] T042 Endurecer `PaginasErrorTest`: los siete verbos a una dirección inexistente dan la 404 propia, y la ruta resuelta para POST no lleva `StartSession` ni la comprobación CSRF en `gatherRouteMiddleware` (R3); la 404 con sesión tras un inicio de sesión real con `post('/login')`, sin `actingAs` (R4); una ruta de prueba `abort(403, DETALLE)` cuya página no muestra el detalle (R5); y pintar la 404 y la 403, con usuario resuelto y sin él, no consulta la base (R22) — `tests/Feature/PaginasErrorTest.php` — hecho cuando: el caso de R5 falla hoy (la 403 muestra el detalle); los de R3, R4 y R22 pasan y se comprueban rompiendo (sin `withoutMiddleware('web')`; la reserva GET fuera de `web`; una consulta en la plantilla), con su nota; dos ejecuciones — cubre: CA7, CA8, CA11
+  - nota: añadida por /review: R3, R4, R5, R22
+- [ ] T043 Mostrar en la 403 la explicación solo si la excepción previa es una `AuthorizationException` y no es la genérica; en otro caso, el texto fijo — `resources/views/errors/403.blade.php` — hecho cuando: T042 pasa entero y `EstadosCitaRolesTest` sigue en verde — cubre: CA8 — depende: T042
+  - nota: añadida por /review: R5
+- [ ] T044 Unir los dos docblocks seguidos de `SECCIONES` en `MovilPacienteTest` — `tests/Feature/MovilPacienteTest.php` — hecho cuando: un solo docblock y `MovilPacienteTest` en verde
+  - nota: añadida por /review: R18
+- [ ] T045 Actualizar `design.md` con el anuncio del aviso (región vacía que llena `publico.js`, copia en `<noscript>`, dentro de `<main>`) y el foco inverso del logo-enlace sobre el panel oscuro — `docs/specs/044-navegacion-salidas/design.md` — hecho cuando: Pantallas, Componentes, M-1 y Accesibilidad dicen lo que hace el código de T038 y T041 — cubre: CA2, CA6 — depende: T038, T041
+  - nota: añadida por /review: R1, R2
+
 ## Verificación final
 - [x] T040 Pasar la verificación final: suite completa (los tests nuevos dos veces), Pint sobre los PHP tocados, gitleaks sobre el diff, semgrep `p/php`, `composer audit --locked`, `npm audit --audit-level=high`, revisión del diff (sin `Log::` ni `style=""` nuevos, sin salida sin escapar) y `node docs/design/capturar.mjs --medir` (se toca `layouts/app.blade.php`) — sin archivos — hecho cuando: todo en verde (incluido `NavegacionSalidasCssTest`, T014) y los resultados anotados en la tarea · verificación manual: el usuario confirma las pantallas pendientes de T020–T031 — depende: T014, T033
   - nota: 2026-11-09 — suite completa 771 en verde (12 722 aserciones; línea base 721), los tests nuevos dos veces en sus tareas; Pint en los 13 PHP tocados; gitleaks sobre `b7173e9..HEAD` y `origin/main..HEAD` sin secretos; semgrep `p/php` sobre los PHP tocados con 0 hallazgos; `composer audit --locked` solo con los 6 avisos de EX4 (vence el 2026-11-11); `npm audit --audit-level=high` sin vulnerabilidades. Diff sin `Log::` ni salida sin escapar; el único `style=""` del diff es el que ya tenía la imagen del registro, que ahora va dentro del enlace (el recuento lo vigila T014). Verificaciones manuales del usuario hechas en T020–T036.
@@ -121,7 +139,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
   - nota: 2026-11-09 — `architecture.md`: página de inicio con sesión, `NoIndexarSalud`, rutas de reserva, plantilla y páginas de error, y salidas del acceso, de la barra lateral y del aviso.
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: en `deployment.md` → «Verificación post-deploy», la página 404 propia y `X-Robots-Tag: noindex` en `/up`; `observability.md` sin cambios (plan, Observabilidad). En `docs/seo.md`, las filas de la tabla de rutas para la 404 y `/up`, la fila de `/` (ya no redirige con sesión) y la línea de la 404 genérica (SE2.b y SE4.a pasan a `mitigada` en `/release`, por corrección) (A12). En `docs/roadmap.md`: SE4.a sale de Pendientes al liberar (A12); la **excepción P7 de la spec 044** (el logout sin auditar, destino los listeners de autenticación del objetivo 3; decisión del usuario, 2026-11-08, A5) y el riesgo de `RegistroCentralDenegaciones` con la base caída (spec 020; decisión del usuario, A8) en «Pendientes y deuda» — depende: T040
   - nota: 2026-11-09 — `deployment.md` (verificación post-deploy: 404 propia, `curl -X POST` y `X-Robots-Tag` de `/up`), `seo.md` (mecanismo de `noindex`, páginas de error y filas de `/`, la 404 y `/up`; SE2.b y SE4.a pasan a mitigadas en `/release`) y `roadmap.md` (excepción P7 de la 044 y riesgo de la 020 con la base caída). `observability.md` sin cambios.
-- [x] T092 Marcar spec como `implemented` — depende: T090, T091
+- [ ] T092 Marcar spec como `implemented` — depende: T090, T091
   - nota: 2026-11-09 — CA1–CA12 marcados (sus tests pasan; suite 771 en verde); spec `implemented` y `docs/specs/README.md` al día.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -134,26 +152,26 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T010, T014 | T020, T021, T034 |
-| CA2 | T010 | T020, T021 |
+| CA2 | T010, T037 | T020, T021, T038, T045 |
 | CA3 | T010 | T022 |
 | CA4 | T010 | T021 |
 | CA5 | T011, T014, T035 | T023, T024, T025 |
-| CA6 | T012, T014, T036 | T026, T027, T036 |
-| CA7 | T013, T014 | T029, T033 |
-| CA8 | T013 | T030, T033 |
+| CA6 | T012, T014, T036, T039 | T026, T027, T036, T041, T045 |
+| CA7 | T013, T014, T042 | T029, T033 |
+| CA8 | T013, T042 | T030, T033, T043 |
 | CA9 | T013 | T031, T033 |
 | CA10 | T013 | T028, T031, T033 |
-| CA11 | T013 | T025, T026, T028, T029, T033 |
+| CA11 | T013, T042 | T025, T026, T028, T029, T033 |
 | CA12 | T013 | T032 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
 | TM1 | T020, T021, T022, T025, T026, T034 | T013 |
-| TM2 | T028, T029, T030 | T013 |
+| TM2 | T028, T029, T030, T043 | T013, T042 |
 | TM3 | T029 | T013 |
 | TM4 | T022 | T010 |
 | TM5 | T026 | T012 |
-| TM6 | T028 | T013 |
+| TM6 | T028 | T013, T042 |
 | TM7 | T030 | T013 |
 
 | Cambio del plan (módulo) | Tarea(s) |
@@ -176,7 +194,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | `tests/Feature/NavegacionSalidasTest.php` | T010, T011, T012 |
 | `tests/Feature/PaginasErrorTest.php` | T013 (T033 lo ejecuta entero) |
 | `tests/Feature/PaginaInicioTest.php` | T011 |
-| `tests/Feature/MovilPacienteTest.php` | T035 |
+| `tests/Feature/MovilPacienteTest.php` | T035, T044 |
 | `tests/Feature/RecuperarContrasenaVistasTest.php` | T020 |
 | `tests/Feature/AdminUsuariosRutasTest.php` | T029 |
 | `tests/Feature/NavegacionSalidasCssTest.php` | T014 |
