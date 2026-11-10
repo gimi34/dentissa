@@ -1,99 +1,93 @@
 ---
 spec: 039-galeria-trabajos
-verdict: changes_requested
-round: 2
+verdict: approved
+round: 3
 date: 2026-11-09
-base: a097006
-head: 499ecb7
-human_signoff: pending
+base: 499ecb7
+head: f57c06d
+human_signoff: no requerido
 ---
 
 # Review · 039 Galería de trabajos
 
 ## Resumen
-`changes_requested` (ronda 2, `--rerun`). R1 a R13 están corregidos, salvo R3, que queda a medias: el
-fondo de la vista ya es inerte, pero el layout no. No hay bloqueantes. Hay dos importantes nuevos:
-R34, lo que queda de R3, y R35, los documentos que siguen diciendo 6 MB y no recogen el límite de los
-PNG. Hay además dos menores. El usuario decidió corregir R34 quitando `aria-modal` (el diálogo es una
-página de confirmación), corregir R35 y R37 y llevar R36 al roadmap (tareas T051–T057).
-Revisión con un solo subagente (perfil `critical`) sobre el diff `a097006..HEAD` (37 KB), con los
-encargos A, C+D, S y accesibilidad.
-Conteo: bloqueante 0 · importante 2 · menor 2
+`approved` (ronda 3, `--rerun`). R34, R35 y R37 de la ronda 2 están corregidos (T051–T057) y no
+aparece nada nuevo. R36 sigue aceptado para el roadmap.
+Revisión sin subagentes, porque el diff es pequeño: `code.diff` de 5,2 KB con una vista y un test, más
+los documentos. Releí los archivos desde cero.
+Conteo: bloqueante 0 · importante 0 · menor 0. Fuera de la spec: tests intermitentes de la 041 en la suite completa (ver Verificación automática)
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `php artisan test` | ✅ 844 en verde. En una pasada anterior falló una vez `RecuperarContrasenaVistasTest::test_el_foco_va_al_primer_campo_con_error` (spec 041, ajeno a la 039): pasa en aislado y en la siguiente pasada completa. Es un test intermitente previo, para un `/fix` aparte |
-| `node --test tests/js/publico.test.mjs` (dos veces) | ✅ 16/16 |
-| `vendor/bin/pint --test` (PHP tocados) | ✅ |
+| `php artisan test` (suite completa, en `f57c06d`) | ⚠ tres pasadas: 845 en verde en la segunda; 2 fallos en la primera (sin nombres: la salida estaba recortada) y 1 en la tercera, `RecuperarContrasenaTest::test_una_cuenta_activa_recibe_el_enlace` («The expected [App\Mail\EnlaceRestablecimiento] mailable was not sent», línea 167). Es código de la spec 041 que la rama no toca (`git diff cf2a57d..HEAD` no cambia nada de la recuperación). Es el mismo intermitente que ya anotó la ronda 2, ahora en otro test de la 041: va a un `/fix` aparte y no es un hallazgo de la 039 |
+| `php artisan test --filter=GestionGaleriaTest` (segunda pasada de los tests cambiados) | ✅ 15/15 |
+| `node --test tests/js/publico.test.mjs` | ✅ 16/16 (sin cambios desde la ronda 2) |
+| `vendor/bin/pint --test tests/Feature/Galeria/GestionGaleriaTest.php` | ✅ |
 | `python .ai/bin/aidd.py validate docs/specs/039-galeria-trabajos` | ✅ 0 errores |
-| `design/medir.mjs`, cuatro pantallas de gestión (T042) | ✅ todas las puertas y KPIs |
+| `design/medir.mjs`, cuatro pantallas de gestión (T057) | ✅ todas las puertas y KPIs |
 
 ## Criterios de aceptación
 | CA | Test | Estado | Nota |
 |---|---|---|---|
-| CA1 | `CarruselInicioTest` (fotos desordenadas), `publico.test.mjs` | ✅ | R6, R8 y R12 corregidos |
-| CA2 | `PaginaGaleriaTest` | ✅ | R9 corregido |
-| CA3–CA7 | sin cambios desde la ronda 1 | ✅ | |
-| CA8 | `SubidaFotoGaleriaTest` (PNG de 4000 px publicado) | ✅ | el límite de los PNG falta en la spec (R37) |
-| CA9, CA10 | `GestionGaleriaTest` | ⚠ | diálogo con `aria-modal` y el layout tabulable (R34) |
-| CA11 | `SubidaFotoGaleriaTest::test_cada_falta_sale_junto_a_su_campo_en_la_pagina`, `GestionGaleriaTest::test_el_aviso_de_error_recibe_el_foco_y_enlaza_cada_campo` | ✅ | R4 y R5 corregidos |
-| CA12 | `SubidaFotoGaleriaTest` (PNG de más de 4000 px; más de 5 MB) | ✅ | R1 y R2 corregidos; por encima de 20 MB sigue el 413 (R36) |
-| CA13 | `GestionGaleriaAccesoTest` (también sin `role:admin`) | ✅ | R11 corregido |
-| CA14, CA16 | sin cambios | ✅ | |
-| CA15 | `GestionGaleriaTest` (tres fotos y comillas) | ✅ | R7 corregido |
+| CA1–CA7 | sin cambios desde la ronda 2 | ✅ | |
+| CA8 | `GestionGaleriaTest::test_la_ayuda_de_la_foto_avisa_del_limite_de_los_png`, `SubidaFotoGaleriaTest` | ✅ | la ayuda avisa del límite antes de subir (R37) |
+| CA9 | `GestionGaleriaTest` | ✅ | |
+| CA10 | `GestionGaleriaTest::test_quitar_pide_confirmacion`, `test_con_el_dialogo_abierto_el_fondo_queda_inerte` | ✅ | el diálogo, sin `aria-modal`, tiene nombre, descripción y el foco inicial en «Cancelar» (R34) |
+| CA11 | sin cambios | ✅ | |
+| CA12 | `SubidaFotoGaleriaTest` (PNG de más de 4000 px; más de 5 MB), `GestionGaleriaTest` (ayuda) | ✅ | por encima de 20 MB sigue el 413 de nginx (R36, aceptado) |
+| CA13–CA16 | sin cambios | ✅ | |
 
-## Seguimiento de la ronda 1
+## Seguimiento de la ronda 2
 | ID | Estado | Evidencia |
 |---|---|---|
-| R1 | corregido | `FotosGaleriaController::pngAcotado()` (cabecera, sin decodificar) tras `dimensions`; tests del rechazo, del PNG de 4000 px y de memoria |
-| R2 | corregido | `client_max_body_size 20m` en las dos configuraciones y en `verificar.sh`; `ConfiguracionProduccionTest` |
-| R3 | corregido a medias → R34 | intro y rejilla inertes; barra lateral y superior del layout no |
-| R4–R13 | corregidos | tests nuevos o endurecidos, cada uno comprobado rompiendo lo que protege (notas de T041–T050) |
+| R34 | corregido | `resources/views/galeria/index.blade.php:120` tiene `role="dialog"`, `aria-labelledby` y `aria-describedby`, sin `aria-modal`; «Cancelar» con `autofocus` (:124). `test_quitar_pide_confirmacion` lo comprueba con XPath sobre el propio diálogo: nombre, descripción, sin `aria-modal` y foco. T051 falló antes de T052 |
+| R35 | corregido | `plan.md` (Cambios por módulo, Pantallas, TM3, D9, D17, Trazabilidad, Rollout e Impacto), ADR 0009 con dos enmiendas fechadas, `architecture.md`, `deployment.md` y `security.md` (superficie de ataque con los 4000 px de los PNG). Las únicas menciones de 6 MB que quedan son históricas: las enmiendas y las notas de tareas ya hechas (T003, T039) |
+| R36 | aceptado | sin cambios (roadmap) |
+| R37 | corregido | la ayuda del campo dice «PNG hasta 4000 píxeles por lado» (`index.blade.php:94`), enlazada con `aria-describedby`. `spec.md` lo recoge con una fila en Decisiones y otra en Historial. T056 falló antes de T057 |
 
 ## Conformidad con el plan
-- Cambios fuera del plan: ninguno; el límite de los PNG entró en el plan con T036.
-- Documentos que no reflejan el código: R35.
+- Cambios fuera del plan: ninguno (`scope.md`: 0 archivos sin tarea). T053–T055 son solo de
+  documentación y no aparecen en `code.diff`.
+- `design.md` y `docs/design/system.md` describen el diálogo como página de confirmación sin
+  `aria-modal`, con la decisión `refinado` registrada.
+- Documentos que no reflejan el código: ninguno.
 
 ## Constitution Check (sobre el código)
-Sin cambios respecto a la ronda 1, salvo P3 (✅: la segunda capa ya tiene test, R11), P4 (✅: R1 corregido)
-y la Definición de terminado (⚠: documentos desfasados, R35).
+Sin cambios respecto a la ronda 2. La Definición de terminado vuelve a ✅, porque los documentos ya
+están al día (R35).
 
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks 8.21.2 (`f71c346..HEAD`) | ✅ sin fugas |
-| semgrep 1.99.0 `p/php` (PHP tocados desde `a097006`) | ✅ 0 hallazgos |
-| `composer audit` / `npm audit` | sin cambios en los lockfiles desde la ronda 1 |
+| gitleaks 8.21.2 (`499ecb7..HEAD`, 8 commits) | ✅ sin fugas |
+| semgrep 1.99.0 `p/php` (vista y test tocados) | ✅ 0 hallazgos (23 reglas) |
+| `composer audit` / `npm audit` | sin cambios en los lockfiles desde la ronda 1. EX4 (Symfony) vence el 2026-11-11 |
 
-La regla de los PNG solo lee la cabecera (`getimagesize`), va después de `mimes` y `dimensions` con
-`bail` y su mensaje es fijo: no abre riesgo nuevo. Los 20 MB valen para todo el `server` de nginx (R36).
+El diff solo cambia un atributo ARIA y un texto de ayuda fijo, sin datos del usuario: no abre
+superficie nueva.
 
 ## Observabilidad
-Sin cambios desde la ronda 1: eventos de auditoría emitidos y probados, logs sin datos sensibles y con `request_id`.
+Sin cambios desde la ronda 1.
 
 ## SEO
-Sin cambios en rutas públicas, metadatos ni HTML indexable desde la ronda 1, salvo el `srcset` (R9), que
-ya no repite candidatos.
+Sin cambios: el diff solo toca la gestión (`/admin/galeria`), que no se indexa.
 
 ## Hallazgos
-| ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
-|---|---|---|---|---|
-| R34 | importante | `resources/views/galeria/index.blade.php:120`, `resources/views/layouts/app.blade.php:17,224-232` | Lo que queda de R3: el diálogo declara `aria-modal="true"`, pero la barra lateral, el botón de salir, «Menú» y «Subir foto» del layout siguen tabulables detrás del velo (WCAG 2.4.3). | Decisión del usuario: quitar `aria-modal`. El diálogo es una página de confirmación sin JavaScript, con el foco inicial en «Cancelar» |
-| R35 | importante | `docs/specs/039-galeria-trabajos/plan.md:52,70,204,241,306,399,421`, `docs/architecture.md:233-234`, `docs/deployment.md:275`, `docs/security.md:68`, `docs/adr/0009-fotos-subidas-volumen-storage.md:72` | Los documentos siguen diciendo nginx a 6 MB y no recogen el límite de 4000 px de los PNG (TM3, superficie de ataque, Rollout, ADR). | Ponerlos al día |
-| R36 | menor | `docker/nginx/dentissa.prod.conf:26-29`, `docker/nginx/dentissa.conf:21-25` | Los 20 MB valen para todo el `server`, también para las rutas sin sesión; el comentario dice que el resto lo frena la validación, que llega después de leer el cuerpo. Por encima de 20 MB sigue el 413 de nginx en inglés. | Acotar los 20 MB a `/admin/galeria` con un `location` propio, o una página 413 en español |
-| R37 | menor | `docs/specs/039-galeria-trabajos/spec.md` (CA8, CA12), `resources/views/galeria/index.blade.php:94` | El límite de 4000 px de los PNG (decisión del usuario) no está en la spec, y la ayuda del campo no lo dice. | Anotarlo en la spec y en la ayuda |
+Ninguno nuevo.
 
 ## Preparación para release
-- Rollback, migraciones y feature flags: sin cambios desde la ronda 1 (factible, solo *expand*, sin flags).
-- SCA: EX4 vence el 2026-11-11; antes del `/release`, el `/chore` de Symfony 7.4.23 (condición de T096).
-- **La rama no contiene v0.14.2:** antes del `/release` hay que fusionar `main`.
+- Rollback, migraciones y feature flags: sin cambios desde la ronda 1. El rollback es factible: la
+  entrega solo tiene *expand* y no lleva flags.
+- `docs/architecture.md` y `docs/deployment.md` reflejan los cambios (T090, T091, T054).
+- SCA: EX4 vence el 2026-11-11. Antes del `/release` hay que hacer el `/chore` de Symfony 7.4.23
+  (condición de T096).
+- **La rama no contiene v0.14.2:** antes del `/release` hay que fusionar `main`, para no deshacer en
+  producción el arreglo del botón de alta de pacientes.
 
 ## Tareas añadidas
-- T051, T052 ← R34 · T053, T054, T055 ← R35 (y la mención de `aria-modal` en el diseño) · T056, T057 ← R37
+Ninguna.
 
 ## Aceptados sin tarea
-Aceptados por el usuario el 2026-11-09:
-- **R36** → roadmap: los 20 MB de nginx valen para todo el servidor (acotarlos a `/admin/galeria`) y por encima de 20 MB sale el 413 en inglés.
-
-Siguen vigentes los aceptados de la ronda 1 (`history/review.r1.md`): R14–R33.
+Sigue aceptado **R36** de la ronda 2 (`history/review.r2.md`): va al roadmap con la clave `039/R36`.
+También siguen vigentes los aceptados de la ronda 1 (`history/review.r1.md`), R14–R33.
