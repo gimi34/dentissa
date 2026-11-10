@@ -7,6 +7,8 @@ use App\Galeria\FotoProcesada;
 use App\Galeria\ProcesadorFoto;
 use App\Models\GaleriaFoto;
 use App\Models\Usuario;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -137,6 +139,48 @@ class SubidaFotoGaleriaTest extends TestCase
             ->assertRedirect(route('admin.galeria.index'))
             ->assertSessionHasErrors([$campo => $mensaje]);
         $this->assertNadaGuardado(0);
+    }
+
+    public static function faltasEnLaPagina(): array
+    {
+        return [
+            'sin descripción' => [['descripcion' => ''], 'descripcion', '//textarea[@id="descripcion"]', 'Escribe una descripción de la foto.'],
+            'sin decir si hay paciente' => [['con_paciente' => null], 'con_paciente', '//input[@id="con_paciente-no"]', 'Indica si en la foto aparece un paciente.'],
+            'con paciente y sin consentimiento' => [['con_paciente' => 'si'], 'consentimiento', '//input[@id="consentimiento"]', 'Marca que tienes el consentimiento escrito del paciente.'],
+        ];
+    }
+
+    /** /review R4: CA11 sobre la página que ve el admin, no solo en la sesión. */
+    #[DataProvider('faltasEnLaPagina')]
+    public function test_cada_falta_sale_junto_a_su_campo_en_la_pagina(array $cambios, string $campo, string $control, string $mensaje): void
+    {
+        $datos = array_filter($this->datos($this->imagenLisa('jpg'), $cambios), fn ($v) => $v !== null);
+        $html = $this->actingAs($this->admin())->from(route('admin.galeria.index'))->followingRedirects()
+            ->post(route('admin.galeria.store'), $datos)->assertOk()->getContent();
+        $documento = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $documento->loadHTML('<?xml encoding="utf-8"?>'.$html);
+        libxml_clear_errors();
+        $xpath = new DOMXPath($documento);
+
+        $error = $xpath->query('//*[@id="'.$campo.'-error" and contains(@class, "campo-error")]')->item(0);
+        $this->assertNotNull($error, "Hay un mensaje junto a {$campo}.");
+        $this->assertSame($mensaje, trim($error->textContent));
+        $nodo = $xpath->query($control)->item(0);
+        $this->assertSame('true', $nodo->getAttribute('aria-invalid'), "{$campo} marcado como inválido.");
+        $describe = $campo === 'con_paciente' ? $xpath->query('//fieldset[contains(@class, "campo-paciente")]')->item(0)->getAttribute('aria-describedby') : $nodo->getAttribute('aria-describedby');
+        $this->assertContains("{$campo}-error", explode(' ', $describe), 'Enlazado con su mensaje.');
+        foreach ($xpath->query('//*[@aria-describedby]') as $conDescripcion) {
+            foreach (array_filter(explode(' ', $conDescripcion->getAttribute('aria-describedby'))) as $id) {
+                $this->assertSame(1, $xpath->query('//*[@id="'.$id.'"]')->length, "aria-describedby apunta a #{$id}, que existe.");
+            }
+        }
+        if ($campo !== 'descripcion') {
+            $this->assertSame('Resina en un incisivo, antes y después.', trim($xpath->query('//textarea[@id="descripcion"]')->item(0)->textContent), 'Conserva la descripción.');
+        }
+        if (isset($cambios['con_paciente'])) {
+            $this->assertTrue($xpath->query('//input[@id="con_paciente-si"]')->item(0)->hasAttribute('checked'), 'Conserva la respuesta del paciente.');
+        }
     }
 
     public function test_sin_archivo_pide_la_foto(): void
