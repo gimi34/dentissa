@@ -170,12 +170,16 @@ class PaginaGaleriaTest extends TestCase
         }
     }
 
-    public function test_el_pequeno_mide_como_el_grande_si_este_no_llega_a_800(): void
+    public function test_si_la_foto_no_llega_a_800_srcset_lleva_un_solo_candidato(): void
     {
+        // /review R9: dos candidatos del mismo ancho (600w, 600w) son un srcset no válido.
         $foto = $this->foto(1, 'Pequeña', ['ancho' => 600, 'alto' => 450]);
+        $this->foto(2, 'Justa', ['ancho' => 800, 'alto' => 600]);
 
-        $img = $this->pagina()->query('//main//img')->item(0);
-        $this->assertSame($this->url($foto, 800).' 600w, '.$this->url($foto, 1600).' 600w', $img->getAttribute('srcset'));
+        $imgs = $this->pagina()->query('//main//img');
+        $this->assertSame($this->url($foto, 800).' 600w', $imgs->item(0)->getAttribute('srcset'));
+        $this->assertSame($this->url($foto, 800), $imgs->item(0)->getAttribute('src'));
+        $this->assertStringNotContainsString('/1600', $imgs->item(1)->getAttribute('srcset'), 'Con 800 px exactos, tampoco el grande.');
     }
 
     public function test_solo_las_tres_primeras_cargan_sin_esperar(): void
