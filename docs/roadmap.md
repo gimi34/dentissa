@@ -105,6 +105,21 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     inserta `publico.js` sobre el `h1` y el cambio de fuentes): un `/fix` de la 038 (plan D14, decisión del
     usuario en `/design-spec 039`). En la medición de la app con el carrusel (T028) K11 pasa; comprobar en
     producción antes de abrir la ficha.
+  - aceptados sin tarea de `/review` (deuda menor, liberada en v0.16.0): 039/R14 con la galería llena, la foto se procesa
+    antes de comprobar el límite; 039/R15 el bloqueo del límite de 12 sin test y posible *deadlock* con dos subidas sobre la
+    tabla vacía; 039/R16 orientaciones EXIF 2, 4, 5 y 7 sin test; 039/R17 tope del grande en 500 KiB frente a los 500 kB
+    de la spec; 039/R18 la foto se lee entera antes de comparar el `ETag`; 039/R19 el test de auditoría sin descripción no
+    comprueba que haya eventos; 039/R20 literal `800` repetido; 039/R21 el test del carrusel no cubre el desplazamiento a
+    mano ni `is-actual`; 039/R22 el test de CSRF no cuenta los formularios de la gestión; 039/R23 `GaleriaCssTest` busca
+    `--carrusel-foto-w` fuera de su corte; 039/R24 `GaleriaCssTest` no cubre todas las reglas de la gestión; 039/R25 la
+    declaración de CA9 se busca en toda la página; 039/R26 en el móvil, la 2.ª y la 3.ª foto de `/galeria` cargan sin
+    esperar; 039/R27 `--foto-ratio` declarado en dos hojas; 039/R28 el `alt` repite el pie; 039/R29 los controles del
+    carrusel son enlaces que actúan como botones; 039/R30 `/galeria` sin enlace en la navegación ni en el pie; 039/R31
+    `/galeria` vacía es indexable; 039/R32 el desplazamiento a mano no anuncia la foto; 039/R33 `design.md` cita
+    `galeria.css`; 039/R36 los 20 MB de nginx valen para todo el servidor (acotarlos a `/admin/galeria`) y por encima
+    de 20 MB sale el 413 de nginx en inglés;
+  - la cabecera `x-content-type-options: nosniff` de las fotos sale dos veces en producción (nginx y la respuesta de
+    Laravel); no hace daño (visto en T097, v0.16.0).
 - Spec 043 (2026-11-05): 043/A8 `TrimStrings` recorta `password_actual` y `contrasena_correo`; una contraseña que empieza o
   acaba con un espacio (posible al fijarla por la recuperación) no se puede acreditar en el perfil. Anterior a la 043; posible `/fix`.
   - aceptados sin tarea de `/review` (deuda menor, liberada en v0.14.1): 043/R3 subcaso de CA5 de la recuperación que solo

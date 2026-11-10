@@ -240,3 +240,4 @@ Ninguna.
 | 2026-11-01 | Vuelve a implemented: correcciones de `/review` r4 (T003, T006–T008: pastilla del pie de foto, horario exacto de CA5 en la ubicación, pares de contraste de la ronda 6 y menores); suite 613 en verde | /implement 038 |
 | 2026-11-02 | Liberada en v0.13.0 (producción el 2026-11-02, aprobada por el responsable) | /release |
 | 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: con sesión, `/` muestra la página con «Ir a mi panel» (CA2 → reemplazado por 044 CA5) y el aviso «Has cerrado sesión»; `publico.js` retira el aviso | /release |
+| 2026-11-10 | Comportamiento modificado por 039 en v0.16.0: con fotos en la galería, `/` muestra el carrusel «Nuestros trabajos» después de los servicios; con la galería vacía, la página no cambia (039 CA1, CA3) | /release |
