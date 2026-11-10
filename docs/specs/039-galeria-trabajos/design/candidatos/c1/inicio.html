@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Candidato c1 de /design-spec 039. La composición más directa que cumple los criterios: la sección «Nuestros trabajos» repite la cabecera del avance de servicios (etiqueta, h2 y botón a la derecha) sobre una banda --p100, el carrusel es una fila con scroll-snap y sus controles bajo un filete de tinta como el índice de servicios; /galeria usa la estructura de /servicios; la gestión, el layout del admin con .formulario-accesible. Tokens propuestos: --foto-ratio (4 / 3, fijo), --carrusel-foto-w (86 % · 72 % desde 560 px · 62 % desde 900 px) y --thumb-w (120px, fijo). -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Dentissa · Tu sonrisa, nuestra prioridad</title>
+    <meta name="description" content="Clínica dental Dentissa en Lázaro Cárdenas: conoce nuestros servicios, crea tu cuenta y agenda tu cita en línea.">
+    <link rel="canonical" href="https://dentissa.app/">
+    
+    <link href="../../../../../../public/css/app.css" rel="stylesheet">
+    <link href="../../../../../../public/css/publico.css" rel="stylesheet">
+    
+    <script src="../../../../../../public/js/publico.js" defer></script>
+    <link href="galeria.css" rel="stylesheet">
+    <script src="galeria.js" defer></script>
+</head>
+<body class="publico">
+
+
+<header class="pub-bar" id="top">
+    <div class="pub-wrap pub-bar__in">
+        <a class="pub-brand" href="inicio.html" aria-label="Inicio">
+            <span class="logo" role="img" aria-label="Melissa López N. · Odontología integral"></span>
+        </a>
+        <nav class="pub-nav" aria-label="Secciones">
+            <a href="https://dentissa.app/servicios">Servicios</a>
+            <a href="inicio.html#ubicacion">Ubicación</a>
+                            <a href="https://dentissa.app/login">Iniciar sesión</a>
+                <a class="c-btn c-btn--ink" href="https://dentissa.app/registro">Crear cuenta</a>
+                    </nav>
+        
+        <details class="pub-menu">
+            <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+            <nav class="pub-menu__panel" aria-label="Secciones">
+                <a href="inicio.html#nosotros">Sobre nosotros</a>
+                <a href="https://dentissa.app/servicios">Servicios</a>
+                <a href="inicio.html#ubicacion">Ubicación y contacto</a>
+                                    <a href="https://dentissa.app/login">Iniciar sesión</a>
+                    <a class="c-btn c-btn--primary" href="https://dentissa.app/registro">Crear cuenta</a>
+                            </nav>
+        </details>
+    </div>
+</header>
+
+<main>
+    <section class="pub-hero" aria-labelledby="titulo">
+    
+    <svg class="pub-arco" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><path d="M60 600 C80 220 300 60 500 60 C700 60 920 220 940 600"/><path d="M150 600 C170 300 340 160 500 160 C660 160 830 300 850 600"/><path d="M240 600 C260 380 380 260 500 260 C620 260 740 380 760 600"/></svg>
+    <div class="pub-wrap pub-hero__grid">
+        <div>
+            <span class="pub-etiqueta">Odontología integral · Lázaro Cárdenas</span>
+            
+            <h1 id="titulo"><span class="pub-ln"><span>Tu sonrisa,</span></span> <span class="pub-ln"><span>nuestra</span></span> <span class="pub-ln"><span><em>prioridad.</em></span></span></h1>
+            <p class="pub-hero__lead">Para toda la familia, en el centro de Lázaro Cárdenas. Crea tu cuenta y agenda en línea.</p>
+            <div class="pub-hero__actions">
+                <a class="c-btn c-btn--primary c-btn--lg" href="https://dentissa.app/registro">Agendar mi primera cita <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                <a class="c-btn c-btn--secondary c-btn--lg" href="https://dentissa.app/servicios">Ver servicios</a>
+            </div>
+            
+            <ul class="pub-hero__facts">
+                <li><span class="pub-status" data-live data-horario="{&quot;1&quot;:[&quot;9:00&quot;,&quot;20:00&quot;],&quot;2&quot;:[&quot;9:00&quot;,&quot;20:00&quot;],&quot;3&quot;:[&quot;9:00&quot;,&quot;20:00&quot;],&quot;4&quot;:[&quot;9:00&quot;,&quot;20:00&quot;],&quot;5&quot;:[&quot;9:00&quot;,&quot;20:00&quot;],&quot;6&quot;:[&quot;9:00&quot;,&quot;14:00&quot;]}" data-zona="America/Mexico_City"><span class="pub-status__dot" aria-hidden="true"></span><span class="pub-status__text" aria-live="polite"></span></span></li>
+                <li>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</li>
+                <li><a href="tel:+527530000000">753 000 0000</a></li>
+            </ul>
+            <p class="pub-acceso"><a href="https://dentissa.app/login">Iniciar sesión</a><a href="https://dentissa.app/registro">Crear cuenta</a></p>
+        </div>
+        
+        <figure class="pub-arcada">
+            <div class="pub-arcada__marco"><img src="../../../../../../public/images/brand/access.webp" data-origen="propia" width="900" height="900" fetchpriority="high" alt="Revisión dental con espejo, teñida de rosa, con el logo de Melissa López N., Odontología integral"></div>
+        </figure>
+    </div>
+</section>
+
+<section class="pub-sec pub-about" id="nosotros" aria-labelledby="t-nosotros">
+    <div class="pub-wrap">
+        <h2 id="t-nosotros">Sobre nosotros</h2>
+        
+        <p class="pub-cita" data-reveal="mask">Somos una consulta de odontología integral en el centro de Lázaro Cárdenas.</p>
+        <div class="pub-about__body">
+            <p data-reveal>Atendemos a toda la familia, desde la primera revisión de los niños hasta la ortodoncia y las prótesis de los adultos, en un mismo lugar y con el mismo equipo.</p>
+            <p data-reveal>Antes de cada tratamiento te explicamos qué vamos a hacer, cuánto dura y qué opciones tienes, para que decidas con calma. Y para que no tengas que llamar en horario de trabajo, puedes crear tu cuenta y agendar tus citas en línea.</p>
+        </div>
+        <ol class="pub-pasos" role="list" aria-label="Antes de cada tratamiento">
+                            <li class="pub-paso" data-reveal><span class="pub-paso__n" aria-hidden="true">1</span><h3>Qué vamos a hacer</h3><p>Lo vemos juntos, con palabras claras, antes de empezar.</p></li>
+                            <li class="pub-paso" data-reveal><span class="pub-paso__n" aria-hidden="true">2</span><h3>Cuánto dura</h3><p>Cuántas citas lleva y cuánto tiempo cada una, para que lo acomodes a tu semana.</p></li>
+                            <li class="pub-paso" data-reveal><span class="pub-paso__n" aria-hidden="true">3</span><h3>Qué opciones tienes</h3><p>Si hay más de un camino, te los mostramos para que decidas con calma.</p></li>
+                    </ol>
+        <a class="c-btn c-btn--ink c-btn--lg" href="https://dentissa.app/registro" data-reveal>Crear mi cuenta</a>
+    </div>
+</section>
+
+
+<section class="pub-consulta" data-scene="consulta" aria-label="La consulta">
+    <div class="pub-consulta__stage">
+        <figure>
+            <div class="pub-consulta__foto"><img src="../../../../../../public/images/brand/access.webp" data-origen="propia" width="900" height="900" loading="lazy" alt="La consulta de Melissa López N.: revisión dental con espejo, teñida de rosa, con el logo encima"></div>
+            <figcaption>La consulta de Melissa López N., en el centro de Lázaro Cárdenas.</figcaption>
+        </figure>
+    </div>
+</section>
+
+
+    <section class="pub-sec pub-services" id="servicios" aria-labelledby="t-servicios">
+        <div class="pub-wrap">
+            <div class="pub-services__head">
+                <div>
+                    <span class="pub-etiqueta">Por tipo de tratamiento</span>
+                    <h2 id="t-servicios" data-reveal="mask">Nuestros servicios</h2>
+                    <p data-reveal>Lo que atendemos en la consulta.</p>
+                </div>
+                <a class="c-btn c-btn--secondary" href="https://dentissa.app/servicios" data-reveal>Ver todos los servicios <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            </div>
+            <ul class="pub-index" role="list">
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-0">
+                            <span class="pub-index__n">01</span>
+                            <span class="pub-index__name">Cirugía</span>
+                            <span class="pub-index__count">2 tratamientos</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-1">
+                            <span class="pub-index__n">02</span>
+                            <span class="pub-index__name">Diagnóstico</span>
+                            <span class="pub-index__count">2 tratamientos</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-2">
+                            <span class="pub-index__n">03</span>
+                            <span class="pub-index__name">Endodoncia</span>
+                            <span class="pub-index__count">2 tratamientos</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-3">
+                            <span class="pub-index__n">04</span>
+                            <span class="pub-index__name">Ortodoncia</span>
+                            <span class="pub-index__count">3 tratamientos</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-4">
+                            <span class="pub-index__n">05</span>
+                            <span class="pub-index__name">Preventivo</span>
+                            <span class="pub-index__count">4 tratamientos</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-5">
+                            <span class="pub-index__n">06</span>
+                            <span class="pub-index__name">Prostodoncia</span>
+                            <span class="pub-index__count">1 tratamiento</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                                    <li data-reveal>
+                        <a href="https://dentissa.app/servicios#categoria-6">
+                            <span class="pub-index__n">07</span>
+                            <span class="pub-index__name">Restauración</span>
+                            <span class="pub-index__count">1 tratamiento</span>
+                            <span class="pub-index__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </a>
+                    </li>
+                            </ul>
+        </div>
+    </section>
+
+<section class="pub-sec pub-trabajos" id="trabajos" aria-labelledby="t-trabajos">
+    <div class="pub-wrap">
+        <div class="pub-services__head">
+            <div>
+                <span class="pub-etiqueta">Hecho en la consulta</span>
+                <h2 id="t-trabajos" data-reveal="mask">Nuestros trabajos</h2>
+                <p data-reveal>Algunos tratamientos que terminamos aquí.</p>
+            </div>
+            <a class="c-btn c-btn--secondary" href="galeria.html" data-reveal>Ver toda la galería <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+        <div class="pub-carrusel" data-carrusel>
+            <div class="pub-carrusel__ventana" tabindex="0" role="region" aria-label="Fotos de nuestros trabajos">
+                <ol class="pub-carrusel__lista" role="list">
+                <li id="trabajo-1"><figure class="pub-trabajo"><div class="pub-trabajo__foto"><img src="dibujos/resina.svg" data-origen="dibujada" width="1200" height="900" alt="Resina en un incisivo, antes y después."></div><figcaption><span class="pub-trabajo__n">Foto 1 de 6</span> <span class="pub-trabajo__desc">Resina en un incisivo, antes y después.</span></figcaption></figure></li>
+                <li id="trabajo-2"><figure class="pub-trabajo"><div class="pub-trabajo__foto"><img src="dibujos/corona.svg" data-origen="dibujada" width="1200" height="900" loading="lazy" alt="Corona de porcelana en un premolar."></div><figcaption><span class="pub-trabajo__n">Foto 2 de 6</span> <span class="pub-trabajo__desc">Corona de porcelana en un premolar.</span></figcaption></figure></li>
+                <li id="trabajo-3"><figure class="pub-trabajo"><div class="pub-trabajo__foto"><img src="dibujos/carillas.svg" data-origen="dibujada" width="1200" height="900" loading="lazy" alt="Carillas en los cuatro incisivos superiores."></div><figcaption><span class="pub-trabajo__n">Foto 3 de 6</span> <span class="pub-trabajo__desc">Carillas en los cuatro incisivos superiores.</span></figcaption></figure></li>
+                <li id="trabajo-4"><figure class="pub-trabajo"><div class="pub-trabajo__foto"><img src="dibujos/protesis.svg" data-origen="dibujada" width="1200" height="900" loading="lazy" alt="Prótesis parcial removible, recién salida del laboratorio."></div><figcaption><span class="pub-trabajo__n">Foto 4 de 6</span> <span class="pub-trabajo__desc">Prótesis parcial removible, recién salida del laboratorio.</span></figcaption></figure></li>
+                <li id="trabajo-5"><figure class="pub-trabajo"><div class="pub-trabajo__foto"><img src="dibujos/modelo.svg" data-origen="dibujada" width="1200" height="900" loading="lazy" alt="Modelo de yeso para planear una ortodoncia."></div><figcaption><span class="pub-trabajo__n">Foto 5 de 6</span> <span class="pub-trabajo__desc">Modelo de yeso para planear una ortodoncia.</span></figcaption></figure></li>
+                <li id="trabajo-6"><figure class="pub-trabajo"><div class="pub-trabajo__foto"><img src="dibujos/blanqueamiento.svg" data-origen="dibujada" width="1200" height="900" loading="lazy" alt="Blanqueamiento: el tono antes y después."></div><figcaption><span class="pub-trabajo__n">Foto 6 de 6</span> <span class="pub-trabajo__desc">Blanqueamiento: el tono antes y después.</span></figcaption></figure></li>
+                </ol>
+            </div>
+            <div class="pub-carrusel__controles">
+                <a class="c-btn c-btn--secondary" href="#trabajo-6" data-anterior><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Anterior</a>
+                <p class="pub-solo-lector" role="status" data-estado></p>
+                <a class="c-btn c-btn--secondary" href="#trabajo-2" data-siguiente>Siguiente <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pub-book" aria-labelledby="t-agenda">
+    <div class="pub-wrap">
+        <div class="pub-book__card" data-reveal>
+            <svg class="pub-book__arco" viewBox="0 0 600 600" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M40 600 C60 200 220 40 300 40 C380 40 540 200 560 600"/><path d="M130 600 C150 280 250 150 300 150 C350 150 450 280 470 600"/></svg>
+            <div class="pub-book__texto">
+                <h2 id="t-agenda">Agenda sin llamar.</h2>
+                <p>Crea tu cuenta y elige el día de tu cita en línea, a la hora que te quede, aunque la consulta esté cerrada.</p>
+            </div>
+            
+            <ul class="pub-semana" role="list" aria-label="Horario de la semana">
+                                                        <li class=""><b>Lun</b> 9:00–20:00</li>
+                                                        <li class=""><b>Mar</b> 9:00–20:00</li>
+                                                        <li class=""><b>Mié</b> 9:00–20:00</li>
+                                                        <li class=""><b>Jue</b> 9:00–20:00</li>
+                                                        <li class=""><b>Vie</b> 9:00–20:00</li>
+                                                        <li class=""><b>Sáb</b> 9:00–14:00</li>
+                                                        <li class="pub-semana__cerrado"><b>Dom</b> Cerrado</li>
+                            </ul>
+            <div class="pub-book__pie">
+                <span>Tu cita queda en tu cuenta y puedes cambiarla desde ahí.</span>
+                <a class="c-btn c-btn--primary c-btn--lg" href="https://dentissa.app/registro">Agendar mi primera cita <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="pub-sec pub-visit" id="ubicacion" aria-labelledby="t-ubicacion">
+    <div class="pub-wrap">
+        <span class="pub-etiqueta">Visítanos</span>
+        <h2 id="t-ubicacion" data-reveal="mask">Encuéntranos fácilmente</h2>
+        <div class="pub-visit__grid">
+            <div data-reveal>
+                <address class="pub-visit__addr">Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950</address>
+                
+                <p class="pub-visit__horario">Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</p>
+                <dl data-semana>
+                                            <div data-day="1-5">
+                            <dt>Lunes a viernes</dt>
+                            <dd>9:00–20:00</dd>
+                        </div>
+                                            <div data-day="6">
+                            <dt>Sábados</dt>
+                            <dd>9:00–14:00</dd>
+                        </div>
+                                        <div data-day="0">
+                        <dt>Domingos</dt>
+                        <dd>Cerrado</dd>
+                    </div>
+                </dl>
+                <a class="pub-visit__tel" href="tel:+527530000000">753 000 0000</a>
+                <div>
+                    
+                    <a class="c-btn c-btn--ink" href="https://www.google.com/maps/dir/?api=1&destination=Av.%20Insurgentes%20450%2C%20Col.%20Centro%2C%20L%C3%A1zaro%20C%C3%A1rdenas%2C%20Mich.%2C%20C.P.%2060950" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar (se abre en una pestaña nueva)">Cómo llegar <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </div>
+            
+            <div class="pub-map" data-reveal>
+                <iframe src="https://www.google.com/maps?q=Av.%20Insurgentes%20450%2C%20Col.%20Centro%2C%20L%C3%A1zaro%20C%C3%A1rdenas%2C%20Mich.%2C%20C.P.%2060950&output=embed" title="Mapa de Google con la ubicación de la consulta" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                <p>El mapa lo sirve Google.</p>
+            </div>
+        </div>
+    </div>
+</section>
+</main>
+
+
+<footer class="pub-foot">
+    <div class="pub-wrap">
+        <nav aria-label="Pie">
+            <ul class="pub-foot__links">
+                <li><a href="inicio.html#nosotros">Sobre nosotros</a></li>
+                <li><a href="https://dentissa.app/servicios">Servicios</a></li>
+                <li><a href="inicio.html#ubicacion">Ubicación</a></li>
+                                    <li><a href="https://dentissa.app/login">Iniciar sesión</a></li>
+                    <li><a href="https://dentissa.app/registro">Crear cuenta</a></li>
+                            </ul>
+        </nav>
+        <div class="pub-foot__info">
+            <span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</span>
+            <a href="tel:+527530000000">753 000 0000</a>
+            <span>Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950</span>
+        </div>
+        <div class="pub-foot__small">
+            <span>Melissa López N. · Odontología integral</span>
+            <span>© 2026 Dentissa</span>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

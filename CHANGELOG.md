@@ -5,6 +5,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-10
+
+### Added
+- «Nuestros trabajos» en la página de inicio: un carrusel con fotos de tratamientos hechos en la consulta, con
+  «Anterior», «Siguiente» y «Foto n de N», sin avance automático. Sin JavaScript, las fotos se recorren igual; con la
+  galería vacía, la página de inicio no cambia (spec 039).
+- Página `/galeria` con todas las fotos de trabajos y su descripción, abierta a cualquiera y con su título y
+  descripción para los buscadores (spec 039).
+- El administrador gestiona la galería desde «Galería» en el menú: sube fotos en JPG, PNG o WebP de hasta 5 MB (los PNG,
+  hasta 4000 píxeles por lado) con una descripción, cambia su orden y las quita con confirmación. Si en la foto aparece
+  un paciente, tiene que confirmar que hay un consentimiento firmado. Cada error del formulario sale junto a su campo
+  (spec 039).
+
+### Security
+- Las fotos se publican sin los datos que guarda la cámara (ubicación, fecha o modelo del aparato), y las que muestran
+  a un paciente no se indexan en buscadores. Solo el administrador puede gestionar la galería. Publicar, reordenar y
+  quitar una foto queda en el registro de auditoría (spec 039).
+
 ## [0.15.0] - 2026-11-10
 
 ### Added

@@ -47,6 +47,16 @@ return [
             'report' => false,
         ],
 
+        // Spec 039 (ADR 0009): fotos de la galería, dentro del volumen `storage`. Sin URL pública:
+        // las sirve `GET /galeria/fotos/{foto}/{ancho}` desde la aplicación.
+        'galeria' => [
+            'driver' => 'local',
+            'root' => storage_path('app/galeria'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

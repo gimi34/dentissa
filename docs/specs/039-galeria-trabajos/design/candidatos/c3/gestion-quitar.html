@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Candidato c3 de /design-spec 039 (gestión). c2 corregido con la lista del evaluador (75/100): en el escritorio cada foto del carrusel es una lámina con la foto (7) y un panel (5) con el número grande en Newsreader, «Foto n de 6» y la descripción, como el índice de servicios; el mosaico de /galeria cierra sus filas (la 01 ocupa el alto de dos a su lado); los dibujos van sobre papel blanco para separarse de la banda; en la gestión, el selector de archivo con el estilo de botón de la app y su error propio, «Quitar» sin relleno y el icono del consentimiento en --p600. Tokens propuestos: --foto-ratio (4 / 3, fijo), --carrusel-foto-w (86 % · 72 % desde 560 px · 100 % desde 900 px) y --thumb-w (120px, fijo). -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería de trabajos · Dentissa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="../../../../../../public/css/app.css" rel="stylesheet">
+    <link href="../../../../../../public/css/movil.css" rel="stylesheet">
+    
+    <script src="../../../../../../public/js/menu.js"></script>
+    <style>
+/* Estilos para el Modal */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    display: none; /* Oculto por defecto */
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s ease;
+}
+.modal-overlay.show { display: flex; opacity: 1; }
+.modal-box {
+    width: 100%; max-width: 420px;
+    transform: translateY(-20px); transition: transform 0.2s ease;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+.modal-overlay.show .modal-box { transform: translateY(0); }
+</style>
+    <link href="gestion.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+<aside class="sidebar" id="menu-principal" aria-label="Menú">
+    <div class="sidebar-logo">
+        <img src="../../../../../../public/images/logo-icon.png" alt="Melissa López N." data-origen="propia">
+        
+        <span class="sidebar-marca" role="img" aria-label="Melissa López N."></span>
+        <button type="button" class="menu-cerrar" aria-label="Cerrar menú">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Secciones">
+                    <span class="nav-label">Principal</span>
+            <a href="/admin" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+                Home
+            </a>
+            <a href="/admin/citas" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                Citas
+            </a>
+            <a href="/admin/pacientes" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Pacientes
+            </a>
+            <span class="nav-label">Clínica</span>
+            <a href="/admin/personal" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                    <path d="M12 11v2M11 13h2"/>
+                </svg>
+                Personal
+            </a>
+            <a href="/admin/servicios" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Servicios
+            </a>
+            <a href="/admin/galeria" class="nav-item active" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>
+                </svg>
+                Galería
+            </a>
+            <span class="nav-label">Análisis</span>
+            <a href="/admin/reportes" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <path d="M18 20V10M12 20V4M6 20v-6"/>
+                </svg>
+                Reportes
+            </a>
+            <a href="/admin/usuarios" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    <path d="M16 3.5a4 4 0 0 1 0 7M20 20c0-3-1.8-5.5-4-6.5"/>
+                </svg>
+                Usuarios
+            </a>
+            
+            <a href="/admin/auditoria" class="nav-item " >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+                Auditoría
+            </a>
+
+            </nav>
+
+    <div class="sidebar-user">
+        <div class="user-card">
+            <div class="user-avatar">
+                AS
+            </div>
+            <div class="user-card-texto">
+                <div class="user-name">Admin Sistema</div>
+                <div class="user-role">Admin</div>
+            </div>
+        </div>
+        <form action="/logout" method="POST">
+            <input type="hidden" name="_token" value="Ga3yODLafABC4Hy1QgYfs5JuVamKFMBcPlcBS4Im" autocomplete="off">            <button type="submit" class="btn-logout">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesión
+            </button>
+        </form>
+    </div>
+</aside>
+
+
+<div class="menu-velo" hidden></div>
+
+<!-- ══ MAIN ═══════════════════════════════════════════════════ -->
+<main class="main">
+        <header class="topbar">
+        <button type="button" class="menu-btn" aria-label="Menú" aria-expanded="false" aria-controls="menu-principal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M3 6h18M3 12h18M3 18h18"/>
+            </svg>
+        </button>
+        <h1 class="topbar-title">Galería de trabajos</h1>
+        <div class="topbar-actions formulario-accesible">
+            <a href="#subir" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Subir foto
+            </a>
+        </div>
+    </header>
+
+    <div class="content">
+        <div class="formulario-accesible galeria-gestion">
+            <p class="galeria-gestion__intro">Las fotos se ven en este orden en la página de inicio y en <a href="galeria.html">la galería</a>. Hay 6 de 12.</p>
+            <div class="galeria-gestion__grid">
+                <section class="card" aria-labelledby="t-fotos">
+                    <h2 id="t-fotos">Fotos publicadas</h2>
+                    <ol class="foto-lista" role="list">
+                <li class="foto-tarjeta">
+                    <img class="foto-tarjeta__img" src="dibujos/resina.svg" data-origen="dibujada" width="1200" height="900" alt="" loading="lazy">
+                    <div>
+                        <span class="foto-tarjeta__pos">Posición 1</span>
+                        <p class="foto-tarjeta__desc">Resina en un incisivo, antes y después.</p>
+                        <p class="foto-tarjeta__estado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Consentimiento declarado por Admin Sistema el 5 nov 2026</p>
+                    </div>
+                    <div class="foto-tarjeta__acciones">
+                        
+                        <button type="submit" class="btn btn-outline" aria-label="Mover abajo: Resina en un incisivo, antes y después."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6"/></svg> Abajo</button>
+                        <button type="button" class="btn btn-outline btn-quitar" aria-label="Quitar: Resina en un incisivo, antes y después.">Quitar</button>
+                    </div>
+                </li>
+                <li class="foto-tarjeta">
+                    <img class="foto-tarjeta__img" src="dibujos/corona.svg" data-origen="dibujada" width="1200" height="900" alt="" loading="lazy">
+                    <div>
+                        <span class="foto-tarjeta__pos">Posición 2</span>
+                        <p class="foto-tarjeta__desc">Corona de porcelana en un premolar.</p>
+                        <p class="foto-tarjeta__estado">Sin pacientes en la foto</p>
+                    </div>
+                    <div class="foto-tarjeta__acciones">
+                        <button type="submit" class="btn btn-outline" aria-label="Mover arriba: Corona de porcelana en un premolar."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6"/></svg> Arriba</button>
+                        <button type="submit" class="btn btn-outline" aria-label="Mover abajo: Corona de porcelana en un premolar."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6"/></svg> Abajo</button>
+                        <button type="button" class="btn btn-outline btn-quitar" aria-label="Quitar: Corona de porcelana en un premolar.">Quitar</button>
+                    </div>
+                </li>
+                <li class="foto-tarjeta">
+                    <img class="foto-tarjeta__img" src="dibujos/carillas.svg" data-origen="dibujada" width="1200" height="900" alt="" loading="lazy">
+                    <div>
+                        <span class="foto-tarjeta__pos">Posición 3</span>
+                        <p class="foto-tarjeta__desc">Carillas en los cuatro incisivos superiores.</p>
+                        <p class="foto-tarjeta__estado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Consentimiento declarado por Admin Sistema el 3 nov 2026</p>
+                    </div>
+                    <div class="foto-tarjeta__acciones">
+                        <button type="submit" class="btn btn-outline" aria-label="Mover arriba: Carillas en los cuatro incisivos superiores."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6"/></svg> Arriba</button>
+                        <button type="submit" class="btn btn-outline" aria-label="Mover abajo: Carillas en los cuatro incisivos superiores."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6"/></svg> Abajo</button>
+                        <button type="button" class="btn btn-outline btn-quitar" aria-label="Quitar: Carillas en los cuatro incisivos superiores.">Quitar</button>
+                    </div>
+                </li>
+                <li class="foto-tarjeta">
+                    <img class="foto-tarjeta__img" src="dibujos/protesis.svg" data-origen="dibujada" width="1200" height="900" alt="" loading="lazy">
+                    <div>
+                        <span class="foto-tarjeta__pos">Posición 4</span>
+                        <p class="foto-tarjeta__desc">Prótesis parcial removible, recién salida del laboratorio.</p>
+                        <p class="foto-tarjeta__estado">Sin pacientes en la foto</p>
+                    </div>
+                    <div class="foto-tarjeta__acciones">
+                        <button type="submit" class="btn btn-outline" aria-label="Mover arriba: Prótesis parcial removible, recién salida del laboratorio."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6"/></svg> Arriba</button>
+                        <button type="submit" class="btn btn-outline" aria-label="Mover abajo: Prótesis parcial removible, recién salida del laboratorio."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6"/></svg> Abajo</button>
+                        <button type="button" class="btn btn-outline btn-quitar" aria-label="Quitar: Prótesis parcial removible, recién salida del laboratorio.">Quitar</button>
+                    </div>
+                </li>
+                <li class="foto-tarjeta">
+                    <img class="foto-tarjeta__img" src="dibujos/modelo.svg" data-origen="dibujada" width="1200" height="900" alt="" loading="lazy">
+                    <div>
+                        <span class="foto-tarjeta__pos">Posición 5</span>
+                        <p class="foto-tarjeta__desc">Modelo de yeso para planear una ortodoncia.</p>
+                        <p class="foto-tarjeta__estado">Sin pacientes en la foto</p>
+                    </div>
+                    <div class="foto-tarjeta__acciones">
+                        <button type="submit" class="btn btn-outline" aria-label="Mover arriba: Modelo de yeso para planear una ortodoncia."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6"/></svg> Arriba</button>
+                        <button type="submit" class="btn btn-outline" aria-label="Mover abajo: Modelo de yeso para planear una ortodoncia."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6"/></svg> Abajo</button>
+                        <button type="button" class="btn btn-outline btn-quitar" aria-label="Quitar: Modelo de yeso para planear una ortodoncia.">Quitar</button>
+                    </div>
+                </li>
+                <li class="foto-tarjeta">
+                    <img class="foto-tarjeta__img" src="dibujos/blanqueamiento.svg" data-origen="dibujada" width="1200" height="900" alt="" loading="lazy">
+                    <div>
+                        <span class="foto-tarjeta__pos">Posición 6</span>
+                        <p class="foto-tarjeta__desc">Blanqueamiento: el tono antes y después.</p>
+                        <p class="foto-tarjeta__estado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Consentimiento declarado por Admin Sistema el 28 oct 2026</p>
+                    </div>
+                    <div class="foto-tarjeta__acciones">
+                        <button type="submit" class="btn btn-outline" aria-label="Mover arriba: Blanqueamiento: el tono antes y después."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6"/></svg> Arriba</button>
+                        
+                        <button type="button" class="btn btn-outline btn-quitar" aria-label="Quitar: Blanqueamiento: el tono antes y después.">Quitar</button>
+                    </div>
+                </li>
+                    </ol>
+                </section>
+            <section class="card" id="subir" aria-labelledby="t-subir">
+                <h2 id="t-subir">Nueva foto</h2>
+
+                <form class="galeria-form" action="#" method="POST" enctype="multipart/form-data" novalidate>
+                    <div class="campo">
+                        <label class="field-label" for="foto">Foto</label>
+                        <input class="field campo-archivo" type="file" id="foto" name="foto" accept="image/jpeg,image/png,image/webp" aria-describedby="foto-ayuda">
+                        <p class="ayuda" id="foto-ayuda">JPG, PNG o WebP, hasta 5 MB. Se publica sin los datos de la cámara.</p>
+                    </div>
+                    <div class="campo">
+                        <label class="field-label" for="descripcion">Descripción</label>
+                        
+                        <textarea class="field" id="descripcion" name="descripcion" rows="3" maxlength="160" aria-describedby="descripcion-ayuda"></textarea>
+                        <p class="ayuda" id="descripcion-ayuda">Se lee debajo de la foto y es su texto alternativo.</p>
+                    </div>
+                    <fieldset class="campo-paciente">
+                        <legend>¿Aparece la boca o los dientes de un paciente?</legend>
+                        
+                        <label class="opcion"><input type="radio" name="paciente" value="no"> No, no aparece ningún paciente</label>
+                        <label class="opcion"><input type="radio" name="paciente" value="si"> Sí, aparece un paciente</label>
+                    </fieldset>
+                    <div class="consentimiento">
+                        
+                        <label class="campo-casilla"><input type="checkbox" name="consentimiento" value="1"> Tengo el consentimiento escrito del paciente para publicar esta foto y no se le puede reconocer</label>
+                        <p class="ayuda">Guarda el documento firmado en la clínica; aquí queda tu nombre y la fecha.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Publicar foto</button>
+                </form>
+            </section>
+            </div>
+        </div>
+    </div>
+<div class="modal-overlay show" style="display:flex">
+    <div class="modal-box card" role="dialog" aria-modal="true" aria-labelledby="t-quitar" aria-describedby="d-quitar">
+        <h2 id="t-quitar">¿Quitar esta foto?</h2>
+        <p id="d-quitar">«Corona de porcelana en un premolar.» deja de verse en la página de inicio y en la galería, y su dirección deja de abrirse.</p>
+        <div class="acciones-fila">
+            <button type="button" class="btn btn-outline">Cancelar</button>
+            <button type="submit" class="btn btn-danger">Quitar</button>
+        </div>
+    </div>
+</div>
+</main>
+
+
+</body>
+</html>

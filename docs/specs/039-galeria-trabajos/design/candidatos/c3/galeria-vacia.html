@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Candidato c3 de /design-spec 039. c2 corregido con la lista del evaluador (75/100): en el escritorio cada foto del carrusel es una lámina con la foto (7) y un panel (5) con el número grande en Newsreader, «Foto n de 6» y la descripción, como el índice de servicios; el mosaico de /galeria cierra sus filas (la 01 ocupa el alto de dos a su lado); los dibujos van sobre papel blanco para separarse de la banda; en la gestión, el selector de archivo con el estilo de botón de la app y su error propio, «Quitar» sin relleno y el icono del consentimiento en --p600. Tokens propuestos: --foto-ratio (4 / 3, fijo), --carrusel-foto-w (86 % · 72 % desde 560 px · 100 % desde 900 px) y --thumb-w (120px, fijo). -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Nuestros trabajos · Dentissa</title>
+    <meta name="description" content="Fotos de tratamientos hechos en la consulta Dentissa en Lázaro Cárdenas.">
+    <link rel="canonical" href="https://dentissa.app/galeria">
+    
+    <link href="../../../../../../public/css/app.css" rel="stylesheet">
+    <link href="../../../../../../public/css/publico.css" rel="stylesheet">
+    
+    <script src="../../../../../../public/js/publico.js" defer></script>
+    <link href="galeria.css" rel="stylesheet">
+    <script src="galeria.js" defer></script>
+</head>
+<body class="publico">
+
+
+<header class="pub-bar" id="top">
+    <div class="pub-wrap pub-bar__in">
+        <a class="pub-brand" href="inicio.html" aria-label="Inicio">
+            <span class="logo" role="img" aria-label="Melissa López N. · Odontología integral"></span>
+        </a>
+        <nav class="pub-nav" aria-label="Secciones">
+            <a href="https://dentissa.app/servicios">Servicios</a>
+            <a href="inicio.html#ubicacion">Ubicación</a>
+                            <a href="https://dentissa.app/login">Iniciar sesión</a>
+                <a class="c-btn c-btn--ink" href="https://dentissa.app/registro">Crear cuenta</a>
+                    </nav>
+        
+        <details class="pub-menu">
+            <summary aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+            <nav class="pub-menu__panel" aria-label="Secciones">
+                <a href="inicio.html#nosotros">Sobre nosotros</a>
+                <a href="https://dentissa.app/servicios">Servicios</a>
+                <a href="inicio.html#ubicacion">Ubicación y contacto</a>
+                                    <a href="https://dentissa.app/login">Iniciar sesión</a>
+                    <a class="c-btn c-btn--primary" href="https://dentissa.app/registro">Crear cuenta</a>
+                            </nav>
+        </details>
+    </div>
+</header>
+
+<main>
+<div class="lb-seccion pub-galeria">
+    <div class="lb-wrap">
+        <div class="lb-cabeza">
+            <span class="pub-etiqueta">Galería</span>
+            <h1>Nuestros trabajos</h1>
+            <p>Fotos de tratamientos hechos en la consulta.</p>
+        </div>
+        <div class="pub-galeria__vacia">
+            <p>Aún no hay fotos de nuestros trabajos.</p>
+            <a class="c-btn c-btn--secondary" href="inicio.html">Volver al inicio</a>
+        </div>
+    </div>
+</div>
+</main>
+
+
+<footer class="pub-foot">
+    <div class="pub-wrap">
+        <nav aria-label="Pie">
+            <ul class="pub-foot__links">
+                <li><a href="inicio.html#nosotros">Sobre nosotros</a></li>
+                <li><a href="https://dentissa.app/servicios">Servicios</a></li>
+                <li><a href="inicio.html#ubicacion">Ubicación</a></li>
+                                    <li><a href="https://dentissa.app/login">Iniciar sesión</a></li>
+                    <li><a href="https://dentissa.app/registro">Crear cuenta</a></li>
+                            </ul>
+        </nav>
+        <div class="pub-foot__info">
+            <span>Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00</span>
+            <a href="tel:+527530000000">753 000 0000</a>
+            <span>Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950</span>
+        </div>
+        <div class="pub-foot__small">
+            <span>Melissa López N. · Odontología integral</span>
+            <span>© 2026 Dentissa</span>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

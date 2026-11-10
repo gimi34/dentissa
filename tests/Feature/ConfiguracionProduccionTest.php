@@ -894,6 +894,38 @@ class ConfiguracionProduccionTest extends TestCase
         $this->assertStringContainsString('config --services', substr($tras, $incompleta, $levantar - $incompleta), 'Lee la lista justo antes de levantar.');
     }
 
+    /**
+     * Spec 039 (D17, T032; /analyze A11, A26): verificar.sh comprueba lo que necesita la galería en
+     * una sección propia, «Galería (spec 039)», que corre con y sin `--interna` y queda fuera del
+     * bloque de 16 comprobaciones de configuración: GD de app con JPEG y WebP, el directorio de las
+     * fotos (o su padre, si aún no hay ninguna) escribible por www-data y nginx con 20 MB (/review R2:
+     * la validación de 5 MB da su mensaje en español; con 6 MB, nginx cortaba antes con su 413).
+     */
+    public function test_verificar_comprueba_lo_que_necesita_la_galeria(): void
+    {
+        $script = $this->leer('deploy/verificar.sh');
+        $inicio = strpos($script, 'echo "== Galería (spec 039)"');
+        $this->assertNotFalse($inicio, 'verificar.sh tiene la sección de la galería.');
+
+        // La sección acaba en la siguiente sección o en el siguiente bloque que depende del modo.
+        $primeraExterna = strpos($script, 'if [[ "${modo}" != "--interna" ]]; then');
+        $fin = min(array_filter([strpos($script, 'echo "==', $inicio + 1), strpos($script, 'if [[ "${modo}"', $inicio)], fn ($p) => $p !== false) ?: [strlen($script)]);
+        $seccion = substr($script, $inicio, $fin - $inicio);
+        $this->assertLessThan($primeraExterna, $inicio, 'Corre también con --interna.');
+        $this->assertGreaterThan(strpos($script, 'de 16 comprobaciones"'), $inicio, 'Fuera del bloque de configuración de 16.');
+        $this->assertStringNotContainsString('--interna', $seccion, 'No depende del modo.');
+
+        $this->assertMatchesRegularExpression('/"\$\{php\[@\]\}" -r .*gd_info\(\).*"JPEG Support".*"WebP Support"/s', $seccion, 'GD de app con JPEG y WebP, como www-data.');
+        $this->assertMatchesRegularExpression('/"\$\{compose\[@\]\}" exec -T -u www-data app test -w storage\/app\/galeria/', $seccion, 'El directorio de las fotos, escribible por www-data.');
+        $this->assertMatchesRegularExpression('/"\$\{compose\[@\]\}" exec -T -u www-data app test -w storage\/app\b(?!\/)/', $seccion, 'O su padre, antes de la primera foto.');
+        $this->assertMatchesRegularExpression('/"\$\{compose\[@\]\}" exec -T web nginx -T 2> ?\/dev\/null \| grep -q .client_max_body_size 20m;/', $seccion, 'nginx acepta 20 MB.');
+        foreach (['docker/nginx/dentissa.conf', 'docker/nginx/dentissa.prod.conf'] as $conf) {
+            $this->assertMatchesRegularExpression('/^\s*client_max_body_size 20m;$/m', $this->leer($conf), "{$conf} acepta 20 MB.");
+        }
+        $this->assertGreaterThanOrEqual(3, preg_match_all('/^\s+ok "/m', $seccion), 'Cada comprobación dice OK…');
+        $this->assertGreaterThanOrEqual(3, preg_match_all('/^\s+fallo "/m', $seccion), '…o FALLO, y suma al contador.');
+    }
+
     /** Spec 020 (CA5): verificar.sh comprueba que el scheduler está en marcha y programa la purga. */
     public function test_verificar_comprueba_el_scheduler(): void
     {

@@ -56,6 +56,12 @@ class PaginasPublicasTest extends TestCase
             'descripcion' => 'Todos los tratamientos de la consulta Dentissa en Lázaro Cárdenas, de la revisión general a la ortodoncia y las prótesis.',
             'canonica' => self::DOMINIO.'/servicios',
         ],
+        // Spec 039 (CA6, T014): la galería de trabajos, indexable y con sus metadatos propios.
+        '/galeria' => [
+            'titulo' => 'Nuestros trabajos · Dentissa',
+            'descripcion' => 'Fotos de tratamientos hechos en la consulta Dentissa en Lázaro Cárdenas.',
+            'canonica' => self::DOMINIO.'/galeria',
+        ],
     ];
 
     private const SCRIPT = 'js/publico.js';

@@ -25,7 +25,8 @@ inicio de sesión.
 - Renderizado: ssr — Laravel con Blade renderiza en el servidor el HTML completo de cada ruta; no
   depende de JavaScript.
 - Se indexa: `/registro` (decisión del usuario, 2026-10-16), `/` y `/servicios` (spec 038,
-  decisión del usuario, 2026-10-20).
+  decisión del usuario, 2026-10-20) y `/galeria` (spec 039). Las fotos de `/galeria/fotos/*` con un
+  paciente llevan `X-Robots-Tag: noindex` (spec 039, D16).
 - JavaScript: `/` y `/servicios` cargan un solo script propio, `public/js/publico.js` (≈ 8 kB, con
   `defer`), que solo añade la pastilla, la fila de hoy, las entradas y la escena: el contenido llega
   entero en el HTML del servidor y se lee sin él (spec 038, D16). `/` incrusta el mapa de Google
@@ -58,6 +59,8 @@ permiso del usuario, con `GET` a https://dentissa.app (solo códigos de estado y
 |---|---|---|---|---|---|---|---|---|
 | `/` | sí (spec 038) | ✅ «Dentissa · Tu sonrisa, nuestra prioridad» | ✅ propia | ✅ `https://dentissa.app/` | ✅ uno («Tu sonrisa, nuestra prioridad.») | ➖ (fuera de alcance, SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` sin sesión (con sesión, `302` al panel del rol) · `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` · `resources/views/publico/inicio.blade.php` · Spec 044: con sesión, `200` con «Ir a mi panel» (ya no redirige; los buscadores entran sin sesión) |
 | `/servicios` | sí (spec 038) | ✅ «Servicios · Dentissa» | ✅ propia | ✅ `https://dentissa.app/servicios` | ✅ uno («Nuestros servicios») | ➖ (SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` con y sin sesión · `PaginasPublicasTest` · `resources/views/publico/servicios.blade.php` |
+| `/galeria` | sí (spec 039) | ✅ «Nuestros trabajos · Dentissa» | ✅ propia | ✅ `https://dentissa.app/galeria` | ✅ uno («Nuestros trabajos») | ➖ (SE6) | ➖ (SE7) | Spec 039, rama sin liberar: `200` con y sin sesión, igual en los cuatro roles · `PaginaGaleriaTest::test_metadatos_de_galeria` y `PaginasPublicasTest` · `resources/views/publico/galeria.blade.php` |
+| `/galeria/fotos/{foto}/{ancho}` (spec 039) | imagen, no HTML: las fotos con paciente con `X-Robots-Tag: noindex` (D16) | — | — | — | — | — | — | `image/webp`, `Cache-Control: no-cache, private` con `ETag`; 404 en cuanto se quita · `PaginaGaleriaTest::test_solo_las_fotos_con_paciente_llevan_noindex` |
 | `/registro` | sí | ✅ «Dentissa · Crear cuenta» | ❌ sin `<meta name="description">` | ❌ sin `<link rel="canonical">` | ✅ uno («Únete a nuestra comunidad») | ❌ | ❌ | `curl -s /registro` · `resources/views/auth/register.blade.php:6,33`; `200` en producción |
 | `/login` | no (inicio de sesión) | ✅ «Dentissa · Iniciar sesión» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ✅ `noindex` desde `layouts/acceso.blade.php` (spec 041) |
 | `/contrasena/olvidada`, `/contrasena/enviada`, `/contrasena/nueva/{token}` (spec 041) | no (acceso; la última lleva un secreto) | ✅ «Dentissa · Recuperar acceso», «Dentissa · Revisa tu correo», «Dentissa · Contraseña nueva» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ✅ `noindex`; solo existen con `RECUPERAR_CONTRASENA=true` |
@@ -86,7 +89,7 @@ Correcciones:
 ### SE3 · media — Sin `sitemap.xml` y `robots.txt` sin sitemap
 Evidencia: `/sitemap.xml` → `404` en local y en producción; `public/robots.txt` sin línea `Sitemap:`.
 Correcciones:
-- SE3.a `sitemap.xml` con las rutas indexables (`https://dentissa.app/registro`, `https://dentissa.app/` y `https://dentissa.app/servicios`, spec 038) — estado: pendiente
+- SE3.a `sitemap.xml` con las rutas indexables (`https://dentissa.app/registro`, `https://dentissa.app/` y `https://dentissa.app/servicios`, spec 038; `https://dentissa.app/galeria`, spec 039) — estado: pendiente
 - SE3.b `Sitemap: https://dentissa.app/sitemap.xml` en `robots.txt` — estado: pendiente
 
 ### SE4 · baja — Sin página 404 propia

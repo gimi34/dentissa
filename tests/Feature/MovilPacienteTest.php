@@ -38,7 +38,7 @@ class MovilPacienteTest extends TestCase
      * cada rol termina con «Ver sitio web», la página pública.
      */
     private const SECCIONES = [
-        'admin' => ['Home', 'Citas', 'Pacientes', 'Personal', 'Servicios', 'Reportes', 'Usuarios', 'Auditoría', 'Ver sitio web'],
+        'admin' => ['Home', 'Citas', 'Pacientes', 'Personal', 'Servicios', 'Galería', 'Reportes', 'Usuarios', 'Auditoría', 'Ver sitio web'], // Galería: spec 039
         'dentista' => ['Home', 'Mis Citas', 'Pacientes', 'Expedientes', 'Ver sitio web'],
         'asistente' => ['Home', 'Mis Doctores', 'Citas', 'Pacientes', 'Ver sitio web'],
         'cliente' => ['Inicio', 'Mis Citas', 'Agendar Cita', 'Mi Perfil', 'Ver sitio web'],

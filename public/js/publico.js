@@ -91,12 +91,79 @@
         return Math.min(1, Math.max(0, -rect.top / recorrido));
     }
 
-    global.DentissaPublico = { estadoAhora: estadoAhora, diaDeHoy: diaDeHoy, progresoEscena: progresoEscena };
+    // Carrusel de trabajos (spec 039, M-1): la foto vecina da la vuelta en los dos sentidos.
+    function fotoVecina(actual, paso, total) {
+        if (!(total > 0) || isNaN(actual)) return 0;
+        return (((actual + paso) % total) + total) % total;
+    }
+
+    // Texto de la región de estado: lo que lee el pie sin el numeral decorativo (aria-hidden).
+    function textoEstado(hijos) {
+        return Array.prototype.filter.call(hijos, function (h) { return h.getAttribute('aria-hidden') !== 'true'; })
+            .map(function (h) { return h.textContent; })
+            .join(' ').replace(/\s+/g, ' ').trim();
+    }
+
+    global.DentissaPublico = {
+        estadoAhora: estadoAhora, diaDeHoy: diaDeHoy, progresoEscena: progresoEscena,
+        fotoVecina: fotoVecina, textoEstado: textoEstado,
+    };
 
     var doc = global.document;
     if (!doc) return;
 
+    // Carrusel de trabajos (spec 039; CA1, CA4; M-1). Mejora progresiva: sin JavaScript la fila se
+    // desplaza a mano y «Anterior» y «Siguiente» son enlaces a cada foto. Con él, mueven la ventana una
+    // foto (sin animar con movimiento reducido), apuntan siempre a la vecina y la región de estado anuncia
+    // la foto con textContent. Sin avance automático (WCAG 2.2.2).
+    function montarCarrusel(carrusel) {
+        var ventana = carrusel.querySelector('.pub-carrusel__ventana');
+        var items = Array.prototype.slice.call(carrusel.querySelectorAll('.pub-carrusel__lista > li'));
+        var anterior = carrusel.querySelector('[data-anterior]');
+        var siguiente = carrusel.querySelector('[data-siguiente]');
+        var estado = carrusel.querySelector('[data-estado]');
+        // Una sola foto (/review R8): es la actual, sin la escala de las demás, y no hay vecinas.
+        if (items.length === 1) items[0].classList.add('is-actual');
+        if (!ventana || items.length < 2 || !anterior || !siguiente) return;
+        var actual = 0;
+
+        function marcar(i) {
+            actual = i;
+            items.forEach(function (li, k) { li.classList.toggle('is-actual', k === i); });
+            anterior.setAttribute('href', '#' + items[fotoVecina(i, -1, items.length)].id);
+            siguiente.setAttribute('href', '#' + items[fotoVecina(i, 1, items.length)].id);
+        }
+        function ir(i) {
+            var reducir = typeof global.matchMedia === 'function' && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            ventana.scrollTo({ left: items[i].offsetLeft - items[0].offsetLeft, behavior: reducir ? 'auto' : 'smooth' });
+            marcar(i);
+            var pie = items[i].querySelector('figcaption');
+            if (estado && pie) estado.textContent = textoEstado(pie.children);
+        }
+        anterior.addEventListener('click', function (e) { e.preventDefault(); ir(fotoVecina(actual, -1, items.length)); });
+        siguiente.addEventListener('click', function (e) { e.preventDefault(); ir(fotoVecina(actual, 1, items.length)); });
+
+        // Al desplazar a mano (o con el dedo), la vecina se recalcula cuando la fila se detiene.
+        var espera;
+        ventana.addEventListener('scroll', function () {
+            global.clearTimeout(espera);
+            espera = global.setTimeout(function () {
+                var x = ventana.scrollLeft;
+                var mejor = 0;
+                var distancia = Infinity;
+                items.forEach(function (li, k) {
+                    var d = Math.abs(li.offsetLeft - items[0].offsetLeft - x);
+                    if (d < distancia) { distancia = d; mejor = k; }
+                });
+                marcar(mejor);
+            }, 120);
+        }, { passive: true });
+        marcar(0);
+    }
+
     function iniciar() {
+        Array.prototype.forEach.call(doc.querySelectorAll('[data-carrusel]'), montarCarrusel);
+
         var ahora = new Date();
         var vivo = doc.querySelector('[data-live]');
         var zona = vivo && vivo.getAttribute('data-zona');

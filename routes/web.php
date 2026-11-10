@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisenioAccesoController;
 use App\Http\Controllers\DisenioAuditoriaController;
 use App\Http\Controllers\ExpedientesController;
+use App\Http\Controllers\FotosGaleriaController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\PaginasPublicasController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ServiciosController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Middleware\PreventBackHistory;
 
 // ── Auth ────────────────────────────────────────────────────────────────
 Route::get('/login', [AuthController::class,  'loginForm'])->name('login');
@@ -47,6 +49,11 @@ if (config('acceso.recuperar_contrasena')) {
 // ── Páginas públicas (spec 038) ─────────────────────────────────────────
 Route::get('/', [PaginasPublicasController::class, 'inicio'])->name('inicio');
 Route::get('/servicios', [PaginasPublicasController::class, 'servicios'])->name('servicios.publicos');
+// Spec 039: la galería y cada foto. La foto va sin PreventBackHistory, que pisaría su
+// Cache-Control (plan → «Entrega de las fotos», /analyze A1).
+Route::get('/galeria', [PaginasPublicasController::class, 'galeria'])->name('galeria.publica');
+Route::get('/galeria/fotos/{foto}/{ancho}', [PaginasPublicasController::class, 'foto'])->name('galeria.foto')
+    ->whereUuid('foto')->whereIn('ancho', ['800', '1600'])->withoutMiddleware(PreventBackHistory::class);
 
 // ── Vista previa del diseño (spec 020, D19) ─────────────────────────────
 // Solo en local (TM15): datos de muestra, sin sesión ni base, para medir con design/medir.mjs.
@@ -112,6 +119,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Registro de auditoría (spec 020): solo consulta, sin rutas de modificación (CA2).
     Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+
+    // Galería de trabajos (spec 039; CA8–CA13): además de role:admin, cada acción comprueba el
+    // Gate gestionar-galeria. Quitar pide confirmación en una página (D7).
+    Route::controller(FotosGaleriaController::class)->prefix('galeria')->name('galeria.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::patch('/{foto}/subir', 'subir')->name('subir')->whereUuid('foto');
+        Route::patch('/{foto}/bajar', 'bajar')->name('bajar')->whereUuid('foto');
+        Route::get('/{foto}/quitar', 'confirmarQuitar')->name('quitar')->whereUuid('foto');
+        Route::delete('/{foto}', 'destroy')->name('destroy')->whereUuid('foto');
+    });
 
     // Usuarios
     // El orden importa: Laravel resuelve por orden de registro, así que

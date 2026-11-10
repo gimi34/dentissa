@@ -67,6 +67,7 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, asignación asistente↔dentista y horarios: valida el horario y lo guarda con `app/Agenda/HorarioDentista.php`, que también da la lista de citas fuera del horario de la ficha (spec 027) | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
 | Servicios | `app/Http/Controllers/ServiciosController.php` | Catálogo (Eloquent + `Route::resource`) | `servicios` |
 | Páginas públicas | `app/Http/Controllers/PaginasPublicasController.php` | `/` (página de inicio; desde la spec 044 también con sesión, con «Ir a mi panel» hacia `panelDelRol()` en lugar de los enlaces de cuenta) y `/servicios`, sin parámetros, con `Servicio::porCategoria()` (solo activos: nombre, descripción y categoría, en una consulta) y el contacto de `config/clinica.php` (spec 038) | `servicios` |
+| Galería de trabajos | `app/Galeria/` (`ProcesadorFoto`, `Galeria`, `FotoProcesada`, `FotoNoProcesable`), `app/Models/GaleriaFoto.php`, `FotosGaleriaController`, `PaginasPublicasController::galeria()` y `foto()`, `app/Autorizacion/GestionGaleria.php` | Spec 039 ([ADR 0009](adr/0009-fotos-subidas-volumen-storage.md)): el admin sube (JPG, PNG o WebP de hasta 5 MB y 6000 px), ordena y quita como mucho 12 fotos; `ProcesadorFoto` las recodifica con GD en dos WebP sin datos de la cámara (1600 px y 500 kB como mucho; 800 px), `Galeria` publica, mueve y quita en transacciones con auditoría crítica. Gate `gestionar-galeria` además de `role:admin`. Se ven en el carrusel de `/` y en `/galeria`, y cada foto se sirve por `GET /galeria/fotos/{foto}/{ancho}` (`no-cache, private` con `ETag`, `noindex` si hay paciente) | `galeria_fotos`, disco `galeria` |
 | Usuarios | `app/Http/Controllers/UsuarioController.php` | Administración de cuentas y roles | `usuarios` |
 | Perfil | `app/Http/Controllers/PerfilController.php` | Perfil y contraseña del cliente | `usuarios`, `pacientes` |
 | Middleware | `app/Http/Middleware/RoleMiddleware.php`, `PreventBackHistory.php`, `IdentificadorPeticion.php`, `ContextoActor.php`, `SesionVigente.php` | Rol por grupo de rutas; cabeceras no-cache. Spec 041: `SesionVigente` (grupo `web`, antes de `ContextoActor`) cierra la sesión cuya versión es menor que `usuarios.version_sesion`. Spec 020: `IdentificadorPeticion` (global) reutiliza el `X-Request-Id` si es un UUID o genera uno, lo pone en el `Context` y lo devuelve en toda respuesta; `ContextoActor` (al final del grupo `web`) pone o quita el actor de los logs al empezar cada petición. Spec 044: `NoIndexarSalud` (global) añade `X-Robots-Tag: noindex` a `/up`, que se registra fuera del grupo `web` | `usuarios.rol`, `Context` de Laravel |
@@ -106,14 +107,17 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   Columnas `creado_en`/`actualizado_en` escritas a mano (sin timestamps de Laravel).
 - Acceso: PDO con Query Builder (148 usos de `DB::` en controladores y 4 más en `app/Autorizacion`
   y el comando; `app/Agenda` recibe la conexión inyectada) y Eloquent solo para
-  `Usuario` (modelo de autenticación, tabla `usuarios`) y `Servicio`.
+  `Usuario` (modelo de autenticación, tabla `usuarios`), `Servicio` y `GaleriaFoto` (spec 039).
 - Entidades: `usuarios` (rol enum cliente/asistente/dentista/admin), `pacientes`, `personal`
   (tipo dentista/asistente/administrador), `asistente_dentista`, `horarios_dentista`, `servicios`,
   `citas` (estado enum de 6 valores), `historial_citas` (`cambiado_por`, `estado_anterior`,
   `estado_nuevo`, `motivo`, `fecha_hora_anterior`, `fecha_hora_nueva`), `expedientes` y, desde la
   spec 020, `auditoria` (`id` autoincremental, `ocurrido_en` en UTC con microsegundos, actor sin
   clave foránea, acción, recurso, resultado de vocabulario cerrado, `campos` y `detalle` JSON, IP y
-  `request_id`; índices por fecha, acción, recurso y petición). Vistas SQL `v_citas_hoy` y
+  `request_id`; índices por fecha, acción, recurso y petición) y, desde la spec 039, `galeria_fotos`
+  (descripción, posición única, si hay paciente y la declaración de consentimiento con cuenta, nombre
+  copiado y fecha, medidas y pesos de los dos WebP; las fotos, en el disco `galeria`,
+  `storage/app/galeria/<id>-1600.webp` y `<id>-800.webp`). Vistas SQL `v_citas_hoy` y
   `v_historial_paciente` (no las usa el código PHP).
 - Esquema: las tablas de dominio, las vistas y el trigger `trg_historial_cita` solo existen en
   `database/dentissa.sql`. Las migraciones crean tablas de infraestructura (`users`, `sessions`,
@@ -122,7 +126,7 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   `fecha_hora_nueva` (`DATETIME NULL`, spec 028). La tabla `auditoria` sí nace de una migración
   (spec 020), con sus triggers `auditoria_sin_update` (rechaza todo `UPDATE`) y
   `auditoria_sin_delete` (solo deja borrar con el indicador `@auditoria_purga` y eventos de más de
-  5 años medidos con `UTC_TIMESTAMP()`). El
+  5 años medidos con `UTC_TIMESTAMP()`). `galeria_fotos` también nace de una migración (spec 039). El
   esquema no se puede recrear desde migraciones sobre una base vacía.
 
 ## Integraciones externas
@@ -201,10 +205,14 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   cortes de 900 y 560 px. `public/js/publico.js` (D16, con `defer`) escribe la pastilla «¿Está abierto
   ahora?» y la fila de hoy, pone el filete de la cabecera, cierra el menú con Escape y, con movimiento
   normal, las entradas y el progreso `--p` de la escena; sin él la página está completa. Sus funciones
-  puras (`estadoAhora`, `diaDeHoy`, `progresoEscena`) se prueban con `node --test tests/js/`.
+  puras (`estadoAhora`, `diaDeHoy`, `progresoEscena`) se prueban con `node --test tests/js/`. Spec 039:
+  la sección «Nuestros trabajos» de `/` (solo con fotos) y `/galeria` usan la foto de trabajo compartida
+  (`publico/_trabajo.blade.php`, con `srcset` de 800 y 1600 px), y el carrusel vive en el mismo
+  `publico.js` (`fotoVecina`, `textoEstado`; sin avance automático). La gestión es
+  `galeria/index.blade.php` dentro de `.formulario-accesible`, con la entrada «Galería» en el menú del admin.
 - SEO (upgrade a AI-DD 1.13.0): todo el HTML se renderiza en el servidor con Blade, sin depender de
   JavaScript. Las vistas de acceso (`resources/views/auth/*.blade.php`) tienen su propio `<head>`,
-  donde van los metadatos de `/registro`; `/` y `/servicios` (spec 038) los toman de
+  donde van los metadatos de `/registro`; `/`, `/servicios` (spec 038) y `/galeria` (spec 039) los toman de
   `layouts/publico.blade.php` (título, descripción y canónica por sección, desde `APP_URL`); el
   resto usa el `<head>` de `layouts/app.blade.php`. `public/robots.txt` es estático y no hay `sitemap.xml`. Reglas y brechas
   en [seo.md](seo.md).
@@ -215,8 +223,8 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 - Autenticación y autorización: sesión de Laravel (guard `web`) sobre `App\Models\Usuario`;
   middleware `role:` por grupo de rutas (el de `/cliente`, solo `auth`); comprobaciones de fila en
   controladores (`aplicarAlcanceRol`, `autorizadoParaCita`, que delegan en `AlcanceClinico`), y
-  Gates para los cambios de estado (spec 026) y la reprogramación (spec 028) de las citas y para el
-  horario del dentista (spec 027). Detalle en [security.md](security.md).
+  Gates para los cambios de estado (spec 026) y la reprogramación (spec 028) de las citas, para el
+  horario del dentista (spec 027) y para la gestión de la galería (spec 039). Detalle en [security.md](security.md).
 - Observabilidad: cada respuesta lleva `X-Request-Id`, y el `request_id` y el actor de la sesión
   van en el `Context` de Laravel, que los añade a todos los logs; el registro de auditoría guarda
   el mismo `request_id`. El aviso `auditoria` del vigilante cuenta los eventos que no se pudieron
@@ -234,6 +242,9 @@ Dos entornos (spec 030, [ADR 0005](adr/0005-produccion-servidor-propio-cloudflar
 - **Local:** Docker Compose (`app` php-fpm, `nginx`, `db` MariaDB, `phpmyadmin` y, desde la spec
   020, `scheduler` con `schedule:work` y el mismo build que `app`), con los puertos solo en
   `127.0.0.1` y las imágenes con versión exacta.
+- **Spec 039:** las imágenes de `app` compilan GD con JPEG y WebP; nginx acepta cuerpos de hasta 20 MB
+  (`client_max_body_size 20m`, para que una foto de más de 5 MB reciba el mensaje de la validación); las fotos de la galería viven en el volumen `storage` y no entran en las
+  copias (D4, riesgo en [deployment.md](deployment.md)); `verificar.sh` comprueba las tres cosas.
 - **Producción:** servidor propio (Ubuntu Server 24.04) con `docker-compose.prod.yml`. Staging no
   existe.
 

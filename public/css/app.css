@@ -134,6 +134,9 @@
     --acceso-solape:          56px;
     --acceso-panel-pad:       56px;
     --acceso-lado-pad:        42px;
+    /* Galería de trabajos (spec 039, system.md 1.13.0). */
+    --thumb-w:                120px; /* miniatura de la tarjeta de foto de la gestión */
+    --foto-ratio:             4 / 3; /* proporción de las fotos, recortadas al publicarlas */
 }
 
 body {
@@ -729,3 +732,126 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
   .paginacion-botones .btn { flex: 1; justify-content: center; min-height: var(--touch-min); }
 }
 /* Fin spec 020 */
+
+/* Spec 039 · Gestión de la galería de trabajos (candidato c3, design.md; system.md 1.13.0). Todo dentro
+   de .formulario-accesible (P9): tarjeta de foto, pregunta del paciente, consentimiento, selector de
+   archivo, aviso de error y diálogo de quitar, que es una página (D7) y no lleva JavaScript. */
+.topbar-actions .formulario-accesible .btn,
+.formulario-accesible.galeria-gestion .btn { min-height: var(--touch-min); }
+.formulario-accesible.galeria-gestion { display: grid; gap: var(--space-6); }
+.formulario-accesible .galeria-gestion__intro { margin: 0; color: var(--text); font-size: var(--text-body); }
+.formulario-accesible .galeria-gestion__intro a { color: var(--p600); font-weight: var(--weight-strong); }
+.formulario-accesible .galeria-gestion__grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-6); align-items: start; }
+.formulario-accesible.galeria-gestion h2 { margin: 0 0 var(--space-5); font-size: var(--text-marca); font-weight: var(--weight-strong); color: var(--text); }
+
+.formulario-accesible .foto-lista { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.formulario-accesible .foto-tarjeta {
+    display: grid;
+    grid-template-columns: var(--thumb-w) minmax(0, 1fr);
+    gap: var(--space-4) var(--space-5);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+}
+.formulario-accesible .foto-tarjeta__img { display: block; width: 100%; height: auto; aspect-ratio: var(--foto-ratio); object-fit: cover; border-radius: var(--radius-sm); background: var(--p100); }
+.formulario-accesible .foto-tarjeta__pos { color: var(--p600); font-size: var(--text-small); font-weight: var(--weight-bold); }
+.formulario-accesible .foto-tarjeta__desc { margin: var(--space-1) 0 var(--space-2); color: var(--text); font-size: var(--text-body); overflow-wrap: anywhere; }
+.formulario-accesible .foto-tarjeta__estado { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--text); font-size: var(--text-small); }
+.formulario-accesible .foto-tarjeta__estado svg { flex: none; width: var(--icon-md); height: var(--icon-md); color: var(--p600); }
+.formulario-accesible .foto-tarjeta__acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.formulario-accesible .btn-quitar { color: var(--red); border-color: var(--red); }
+.formulario-accesible .btn-quitar:hover { background: var(--red-bg); }
+
+.formulario-accesible .galeria-form .ayuda { margin: 0; color: var(--text); font-size: var(--text-small); }
+.formulario-accesible .galeria-form textarea.field { resize: vertical; }
+.formulario-accesible .galeria-form .field[aria-invalid="true"] { border-color: var(--red); }
+.formulario-accesible .campo-paciente { margin: 0 0 var(--space-5); padding: 0; border: 0; }
+.formulario-accesible .campo-paciente legend { margin-bottom: var(--space-2); padding: 0; color: var(--text); font-size: var(--text-small); font-weight: var(--weight-strong); }
+.formulario-accesible .opcion { display: flex; align-items: center; gap: 0; min-height: var(--touch-min); color: var(--text); font-size: var(--text-body); }
+.formulario-accesible .consentimiento {
+    display: grid;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--p50);
+}
+.formulario-accesible .consentimiento .campo-casilla { align-items: flex-start; gap: 0; min-height: var(--touch-min); color: var(--text); font-size: var(--text-body); font-weight: var(--weight-strong); }
+/* La casilla solo aparece al responder «Sí»; sin :has() se ve siempre. */
+.formulario-accesible .campo-paciente:not(:has(input[value="si"]:checked)) + .consentimiento { display: none; }
+.formulario-accesible .campo-error { margin: 0; color: var(--red); font-size: var(--text-small); font-weight: var(--weight-strong); }
+.formulario-accesible .aviso-error { margin-bottom: var(--space-5); padding: var(--space-4); border: var(--border-width) solid var(--red); border-radius: var(--radius-sm); background: var(--red-bg); color: var(--text); font-size: var(--text-body); }
+.formulario-accesible .aviso-error p { margin: 0; }
+/* /review R5: el aviso recibe el foco al cargar y enlaza cada campo con error. */
+.formulario-accesible .aviso-error:focus { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.formulario-accesible .aviso-error__lista { margin: var(--space-2) 0 0; padding-left: var(--space-6); }
+.formulario-accesible .aviso-error__lista a { display: inline-flex; align-items: center; min-height: var(--touch-min); color: var(--red); font-weight: var(--weight-strong); }
+
+/* Radios y casilla con zona de toque de 44 px (patrón de .remember-label, spec 041): el control mide
+   --touch-min y dibuja un círculo o un cuadro de --icon-md; marcado, punto o palomita. */
+.formulario-accesible .opcion input,
+.formulario-accesible .consentimiento .campo-casilla input {
+    appearance: none;
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    margin: 0 0 0 calc(var(--space-3) * -1);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+.formulario-accesible .opcion input::before,
+.formulario-accesible .opcion input::after,
+.formulario-accesible .consentimiento .campo-casilla input::before,
+.formulario-accesible .consentimiento .campo-casilla input::after { content: ""; grid-area: 1 / 1; box-sizing: border-box; }
+.formulario-accesible .opcion input::before { width: var(--icon-md); height: var(--icon-md); background: var(--white); border: var(--border-width) solid var(--border-control); border-radius: var(--radius-pill); }
+.formulario-accesible .opcion input:checked::before { border-color: var(--p500); }
+.formulario-accesible .opcion input:checked::after { width: var(--space-3); height: var(--space-3); border-radius: var(--radius-pill); background: var(--p500); }
+.formulario-accesible .opcion input[aria-invalid="true"]::before { border-color: var(--red); }
+.formulario-accesible .consentimiento .campo-casilla input { margin-top: calc((var(--touch-min) - var(--icon-md)) / -2 + var(--space-1)); }
+.formulario-accesible .consentimiento .campo-casilla input::before { width: var(--icon-md); height: var(--icon-md); background: var(--white); border: var(--border-width) solid var(--border-control); border-radius: var(--space-1); }
+.formulario-accesible .consentimiento .campo-casilla input:checked::before { border-color: var(--p500); }
+.formulario-accesible .consentimiento .campo-casilla input:checked::after { width: var(--space-2); height: var(--space-4); margin-top: calc(var(--border-width) * -2); border: solid var(--p500); border-width: 0 var(--border-width-strong) var(--border-width-strong) 0; transform: rotate(45deg); }
+.formulario-accesible .consentimiento .campo-casilla input[aria-invalid="true"]::before { border-color: var(--red); }
+.formulario-accesible .opcion input:focus-visible,
+.formulario-accesible .consentimiento .campo-casilla input:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -4); }
+
+/* Selector de archivo: el control nativo con el botón de la app. */
+.formulario-accesible .galeria-form .campo-archivo { padding: var(--space-2); color: var(--text); font-size: var(--text-body); }
+.formulario-accesible .galeria-form .campo-archivo::file-selector-button {
+    min-height: var(--touch-min);
+    margin-right: var(--space-4);
+    padding: 0 var(--space-5);
+    border: var(--border-width) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--p600);
+    font: inherit;
+    font-weight: var(--weight-strong);
+    cursor: pointer;
+}
+.formulario-accesible .galeria-form .campo-archivo:hover::file-selector-button { background: var(--p100); }
+
+/* Diálogo de quitar: abierto cuando la página es …/quitar; respeta el margen lateral. */
+.formulario-accesible .modal-overlay { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding-inline: var(--space-4); background: var(--overlay); }
+.formulario-accesible .modal-box { width: 100%; max-width: var(--acceso-form-max); border-radius: var(--radius); }
+.formulario-accesible .modal-box h2 { margin: 0 0 var(--space-3); font-size: var(--text-marca); color: var(--text); }
+.formulario-accesible .modal-box p { margin: 0 0 var(--space-6); color: var(--text); font-size: var(--text-body); overflow-wrap: anywhere; }
+.formulario-accesible .modal-box .acciones-fila { gap: var(--space-3); }
+
+@media (max-width: 899px) {
+    .formulario-accesible .galeria-gestion__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 559px) {
+    .formulario-accesible .foto-tarjeta { grid-template-columns: minmax(0, 1fr); }
+    .formulario-accesible .foto-tarjeta__img { width: var(--thumb-w); }
+    .formulario-accesible .foto-tarjeta__acciones { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+    .formulario-accesible .foto-tarjeta__acciones .btn { justify-content: center; padding: 0 var(--space-2); }
+}
+/* Refinado (design.md, 2026-11-08): los bordes de la tarjeta y del botón del archivo van con
+   --border-control, el contraste de 3:1 que pide .formulario-accesible (spec 028) a todo borde. */
+/* Fin spec 039 */

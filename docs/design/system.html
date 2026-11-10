@@ -300,6 +300,23 @@
                       border-radius: var(--radius-sm); padding: 0 var(--space-4); font: inherit; background: var(--color-surface); }
   .opt .m-campo-035:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus); outline-offset: var(--focus-ring-offset); }
 </style>
+<style id="componentes-039">
+  /* Muestras vivas de la spec 039 (foto de trabajo, tarjeta de foto y pregunta del paciente), con los tokens de .opt. */
+  .opt .g-fila { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: flex-start; }
+  .opt .g-trabajo { margin: 0; width: 320px; display: grid; gap: var(--space-4); }
+  .opt .g-foto { aspect-ratio: var(--foto-ratio); border-radius: var(--radius-lg); border: var(--border-width) solid var(--color-border);
+                 box-shadow: var(--shadow-soft); background: var(--color-p100); }
+  .opt .g-trabajo figcaption { display: grid; gap: var(--space-2); }
+  .opt .g-num { font-family: var(--font-display); font-size: var(--text-publico-h3); color: var(--color-accent-text); }
+  .opt .g-n { font-size: var(--text-small); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: var(--tracking-etiqueta); color: var(--color-accent-text); }
+  .opt .g-tarjeta { width: 320px; box-sizing: border-box; display: grid; grid-template-columns: var(--thumb-w) minmax(0, 1fr); gap: var(--space-4);
+                    padding: var(--space-5); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+  .opt .g-thumb { aspect-ratio: var(--foto-ratio); border-radius: var(--radius-sm); background: var(--color-p100); }
+  .opt .g-tarjeta p { margin: 0 0 var(--space-2); overflow-wrap: anywhere; }
+  .opt .g-paciente { width: 320px; box-sizing: border-box; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5); }
+  .opt .g-paciente label { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min); }
+  .opt .g-paciente input { width: var(--icon-md); height: var(--icon-md); margin: 0; accent-color: var(--color-link); }
+</style>
 <style id="componentes-020">
   /* Muestras vivas de la spec 020 (paginación, con y sin «Anterior»), con los tokens de .opt. */
   .opt .m-paginacion { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4) var(--space-6);
@@ -442,6 +459,7 @@
     --color-p200: #F4C0D1; --color-p100: #FBEAF0; /* --p200 («prioridad.») y --p100 (franja), 1.8.0 */
 
     --duration-fast: 150ms; --duration-base: 250ms; /* --duration-base: 0.25s (spec 038) */
+    --foto-ratio: 4 / 3; --carrusel-foto-w: 86%; --thumb-w: 120px; /* spec 039, 1.13.0 (--carrusel-foto-w: 72 % desde 560 px y 90 % desde 900 px) */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); /* spec 038, 1.8.0 */
     --duration-reveal: 800ms; --stagger: 80ms; --duration-marquesina: 48s; /* spec 038, 1.8.0 (--duration-marquesina, retirado en 1.9.0) */
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* spec 038, 1.9.0: el trazo del diente */
@@ -835,6 +853,19 @@
       <div class="s44-error"><span class="s44-etiqueta">Error 404 · página no encontrada</span><h4>No encontramos esta página</h4>
         <p>La dirección no existe o cambió.</p><button class="a-boton" type="button">Ir a la página de inicio</button>
         <p class="s44-secundarios"><a class="s44-enlace" href="#salidas-044">Iniciar sesión</a><a class="s44-enlace" href="#salidas-044">Crear cuenta</a></p></div>
+    <h3 id="galeria-039">Galería de trabajos (spec 039, 1.13.0)</h3>
+    <p class="v-note">Muestra viva de la foto de trabajo, la tarjeta de foto de la gestión y la pregunta del paciente
+      (<a href="../specs/039-galeria-trabajos/design.md">diseño</a>, <a href="../specs/039-galeria-trabajos/design/candidatos/c3/inicio.html">candidato <code>c3</code></a>),
+      con los tokens de 1.13.0: <code>--foto-ratio</code> (4 / 3), <code>--carrusel-foto-w</code> (86 %, 72 % desde 560 px y 90 % desde
+      900 px) y <code>--thumb-w</code> (120 px). El carrusel, el mosaico y el diálogo de quitar se ven en el candidato; el recuadro
+      rosa ocupa el sitio de la foto. Sin colores nuevos.</p>
+    <div class="v-stage"><div class="opt"><div class="g-fila">
+      <figure class="g-trabajo"><div class="g-foto" role="img" aria-label="Sitio de la foto, en proporción 4:3"></div>
+        <figcaption><span class="g-num" aria-hidden="true">01</span><span class="g-n">Foto 1 de 6</span><span>Resina en un incisivo, antes y después.</span></figcaption></figure>
+      <div class="g-tarjeta"><div class="g-thumb" aria-hidden="true"></div>
+        <div><p class="g-n">Posición 2</p><p>Corona de porcelana en un premolar.</p><p>Consentimiento declarado por Admin Sistema el 07/11/2026</p></div></div>
+      <fieldset class="g-paciente"><legend>¿Aparece un paciente en la foto?</legend>
+        <label><input type="radio" name="g-paciente-039"> Sí</label><label><input type="radio" name="g-paciente-039" checked> No</label></fieldset>
     </div></div></div>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
     <p class="v-note">Muestra viva de la paginación de la consulta de auditoría

@@ -6,6 +6,7 @@ use App\Auditoria\AlmacenAuditoria;
 use App\Auditoria\AlmacenAuditoriaBaseDatos;
 use App\Auditoria\Auditoria;
 use App\Autorizacion\CambiarEstadoCita;
+use App\Autorizacion\GestionGaleria;
 use App\Autorizacion\GestionPersonal;
 use App\Autorizacion\ReprogramarCita;
 use App\Http\Controllers\AuthController;
@@ -46,6 +47,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Horario del dentista (spec 027): solo la administración, y solo sobre dentistas.
         Gate::define('definir-horario', [GestionPersonal::class, 'definirHorario']);
+
+        // Galería de trabajos (spec 039, CA13): solo la administración la gestiona.
+        Gate::define('gestionar-galeria', [GestionGaleria::class, 'autorizar']);
 
         // Límites de intentos (spec 030, CA8): 5 por minuto por IP (IPv6 por su /64), cuente o no
         // el resultado. El mensaje es el del login y no revela si la cuenta existe.

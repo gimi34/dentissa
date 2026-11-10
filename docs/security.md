@@ -22,6 +22,7 @@ updated: 2026-10-18
 | `google_id` | confidencial | `usuarios.google_id` | acceso por rol |
 | Sesiones (IP, user agent, payload) | confidencial | `storage/framework/sessions` (driver `file` en local, confirmado por el usuario, 2026-09-28; también en producción, plantilla de `app.env` en `deploy/README.md`) | sin cifrar (`SESSION_ENCRYPT=false`; en producción, RS10.c) |
 | Credenciales OAuth y de BD | restringida (secreto) | `.env` (no versionado) | fuera del repo |
+| Fotos de la galería con un paciente (spec 039) | restringida (salud), publicada con consentimiento | `storage/app/galeria` (WebP recodificados) y `galeria_fotos` (declaración: cuenta, nombre copiado y fecha) | solo el admin publica, y con la casilla del consentimiento escrito; sin datos de la cámara; `X-Robots-Tag: noindex`; `Cache-Control: no-cache, private`; 404 en cuanto se quita (RS20) |
 
 ## Autenticación y autorización
 - Mecanismo de autenticación: sesión propia de Laravel (guard `web`, driver `session`) sobre
@@ -63,6 +64,8 @@ updated: 2026-10-18
 | `POST /logout` | HTTP | no exige `auth` | invalida sesión |
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `GET /`, `GET /servicios` | HTTP público | no (con sesión, `/` redirige al panel del rol) | Páginas públicas (spec 038): sin parámetros; solo el catálogo activo (nombre, descripción y categoría), escapado (TM1, TM2), con una consulta por petición. Sin límite propio: riesgo aceptado TM6 de la 038 (Cloudflare delante, spec 030). `/` incrusta el mapa de Google: `frame-src https://www.google.com` solo en `/` (`docker/nginx/seguridad/marcos.conf`), y el navegador del visitante pide el mapa a Google al acercarse (`loading="lazy"`), enviando solo el dominio de origen (`referrerpolicy`); la página lo avisa («El mapa lo sirve Google.», TM4) |
+| `GET /galeria`, `GET /galeria/fotos/{foto}/{ancho}` | HTTP público | no | Spec 039: la galería y cada foto (`{foto}` UUID y `{ancho}` 800 o 1600; la ruta del archivo sale de la fila); fotos en `image/webp` con `nosniff`, `no-cache, private` y `ETag`; las de paciente, con `noindex` |
+| `POST /admin/galeria` y el resto de `admin.galeria.*` | HTTP, subida de archivos | sí, `role:admin` y Gate `gestionar-galeria` | Spec 039: JPG, PNG o WebP por contenido, como mucho 5 MB (nginx 20 MB) y 6000 px por lado (4000 px si es PNG, leído de la cabecera antes de decodificar), 12 fotos; se guardan solo los píxeles recodificados en WebP, nunca el original |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
 | `/asistente/*` | HTTP | sí, `role:asistente` | pacientes y expedientes sin filtro de alcance |
@@ -375,6 +378,17 @@ Correcciones:
 - RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: pendiente (→ objetivo 2)
 - RS19.b No se puede desactivar ni quitar el rol al último admin activo — estado: pendiente (→ objetivo 2)
 - RS19.c Al cambiar el rol, crear o retirar la ficha de `personal` o `pacientes` que corresponde (o impedir el cambio si no se puede) — estado: pendiente (→ objetivo 2)
+
+### RS20 · Baja — Una foto con paciente puede seguir fuera de la clínica tras retirar el consentimiento (A01 Broken Access Control)
+Detectado en la spec 039 (plan D16, TM8). Al quitar una foto se borran la fila y los archivos y su
+dirección responde 404 desde la siguiente petición, sin caché intermedia (`no-cache, private`). Pero
+quien ya la descargó la conserva, y un buscador de imágenes podría haberla guardado antes de leer
+`noindex`. Evidencia: `PaginasPublicasController::foto()`, `PaginaGaleriaTest`.
+
+Correcciones:
+- RS20.a `X-Robots-Tag: noindex` en las fotos con paciente — estado: en curso (spec 039)
+- RS20.b Revalidar en cada visita y 404 en cuanto se quita la foto — estado: en curso (spec 039)
+- RS20.c Las copias ya descargadas por terceros — estado: aceptado (no se puede evitar; decisión del usuario, 2026-11-08, /analyze 039 A10)
 
 ## No determinado
 - Valores de `APP_DEBUG`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT` y `GOOGLE_REDIRECT_URI`: en

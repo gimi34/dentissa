@@ -145,6 +145,10 @@ class PaginasPublicasCssTest extends TestCase
         'resources/views/layouts/publico.blade.php',
         'resources/views/publico/inicio.blade.php',
         'resources/views/publico/servicios.blade.php',
+        // Spec 039 (T019, P9; /analyze A4): las vistas de la galería, pública y de la gestión.
+        'resources/views/publico/galeria.blade.php',
+        'resources/views/publico/_trabajo.blade.php',
+        'resources/views/galeria/index.blade.php',
     ];
 
     /** El bloque `:root` de `app.css`. */
@@ -259,7 +263,7 @@ class PaginasPublicasCssTest extends TestCase
             $this->assertDoesNotMatchRegularExpression('/\sstyle\s*=/i', file_get_contents(base_path($vista)), "{$vista} sin style=\"\".");
             $this->assertDoesNotMatchRegularExpression('/<style\b/i', file_get_contents(base_path($vista)), "{$vista} sin <style>.");
         }
-        foreach (['/', '/servicios'] as $ruta) {
+        foreach (['/', '/servicios', '/galeria'] as $ruta) {
             $documento = new DOMDocument;
             libxml_use_internal_errors(true);
             $documento->loadHTML('<?xml encoding="utf-8"?>'.$this->get($ruta)->assertOk()->getContent());

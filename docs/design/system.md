@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.12.0
+version: 1.13.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-09
+updated: 2026-11-10
 ---
 
 # Sistema de diseño de Dentissa
@@ -272,6 +272,13 @@ UTC, integridad `sha512-weuGsCirGVWBWqpt6YUp0yLThTe4G8YO4…`, igual a la del re
   `--text-publico-small` (botón principal), y `--green-texto` (aviso de éxito), que trajeron la 020 y la 038.
   No se retiran mientras el acceso los use. Su punto de corte es 769 px (formulario solo en el teléfono, panel
   al 48 % en el escritorio), solo en la condición de `@media`.
+- **Spec 039 (galería de trabajos, 1.13.0):**
+  - `--foto-ratio` (`4 / 3`, fijo): proporción de toda foto de trabajo; las fotos se recortan a ella al
+    publicarlas, así que no hay saltos (CLS) y el mosaico alinea;
+  - `--carrusel-foto-w` (con cortes): `86%` por debajo de 560 px, `72%` desde 560 px y `90%` desde
+    900 px, donde cada foto es una lámina con su panel. Es el ancho de cada foto del carrusel de `/`:
+    se ve una entera y el borde de la siguiente, que dice que la fila sigue;
+  - `--thumb-w` (`120px`, fijo): miniatura de la tarjeta de foto de la gestión.
 - **Punto de corte (spec 033):** móvil por debajo de 900 px (`@media (max-width: 899px)`). Las media
   queries no admiten variables: es el único literal admitido, solo en la condición. `menu.js` no lo
   repite: deduce el modo de si se muestra el botón «Menú».
@@ -708,6 +715,46 @@ candidatos: componentes del sistema, sin tokens nuevos).
   `--weight-strong`, `--p500` (con el puntero, `--p600` subrayado), alto `--touch-min`; en fila con
   `--space-4` de separación y en columna por debajo de 400 px.
 
+### Galería de trabajos (spec 039, 1.13.0)
+Fotos de trabajos de la consulta en `/` (carrusel) y `/galeria` (mosaico), y su gestión por el
+administrador ([diseño](../specs/039-galeria-trabajos/design.md), candidato `c3`).
+
+Superficie pública (`publico.css`), con los componentes del sitio público (`.pub-etiqueta`,
+`.pub-services__head`, `.c-btn--secondary` con flecha, `.lb-cabeza` y `.lb-volver`):
+- **Carrusel de trabajos** (`.pub-carrusel`): en una banda `--p100` tras el avance de servicios. Es una
+  ventana con `overflow-x` y `scroll-snap`, tabulable, con `role="region"` y nombre. Cada foto mide
+  `--carrusel-foto-w`. Los controles van debajo de un filete de tinta: «Anterior» y «Siguiente» son
+  enlaces a la foto vecina (`#trabajo-n`) y, con JavaScript, la mueven. Una región `role="status"`,
+  montada vacía, anuncia «Foto n de N» y la descripción, sin el numeral. No avanza solo.
+- **Foto de trabajo** (`.pub-trabajo`): `figure` con la foto en `--foto-ratio`, radio `--radius-lg`,
+  borde `--border` y `--shadow-soft`. El pie lleva el numeral en `--font-display` (`aria-hidden`),
+  «Foto n de N» como etiqueta y la descripción, que también es el `alt`. En el carrusel, desde 900 px,
+  es una lámina con la foto (7) y el panel (5).
+- **Mosaico de `/galeria`** (`.pub-mosaico`): `ol` de fotos de trabajo en tres columnas desde 900 px
+  (la 01 ocupa dos columnas y dos filas para que las filas cierren), dos desde 560 px y una por debajo.
+- **Galería vacía** (`.pub-galeria__vacia`): «Aún no hay fotos de nuestros trabajos.» con la vuelta al
+  inicio.
+- **Solo para el lector** (`.pub-solo-lector`): utilidad que oculta a la vista y deja en el árbol de
+  accesibilidad, para la región de estado del carrusel.
+
+Gestión (`app.css`), dentro de `.formulario-accesible` y con su layout (`.topbar`, `.card`,
+`.btn-primary`, `.btn-outline`, `.modal-overlay`, `.modal-box`):
+- **Tarjeta de foto** (`.foto-tarjeta`): miniatura de `--thumb-w` (`alt=""`, la descripción va al lado),
+  posición, descripción y, si hay paciente, «Consentimiento declarado por {nombre} el {fecha}» con el
+  escudo en `--p600`. «Arriba», «Abajo» y «Quitar» son botones de contorno de `--touch-min`.
+- **Pregunta del paciente** (`.campo-paciente`): `fieldset` con `legend` y dos radios con zona de toque
+  de `--touch-min` y círculo de `--icon-md`.
+- **Consentimiento** (`.consentimiento`): casilla de `--touch-min` con palomita, visible solo con «Sí».
+  Generaliza la casilla del acceso (`.remember-label`, spec 041).
+- **Selector de archivo** (`.campo-archivo`): con el botón de la app en `::file-selector-button`.
+- **Aviso de error** (`.aviso-error`, `role="alert"`) arriba del formulario y `.campo-error` junto a
+  cada campo, enlazado con `aria-describedby` y `aria-invalid`.
+- **Diálogo de quitar:** `.modal-box` con `role="dialog"`, `aria-labelledby` y `aria-describedby`, el
+  foco en «Cancelar» y el formulario de borrado dentro. Es una página de confirmación (`…/quitar`), así
+  que funciona sin JavaScript; no declara `aria-modal` porque el layout sigue tabulable (spec 039,
+  /review R34). El contenido de la vista detrás queda `inert`.
+- **Menú del administrador:** entrada «Galería» después de «Servicios», con `aria-current` en sus rutas.
+
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
 - agendada → pink (`--p600` sobre `--p100`, 6.05:1);
@@ -790,6 +837,11 @@ firma (la franja del horario), entradas por sección que cambian con el contenid
 tarjetas una a una, mapa desde una máscara) con la clase `is-in` que pone el script común
 `public/js/publico.js`, y respuesta bajo la mano (botones que ceden, tarjetas que cambian borde,
 sombra e icono).
+
+Galería (spec 039, 1.13.0): el cambio de foto del carrusel (M-1 de la 039). Desplaza la ventana con
+`scroll-behavior: smooth`, y la foto actual pasa de `scale(1.04)` a `none` con `--duration-reveal` y
+`--ease-expo`. Solo con `prefers-reduced-motion: no-preference`: con movimiento reducido salta sin
+escala, y sin JavaScript la fila se desplaza a mano. Sin avance automático.
 
 Acceso (spec 041, 1.11.0): solo la respuesta de los botones (M-1), `transform: scale(0.98)` y el color
 de fondo con `--duration-respuesta` y `--ease-clinico`, en `:active`; sin transición con movimiento
@@ -1024,3 +1076,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-03 | diseño | ¿Qué incorpora el sistema para el acceso y la recuperación de contraseña (spec 041)? | Versión 1.11.0: tokens `--font-acceso` (Roboto autoalojada), `--text-acceso-small`, `--duration-respuesta` y `--ease-clinico`; componentes del acceso (marco con franja y panel con degradado `--p600 → --p800`, carnet, troquel, talón, bloque «Vale hasta», botón en espera, casilla de 44 px); botón primario del acceso en `--p500`, borde de campos `--border-control` y etiquetas a `--text-meta`; M-1. Los tokens que ya estaban (`--text-acceso-titulo`, `--text-acceso`, `--acceso-form-max` de la 020; `--green-texto`, `--text-publico`, `--leading-publico`, `--radius-pill` y `--sombra-tarjeta-alta` de la 038) no se duplican y no se retiran mientras el acceso los use | usuario (spec 041, design.md `c7`, plan D13 y D18) |
 | 2026-11-09 | diseño | ¿Qué incorpora el sistema para las salidas de las pantallas (spec 044)? | Versión 1.12.0, sin tokens nuevos: enlace «Volver al inicio», logo-enlace del panel de marca, entrada «Ver sitio web» de la barra lateral, aviso del sitio público (`.pub-aviso`), plantilla de página de error sobre el error genérico de la 020 y enlace secundario del error; DS7 en curso | usuario (spec 044, design.md sin candidatos y plan D1, D2) |
 | 2026-11-03 | diseño | El usuario prefiere el estilo anterior del acceso al carnet de `c7` (spec 041, D20) | Dentro de 1.11.0, aún sin liberar: sale el carnet (franja, tarjeta y troquel) y entran el panel y el formulario del login anterior, con sus valores como tokens; se mantienen el contraste, el foco y el toque que pide P9 | usuario |
+| 2026-11-08 | diseño | ¿Qué incorpora el sistema para la galería de trabajos (spec 039)? | Versión 1.13.0 (era 1.12.0; se renumeró al fusionar la v0.15.0, que liberó la 1.12.0 con la spec 044): tokens `--foto-ratio` (fijo), `--carrusel-foto-w` (cortes de 560 y 900 px) y `--thumb-w` (fijo); componentes públicos «Carrusel de trabajos», «Foto de trabajo», «Mosaico de `/galeria`», «Galería vacía» y la utilidad `.pub-solo-lector`; componentes de la gestión dentro de `.formulario-accesible` («Tarjeta de foto», «Pregunta del paciente», «Consentimiento», «Selector de archivo», «Aviso de error»), con radios y casilla de 44 px que generalizan `.remember-label`; entrada «Galería» del menú del administrador; M-1 de la 039. Sin colores nuevos. `--duration-firma`, que la 038 anunciaba para la 039, no hace falta | usuario (spec 039, design.md `c3` y plan) |
