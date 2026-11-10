@@ -63,3 +63,4 @@ Hoy no se registran altas, cambios de rol ni desactivaciones. Eventos requeridos
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-11-10 | Test de rutas cambiado por 044 en v0.15.0: con la ruta de reserva, un identificador sin forma de UUID no llega a `@show` y responde 404 (`AdminUsuariosRutasTest`, 044 /analyze A16) | /release |

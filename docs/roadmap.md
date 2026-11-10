@@ -132,7 +132,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   lo ya registrado (en el servidor); OB9.a `php.ini-production` y OB9.b logs de php-fpm (objetivo
   5); RD9.a MariaDB del CI fijada y RD8.a–b vuelta atrás que avisa y comprueba el árbol (objetivo 5).
 - SEO de baja severidad (`docs/seo.md`, upgrade a AI-DD 1.13.0; decisión del usuario, 2026-10-16), para
-  la spec que toque esas páginas: SE4.a página 404 propia en español con `noindex` (con SE2.b);
+  la spec que toque esas páginas (SE4.a y SE2.b, mitigadas en v0.15.0 por la spec 044):
   SE5.a íconos del sitio (`favicon.svg` sin `<text>`, PNG de 32 y `apple-touch-icon`) desde el logo
   actual y SE5.b `theme-color` con `--bg`; SE6.a Open Graph en `/registro` con imagen general de
   1200×630 desde una «Tarjeta para compartir» del sistema de diseño; SE7.a JSON-LD `Dentist` solo
@@ -537,6 +537,15 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   2026-10-06). El login y la vuelta de Google ya emiten `Illuminate\Auth\Events\Lockout` en cada
   rechazo, y la vuelta de Google fallida emite `Illuminate\Auth\Events\Failed` (spec 031), para
   que la 021 los audite sin tocar el login (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+- Spec 044, aceptados en `/review` (2026-11-09 y 2026-11-10; liberada en v0.15.0):
+  - 044/R9: el aviso «Has cerrado sesión» desaparece de golpe y el contenido sube (animar la altura o reservar el hueco);
+  - 044/R11: la explicación de la 403 solo se prueba con una ruta sintética (falta un `Gate::authorize` real, p. ej. reprogramar como dentista);
+  - 044/R12: `PaginaInicioTest` busca «Ir a mi panel» en toda la página;
+  - 044/R13: las caracterizaciones de CA3 y CA4 no siguen el `href` de la salida;
+  - 044/R17: `xpath()`, `ruta()` y `enlacesA()` duplicados en dos tests, con semántica distinta (llevarlos a un trait);
+  - 044/R20: `$panel` se calcula en `PaginasPublicasController` y en `layouts/publico`;
+  - 044/R21: la ruta de reserva GET abre sesión en cada 404 anónima (vigilar `storage/framework/sessions` o limitar las 404 en Cloudflare);
+  - 044/R23: `ContrasenaDistintaTest::test_tras_el_rechazo_el_enlace_sigue_sirviendo` (spec 043) es intermitente en la suite completa → ficha `/fix` aparte.
 - Excepción P7 de la spec 044: cerrar sesión cambia de destino (lleva a `/` con el aviso) sin registrarse
   como evento de auditoría; el evento llega con los listeners de autenticación de `docs/observability.md`
   (OB1.b, objetivo 3), junto con los de inicio de sesión, como la excepción de la 030 (decisión del

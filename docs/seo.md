@@ -81,7 +81,7 @@ Evidencia: `/login` responde `200` sin `<meta name="robots">` ni cabecera `X-Rob
 responde `200` con HTML y tampoco lo lleva.
 Correcciones:
 - SE2.a `noindex` en `/login` (y en `/registro/contacto`, si alguna vez se sirve sin redirigir) — estado: mitigada (v0.14.0, spec 041): `/login` lleva `noindex` y `/registro/contacto` sin los datos de Google redirige a `/registro`, así que nunca se sirve a un buscador (decisión del usuario, 2026-10-28)
-- SE2.b `noindex` en la 404 propia (SE4) y `X-Robots-Tag: noindex` en `/up` — estado: pendiente
+- SE2.b `noindex` en la 404 propia (SE4) y `X-Robots-Tag: noindex` en `/up` — estado: mitigada (v0.15.0, spec 044): las páginas de error llevan `<meta name="robots" content="noindex">` y `/up` la cabecera (`NoIndexarSalud`), comprobado en producción
 
 ### SE3 · media — Sin `sitemap.xml` y `robots.txt` sin sitemap
 Evidencia: `/sitemap.xml` → `404` en local y en producción; `public/robots.txt` sin línea `Sitemap:`.
@@ -93,7 +93,7 @@ Correcciones:
 Evidencia: `/pagina-que-no-existe` → `404` con la página genérica de Laravel «Not Found», en inglés y
 sin navegación (no hay `resources/views/errors/`).
 Correcciones:
-- SE4.a Página 404 propia, en español, con enlace al inicio de sesión y al registro y `noindex` (con SE2.b) — estado: pendiente
+- SE4.a Página 404 propia, en español, con enlace al inicio de sesión y al registro y `noindex` (con SE2.b) — estado: mitigada (v0.15.0, spec 044)
 
 ### SE5 · baja — Sin íconos del sitio ni `theme-color`
 Evidencia: `public/favicon.ico` vacío (0 bytes, el de la plantilla de Laravel) y ningún

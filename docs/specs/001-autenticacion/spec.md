@@ -25,7 +25,7 @@ de Google para no recordar otra contraseña.
 - [ ] CA2 · Dado un usuario con `activo=0`, cuando envía credenciales correctas, entonces el login se rechaza con un error en el formulario.
 - [ ] CA3 · Dadas credenciales incorrectas, cuando se envía el login, entonces vuelve al formulario con error y sin sesión.
 - [x] CA4 · Dado un visitante sin sesión, cuando abre `/`, entonces se le redirige a `/login`. → reemplazado por 038 CA1
-- [ ] CA5 · Dado un usuario autenticado, cuando abre `/`, entonces se le redirige al panel de su rol (`/admin`, `/dentista`, `/asistente` o `/cliente`).
+- [ ] CA5 · Dado un usuario autenticado, cuando abre `/`, entonces se le redirige al panel de su rol (`/admin`, `/dentista`, `/asistente` o `/cliente`). → reemplazado por 044 CA5
 - [ ] CA6 · Dado un usuario con `google_id` vinculado, cuando completa el callback de Google, entonces inicia sesión y va a su panel.
 - [ ] CA7 · Dado un correo de Google sin cuenta, cuando completa el callback, entonces sus datos se guardan en sesión y se le envía a `/registro/contacto` (spec 002).
 - [ ] CA8 · Dado un usuario autenticado, cuando envía `POST /logout`, entonces la sesión se invalida y el token CSRF se regenera.
@@ -76,3 +76,4 @@ Eventos requeridos en `docs/observability.md`.
 | 2026-10-27 | Anotado por 032 en v0.11.0: el canal `seguridad` registra los fallos de acceso para los avisos; no es el registro de auditoría de CA9, que sigue → 020/021 (032 /analyze A48) | /release |
 | 2026-11-02 | Comportamiento modificado por 038 en v0.13.0: sin sesión, `/` muestra la página de inicio pública (CA4 → 038 CA1) | /release |
 | 2026-11-03 | Comportamiento modificado por 041 en v0.14.0: «¿Olvidaste tu contraseña?» lleva a la recuperación por correo (fuera de alcance de la 001), el login cambia de aspecto y no se indexa | /release |
+| 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: cerrar sesión lleva a `/` con el aviso «Has cerrado sesión»; con sesión, `/` muestra la página de inicio (CA5 → reemplazado por 044 CA5); salidas en el inicio de sesión | /release |
