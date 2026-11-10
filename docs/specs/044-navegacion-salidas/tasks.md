@@ -156,6 +156,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097: `/no-existe` muestra la 404 propia, `curl -I https://dentissa.app/up` lleva `X-Robots-Tag: noindex`, `curl -X POST https://dentissa.app/no-existe` responde 404 y no 419 (D3: en los tests la comprobación CSRF está desactivada, A18), y con una cuenta de prueba, «Ver sitio web» desde el panel y cerrar sesión con su aviso
+  - con NVDA, tras cerrar sesión en producción, se anuncia «Has cerrado sesión» al llegar a la página (/review r2 R24; aceptado por el usuario el 2026-11-10)
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh v0.15.0`, `verificar.sh` y la comprobación de T095 (incluido el `curl -X POST`); vigilar 5xx, 404 y 403 en el log de nginx la primera hora. Rollback: `deploy/volver.sh <tag anterior>` sin copia
 - [ ] T098 Marcar spec como `released`; en las specs 001, 002, 012, 038 y 041 anotar el cambio en su Historial, y marcar 038 CA2 y 001 CA5 `→ reemplazado por 044 CA5` (A4); en la 041, anotar el cambio del test del logo (A3), y en la 010 el del test de rutas de usuarios (A16), y en la 033 el de las secciones del menú (T035)
