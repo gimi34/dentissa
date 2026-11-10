@@ -1,6 +1,7 @@
 ---
 spec: 044-navegacion-salidas
 plan: plan.md
+impl_base: b7173e9
 status: approved
 ---
 
@@ -15,6 +16,7 @@ Formato:
 - Bajo una tarea: `  - nota: …`, `  - bloqueo: AAAA-MM-DD — <qué falta> — <skill a ejecutar>`.
 - **Proceso ligero (spec y `design.md`, Decisiones):** sin ciclo de `/design-spec`; cada pantalla la valida el usuario a 320, 390 y 1440 px en la tarea que la construye. Sale como v0.15.0, antes que la 039 y después del `/chore` de Symfony 7.4.23 (EX4 vence el 2026-11-11).
 - **Tests en este clon:** los contenedores en marcha montan `dentissa-041`; aquí, `MSYS_NO_PATHCONV=1 docker compose run --rm --no-deps -T app php artisan test …` (sin tocar los otros contenedores).
+- **Línea base (2026-11-09, `impl_base` b7173e9):** suite completa 721 en verde (12 191 aserciones), sin fallos previos.
 - **Corrección tras `/analyze` r1 (2026-11-08):** `/tasks --fix` editó en su lugar T010, T011, T013, T020, T021, T029, T031, T033, T040, T091 y T098 (A1–A4, A6, A7, A10–A14; A5 y A8 por decisión del usuario) y añadió T014 (A6). Tras `/analyze` r2: T014 se movió delante de las tareas de interfaz (A19) y se editaron T013, T021, T023, T027, T028, T029, T040, T095 y T097 (A9, A16–A20, A22). No se renumeró ninguna.
 - **Rutas de prueba:** en `setUp()` con `Route::middleware('web')->get('/_pruebas/044/…')`, como `DenegacionesAuditadasTest`; la 500, con `config(['app.debug' => false])`, como `ErroresProduccionTest`.
 
@@ -35,7 +37,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | P10 Rutas indexables | ✅ | `/` y `/registro` sin cambios de metadatos; `noindex` en errores y `/up` | test: T013 (CA7, CA12) y `PaginasPublicasTest` en la suite de T040 |
 
 ## Preparación
-- [ ] T001 Incorporar al sistema de diseño los componentes de `design.md` → «Cambios a incorporar al sistema» (enlace «Volver al inicio», logo-enlace, entrada «Página de inicio» de la barra lateral, `.pub-aviso`, plantilla de página de error y `.enlace-secundario`) y actualizar «Estados de pantalla → Error del servidor» y DS7 (parcial), con versión 1.12.0 y su entrada en «Decisiones» — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` 1.12.0 lista los seis componentes con sus tokens (ninguno nuevo) y `system.html` los muestra
+- [x] T001 Incorporar al sistema de diseño los componentes de `design.md` → «Cambios a incorporar al sistema» (enlace «Volver al inicio», logo-enlace, entrada «Página de inicio» de la barra lateral, `.pub-aviso`, plantilla de página de error y `.enlace-secundario`) y actualizar «Estados de pantalla → Error del servidor» y DS7 (parcial), con versión 1.12.0 y su entrada en «Decisiones» — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` 1.12.0 lista los seis componentes con sus tokens (ninguno nuevo) y `system.html` los muestra
 
 ## Tests transversales
 - [ ] T014 Escribir las comprobaciones automáticas de P9 (A6), con el patrón de `MovilPacienteTest::assertDeclara` (`Concerns/ReglasCss`): `.enlace-inicio` en `acceso.css` y `auth.css`, `.enlace-secundario` en `errores.css` y la entrada de la barra lateral declaran el alto `--touch-min`; `.enlace-inicio`, `.enlace-secundario` y `.pub-aviso` solo usan tokens (sin colores ni medidas literales); `layouts/acceso`, `auth/recuperar/nueva`, `layouts/app`, `layouts/publico`, `publico/inicio` y las vistas de `errors/` nuevas no tienen `style=""`, y `register` y `registro-contacto` conservan el mismo número de `style=""` que hoy — `tests/Feature/NavegacionSalidasCssTest.php` — hecho cuando: falla por la razón esperada (las reglas y la entrada aún no existen; los casos de `style=""` pasan desde el principio y se comprueban añadiendo uno un momento) y se ejecuta dos veces seguidas — cubre: CA1, CA5, CA6, CA7 — depende: T001
