@@ -253,7 +253,9 @@ class RecuperarContrasenaVistasTest extends TestCase
                 $this->assertSame(0, $this->conClase($xpath, $clase)->length, "{$nombre}: sin .{$clase}, del estilo c7.");
             }
             $this->assertSame('Tu sonrisa,nuestra prioridad', trim($this->conClase($xpath, 'panel-tagline')->item(0)->textContent), "{$nombre}: el lema de antes.");
-            $this->assertSame(1, $xpath->query('//aside[contains(@class, "panel-left")]//img[@alt!=""]')->length, "{$nombre}: el logo del panel.");
+            // Spec 044 (CA2, /analyze A3): el logo del panel es un enlace a la página de inicio con nombre accesible;
+            // la imagen va con alt vacío para no repetirlo.
+            $this->assertSame(1, $xpath->query('//aside[contains(@class, "panel-left")]//a[@aria-label="Ir a la página de inicio"]//img[@alt=""]')->length, "{$nombre}: el logo del panel, como enlace.");
             $this->assertSame(1, $xpath->query('//h1[contains(@class, "form-title")]')->length, "{$nombre}: el título es el h1.");
         }
 

@@ -77,6 +77,14 @@ class NavegacionSalidasCssTest extends TestCase
         $this->assertSame([], $this->duraciones($cuerpo), "{$selector} en {$hoja} sin duraciones literales.");
     }
 
+    /** Duraciones literales (s o ms), que P9 pide como token (como en `MovilPacienteTest`). */
+    private function duraciones(string $cuerpo): array
+    {
+        preg_match_all('/(?<![\w-])\d+(\.\d+)?m?s\b/', $cuerpo, $m);
+
+        return $m[0];
+    }
+
     public function test_auth_css_toma_los_tokens_del_enlace_con_los_valores_de_app_css(): void
     {
         $raiz = $this->declaraciones(':root', 'css/auth.css');

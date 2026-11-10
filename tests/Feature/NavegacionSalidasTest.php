@@ -18,8 +18,8 @@ use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\TestCase;
 
 /**
- * Salidas de las pantallas (spec 044): volver a la página de inicio desde el acceso y el registro
- * (CA1–CA4), desde el panel (CA5) y al cerrar sesión (CA6).
+ * Salidas de las pantallas (spec 044): la salida del acceso y del registro (CA1–CA4; la recuperación de
+ * contraseña sale al inicio de sesión, D11), desde el panel (CA5) y al cerrar sesión (CA6).
  *
  * Que el enlace se vea sin desplazarse a 320, 390 y 1440 px lo comprueba el usuario en cada tarea de
  * interfaz (plan, Trazabilidad); aquí se comprueba que es lo primero del formulario.
@@ -60,15 +60,33 @@ class NavegacionSalidasTest extends TestCase
         ];
     }
 
-    #[DataProvider('pantallasDeAcceso')]
-    public function test_las_pantallas_de_acceso_empiezan_por_volver_al_inicio(string $pantalla): void
+    /** Salida de cada pantalla (CA1, D11): inicio en tres; inicio de sesión en las cuatro de recuperación. */
+    public static function salidasDeAcceso(): array
+    {
+        $inicio = ['/', 'Volver al inicio'];
+        $login = ['/login', 'Volver a iniciar sesión'];
+
+        return [
+            'inicio de sesión' => ['login', ...$inicio],
+            'registro' => ['registro', ...$inicio],
+            'completar el registro con Google' => ['contacto', ...$inicio],
+            'pedir el enlace' => ['solicitud', ...$login],
+            'enlace enviado' => ['enviada', ...$login],
+            'enlace caducado' => ['caducado', ...$login],
+            'contraseña nueva' => ['nueva', ...$login],
+        ];
+    }
+
+    #[DataProvider('salidasDeAcceso')]
+    public function test_las_pantallas_de_acceso_empiezan_por_su_salida(string $pantalla, string $destino, string $texto): void
     {
         $xpath = $this->xpath($this->pantalla($pantalla));
         $primero = $xpath->query("(//*[contains(concat(' ', normalize-space(@class), ' '), ' form-container ')]//a)[1]")->item(0);
 
         $this->assertNotNull($primero, "{$pantalla}: el formulario tiene enlaces.");
-        $this->assertSame('/', $this->ruta($primero->getAttribute('href')), "{$pantalla}: el primer enlace del formulario lleva a la página de inicio.");
-        $this->assertStringContainsString('Volver al inicio', trim($primero->textContent), "{$pantalla}: el primer enlace dice «Volver al inicio».");
+        $this->assertSame($destino, $this->ruta($primero->getAttribute('href')), "{$pantalla}: el primer enlace del formulario lleva a {$destino}.");
+        $this->assertSame($texto, trim($primero->textContent), "{$pantalla}: el primer enlace dice «{$texto}».");
+        $this->assertSame(1, $this->enlacesA($xpath, $destino, $texto), "{$pantalla}: «{$texto}» no se repite más abajo.");
     }
 
     #[DataProvider('pantallasDeAcceso')]
@@ -91,7 +109,6 @@ class NavegacionSalidasTest extends TestCase
         $xpath = $this->xpath($this->pantalla('nueva'));
 
         $this->assertSame(1, $this->enlacesA($xpath, '/login', 'Volver a iniciar sesión'), '«Contraseña nueva» ofrece «Volver a iniciar sesión».');
-        $this->assertSame(1, $this->enlacesA($xpath, '/', 'Volver al inicio'), '«Contraseña nueva» ofrece «Volver al inicio».');
     }
 
     public function test_salir_de_contrasena_nueva_no_gasta_el_enlace(): void
