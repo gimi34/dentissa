@@ -56,3 +56,4 @@ Cada rol necesita, al entrar, un resumen de lo más urgente de su día.
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 (acciones de la próxima cita en el panel del paciente) | /init (re-sincronizar, 2026-10-18) |
+| 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: «Ver sitio web» al final de la barra lateral de los cuatro roles | /release |

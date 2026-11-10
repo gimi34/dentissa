@@ -1,8 +1,9 @@
 ---
 id: 044
 slug: navegacion-salidas
-status: implemented
+status: released
 created: 2026-11-08
+released: v0.15.0 (2026-11-10)
 extends: [001, 002, 012, 038, 041]
 ---
 
@@ -144,3 +145,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | Aprobada de nuevo | Aprobación del usuario |
 | 2026-11-09 | CA1 y CA3: la recuperación de contraseña sale al inicio de sesión | Decisión del usuario al verificar T020 (/implement 044); aprobada por el usuario |
 | 2026-11-09 | CA5: la entrada del panel se llama «Ver sitio web» | Decisión del usuario al verificar T023 (/implement 044) |
+| 2026-11-10 | Liberada en v0.15.0 (PR #70, tag sobre 60d7324; producción verificada por el usuario) | /release |

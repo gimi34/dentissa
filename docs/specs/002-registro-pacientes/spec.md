@@ -62,3 +62,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-10-04 | Comportamiento modificado por 030 en v0.5.0 | /release |
+| 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: «Volver al inicio» y logo-enlace en el registro; con sesión, el registro lleva al panel del rol | /release |
