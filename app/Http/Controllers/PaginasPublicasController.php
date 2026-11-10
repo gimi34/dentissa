@@ -16,14 +16,12 @@ class PaginasPublicasController extends Controller
     // ── Inicio ──────────────────────────────────────────────────────────────
     public function inicio()
     {
-        // Con sesión, cada rol sigue yendo a su panel (spec 038 CA2).
-        if (auth()->check()) {
-            return redirect(self::panelDelRol(auth()->user()));
-        }
-
+        // Spec 044 (CA5, reemplaza 038 CA2): con sesión se ve la página, con «Ir a mi panel» en lugar de los
+        // enlaces de cuenta; el inicio de sesión sigue llevando al panel de cada rol.
         return view('publico.inicio', [
             'categorias' => Servicio::porCategoria(),
             'contacto' => config('clinica.contacto'),
+            'panel' => auth()->check() ? self::panelDelRol(auth()->user()) : null,
         ]);
     }
 

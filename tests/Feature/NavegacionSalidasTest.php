@@ -193,11 +193,11 @@ class NavegacionSalidasTest extends TestCase
 
             $hallada = 0;
             foreach ($entradas as $entrada) {
-                if ($this->ruta($entrada->getAttribute('href')) === '/' && trim($entrada->textContent) === 'Página de inicio') {
+                if ($this->ruta($entrada->getAttribute('href')) === '/' && trim($entrada->textContent) === 'Ver sitio web') {
                     $hallada++;
                 }
             }
-            $this->assertSame(1, $hallada, "{$rol}: la barra lateral tiene una entrada «Página de inicio» a la página de inicio.");
+            $this->assertSame(1, $hallada, "{$rol}: la barra lateral tiene una entrada «Ver sitio web» a la página de inicio.");
         }
     }
 
@@ -214,8 +214,12 @@ class NavegacionSalidasTest extends TestCase
             $this->assertSame(1, $acceso->length, "{$rol}: la portada ofrece un solo enlace de cuenta.");
             $this->assertSame($rutaPanel, $this->ruta($acceso->item(0)->getAttribute('href')), "{$rol}: el de la portada lleva a su panel.");
             $this->assertSame('Ir a mi panel', trim($acceso->item(0)->textContent));
-            $botones = $xpath->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' c-btn--lg ')]");
-            $this->assertGreaterThan(0, $botones->length, "{$rol}: la página tiene sus botones grandes.");
+            // Los botones grandes de cuenta («Agendar mi primera cita», «Crear mi cuenta»); «Ver servicios» no es de cuenta.
+            $botones = array_filter(
+                iterator_to_array($xpath->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' c-btn--lg ')]")),
+                fn ($boton) => $this->ruta($boton->getAttribute('href')) !== '/servicios'
+            );
+            $this->assertCount(3, $botones, "{$rol}: los tres botones de cuenta de la página.");
             foreach ($botones as $boton) {
                 $this->assertSame($rutaPanel, $this->ruta($boton->getAttribute('href')), "{$rol}: cada botón de cuenta lleva a su panel.");
                 $this->assertSame('Ir a mi panel', trim($boton->textContent), "{$rol}: y dice «Ir a mi panel».");

@@ -32,7 +32,7 @@
             <h1 id="titulo"><span class="pub-ln"><span>Tu sonrisa,</span></span> <span class="pub-ln"><span>nuestra</span></span> <span class="pub-ln"><span><em>prioridad.</em></span></span></h1>
             <p class="pub-hero__lead">Para toda la familia, en el centro de Lázaro Cárdenas. Crea tu cuenta y agenda en línea.</p>
             <div class="pub-hero__actions">
-                <a class="c-btn c-btn--primary c-btn--lg" href="{{ route('register') }}">Agendar mi primera cita <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                @if ($panel)<a class="c-btn c-btn--primary c-btn--lg" href="{{ $panel }}">Ir a mi panel <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>@else<a class="c-btn c-btn--primary c-btn--lg" href="{{ route('register') }}">Agendar mi primera cita <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>@endif
                 <a class="c-btn c-btn--secondary c-btn--lg" href="{{ url('/servicios') }}">Ver servicios</a>
             </div>
             {{-- Cosa viva: publico.js escribe «¿Está abierto ahora?» con este horario y la hora de la consulta;
@@ -42,7 +42,8 @@
                 <li>{{ $horario }}</li>
                 <li><a href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a></li>
             </ul>
-            <p class="pub-acceso"><a href="{{ route('login') }}">Iniciar sesión</a><a href="{{ route('register') }}">Crear cuenta</a></p>
+            {{-- Spec 044 (CA5): con sesión, la cuenta se resume en «Ir a mi panel». --}}
+            <p class="pub-acceso">@if ($panel)<a href="{{ $panel }}">Ir a mi panel</a>@else<a href="{{ route('login') }}">Iniciar sesión</a><a href="{{ route('register') }}">Crear cuenta</a>@endif</p>
         </div>
         {{-- La foto propia de la marca (D20) en el marco de la arcada (D23). --}}
         <figure class="pub-arcada">
@@ -65,7 +66,7 @@
                 <li class="pub-paso" data-reveal><span class="pub-paso__n" aria-hidden="true">{{ $loop->iteration }}</span><h3>{{ $titulo }}</h3><p>{{ $texto }}</p></li>
             @endforeach
         </ol>
-        <a class="c-btn c-btn--ink c-btn--lg" href="{{ route('register') }}" data-reveal>Crear mi cuenta</a>
+        @if ($panel)<a class="c-btn c-btn--ink c-btn--lg" href="{{ $panel }}" data-reveal>Ir a mi panel</a>@else<a class="c-btn c-btn--ink c-btn--lg" href="{{ route('register') }}" data-reveal>Crear mi cuenta</a>@endif
     </div>
 </section>
 
@@ -124,7 +125,7 @@
             </ul>
             <div class="pub-book__pie">
                 <span>Tu cita queda en tu cuenta y puedes cambiarla desde ahí.</span>
-                <a class="c-btn c-btn--primary c-btn--lg" href="{{ route('register') }}">Agendar mi primera cita <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                @if ($panel)<a class="c-btn c-btn--primary c-btn--lg" href="{{ $panel }}">Ir a mi panel <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>@else<a class="c-btn c-btn--primary c-btn--lg" href="{{ route('register') }}">Agendar mi primera cita <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>@endif
             </div>
         </div>
     </div>
