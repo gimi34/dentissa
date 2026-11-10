@@ -205,7 +205,8 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con la cuenta del administrador y una foto de prueba sin pacientes: publicarla y verla en `/` y en `/galeria`; en `/admin/auditoria`, `galeria_foto_publicada` con su `request_id`; las cabeceras de `/galeria/fotos/<id>/800` desde fuera, con `Cache-Control: no-cache, private`, `ETag` y `cf-cache-status` distinto de `HIT` (/analyze A10); quitarla y su dirección responde 404; sin 413 en `dentissa-error.log` ni `galeria.procesado_fallido` ni `galeria.archivo_no_borrado` en `laravel.log` — resultado: —
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-10 10:44 para v0.16.0 («desplegar v0.16.0 a producción»), con el chore de Symfony 7.4.23 ya liberado en v0.15.0 y `composer audit` limpio sin EX4 (A12)
   - nota: A12 — condición previa: el `/chore` de Symfony 7.4.23 liberado y `composer audit` limpio sin EX4 (vence el 2026-11-11); sin eso no se pide la aprobación.
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z`, `verificar.sh` (con las comprobaciones de T033) y la comprobación de T095. Vigilar los 5xx en `/galeria`, `/galeria/fotos/*` y `POST /admin/galeria`, los 413, `auditoria.fallo` y la memoria de `app`. Rollback: `deploy/volver.sh <tag anterior>`, sin la copia
 - [ ] T098 Marcar spec como `released`
