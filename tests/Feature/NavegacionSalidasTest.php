@@ -172,6 +172,66 @@ class NavegacionSalidasTest extends TestCase
             ->assertDontSee(self::GOOGLE['email'], false);
     }
 
+    // ── Historia 2: del panel a la página de inicio (CA5) ──────────────────────────────
+
+    /** Cada rol del escenario con la ruta de su panel. */
+    private function roles(): array
+    {
+        return [
+            'admin' => [$this->admin, route('admin.dashboard')],
+            'dentista' => [$this->dentista1, route('dentista.dashboard')],
+            'asistente' => [$this->asistente, route('asistente.dashboard')],
+            'cliente' => [$this->paciente1, route('cliente.dashboard')],
+        ];
+    }
+
+    public function test_el_panel_de_cada_rol_enlaza_la_pagina_de_inicio(): void
+    {
+        foreach ($this->roles() as $rol => [$usuario, $panel]) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get($panel)->assertOk()->getContent());
+            $entradas = $xpath->query("//nav[contains(concat(' ', normalize-space(@class), ' '), ' sidebar-nav ')]//a[contains(concat(' ', normalize-space(@class), ' '), ' nav-item ')]");
+
+            $hallada = 0;
+            foreach ($entradas as $entrada) {
+                if ($this->ruta($entrada->getAttribute('href')) === '/' && trim($entrada->textContent) === 'Página de inicio') {
+                    $hallada++;
+                }
+            }
+            $this->assertSame(1, $hallada, "{$rol}: la barra lateral tiene una entrada «Página de inicio» a la página de inicio.");
+        }
+    }
+
+    public function test_la_pagina_de_inicio_con_sesion_ofrece_ir_a_mi_panel(): void
+    {
+        foreach ($this->roles() as $rol => [$usuario, $panel]) {
+            $xpath = $this->xpath($this->actingAs($usuario)->get('/')->assertOk()->getContent());
+            $rutaPanel = $this->ruta($panel);
+
+            foreach ($xpath->query('//a[@href]') as $enlace) {
+                $this->assertNotContains($this->ruta($enlace->getAttribute('href')), ['/login', '/registro'], "{$rol}: con sesión, ningún enlace lleva al inicio de sesión ni al registro.");
+            }
+            $acceso = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' pub-acceso ')]//a");
+            $this->assertSame(1, $acceso->length, "{$rol}: la portada ofrece un solo enlace de cuenta.");
+            $this->assertSame($rutaPanel, $this->ruta($acceso->item(0)->getAttribute('href')), "{$rol}: el de la portada lleva a su panel.");
+            $this->assertSame('Ir a mi panel', trim($acceso->item(0)->textContent));
+            $botones = $xpath->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' c-btn--lg ')]");
+            $this->assertGreaterThan(0, $botones->length, "{$rol}: la página tiene sus botones grandes.");
+            foreach ($botones as $boton) {
+                $this->assertSame($rutaPanel, $this->ruta($boton->getAttribute('href')), "{$rol}: cada botón de cuenta lleva a su panel.");
+                $this->assertSame('Ir a mi panel', trim($boton->textContent), "{$rol}: y dice «Ir a mi panel».");
+            }
+        }
+    }
+
+    public function test_el_registro_con_sesion_lleva_al_panel(): void
+    {
+        foreach ($this->roles() as $rol => [$usuario, $panel]) {
+            $this->actingAs($usuario)->get('/registro')->assertRedirect($panel);
+            $this->actingAs($usuario)->get('/registro/contacto')->assertRedirect($panel);
+            $this->actingAs($usuario)->withSession(['google_registro' => self::GOOGLE])->get('/registro/contacto')->assertRedirect($panel);
+        }
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
 
     /** HTML de cada pantalla de acceso, sin sesión. */
