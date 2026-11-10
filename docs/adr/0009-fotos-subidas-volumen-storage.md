@@ -69,7 +69,11 @@ Proyecto académico, sin presupuesto.
   (/analyze 039 A25).
 - Es necesario reconstruir el contenedor de desarrollo (`docker compose build app`) para que los tests
   con imágenes JPG falsas funcionen en local; la CI ya usa `setup-php` con GD completo.
-- nginx tiene que aceptar cuerpos de hasta 6 MB (`client_max_body_size`; hoy rige el valor por
-  defecto, 1 MB) en las dos configuraciones.
+- nginx tiene que aceptar cuerpos de hasta 20 MB (`client_max_body_size`; hoy rige el valor por
+  defecto, 1 MB) en las dos configuraciones. Enmienda del 2026-11-09 (/review 039 R2): eran 6 MB, pero
+  una foto de más de 6 MB recibía el 413 de nginx en inglés en lugar del mensaje de la validación.
+- Enmienda del 2026-11-09 (/review 039 R1, decisión del usuario): GD decodifica un PNG con un búfer
+  completo además de la imagen, y uno de 6000 × 6000 agota los 256 MB de PHP. Los PNG se limitan a
+  4000 px por lado, leído de la cabecera antes de decodificar; JPEG y WebP siguen en 6000.
 - Si se pierde el volumen `storage`, se pierden las fotos (no las declaraciones) hasta que el
   administrador las vuelva a subir.

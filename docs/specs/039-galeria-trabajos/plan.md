@@ -49,7 +49,7 @@ Conteo: 10 cumplen, ninguno no aplica y ninguno se viola.
 | Módulo | Cambio | Riesgo |
 |---|---|---|
 | `Dockerfile` (ruta protegida, aprobado por el usuario el 2026-11-07) y `docker/prod/Dockerfile` | `libjpeg62-turbo-dev` y `libwebp-dev`; `docker-php-ext-configure gd --with-jpeg --with-webp` antes de instalar `gd` (ADR 0009) | Medio: trivy puede marcar los paquetes nuevos; hay que reconstruir el contenedor de desarrollo |
-| `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | `client_max_body_size 6m;` en el `server` (hoy rige 1 MB) | Bajo |
+| `docker/nginx/dentissa.conf`, `docker/nginx/dentissa.prod.conf` | `client_max_body_size 20m;` en el `server` (hoy rige 1 MB). Eran 6 MB; pasan a 20 MB para que una foto de más de 5 MB llegue a la validación y reciba su mensaje en español (/review R2) | Bajo |
 | `config/filesystems.php` | Disco `galeria`: `local`, raíz `storage_path('app/galeria')`, sin URL pública | Bajo |
 | `database/migrations/2026_11_07_000000_create_galeria_fotos_table.php` (nuevo) | Tabla `galeria_fotos` (Contratos y datos); solo *expand* | Bajo |
 | `app/Models/GaleriaFoto.php` (nuevo) | Modelo con UUID, `creado_en` y `actualizado_en`, orden por `posicion`, relación con la cuenta que declaró el consentimiento | Bajo |
@@ -67,7 +67,7 @@ Conteo: 10 cumplen, ninguno no aplica y ninguno se viola.
 | `public/css/app.css` | Tarjeta de foto, pregunta del paciente, consentimiento, selector de archivo y aviso de error, dentro de `.formulario-accesible` (de `c3/gestion.css`) | Bajo |
 | `public/js/publico.js` y `tests/js/publico.test.mjs` | Carrusel (de `c3/galeria.js`) en el mismo script, para seguir con un solo script propio por ruta; la función que elige la foto vecina se exporta para su test | Bajo |
 | `docs/design/system.md`, `docs/design/system.html` | Versión 1.12.0 con los cambios de `design.md` | Bajo |
-| `deploy/verificar.sh` y `tests/Feature/ConfiguracionProduccionTest.php` | Tres comprobaciones nuevas en producción (D17): GD de `app` con JPEG y WebP (`gd_info()`), `storage/app/galeria` escribible por `www-data` (o su padre `storage/app` si aún no existe) y `client_max_body_size 6m` en la configuración de `web` (`nginx -T`). Van en una sección propia, `== Galería (spec 039)`, que corre con y sin `--interna`. Usan `-u www-data` en `app`, `ok` y `fallo` como el resto, y dejan sin cambios el bloque de configuración de 16 comprobaciones y su test (/analyze A26). El test lee el script, como los de cabeceras | Bajo |
+| `deploy/verificar.sh` y `tests/Feature/ConfiguracionProduccionTest.php` | Tres comprobaciones nuevas en producción (D17): GD de `app` con JPEG y WebP (`gd_info()`), `storage/app/galeria` escribible por `www-data` (o su padre `storage/app` si aún no existe) y `client_max_body_size 20m` en la configuración de `web` (`nginx -T`). Van en una sección propia, `== Galería (spec 039)`, que corre con y sin `--interna`. Usan `-u www-data` en `app`, `ok` y `fallo` como el resto, y dejan sin cambios el bloque de configuración de 16 comprobaciones y su test (/analyze A26). El test lee el script, como los de cabeceras | Bajo |
 | `tests/Feature/Galeria/*Test.php`, `tests/Unit/Galeria/ProcesadorFotoTest.php` (nuevos), `tests/Feature/PaginasPublicasTest.php`, `tests/Feature/PaginasPublicasCssTest.php` (`VISTAS`) | Ver Estrategia de pruebas | — |
 
 ## Contratos y datos
@@ -149,7 +149,7 @@ por la spec 020. Sin sesión: 302 al inicio de sesión.
 |---|---|---|
 | Inicio, sección «Nuestros trabajos» | con fotos / sin fotos (no se pinta) | `h2`; ventana tabulable con `role="region"` y nombre; «Anterior» y «Siguiente» como enlaces a la foto vecina; región `role="status"` montada vacía y escrita al cambiar; numeral `aria-hidden`; sin avance automático |
 | `/galeria` | con fotos / vacía | un `h1`; `ol` de `figure` con `figcaption`; `alt` = descripción |
-| Gestión | lista, formulario, errores, consentimiento, diálogo de quitar, avisos de éxito | `h1` «Galería de trabajos», errores junto a cada campo con `aria-invalid` y `aria-describedby`, aviso `role="alert"`, `fieldset` con `legend`, radios y casilla de 44 px, diálogo `role="dialog"` con `aria-modal` y el foco en «Cancelar» |
+| Gestión | lista, formulario, errores, consentimiento, diálogo de quitar, avisos de éxito | `h1` «Galería de trabajos», errores junto a cada campo con `aria-invalid` y `aria-describedby`, aviso `role="alert"`, `fieldset` con `legend`, radios y casilla de 44 px, diálogo `role="dialog"` como página de confirmación, sin `aria-modal` (el layout sigue tabulable; /review R34), con el contenido de la vista inerte y el foco en «Cancelar» |
 
 **Qué ve cada rol:** solo el admin ve la entrada «Galería» del menú y sus pantallas. El resto de
 roles y los visitantes ven `/` (con sesión, `/` sigue llevando a su panel) y `/galeria` igual. No
@@ -201,7 +201,7 @@ APP1 con EXIF y GPS sintéticos en un JPEG).
 |---|---|---|---|---|---|
 | TM1 | Elevation: un dentista, asistente o paciente gestiona la galería con peticiones a mano | A01:2025 | rutas `admin.galeria.*` | `role:admin` en el grupo y `Gate::authorize('gestionar-galeria')` en cada acción; 403 registrado | `GestionGaleriaAccesoTest` (cada acción × rol → 403 y la galería sin cambios; sin sesión → inicio de sesión) |
 | TM2 | Tampering: un ejecutable o un políglota PHP disfrazado de `.jpg` | A05:2025 · A08:2025 | subida y entrega | tipo por contenido (`mimes` con finfo) y decodificación con GD. Se guardan solo los píxeles recodificados en WebP, con el UUID como nombre, fuera de `public/`; se sirven como `image/webp` con `nosniff` | `SubidaFotoGaleriaTest::test_un_archivo_que_no_es_imagen_aunque_acabe_en_jpg_se_rechaza` · `ProcesadorFotoTest::test_el_resultado_son_dos_webp_4_3_de_las_medidas_del_plan` · `PaginaGaleriaTest::test_la_foto_se_sirve_como_webp_con_nosniff` |
-| TM3 | DoS: archivos enormes, bombas de descompresión o llenar el disco | A06:2025 | subida | 6 MB en nginx, 5 MB en la validación, como mucho 6000 px por lado antes de decodificar (`dimensions` lee la cabecera), procesado con el pico de memoria acotado (D9), 12 fotos con `lockForUpdate`, sin conservar originales | `SubidaFotoGaleriaTest` (más de 5 MB, más de 6000 px, la número 13) · `ProcesadorFotoTest` (6000 × 6000 con orientación 6, pico < 200 MB) |
+| TM3 | DoS: archivos enormes, bombas de descompresión o llenar el disco | A06:2025 | subida | 20 MB en nginx, 5 MB en la validación, como mucho 6000 px por lado antes de decodificar (`dimensions` lee la cabecera) y 4000 px si es PNG (D9, /review R1), procesado con el pico de memoria acotado (D9), 12 fotos con `lockForUpdate`, sin conservar originales | `SubidaFotoGaleriaTest` (más de 5 MB, más de 6000 px, PNG de más de 4000 px, la número 13) · `ProcesadorFotoTest` (6000 × 6000 con orientación 6 y PNG con alfa de 4000 × 4000, pico < 200 MB) |
 | TM4 | Information disclosure: ubicación u otros datos de la cámara en la foto publicada | A02:2025 | procesado | GD no copia metadatos al recodificar; se aplica la orientación y no se guarda el original | `ProcesadorFotoTest::test_no_quedan_datos_de_la_camara` · `PaginaGaleriaTest::test_la_foto_descargada_no_tiene_exif` (CA14) |
 | TM5 | XSS almacenado por la descripción | A05:2025 | vistas públicas y gestión | salida escapada de Blade en el pie y en `alt`; el JS escribe con `textContent` | `PaginaGaleriaTest::test_la_descripcion_se_muestra_como_texto` (CA15) · `CarruselInicioTest` (mismo caso en `/`) · `GestionGaleriaTest::test_la_descripcion_se_muestra_como_texto_en_la_gestion` (tarjeta y diálogo de quitar; /analyze A9) |
 | TM6 | Path traversal o enumeración en `/galeria/fotos/{foto}` | A01:2025 | entrega | `whereUuid` y `GaleriaFoto` resuelto por Eloquent; la ruta del archivo sale del `id` de la fila | `PaginaGaleriaTest::test_una_direccion_que_no_es_una_foto_responde_404` (`../`, texto, UUID inexistente) |
@@ -238,7 +238,7 @@ Casos de abuso de la spec:
 | RNF: WCAG 2.1 AA; el carrusel no se mueve solo y anuncia la foto | vistas, `publico.js` | `CarruselInicioTest::test_la_region_de_estado_esta_montada_y_vacia`, `publico.test.mjs`. verificación manual: puertas de `medir.mjs` y recorrido con teclado contra `c3` |
 | RNF: `/galeria` indexable, Lighthouse SEO ≥ 90, JavaScript ≤ 100 kB, contenido en el HTML del servidor | `galeria.blade.php` | `PaginaGaleriaTest::test_metadatos_de_galeria`, `::test_solo_carga_el_script_publico_con_defer`. verificación manual: K10 de `medir.mjs` y Lighthouse en `/review` |
 | RNF: cada foto ≤ 500 kB; las de fuera de pantalla con carga diferida | `ProcesadorFoto`, `_trabajo.blade.php` | `ProcesadorFotoTest::test_el_grande_pesa_como_mucho_500_kb_tambien_con_ruido`, `::test_el_pequeno_de_una_foto_realista_pesa_como_mucho_60_kb`, `CarruselInicioTest::test_todas_las_fotos_del_carrusel_cargan_en_diferido`, `PaginaGaleriaTest::test_solo_las_tres_primeras_cargan_sin_esperar`, `::test_cada_foto_ofrece_las_dos_medidas` (`src` de 800, `srcset` con los dos descriptores y `sizes` de Contratos). verificación manual: K9 de `medir.mjs` en `/` y `/galeria` con 12 fotos con grano realista (`publicar 12` de «Datos de medición») |
-| Comprobación en producción (spec → Notas para /plan; D17) | `deploy/verificar.sh` | `ConfiguracionProduccionTest::test_verificar_comprueba_lo_que_necesita_la_galeria` (GD con JPEG y WebP, directorio escribible y `client_max_body_size 6m`). verificación manual: `verificar.sh` en verde tras el deploy (T097) |
+| Comprobación en producción (spec → Notas para /plan; D17) | `deploy/verificar.sh` | `ConfiguracionProduccionTest::test_verificar_comprueba_lo_que_necesita_la_galeria` (GD con JPEG y WebP, directorio escribible y `client_max_body_size 20m`). verificación manual: `verificar.sh` en verde tras el deploy (T097) |
 | TM1 | ver CA13 | `GestionGaleriaAccesoTest` |
 | TM2 | `ProcesadorFoto`, `PaginasPublicasController::foto` | ver Modelo de amenazas |
 | TM3 | nginx, `reglasDeSubida()`, `Galeria::publicar` | ver CA12 |
@@ -303,7 +303,7 @@ Casos de abuso de la spec:
 - **Requisito previo:** el `/chore` de Symfony 7.4.23 liberado y `composer audit` limpio sin EX4,
   que vence el 2026-11-11. Es condición de T096 (/analyze A12).
 - **Orden de despliegue:** lo hace `deploy/desplegar.sh vX.Y.Z` en un solo paso:
-  1. construye las imágenes, ya con GD con JPEG y WebP y nginx a 6 MB;
+  1. construye las imágenes, ya con GD con JPEG y WebP y nginx a 20 MB;
   2. ejecuta la migración *expand* `create_galeria_fotos_table`;
   3. levanta la aplicación.
 
@@ -396,7 +396,7 @@ Casos de abuso de la spec:
   (T091).
 - **D17 · `verificar.sh` (decisión del usuario, 2026-11-08, /analyze A11).** Entra en la 039: GD de
   `app` con JPEG y WebP, `storage/app/galeria` (o `storage/app`) escribible por `www-data` y
-  `client_max_body_size 6m` en `web`, en la sección propia de Cambios por módulo (/analyze A26). Atiende la pregunta de las Notas para /plan de la spec.
+  `client_max_body_size 20m` en `web` (/review R2), en la sección propia de Cambios por módulo (/analyze A26). Atiende la pregunta de las Notas para /plan de la spec.
 - **D18 · Identificadores `char(36)` (/analyze A8).** `id` y `consentimiento_usuario_id` como
   `char(36)`, igual que `usuarios.id` y las migraciones existentes.
 - **D10 · Descripción de 160 caracteres como mucho.** La spec deja fuera los textos largos por foto;
@@ -418,7 +418,7 @@ Casos de abuso de la spec:
     con su Gate.
   - **Frontend:** `publico/galeria.blade.php`, `galeria/index.blade.php` y el carrusel en
     `publico.js`.
-  - **Despliegue:** GD con JPEG y WebP, nginx a 6 MB, las fotos en el volumen `storage` y fuera de
+  - **Despliegue:** GD con JPEG y WebP, nginx a 20 MB, las fotos en el volumen `storage` y fuera de
     las copias.
 - `docs/deployment.md` (T091): las fotos en el volumen `storage`, el riesgo de no tener copia (RD) y
   `client_max_body_size`.
