@@ -536,6 +536,14 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   2026-10-06). El login y la vuelta de Google ya emiten `Illuminate\Auth\Events\Lockout` en cada
   rechazo, y la vuelta de Google fallida emite `Illuminate\Auth\Events\Failed` (spec 031), para
   que la 021 los audite sin tocar el login (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+- Excepción P7 de la spec 044: cerrar sesión cambia de destino (lleva a `/` con el aviso) sin registrarse
+  como evento de auditoría; el evento llega con los listeners de autenticación de `docs/observability.md`
+  (OB1.b, objetivo 3), junto con los de inicio de sesión, como la excepción de la 030 (decisión del
+  usuario, 2026-11-08, /analyze 044 A5).
+- Riesgo de la spec 020 visto en la 044 (/analyze 044 A8): `RegistroCentralDenegaciones` lee el usuario de
+  la sesión en cada respuesta de error; con la base caída y una sesión con usuario, podría lanzar antes
+  de pintar la página de error. Las páginas de la 044 no consultan la base; el camino del registro
+  central queda para una spec o ficha aparte (decisión del usuario, 2026-11-08).
 - Residuo de OB4.a aceptado al abrir producción con la spec 030: los errores de base de datos pueden
   dejar SQL con sus valores en `laravel.log` del servidor. Se acepta con datos ficticios; la spec 023
   (OB4.a) debe liberarse antes de tener datos reales (spec 030, /analyze A26; decisión del usuario,

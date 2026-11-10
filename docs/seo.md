@@ -35,9 +35,11 @@ inicio de sesión.
   `shared/seo-checklist.md` §2), `/contrasena/olvidada`, `/contrasena/enviada` y
   `/contrasena/nueva/{token}` (spec 041; esta última lleva además `no-referrer`), `/registro/contacto`
   (paso con sesión), la 404, `/up` (salud) y todas las rutas tras inicio de sesión — mecanismo: `noindex`
-  en meta en `/login` y en la recuperación (`layouts/acceso.blade.php`, spec 041); en la 404 y `/up`,
-  pendiente (SE2.b); las rutas privadas ya redirigen sin sesión.
-- Páginas de error: 404 genérica de Laravel, en inglés (SE4); rutas privadas sin sesión →
+  en meta en `/login` y en la recuperación (`layouts/acceso.blade.php`, spec 041); en las páginas de error,
+  en meta (`errors/plantilla.blade.php`), y en `/up`, la cabecera `X-Robots-Tag` (`NoIndexarSalud`; spec 044,
+  SE2.b); las rutas privadas ya redirigen sin sesión.
+- Páginas de error: propias desde la spec 044 (404, 403, 419, 429 y 500, en español, con `noindex`; SE4.a);
+  rutas privadas sin sesión →
   redirección `302` a `/login` (comprobado en local y en producción); fuera del sitemap.
 - Archivos generados: `robots.txt` estático en `public/` (permite todo y no declara sitemap);
   `sitemap.xml` no existe (SE3).
@@ -54,15 +56,15 @@ permiso del usuario, con `GET` a https://dentissa.app (solo códigos de estado y
 
 | Ruta | Indexable | Título | Descripción | Canónica | `h1` | Open Graph | Datos estructurados | Evidencia |
 |---|---|---|---|---|---|---|---|---|
-| `/` | sí (spec 038) | ✅ «Dentissa · Tu sonrisa, nuestra prioridad» | ✅ propia | ✅ `https://dentissa.app/` | ✅ uno («Tu sonrisa, nuestra prioridad.») | ➖ (fuera de alcance, SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` sin sesión (con sesión, `302` al panel del rol) · `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` · `resources/views/publico/inicio.blade.php` |
+| `/` | sí (spec 038) | ✅ «Dentissa · Tu sonrisa, nuestra prioridad» | ✅ propia | ✅ `https://dentissa.app/` | ✅ uno («Tu sonrisa, nuestra prioridad.») | ➖ (fuera de alcance, SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` sin sesión (con sesión, `302` al panel del rol) · `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` · `resources/views/publico/inicio.blade.php` · Spec 044: con sesión, `200` con «Ir a mi panel» (ya no redirige; los buscadores entran sin sesión) |
 | `/servicios` | sí (spec 038) | ✅ «Servicios · Dentissa» | ✅ propia | ✅ `https://dentissa.app/servicios` | ✅ uno («Nuestros servicios») | ➖ (SE6) | ➖ (SE7) | Spec 038, rama sin liberar: `200` con y sin sesión · `PaginasPublicasTest` · `resources/views/publico/servicios.blade.php` |
 | `/registro` | sí | ✅ «Dentissa · Crear cuenta» | ❌ sin `<meta name="description">` | ❌ sin `<link rel="canonical">` | ✅ uno («Únete a nuestra comunidad») | ❌ | ❌ | `curl -s /registro` · `resources/views/auth/register.blade.php:6,33`; `200` en producción |
 | `/login` | no (inicio de sesión) | ✅ «Dentissa · Iniciar sesión» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ✅ `noindex` desde `layouts/acceso.blade.php` (spec 041) |
 | `/contrasena/olvidada`, `/contrasena/enviada`, `/contrasena/nueva/{token}` (spec 041) | no (acceso; la última lleva un secreto) | ✅ «Dentissa · Recuperar acceso», «Dentissa · Revisa tu correo», «Dentissa · Contraseña nueva» | ➖ | ➖ | ✅ uno | ➖ | ➖ | ✅ `noindex`; solo existen con `RECUPERAR_CONTRASENA=true` |
 | `/registro/contacto` | no (paso con sesión) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `302` a `/registro` sin sesión |
 | rutas privadas (`/admin`, `/cliente`…) | no (tras inicio de sesión) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `302` a `/login` sin sesión, en local y en producción |
-| 404 | no (página de error) | genérica «Not Found» (inglés) | ➖ | ➖ | ➖ | ➖ | ➖ | `404` real en local y en producción (`/pagina-que-no-existe`) |
-| `/up` | no (salud) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `200` HTML de Laravel, sin `noindex` |
+| 404 | no (página de error) | ✅ «No encontramos esta página · Dentissa» | ➖ | ➖ | ✅ uno | ➖ | ➖ | Spec 044: `404` con `<meta name="robots" content="noindex">`, también para POST, DELETE y verbos equivocados (`PaginasErrorTest`) |
+| `/up` | no (salud) | ➖ | ➖ | ➖ | ➖ | ➖ | ➖ | `200` HTML de Laravel con `X-Robots-Tag: noindex` (spec 044, `PaginasErrorTest`) |
 | `/robots.txt` | no (archivo de rastreo) | — | — | — | — | — | — | `200`: `User-agent: *` · `Disallow:` (sin `Sitemap:`) |
 | `/sitemap.xml` | no (archivo de rastreo) | — | — | — | — | — | — | `404` en local y en producción |
 
