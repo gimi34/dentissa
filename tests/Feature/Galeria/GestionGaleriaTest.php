@@ -249,14 +249,31 @@ class GestionGaleriaTest extends TestCase
 
     public function test_la_descripcion_se_muestra_como_texto_en_la_gestion(): void
     {
-        $foto = $this->foto(1, '<script>alert(1)</script>');
+        // /review R7: tres fotos con la carga en la del medio, para que salgan sus «Arriba» y «Abajo», y
+        // con comillas, para probar también la salida dentro de un atributo.
+        $carga = '"><script>alert(1)</script>';
+        $escapada = '&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;';
+        $this->foto(1);
+        $foto = $this->foto(2, $carga);
+        $this->foto(3);
         $this->actingAs($this->admin);
 
-        foreach ([route('admin.galeria.index'), route('admin.galeria.quitar', $foto)] as $url) {
+        foreach ([route('admin.galeria.index') => 4, route('admin.galeria.quitar', $foto) => 5] as $url => $veces) {
             $html = $this->get($url)->assertOk()->getContent();
             $this->assertStringNotContainsString('<script>alert(1)</script>', $html, "Sin la etiqueta en {$url}.");
-            $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html, "Escapada en {$url}.");
+            $this->assertStringNotContainsString('"><script>', $html, "Sin salir del atributo en {$url}.");
+            $this->assertSame($veces, substr_count($html, $escapada), "Escapada en la tarjeta, en los tres aria-label y, en el diálogo, en su texto ({$url}).");
+            $xpath = $this->xpath($html);
+            foreach (['Mover arriba: ', 'Mover abajo: ', 'Quitar: '] as $prefijo) {
+                $this->assertSame(1, $xpath->query('//*[@aria-label='.$this->literalXpath($prefijo.$carga).']')->length, "El aria-label «{$prefijo}…» lleva la descripción como texto.");
+            }
         }
+    }
+
+    /** Literal de XPath 1.0 para un texto con comillas simples y dobles. */
+    private function literalXpath(string $texto): string
+    {
+        return "concat('".str_replace("'", "', \"'\", '", $texto)."', '')";
     }
 
     public function test_con_el_dialogo_abierto_el_fondo_queda_inerte(): void
