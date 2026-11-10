@@ -117,7 +117,7 @@
 
     @if($quitar)
         <div class="modal-overlay">
-            <div class="modal-box card" role="dialog" aria-modal="true" aria-labelledby="t-quitar" aria-describedby="d-quitar">
+            <div class="modal-box card" role="dialog" aria-labelledby="t-quitar" aria-describedby="d-quitar">
                 <h2 id="t-quitar">¿Quitar esta foto?</h2>
                 <p id="d-quitar">«{{ $quitar->descripcion }}» deja de verse en la página de inicio y en la galería, y su dirección deja de abrirse.</p>
                 <div class="acciones-fila">
