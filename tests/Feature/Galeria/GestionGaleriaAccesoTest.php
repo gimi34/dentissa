@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Galeria;
 
+use App\Http\Middleware\RoleMiddleware;
 use App\Models\GaleriaFoto;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -94,6 +95,22 @@ class GestionGaleriaAccesoTest extends TestCase
     #[DataProvider('rolesPorAccion')]
     public function test_otros_roles_reciben_403_en_cada_accion(string $rol, string $accion): void
     {
+        $antes = $this->estado();
+        $this->actingAs($this->usuario($rol));
+
+        $this->peticion($accion)->assertForbidden();
+
+        $this->assertSame($antes, $this->estado(), 'La galería no cambia.');
+    }
+
+    /**
+     * /review R11 (P3): la segunda capa. Sin el middleware `role:admin`, el Gate `gestionar-galeria`
+     * de cada acción sigue negando a los demás roles, y nada cambia.
+     */
+    #[DataProvider('rolesPorAccion')]
+    public function test_sin_role_admin_el_gate_niega_a_los_demas_roles(string $rol, string $accion): void
+    {
+        $this->withoutMiddleware(RoleMiddleware::class);
         $antes = $this->estado();
         $this->actingAs($this->usuario($rol));
 
