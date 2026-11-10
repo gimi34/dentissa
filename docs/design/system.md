@@ -721,8 +721,10 @@ Gestión (`app.css`), dentro de `.formulario-accesible` y con su layout (`.topba
 - **Selector de archivo** (`.campo-archivo`): con el botón de la app en `::file-selector-button`.
 - **Aviso de error** (`.aviso-error`, `role="alert"`) arriba del formulario y `.campo-error` junto a
   cada campo, enlazado con `aria-describedby` y `aria-invalid`.
-- **Diálogo de quitar:** `.modal-box` con `role="dialog"`, `aria-modal`, el foco en «Cancelar» y el
-  formulario de borrado dentro. Es una página (`…/quitar`), así que funciona sin JavaScript.
+- **Diálogo de quitar:** `.modal-box` con `role="dialog"`, `aria-labelledby` y `aria-describedby`, el
+  foco en «Cancelar» y el formulario de borrado dentro. Es una página de confirmación (`…/quitar`), así
+  que funciona sin JavaScript; no declara `aria-modal` porque el layout sigue tabulable (spec 039,
+  /review R34). El contenido de la vista detrás queda `inert`.
 - **Menú del administrador:** entrada «Galería» después de «Servicios», con `aria-current` en sus rutas.
 
 ### Badge de estado

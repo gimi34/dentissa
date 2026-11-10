@@ -165,7 +165,9 @@ No hay colores nuevos: `criterios.json → tokens.colors` no cambia.
 - **Formulario:**
   - Cada error va junto a su campo, con `aria-invalid` y `aria-describedby`, y hay un aviso `role="alert"` arriba.
   - La pregunta del paciente es un `fieldset` con `legend`.
-  - El diálogo de quitar lleva `role="dialog"`, `aria-modal`, `aria-labelledby` y `aria-describedby`.
+  - El diálogo de quitar es una página de confirmación (`…/quitar`, sin JavaScript): lleva `role="dialog"`,
+    `aria-labelledby` y `aria-describedby`, sin `aria-modal` (el layout sigue tabulable), con el contenido de la
+    vista inerte detrás y el foco inicial en «Cancelar».
 - **Decorativos ocultos:** el numeral (`aria-hidden`), las flechas (`aria-hidden`) y las miniaturas de la gestión (`alt=""`, porque la descripción va al lado).
 
 ## Decisiones
@@ -181,3 +183,4 @@ No hay colores nuevos: `criterios.json → tokens.colors` no cambia.
 | 2026-11-07 | refinado | Tres observaciones del evaluador: el hueco del panel del carrusel en el escritorio, el diálogo de quitar sin margen a 390 px y la casilla de consentimiento visible antes de responder | Aplicadas a `c3` y medidas de nuevo (96/96 puertas, 41/42 KPIs) | usuario |
 | 2026-11-07 | diseño | ¿Se aprueba el acta? | Aprobada, con `c3` refinado | usuario |
 | 2026-11-08 | refinado | En `/implement` (T030), `ReprogramarCitaVistasTest` (spec 028) exige contraste de 3:1 a todo borde dentro de `.formulario-accesible`; el de la tarjeta de foto (`--border`, 1,31:1) y el del botón «Elegir archivo» (`--p200`, 1,58:1) no llegan | Los dos pasan a `--border-control` (3,93:1 sobre blanco), en `c3/gestion.css` y en `app.css`. `c3` vuelto a medir: `gestion` 12/12 puertas y 7/7 KPIs | usuario |
+| 2026-11-09 | refinado | /review R34: el diálogo de quitar declaraba `aria-modal`, pero la barra lateral y la superior del layout siguen tabulables detrás del velo (WCAG 2.4.3) | Sin `aria-modal`: es una página de confirmación con `role="dialog"`, nombre y descripción, el contenido de la vista inerte y el foco inicial en «Cancelar»; el aspecto no cambia | usuario (/review 039 R34) |
