@@ -70,6 +70,22 @@ trait GaleriaDePrueba
         return $this->subida($this->insertarExif($jpeg, $orientacion, false), 'enorme.jpg');
     }
 
+    /**
+     * Un PNG con canal alfa (una esquina semitransparente), el peor caso de memoria al decodificar un
+     * PNG con GD (/review 039 R1).
+     */
+    protected function pngConAlfa(int $ancho, int $alto, string $nombre = 'alfa.png'): UploadedFile
+    {
+        $imagen = $this->lienzoPartido($ancho, $alto);
+        imagealphablending($imagen, false);
+        imagesavealpha($imagen, true);
+        imagefilledrectangle($imagen, 0, 0, min(99, $ancho - 1), min(99, $alto - 1), imagecolorallocatealpha($imagen, 0, 0, 0, 60));
+        $png = $this->codificar($imagen, 'png');
+        imagedestroy($imagen);
+
+        return $this->subida($png, $nombre);
+    }
+
     /** Una imagen lisa del formato pedido (`jpg`, `png`, `webp` o `gif`). */
     protected function imagenLisa(string $formato, int $ancho = 1200, int $alto = 900, ?string $nombre = null): UploadedFile
     {

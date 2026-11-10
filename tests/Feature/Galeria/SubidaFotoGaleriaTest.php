@@ -176,6 +176,28 @@ class SubidaFotoGaleriaTest extends TestCase
         $this->assertNadaGuardado(0);
     }
 
+    public function test_un_png_de_mas_de_4000_px_se_rechaza(): void
+    {
+        // /review R1: un PNG grande agota la memoria al decodificarlo; se rechaza leyendo la cabecera.
+        $this->subir($this->datos($this->imagenLisa('png', 4001, 10)))
+            ->assertSessionHasErrors(['foto' => 'La foto PNG es demasiado grande: como mucho 4000 píxeles por lado.']);
+        $this->assertNadaGuardado(0);
+    }
+
+    public function test_un_png_de_4000_px_se_publica(): void
+    {
+        $this->subir($this->datos($this->pngConAlfa(4000, 3000)))->assertSessionHasNoErrors();
+
+        $this->assertSame(1, GaleriaFoto::count());
+    }
+
+    public function test_un_jpg_de_mas_de_4000_px_sigue_admitido(): void
+    {
+        $this->subir($this->datos($this->imagenLisa('jpg', 4500, 10)))->assertSessionHasNoErrors();
+
+        $this->assertSame(1, GaleriaFoto::count(), 'El límite de 4000 px es solo para PNG.');
+    }
+
     public function test_con_12_fotos_no_se_publica_la_siguiente(): void
     {
         foreach (range(1, 12) as $posicion) {

@@ -140,6 +140,22 @@ class ProcesadorFotoTest extends TestCase
         $this->assertSame([1600, 1200], array_slice($this->medidas($r->grande), 0, 2), 'Cuadrada y girada, sale recortada a 4:3 apaisada.');
     }
 
+    public function test_un_png_con_alfa_de_4000_px_queda_por_debajo_de_200_mb(): void
+    {
+        // /review R1: GD decodifica el PNG con un búfer completo además de la imagen; 4000 px es el
+        // límite de los PNG que admite la validación.
+        $subida = $this->pngConAlfa(4000, 4000);
+        gc_collect_cycles();
+
+        $antes = memory_get_usage();
+        memory_reset_peak_usage();
+        $r = $this->procesador()->procesar($subida);
+        $pico = memory_get_peak_usage() - $antes;
+
+        $this->assertLessThan(200 * 1024 * 1024, $pico, sprintf('Pico del procesado: %.1f MB (memory_limit 256M).', $pico / 1048576));
+        $this->assertSame([1600, 1200], array_slice($this->medidas($r->grande), 0, 2));
+    }
+
     public function test_un_archivo_que_no_decodifica_lanza_la_excepcion(): void
     {
         $this->expectException(FotoNoProcesable::class);
