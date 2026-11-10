@@ -33,12 +33,15 @@ class MovilPacienteTest extends TestCase
         '--text-meta' => '13px', '--logo-max-w' => '160px', '--icon-md' => '18px', '--text-marca' => '16px',
     ];
 
-    /** Enlaces del menú por rol (con «Auditoría» de la spec 020 en el de admin). */
+    /**
+     * Enlaces del menú por rol (con «Auditoría» de la spec 020 en el de admin). Desde la spec 044 (CA5, T035)
+     * cada rol termina con «Ver sitio web», la página pública.
+     */
     private const SECCIONES = [
-        'admin' => ['Home', 'Citas', 'Pacientes', 'Personal', 'Servicios', 'Reportes', 'Usuarios', 'Auditoría'],
-        'dentista' => ['Home', 'Mis Citas', 'Pacientes', 'Expedientes'],
-        'asistente' => ['Home', 'Mis Doctores', 'Citas', 'Pacientes'],
-        'cliente' => ['Inicio', 'Mis Citas', 'Agendar Cita', 'Mi Perfil'],
+        'admin' => ['Home', 'Citas', 'Pacientes', 'Personal', 'Servicios', 'Reportes', 'Usuarios', 'Auditoría', 'Ver sitio web'],
+        'dentista' => ['Home', 'Mis Citas', 'Pacientes', 'Expedientes', 'Ver sitio web'],
+        'asistente' => ['Home', 'Mis Doctores', 'Citas', 'Pacientes', 'Ver sitio web'],
+        'cliente' => ['Inicio', 'Mis Citas', 'Agendar Cita', 'Mi Perfil', 'Ver sitio web'],
     ];
 
     /** Panel de cada rol y el enlace del menú que debe quedar como sección actual. */

@@ -16,8 +16,9 @@
 
     <!-- Ilustración central -->
 <div class="panel-illustration">
-    <img src="{{ asset('images/logo-main.png') }}"
-         alt="Dentissa"
+    {{-- Spec 044 (CA2): el logo lleva a la página de inicio; el nombre lo da el enlace. --}}
+    <a class="logo-enlace" href="{{ route('inicio') }}" aria-label="Ir a la página de inicio"><img src="{{ asset('images/logo-main.png') }}"
+         alt=""
          style="
              display: block;
              margin: 0 auto;
@@ -27,7 +28,7 @@
              object-position: center;
              position: relative;
              z-index: 2;
-         ">
+         "></a>
 </div>
     <div class="panel-copy">
         <h1 class="panel-tagline">Únete a<br>nuestra <em>comunidad</em></h1>
@@ -50,6 +51,8 @@
 <div class="panel-right">
     <div class="form-wrapper">
         <div class="form-container">
+            {{-- Spec 044 (CA1, CA4): la salida, primera del formulario a todos los anchos (el panel no se ve en el móvil). --}}
+            <a class="enlace-inicio" href="{{ route('inicio') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Volver al inicio</a>
 
             <!-- Barra de progreso -->
             <div class="progress-bar-wrap">

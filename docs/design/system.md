@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.11.0
+version: 1.12.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-03
+updated: 2026-11-09
 ---
 
 # Sistema de diseño de Dentissa
@@ -680,6 +680,34 @@ spec. Exclusivos de estas pantallas:
 - **Avisos:** «Revisa tu correo» y el éxito del login con `role="status"`; enlace que ya no sirve y
   demasiados intentos con `role="alert"`.
 
+### Salidas al inicio y páginas de error (spec 044, 1.12.0)
+Piezas para no dejar a nadie sin salida ([diseño](../specs/044-navegacion-salidas/design.md), sin
+candidatos: componentes del sistema, sin tokens nuevos).
+- **Enlace «Volver al inicio»** (`.enlace-inicio`, en `acceso.css` y `auth.css`): primer elemento del
+  formulario del acceso y del registro, a todos los anchos (por debajo de 769 px el panel de marca no se
+  ve). Flecha de `--icon-md` (`aria-hidden`) y texto en `--text-meta`, `--weight-strong`, `--p500`; con
+  el puntero, `--p600` subrayado; alto `--touch-min`; margen inferior `--space-4`; foco del sistema.
+  `auth.css` copia a su `:root` los tokens que usa, con los mismos valores de `app.css`.
+- **Logo-enlace del panel de marca:** el logo del acceso, del registro y del error genérico dentro de un
+  enlace a la página de inicio con `aria-label="Ir a la página de inicio"`; la imagen con `alt=""`. Sobre el
+  panel oscuro, el foco es el inverso (`--focus-ring-inverso`, blanco): el del sistema (`--p600`) no llega a
+  3:1 sobre el degradado `--p600 → --p800` (/review 044 R1).
+- **Entrada «Ver sitio web» de la barra lateral:** al final de `.sidebar-nav`, para los cuatro roles,
+  `.nav-label` «Sitio» y un `.nav-item` con icono de globo de trazo 1,8; en el móvil, dentro del menú
+  (spec 033), antes del nombre y «Cerrar sesión».
+- **Aviso del sitio público** (`.pub-aviso`, en `publico.css`): franja bajo la cabecera con fondo
+  `--p50`, borde inferior `--border`, texto `--text` en `--text-publico-small`, palomita `--p600`
+  (`aria-hidden`) y relleno `--space-3`/`--space-4`. `role="status"`; con JavaScript se retira solo a los
+  6 s con un fundido de `--duration-base` (`publico.js`; con movimiento reducido, sin fundido) y sin él se
+  queda. Hoy, solo «Has cerrado sesión».
+- **Página de error** (plantilla común sobre el error genérico de la 020, `errores.css`): franja con el
+  logo en el teléfono y panel de marca desde 769 px, `.etiqueta` «Error NNN · …», un solo `h1`, `.sub`,
+  la acción principal `.btn-primario` y los enlaces secundarios; `.codigo` con el identificador de la
+  petición solo en la 500. Sin consultas a la base, con `noindex`. Páginas: 404, 403, 419, 429 y 500.
+- **Enlace secundario del error** (`.enlace-secundario`, `errores.css`): `--text-meta`,
+  `--weight-strong`, `--p500` (con el puntero, `--p600` subrayado), alto `--touch-min`; en fila con
+  `--space-4` de separación y en columna por debajo de 400 px.
+
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
 - agendada → pink (`--p600` sobre `--p100`, 6.05:1);
@@ -708,8 +736,9 @@ El estado se lee en el texto, no solo por el color.
 ### Estados de pantalla
 - **Vacío:** `.empty-state` (icono de 40px y texto) en 15 vistas.
 - **Cargando:** no existe.
-- **Error del servidor:** no hay páginas propias. 403 y 404 muestran las de Laravel, en inglés y sin
-  la marca (capturas `error-403` y `error-404`, DS7).
+- **Error del servidor:** desde la spec 044, páginas propias para 404, 403, 419, 429 y 500 con la
+  plantilla del error genérico (ver «Salidas al inicio y páginas de error»); la 503 de la auditoría
+  (spec 020) usa la misma carcasa.
 
 ### Iconos
 Iconos SVG de línea en el menú, los botones y las tarjetas. En el panel del paciente se mezclan con
@@ -950,7 +979,7 @@ se corrige cuando una spec toca la pantalla o como objetivo del roadmap. Se conc
 | DS4 | Valores fijos: 861 `style=""` en las vistas, 20 tamaños de letra, escala de espaciado solo en las reglas de la 027; barra lateral `#C75078` y radios literales fuera de los tokens | `resources/views/**`, `public/css/app.css:63,171` | Tokens de espaciado y tipografía; migrar los estilos en línea al tocar cada pantalla | en curso: escala de espaciado, `--text-body`, `--text-small` y pesos (spec 027); filas y campos de la sección de horario de la ficha sin estilos en línea |
 | DS5 | Componentes duplicados o contradictorios: 11 bloques `<style>` dentro del contenido redefinen `.field` (borde 1.5px, radio 5px, 'DM Sans'), `citas.css` solo en 7 vistas, y `auth.css` redefine tokens (`--text-light: #000`) | `expedientes/create:139`, `pacientes/create:200`, `usuarios/index:208`…, `public/css/auth.css:8-26` | Una sola hoja de componentes cargada por el layout | en curso: `.field-hint` y `.field-hint-error` pasan a `app.css` (spec 027) |
 | DS6 | Objetivo de toque < 44px (medido): botón 31px, `.btn-sm` 22–27px, campo 34–38px, elemento del menú 35px | `public/css/app.css:194-219,353-356`, `citas.css:16-30`; medidas de las 104 vistas con menú | `min-height` con un token `--touch-min` | parcial (033, 034): `--touch-min` existe y se aplica por debajo de 900 px en el menú y las pantallas del paciente (spec 033) y en las pantallas más usadas del personal (spec 034) |
-| DS7 | Estados y semántica que faltan: sin deshabilitado ni carga, sin páginas de error propias (403 y 404 de Laravel en inglés), mensajes flash sin `aria-live`, diálogos sin `role="dialog"` ni manejo del foco, 5 `confirm()` nativos, títulos de sección como `span` | `layouts/app.blade.php:207-253`, `servicios/index:121-193`, `usuarios/index:215-299`; capturas `error-403`, `error-404` | Componentes de aviso y diálogo accesibles, estados de carga y páginas de error con la marca | pendiente |
+| DS7 | Estados y semántica que faltan: sin deshabilitado ni carga, sin páginas de error propias (403 y 404 de Laravel en inglés), mensajes flash sin `aria-live`, diálogos sin `role="dialog"` ni manejo del foco, 5 `confirm()` nativos, títulos de sección como `span` | `layouts/app.blade.php:207-253`, `servicios/index:121-193`, `usuarios/index:215-299`; capturas `error-403`, `error-404` | Componentes de aviso y diálogo accesibles, estados de carga y páginas de error con la marca | en curso: páginas de error propias 403, 404, 419, 429 y 500 con la marca (spec 044); el resto sigue pendiente |
 | DS8 | La app no se adapta a móvil (medido): a 390 px, 54 de 62 vistas se desbordan en horizontal (472–1157px de ancho; las dos de reprogramar, 498px por la barra lateral), con barra lateral fija de 242px y rejillas fijas; solo el acceso y el registro se adaptan | `public/css/app.css` (0 `@media`), `:60-70,234,270-272`; capturas `*-390` | Diseño adaptable a partir de 390px, empezando por las pantallas del paciente | parcial (033, 034, 035): menú común y pantallas del paciente desde 320 px (spec 033); paneles, citas con su filtro, detalle de cita, pacientes y servicios del personal, con las tablas como tarjetas (spec 034); ficha y formulario del paciente y lista, ficha y alta de expedientes (spec 035); agenda y servicios (spec 036) y administración (spec 037), pendientes |
 | DS9 | Tipografía: Roboto se carga desde Google Fonts sin aprobación en `security.md`; 'DM Sans' y 'DM Mono' se nombran sin cargarse (medido: los campos de usuarios caen a la sans-serif genérica); el peso 300 se carga y no se usa | `layouts/app.blade.php:7`, `usuarios/create:127`, `usuarios/index:210`, `servicios/index:37`, `expedientes/create:110` | Autoalojar Roboto o aprobar el servicio; quitar las familias no cargadas y los pesos sin uso | pendiente |
 | DS10 | El movimiento no respeta `prefers-reduced-motion` | `public/css/auth.css:164,346,504-509`, `usuarios/index:295`, `app.css:374` | Bloque `prefers-reduced-motion: reduce` | parcial (033, v0.7.0): solo el menú del móvil (spec 033) |
@@ -993,4 +1022,5 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 5 de las páginas públicas (spec 038, «La ventana del diente»)? | Versión 1.9.0, superficie «Sitio público»: `--font-display` (Cormorant Garamond) y `--font-publica` en Montserrat (sustituye a Lexend); `--text-display`, `--text-statement`, `--text-seccion`, `--text-indice`, `--text-firma` y `--text-lead` (fluidos); `--shadow-soft`, `--ease-in-out`, `--page-ancho`, `--gutter` y `--space-seccion-publica`; componentes botón en píldora (principal, tinta y fantasma), pastilla de estado, promesa, índice de categorías, tarjeta de la agenda, cabecera pública con «Menú» y pie; los pares de contraste de la ronda 5; reglas de uso. Se retiran Lexend, los velos, `--text-portada`, `--text-marquesina`, `--leading-portada`, `--tracking-portada`, `--sombra-tarjeta`, `--icono-tarjeta` y `--duration-marquesina` y los componentes de la ronda 3 (portada, tarjeta de categoría y franja); `--sombra-tarjeta-alta` y `--leading-publico` se quedan por la 020 | usuario (spec 038, design.md de la ronda 5 y plan D19–D21) |
 | 2026-10-31 | diseño | ¿Qué incorpora el sistema para la ronda 6 de la 038 (motor por criterios, candidato `c5`)? | Versión 1.10.0: `--font-display` pasa a Newsreader (Cormorant Garamond corre las tildes); componentes «Etiqueta», «Cita destacada», «Pasos en línea», «Semana de la consulta» e índice con número; la arcada y la escena «consulta» (exclusivos de `/`); el menú del móvil solo con el icono de hamburguesa; el ancho del logo de la cabecera; se retiran la promesa en tarjetas, la tarjeta con el diente y la ventana del diente | usuario (spec 038, design.md de la ronda 6 y plan D23) |
 | 2026-11-03 | diseño | ¿Qué incorpora el sistema para el acceso y la recuperación de contraseña (spec 041)? | Versión 1.11.0: tokens `--font-acceso` (Roboto autoalojada), `--text-acceso-small`, `--duration-respuesta` y `--ease-clinico`; componentes del acceso (marco con franja y panel con degradado `--p600 → --p800`, carnet, troquel, talón, bloque «Vale hasta», botón en espera, casilla de 44 px); botón primario del acceso en `--p500`, borde de campos `--border-control` y etiquetas a `--text-meta`; M-1. Los tokens que ya estaban (`--text-acceso-titulo`, `--text-acceso`, `--acceso-form-max` de la 020; `--green-texto`, `--text-publico`, `--leading-publico`, `--radius-pill` y `--sombra-tarjeta-alta` de la 038) no se duplican y no se retiran mientras el acceso los use | usuario (spec 041, design.md `c7`, plan D13 y D18) |
+| 2026-11-09 | diseño | ¿Qué incorpora el sistema para las salidas de las pantallas (spec 044)? | Versión 1.12.0, sin tokens nuevos: enlace «Volver al inicio», logo-enlace del panel de marca, entrada «Ver sitio web» de la barra lateral, aviso del sitio público (`.pub-aviso`), plantilla de página de error sobre el error genérico de la 020 y enlace secundario del error; DS7 en curso | usuario (spec 044, design.md sin candidatos y plan D1, D2) |
 | 2026-11-03 | diseño | El usuario prefiere el estilo anterior del acceso al carnet de `c7` (spec 041, D20) | Dentro de 1.11.0, aún sin liberar: sale el carnet (franja, tarjeta y troquel) y entran el panel y el formulario del login anterior, con sus valores como tokens; se mantienen el contraste, el foco y el toque que pide P9 | usuario |

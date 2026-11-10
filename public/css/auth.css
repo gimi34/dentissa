@@ -23,6 +23,18 @@
     --green-bg:   #E1F5EE;
     --red:        #A32D2D;
     --red-bg:     #FCEBEB;
+    /* Spec 044 (D8): tokens del enlace «Volver al inicio», con los mismos valores de app.css (system.md 1.12.0). */
+    --touch-min:          44px;
+    --space-2:            6px;
+    --space-4:            10px;
+    --icon-md:            18px;
+    --text-meta:          13px;
+    --weight-strong:      500;
+    --radius-sm:          8px;
+    --focus-ring:         var(--p600);
+    --focus-ring-width:   2px;
+    --focus-ring-offset:  2px;
+    --focus-ring-inverso: var(--white);
 }
 
 html, body { height: 100%; }
@@ -334,3 +346,13 @@ body {
 
 @media (max-width: 860px) { .page-register .panel-left { display: none; } }
 @media (max-width: 520px) { .page-register .grid-2 { grid-template-columns: 1fr; } }
+
+/* Spec 044 (CA1, CA2; system.md 1.12.0): «Volver al inicio», primero del formulario a todos los anchos, y el logo
+   del panel como enlace a la página de inicio, con el foco del sistema. */
+.enlace-inicio { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); margin-bottom: var(--space-4); font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--p500); text-decoration: none; }
+.enlace-inicio:hover { color: var(--p600); text-decoration: underline; }
+.enlace-inicio svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+.logo-enlace { display: block; border-radius: var(--radius-sm); }
+.enlace-inicio:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+/* /review R1: sobre el panel oscuro, el foco inverso (blanco). */
+.logo-enlace:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring-inverso); outline-offset: var(--focus-ring-offset); }

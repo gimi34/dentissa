@@ -133,3 +133,113 @@ test('sin el botón de pausa ni escribirPastilla (D21)', () => {
     assert.equal(publico.escribirPastilla, undefined);
     assert.doesNotMatch(CODIGO, /marquesina/, 'el script ya no conoce la franja');
 });
+
+/*
+ * Spec 044 (CA6, T036; /review R2, R6): el aviso de la cabecera («Has cerrado sesión»). Su texto va en una
+ * región role="status" que llega con el texto del servidor (sin JavaScript se ve igual); el script la vacía y la
+ * vuelve a escribir un instante después, que es el cambio que anuncian los lectores de pantalla. A los 6 s se
+ * retira: con movimiento normal se funde (clase is-saliendo) y se oculta al terminar la transición o, si no
+ * llega, con un temporizador de respaldo; con movimiento reducido o sin la clase js, sin fundido. Sin aviso no
+ * se programa nada.
+ */
+const TEXTO = 'Has cerrado sesión';
+
+function documentoConAviso(reducido, conJs = true) {
+    const temporizadores = [];
+    const oyentes = {};
+    const clasesAviso = new Set();
+    const region = { textContent: TEXTO };
+    const aviso = {
+        hidden: false,
+        classList: { add: (c) => clasesAviso.add(c), contains: (c) => clasesAviso.has(c) },
+        addEventListener: (tipo, fn) => { oyentes[tipo] = fn; },
+        querySelector: (sel) => (sel === '[role="status"]' ? region : null),
+    };
+    return {
+        aviso,
+        region,
+        clasesAviso,
+        oyentes,
+        temporizadores,
+        globales: {
+            document: {
+                readyState: 'complete',
+                documentElement: { classList: { add: () => {}, contains: (c) => c === 'js' && conJs } },
+                querySelector: (sel) => (sel === '.pub-aviso' ? aviso : null),
+                querySelectorAll: () => [],
+                addEventListener: () => {},
+            },
+            matchMedia: () => ({ matches: reducido }),
+            setTimeout: (fn, ms) => temporizadores.push({ fn, ms }),
+        },
+    };
+}
+
+/** Ejecuta el primer temporizador pendiente con esa espera. */
+function correr(falso, ms) {
+    const t = falso.temporizadores.find((x) => x.ms === ms && !x.hecho);
+    assert.ok(t, `hay un temporizador de ${ms} ms`);
+    t.hecho = true;
+    t.fn();
+}
+
+test('el texto del aviso se reescribe tras la carga para que se anuncie (spec 044, R2)', () => {
+    const falso = documentoConAviso(false);
+    cargar(falso.globales);
+
+    assert.equal(falso.region.textContent, '', 'al cargar, la región se vacía');
+    const anuncio = falso.temporizadores.find((t) => t.ms < 1000);
+    assert.ok(anuncio, 'y se programa volver a escribirla enseguida');
+    anuncio.fn();
+    assert.equal(falso.region.textContent, TEXTO, 'el mismo texto, ahora como cambio de la región');
+});
+
+test('el aviso de la cabecera se retira solo a los 6 s, con fundido (spec 044)', () => {
+    const falso = documentoConAviso(false);
+    cargar(falso.globales);
+
+    assert.equal(falso.temporizadores.filter((t) => t.ms === 6000).length, 1, 'un solo temporizador de retirada');
+    assert.equal(falso.aviso.hidden, false, 'antes de los 6 s se ve');
+    correr(falso, 6000);
+    assert.equal(falso.clasesAviso.has('is-saliendo'), true, 'empieza el fundido');
+    assert.equal(falso.aviso.hidden, false, 'sigue en la página mientras se funde');
+    falso.oyentes.transitionend();
+    assert.equal(falso.aviso.hidden, true, 'al terminar el fundido se oculta');
+});
+
+test('si no llega transitionend, un respaldo oculta el aviso (spec 044, R6)', () => {
+    const falso = documentoConAviso(false);
+    cargar(falso.globales);
+
+    correr(falso, 6000);
+    const respaldo = falso.temporizadores.find((t) => !t.hecho && t.ms > 0 && t.ms < 6000 && t !== falso.temporizadores[0]);
+    assert.ok(respaldo, 'al empezar el fundido se programa un respaldo');
+    respaldo.fn();
+    assert.equal(falso.aviso.hidden, true, 'el respaldo lo oculta sin transitionend');
+});
+
+test('con movimiento reducido el aviso se oculta sin fundido (spec 044)', () => {
+    const falso = documentoConAviso(true);
+    cargar(falso.globales);
+
+    correr(falso, 6000);
+    assert.equal(falso.clasesAviso.has('is-saliendo'), false);
+    assert.equal(falso.aviso.hidden, true);
+});
+
+test('sin aviso no se programa nada (spec 044)', () => {
+    const falso = documentoConAviso(false);
+    falso.globales.document.querySelector = () => null;
+    cargar(falso.globales);
+
+    assert.equal(falso.temporizadores.length, 0);
+});
+
+test('sin la clase js (sin fundido posible) el aviso se oculta directamente (spec 044)', () => {
+    const falso = documentoConAviso(false, false);
+    cargar(falso.globales);
+
+    correr(falso, 6000);
+    assert.equal(falso.clasesAviso.has('is-saliendo'), false);
+    assert.equal(falso.aviso.hidden, true);
+});

@@ -125,6 +125,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        // Spec 044 (CA6): a la página de inicio, con el aviso de un solo uso en la sesión nueva (destino fijo, TM1).
+        return redirect()->route('inicio')->with('sesion_cerrada', true);
     }
 }

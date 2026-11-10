@@ -236,6 +236,18 @@
   .opt .a-espera { min-height: var(--touch-min); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-p100); color: var(--color-p800); font: inherit; }
   .opt .a-campo { display: grid; gap: var(--space-1); font-size: var(--text-meta); }
   .opt .a-campo input { min-height: var(--touch-min); border: var(--border-width) solid var(--color-border-control); border-radius: var(--radius-sm); padding: 0 var(--space-4); font: inherit; font-size: var(--text-acceso); }
+  /* 1.12.0 (spec 044): salidas al inicio y página de error. */
+  .opt .s44 { display: grid; gap: var(--space-5); max-width: 520px; font-family: var(--font-acceso); }
+  .opt .s44-enlace { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); color: var(--color-link); font-size: var(--text-meta); font-weight: var(--weight-strong); text-decoration: none; }
+  .opt .s44-enlace:hover { text-decoration: underline; }
+  .opt .s44-nav { display: grid; gap: var(--space-1); background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); }
+  .opt .s44-nav span { font-size: var(--text-meta); font-weight: var(--weight-strong); }
+  .opt .s44-nav a { display: flex; align-items: center; min-height: var(--touch-min); padding: 0 var(--space-3); color: var(--color-text); text-decoration: none; }
+  .opt .s44-aviso { background: var(--color-bg); border-bottom: var(--border-width) solid var(--color-border); color: var(--color-text); padding: var(--space-3) var(--space-4); font-family: var(--font-publica); font-size: var(--text-publico-small); }
+  .opt .s44-error { background: var(--color-surface); border-radius: var(--radius-md); padding: var(--space-7); display: grid; gap: var(--space-4); }
+  .opt .s44-error h4 { margin: 0; font-size: var(--text-acceso-titulo); }
+  .opt .s44-error .s44-etiqueta { font-size: var(--text-meta); font-weight: var(--weight-bold); color: var(--color-accent-text); }
+  .opt .s44-secundarios { display: flex; flex-wrap: wrap; gap: var(--space-4); }
   .opt .p-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); }
   .opt .p-placa { background: var(--color-surface); border: var(--border-width-strong) solid var(--color-accent-text); border-radius: var(--radius-md);
                   padding: var(--space-7); display: grid; gap: var(--space-5); max-width: 360px; }
@@ -812,6 +824,18 @@
         </div></div>
       </div>
     </div></div>
+    <h3 id="salidas-044">Salidas al inicio y páginas de error (spec 044, 1.12.0)</h3>
+    <p class="v-note">Muestra de las piezas de la 044 (<a href="../specs/044-navegacion-salidas/design.md">diseño</a>, sin candidatos ni tokens nuevos):
+      el enlace «Volver al inicio» del acceso y del registro, la entrada «Ver sitio web» de la barra lateral, el aviso del sitio público y una página de
+      error con su acción principal y sus enlaces secundarios. En la app, la página de error usa la carcasa del error genérico de la 020.</p>
+    <div class="v-stage"><div class="opt"><div class="s44">
+      <a class="s44-enlace" href="#salidas-044"><span aria-hidden="true">←</span> Volver al inicio</a>
+      <nav class="s44-nav" aria-label="Muestra de la barra lateral"><span>Sitio</span><a href="#salidas-044">Ver sitio web</a></nav>
+      <p class="s44-aviso" role="status"><span aria-hidden="true">✓</span> Has cerrado sesión</p>
+      <div class="s44-error"><span class="s44-etiqueta">Error 404 · página no encontrada</span><h4>No encontramos esta página</h4>
+        <p>La dirección no existe o cambió.</p><button class="a-boton" type="button">Ir a la página de inicio</button>
+        <p class="s44-secundarios"><a class="s44-enlace" href="#salidas-044">Iniciar sesión</a><a class="s44-enlace" href="#salidas-044">Crear cuenta</a></p></div>
+    </div></div></div>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
     <p class="v-note">Muestra viva de la paginación de la consulta de auditoría
       (<a href="../specs/020-auditoria-base/design.md">diseño</a>, <code>c4</code>), con los tokens de

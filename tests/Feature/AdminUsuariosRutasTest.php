@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 /**
@@ -76,12 +75,18 @@ class AdminUsuariosRutasTest extends TestCase
         );
     }
 
-    /** FR1.2 — la restricción sobre {id} impide que un literal caiga en @show. */
+    /**
+     * FR1.2 — la restricción sobre {id} impide que un literal caiga en @show. Desde la spec 044 (D3, A16) una
+     * dirección sin ruta la atiende la ruta de reserva, así que `match()` ya no lanza la excepción: se comprueba
+     * que no llega a @show y que responde 404.
+     */
     public function test_un_identificador_sin_forma_de_uuid_no_resuelve_a_show(): void
     {
-        $this->expectException(NotFoundHttpException::class);
+        $ruta = Route::getRoutes()->match(Request::create('/admin/usuarios/no-soy-un-uuid', 'GET'));
 
-        $this->accionDe('/admin/usuarios/no-soy-un-uuid');
+        $this->assertNotSame(UsuarioController::class.'@show', $ruta->getActionName());
+        $this->assertTrue($ruta->isFallback, 'La atiende la ruta de reserva, no la de usuarios.');
+        $this->get('/admin/usuarios/no-soy-un-uuid')->assertNotFound();
     }
 
     /** FR4.2 y FR4.5 — el borrado físico desaparece y la baja lógica ocupa su lugar. */

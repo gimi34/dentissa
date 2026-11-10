@@ -274,7 +274,11 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   (llega en menos de 5 minutos) y monitor de UptimeRobot en verde.
 - Smoke tests: login de una cuenta de prueba por rol, agendar y cancelar una cita ficticia. Sin
   exponer, por túnel SSH al contenedor `web` (`http://localhost:<puerto>`, ver `deploy/README.md`).
-- Health check: `GET /up` (hoy no comprueba la BD; ver OB6).
+- Health check: `GET /up` (hoy no comprueba la BD; ver OB6). Desde la spec 044 lleva `X-Robots-Tag: noindex`
+  (`curl -I https://dentissa.app/up`).
+- Páginas de error (spec 044): `https://dentissa.app/no-existe` muestra la 404 propia («No encontramos esta
+  página»), y `curl -X POST https://dentissa.app/no-existe` responde 404, no 419: en los tests la
+  comprobación CSRF está desactivada y solo se ve en un servidor real.
 - Logs: `storage/logs/laravel.log` en el volumen `storage` y `dentissa-access.log` /
   `dentissa-error.log` de nginx en el volumen `nginx_logs`; se conservan tras reiniciar el servidor
   (ensayado, spec 030, T045); desde la spec 032, `storage/logs/seguridad-AAAA-MM-DD.log` (fallos de
