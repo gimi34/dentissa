@@ -116,6 +116,8 @@
         var anterior = carrusel.querySelector('[data-anterior]');
         var siguiente = carrusel.querySelector('[data-siguiente]');
         var estado = carrusel.querySelector('[data-estado]');
+        // Una sola foto (/review R8): es la actual, sin la escala de las demás, y no hay vecinas.
+        if (items.length === 1) items[0].classList.add('is-actual');
         if (!ventana || items.length < 2 || !anterior || !siguiente) return;
         var actual = 0;
 

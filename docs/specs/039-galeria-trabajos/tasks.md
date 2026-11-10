@@ -157,8 +157,9 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T046 Añadir a `publico.test.mjs` el carrusel con una sola foto: la foto queda marcada como actual (`is-actual`) y no se monta nada más — `tests/js/publico.test.mjs` — hecho cuando: falla hoy — cubre: CA1, CA5
   - nota: añadida por /review: R8
   - nota: 2026-11-09 — falla porque con una sola foto `montarCarrusel` sale antes de marcarla (`is-actual` ausente); los 15 casos anteriores siguen en verde.
-- [ ] T047 Marcar como actual la única foto del carrusel, para que no quede ampliada con JavaScript — `public/js/publico.js` — hecho cuando: T046 pasa y `node --test tests/js/publico.test.mjs` sigue en verde, dos veces — cubre: CA1, CA5 — depende: T046
+- [x] T047 Marcar como actual la única foto del carrusel, para que no quede ampliada con JavaScript — `public/js/publico.js` — hecho cuando: T046 pasa y `node --test tests/js/publico.test.mjs` sigue en verde, dos veces — cubre: CA1, CA5 — depende: T046
   - nota: añadida por /review: R8
+  - nota: 2026-11-09 — con una sola foto, `montarCarrusel` le pone `is-actual` antes de salir. `publico.test.mjs` 16/16 dos veces; los tests del script público (sin sumideros, un solo script con `defer`) siguen en verde.
 - [ ] T048 Cambiar en `PaginaGaleriaTest` el caso de la foto de menos de 800 px: un solo candidato en `srcset` (`/galeria/fotos/<id>/800 600w`) — `tests/Feature/Galeria/PaginaGaleriaTest.php` — hecho cuando: falla hoy (repite `600w`) — cubre: CA2
   - nota: añadida por /review: R9
 - [ ] T049 Emitir un solo candidato en `srcset` cuando la foto mide 800 px o menos — `resources/views/publico/_trabajo.blade.php` — hecho cuando: T048 pasa y el resto de `PaginaGaleriaTest` y `CarruselInicioTest` siguen en verde — cubre: CA2 — depende: T048
