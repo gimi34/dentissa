@@ -1,39 +1,42 @@
 ---
 result: pass
-round: 4
+round: 5
 mode: delta
 constitution_version: 1.3.0
 date: 2026-11-09
-spec_sha: 2a84774845b7
-plan_sha: 474aeae71e2e
-tasks_sha: e49c2492c2e1
+spec_sha: 8fe5736e945b
+plan_sha: d95d50549695
+tasks_sha: 46e22ae955c7
 ---
 
 # Análisis · 044 Salidas de las pantallas
 
 ## Resumen
-`pass`. Delta pequeño y sin subagente, por una decisión del usuario durante `/implement` (verificación de
-T020): la recuperación de contraseña sale arriba al inicio de sesión (spec CA1 y CA3, `design.md`, plan D11,
-tareas T010, T020, T022 y T034 nueva). Se releyeron desde cero esas secciones. El único descuadre, el KPI K1
-de la spec y del diseño, que solo nombraba «Volver al inicio», se corrigió en la misma ronda; también se
-añadió T034 a los controles de TM1.
+`pass`. Delta mínimo y sin subagente, por dos decisiones del usuario durante `/implement`:
+- **Verificación de T023:** la entrada de la barra lateral se llama «Ver sitio web», con icono de globo, en
+  lugar de «Página de inicio». Cambia en la spec (CA5, K3), en `design.md`, en el plan y en `system.md`.
+- **Suite de T023:** T035 actualiza la lista fija de secciones del menú de la spec 033.
+
+Se releyeron desde cero esas secciones. Las únicas menciones que quedan de «Página de inicio» son las filas
+de Decisiones y las notas que registran el cambio.
 Conteo (nuevos): CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 12 / 12 (CA1: T010, T014 · T020, T021, T034) |
-| Amenazas con control y test | 7 / 7 (TM1 con destinos fijos también en T034) |
+| Criterios con tarea de test e implementación | 12 / 12 (CA5: T011, T014, T035 · T023, T024, T025) |
+| Amenazas con control y test | 7 / 7 |
 | Principios de la constitución evaluados | 10 / 10 |
 
 ## Seguimiento de rondas anteriores
-Sin hallazgos abiertos (ronda 3: `pass`).
+Sin hallazgos abiertos (ronda 4: `pass`).
 
 ## Hallazgos nuevos
-Ninguno. Comprobado: CA1 y CA3 coinciden con `design.md` (filas «Inicio de sesión» y «Recuperación») y con
-D11; el destino sigue siendo fijo (`route('login')` o `route('inicio')`, sin leer nada de la petición: TM1);
-`RecuperarContrasenaTest::test_la_pantalla_de_solicitud_tiene_volver` sigue cubriendo un solo «Volver a
-iniciar sesión» al inicio de sesión (041 CA1); T034 toca 3 archivos y depende de T010 y T020; sin ciclos.
+Ninguno. Comprobado:
+- T035 toca un solo archivo, depende de T023 y figura en la Cobertura (CA5 y módulos).
+- T098 anota el cambio en el Historial de la 033.
+- El destino de «Ver sitio web» sigue siendo fijo (`route('inicio')`).
+- La 033 CA2 («mismas secciones en el móvil y el escritorio») se sigue cumpliendo.
 
 ## Decisiones pendientes del usuario
 Ninguna.
