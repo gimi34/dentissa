@@ -25,7 +25,7 @@ usuario lo valida en pantalla durante `/implement` a 320, 390 y 1440 px.
 |---|---|---|
 | K1 · Salida de arriba del acceso: «Volver al inicio» o, en la recuperación, «Volver a iniciar sesión» (CA1, D11) | sin desplazarse a 320, 390 y 1440 px; toque ≥ 44 px | es lo primero del formulario (test sobre el HTML) y lo ve el usuario a los tres anchos |
 | K2 · Logo enlace (CA2) | nombre accesible «Ir a la página de inicio» | test sobre el HTML |
-| K3 · «Página de inicio» en el panel (CA5) | cuatro roles, escritorio y menú del móvil | test por rol + `capturar.mjs --medir` |
+| K3 · «Ver sitio web» en el panel (CA5) | cuatro roles, escritorio y menú del móvil | test por rol + `capturar.mjs --medir` |
 | K4 · Aviso «Has cerrado sesión» (CA6) | en la primera pantalla, `role="status"` | test sobre el HTML + verificación del usuario |
 | K5 · Páginas de error (CA7–CA10) | en español, con la marca y una salida a los tres anchos | tests por código + verificación del usuario |
 | Puertas | contraste AA, foco visible, toque ≥ 44 px, sin desborde a 320 px | revisión contra `system.html` en `/review` y `capturar.mjs --medir` |
@@ -88,7 +88,7 @@ añade a `system.md` y `system.html` (versión 1.12.0):
 |---|---|---|---|---|
 | Enlace «Volver al inicio» (`.enlace-inicio`, acceso y registro) | fijo | icono flecha `--icon-md` + texto en `--text-meta`, `--weight-strong`, `--p500` (hover `--p600` subrayado), alto `--touch-min`, margen inferior `--space-4`; primer elemento del formulario | — | CA1: visible sin desplazarse en todas las pantallas, también donde el panel de marca no se ve |
 | Logo-enlace del panel de marca | fijo | el logo dentro de un enlace con `aria-label="Ir a la página de inicio"` (la imagen con `alt=""`); foco con el anillo de foco del sistema | — | CA2 |
-| Entrada «Página de inicio» de la barra lateral | fijo | `.nav-label` «Sitio» + `.nav-item` con icono de casa, al final de `.sidebar-nav` | — | CA5 |
+| Entrada «Ver sitio web» de la barra lateral | fijo | `.nav-label` «Sitio» + `.nav-item` con icono de globo, al final de `.sidebar-nav` | — | CA5 |
 | Aviso del sitio público (`.pub-aviso`) | fijo | franja bajo la cabecera, fondo `--p50`, borde inferior `--border`, texto `--text` en `--text-publico-small`, icono de palomita `--p600`, relleno `--space-3`/`--space-4`; `role="status"`; no se cierra solo | — | CA6 |
 | Página de error (plantilla común sobre el error genérico de la 020) | fijo | `.etiqueta` «Error NNN · …», `h1`, `.sub`, acción principal `.btn-primario`; `.codigo` con el identificador de la petición solo en la 500; el logo de la franja y del panel como enlace a la página de inicio | — | CA7–CA10; cierra la parte de páginas de error de DS7 |
 | Enlace secundario del error (`.enlace-secundario`, `errores.css`) | fijo | `--text-meta`, `--weight-strong`, `--p500` (hover `--p600` subrayado), alto `--touch-min`, en fila con `--space-4` de separación y en columna por debajo de 400 px | — | CA7, CA8: «Iniciar sesión», «Crear cuenta», «Ir a mi panel» |
@@ -105,7 +105,7 @@ Ninguno.
 - **Encabezados y estructura:** cada página de error con un solo `h1`; el aviso de sesión cerrada no
   es un encabezado y se anuncia con `role="status"` sin mover el foco.
 - **Teclado:** «Volver al inicio» es el primer enlace del formulario (después del logo en el
-  escritorio); en la barra lateral, «Página de inicio» va después de las secciones del rol y antes de
+  escritorio); en la barra lateral, «Ver sitio web» va después de las secciones del rol y antes de
   «Cerrar sesión».
 - **Decorativos ocultos:** iconos con `aria-hidden="true"`; la imagen del logo-enlace con `alt=""`.
 
@@ -117,4 +117,5 @@ Ninguno.
 | 2026-11-08 | diseño | Dónde va «Volver al inicio» en el móvil, donde el panel de marca no se ve | Primer elemento del formulario, a todos los anchos; el logo-enlace es un extra del escritorio | razonable (CA1) |
 | 2026-11-08 | diseño | Aspecto de las páginas de error | La carcasa del error genérico de la 020: ya es la página de error de la marca, lleva `noindex`, solo usa recursos propios y no necesita sesión ni base de datos | `docs/specs/020-…/design.md` (c4/error.html), RNF de la spec |
 | 2026-11-09 | refinado | Salida de arriba en la recuperación de contraseña (verificación de T020) | «← Volver a iniciar sesión», con el mismo componente `.enlace-inicio`; se quita el «Volver a iniciar sesión» de abajo | usuario |
+| 2026-11-09 | refinado | Nombre de la entrada de la barra lateral (verificación de T023) | «Ver sitio web» con icono de globo, para no confundirla con «Home»/«Inicio» del panel | usuario |
 | 2026-11-08 | diseño | Botones de cuenta de la página de inicio con sesión | Pasan a «Ir a mi panel», para que ningún texto prometa registrarse a quien ya tiene cuenta | razonable (CA5; contracts-by-type → «Qué ve cada rol») |

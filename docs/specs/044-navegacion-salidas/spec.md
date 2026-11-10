@@ -29,7 +29,7 @@ tiene que usar el botón Atrás o escribir la dirección. La spec atiende la bre
 - [ ] CA2 · Dado un visitante en esas pantallas, cuando el logo de la clínica está visible, entonces es un enlace a la página de inicio cuyo nombre para lectores de pantalla es «Ir a la página de inicio».
 - [ ] CA3 · Dado un visitante en «Contraseña nueva», cuando decide no seguir, entonces tiene «Volver a iniciar sesión»; salir no cambia la contraseña ni gasta el enlace del correo, que sigue valiendo hasta que caduque.
 - [ ] CA4 · Dado alguien que está completando el registro con Google (pantalla de contacto), cuando pulsa «Volver al inicio», entonces llega a la página de inicio sin que se cree ninguna cuenta; si después vuelve a registrarse con Google, empieza de nuevo sin datos a medias.
-- [ ] CA5 · Dado un usuario con sesión de cualquier rol (administración, dentista, asistente o paciente), cuando abre la navegación de su panel (barra lateral en escritorio, menú en el móvil), entonces encuentra «Página de inicio», que lleva a la página de inicio sin cerrar la sesión; desde allí, «Ir a mi panel» lo devuelve a su panel. Con sesión, la página de inicio se muestra con «Ir a mi panel» en la cabecera en lugar de llevar al panel (reemplaza 038 CA2 y 001 CA5); al iniciar sesión se sigue entrando directo al panel de cada rol.
+- [ ] CA5 · Dado un usuario con sesión de cualquier rol (administración, dentista, asistente o paciente), cuando abre la navegación de su panel (barra lateral en escritorio, menú en el móvil), entonces encuentra «Ver sitio web», que lleva a la página de inicio sin cerrar la sesión; desde allí, «Ir a mi panel» lo devuelve a su panel. Con sesión, la página de inicio se muestra con «Ir a mi panel» en la cabecera en lugar de llevar al panel (reemplaza 038 CA2 y 001 CA5); al iniciar sesión se sigue entrando directo al panel de cada rol.
 - [ ] CA6 · Dado un usuario con sesión, cuando cierra sesión, entonces llega a la página de inicio con el aviso «Has cerrado sesión», marcado como mensaje de estado para que los lectores de pantalla lo lean al llegar a la página; la cabecera ofrece «Iniciar sesión» y «Crear cuenta», y el botón Atrás del navegador no vuelve a mostrar datos del panel.
 - [ ] CA7 · Dado cualquiera, con o sin sesión, cuando abre una dirección que no existe, entonces recibe la respuesta «no encontrada» con una página en español con el estilo de la clínica, «No encontramos esta página», un enlace a la página de inicio y, sin sesión, «Iniciar sesión» y «Crear cuenta», o, con sesión, «Ir a mi panel»; la página pide a los buscadores que no la indexen.
 - [ ] CA8 · Dado un usuario con sesión, cuando abre una página que su rol no puede usar, entonces recibe la respuesta «acceso denegado» con una página en español, «No tienes acceso a esta página», con la explicación concreta cuando la hay (p. ej. «Como dentista no puedes reprogramar citas…», como hoy) y enlaces a su panel y a la página de inicio; el acceso denegado sigue quedando en el registro de auditoría igual que hoy.
@@ -48,7 +48,7 @@ tiene que usar el botón Atrás o escribir la dirección. La spec atiende la bre
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: ninguno nuevo. Las páginas de error no muestran datos de pacientes, cuentas ni del sistema; la pantalla «Contraseña nueva» lleva un enlace secreto que salir de ella no debe exponer a terceros.
-- Quién puede hacer qué: cualquiera ve las pantallas de acceso, la página de inicio y las de error; «Página de inicio» del panel y «Ir a mi panel» solo con sesión. Ningún permiso cambia.
+- Quién puede hacer qué: cualquiera ve las pantallas de acceso, la página de inicio y las de error; «Ver sitio web» del panel y «Ir a mi panel» solo con sesión. Ningún permiso cambia.
 - Casos de abuso:
   - Como atacante, pongo en la dirección un destino de vuelta hacia otro sitio para usar la clínica como trampolín de phishing → los enlaces de vuelta tienen destinos fijos del propio sitio (CA11).
   - Como atacante, pido direcciones inexistentes o prohibidas para descubrir rutas, versiones o qué recursos existen → la página de error no lo revela y la respuesta no cambia respecto de hoy (CA11).
@@ -78,7 +78,7 @@ cuatro roles en escritorio y móvil, la página de inicio (aviso de sesión cerr
 error nuevas (no encontrada, acceso denegado, página caducada, demasiados intentos, fallo del
 servidor). Recursos de marca: el logo de la clínica y el estilo de las pantallas de acceso y de la
 página de inicio. Qué debe diseñarse: la posición del «Volver al inicio» a todos los anchos (en el
-móvil el panel del logo puede no verse), la entrada «Página de inicio» del panel, el aviso de sesión
+móvil el panel del logo puede no verse), la entrada «Ver sitio web» del panel, el aviso de sesión
 cerrada y una plantilla común para las páginas de error.
 
 Sin ciclo de candidatos de `/design-spec` (decisión del usuario): `/plan` coloca los enlaces con los
@@ -91,7 +91,7 @@ Modo: operar · sin ciclo de candidatos (decisión del usuario) · la verificaci
 |---|---|---|---|
 | K1 | La salida de arriba de las pantallas de acceso («Volver al inicio» o, en la recuperación, «Volver a iniciar sesión») | visible sin desplazarse a 320, 390 y 1440 px; objetivo de toque ≥ 44 px | CA1 |
 | K2 | Logo de las pantallas de acceso | enlace con nombre accesible «Ir a la página de inicio» | CA2 |
-| K3 | «Página de inicio» en el panel | presente para los cuatro roles en escritorio y en el menú del móvil | CA5 |
+| K3 | «Ver sitio web» en el panel | presente para los cuatro roles en escritorio y en el menú del móvil | CA5 |
 | K4 | Aviso «Has cerrado sesión» | visible en la primera pantalla y anunciado a lectores de pantalla | CA6 |
 | K5 | Páginas de error | en español, con el estilo de la clínica y al menos un enlace de salida a 320, 390 y 1440 px | CA7–CA10 |
 
@@ -115,7 +115,7 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | brecha | Extiende 5 specs (001, 002, 012, 038, 041), por encima de 4 | Se mantiene junta: son cambios pequeños de navegación en cada una, que solo tienen sentido juntos | usuario (división elegida) |
 | 2026-11-08 | supuesto | Qué páginas de error se hacen propias | No encontrada, acceso denegado, página caducada, demasiados intentos y fallo del servidor. Demasiados intentos es preventiva: hoy los límites responden con su propio aviso y no cambian (/analyze A2) | razonable |
 | 2026-11-08 | supuesto | Destinos de los enlaces de vuelta | Fijos (inicio, inicio de sesión, crear cuenta, mi panel); nunca la página anterior ni un destino de la dirección | razonable (CA11) |
-| 2026-11-08 | supuesto | Logo del panel como enlace | No se exige: la salida es la entrada «Página de inicio» del menú | razonable |
+| 2026-11-08 | supuesto | Logo del panel como enlace | No se exige: la salida es la entrada «Ver sitio web» del menú | razonable |
 | 2026-11-08 | implícita | Las respuestas de acceso denegado y no encontrada no cambian | Se mantienen las de hoy (p. ej. una cita ajena responde «no encontrada») | `docs/security.md`, spec 028 |
 | 2026-11-08 | contradicción | 038 CA2 lleva al panel a quien abre la página de inicio con sesión; CA5 pide llegar a ella desde el panel | Con sesión, la página de inicio se muestra con «Ir a mi panel» (reemplaza 038 CA2); el inicio de sesión sigue llevando al panel | usuario (en /plan 044) |
 | 2026-11-08 | implícita | Explicación de la página de acceso denegado | Se conserva el mensaje concreto de cada permiso que hoy ve el usuario (p. ej. el del dentista al reprogramar) | `tests/Feature/EstadosCitaRolesTest.php`, `app/Autorizacion/` |
@@ -124,6 +124,7 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | brecha | Página 429 sin ningún camino real hoy (/analyze A2) | Se mantiene como preventiva; CA10 lo dice | usuario |
 | 2026-11-08 | brecha | Con la base caída, una denegación podría no llegar a su página por la auditoría de la 020 (/analyze A8) | El requisito se limita a la plantilla; el riesgo de `RegistroCentralDenegaciones` va al roadmap | usuario |
 | 2026-11-09 | brecha | En la recuperación de contraseña, ¿la salida de arriba lleva al inicio o al inicio de sesión? (verificación de T020) | Las cuatro pantallas de recuperación llevan arriba «Volver a iniciar sesión» y pierden el de abajo; en el escritorio el logo sigue llevando a la página de inicio | usuario (2026-11-09, /implement 044) |
+| 2026-11-09 | brecha | La entrada del panel «Página de inicio» se confunde con «Home»/«Inicio», que llevan al panel (verificación de T023) | Se llama «Ver sitio web», con icono de globo | usuario (2026-11-09, /implement 044) |
 | 2026-11-08 | implícita | Indexación | Inicio y registro indexables; acceso, errores y salud no | `docs/seo.md`, `.ai/project.yaml → seo` |
 
 ## Notas para /plan
@@ -142,3 +143,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-08 | CA5 reemplaza también 001 CA5; CA6, CA9 y CA10 precisados; excepción P7 del logout; RNF de las páginas de error acotado; vuelve a `draft` | /analyze r1: A2, A4, A5, A8, A9, A11 (decisiones del usuario) |
 | 2026-11-08 | Aprobada de nuevo | Aprobación del usuario |
 | 2026-11-09 | CA1 y CA3: la recuperación de contraseña sale al inicio de sesión | Decisión del usuario al verificar T020 (/implement 044); aprobada por el usuario |
+| 2026-11-09 | CA5: la entrada del panel se llama «Ver sitio web» | Decisión del usuario al verificar T023 (/implement 044) |
