@@ -113,7 +113,11 @@ trait GaleriaDePrueba
             }
         }
 
-        return $this->subida($this->codificar($imagen, 'png'), 'ruido.png');
+        // JPEG y no PNG: un PNG de 6000 px ya no se admite (/review R1) y decodificarlo agota la memoria.
+        $jpeg = $this->codificar($imagen, 'jpg', 95);
+        imagedestroy($imagen);
+
+        return $this->subida($jpeg, 'ruido.jpg');
     }
 
     /**
