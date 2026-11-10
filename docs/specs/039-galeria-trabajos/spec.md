@@ -1,8 +1,9 @@
 ---
 id: 039
 slug: galeria-trabajos
-status: implemented
+status: released
 created: 2026-10-20
+released: v0.16.0 (2026-11-10)
 extends: [038]
 ---
 
@@ -213,4 +214,5 @@ Ninguna.
 | 2026-11-07 | Vuelve a `draft`: Auditoría con el registro de la spec 020 y CA16 | Decisión del usuario en `/plan 039` |
 | 2026-11-07 | Aprobada de nuevo (`approved`) con CA16 | usuario |
 | 2026-11-09 | Decisiones: PNG hasta 4000 píxeles por lado, también en la ayuda del campo de la foto | Decisión del usuario en `/review 039` (R1, R37) |
+| 2026-11-10 | Liberada en v0.16.0 (producción el 2026-11-10, aprobada por el responsable) | /release |
 | 2026-10-20 | Spec creada en `draft`, separada de la 038 | División decidida por el usuario al añadir promociones |
