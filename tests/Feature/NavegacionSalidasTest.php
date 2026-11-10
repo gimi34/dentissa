@@ -236,6 +236,37 @@ class NavegacionSalidasTest extends TestCase
         }
     }
 
+    // ── Historia 3: cerrar sesión (CA6) ──────────────────────────────────────────────
+
+    public function test_cerrar_sesion_lleva_al_inicio_con_el_aviso_una_sola_vez(): void
+    {
+        $this->actingAs($this->paciente1)->post('/logout')->assertRedirect(route('inicio'));
+        $this->assertGuest();
+
+        $xpath = $this->xpath($this->get('/')->assertOk()->getContent());
+        $aviso = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' pub-aviso ')]");
+        $this->assertSame(1, $aviso->length, 'Tras cerrar sesión, la página de inicio muestra el aviso.');
+        $this->assertSame('status', $aviso->item(0)->getAttribute('role'), 'El aviso es un mensaje de estado.');
+        $this->assertSame('Has cerrado sesión', trim($aviso->item(0)->textContent));
+        $this->assertGreaterThan(0, $this->enlacesA($xpath, '/login', 'Iniciar sesión'), 'La cabecera ofrece «Iniciar sesión».');
+        $this->assertGreaterThan(0, $this->enlacesA($xpath, '/registro', 'Crear cuenta'), 'La cabecera ofrece «Crear cuenta».');
+
+        $otra = $this->xpath($this->get('/')->assertOk()->getContent());
+        $this->assertSame(0, $otra->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' pub-aviso ')]")->length, 'Al recargar, el aviso ya no sale.');
+    }
+
+    /** Caracterización: el grupo web no deja guardar en caché ni el panel ni la página de inicio (TM5). */
+    public function test_tras_cerrar_sesion_el_panel_no_se_sirve_de_cache(): void
+    {
+        $panel = $this->actingAs($this->paciente1)->get('/cliente')->assertOk();
+        $this->assertStringContainsString('no-store', (string) $panel->headers->get('Cache-Control'), 'El panel no se guarda en caché.');
+
+        $this->post('/logout');
+        $inicio = $this->get('/')->assertOk();
+        $this->assertStringContainsString('no-store', (string) $inicio->headers->get('Cache-Control'), 'La página con el aviso no se guarda en caché.');
+        $this->get('/cliente')->assertRedirect(route('login'));
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
 
     /** HTML de cada pantalla de acceso, sin sesión. */
