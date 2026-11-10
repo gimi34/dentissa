@@ -138,6 +138,7 @@ por la spec 020. Sin sesión: 302 al inicio de sesión.
   - no es una imagen, o es de otro formato: «El archivo no es una imagen JPG, PNG o WebP.»;
   - más de 5 MB: «La foto pesa más de 5 MB.»;
   - más de 6000 px: «La foto es demasiado grande: como mucho 6000 píxeles por lado.»;
+  - un PNG de más de 4000 px por lado: «La foto PNG es demasiado grande: como mucho 4000 píxeles por lado.» (D9, /review R1);
   - 12 fotos: «Ya hay 12 fotos. Quita una antes de subir otra.»;
   - GD no puede leerla: «No se pudo leer la foto. Prueba con otro archivo.»
 - Descripción de más de 160 caracteres: «La descripción puede tener como mucho 160 caracteres.»
@@ -199,7 +200,7 @@ APP1 con EXIF y GPS sintéticos en un JPEG).
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
 | TM1 | Elevation: un dentista, asistente o paciente gestiona la galería con peticiones a mano | A01:2025 | rutas `admin.galeria.*` | `role:admin` en el grupo y `Gate::authorize('gestionar-galeria')` en cada acción; 403 registrado | `GestionGaleriaAccesoTest` (cada acción × rol → 403 y la galería sin cambios; sin sesión → inicio de sesión) |
-| TM2 | Tampering: un ejecutable o un políglota PHP disfrazado de `.jpg` | A05:2025 · A08:2025 | subida y entrega | tipo por contenido (`mimes` con finfo) y decodificación con GD. Se guardan solo los píxeles recodificados en WebP, con el UUID como nombre, fuera de `public/`; se sirven como `image/webp` con `nosniff` | `SubidaFotoGaleriaTest::test_un_archivo_que_no_es_imagen_aunque_acabe_en_jpg_se_rechaza` · `ProcesadorFotoTest::test_el_resultado_es_webp_recodificado` · `PaginaGaleriaTest::test_la_foto_se_sirve_como_webp_con_nosniff` |
+| TM2 | Tampering: un ejecutable o un políglota PHP disfrazado de `.jpg` | A05:2025 · A08:2025 | subida y entrega | tipo por contenido (`mimes` con finfo) y decodificación con GD. Se guardan solo los píxeles recodificados en WebP, con el UUID como nombre, fuera de `public/`; se sirven como `image/webp` con `nosniff` | `SubidaFotoGaleriaTest::test_un_archivo_que_no_es_imagen_aunque_acabe_en_jpg_se_rechaza` · `ProcesadorFotoTest::test_el_resultado_son_dos_webp_4_3_de_las_medidas_del_plan` · `PaginaGaleriaTest::test_la_foto_se_sirve_como_webp_con_nosniff` |
 | TM3 | DoS: archivos enormes, bombas de descompresión o llenar el disco | A06:2025 | subida | 6 MB en nginx, 5 MB en la validación, como mucho 6000 px por lado antes de decodificar (`dimensions` lee la cabecera), procesado con el pico de memoria acotado (D9), 12 fotos con `lockForUpdate`, sin conservar originales | `SubidaFotoGaleriaTest` (más de 5 MB, más de 6000 px, la número 13) · `ProcesadorFotoTest` (6000 × 6000 con orientación 6, pico < 200 MB) |
 | TM4 | Information disclosure: ubicación u otros datos de la cámara en la foto publicada | A02:2025 | procesado | GD no copia metadatos al recodificar; se aplica la orientación y no se guarda el original | `ProcesadorFotoTest::test_no_quedan_datos_de_la_camara` · `PaginaGaleriaTest::test_la_foto_descargada_no_tiene_exif` (CA14) |
 | TM5 | XSS almacenado por la descripción | A05:2025 | vistas públicas y gestión | salida escapada de Blade en el pie y en `alt`; el JS escribe con `textContent` | `PaginaGaleriaTest::test_la_descripcion_se_muestra_como_texto` (CA15) · `CarruselInicioTest` (mismo caso en `/`) · `GestionGaleriaTest::test_la_descripcion_se_muestra_como_texto_en_la_gestion` (tarjeta y diálogo de quitar; /analyze A9) |
@@ -236,7 +237,7 @@ Casos de abuso de la spec:
 | CA16: publicar, mover y quitar quedan registrados (quién, acción, foto, si hay paciente, cuándo, resultado, sin descripción ni imagen); el 403 con sesión, como acceso denegado | `Galeria` (`Auditoria::registrar`, crítico), `RegistroCentralDenegaciones` (existente) | `AuditoriaGaleriaTest::test_publicar_mover_y_quitar_quedan_registrados`, `::test_el_evento_no_lleva_la_descripcion`, `::test_si_la_auditoria_falla_no_se_publica_nada`, `::test_el_acceso_denegado_queda_registrado` |
 | RNF: WCAG 2.1 AA; el carrusel no se mueve solo y anuncia la foto | vistas, `publico.js` | `CarruselInicioTest::test_la_region_de_estado_esta_montada_y_vacia`, `publico.test.mjs`. verificación manual: puertas de `medir.mjs` y recorrido con teclado contra `c3` |
 | RNF: `/galeria` indexable, Lighthouse SEO ≥ 90, JavaScript ≤ 100 kB, contenido en el HTML del servidor | `galeria.blade.php` | `PaginaGaleriaTest::test_metadatos_de_galeria`, `::test_solo_carga_el_script_publico_con_defer`. verificación manual: K10 de `medir.mjs` y Lighthouse en `/review` |
-| RNF: cada foto ≤ 500 kB; las de fuera de pantalla con carga diferida | `ProcesadorFoto`, `_trabajo.blade.php` | `ProcesadorFotoTest::test_el_grande_pesa_como_mucho_500_kb` (también con ruido), `::test_el_pequeno_de_una_foto_realista_pesa_como_mucho_60_kb`, `CarruselInicioTest::test_todas_las_fotos_del_carrusel_cargan_en_diferido`, `PaginaGaleriaTest::test_solo_las_tres_primeras_cargan_sin_esperar`, `::test_cada_foto_ofrece_las_dos_medidas` (`src` de 800, `srcset` con los dos descriptores y `sizes` de Contratos). verificación manual: K9 de `medir.mjs` en `/` y `/galeria` con 12 fotos con grano realista (`publicar 12` de «Datos de medición») |
+| RNF: cada foto ≤ 500 kB; las de fuera de pantalla con carga diferida | `ProcesadorFoto`, `_trabajo.blade.php` | `ProcesadorFotoTest::test_el_grande_pesa_como_mucho_500_kb_tambien_con_ruido`, `::test_el_pequeno_de_una_foto_realista_pesa_como_mucho_60_kb`, `CarruselInicioTest::test_todas_las_fotos_del_carrusel_cargan_en_diferido`, `PaginaGaleriaTest::test_solo_las_tres_primeras_cargan_sin_esperar`, `::test_cada_foto_ofrece_las_dos_medidas` (`src` de 800, `srcset` con los dos descriptores y `sizes` de Contratos). verificación manual: K9 de `medir.mjs` en `/` y `/galeria` con 12 fotos con grano realista (`publicar 12` de «Datos de medición») |
 | Comprobación en producción (spec → Notas para /plan; D17) | `deploy/verificar.sh` | `ConfiguracionProduccionTest::test_verificar_comprueba_lo_que_necesita_la_galeria` (GD con JPEG y WebP, directorio escribible y `client_max_body_size 6m`). verificación manual: `verificar.sh` en verde tras el deploy (T097) |
 | TM1 | ver CA13 | `GestionGaleriaAccesoTest` |
 | TM2 | `ProcesadorFoto`, `PaginasPublicasController::foto` | ver Modelo de amenazas |
@@ -370,6 +371,10 @@ Casos de abuso de la spec:
     `imagecopyresampled` con el rectángulo calculado sobre las medidas giradas. Después se libera
     la original y se gira la reducida, de 1600 × 1200 como mucho (unos 7,7 MB). Pico estimado:
     144 + 7,7 + 7,7 MB más la aplicación. Lo prueba `ProcesadorFotoTest`.
+  - PNG (/review R1, decisión del usuario, 2026-11-09): GD decodifica un PNG con un búfer completo
+    además de la imagen, y uno de 6000 × 6000 agota los 256 MB (reproducido: 500 sin mensaje). Los PNG
+    se limitan a 4000 px por lado, leído de la cabecera antes de decodificar, con su propio mensaje;
+    JPEG y WebP siguen en 6000. `ProcesadorFotoTest` mide el pico con un PNG RGBA de 4000 × 4000.
 - **D15 · Dos medidas por foto (decisión del usuario, 2026-11-08, /analyze A6 y A7; → ADR 0009).**
   - Opciones: una sola versión de 250 kB como mucho (más pérdida de calidad); aceptar K9 por encima;
     una versión de 800 px servida con `srcset`.
