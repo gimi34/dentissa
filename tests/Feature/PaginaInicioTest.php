@@ -236,12 +236,15 @@ class PaginaInicioTest extends TestCase
         $this->assertSame([1, 2, 3, 4, 5, 6], array_keys($semanal), 'El domingo (7) está cerrado.');
     }
 
-    public function test_con_sesion_cada_rol_va_a_su_panel(): void
+    /** 038 CA2, reemplazado por 044 CA5: con sesión se ve la página, con «Ir a mi panel» hacia el panel de cada rol. */
+    public function test_con_sesion_cada_rol_ve_la_pagina_con_ir_a_mi_panel(): void
     {
         foreach (['admin', 'dentista', 'asistente', 'cliente'] as $rol) {
             $this->actingAs($this->crearUsuario($rol))
                 ->get('/')
-                ->assertRedirect(route("{$rol}.dashboard"));
+                ->assertOk()
+                ->assertSee('Ir a mi panel')
+                ->assertSee('href="'.route("{$rol}.dashboard").'"', false);
         }
     }
 

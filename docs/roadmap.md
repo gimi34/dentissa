@@ -17,7 +17,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b, RS15.c y RS15.d → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS8.c, RS15.b, RS15.c, RS15.d, OB4.b, OB4.c, OB6.b, OB6.c, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS8.d → Pendientes y deuda (CSP estricta, por pantallas), RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); [031](specs/031-endurecer-produccion/spec.md) (cabeceras, conexión segura obligatoria, incidencias de la 030 y administración desde fuera); [032](specs/032-alertas-cifrado-copias/spec.md) (alertas y copias cifradas, en curso: OB6.b y RS15.b; RS15.c como excepción EX3 hasta el primer dato real; OB6.c y RS15.d, staging, pendientes) | pendiente |
 | 6 | Accesibilidad WCAG 2.1 AA de la interfaz | Toda pantalla cumple el sistema de diseño (`docs/design/system.md`) en contraste, foco, tamaño de toque y estados accesibles: DS1 (texto con contraste < 4.5:1), DS2 (foco e indicadores invisibles), DS6 (toque < 44 px) y DS7 (estados, avisos y diálogos accesibles), comprobado en `/review` contra `system.html`; fuera: DS3, DS4, DS5, DS8, DS9, DS10 y DS11 → Pendientes y deuda (se corrigen al tocar cada pantalla) (decisión del usuario, 2026-10-02) | [033](specs/033-movil-paciente/spec.md) (DS6 en el menú y las pantallas del paciente, released v0.7.0) · [034](specs/034-movil-personal/spec.md) (DS6 en las pantallas más usadas del personal y las listas, released v0.8.0) · [035](specs/035-movil-pacientes-expedientes/spec.md) (DS6 en pacientes y expedientes del personal, released v0.9.0) | pendiente |
-| 7 | Registro indexable correctamente | `/registro` llega con título, descripción única y canónica absoluta desde `seo.site_url`; `/login`, la 404 y `/up` llevan `noindex`; `sitemap.xml` lista las rutas indexables (`/registro`, y `/` y `/servicios` desde la spec 038) y `robots.txt` lo declara; Lighthouse SEO ≥ 90 (P10). Riesgos: SE1.a, SE1.b, SE2.a, SE2.b, SE3.a, SE3.b; fuera: SE4.a, SE5.a, SE5.b, SE6.a y SE7.a → Pendientes y deuda (decisión del usuario, 2026-10-16) | — | pendiente |
+| 7 | Registro indexable correctamente | `/registro` llega con título, descripción única y canónica absoluta desde `seo.site_url`; `/login`, la 404 y `/up` llevan `noindex`; `sitemap.xml` lista las rutas indexables (`/registro`, y `/` y `/servicios` desde la spec 038) y `robots.txt` lo declara; Lighthouse SEO ≥ 90 (P10). Riesgos: SE1.a, SE1.b, SE2.a, SE2.b, SE3.a, SE3.b; fuera: SE4.a, SE5.a, SE5.b, SE6.a y SE7.a → Pendientes y deuda (decisión del usuario, 2026-10-16) | [044](specs/044-navegacion-salidas/spec.md) (SE2.b, SE4.a) | pendiente |
 
 <!-- Un objetivo que atiende riesgos (RS/OB/RD) cita **cada** corrección del riesgo: las que
      cubre y las que deja fuera con su destino. Nunca resume un riesgo citando solo su número. -->
@@ -141,7 +141,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   lo ya registrado (en el servidor); OB9.a `php.ini-production` y OB9.b logs de php-fpm (objetivo
   5); RD9.a MariaDB del CI fijada y RD8.a–b vuelta atrás que avisa y comprueba el árbol (objetivo 5).
 - SEO de baja severidad (`docs/seo.md`, upgrade a AI-DD 1.13.0; decisión del usuario, 2026-10-16), para
-  la spec que toque esas páginas: SE4.a página 404 propia en español con `noindex` (con SE2.b);
+  la spec que toque esas páginas (SE4.a y SE2.b, mitigadas en v0.15.0 por la spec 044):
   SE5.a íconos del sitio (`favicon.svg` sin `<text>`, PNG de 32 y `apple-touch-icon`) desde el logo
   actual y SE5.b `theme-color` con `--bg`; SE6.a Open Graph en `/registro` con imagen general de
   1200×630 desde una «Tarjeta para compartir» del sistema de diseño; SE7.a JSON-LD `Dentist` solo
@@ -546,6 +546,23 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   2026-10-06). El login y la vuelta de Google ya emiten `Illuminate\Auth\Events\Lockout` en cada
   rechazo, y la vuelta de Google fallida emite `Illuminate\Auth\Events\Failed` (spec 031), para
   que la 021 los audite sin tocar el login (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+- Spec 044, aceptados en `/review` (2026-11-09 y 2026-11-10; liberada en v0.15.0):
+  - 044/R9: el aviso «Has cerrado sesión» desaparece de golpe y el contenido sube (animar la altura o reservar el hueco);
+  - 044/R11: la explicación de la 403 solo se prueba con una ruta sintética (falta un `Gate::authorize` real, p. ej. reprogramar como dentista);
+  - 044/R12: `PaginaInicioTest` busca «Ir a mi panel» en toda la página;
+  - 044/R13: las caracterizaciones de CA3 y CA4 no siguen el `href` de la salida;
+  - 044/R17: `xpath()`, `ruta()` y `enlacesA()` duplicados en dos tests, con semántica distinta (llevarlos a un trait);
+  - 044/R20: `$panel` se calcula en `PaginasPublicasController` y en `layouts/publico`;
+  - 044/R21: la ruta de reserva GET abre sesión en cada 404 anónima (vigilar `storage/framework/sessions` o limitar las 404 en Cloudflare);
+  - 044/R23: `ContrasenaDistintaTest::test_tras_el_rechazo_el_enlace_sigue_sirviendo` (spec 043) es intermitente en la suite completa → ficha `/fix` aparte.
+- Excepción P7 de la spec 044: cerrar sesión cambia de destino (lleva a `/` con el aviso) sin registrarse
+  como evento de auditoría; el evento llega con los listeners de autenticación de `docs/observability.md`
+  (OB1.b, objetivo 3), junto con los de inicio de sesión, como la excepción de la 030 (decisión del
+  usuario, 2026-11-08, /analyze 044 A5).
+- Riesgo de la spec 020 visto en la 044 (/analyze 044 A8): `RegistroCentralDenegaciones` lee el usuario de
+  la sesión en cada respuesta de error; con la base caída y una sesión con usuario, podría lanzar antes
+  de pintar la página de error. Las páginas de la 044 no consultan la base; el camino del registro
+  central queda para una spec o ficha aparte (decisión del usuario, 2026-11-08).
 - Residuo de OB4.a aceptado al abrir producción con la spec 030: los errores de base de datos pueden
   dejar SQL con sus valores en `laravel.log` del servidor. Se acepta con datos ficticios; la spec 023
   (OB4.a) debe liberarse antes de tener datos reales (spec 030, /analyze A26; decisión del usuario,

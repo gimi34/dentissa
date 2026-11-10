@@ -38,7 +38,7 @@ promociones (040) se añaden a esta página en sus propias specs.
   ubicación y contacto. Ve además enlaces visibles a «Iniciar sesión» y a crear una cuenta
   (reemplaza 001 CA4).
 - [x] CA2 · Dado un usuario con sesión de cualquier rol, cuando abre `/`, entonces se le lleva a su
-  panel, como hasta ahora; cuando abre `/servicios`, la ve igual que un visitante.
+  panel, como hasta ahora; cuando abre `/servicios`, la ve igual que un visitante. → reemplazado por 044 CA5
 - [x] CA3 · Dado un visitante, cuando mira «Sobre nosotros», entonces lee exactamente este texto:
   «Somos una consulta de odontología integral en el centro de Lázaro Cárdenas. Atendemos a toda la
   familia, desde la primera revisión de los niños hasta la ortodoncia y las prótesis de los
@@ -239,3 +239,4 @@ Ninguna.
 | 2026-11-01 | Vuelve a approved: `/review` r4 changes_requested (R32–R35 y los menores R38, R39, R41 y R42; tareas T003 y T006–T008) | `/review 038 --rerun` |
 | 2026-11-01 | Vuelve a implemented: correcciones de `/review` r4 (T003, T006–T008: pastilla del pie de foto, horario exacto de CA5 en la ubicación, pares de contraste de la ronda 6 y menores); suite 613 en verde | /implement 038 |
 | 2026-11-02 | Liberada en v0.13.0 (producción el 2026-11-02, aprobada por el responsable) | /release |
+| 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: con sesión, `/` muestra la página con «Ir a mi panel» (CA2 → reemplazado por 044 CA5) y el aviso «Has cerrado sesión»; `publico.js` retira el aviso | /release |

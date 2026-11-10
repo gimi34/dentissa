@@ -7,6 +7,8 @@
 @endsection
 
 @section('titulo', 'Contraseña nueva')
+{{-- Spec 044 (CA1, CA3, D11): la salida de arriba es «Volver a iniciar sesión». --}}
+@section('volver', 'login')
 
 @section('contenido')
     <div class="form-header">

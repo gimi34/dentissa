@@ -38,6 +38,14 @@ body { display: block; }
 .btn-primario { background: var(--p500); color: var(--white); width: 100%; }
 .btn-primario:hover { background: var(--p600); }
 .carnet a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+/* Spec 044 (CA7, CA8; system.md 1.12.0): enlaces secundarios de las páginas de error y el logo como enlace a la
+   página de inicio (sobre el fondo oscuro, con el foco inverso). */
+.enlaces-secundarios { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 var(--space-4); margin: 0; }
+.enlace-secundario { display: inline-flex; align-items: center; min-height: var(--touch-min); font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--p500); text-decoration: none; }
+.enlace-secundario:hover { color: var(--p600); text-decoration: underline; }
+.logo-enlace { display: block; border-radius: var(--radius-sm); }
+.logo-enlace:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring-inverso); outline-offset: var(--focus-ring-offset); }
+@media (max-width: 400px) { .enlaces-secundarios { flex-direction: column; align-items: center; } }
 .talon { border-top: var(--border-width) solid var(--border); padding: var(--space-5) var(--space-7) var(--space-6); display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-6); font-size: var(--text-meta); line-height: var(--leading-publico); }
 .talon dt { font-weight: var(--weight-bold); color: var(--p600); }
 .tel { white-space: nowrap; color: inherit; }

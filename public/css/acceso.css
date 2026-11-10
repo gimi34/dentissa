@@ -25,6 +25,7 @@
   --focus-ring: var(--p600);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
+  --focus-ring-inverso: var(--white);   /* spec 044 (/review R1): foco sobre el panel de marca oscuro */
   --border-width: 1px;
   --border-width-strong: 2px;
   --radius-sm: 8px;
@@ -146,7 +147,15 @@ body { font-family: var(--font-acceso); color: var(--text); background: var(--wh
 .remember-label input:focus-visible { outline-offset: calc(var(--focus-ring-offset) * -4); }
 .forgot-link { display: inline-flex; align-items: center; min-height: var(--touch-min); font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--p500); text-decoration: none; }
 .forgot-link:hover { color: var(--p600); text-decoration: underline; }
-.enlace-volver { margin-top: var(--space-3); }
+
+/* Spec 044 (CA1, CA2; system.md 1.12.0): «Volver al inicio», primero del formulario a todos los anchos, y el logo
+   del panel como enlace a la página de inicio. El foco es el del sistema (a:focus-visible). */
+.enlace-inicio { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); margin-bottom: var(--space-4); font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--p500); text-decoration: none; }
+.enlace-inicio:hover { color: var(--p600); text-decoration: underline; }
+.enlace-inicio svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+.logo-enlace { display: block; border-radius: var(--radius-sm); }
+/* /review R1: sobre el panel --p600 → --p800 el foco del sistema (--p600) no se ve; el inverso (blanco) sí. */
+.logo-enlace:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring-inverso); outline-offset: var(--focus-ring-offset); }
 
 /* Botones. M-1: respuesta de los botones, sin movimiento si se pide reducirlo. */
 .btn-submit { width: 100%; min-height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--space-7); background: var(--p500); color: var(--white); border: 0; border-radius: var(--radius-acceso); font: inherit; font-size: var(--text-publico-small); font-weight: var(--weight-strong); text-decoration: none; cursor: pointer; transition: background var(--duration-respuesta) var(--ease-clinico), transform var(--duration-respuesta) var(--ease-clinico); }

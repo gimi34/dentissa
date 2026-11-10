@@ -134,7 +134,7 @@
     --acceso-solape:          56px;
     --acceso-panel-pad:       56px;
     --acceso-lado-pad:        42px;
-    /* Galería de trabajos (spec 039, system.md 1.12.0). */
+    /* Galería de trabajos (spec 039, system.md 1.13.0). */
     --thumb-w:                120px; /* miniatura de la tarjeta de foto de la gestión */
     --foto-ratio:             4 / 3; /* proporción de las fotos, recortadas al publicarlas */
 }
@@ -733,7 +733,7 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
 }
 /* Fin spec 020 */
 
-/* Spec 039 · Gestión de la galería de trabajos (candidato c3, design.md; system.md 1.12.0). Todo dentro
+/* Spec 039 · Gestión de la galería de trabajos (candidato c3, design.md; system.md 1.13.0). Todo dentro
    de .formulario-accesible (P9): tarjeta de foto, pregunta del paciente, consentimiento, selector de
    archivo, aviso de error y diálogo de quitar, que es una página (D7) y no lleva JavaScript. */
 .topbar-actions .formulario-accesible .btn,

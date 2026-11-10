@@ -168,3 +168,4 @@ primera pantalla 25, sistema 25, lectura 15, plantilla 10 (ver "Decisiones").
 | 2026-11-03 | El usuario corrige antes de liberar 7 menores de la review (R7, R8, R10, R16, R26, R32, R33) | usuario |
 | 2026-11-03 | Liberada en v0.14.0; recuperación encendida en producción y probada por el usuario | /release |
 | 2026-11-07 | Comportamiento modificado por 043 en v0.14.1: la contraseña nueva tiene que ser distinta de la actual (reemplaza en parte CA3, amplía CA4) | /release |
+| 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: la recuperación sale arriba a «Volver a iniciar sesión» (sin repetirlo abajo) y el logo del panel es un enlace a la página de inicio; `RecuperarContrasenaVistasTest` comprueba el logo-enlace en lugar de la imagen con `alt` (044 /analyze A3) | /release |

@@ -209,3 +209,13 @@ Route::middleware('auth')->prefix('cliente')->name('cliente.')->group(function (
     // Spec 043 (D8, CA8): solo el paciente cambia su contraseña aquí; el resto del grupo → spec 015 (RS2.a).
     Route::put('/perfil/password', [PerfilController::class, 'updatePassword'])->middleware('role:cliente')->name('perfil.password');
 });
+
+// ── Rutas de reserva (spec 044, D3; /analyze A1, A16, A17) ─────────────────
+// Se resuelven siempre después de todas las demás. GET y HEAD van por el grupo `web` para que la 404
+// propia sepa si hay sesión; el resto de verbos, sin él (sin sesión ni comprobación CSRF, que daría 419).
+// Así ningún verbo cambia de 404 a 405, y un verbo equivocado sobre una ruta que existe también es 404.
+Route::fallback(fn () => abort(404));
+Route::match(['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], '{reserva}', fn () => abort(404))
+    ->where('reserva', '.*')
+    ->fallback()
+    ->withoutMiddleware('web');

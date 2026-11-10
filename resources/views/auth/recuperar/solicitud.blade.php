@@ -2,6 +2,8 @@
 @extends('layouts.acceso')
 
 @section('titulo', 'Recuperar acceso')
+{{-- Spec 044 (CA1, D11): la salida de arriba es «Volver a iniciar sesión», sin repetirla abajo. --}}
+@section('volver', 'login')
 
 @section('contenido')
     <div class="form-header">
@@ -34,7 +36,6 @@
             <button class="btn-submit" type="submit">Enviar enlace</button>
         @endif
     </form>
-    <p class="enlace-volver"><a class="forgot-link" href="{{ route('login') }}">Volver a iniciar sesión</a></p>
     <dl class="talon">
         @unless($espera)
             <dt>El enlace</dt><dd>Vale 60 minutos desde que lo pidas, una sola vez.</dd>
