@@ -163,8 +163,9 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T048 Cambiar en `PaginaGaleriaTest` el caso de la foto de menos de 800 px: un solo candidato en `srcset` (`/galeria/fotos/<id>/800 600w`) — `tests/Feature/Galeria/PaginaGaleriaTest.php` — hecho cuando: falla hoy (repite `600w`) — cubre: CA2
   - nota: añadida por /review: R9
   - nota: 2026-11-09 — el caso pasa a `test_si_la_foto_no_llega_a_800_srcset_lleva_un_solo_candidato` (600 px y 800 px exactos) y falla hoy porque `srcset` repite el ancho.
-- [ ] T049 Emitir un solo candidato en `srcset` cuando la foto mide 800 px o menos — `resources/views/publico/_trabajo.blade.php` — hecho cuando: T048 pasa y el resto de `PaginaGaleriaTest` y `CarruselInicioTest` siguen en verde — cubre: CA2 — depende: T048
+- [x] T049 Emitir un solo candidato en `srcset` cuando la foto mide 800 px o menos — `resources/views/publico/_trabajo.blade.php` — hecho cuando: T048 pasa y el resto de `PaginaGaleriaTest` y `CarruselInicioTest` siguen en verde — cubre: CA2 — depende: T048
   - nota: añadida por /review: R9
+  - nota: 2026-11-09 — `srcset` con el grande solo si `ancho` pasa de 800; T048 y los 43 casos de `PaginaGaleriaTest`, `CarruselInicioTest` y `PaginasPublicasCssTest` en verde.
 - [ ] T050 Escribir en `GestionGaleriaAccesoTest` la segunda capa de P3: sin el middleware `role:admin`, dentista, asistente y paciente siguen recibiendo 403 en cada acción por el Gate `gestionar-galeria` — `tests/Feature/Galeria/GestionGaleriaAccesoTest.php` — hecho cuando: pasa y está comprobado rompiendo (sin `Gate::authorize` en una acción, falla) — cubre: CA13
   - nota: añadida por /review: R11
 
