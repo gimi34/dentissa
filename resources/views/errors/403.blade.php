@@ -1,8 +1,11 @@
 {{-- Spec 044 (CA8; D5; TM2, TM7): acceso denegado por rol o por permiso. Muestra la explicación de
-     `Response::deny()` cuando la hay (p. ej. «Como dentista no puedes reprogramar citas…»), nunca el genérico de
+     `Response::deny()` cuando la hay (solo de una `AuthorizationException`, /review R5) (p. ej. «Como dentista no puedes reprogramar citas…»), nunca el genérico de
      Laravel. El registro del acceso denegado no depende de esta vista (spec 020). --}}
 @php
-    $explicacion = trim((string) ($exception?->getMessage() ?? ''));
+    // /review R5: solo la explicación de un permiso, es decir, el mensaje de una AuthorizationException
+    // (Response::deny) que Laravel convierte en 403; nunca el texto de otra excepción 403 (p. ej. abort(403, …)).
+    $permiso = $exception?->getPrevious();
+    $explicacion = $permiso instanceof \Illuminate\Auth\Access\AuthorizationException ? trim((string) $permiso->getMessage()) : '';
     if ($explicacion === 'This action is unauthorized.') {
         $explicacion = '';
     }
