@@ -5,6 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-11-08
+
+### Fixed
+- En la lista de pacientes, el botón «Nuevo paciente» ya no lleva al dentista a una página de acceso denegado: el
+  dentista no da de alta pacientes y ya no ve el botón. Con la lista vacía, «Registrar primer paciente» lleva al alta
+  del propio rol (administración o asistente) (fix 2026-11-08-boton-alta-pacientes).
+
 ## [0.14.1] - 2026-11-05
 
 ### Changed
