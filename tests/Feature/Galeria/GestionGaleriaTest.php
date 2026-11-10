@@ -178,7 +178,16 @@ class GestionGaleriaTest extends TestCase
 
         $html = $this->actingAs($this->admin)->get(route('admin.galeria.quitar', $foto))->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression('/role="dialog"[^>]*aria-modal="true"|aria-modal="true"[^>]*role="dialog"/', $html, 'El diálogo está abierto.');
+        // /review R34: página de confirmación con role="dialog", pero sin aria-modal: el layout sigue
+        // tabulable y el diálogo no promete un fondo inerte que no tiene.
+        $xpath = $this->xpath($html);
+        $dialogo = $xpath->query('//*[@role="dialog"]')->item(0);
+        $this->assertNotNull($dialogo, 'El diálogo está abierto.');
+        $this->assertFalse($dialogo->hasAttribute('aria-modal'), 'Sin aria-modal.');
+        $this->assertSame('¿Quitar esta foto?', trim($xpath->query('//*[@id="'.$dialogo->getAttribute('aria-labelledby').'"]')->item(0)?->textContent ?? ''), 'Nombrado por su título.');
+        $this->assertStringContainsString('deja de verse', $xpath->query('//*[@id="'.$dialogo->getAttribute('aria-describedby').'"]')->item(0)?->textContent ?? '', 'Descrito por su texto.');
+        $cancelar = $xpath->query('.//a[normalize-space()="Cancelar"]', $dialogo)->item(0);
+        $this->assertTrue($cancelar?->hasAttribute('autofocus') ?? false, 'El foco inicial, en «Cancelar».');
         $this->assertStringContainsString('¿Quitar esta foto?', $html);
         $this->assertStringContainsString('«Corona de porcelana en un premolar.»', $html, 'Dice cuál.');
         $this->assertMatchesRegularExpression('/<form[^>]*action="'.preg_quote(route('admin.galeria.destroy', $foto), '/').'"/', $html, 'Con el formulario de borrado.');
@@ -278,8 +287,8 @@ class GestionGaleriaTest extends TestCase
 
     public function test_con_el_dialogo_abierto_el_fondo_queda_inerte(): void
     {
-        // /review R3 (WCAG 2.4.3): el diálogo declara aria-modal; sin JavaScript, el fondo se vuelve
-        // inerte desde el servidor para que el foco no salga del diálogo.
+        // /review R3 (WCAG 2.4.3): sin JavaScript, el contenido de la vista detrás del diálogo se vuelve
+        // inerte desde el servidor (el layout no; por eso el diálogo no declara aria-modal, R34).
         $foto = $this->foto(1);
         $this->foto(2);
         $this->actingAs($this->admin);
