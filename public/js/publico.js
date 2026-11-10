@@ -13,8 +13,12 @@
     var DIAS = { 1: 'lunes', 2: 'martes', 3: 'miércoles', 4: 'jueves', 5: 'viernes', 6: 'sábado', 7: 'domingo' };
     var SEMANA = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
     var HORA = /^(\d{1,2}):(\d{2})$/;
-    // Spec 044 (CA6, T036): tiempo que se ve el aviso de la cabecera antes de retirarse solo.
+    // Spec 044 (CA6, T036): tiempo que se ve el aviso de la cabecera antes de retirarse solo; espera para volver a
+    // escribir su texto (que la región de estado ya esté en el árbol de accesibilidad, /review R2) y respaldo del
+    // fundido de --duration-base por si no llega transitionend (/review R6).
     var AVISO_MS = 6000;
+    var AVISO_ANUNCIO_MS = 250;
+    var AVISO_RESPALDO_MS = 400;
 
     function minutos(hora) {
         var m = HORA.exec(hora);
@@ -128,24 +132,34 @@
             });
         }
 
-        // Spec 044 (CA6, T036): el aviso de la cabecera («Has cerrado sesión») se retira solo a los AVISO_MS: se funde
-        // y se oculta al terminar la transición; con movimiento reducido, sin fundido. Sin JavaScript se queda.
+        var reducido = typeof global.matchMedia === 'function' && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Spec 044 (CA6, T036; /review R2, R6): el aviso de la cabecera («Has cerrado sesión»). Su texto llega del
+        // servidor en una región role="status"; se vacía y se vuelve a escribir enseguida, que es el cambio que anuncian
+        // los lectores de pantalla. A los AVISO_MS se retira: se funde y se oculta al terminar la transición (o con el
+        // respaldo); con movimiento reducido o sin la clase js, sin fundido. Sin JavaScript se queda.
         var aviso = doc.querySelector('.pub-aviso');
         if (aviso && typeof global.setTimeout === 'function') {
-            var avisoSinMovimiento = typeof global.matchMedia === 'function' && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var region = aviso.querySelector('[role="status"]');
+            if (region) {
+                var textoAviso = region.textContent;
+                region.textContent = '';
+                global.setTimeout(function () { region.textContent = textoAviso; }, AVISO_ANUNCIO_MS);
+            }
             global.setTimeout(function () {
+                var ocultar = function () { aviso.hidden = true; };
                 // Sin la clase js (sin IntersectionObserver) no hay fundido ni transitionend: se oculta ya.
-                if (avisoSinMovimiento || !doc.documentElement.classList.contains('js')) {
-                    aviso.hidden = true;
+                if (reducido || !doc.documentElement.classList.contains('js')) {
+                    ocultar();
                     return;
                 }
-                aviso.addEventListener('transitionend', function () { aviso.hidden = true; });
+                aviso.addEventListener('transitionend', ocultar);
                 aviso.classList.add('is-saliendo');
+                global.setTimeout(ocultar, AVISO_RESPALDO_MS);
             }, AVISO_MS);
         }
 
         // Con movimiento reducido o sin IntersectionObserver, nada se oculta ni se mueve.
-        var reducido = typeof global.matchMedia === 'function' && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reducido || typeof global.IntersectionObserver !== 'function') return;
 
         var observador = new global.IntersectionObserver(function (entradas) {

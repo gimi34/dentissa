@@ -57,12 +57,13 @@
     </div>
 </header>
 
-{{-- Spec 044 (CA6): tras cerrar sesión, un aviso de estado bajo la cabecera; sale una sola vez (flash). --}}
-@if (session('sesion_cerrada'))
-    <p class="pub-aviso" role="status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>Has cerrado sesión</p>
-@endif
-
 <main>
+    {{-- Spec 044 (CA6): tras cerrar sesión, un aviso de estado al principio de <main> (/review R8); sale una sola vez
+         (flash). El texto va en su propia región de estado, que publico.js reescribe tras la carga para que se anuncie
+         (/review R2); sin JavaScript se ve igual. --}}
+    @if (session('sesion_cerrada'))
+        <p class="pub-aviso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span role="status">Has cerrado sesión</span></p>
+    @endif
     @yield('contenido')
 </main>
 
