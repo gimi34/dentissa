@@ -230,8 +230,8 @@ Dos entornos (spec 030, [ADR 0005](adr/0005-produccion-servidor-propio-cloudflar
 - **Local:** Docker Compose (`app` php-fpm, `nginx`, `db` MariaDB, `phpmyadmin` y, desde la spec
   020, `scheduler` con `schedule:work` y el mismo build que `app`), con los puertos solo en
   `127.0.0.1` y las imágenes con versión exacta.
-- **Spec 039:** las imágenes de `app` compilan GD con JPEG y WebP; nginx acepta cuerpos de hasta 6 MB
-  (`client_max_body_size 6m`); las fotos de la galería viven en el volumen `storage` y no entran en las
+- **Spec 039:** las imágenes de `app` compilan GD con JPEG y WebP; nginx acepta cuerpos de hasta 20 MB
+  (`client_max_body_size 20m`, para que una foto de más de 5 MB reciba el mensaje de la validación); las fotos de la galería viven en el volumen `storage` y no entran en las
   copias (D4, riesgo en [deployment.md](deployment.md)); `verificar.sh` comprueba las tres cosas.
 - **Producción:** servidor propio (Ubuntu Server 24.04) con `docker-compose.prod.yml`. Staging no
   existe.

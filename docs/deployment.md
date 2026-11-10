@@ -272,7 +272,8 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
   «Entorno aplicado» en los cinco servicios. Desde la spec 039, con y sin `--interna`, la sección
   «Galería (spec 039)»: GD de `app` con JPEG y WebP (las imágenes de `app` compilan GD con
   `libjpeg62-turbo` y `libwebp`, ADR 0009), `storage/app/galeria` (o `storage/app`, antes de la
-  primera foto) escribible por `www-data` y `client_max_body_size 6m` en `web` (fotos de hasta 5 MB).
+  primera foto) escribible por `www-data` y `client_max_body_size 20m` en `web` (fotos de hasta 5 MB; los 20 MB dejan que una más grande
+  llegue a la validación y reciba su mensaje).
 - Galería (spec 039): publicar una foto de prueba sin pacientes, verla en `/` y en `/galeria`, anotar
   las cabeceras de `/galeria/fotos/<id>/800` desde fuera (`Cache-Control: no-cache, private`, `ETag` y
   `cf-cache-status` distinto de `HIT`), quitarla y comprobar que su dirección responde 404.
