@@ -4,6 +4,8 @@ namespace Tests\Feature\Galeria;
 
 use App\Models\GaleriaFoto;
 use App\Models\Usuario;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -68,6 +70,16 @@ class GestionGaleriaTest extends TestCase
         preg_match_all('/<img[^>]*\salt="(Trabajo número \d+)"/', $html, $m);
 
         return $m[1];
+    }
+
+    private function xpath(string $html): DOMXPath
+    {
+        $documento = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $documento->loadHTML('<?xml encoding="utf-8"?>'.$html);
+        libxml_clear_errors();
+
+        return new DOMXPath($documento);
     }
 
     private function fecha(Carbon $dia): string
@@ -245,6 +257,59 @@ class GestionGaleriaTest extends TestCase
             $this->assertStringNotContainsString('<script>alert(1)</script>', $html, "Sin la etiqueta en {$url}.");
             $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html, "Escapada en {$url}.");
         }
+    }
+
+    public function test_con_el_dialogo_abierto_el_fondo_queda_inerte(): void
+    {
+        // /review R3 (WCAG 2.4.3): el diálogo declara aria-modal; sin JavaScript, el fondo se vuelve
+        // inerte desde el servidor para que el foco no salga del diálogo.
+        $foto = $this->foto(1);
+        $this->foto(2);
+        $this->actingAs($this->admin);
+
+        $xpath = $this->xpath($this->get(route('admin.galeria.quitar', $foto))->assertOk()->getContent());
+        $this->assertSame(1, $xpath->query('//*[contains(@class, "galeria-gestion__intro") and @inert]')->length, 'La introducción, inerte.');
+        $this->assertSame(1, $xpath->query('//*[contains(@class, "galeria-gestion__grid") and @inert]')->length, 'La lista y el formulario, inertes.');
+        $this->assertSame(1, $xpath->query('//*[@role="dialog"]')->length, 'Hay diálogo.');
+        $this->assertSame(0, $xpath->query('//*[@role="dialog"]/ancestor-or-self::*[@inert]')->length, 'El diálogo no está inerte.');
+
+        $sinDialogo = $this->xpath($this->get(route('admin.galeria.index'))->assertOk()->getContent());
+        $this->assertSame(0, $sinDialogo->query('//*[@inert]')->length, 'Sin diálogo, nada inerte.');
+    }
+
+    public function test_el_aviso_de_error_recibe_el_foco_y_enlaza_cada_campo(): void
+    {
+        // /review R5 (WCAG 3.3.1): tras la recarga, el aviso recibe el foco y lleva a cada campo con error.
+        $this->actingAs($this->admin);
+        $html = $this->from(route('admin.galeria.index'))->followingRedirects()
+            ->post(route('admin.galeria.store'), [])->assertOk()->getContent();
+        $xpath = $this->xpath($html);
+
+        $aviso = $xpath->query('//*[@role="alert" and contains(@class, "aviso-error")]')->item(0);
+        $this->assertNotNull($aviso, 'Hay aviso.');
+        $this->assertSame('-1', $aviso->getAttribute('tabindex'));
+        $this->assertTrue($aviso->hasAttribute('autofocus'), 'Recibe el foco al cargar.');
+        $enlaces = array_map(fn ($a) => $a->getAttribute('href'), iterator_to_array($xpath->query('.//a', $aviso)));
+        $this->assertSame(['#foto', '#descripcion', '#con_paciente-no'], $enlaces, 'Un enlace por campo con error, en orden.');
+        foreach ($enlaces as $href) {
+            $this->assertSame(1, $xpath->query('//*[@id="'.substr($href, 1).'"]')->length, "{$href} existe.");
+        }
+
+        $conPaciente = $this->xpath($this->from(route('admin.galeria.index'))->followingRedirects()->post(route('admin.galeria.store'), [
+            'foto' => $this->imagenLisa('jpg'), 'descripcion' => 'Algo', 'con_paciente' => 'si',
+        ])->assertOk()->getContent());
+        $this->assertSame(['#consentimiento'], array_map(fn ($a) => $a->getAttribute('href'), iterator_to_array($conPaciente->query('//*[@role="alert"]//a'))));
+        $this->assertSame(1, $conPaciente->query('//input[@id="consentimiento"]')->length);
+    }
+
+    public function test_la_casilla_del_consentimiento_enlaza_su_ayuda(): void
+    {
+        // /review R10: como la foto y la descripción, la casilla lleva su ayuda en aria-describedby.
+        $xpath = $this->xpath($this->actingAs($this->admin)->get(route('admin.galeria.index'))->assertOk()->getContent());
+
+        $casilla = $xpath->query('//input[@name="consentimiento"]')->item(0);
+        $this->assertContains('consentimiento-ayuda', explode(' ', $casilla->getAttribute('aria-describedby')));
+        $this->assertStringContainsString('Guarda el documento firmado', $xpath->query('//*[@id="consentimiento-ayuda"]')->item(0)?->textContent ?? '');
     }
 
     public function test_los_formularios_llevan_token_csrf(): void
