@@ -23,7 +23,7 @@ usuario lo valida en pantalla durante `/implement` a 320, 390 y 1440 px.
 
 | Puerta o KPI | Objetivo | Cómo se comprueba |
 |---|---|---|
-| K1 · «Volver al inicio» en el acceso (CA1) | sin desplazarse a 320, 390 y 1440 px; toque ≥ 44 px | es lo primero del formulario (test sobre el HTML) y lo ve el usuario a los tres anchos |
+| K1 · Salida de arriba del acceso: «Volver al inicio» o, en la recuperación, «Volver a iniciar sesión» (CA1, D11) | sin desplazarse a 320, 390 y 1440 px; toque ≥ 44 px | es lo primero del formulario (test sobre el HTML) y lo ve el usuario a los tres anchos |
 | K2 · Logo enlace (CA2) | nombre accesible «Ir a la página de inicio» | test sobre el HTML |
 | K3 · «Página de inicio» en el panel (CA5) | cuatro roles, escritorio y menú del móvil | test por rol + `capturar.mjs --medir` |
 | K4 · Aviso «Has cerrado sesión» (CA6) | en la primera pantalla, `role="status"` | test sobre el HTML + verificación del usuario |

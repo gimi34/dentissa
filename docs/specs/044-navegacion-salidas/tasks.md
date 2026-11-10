@@ -112,7 +112,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
-| TM1 | T020, T021, T022, T025, T026 | T013 |
+| TM1 | T020, T021, T022, T025, T026, T034 | T013 |
 | TM2 | T028, T029, T030 | T013 |
 | TM3 | T029 | T013 |
 | TM4 | T022 | T010 |

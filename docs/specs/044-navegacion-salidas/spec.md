@@ -89,7 +89,7 @@ Modo: operar · sin ciclo de candidatos (decisión del usuario) · la verificaci
 
 | ID | Qué se mide | Objetivo | Sale de |
 |---|---|---|---|
-| K1 | «Volver al inicio» en las pantallas de acceso | visible sin desplazarse a 320, 390 y 1440 px; objetivo de toque ≥ 44 px | CA1 |
+| K1 | La salida de arriba de las pantallas de acceso («Volver al inicio» o, en la recuperación, «Volver a iniciar sesión») | visible sin desplazarse a 320, 390 y 1440 px; objetivo de toque ≥ 44 px | CA1 |
 | K2 | Logo de las pantallas de acceso | enlace con nombre accesible «Ir a la página de inicio» | CA2 |
 | K3 | «Página de inicio» en el panel | presente para los cuatro roles en escritorio y en el menú del móvil | CA5 |
 | K4 | Aviso «Has cerrado sesión» | visible en la primera pantalla y anunciado a lectores de pantalla | CA6 |
