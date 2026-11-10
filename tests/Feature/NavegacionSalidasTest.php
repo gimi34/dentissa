@@ -246,10 +246,16 @@ class NavegacionSalidasTest extends TestCase
         $xpath = $this->xpath($this->get('/')->assertOk()->getContent());
         $aviso = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' pub-aviso ')]");
         $this->assertSame(1, $aviso->length, 'Tras cerrar sesión, la página de inicio muestra el aviso.');
-        $this->assertSame('status', $aviso->item(0)->getAttribute('role'), 'El aviso es un mensaje de estado.');
-        $this->assertSame('Has cerrado sesión', trim($aviso->item(0)->textContent));
-        $this->assertGreaterThan(0, $this->enlacesA($xpath, '/login', 'Iniciar sesión'), 'La cabecera ofrece «Iniciar sesión».');
-        $this->assertGreaterThan(0, $this->enlacesA($xpath, '/registro', 'Crear cuenta'), 'La cabecera ofrece «Crear cuenta».');
+        $this->assertSame(1, $xpath->query("//main//*[contains(concat(' ', normalize-space(@class), ' '), ' pub-aviso ')]")->length, 'El aviso va dentro de <main> (/review R8).');
+        // /review R2: el texto va en su propia región de estado, que publico.js reescribe tras la carga; el icono, fuera.
+        $region = $xpath->query('.//*[@role="status"]', $aviso->item(0));
+        $this->assertSame(1, $region->length, 'El texto del aviso va en una región role="status".');
+        $this->assertSame('Has cerrado sesión', trim($region->item(0)->textContent));
+        $this->assertSame(0, $xpath->query('.//*[local-name()="svg"]', $region->item(0))->length, 'El icono queda fuera de la región.');
+        // /review R10: los enlaces de cuenta, en la cabecera.
+        $cabecera = "//header[contains(concat(' ', normalize-space(@class), ' '), ' pub-bar ')]//a[@href]";
+        $this->assertGreaterThan(0, $this->enlacesEn($xpath, $cabecera, '/login', 'Iniciar sesión'), 'La cabecera ofrece «Iniciar sesión».');
+        $this->assertGreaterThan(0, $this->enlacesEn($xpath, $cabecera, '/registro', 'Crear cuenta'), 'La cabecera ofrece «Crear cuenta».');
 
         $otra = $this->xpath($this->get('/')->assertOk()->getContent());
         $this->assertSame(0, $otra->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' pub-aviso ')]")->length, 'Al recargar, el aviso ya no sale.');
@@ -300,6 +306,19 @@ class NavegacionSalidasTest extends TestCase
         }
 
         return $ruta;
+    }
+
+    /** Enlaces de una consulta XPath a una ruta cuyo texto contiene el dado (/review R10). */
+    private function enlacesEn(DOMXPath $xpath, string $consulta, string $ruta, string $texto): int
+    {
+        $total = 0;
+        foreach ($xpath->query($consulta) as $enlace) {
+            if ($this->ruta($enlace->getAttribute('href')) === $ruta && str_contains(trim($enlace->textContent), $texto)) {
+                $total++;
+            }
+        }
+
+        return $total;
     }
 
     /** Enlaces de la página a una ruta cuyo texto contiene el dado. */
