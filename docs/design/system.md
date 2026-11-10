@@ -689,7 +689,9 @@ candidatos: componentes del sistema, sin tokens nuevos).
   el puntero, `--p600` subrayado; alto `--touch-min`; margen inferior `--space-4`; foco del sistema.
   `auth.css` copia a su `:root` los tokens que usa, con los mismos valores de `app.css`.
 - **Logo-enlace del panel de marca:** el logo del acceso, del registro y del error genérico dentro de un
-  enlace a la página de inicio con `aria-label="Ir a la página de inicio"`; la imagen con `alt=""`.
+  enlace a la página de inicio con `aria-label="Ir a la página de inicio"`; la imagen con `alt=""`. Sobre el
+  panel oscuro, el foco es el inverso (`--focus-ring-inverso`, blanco): el del sistema (`--p600`) no llega a
+  3:1 sobre el degradado `--p600 → --p800` (/review 044 R1).
 - **Entrada «Ver sitio web» de la barra lateral:** al final de `.sidebar-nav`, para los cuatro roles,
   `.nav-label` «Sitio» y un `.nav-item` con icono de globo de trazo 1,8; en el móvil, dentro del menú
   (spec 033), antes del nombre y «Cerrar sesión».

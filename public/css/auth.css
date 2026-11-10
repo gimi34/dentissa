@@ -34,6 +34,7 @@
     --focus-ring:         var(--p600);
     --focus-ring-width:   2px;
     --focus-ring-offset:  2px;
+    --focus-ring-inverso: var(--white);
 }
 
 html, body { height: 100%; }
@@ -352,4 +353,6 @@ body {
 .enlace-inicio:hover { color: var(--p600); text-decoration: underline; }
 .enlace-inicio svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
 .logo-enlace { display: block; border-radius: var(--radius-sm); }
-.enlace-inicio:focus-visible, .logo-enlace:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.enlace-inicio:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+/* /review R1: sobre el panel oscuro, el foco inverso (blanco). */
+.logo-enlace:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring-inverso); outline-offset: var(--focus-ring-offset); }
