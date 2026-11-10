@@ -204,3 +204,17 @@ test('con movimiento reducido el carrusel salta sin animar (039)', () => {
     assert.equal(ventana.desplazado.at(-1).behavior, 'auto');
     assert.equal(ventana.desplazado.at(-1).left, 600, 'de la primera a la última');
 });
+
+test('con una sola foto, queda marcada como actual y no se monta nada más (039, /review R8)', () => {
+    const clases = new Set();
+    const unica = { id: 'trabajo-1', offsetLeft: 0, classList: { toggle: (c, si) => (si ? clases.add(c) : clases.delete(c)), add: (c) => clases.add(c) }, querySelector: () => null };
+    const enlace = () => ({ href: '#trabajo-1', setAttribute(k, v) { if (k === 'href') this.href = v; }, addEventListener(t, f) { this[t] = f; } });
+    const partes = { '.pub-carrusel__ventana': { scrollTo() {}, addEventListener() {} }, '[data-anterior]': enlace(), '[data-siguiente]': enlace(), '[data-estado]': { textContent: '' } };
+    const carrusel = { querySelector: (s) => partes[s] ?? null, querySelectorAll: (s) => (s === '.pub-carrusel__lista > li' ? [unica] : []) };
+    const falso = documentoFalso();
+    falso.document.querySelectorAll = (s) => (s === '[data-carrusel]' ? [carrusel] : []);
+    cargar({ document: falso.document, matchMedia: () => ({ matches: false }), setTimeout: () => 0 });
+
+    assert.ok(clases.has('is-actual'), 'la única foto es la actual: sin escala fija');
+    assert.equal(partes['[data-siguiente]'].click, undefined, 'sin vecinas, los enlaces no se enganchan');
+});
