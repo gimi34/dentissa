@@ -1,7 +1,7 @@
 ---
 spec: 044-navegacion-salidas
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 044 Salidas de las pantallas
