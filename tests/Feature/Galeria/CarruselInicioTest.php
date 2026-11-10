@@ -27,7 +27,8 @@ class CarruselInicioTest extends TestCase
         Storage::fake('galeria');
     }
 
-    private function fotos(int $cuantas, string $descripcion = ''): array
+    /** Fotos con posiciones 1…n, creadas en el orden de `$orden` si se da (/review R6). */
+    private function fotos(int $cuantas, string $descripcion = '', ?array $orden = null): array
     {
         return array_map(fn (int $n) => GaleriaFoto::create([
             'descripcion' => $descripcion ?: "Trabajo número {$n}",
@@ -37,7 +38,7 @@ class CarruselInicioTest extends TestCase
             'alto' => 1200,
             'bytes' => 10,
             'bytes_pequena' => 10,
-        ]), range(1, $cuantas));
+        ]), $orden ?? range(1, $cuantas));
     }
 
     private function xpath(string $html): DOMXPath
@@ -63,7 +64,8 @@ class CarruselInicioTest extends TestCase
 
     public function test_el_carrusel_va_despues_de_los_servicios_en_orden(): void
     {
-        $this->fotos(3);
+        // Creadas desordenadas: con UUID ordenados, crearlas en orden haría pasar el test sin ordenadas().
+        $this->fotos(3, '', [2, 1, 3]);
         $html = $this->get('/')->assertOk()->getContent();
         $xpath = $this->xpath($html);
         $seccion = $this->seccion($xpath);
@@ -73,6 +75,9 @@ class CarruselInicioTest extends TestCase
         $servicios = strpos($html, 'Ver todos los servicios');
         $trabajos = strpos($html, 'id="t-trabajos"');
         $agenda = strpos($html, 'id="t-agenda"');
+        foreach ([$servicios, $trabajos, $agenda] as $posicion) {
+            $this->assertNotFalse($posicion, 'Las tres marcas están en la página (/review R12).');
+        }
         $this->assertTrue($servicios < $trabajos && $trabajos < $agenda, 'Después de los servicios y antes de la agenda.');
 
         $this->assertSame('Nuestros trabajos', $this->texto($xpath->query('.//h2[@id="t-trabajos"]', $seccion)->item(0)));
