@@ -27,6 +27,9 @@ class NavegacionSalidasCssTest extends TestCase
         'auth/register' => 17,
         'auth/registro-contacto' => 6,
         'auth/recuperar/nueva' => 0,
+        'auth/recuperar/solicitud' => 0,
+        'auth/recuperar/enviada' => 0,
+        'auth/recuperar/caducado' => 0,
     ];
 
     /** Vistas nuevas de la spec: sin ningún estilo en línea. */
@@ -64,7 +67,41 @@ class NavegacionSalidasCssTest extends TestCase
             'volver al inicio del registro' => ['.enlace-inicio', 'css/auth.css'],
             'enlace secundario del error' => ['.enlace-secundario', 'css/errores.css'],
             'aviso del sitio público' => ['.pub-aviso', 'css/publico.css'],
+            // /review R14: el resto de reglas nuevas de la spec.
+            'icono del enlace del acceso' => ['.enlace-inicio svg', 'css/acceso.css'],
+            'icono del enlace del registro' => ['.enlace-inicio svg', 'css/auth.css'],
+            'enlace del acceso con el puntero' => ['.enlace-inicio:hover', 'css/acceso.css'],
+            'enlace del registro con el puntero' => ['.enlace-inicio:hover', 'css/auth.css'],
+            'logo-enlace del acceso' => ['.logo-enlace', 'css/acceso.css'],
+            'logo-enlace del registro' => ['.logo-enlace', 'css/auth.css'],
+            'logo-enlace del error' => ['.logo-enlace', 'css/errores.css'],
+            'enlaces secundarios del error' => ['.enlaces-secundarios', 'css/errores.css'],
+            'enlace secundario con el puntero' => ['.enlace-secundario:hover', 'css/errores.css'],
+            'icono del aviso' => ['.pub-aviso svg', 'css/publico.css'],
         ];
+    }
+
+    /** /review R1: sobre el panel de marca oscuro, el foco del logo-enlace es el inverso (blanco), no --p600. */
+    public static function focosDelLogo(): array
+    {
+        return [
+            'acceso' => ['css/acceso.css'],
+            'registro' => ['css/auth.css'],
+            'páginas de error' => ['css/errores.css'],
+        ];
+    }
+
+    #[DataProvider('focosDelLogo')]
+    public function test_el_foco_del_logo_enlace_es_el_inverso_sobre_el_panel_oscuro(string $hoja): void
+    {
+        $cuerpo = $this->declaraciones('.logo-enlace:focus-visible', $hoja);
+
+        $this->assertNotSame('', $cuerpo, "{$hoja} define el foco de .logo-enlace.");
+        $this->assertStringContainsString('var(--focus-ring-inverso)', $cuerpo, "{$hoja}: el foco del logo-enlace usa --focus-ring-inverso.");
+        $this->assertStringNotContainsString('var(--focus-ring)', $cuerpo, "{$hoja}: y no el --focus-ring (--p600) sobre el panel --p600.");
+
+        $raiz = $this->declaraciones(':root', $hoja === 'css/errores.css' ? 'css/app.css' : $hoja);
+        $this->assertMatchesRegularExpression('/--focus-ring-inverso\s*:\s*var\(--white\)\s*;/', $raiz, "{$hoja}: --focus-ring-inverso vale var(--white), como en app.css.");
     }
 
     #[DataProvider('reglasNuevas')]
@@ -90,7 +127,10 @@ class NavegacionSalidasCssTest extends TestCase
         $raiz = $this->declaraciones(':root', 'css/auth.css');
         $sistema = $this->declaraciones(':root', 'css/app.css');
 
-        foreach (['--touch-min', '--space-4', '--icon-md', '--text-meta', '--weight-strong'] as $token) {
+        // /review R15: todos los tokens que auth.css copia de app.css (spec 044, D8; R1 añade el foco inverso).
+        $tokens = ['--touch-min', '--space-2', '--space-4', '--icon-md', '--text-meta', '--weight-strong',
+            '--radius-sm', '--focus-ring', '--focus-ring-inverso', '--focus-ring-width', '--focus-ring-offset'];
+        foreach ($tokens as $token) {
             $this->assertMatchesRegularExpression('/'.preg_quote($token, '/').'\s*:\s*([^;]+);/', $raiz, "auth.css define {$token}.");
             preg_match('/'.preg_quote($token, '/').'\s*:\s*([^;]+);/', $raiz, $suyo);
             preg_match('/'.preg_quote($token, '/').'\s*:\s*([^;]+);/', $sistema, $original);
