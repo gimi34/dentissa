@@ -27,9 +27,10 @@
 
 @section('content')
 <div class="formulario-accesible galeria-gestion">
-    <p class="galeria-gestion__intro">Las fotos se ven en este orden en la página de inicio y en <a href="{{ route('galeria.publica') }}">la galería</a>. Hay {{ $total }} de {{ $limite }}.</p>
+    {{-- /review R3: con el diálogo abierto, el fondo queda inerte (sin JavaScript, desde el servidor). --}}
+    <p class="galeria-gestion__intro" @if($quitar) inert @endif>Las fotos se ven en este orden en la página de inicio y en <a href="{{ route('galeria.publica') }}">la galería</a>. Hay {{ $total }} de {{ $limite }}.</p>
 
-    <div class="galeria-gestion__grid">
+    <div class="galeria-gestion__grid" @if($quitar) inert @endif>
         <section class="card" aria-labelledby="t-fotos">
             <h2 id="t-fotos">Fotos publicadas</h2>
             @if($total === 0)
@@ -74,8 +75,14 @@
         <section class="card" id="subir" aria-labelledby="t-subir">
             <h2 id="t-subir">Nueva foto</h2>
             @if($errors->any())
-                <div class="aviso-error" role="alert">
+                {{-- /review R5: tras la recarga, el aviso recibe el foco y lleva a cada campo con error. --}}
+                <div class="aviso-error" role="alert" tabindex="-1" autofocus>
                     <p><strong>No se publicó la foto.</strong> Corrige lo marcado y vuelve a subirla.</p>
+                    <ul class="aviso-error__lista">
+                        @foreach(['foto' => 'foto', 'descripcion' => 'descripcion', 'con_paciente' => 'con_paciente-no', 'consentimiento' => 'consentimiento'] as $campo => $destino)
+                            @if($error($campo))<li><a href="#{{ $destino }}">{{ $error($campo) }}</a></li>@endif
+                        @endforeach
+                    </ul>
                 </div>
             @endif
             <form class="galeria-form" action="{{ route('admin.galeria.store') }}" method="POST" enctype="multipart/form-data" novalidate>
@@ -95,13 +102,13 @@
                 <fieldset class="campo-paciente" @if($error('con_paciente')) aria-describedby="con_paciente-error" @endif>
                     <legend>¿Aparece la boca o los dientes de un paciente?</legend>
                     @if($error('con_paciente'))<p class="campo-error" id="con_paciente-error">{{ $error('con_paciente') }}</p>@endif
-                    <label class="opcion"><input type="radio" name="con_paciente" value="no" @checked($paciente === 'no') @if($error('con_paciente')) aria-invalid="true" @endif> No, no aparece ningún paciente</label>
-                    <label class="opcion"><input type="radio" name="con_paciente" value="si" @checked($paciente === 'si') @if($error('con_paciente')) aria-invalid="true" @endif> Sí, aparece un paciente</label>
+                    <label class="opcion"><input type="radio" id="con_paciente-no" name="con_paciente" value="no" @checked($paciente === 'no') @if($error('con_paciente')) aria-invalid="true" @endif> No, no aparece ningún paciente</label>
+                    <label class="opcion"><input type="radio" id="con_paciente-si" name="con_paciente" value="si" @checked($paciente === 'si') @if($error('con_paciente')) aria-invalid="true" @endif> Sí, aparece un paciente</label>
                 </fieldset>
                 <div class="consentimiento">
                     @if($error('consentimiento'))<p class="campo-error" id="consentimiento-error">{{ $error('consentimiento') }}</p>@endif
-                    <label class="campo-casilla"><input type="checkbox" name="consentimiento" value="1" @checked(old('consentimiento')) @if($error('consentimiento')) aria-invalid="true" aria-describedby="consentimiento-error" @endif> Tengo el consentimiento escrito del paciente para publicar esta foto y no se le puede reconocer</label>
-                    <p class="ayuda">Guarda el documento firmado en la clínica; aquí queda tu nombre y la fecha.</p>
+                    <label class="campo-casilla"><input type="checkbox" id="consentimiento" name="consentimiento" value="1" @checked(old('consentimiento')) aria-describedby="{{ $describe('consentimiento', 'consentimiento-ayuda') }}" @if($error('consentimiento')) aria-invalid="true" @endif> Tengo el consentimiento escrito del paciente para publicar esta foto y no se le puede reconocer</label>
+                    <p class="ayuda" id="consentimiento-ayuda">Guarda el documento firmado en la clínica; aquí queda tu nombre y la fecha.</p>
                 </div>
                 <button type="submit" class="btn btn-primary">Publicar foto</button>
             </form>

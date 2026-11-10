@@ -784,6 +784,10 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
 .formulario-accesible .campo-error { margin: 0; color: var(--red); font-size: var(--text-small); font-weight: var(--weight-strong); }
 .formulario-accesible .aviso-error { margin-bottom: var(--space-5); padding: var(--space-4); border: var(--border-width) solid var(--red); border-radius: var(--radius-sm); background: var(--red-bg); color: var(--text); font-size: var(--text-body); }
 .formulario-accesible .aviso-error p { margin: 0; }
+/* /review R5: el aviso recibe el foco al cargar y enlaza cada campo con error. */
+.formulario-accesible .aviso-error:focus { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.formulario-accesible .aviso-error__lista { margin: var(--space-2) 0 0; padding-left: var(--space-6); }
+.formulario-accesible .aviso-error__lista a { display: inline-flex; align-items: center; min-height: var(--touch-min); color: var(--red); font-weight: var(--weight-strong); }
 
 /* Radios y casilla con zona de toque de 44 px (patrón de .remember-label, spec 041): el control mide
    --touch-min y dibuja un círculo o un cuadro de --icon-md; marcado, punto o palomita. */
