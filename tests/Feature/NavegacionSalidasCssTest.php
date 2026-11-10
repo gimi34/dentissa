@@ -102,7 +102,7 @@ class NavegacionSalidasCssTest extends TestCase
     {
         $layout = file_get_contents(resource_path('views/layouts/app.blade.php'));
 
-        $this->assertMatchesRegularExpression('/<a\s[^>]*href="\{\{\s*route\(\'inicio\'\)\s*\}\}"[^>]*class="nav-item[^"]*"|<a\s[^>]*class="nav-item[^"]*"[^>]*href="\{\{\s*route\(\'inicio\'\)\s*\}\}"/', $layout, 'La entrada «Página de inicio» es un .nav-item que lleva a route(\'inicio\').');
+        $this->assertMatchesRegularExpression('/<a\s[^>]*href="\{\{\s*route\(\'inicio\'\)\s*\}\}"[^>]*class="nav-item[^"]*"|<a\s[^>]*class="nav-item[^"]*"[^>]*href="\{\{\s*route\(\'inicio\'\)\s*\}\}"/', $layout, 'La entrada «Ver sitio web» es un .nav-item que lleva a route(\'inicio\').');
 
         $movil = '';
         foreach ($this->reglasCss('css/movil.css') as [$selectores, $cuerpo]) {

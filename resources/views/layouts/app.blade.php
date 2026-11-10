@@ -183,6 +183,16 @@
                 Mi Perfil
             </a>
         @endif
+
+        {{-- Spec 044 (CA5): para los cuatro roles, «Ver sitio web» lleva a la página pública sin cerrar la sesión (no confundir con
+             «Home»/«Inicio», que es el panel); en el móvil, dentro del menú. --}}
+        <span class="nav-label">Sitio</span>
+        <a href="{{ route('inicio') }}" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>
+            </svg>
+            Ver sitio web
+        </a>
     </nav>
 
     <div class="sidebar-user">
