@@ -133,6 +133,16 @@ body.publico button:focus-visible {
     text-underline-offset: var(--space-1);
 }
 
+/* Spec 044 (CA6; system.md 1.12.0): aviso de estado bajo la cabecera, hoy solo «Has cerrado sesión». */
+.pub-aviso { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--gutter); background: var(--p50); border-bottom: var(--border-width) solid var(--border); color: var(--text); font-size: var(--text-publico-small); }
+.pub-aviso svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; color: var(--p600); }
+/* T036: con JavaScript se retira solo a los 6 s (publico.js); el fundido de --duration-base solo con la clase js y
+   sin movimiento reducido; si no, se oculta sin fundido. */
+.pub-aviso[hidden] { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+    .js .pub-aviso.is-saliendo { opacity: 0; transition: opacity var(--duration-base) var(--ease-out); }
+}
+
 /* Cabecera: fija arriba en --p50, con el filete al bajar (publico.js). */
 .pub-bar {
     position: sticky;
