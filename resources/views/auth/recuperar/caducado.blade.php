@@ -7,6 +7,8 @@
 @endsection
 
 @section('titulo', 'Este enlace ya no sirve')
+{{-- Spec 044 (CA1, D11): la salida de arriba es «Volver a iniciar sesión», sin repetirla abajo. --}}
+@section('volver', 'login')
 
 @section('contenido')
     <div class="form-header">
@@ -25,7 +27,6 @@
         </div>
     @endif
     <a class="btn-submit" href="{{ route('contrasena.solicitud') }}">Pedir un enlace nuevo</a>
-    <p class="enlace-volver"><a class="forgot-link" href="{{ route('login') }}">Volver a iniciar sesión</a></p>
     <dl class="talon">
         <dt>¿Sin correo?</dt><dd>Llama a la consulta: <span class="tel">{{ config('clinica.contacto.telefono') }}</span></dd>
     </dl>

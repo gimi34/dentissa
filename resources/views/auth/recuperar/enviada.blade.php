@@ -2,6 +2,8 @@
 @extends('layouts.acceso')
 
 @section('titulo', 'Revisa tu correo')
+{{-- Spec 044 (CA1, D11): la salida de arriba es «Volver a iniciar sesión», sin repetirla abajo. --}}
+@section('volver', 'login')
 
 @section('contenido')
     <div class="form-header">
@@ -13,7 +15,6 @@
         <span class="vale-hora">{{ $hora }}</span>
         <p>Abre el correo de Dentissa y pulsa «Elegir contraseña nueva».</p>
     </div>
-    <p class="enlace-volver"><a class="forgot-link" href="{{ route('login') }}">Volver a iniciar sesión</a></p>
     <dl class="talon">
         <dt>¿No llegó?</dt><dd><p>Revisa la carpeta de spam o <a class="en-texto" href="{{ route('contrasena.solicitud') }}">pide otro enlace</a>.</p></dd>
         <dt>¿Sin correo?</dt><dd>Llama a la consulta: <span class="tel">{{ config('clinica.contacto.telefono') }}</span></dd>
