@@ -1,7 +1,7 @@
 ---
 id: 039
 slug: galeria-trabajos
-status: approved
+status: implemented
 created: 2026-10-20
 extends: [038]
 ---
