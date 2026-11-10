@@ -14,9 +14,9 @@ class RegisterController extends Controller
 {
     public function showForm()
     {
-        // Si ya está logueado, redirigir a su panel
+        // Con sesión, al panel de su rol (spec 044, D7: `/` ya no redirige con sesión; destino fijo, TM1).
         if (Auth::check()) {
-            return redirect('/');
+            return redirect(PaginasPublicasController::panelDelRol(Auth::user()));
         }
 
         return view('auth.register');
@@ -95,6 +95,11 @@ class RegisterController extends Controller
 
     public function contactoForm(Request $request)
     {
+        // Con sesión, al panel de su rol, haya o no datos de Google a medias (spec 044, D7; control nuevo).
+        if (Auth::check()) {
+            return redirect(PaginasPublicasController::panelDelRol(Auth::user()));
+        }
+
         $google = $request->session()->get('google_registro');
 
         if (! $google) {
