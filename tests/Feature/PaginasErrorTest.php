@@ -7,6 +7,7 @@ use DOMXPath;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,7 @@ class PaginasErrorTest extends TestCase
             Route::get('/no-encontrada', fn () => abort(404, self::DETALLE));
             Route::get('/denegada-con-mensaje', fn () => throw new AuthorizationException('Como prueba no puedes hacer esto.'));
             Route::get('/denegada-generica', fn () => throw new AuthorizationException);
+            Route::get('/denegada-con-detalle', fn () => abort(403, self::DETALLE));
         });
     }
 
@@ -63,9 +65,16 @@ class PaginasErrorTest extends TestCase
         $this->assertSame(1, $xpath->query('//meta[@name="robots"][@content="noindex"]')->length, 'La 404 no se indexa.');
     }
 
+    /**
+     * /review R4: con una sesión de verdad (inicio de sesión y guard olvidado), no con `actingAs`, para que el usuario
+     * solo pueda salir de la sesión que abre la ruta de reserva GET dentro del grupo `web` (D3, D4).
+     */
     public function test_una_direccion_inexistente_con_sesion_ofrece_ir_a_mi_panel(): void
     {
-        $xpath = $this->xpath($this->actingAs($this->paciente1)->get('/no-existe-044')->assertNotFound()->getContent());
+        $this->post('/login', ['email' => $this->paciente1->email, 'password' => 'secreto-de-pruebas'])->assertRedirect();
+        $this->app['auth']->forgetGuards();
+
+        $xpath = $this->xpath($this->get('/no-existe-044')->assertNotFound()->getContent());
 
         $this->assertSame(1, $this->enlacesA($xpath, '/cliente', 'Ir a mi panel'));
         $this->assertSame(1, $this->enlacesA($xpath, '/', 'Ir a la página de inicio'));
@@ -74,10 +83,36 @@ class PaginasErrorTest extends TestCase
 
     public function test_cualquier_verbo_a_una_direccion_inexistente_sigue_en_404(): void
     {
-        foreach (['get', 'post', 'delete'] as $verbo) {
-            $xpath = $this->xpath($this->{$verbo}('/no-existe-044')->assertNotFound()->getContent());
-            $this->assertSame(['No encontramos esta página'], $this->h1($xpath), "{$verbo}: la página propia.");
+        // /review R3: los siete verbos; HEAD no lleva cuerpo.
+        foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'] as $verbo) {
+            $respuesta = $this->call($verbo, '/no-existe-044')->assertNotFound();
+            if ($verbo !== 'HEAD') {
+                $this->assertSame(['No encontramos esta página'], $this->h1($this->xpath($respuesta->getContent())), "{$verbo}: la página propia.");
+            }
         }
+    }
+
+    /**
+     * /review R3: en los tests la comprobación CSRF está desactivada, así que se mira la ruta resuelta: la reserva de
+     * los verbos distintos de GET no pasa por la sesión ni por la comprobación CSRF (si no, un POST daría 419), y la
+     * de GET sí pasa por la sesión (la 404 sabe si hay usuario).
+     */
+    public function test_la_reserva_de_los_otros_verbos_no_lleva_sesion_ni_csrf(): void
+    {
+        // Una petición antes, para que el kernel registre en el router los grupos de middleware (`web`).
+        $this->get('/no-existe-044')->assertNotFound();
+
+        $middleware = fn (string $verbo) => implode(' ', array_map(
+            fn ($m) => is_string($m) ? $m : get_class($m),
+            app('router')->gatherRouteMiddleware(Route::getRoutes()->match(Request::create('/no-existe-044', $verbo)))
+        ));
+
+        foreach (['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] as $verbo) {
+            $lista = $middleware($verbo);
+            $this->assertStringNotContainsString('StartSession', $lista, "{$verbo}: la reserva no abre sesión.");
+            $this->assertDoesNotMatchRegularExpression('/Csrf|Forgery/', $lista, "{$verbo}: la reserva no pasa por la comprobación CSRF.");
+        }
+        $this->assertStringContainsString('StartSession', $middleware('GET'), 'GET: la reserva sí pasa por la sesión (control).');
     }
 
     public function test_un_verbo_equivocado_responde_404(): void
@@ -123,6 +158,10 @@ class PaginasErrorTest extends TestCase
         $this->actingAs($this->dentista1)->get('/_pruebas/044/denegada-generica')->assertForbidden()
             ->assertSee('No tienes acceso a esta página')
             ->assertDontSee('This action is unauthorized.');
+        // /review R5: solo la explicación de un permiso (Response::deny), nunca el texto de otra excepción 403.
+        $this->actingAs($this->dentista1)->get('/_pruebas/044/denegada-con-detalle')->assertForbidden()
+            ->assertSee('No tienes acceso a esta página')
+            ->assertDontSee(self::DETALLE, false);
     }
 
     /** Caracterización (TM7): la página nueva no cambia el registro del acceso denegado (spec 020). */
@@ -189,15 +228,25 @@ class PaginasErrorTest extends TestCase
             ->assertDontSee('#0 ', false);
     }
 
+    /** TM6 y /review R22: ninguna página de error consulta la base, con usuario resuelto y sin él. */
     public function test_pintar_la_500_no_consulta_la_base(): void
     {
-        $this->actingAs($this->paciente1);
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-
-        view('errors.500', ['exception' => new HttpException(500)])->render();
-
-        $this->assertSame([], DB::getQueryLog(), 'La página de fallo del servidor no consulta la base.');
+        $paginas = [
+            '500' => new HttpException(500),
+            '404' => new HttpException(404),
+            '403' => new HttpException(403),
+        ];
+        foreach ([false, true] as $conUsuario) {
+            if ($conUsuario) {
+                $this->actingAs($this->paciente1);
+            }
+            foreach ($paginas as $codigo => $excepcion) {
+                DB::flushQueryLog();
+                DB::enableQueryLog();
+                view("errors.{$codigo}", ['exception' => $excepcion])->render();
+                $this->assertSame([], DB::getQueryLog(), "La {$codigo} ".($conUsuario ? 'con' : 'sin').' usuario no consulta la base.');
+            }
+        }
     }
 
     public function test_las_paginas_de_error_llevan_el_identificador_de_peticion(): void
