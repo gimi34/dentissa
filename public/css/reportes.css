@@ -1,0 +1,134 @@
+/* Spec 047 · reportes de la administración (design.md, sin candidatos). Solo tokens del sistema
+   (app.css, system.md 1.14.0). Incluye la primera hoja de impresión del sistema (plan D6): se carga
+   solo en esta página, así que la impresión de las demás no cambia. */
+
+.reporte { display: flex; flex-direction: column; gap: var(--space-6); }
+
+/* ── Controles: mínimo de toque a todos los anchos y borde de control (D13) ── */
+.reporte .btn { min-height: var(--touch-min); }
+.reporte .field { min-height: var(--touch-min); }
+/* .btn fija display: sin esto, el atributo hidden de «Imprimir» no lo ocultaría. */
+.reporte .btn[hidden] { display: none; }
+.reporte .btn-outline { border-color: var(--border-control); }
+.reporte .btn-outline[aria-current="true"] { background: var(--p100); box-shadow: inset 0 0 0 var(--border-width) var(--border-control); }
+.reporte .btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+
+/* ── Periodo: filtro, atajos e «Imprimir» ── */
+.reporte-formulario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, var(--campo-fecha-max))) auto;
+    gap: var(--space-1) var(--space-5);
+    justify-content: start;
+}
+/* Etiqueta, campo y error comparten filas entre los dos campos: el botón queda a la altura del campo. */
+.reporte-campo { display: grid; grid-row: span 3; grid-template-rows: subgrid; min-width: 0; }
+.reporte-formulario .btn { grid-row: 2; }
+.reporte-error { font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--red); }
+.reporte-campo-con-error .field, .reporte-campo-con-error .field:focus { border: var(--border-width-strong) solid var(--red); }
+.reporte-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
+.reporte-atajos { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.reporte-acciones svg { width: var(--icon-md); height: var(--icon-md); }
+.reporte-aviso {
+    display: flex; gap: var(--space-3); align-items: center; padding: var(--space-5) var(--space-6);
+    background: var(--red-bg); color: var(--red); border: var(--border-width) solid var(--red);
+    border-radius: var(--radius-sm); font-size: var(--text-body);
+}
+.reporte-aviso svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+.reporte-periodo { font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--text); }
+
+/* ── Resumen: el total y las dos tasas ── */
+.reporte .stats-grid { margin-bottom: 0; }
+.reporte-tasas { display: contents; }
+.reporte-tasa-detalle { margin-top: var(--space-1); font-size: var(--text-meta); color: var(--text); }
+.reporte-vacio p { font-size: var(--text-body); color: var(--text); }
+
+/* ── Los tres reportes ── */
+.reporte-rejilla {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "estados servicios" "dentistas dentistas";
+    gap: var(--space-6);
+    align-items: start;
+}
+.reporte-seccion-estados { grid-area: estados; }
+.reporte-seccion-dentistas { grid-area: dentistas; }
+.reporte-seccion-servicios { grid-area: servicios; }
+.reporte-titulo { padding: var(--space-6) var(--space-6) var(--space-1); }
+.reporte-tabla caption { padding: 0 var(--space-6) var(--space-4); font-size: var(--text-small); color: var(--text); text-align: start; }
+.reporte-nota { padding: 0 var(--space-6) var(--space-6); font-size: var(--text-body); color: var(--text); }
+/* Los th globales no llegan a AA (DS1): los de columna van en --p600, como la tabla de auditoría. */
+.reporte-tabla thead th { color: var(--p600); }
+.reporte-tabla tbody th, .reporte-tabla tfoot th {
+    font-size: var(--text-meta); font-weight: var(--weight-regular); letter-spacing: normal; text-transform: none; color: var(--text);
+}
+.reporte-tabla .cifra { font-variant-numeric: tabular-nums; }
+.reporte-tabla tfoot th, .reporte-tabla tfoot td { font-weight: var(--weight-strong); }
+.solo-impresion { display: none; }
+
+/* ── Como tabla: desde 900 px y en el papel ── */
+@media (min-width: 900px), print {
+    .reporte-tabla th, .reporte-tabla td { padding: var(--space-4) var(--space-6); }
+    .reporte-tabla tbody th { border-bottom: var(--border-width) solid var(--border); }
+    .reporte-tabla tbody tr:last-child th { border-bottom: 0; }
+    .reporte-tabla tbody tr:hover th { background: var(--p50); }
+    .reporte-tabla .cifra { text-align: right; white-space: nowrap; }
+    .reporte-tabla tfoot th, .reporte-tabla tfoot td { border-top: var(--border-width) solid var(--border); border-bottom: 0; }
+}
+
+/* ── Móvil: el periodo y el total antes del filtro, sin cambiar el orden del HTML ni del foco
+      (el bloque que se adelanta no tiene controles), y las tres tablas como tarjetas (034) ── */
+@media screen and (max-width: 899px) {
+    .reporte-periodo { order: -2; }
+    .reporte-resumen { display: contents; }
+    .reporte-total { order: -1; }
+    .reporte-tasas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+    .reporte-filtro { padding: var(--space-6); }
+    .reporte-formulario { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; }
+    .reporte-formulario .btn { grid-row: auto; grid-column: 1 / -1; justify-content: center; margin-top: var(--space-3); }
+    .reporte-atajos .btn { flex: 1 1 auto; justify-content: center; }
+    .reporte-rejilla { grid-template-columns: minmax(0, 1fr); grid-template-areas: "estados" "dentistas" "servicios"; }
+
+    /* Cada tarjeta empieza por su encabezado de fila; los totales, en una última tarjeta «Total». */
+    .reporte-tabla tbody th, .reporte-tabla tfoot th {
+        grid-column: 1 / -1; order: -1; padding: 0 0 var(--space-1); border: 0;
+        font-size: var(--text-body); font-weight: var(--weight-strong); text-align: start;
+    }
+    .reporte-tabla tfoot { display: block; background: var(--bg); padding: 0 var(--space-5) var(--space-5); }
+}
+@media screen and (max-width: 419px) {
+    .reporte-formulario { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Hoja de impresión: sin menú ni controles, en negro sobre blanco ── */
+@media print {
+    .sidebar, .topbar, .menu-velo, .reporte-filtro, .reporte-atajos, .reporte-acciones, .reporte-aviso, .reporte-periodo { display: none; }
+    .solo-impresion { display: block; }
+    body { background: var(--white); }
+    .main { margin-left: 0; min-height: 0; }
+    .content { padding: 0; }
+    .reporte { color: var(--text); background: var(--white); }
+    .reporte .card, .reporte .stat-card { background: var(--white); border: var(--border-width) solid var(--border); box-shadow: none; }
+    .reporte tr, .reporte .stat-card { break-inside: avoid; }
+    .reporte-titulo { break-after: avoid; }
+    .reporte-cabecera-impresa p { font-size: var(--text-body); color: var(--text); }
+    .reporte-cabecera-impresa .reporte-cabecera-clinica { font-size: var(--text-marca); font-weight: var(--weight-bold); }
+    .reporte-cabecera-impresa .reporte-cabecera-titulo { font-size: var(--text-marca); font-weight: var(--weight-strong); }
+    .reporte-resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .reporte-rejilla { grid-template-columns: minmax(0, 1fr); grid-template-areas: "estados" "dentistas" "servicios"; }
+    /* El estado y los encabezados, en texto negro: el papel no depende del color. */
+    .reporte .badge { padding: 0; background: transparent; color: var(--text); font-size: var(--text-meta); }
+    .reporte-tabla thead th { color: var(--text); }
+
+    /* El papel carta mide menos de 900 px: se deshacen las tarjetas de movil.css y la tabla se imprime como tabla. */
+    .reporte .tabla-tarjetas thead { display: table-header-group; }
+    .reporte .tabla-tarjetas tbody { display: table-row-group; padding: 0; background: var(--white); }
+    .reporte .tabla-tarjetas tr { display: table-row; padding: 0; border: 0; border-radius: 0; }
+    .reporte .tabla-tarjetas td { display: table-cell; padding: var(--space-4) var(--space-6); border-bottom: var(--border-width) solid var(--border); }
+    .reporte .tabla-tarjetas td::before { content: none; }
+    .reporte .tabla-tarjetas td.cifra { text-align: right; }
+    .reporte .tabla-tarjetas tbody tr:last-child td { border-bottom: 0; }
+    .reporte .tabla-tarjetas tfoot td { border-top: var(--border-width) solid var(--border); border-bottom: 0; }
+}
