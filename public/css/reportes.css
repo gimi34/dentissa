@@ -25,7 +25,7 @@
 }
 /* Etiqueta, campo y error comparten filas entre los dos campos: el botón queda a la altura del campo. */
 .reporte-campo { display: grid; grid-row: span 3; grid-template-rows: subgrid; min-width: 0; }
-.reporte-formulario .btn { grid-row: 2; }
+.reporte-formulario .btn { grid-row: 2; grid-column: 3; }
 .reporte-error { font-size: var(--text-meta); font-weight: var(--weight-strong); color: var(--red); }
 .reporte-campo-con-error .field, .reporte-campo-con-error .field:focus { border: var(--border-width-strong) solid var(--red); }
 .reporte-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
@@ -71,8 +71,8 @@
 /* ── Como tabla: desde 900 px y en el papel ── */
 @media (min-width: 900px), print {
     .reporte-tabla th, .reporte-tabla td { padding: var(--space-4) var(--space-6); }
-    .reporte-tabla tbody th { border-bottom: var(--border-width) solid var(--border); }
-    .reporte-tabla tbody tr:last-child th { border-bottom: 0; }
+    .reporte-tabla tbody th, .reporte-tabla tbody td { border-bottom: var(--border-width) solid var(--border); }
+    .reporte-tabla tbody tr:last-child th, .reporte-tabla tbody tr:last-child td { border-bottom: 0; }
     .reporte-tabla tbody tr:hover th { background: var(--p50); }
     .reporte-tabla .cifra { text-align: right; white-space: nowrap; }
     .reporte-tabla tfoot th, .reporte-tabla tfoot td { border-top: var(--border-width) solid var(--border); border-bottom: 0; }
@@ -96,6 +96,8 @@
         grid-column: 1 / -1; order: -1; padding: 0 0 var(--space-1); border: 0;
         font-size: var(--text-body); font-weight: var(--weight-strong); text-align: start;
     }
+    /* «Completadas» y «Porcentaje» no caben en la columna de etiquetas de la 034. */
+    .reporte-tabla td { grid-template-columns: calc(var(--tarjeta-etiqueta-w) * 1.5) minmax(0, 1fr); }
     .reporte-tabla tfoot { display: block; background: var(--bg); padding: 0 var(--space-5) var(--space-5); }
 }
 @media screen and (max-width: 419px) {
