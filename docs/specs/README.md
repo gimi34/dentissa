@@ -61,7 +61,6 @@ Specs previstas (números reservados; se crean con `/specify` una por una):
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida
 construirlas:
-- **Reportes** (`/admin/reportes`): vista "en construcción".
 - **Recordatorios de cita**: `citas.recordatorio_enviado` se lee pero nunca se escribe.
 - **Adjuntos del expediente**: `expedientes.archivos_url` siempre se guarda como `null`.
 - `welcome.blade.php`: código muerto del esqueleto de Laravel.

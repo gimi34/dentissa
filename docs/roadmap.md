@@ -224,8 +224,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     producción), en tres specs por este orden: [035](specs/035-movil-pacientes-expedientes/spec.md)
     pacientes y expedientes, empezando por la ficha del paciente (`/admin/pacientes/{id}`: hay que
     alejar la vista para verla entera y tiene botones descentrados), con 034/R8 en esas pantallas;
-    036 formularios de agenda y servicios; y 037 administración (personal, usuarios, reportes y
-    doctores de la asistente). La 035 se liberó en v0.9.0 (2026-10-19): ficha y formulario del
+    036 formularios de agenda y servicios; y 037 administración (personal, usuarios y
+    doctores de la asistente; «reportes» ya nace adaptado al móvil con la spec 047). La 035 se liberó en v0.9.0 (2026-10-19): ficha y formulario del
     paciente y lista, ficha y alta de expedientes; quedan la 036 y la 037.
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
