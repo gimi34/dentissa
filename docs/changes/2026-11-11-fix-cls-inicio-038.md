@@ -3,7 +3,7 @@ lane: fix
 status: done                 # open → done → released · escalated (→ escalated_to)
 base: 2590a3e                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [038]               # specs cuyo comportamiento toca ([] si ninguna)
-covers: [K8]                 # fix: criterios de esas specs que el arreglo vuelve a cumplir
+covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir (K8 es un KPI de diseño, no un CA)
 escalated_to: null           # NNN de la spec si el cambio se escaló al flujo completo
 ---
 
