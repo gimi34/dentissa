@@ -283,6 +283,14 @@ body.publico button:focus-visible {
     font-weight: var(--weight-bold);
 }
 .pub-status:not([data-open]) { display: none; }
+/* K8 de la 038 (CLS ≤ 0,1; ficha docs/changes/2026-11-11-fix-cls-inicio-038.md): publico.js escribe la pastilla
+   tras el primer pintado. Con JavaScript, su fila queda reservada desde el principio para que el hero no baje
+   al aparecer; sin él (o sin soporte de `scripting`), no está, como hasta ahora. La fila entera solo mientras
+   está vacía: escrita, la lista vuelve a colocarse como siempre (de 750 a 899 px comparte fila con el horario). */
+@media (scripting: enabled) {
+    .pub-status:not([data-open]) { display: inline-flex; visibility: hidden; }
+    .pub-hero__facts > li:has(> .pub-status:not([data-open])) { flex-basis: 100%; }
+}
 .pub-status__dot {
     flex: none;
     width: var(--space-4);
