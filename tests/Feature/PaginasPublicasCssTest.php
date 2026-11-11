@@ -372,7 +372,8 @@ class PaginasPublicasCssTest extends TestCase
 
         $this->assertContains('@media (max-width: 899px)', $condiciones, 'Corte de la navegación, las columnas y el título fijo.');
         $this->assertContains('@media (max-width: 559px)', $condiciones, 'Corte de los botones y la foto de la escena.');
-        $this->assertSame([], array_values(array_diff($condiciones, ['@media (max-width: 899px)', '@media (max-width: 559px)', self::SIN_MOVIMIENTO])), 'Sin otros cortes.');
+        // `scripting` no es un corte: reserva la fila de la pastilla con JavaScript (ficha 2026-11-11-fix-cls-inicio-038).
+        $this->assertSame([], array_values(array_diff($condiciones, ['@media (max-width: 899px)', '@media (max-width: 559px)', self::SIN_MOVIMIENTO, '@media (scripting: enabled)'])), 'Sin otros cortes.');
     }
 
     public function test_interlineado_y_proporciones_van_con_token(): void
@@ -424,6 +425,29 @@ class PaginasPublicasCssTest extends TestCase
             $this->assertStringStartsWith('.js ', $selector, "{$selector}: solo con JavaScript.");
             $this->assertStringContainsString('var(--p', $cuerpo, "{$selector}: el recorte sigue el progreso --p.");
         }
+    }
+
+    /**
+     * Ficha docs/changes/2026-11-11-fix-cls-inicio-038.md (K8 de la 038, CLS ≤ 0,1): la pastilla aparece
+     * cuando `publico.js` (con defer) le pone `data-open`, tras el primer pintado. Si su fila no está
+     * reservada, la lista del hero crece entre 50 y 57 px y todo el hero baja (CLS 0,212 a 1440 px).
+     * Con JavaScript, la fila se reserva desde el principio; sin él, la pastilla no está (plan de la 038).
+     */
+    public function test_la_pastilla_reserva_su_fila_antes_del_script(): void
+    {
+        $conScript = '@media (scripting: enabled)';
+        $reglas = $this->reglasCss(self::HOJA);
+        $de = fn (string $selector, ?string $media) => implode("\n", array_map(fn ($r) => $r[1], array_filter($reglas,
+            fn ($r) => $r[0] === $selector && ($media === null ? $r[2] === [] : in_array($media, $r[2], true)))));
+
+        $this->assertStringContainsString('display: none', $de('.pub-status:not([data-open])', null), 'Sin JavaScript, la pastilla no está.');
+
+        $reservada = $de('.pub-status:not([data-open])', $conScript);
+        $this->assertStringContainsString('display: inline-flex', $reservada, 'Con JavaScript, la pastilla ocupa su sitio antes de escribirse.');
+        $this->assertStringContainsString('visibility: hidden', $reservada, 'Pero no se ve hasta que el script la escribe.');
+        $this->assertStringContainsString('flex-basis: 100%', $de('.pub-hero__facts > li:has(> .pub-status:not([data-open]))', $conScript), 'Y su fila es suya mientras está vacía.');
+        // Review: escrita, la lista se coloca como siempre (de 750 a 899 px, pastilla y horario en la misma fila).
+        $this->assertSame('', $de('.pub-hero__facts > li:has(> .pub-status)', $conScript), 'Sin fila forzada una vez escrita.');
     }
 
     public function test_las_entradas_solo_ocultan_con_javascript(): void
