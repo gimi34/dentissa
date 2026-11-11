@@ -1,6 +1,7 @@
 ---
 spec: 047-reportes-admin
 plan: plan.md
+impl_base: 8b683d8
 status: approved
 ---
 
@@ -36,8 +37,9 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | P10 Rutas indexables descubribles | ➖ | Sin rutas públicas | — |
 
 ## Preparación
-- [ ] T001 Incorporar al sistema de diseño los «Cambios a incorporar al sistema» del `design.md` (frase del periodo, fila de totales, tasa en `.stat-card`, cabecera impresa y reglas de impresión), subir la versión a 1.14.0 con su entrada en «Decisiones» y cambiar la fila de «Reportes» del inventario — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los dos documentos describen los cinco cambios con la versión 1.14.0 y `python .ai/bin/aidd.py validate` pasa
-- [ ] T002 Registrar la línea base: suite completa en verde antes de tocar código y `impl_base` con el commit de partida — `docs/specs/047-reportes-admin/tasks.md` — hecho cuando: `php artisan test` pasa completo y el frontmatter de este archivo lleva `impl_base`
+- [x] T001 Incorporar al sistema de diseño los «Cambios a incorporar al sistema» del `design.md` (frase del periodo, fila de totales, tasa en `.stat-card`, cabecera impresa y reglas de impresión), subir la versión a 1.14.0 con su entrada en «Decisiones» y cambiar la fila de «Reportes» del inventario — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los dos documentos describen los cinco cambios con la versión 1.14.0 y `python .ai/bin/aidd.py validate` pasa
+- [x] T002 Registrar la línea base: suite completa en verde antes de tocar código y `impl_base` con el commit de partida — `docs/specs/047-reportes-admin/tasks.md` — hecho cuando: `php artisan test` pasa completo y el frontmatter de este archivo lleva `impl_base`
+  - nota: 2026-11-11 — línea base con `impl_base` 8b683d8: suite completa 911 en verde (14 014 aserciones), sin fallos previos; ejecutada con `docker compose run --rm --no-deps -T app` porque los contenedores en marcha montan `dentissa-041`.
 
 ## Tests (antes de implementar)
 - [ ] T010 [P] Escribir `ReportesAccesoTest`: `test_solo_la_administracion_ve_los_reportes` (también con `?desde=…&hasta=…` en la dirección), `test_el_gate_deniega_a_quien_no_es_admin` (con el caso permitido: el admin pasa `ver-reportes`), `test_sin_sesion_lleva_al_inicio_de_sesion`, `test_el_acceso_denegado_queda_en_el_registro_de_auditoria`, `test_reportes_solo_esta_en_el_menu_de_la_administracion`, `test_la_respuesta_no_se_guarda_en_cache` y `test_la_respuesta_lleva_el_identificador_de_peticion` — `tests/Feature/Reportes/ReportesAccesoTest.php` — hecho cuando: el test del Gate falla en su caso permitido porque `ver-reportes` no existe; los de caracterización pasan y cada uno se comprueba rompiendo un momento la pieza que lo protege, anotada en la tarea: `role:admin` de la ruta (403 y su auditoría), `PreventBackHistory` (no-caché), `IdentificadorPeticion` (identificador) y la condición de rol de `layouts/app.blade.php` (menú) — cubre: CA9 — depende: T002
