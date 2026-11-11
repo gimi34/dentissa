@@ -80,10 +80,12 @@
                 @endforeach
             </nav>
             <div class="reporte-acciones">
-                {{-- Nace oculto: reportes.js lo muestra. Sin JavaScript, la página se imprime desde el navegador. --}}
+                {{-- «Descargar» abre el diálogo de impresión del navegador, donde se guarda como PDF (decisión del
+                     usuario, 2026-11-11). Nace oculto: reportes.js lo muestra. Sin JavaScript, la página se imprime
+                     o se guarda igual desde el navegador. --}}
                 <button type="button" id="reporte-imprimir" class="btn btn-outline" hidden>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    Imprimir
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+                    Descargar
                 </button>
             </div>
         </div>

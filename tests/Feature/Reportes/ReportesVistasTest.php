@@ -310,6 +310,8 @@ class ReportesVistasTest extends TestCase
         $this->assertNotNull($boton);
         $this->assertTrue($boton->hasAttribute('hidden'), 'Sin JavaScript, el botón no se muestra.');
         $this->assertSame('button', $boton->getAttribute('type'));
+        // Abre el diálogo del navegador, donde se guarda como PDF (decisión del usuario, 2026-11-11).
+        $this->assertSame('Descargar', $this->texto($boton));
         $this->assertFalse($boton->hasAttribute('onclick'));
 
         $script = $xpath->query('//script[contains(@src, "js/reportes.js")]')->item(0);

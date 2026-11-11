@@ -770,7 +770,7 @@ filtro de auditoría (020), `.stats-grid-3` con `.stat-card`, `.card-0` con tabl
 - **Resumen antes del filtro en el móvil** (punto de corte 900 px): la frase del periodo y la cifra
   «Citas en el periodo» se muestran antes del filtro; desde 900 px, el filtro va primero. El orden del
   HTML y del foco no cambia: el bloque que se adelanta no tiene controles.
-- **Controles:** «Ver reporte» (`btn-primary`), los atajos e «Imprimir» (`btn-outline` con borde
+- **Controles:** «Ver reporte» (`btn-primary`), los atajos y «Descargar» (abre el diálogo de impresión del navegador, donde se guarda como PDF; `btn-outline` con borde
   `--border-control`) miden `--touch-min` a todos los anchos; el atajo del periodo en pantalla lleva
   `aria-current="true"`. Los `th` van en `--p600`, como la tabla de auditoría (los `th` globales, DS1).
 - **Cabecera impresa** (`.solo-impresion`): oculta en pantalla; al imprimir, solo texto: el nombre de

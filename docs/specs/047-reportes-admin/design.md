@@ -124,5 +124,6 @@ Ninguno.
 | 2026-11-10 | diseño | Encabezados de tabla | `--p600`, como la tabla de auditoría, para no añadir deuda DS1 | `docs/design/system.md` → «Tabla de auditoría» |
 | 2026-11-11 | diseño | /analyze A8: `capturar.mjs --medir` exige que toda tabla visible sea `tabla-tarjetas` | Las tres tablas pasan a tarjetas por debajo de 900 px; el `tfoot`, como última tarjeta | /analyze A8 |
 | 2026-11-11 | diseño | /analyze A9: nombre y logo de la hoja impresa | Solo texto, «Melissa López N. · Odontología integral» | usuario |
+| 2026-11-11 | refinado | Tras la verificación manual de `/implement`: el usuario prefiere «Descargar» a «Imprimir» | El botón que este documento llama «Imprimir» se rotula «Descargar», con icono de descarga; hace lo mismo (abre el diálogo de impresión del navegador, donde se guarda como PDF o se imprime). Mismo componente, lugar y orden de foco; sin archivo generado por el servidor ni dependencias nuevas | usuario |
 | 2026-11-11 | diseño | /analyze A10: K1 a 320 px | Se mide a 320×568; por debajo de 900 px la frase del periodo y el total van antes del filtro, sin cambiar el orden del HTML ni del foco | usuario |
 | 2026-11-11 | diseño | /analyze A20: ¿a qué anchos se exige el objetivo de toque? | A todos: los controles de «Reportes» llevan `--touch-min` también en escritorio | /analyze A20 |
