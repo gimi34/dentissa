@@ -1,7 +1,7 @@
 ---
 id: 045
 slug: terminos-privacidad
-status: draft
+status: approved
 created: 2026-11-12
 extends: [002, 038]
 ---

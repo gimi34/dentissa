@@ -1,7 +1,7 @@
 ---
 spec: 045-terminos-privacidad
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 045 Términos de uso y aviso de privacidad
