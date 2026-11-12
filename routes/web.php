@@ -49,6 +49,9 @@ if (config('acceso.recuperar_contrasena')) {
 // ── Páginas públicas (spec 038) ─────────────────────────────────────────
 Route::get('/', [PaginasPublicasController::class, 'inicio'])->name('inicio');
 Route::get('/servicios', [PaginasPublicasController::class, 'servicios'])->name('servicios.publicos');
+// Spec 045: los términos de uso y el aviso de privacidad, públicos y con o sin sesión.
+Route::get('/terminos', [PaginasPublicasController::class, 'terminos'])->name('terminos');
+Route::get('/aviso-de-privacidad', [PaginasPublicasController::class, 'privacidad'])->name('privacidad');
 // Spec 039: la galería y cada foto. La foto va sin PreventBackHistory, que pisaría su
 // Cache-Control (plan → «Entrega de las fotos», /analyze A1).
 Route::get('/galeria', [PaginasPublicasController::class, 'galeria'])->name('galeria.publica');
