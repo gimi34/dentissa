@@ -90,7 +90,8 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
   - nota: `docs/architecture.md`: fila «Reportes» en los módulos (`app/Reportes/`, `ReportesController`, Gate `ver-reportes`) y la frase de «Otras rutas» sobre `/admin/reportes`
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: sin cambios en los dos (plan, Observabilidad y Rollout). Sí cambian: `docs/security.md` → «Dónde se aplica» (Gate `ver-reportes`) y una fila en «Superficie de ataque» para `GET /admin/reportes` (fechas `AAAA-MM-DD`, máximo de 366 días, solo lectura); `docs/specs/README.md` (quitar «Reportes» de «Funcionalidades no documentadas como spec»); `docs/roadmap.md` (la 037 prevista ya no adapta «reportes» al móvil; con confirmación del usuario); y `AGENTS.md` (mapa del repositorio: `app/Reportes/`, el número de controladores contado en ese momento, `reportes.css` y `reportes.js`; ruta protegida: pedir aprobación antes de editarla) — depende: T028
   - nota: A14 — controladores contados en el momento: 19 más el `Controller` base (`ls app/Http/Controllers`), no la cifra del plan. `AGENTS.md` editado con la aprobación del usuario (2026-11-11) y `docs/roadmap.md` con su confirmación; `docs/security.md` («Dónde se aplica» y «Superficie de ataque») y `docs/specs/README.md` actualizados; `deployment.md` y `observability.md`, sin cambios
-- [ ] T092 Marcar spec como `implemented` — depende: T090, T091, T029, T030
+- [x] T092 Marcar spec como `implemented` — depende: T090, T091, T029, T030
+  - nota: de nuevo tras /review r1 (T029 y T030 hechas): spec `implemented` e índice al día (2026-11-12)
   - nota: 2026-11-11: los diez CA marcados con sus tests en verde (69 de `tests/Feature/Reportes`, suite completa 980); spec en `implemented` e índice de specs actualizado
 
 ## Despliegue (lo ejecuta `/release`)
