@@ -1,0 +1,11 @@
+/* Candidato c1 de la 045: lo único que añaden las páginas legales a la composición de /servicios. Solo tokens. */
+.lb-fecha { color: var(--p600); font-size: var(--text-publico-small); }
+.lb-texto p,
+.lb-texto ul { max-width: var(--measure); margin: 0; }
+.lb-texto p + p,
+.lb-texto p + ul,
+.lb-texto ul + p { margin-top: var(--space-4); }
+.lb-texto ul { display: grid; gap: var(--space-3); padding-left: var(--space-6); list-style: disc; }
+.lb-texto li::marker { color: var(--p400); }
+.lb-texto a { color: var(--text); text-decoration: underline; text-decoration-color: var(--p400); text-underline-offset: var(--space-1); }
+.lb-texto strong { font-weight: var(--weight-bold); }

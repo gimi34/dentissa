@@ -56,6 +56,7 @@ Páginas para **leer**: quien llega quiere encontrar rápido la parte que le imp
 guardan, cómo borrarlos) y leerla con calma. Deben sentirse parte del sitio público de la clínica
 (misma cabecera, pie y tipografía), sobrias y claras, sin letra pequeña ni jerga legal innecesaria.
 Sistema: [docs/design/system.md](../../design/system.md) (1.14.0, superficie «Sitio público»).
+Diseño aceptado: [design.md](design.md) (`/design-spec 045`, candidato `c4`, 82/100).
 
 - **Qué debe lograr cada pantalla:** en «Aviso de privacidad», entender en cinco segundos que hay
   una lista de secciones y llegar a la que busca; en «Términos de uso», lo mismo con sus secciones.
@@ -68,14 +69,15 @@ Sistema: [docs/design/system.md](../../design/system.md) (1.14.0, superficie «S
 
 ## Criterios de diseño
 Modo: leer · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos (`.ai/project.yaml →
-design`). Se miden con `evaluate.mjs` sobre las dos páginas a 320, 390 y 1440 px.
+design`). Se miden con `design/medir.mjs` (que llama a `evaluate.mjs`) sobre las dos páginas a 320, 390 y
+1440 px ([design/criterios.json](design/criterios.json)).
 
 | ID | Qué se mide | Objetivo | Sale de |
 |---|---|---|---|
 | K1 | El título y el primer párrafo en la primera pantalla | visibles enteros a 320, 390 y 1440 px | modo leer |
 | K2 | Las secciones de cada página | los títulos de sección de CA1 y CA2, en ese orden, y la fecha de actualización | CA1, CA2 |
-| K3 | Lista de secciones al principio | un enlace por sección, antes de la primera | Diseño |
-| K4 | Largo de línea del texto | ≤ 80 caracteres a 1440 px | modo leer |
+| K3 | Lista de secciones al principio | un enlace por sección, antes de la primera (comprobación manual: `evaluate.mjs` no lo mide) | Diseño |
+| K4 | Largo de línea del texto | ≤ 80 caracteres a 1440 px (comprobación manual y test de CSS) | modo leer |
 | K5 | Enlaces del pie | «Términos de uso» y «Aviso de privacidad» a 320, 390 y 1440 px | CA6 |
 | K6 | Estabilidad visual (CLS) | ≤ 0.1 | modo leer |
 | K7 | JavaScript de la ruta | ≤ 100 kB | P10 |
@@ -106,6 +108,7 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 | 2026-11-12 | supuesto | ¿Por qué medios se ejercen los derechos y se revoca el consentimiento? | En la clínica y por su teléfono (el sitio no publica un correo de la clínica); el texto lo concreta y el usuario lo revisa | — |
 | 2026-11-12 | supuesto | ¿Se indexan las dos páginas? | Sí, con título, descripción y canónica propios: son públicas y dan confianza | `docs/seo.md` (reglas del sitio público) |
 | 2026-11-12 | supuesto | ¿Qué cookies se declaran? | Solo las necesarias para la sesión; el sitio no tiene analítica ni publicidad | revisión de las plantillas públicas (sin scripts de terceros) |
+| 2026-11-12 | diseño | Diseño de las dos páginas | Aceptado `c4` (82/100) en [design.md](design.md): la composición de `/servicios` con «En pocas palabras» y secciones numeradas; propone al sistema un respaldo de Newsreader con sus medidas (1.15.0). K3 y K4 se comprueban a mano | `/design-spec 045` |
 
 ## Notas para /plan
 - Direcciones sugeridas: `/terminos` y `/aviso-de-privacidad`, con `layouts/publico` (cabecera y pie),
