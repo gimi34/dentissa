@@ -50,6 +50,39 @@
     src: url("../fonts/montserrat/montserrat-latin-600-normal.woff2") format("woff2");
 }
 
+/* Respaldo de Montserrat con sus medidas (system.md 1.14.0; ficha docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md):
+   mientras llega Montserrat, Arial del sistema (o Liberation Sans, su equivalente métrico) ajustada a su ancho y a su
+   altura, para que el cambio de fuente no mueva nada (K8 de la 038, CLS ≤ 0,1). size-adjust: ancho medido de
+   Montserrat sobre Arial en cada peso; los override, el ascenso (0,968) y el descenso (0,251) de Montserrat sobre ese
+   tamaño. Sin descarga: si el sistema no tiene ninguna, se usa la siguiente de --font-publica. */
+@font-face {
+    font-family: "Montserrat respaldo";
+    font-weight: 400;
+    src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans");
+    size-adjust: 110.7%;
+    ascent-override: 87.4%;
+    descent-override: 22.7%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Montserrat respaldo";
+    font-weight: 500;
+    src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans");
+    size-adjust: 112.5%;
+    ascent-override: 86%;
+    descent-override: 22.3%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Montserrat respaldo";
+    font-weight: 600 700;
+    src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold");
+    size-adjust: 107.5%;
+    ascent-override: 90%;
+    descent-override: 23.3%;
+    line-gap-override: 0%;
+}
+
 /* Anula el display: flex y la familia del body de app.css (plan D3). Sin overflow en los ancestros
    de la escena: su escenario es sticky y un ancestro que recorte lo rompería. */
 body.publico {
