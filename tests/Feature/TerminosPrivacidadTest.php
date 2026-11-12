@@ -17,6 +17,8 @@ use Tests\TestCase;
  *    configuración, el aviso cuadrado con los datos que pide el registro (CA3), el índice antes de las
  *    secciones con su estructura accesible (K3; /analyze A11), con y sin sesión iguales (CA7) y el texto de
  *    `<main>` igual al del candidato `c4` aprobado, que también prueba que llega en el HTML del servidor (CA8).
+ *  - El registro (T011): la casilla de los dos registros con «aviso de privacidad» y sus enlaces en otra
+ *    pestaña, con `noopener` (CA4, TM1), y el rechazo sin la casilla, sin cuenta creada (CA5).
  */
 class TerminosPrivacidadTest extends TestCase
 {
@@ -54,6 +56,14 @@ class TerminosPrivacidadTest extends TestCase
         'google_id' => 'identificador de Google',
         'foto_url' => 'foto de perfil',
     ];
+
+    private const CASILLA = 'Acepto los términos de uso y el aviso de privacidad de Dentissa';
+
+    private const MENSAJE_CASILLA = 'Debes aceptar los términos de uso y el aviso de privacidad.';
+
+    private const PESTANA = '(se abre en otra pestaña)';
+
+    private const GOOGLE = ['google_id' => 'google-045', 'nombre' => 'Persona', 'apellido' => 'De Pruebas', 'email' => 'google-045@example.test', 'foto_url' => null];
 
     /** Lo que no es un dato de la persona: la confirmación, el token y la propia casilla. */
     private const NO_SON_DATOS = ['_token', 'password_confirmation', 'terminos'];
@@ -150,8 +160,7 @@ class TerminosPrivacidadTest extends TestCase
         $nombres = [];
         foreach ([
             $this->get('/registro')->assertOk()->getContent(),
-            $this->withSession(['google_registro' => ['google_id' => 'google-045', 'nombre' => 'Persona', 'apellido' => 'De Pruebas', 'email' => 'google-045@example.test', 'foto_url' => null]])
-                ->get('/registro/contacto')->assertOk()->getContent(),
+            $this->withSession(['google_registro' => self::GOOGLE])->get('/registro/contacto')->assertOk()->getContent(),
         ] as $html) {
             foreach ($this->xpath($html)->query('//form//*[self::input or self::select or self::textarea][@name]') as $campo) {
                 $nombres[] = $campo->getAttribute('name');
@@ -232,5 +241,58 @@ class TerminosPrivacidadTest extends TestCase
                 "{$ruta}: el texto de la página es el aprobado en candidatos/c4/{$archivo} (y llega en el HTML del servidor, CA8)."
             );
         }
+    }
+
+    public function test_la_casilla_del_registro(): void
+    {
+        foreach ([
+            'registro' => $this->get('/registro')->assertOk()->getContent(),
+            'registro con Google' => $this->withSession(['google_registro' => self::GOOGLE])->get('/registro/contacto')->assertOk()->getContent(),
+        ] as $pantalla => $html) {
+            $xpath = $this->xpath($html);
+            $etiqueta = $xpath->query('//label[.//input[@name="terminos"]]')->item(0);
+            $this->assertInstanceOf(DOMElement::class, $etiqueta, "{$pantalla}: la casilla tiene su etiqueta.");
+
+            // /analyze A7: sin las dos anotaciones, el texto es exactamente el de CA4.
+            $sinAnotaciones = trim(preg_replace('/\s+/u', ' ', str_replace(self::PESTANA, '', $etiqueta->textContent)));
+            $this->assertSame(self::CASILLA, $sinAnotaciones, "{$pantalla}: el texto de la casilla (CA4).");
+
+            $enlaces = $xpath->query('.//a', $etiqueta);
+            $this->assertSame(2, $enlaces->length, "{$pantalla}: dos enlaces en la casilla.");
+            foreach ([[url('/terminos'), 'términos de uso'], [url('/aviso-de-privacidad'), 'aviso de privacidad']] as $n => [$destino, $nombre]) {
+                $enlace = $enlaces->item($n);
+                $this->assertSame($destino, $enlace->getAttribute('href'), "{$pantalla}: «{$nombre}» lleva a su página.");
+                $this->assertSame("{$nombre} ".self::PESTANA, $this->texto($enlace), "{$pantalla}: el enlace anuncia que abre otra pestaña.");
+                $this->assertSame('_blank', $enlace->getAttribute('target'), "{$pantalla}: «{$nombre}» se abre en otra pestaña.");
+                $this->assertContains('noopener', preg_split('/\s+/', $enlace->getAttribute('rel')), "{$pantalla}: «{$nombre}» con noopener (TM1).");
+                $this->assertFalse($enlace->hasAttribute('style'), "{$pantalla}: «{$nombre}» sin estilo en línea (P9).");
+            }
+        }
+    }
+
+    public function test_el_registro_sin_la_casilla_se_rechaza(): void
+    {
+        $correo = 'casilla-045@example.test';
+
+        $this->from('/registro')->post('/registro', [
+            'nombre' => 'Persona',
+            'apellido' => 'De Pruebas',
+            'email' => $correo,
+            'password' => 'secreto-de-pruebas',
+            'password_confirmation' => 'secreto-de-pruebas',
+        ])->assertRedirect('/registro')->assertSessionHasErrors(['terminos' => self::MENSAJE_CASILLA]);
+
+        $this->assertDatabaseMissing('usuarios', ['email' => $correo]);
+    }
+
+    public function test_el_registro_con_google_sin_la_casilla_se_rechaza(): void
+    {
+        $this->withSession(['google_registro' => self::GOOGLE])
+            ->from('/registro/contacto')
+            ->post('/registro/contacto', ['telefono' => '555-0000'])
+            ->assertRedirect('/registro/contacto')
+            ->assertSessionHasErrors(['terminos' => self::MENSAJE_CASILLA]);
+
+        $this->assertDatabaseMissing('usuarios', ['email' => self::GOOGLE['email']]);
     }
 }
