@@ -1,6 +1,6 @@
 ---
 spec: 045-terminos-privacidad
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved           # draft | approved (solo el usuario aprueba)
 exploration: loop        # loop: ciclo por criterios · none: sin diseño nuevo (motivo en "Resultado")
 threshold: 80            # puntuación mínima de la rúbrica (de .ai/project.yaml → design)
 floor: 3                 # nota mínima de cada punto de la rúbrica
@@ -154,3 +154,4 @@ no salen de ningún documento del proyecto:
 | 2026-11-12 | supuesto | La máscara CSS del logo no carga desde `file://`, así que no se veía en las capturas | Medir servido por HTTP desde c3, y además desde el archivo para `G-red` | medida de c2 |
 | 2026-11-12 | diseño | «Cuánto tiempo los conservamos» se partía en su píldora | El título de la sección pasa a «Cuánto los conservamos» (CA2 sigue cubierto: dice cuánto tiempo) | evaluador de c3 |
 | 2026-11-12 | supuesto | Lo que el evaluador aún señaló en c4: frases clave solo en negrita, índice sin la sección en curso, franja libre a 1440 px, una píldora partida a 320 px | Se acepta: c4 supera el umbral. Marcar la sección en curso pediría JavaScript nuevo (la spec no lo quiere) | evaluador de c4 |
+| 2026-11-12 | diseño | ¿Se aprueban el diseño (c4) y el texto de las dos páginas, con los puntos de «Contenido para revisar»? | Aprobados tal cual | usuario |

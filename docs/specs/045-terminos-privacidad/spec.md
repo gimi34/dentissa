@@ -125,3 +125,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-11-12 | Creada en `draft` y aprobada por el usuario | /specify 045 |
+| 2026-11-12 | Diseño aprobado por el usuario (`c4`, 82/100) con el texto de las dos páginas | /design-spec 045 |
