@@ -17,8 +17,9 @@ use Tests\TestCase;
  *    configuración, el aviso cuadrado con los datos que pide el registro (CA3), el índice antes de las
  *    secciones con su estructura accesible (K3; /analyze A11), con y sin sesión iguales (CA7) y el texto de
  *    `<main>` igual al del candidato `c4` aprobado, que también prueba que llega en el HTML del servidor (CA8).
- *  - El registro (T011): la casilla de los dos registros con «aviso de privacidad» y sus enlaces en otra
- *    pestaña, con `noopener` (CA4, TM1), y el rechazo sin la casilla, sin cuenta creada (CA5).
+ *  - El registro (T011, T016): la casilla de los dos registros con «aviso de privacidad»; sus enlaces abren
+ *    una ventana con el mismo texto que la página, sin salir del registro (CA4 refinado), y el rechazo sin
+ *    la casilla, sin cuenta creada (CA5).
  *  - El pie (T012): «Términos de uso» y «Aviso de privacidad» en el pie de las cinco páginas públicas, con y
  *    sin sesión, en la misma pestaña (CA6).
  */
@@ -62,8 +63,6 @@ class TerminosPrivacidadTest extends TestCase
     private const CASILLA = 'Acepto los términos de uso y el aviso de privacidad de Dentissa';
 
     private const MENSAJE_CASILLA = 'Debes aceptar los términos de uso y el aviso de privacidad.';
-
-    private const PESTANA = '(se abre en otra pestaña)';
 
     private const GOOGLE = ['google_id' => 'google-045', 'nombre' => 'Persona', 'apellido' => 'De Pruebas', 'email' => 'google-045@example.test', 'foto_url' => null];
 
@@ -247,29 +246,96 @@ class TerminosPrivacidadTest extends TestCase
 
     public function test_la_casilla_del_registro(): void
     {
-        foreach ([
-            'registro' => $this->get('/registro')->assertOk()->getContent(),
-            'registro con Google' => $this->withSession(['google_registro' => self::GOOGLE])->get('/registro/contacto')->assertOk()->getContent(),
-        ] as $pantalla => $html) {
-            $xpath = $this->xpath($html);
+        foreach ($this->registros() as $pantalla => $xpath) {
             $etiqueta = $xpath->query('//label[.//input[@name="terminos"]]')->item(0);
             $this->assertInstanceOf(DOMElement::class, $etiqueta, "{$pantalla}: la casilla tiene su etiqueta.");
-
-            // /analyze A7: sin las dos anotaciones, el texto es exactamente el de CA4.
-            $sinAnotaciones = trim(preg_replace('/\s+/u', ' ', str_replace(self::PESTANA, '', $etiqueta->textContent)));
-            $this->assertSame(self::CASILLA, $sinAnotaciones, "{$pantalla}: el texto de la casilla (CA4).");
+            $this->assertSame(self::CASILLA, $this->texto($etiqueta), "{$pantalla}: el texto de la casilla (CA4).");
 
             $enlaces = $xpath->query('.//a', $etiqueta);
             $this->assertSame(2, $enlaces->length, "{$pantalla}: dos enlaces en la casilla.");
             foreach ([[url('/terminos'), 'términos de uso'], [url('/aviso-de-privacidad'), 'aviso de privacidad']] as $n => [$destino, $nombre]) {
                 $enlace = $enlaces->item($n);
-                $this->assertSame($destino, $enlace->getAttribute('href'), "{$pantalla}: «{$nombre}» lleva a su página.");
-                $this->assertSame("{$nombre} ".self::PESTANA, $this->texto($enlace), "{$pantalla}: el enlace anuncia que abre otra pestaña.");
-                $this->assertSame('_blank', $enlace->getAttribute('target'), "{$pantalla}: «{$nombre}» se abre en otra pestaña.");
-                $this->assertContains('noopener', preg_split('/\s+/', $enlace->getAttribute('rel')), "{$pantalla}: «{$nombre}» con noopener (TM1).");
+                $this->assertSame($nombre, $this->texto($enlace));
+                $this->assertSame($destino, $enlace->getAttribute('href'), "{$pantalla}: sin JavaScript, «{$nombre}» lleva a su página.");
+                $this->assertFalse($enlace->hasAttribute('target'), "{$pantalla}: «{$nombre}» en la misma pestaña (CA4 refinado; TM1 retirada).");
+                $this->assertSame('dialog', $enlace->getAttribute('aria-haspopup'), "{$pantalla}: «{$nombre}» anuncia que abre una ventana.");
+                $ventana = $xpath->query('//dialog[@id="'.$enlace->getAttribute('data-dialogo').'"]');
+                $this->assertSame(1, $ventana->length, "{$pantalla}: «{$nombre}» abre una ventana que existe.");
                 $this->assertFalse($enlace->hasAttribute('style'), "{$pantalla}: «{$nombre}» sin estilo en línea (P9).");
             }
         }
+    }
+
+    /** @return array<string, DOMXPath> los dos registros: el normal y el que se completa tras entrar con Google */
+    private function registros(): array
+    {
+        return [
+            'registro' => $this->xpath($this->get('/registro')->assertOk()->getContent()),
+            'registro con Google' => $this->xpath($this->withSession(['google_registro' => self::GOOGLE])->get('/registro/contacto')->assertOk()->getContent()),
+        ];
+    }
+
+    /** Texto normalizado de las secciones de un contenedor. */
+    private function textoDeSecciones(DOMXPath $xpath, \DOMNode $contenedor): string
+    {
+        $partes = [];
+        foreach ($xpath->query('.//section', $contenedor) as $seccion) {
+            $partes[] = $this->texto($seccion);
+        }
+
+        return implode(' | ', $partes);
+    }
+
+    public function test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina(): void
+    {
+        $paginas = [
+            'Términos de uso' => $this->pagina(self::TERMINOS),
+            'Aviso de privacidad' => $this->pagina(self::PRIVACIDAD),
+        ];
+        foreach ($this->registros() as $pantalla => $xpath) {
+            $ventanas = $xpath->query('//dialog[contains(concat(" ", normalize-space(@class), " "), " dialogo-legal ")]');
+            $this->assertSame(2, $ventanas->length, "{$pantalla}: una ventana por texto.");
+            foreach ($ventanas as $ventana) {
+                $titulo = $xpath->query('//*[@id="'.$ventana->getAttribute('aria-labelledby').'"]')->item(0);
+                $nombre = $this->texto($titulo);
+                $this->assertArrayHasKey($nombre, $paginas, "{$pantalla}: la ventana se nombra con su título.");
+                $this->assertStringContainsString(self::FECHA, $this->texto($ventana), "{$pantalla}, {$nombre}: con la fecha.");
+                $this->assertSame(1, $xpath->query('.//button[@type="button"][@data-cerrar][normalize-space()="Cerrar"]', $ventana)->length, "{$pantalla}, {$nombre}: botón «Cerrar».");
+                $pagina = $paginas[$nombre];
+                $this->assertSame(
+                    $this->textoDeSecciones($pagina, $pagina->query('//main')->item(0)),
+                    $this->textoDeSecciones($xpath, $ventana),
+                    "{$pantalla}, {$nombre}: el mismo texto que la página (D11)."
+                );
+            }
+        }
+    }
+
+    public function test_la_ventana_del_registro_solo_usa_tokens(): void
+    {
+        // P9: las reglas nuevas de la ventana, solo con tokens (salvo 0, porcentajes, 1.6 y 100dvh).
+        $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents(public_path('css/auth.css')));
+        preg_match_all('/([^{}]*\.dialogo-legal[^{}]*)\{([^}]*)\}/', $css, $reglas, PREG_SET_ORDER);
+        $this->assertNotEmpty($reglas, 'auth.css tiene las reglas de la ventana.');
+        foreach ($reglas as [, $selector, $cuerpo]) {
+            $sinTokens = preg_replace('/var\(--[\w-]+\)|100dvh|\b1\.6\b|\b0\b|\d+%|calc\(|[()*+\-\/,]/', '', $cuerpo);
+            $this->assertDoesNotMatchRegularExpression('/\d|#[0-9a-f]{3}|rgba?\(/i', $sinTokens, trim($selector).': solo tokens.');
+        }
+    }
+
+    public function test_el_script_de_las_ventanas_abre_y_cierra(): void
+    {
+        // /analyze A17: la estructura del script de las ventanas (que el navegador lo ejecute así se comprueba a mano).
+        $ruta = resource_path('views/auth/_dialogos-legales.blade.php');
+        $this->assertFileExists($ruta, 'Las ventanas tienen su parcial.');
+        $this->assertSame(1, preg_match('#<script>(.*?)</script>#s', file_get_contents($ruta), $script), 'El parcial lleva su script.');
+        $js = $script[1];
+        $this->assertStringContainsString("querySelectorAll('[data-dialogo]')", $js, 'Lo abren los enlaces de la casilla.');
+        $this->assertMatchesRegularExpression("/typeof\s+destino\.showModal\s*!==\s*'function'\)\s*return;/", $js, 'Sin showModal, el enlace navega a la página.');
+        $this->assertMatchesRegularExpression('/preventDefault\(\);[\s\S]*showModal\(\)/', $js, 'Con showModal, abre la ventana sin salir.');
+        $this->assertMatchesRegularExpression("/querySelector\('\[data-cerrar\]'\)[\s\S]*?close\(\)/", $js, '«Cerrar» la cierra.');
+        $this->assertMatchesRegularExpression('/target\s*===\s*d\)\s*d\.close\(\)/', $js, 'Pulsar fuera la cierra.');
+        $this->assertMatchesRegularExpression("/addEventListener\('close'[\s\S]*?\.focus\(\)/", $js, 'Al cerrarse, el foco vuelve al enlace.');
     }
 
     public function test_el_registro_sin_la_casilla_se_rechaza(): void
