@@ -96,6 +96,10 @@ class PaginasPublicasTest extends TestCase
         // Spec 045 (T013, TM2; /analyze A1): las vistas de los términos y del aviso, sin salida sin escapar.
         'resources/views/publico/terminos.blade.php',
         'resources/views/publico/aviso-privacidad.blade.php',
+        // Spec 045 (T032): los parciales del texto y de las ventanas del registro.
+        'resources/views/publico/legal/terminos-texto.blade.php',
+        'resources/views/publico/legal/privacidad-texto.blade.php',
+        'resources/views/auth/_dialogos-legales.blade.php',
     ];
 
     /** Host de las peticiones del test (el de `APP_URL` de `phpunit.xml`): también es propio. */

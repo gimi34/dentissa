@@ -180,6 +180,10 @@ class PaginasPublicasCssTest extends TestCase
         // Spec 045 (T014, P9; /analyze A2): los términos de uso y el aviso de privacidad.
         'resources/views/publico/terminos.blade.php',
         'resources/views/publico/aviso-privacidad.blade.php',
+        // Spec 045 (T032): los parciales del texto y de las ventanas del registro.
+        'resources/views/publico/legal/terminos-texto.blade.php',
+        'resources/views/publico/legal/privacidad-texto.blade.php',
+        'resources/views/auth/_dialogos-legales.blade.php',
         'resources/views/publico/_trabajo.blade.php',
         'resources/views/galeria/index.blade.php',
     ];
