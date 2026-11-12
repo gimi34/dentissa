@@ -96,7 +96,8 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097: como admin, `/admin/reportes` muestra el mes en curso con cifras o el estado vacío, un atajo cambia el periodo y la vista previa de impresión sale sin menú; con una cuenta de dentista, 403 y su fila en `/admin/auditoria`
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-12 14:07 para v0.17.0 («desplegar v0.17.0 a producción»)
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar la alerta de 5xx. Rollback: `deploy/volver.sh <tag anterior>` sin copia
 - [ ] T098 Marcar spec como `released`; en la spec 012, una línea en su Historial: el placeholder de «Reportes» ya no existe (spec 047)
 
