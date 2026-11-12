@@ -5,7 +5,7 @@
 //   node capturar.mjs <vista> [<vista>…]   solo esas vistas (por su id en VISTAS), sin recortes
 //   node capturar.mjs --seco [<vista>…]    imprime lo que capturaría y termina (sin navegador ni base)
 //   node capturar.mjs --anchos=1024,1440 <vista>…   esos anchos en lugar de los de cada vista
-//   node capturar.mjs --medir               test en el navegador de las specs 033, 034, 035 y 038 (anchos, toque,
+//   node capturar.mjs --medir               test en el navegador de las specs 033, 034, 035, 038 y 047 (anchos, toque,
 //                                           menú, recortes, solapes, tarjetas, filtro, palabras largas,
 //                                           sin JS, escritorio frente a la línea base y páginas públicas);
 //                                           sale con 1 si algo falla
@@ -112,6 +112,11 @@
 // (D19): con JavaScript, la pastilla «¿Está abierto ahora?» escrita y dentro de la pantalla en los cuatro
 // anchos, y el menú del móvil, que se cierra con Escape y devuelve el foco a «Menú». La franja y su
 // botón de pausa se retiran (D21).
+//
+// Spec 047: «Reportes» del admin entra en las pantallas incluidas de --medir (anchos, recortes, toque,
+// solapes, tarjetas y palabras largas) sin compararse con la línea base, y tiene su comprobación de la
+// primera pantalla. Necesita citas en el mes en curso (las de hoy del paso 3 bastan). El recorte
+// `estado-vacio` es «Reportes» en un periodo sin citas (enero de 2000).
 //
 // Entradas: /tmp/capturas/ids.json y las cuentas <rol>1@dentissa.test (cliente1, con
 // CORREO_CLIENTE) con la contraseña de CLAVE.
@@ -266,7 +271,7 @@ const COMPONENTES = [
   ['badges-estado', '/admin/citas', 'table tbody'],
   ['barra-lateral', '/admin', '.sidebar'],
   ['barra-superior', '/admin', '.topbar'],
-  ['estado-vacio', '/admin/reportes', '.content'],
+  ['estado-vacio', '/admin/reportes?desde=2000-01-01&hasta=2000-01-31', '.content'],
   ['historial', '/admin/citas/{cita_historial}', ':has(> .timeline-item)'],
   ['horario-dia', '/admin/personal/{p_dentista}', '.horario-dia'],
   ['lista-citas', '/admin/personal/{p_dentista}', '.lista-citas'],
@@ -331,6 +336,8 @@ const COMPROBACIONES = [
   '038 sin JS: / y /servicios a 320, 390, 900 y 1440 con JavaScript desactivado, sin desplazamiento horizontal ni recortes, con todas las entradas visibles (CA8, D16)',
   '038 pastilla: con JavaScript, «Abierto ahora · cerramos…» o «Cerrado · abrimos…» escrita y dentro de la pantalla a 320, 390, 900 y 1440 (D19)',
   '038 menú: por debajo de 900, con JavaScript, Escape cierra el menú <details> y el foco vuelve a «Menú» (D19, design.md)',
+  '047 reportes: «Reportes» del admin, con las comprobaciones de las pantallas incluidas (sin desplazamiento horizontal a 320, 390, 844x390 y 1440; sin recortes, solapes ni toque < 44; sus tres tablas como tarjetas; palabras largas), fuera de la línea base (CA1, K4)',
+  '047 primera pantalla: a 320×568 y 390×844, la frase del periodo y «Citas en el periodo» visibles sin desplazarse (K1)',
 ];
 
 const PANELES = { admin: '/admin', dentista: '/dentista', asistente: '/asistente', cliente: '/cliente' };
@@ -341,6 +348,8 @@ const PANTALLAS_PERSONAL = ['admin', 'dentista', 'asistente'].flatMap((rol) => [
   [`${rol}-pacientes`, rol, `/${rol}/pacientes`],
 ]).concat([['admin-servicios', 'admin', '/admin/servicios']]);
 // Spec 035: pantallas de pacientes y expedientes, por cada rol que las ve, [id, rol, ruta].
+// Spec 047: «Reportes». Fuera de PANTALLAS_PERSONAL: no se compara con la línea base (D13 de la 034).
+const PANTALLAS_047 = [['admin-reportes', 'admin', '/admin/reportes']];
 const PANTALLAS_035 = [
   ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-ficha-paciente`, rol, `/${rol}/pacientes/{paciente}`]),
   ['admin-alta-paciente', 'admin', '/admin/pacientes/crear'], ['asistente-alta-paciente', 'asistente', '/asistente/pacientes/crear'],
@@ -916,6 +925,7 @@ async function medir() {
     ...PANTALLAS_PERSONAL,
     ...INCLUIDAS_PACIENTE.map((id) => [id, 'cliente', RUTAS_PACIENTE[id]]),
     ...PANTALLAS_035,
+    ...PANTALLAS_047,
   ];
   const DE_035 = new Set(PANTALLAS_035.map(([id]) => id));
   let controlSolapes = false;
@@ -1233,6 +1243,27 @@ async function medir() {
       if (!estado.foco) falla(donde, 'el foco no vuelve a «Menú»');
       await page.close();
     });
+  }
+
+  // ── Spec 047: «Reportes» ──────────────────────────────────────────────────────────────────
+  // La frase del periodo y «Citas en el periodo», dentro de la primera pantalla (K1).
+  for (const [id, rol, ruta] of PANTALLAS_047) {
+    for (const [ancho, alto] of [[320, 568], [390, 844]]) {
+      const donde = `047 primera pantalla ${id}@${ancho}x${alto}`;
+      await intenta(donde, async () => {
+        const page = await abrir(rol, ruta, String(ancho));
+        await page.setViewportSize({ width: ancho, height: alto });
+        const cajas = await page.evaluate(() => Object.fromEntries(['reporte-periodo', 'resumen-total'].map((nombre) => {
+          const el = document.getElementById(nombre); const r = el?.getBoundingClientRect();
+          return [nombre, el && r.height > 0 ? { arriba: Math.round(r.top), abajo: Math.round(r.bottom) } : null];
+        })));
+        for (const [nombre, caja] of Object.entries(cajas)) {
+          if (!caja) falla(donde, `no se ve #${nombre} (¿hay citas en el mes en curso?)`);
+          else if (caja.arriba < 0 || caja.abajo > alto) falla(donde, `#${nombre} queda fuera de la primera pantalla (de ${caja.arriba} a ${caja.abajo} px)`);
+        }
+        await page.close();
+      });
+    }
   }
 
   return fallos;

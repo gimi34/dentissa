@@ -46,6 +46,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
 | 043 | [contrasena-distinta](043-contrasena-distinta/spec.md) | Identidad | released (v0.14.1) | — | — (2026-11-03) |
 | 044 | [navegacion-salidas](044-navegacion-salidas/spec.md) | Transversal | released (v0.15.0) | — | — (2026-11-08) |
+| 047 | [reportes-admin](047-reportes-admin/spec.md) | Transversal | implemented | — | — (2026-11-10) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
@@ -60,7 +61,6 @@ Specs previstas (números reservados; se crean con `/specify` una por una):
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida
 construirlas:
-- **Reportes** (`/admin/reportes`): vista "en construcción".
 - **Recordatorios de cita**: `citas.recordatorio_enviado` se lee pero nunca se escribe.
 - **Adjuntos del expediente**: `expedientes.archivos_url` siempre se guarda como `null`.
 - `welcome.blade.php`: código muerto del esqueleto de Laravel.

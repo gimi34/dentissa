@@ -4,6 +4,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Nombre de la consulta
+    |--------------------------------------------------------------------------
+    |
+    | El nombre con el que la clínica firma un documento en texto: hoy, la
+    | cabecera de la hoja impresa de «Reportes» (spec 047, CA8, D11).
+    |
+    */
+
+    'nombre' => 'Melissa López N. · Odontología integral',
+
+    /*
+    |--------------------------------------------------------------------------
     | Zona horaria de la clínica
     |--------------------------------------------------------------------------
     |

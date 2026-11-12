@@ -16,6 +16,7 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ServiciosController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\PreventBackHistory;
@@ -114,8 +115,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/personal/{id}/toggle', [PersonalController::class, 'toggleActivo'])->name('personal.toggle');
     Route::post('/personal/{id}/horarios', [PersonalController::class, 'saveHorarios'])->name('personal.horarios');
 
-    // Placeholders
-    Route::get('/reportes', fn () => view('placeholder', ['titulo' => 'Reportes']))->name('reportes');
+    // Reportes de la administración (spec 047): solo lectura.
+    Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes');
 
     // Registro de auditoría (spec 020): solo consulta, sin rutas de modificación (CA2).
     Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');

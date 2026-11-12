@@ -247,6 +247,15 @@
   .opt .s44-error { background: var(--color-surface); border-radius: var(--radius-md); padding: var(--space-7); display: grid; gap: var(--space-4); }
   .opt .s44-error h4 { margin: 0; font-size: var(--text-acceso-titulo); }
   .opt .s44-error .s44-etiqueta { font-size: var(--text-meta); font-weight: var(--weight-bold); color: var(--color-accent-text); }
+  .opt .r47 { display: grid; gap: var(--space-4); max-width: 520px; }
+  .opt .r47-periodo { margin: 0; color: var(--color-text); font-size: var(--text-meta); font-weight: var(--weight-strong); }
+  .opt .r47-tasa { background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); display: grid; gap: var(--space-1); }
+  .opt .r47-tasa strong { font-size: var(--text-acceso-titulo); }
+  .opt .r47-tasa span { font-size: var(--text-meta); }
+  .opt .r47-tabla { width: 100%; border-collapse: collapse; background: var(--color-surface); font-size: var(--text-meta); }
+  .opt .r47-tabla th, .opt .r47-tabla td { padding: var(--space-2) var(--space-3); text-align: left; }
+  .opt .r47-tabla tfoot th, .opt .r47-tabla tfoot td { font-weight: var(--weight-strong); border-top: var(--border-width) solid var(--color-border); }
+  .opt .r47-impresa { margin: 0; padding: var(--space-3); border: var(--border-width) solid var(--color-border); background: var(--color-surface); color: var(--color-text); font-size: var(--text-meta); }
   .opt .s44-secundarios { display: flex; flex-wrap: wrap; gap: var(--space-4); }
   .opt .p-publico { font-family: var(--font-publica); font-size: var(--text-publico); display: grid; gap: var(--space-7); }
   .opt .p-placa { background: var(--color-surface); border: var(--border-width-strong) solid var(--color-accent-text); border-radius: var(--radius-md);
@@ -866,6 +875,20 @@
         <div><p class="g-n">Posición 2</p><p>Corona de porcelana en un premolar.</p><p>Consentimiento declarado por Admin Sistema el 07/11/2026</p></div></div>
       <fieldset class="g-paciente"><legend>¿Aparece un paciente en la foto?</legend>
         <label><input type="radio" name="g-paciente-039"> Sí</label><label><input type="radio" name="g-paciente-039" checked> No</label></fieldset>
+    </div></div></div>
+    <h3 id="reportes-047">Reportes de la administración (spec 047, 1.15.0)</h3>
+    <p class="v-note">Muestra de las piezas de la 047 (<a href="../specs/047-reportes-admin/design.md">diseño</a>, sin candidatos ni tokens nuevos):
+      la frase del periodo, una tasa en su tarjeta de cifra, la fila de totales de una tabla y la cabecera impresa, que solo lleva texto. Por debajo de
+      900 px la frase del periodo y el total van antes del filtro y las tres tablas pasan a tarjetas, con los totales en una última tarjeta. Al
+      imprimir se ocultan el menú, el filtro y los botones (primera hoja de impresión del sistema, en <code>reportes.css</code>).</p>
+    <div class="v-stage"><div class="opt"><div class="r47">
+      <p class="r47-periodo">Del 1 al 30 de noviembre de 2026</p>
+      <div class="r47-tasa"><span>Cancelación</span><strong>12,5 %</strong><span>5 de 40 citas</span></div>
+      <table class="r47-tabla"><caption class="v-note">Citas por dentista</caption>
+        <thead><tr><th scope="col">Dentista</th><th scope="col">Total</th><th scope="col">Completadas</th></tr></thead>
+        <tbody><tr><th scope="row">Dentista de muestra</th><td>40</td><td>31</td></tr></tbody>
+        <tfoot><tr><th scope="row">Total</th><td>40</td><td>31</td></tr></tfoot></table>
+      <p class="r47-impresa">Melissa López N. · Odontología integral — Reportes — Del 1 al 30 de noviembre de 2026 — Generado el 11 de noviembre de 2026</p>
     </div></div></div>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
     <p class="v-note">Muestra viva de la paginación de la consulta de auditoría

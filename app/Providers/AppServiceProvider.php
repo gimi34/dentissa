@@ -9,6 +9,7 @@ use App\Autorizacion\CambiarEstadoCita;
 use App\Autorizacion\GestionGaleria;
 use App\Autorizacion\GestionPersonal;
 use App\Autorizacion\ReprogramarCita;
+use App\Autorizacion\VerReportes;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RecuperarContrasenaController;
 use Illuminate\Auth\Events\Lockout;
@@ -50,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Galería de trabajos (spec 039, CA13): solo la administración la gestiona.
         Gate::define('gestionar-galeria', [GestionGaleria::class, 'autorizar']);
+
+        // Reportes de la administración (spec 047, CA9): solo la administración los ve.
+        Gate::define('ver-reportes', [VerReportes::class, 'autorizar']);
 
         // Límites de intentos (spec 030, CA8): 5 por minuto por IP (IPv6 por su /64), cuente o no
         // el resultado. El mensaje es el del login y no revela si la cuenta existe.
