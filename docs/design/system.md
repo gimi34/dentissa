@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.14.0
+version: 1.15.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -98,11 +98,16 @@ solo `welcome.blade.php`, sin ruta, lo declara).
 Sitio público (spec 038; 1.9.0, ronda 5; 1.10.0, ronda 6; [diseño](../specs/038-pagina-inicio/design.md)):
 dos familias autoalojadas en `public/fonts/` (woff2 latino de `@fontsource` 5.3.0, OFL-1.1, cada una
 con su `OFL.txt`) y declaradas con `@font-face` en `public/css/publico.css`: `--font-display`
-(`"Newsreader", ui-serif, Georgia, serif`; 500, 600 y cursiva 500, `newsreader/`; desde 1.10.0) para los
-títulos y `--font-publica` (`"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
+(`"Newsreader", "Newsreader respaldo", "Newsreader respaldo Times", ui-serif, Georgia, serif`; 500, 600 y
+cursiva 500, `newsreader/`; desde 1.10.0, respaldos desde 1.15.0) para los títulos y `--font-publica` (`"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
 `montserrat/`) para el texto. «Montserrat respaldo» (1.14.0) es Arial del sistema (o Liberation Sans) con
 `size-adjust` y la altura de Montserrat por peso, sin descarga: mientras llega Montserrat ocupa lo mismo y el
-cambio de fuente no mueve la página (K8 de la 038). Newsreader sustituye en 1.10.0 a Cormorant Garamond (1.9.0), que coloca
+cambio de fuente no mueve la página (K8 de la 038). Igual con Newsreader (1.15.0, spec 045): «Newsreader
+respaldo» es Georgia del sistema (500: `size-adjust` 97,25 %, `ascent-override` 76,1 %, `descent-override`
+27,8 %; 600–700, Georgia Bold: 85,28 %, 86,8 %, 31,7 %; cursiva 500, Georgia Italic: 91,1 %, 81,2 %, 29,6 %) y
+«Newsreader respaldo Times», Times New Roman o Liberation Serif (500: 106,65 %, 69,4 %, 25,3 %; 600–700:
+102,74 %, 72 %, 26,3 %; cursiva 500: 101,15 %, 73,2 %, 26,7 %), todas con `line-gap-override` 0 %: la
+primera que tenga el sistema, porque Georgia y Times no tienen las mismas medidas. Newsreader sustituye en 1.10.0 a Cormorant Garamond (1.9.0), que coloca
 las tildes corridas a la derecha y en titulares en español se leen rotas. Montserrat sustituye a Lexend, que se retira (D21). Tamaños fluidos de 320 a 1440 px:
 `--text-display` (52px a 120px, titular de cartel, una palabra por línea), `--text-statement` (28px a
 44px, frase de «Sobre nosotros»), `--text-seccion` (40px a 80px, títulos de sección), `--text-indice`
@@ -757,6 +762,28 @@ Gestión (`app.css`), dentro de `.formulario-accesible` y con su layout (`.topba
   /review R34). El contenido de la vista detrás queda `inert`.
 - **Menú del administrador:** entrada «Galería» después de «Servicios», con `aria-current` en sus rutas.
 
+### Página legal (spec 045, 1.15.0)
+«Términos de uso» (`/terminos`) y «Aviso de privacidad» (`/aviso-de-privacidad`), con la composición de
+`/servicios` ([diseño](../specs/045-terminos-privacidad/design.md), candidato `c4`), en `publico.css`:
+- **Rejilla** (`.lb-legal`): cuatro zonas. Desde 900 px, «cabeza cabeza resumen» sobre «indice texto
+  texto» en `1fr 1.6fr 1.4fr`, con `--space-seccion` entre filas y `--space-8` entre columnas; por debajo,
+  una columna en el orden del documento (cabecera, índice, resumen y texto), para que la primera pantalla
+  del móvil muestre el título, la fecha y el comienzo del índice. La cabecera es `.lb-cabeza` (la fecha
+  de actualización con la entrada, en `--text-lead` y `--p600`).
+- **Índice** (`.lb-indice--legal`): el de `/servicios` (`.lb-indice`, píldoras sticky en escritorio) con
+  su título «En esta página» (`.pub-etiqueta`, a todo el ancho, enlazado con `aria-labelledby`) y el
+  número de cada sección en `small`.
+- **Texto corrido** (`.lb-texto`): la columna entera a `--measure`, para que el filete del título de
+  sección acabe donde acaba el texto; párrafos y listas separados `--space-4`, viñetas `--p400` con
+  `--space-3` entre puntos, enlaces `--text` subrayados en `--p400`; cada sección con
+  `scroll-margin-top: calc(var(--touch-min) * 2 + var(--space-8))` para que la cabecera fija no tape el
+  título al saltar desde el índice.
+- **Número de sección** (`.lb-num`): `--font-publica` `--weight-bold` `--text-publico-small` `--p600`,
+  `--tracking-etiqueta`, encima del `h2` y con `aria-hidden`.
+- **«En pocas palabras»** (`.lb-resumen`): la tarjeta de la agenda (`.pub-book__card` con su arco) con
+  `--space-8` de relleno, el `h2` en `--text-publico-h1`, los puntos en párrafos `--p100` separados por un
+  filete `--p600` y los enlaces `--white` subrayados; es un `aside` con su título.
+
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
 - agendada → pink (`--p600` sobre `--p100`, 6.05:1);
@@ -1080,3 +1107,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-03 | diseño | El usuario prefiere el estilo anterior del acceso al carnet de `c7` (spec 041, D20) | Dentro de 1.11.0, aún sin liberar: sale el carnet (franja, tarjeta y troquel) y entran el panel y el formulario del login anterior, con sus valores como tokens; se mantienen el contraste, el foco y el toque que pide P9 | usuario |
 | 2026-11-08 | diseño | ¿Qué incorpora el sistema para la galería de trabajos (spec 039)? | Versión 1.13.0 (era 1.12.0; se renumeró al fusionar la v0.15.0, que liberó la 1.12.0 con la spec 044): tokens `--foto-ratio` (fijo), `--carrusel-foto-w` (cortes de 560 y 900 px) y `--thumb-w` (fijo); componentes públicos «Carrusel de trabajos», «Foto de trabajo», «Mosaico de `/galeria`», «Galería vacía» y la utilidad `.pub-solo-lector`; componentes de la gestión dentro de `.formulario-accesible` («Tarjeta de foto», «Pregunta del paciente», «Consentimiento», «Selector de archivo», «Aviso de error»), con radios y casilla de 44 px que generalizan `.remember-label`; entrada «Galería» del menú del administrador; M-1 de la 039. Sin colores nuevos. `--duration-firma`, que la 038 anunciaba para la 039, no hace falta | usuario (spec 039, design.md `c3` y plan) |
 | 2026-11-11 | diseño | El inicio salta entre 960 y 1024 px al llegar Montserrat: con el respaldo del sistema, más estrecho, los botones del hero caben en una fila y luego pasan a dos (CLS ~0,19, K8 de la 038) | Versión 1.14.0, sin tokens nuevos: `--font-publica` añade «Montserrat respaldo» (tres `@font-face` locales en `publico.css`, Arial o Liberation Sans con `size-adjust` 110,7 %, 112,5 % y 107,5 % para 400, 500 y 600–700). Ficha `docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md` | usuario (seguir en el carril `/fix`) |
+| 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.15.0, sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
