@@ -288,8 +288,8 @@
                     <div class="field-group">
                         <label class="checkbox-label">
                             <input type="checkbox" name="terminos" id="terminos" required>
-                            Acepto los <a href="#" style="color:var(--p500)">términos de uso</a> y la
-                            <a href="#" style="color:var(--p500)">política de privacidad</a> de Dentissa
+                            Acepto los <a href="{{ route('terminos') }}" target="_blank" rel="noopener">términos de uso (se abre en otra pestaña)</a> y el
+                            <a href="{{ route('privacidad') }}" target="_blank" rel="noopener">aviso de privacidad (se abre en otra pestaña)</a> de Dentissa
                         </label>
                     </div>
 
