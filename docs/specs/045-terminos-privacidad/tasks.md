@@ -2,7 +2,7 @@
 spec: 045-terminos-privacidad
 plan: plan.md
 impl_base: 4c67991
-status: draft
+status: approved
 ---
 
 # Tareas · 045 Términos de uso y aviso de privacidad
