@@ -5,23 +5,22 @@ round: 2
 date: 2026-11-12
 base: 403bc47
 head: 24f49b2
-human_signoff: pending
+human_signoff: gimi34 2026-11-12
 ---
 
 # Review · 047 Reportes de la clínica para la administración
 
 ## Resumen
-`approved`, a falta de la aprobación humana. La ronda 1 ([history/review.r1.md](history/review.r1.md))
+`approved`, con la aprobación del usuario (2026-11-12). La ronda 1 ([history/review.r1.md](history/review.r1.md))
 no encontró bloqueantes y pidió corregir un aviso de seguridad ajeno a la spec (R1) y endurecer dos
 tests (R4, R5). Las tres correcciones están hechas y verificadas: `composer audit` vuelve a salir con
-0 y la suite completa pasa. Quedan dos menores (R2, R3) propuestos como aceptados, a confirmar por el
-usuario.
+0 y la suite completa pasa. Quedan dos menores (R2, R3), aceptados por el usuario sin tarea.
 
 Ronda `--rerun`: se revisó el diff desde el `head` anterior (`code.diff` de 2,1 KB: dos archivos de
 test, más `composer.lock`), los hallazgos abiertos y la verificación automática completa. Hecha sin
 subagentes, releyendo los archivos desde cero.
 
-Conteo: bloqueante 0 · importante 0 · menor 2 (propuestos como aceptados) · corregidos 3
+Conteo: bloqueante 0 · importante 0 · menor 2 (aceptados) · corregidos 3
 
 ## Verificación automática
 | Comando | Resultado |
@@ -38,8 +37,8 @@ Conteo: bloqueante 0 · importante 0 · menor 2 (propuestos como aceptados) · c
 | ID | Severidad | Estado | Evidencia |
 |---|---|---|---|
 | R1 | importante | corregido (T029, `e190027`) | `phpseclib/phpseclib` 3.0.57 → 3.0.58; el diff del lockfile solo cambia ese paquete (`content-hash` igual); versión publicada el 2026-11-02, mismo repositorio, MIT; `composer audit --locked --ignore-severity=low --ignore-severity=medium` sale con 0 |
-| R2 | menor | propuesto como aceptado | sin cambios |
-| R3 | menor | propuesto como aceptado | sin cambios |
+| R2 | menor | aceptado por el usuario (2026-11-12) | sin cambios |
+| R3 | menor | aceptado por el usuario (2026-11-12) | sin cambios |
 | R4 | menor | corregido (T030, `83b8066`) | `ReportesAccesoTest::test_el_acceso_denegado_queda_en_el_registro_de_auditoria` filtra por `actor_id` del dentista del test |
 | R5 | menor | corregido (T030, `83b8066`) | `ReportesCssTest::test_el_aviso_de_error_cumple_el_contraste`; comprobado rompiendo el color de `.reporte-aviso` (falla) y restaurado |
 
@@ -97,6 +96,6 @@ La ronda 2 no añade hallazgos.
 - T030 ← R4, R5 (hecha)
 
 ## Aceptados sin tarea
-Propuestos el 2026-11-12, a confirmar por el usuario con la aprobación:
+Aceptados por el usuario el 2026-11-12:
 - **R2** → roadmap: la vuelta de un periodo rechazado en «Reportes» se detecta por la sesión; una consulta válida que llegue antes que la redirección muestra una vez el error.
 - **R3** → roadmap: el botón «Descargar» de «Reportes» conserva el `id` y el nombre de test de «Imprimir», y el plan de la 047 no recoge el rótulo nuevo.
