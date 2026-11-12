@@ -127,8 +127,10 @@ movimiento reducido).
 - **Teclado:** el orden del documento es el del móvil (título, índice, resumen, texto); en escritorio el
   resumen se ve arriba a la derecha pero se recorre después del índice.
 - **Decorativos ocultos:** el arco de la tarjeta (`aria-hidden`, `focusable="false"`).
-- **Enlaces del registro (CA4):** «(se abre en otra pestaña)» dentro del propio enlace, visible y en el
-  nombre accesible.
+- **Ventanas del registro (CA4, refinado):** cada enlace de la casilla lleva `aria-haspopup="dialog"`; la ventana
+  (`<dialog>` modal) se nombra con su título (`aria-labelledby`), al abrirse el foco va a «Cerrar» (primer
+  elemento enfocable, comportamiento nativo de `showModal`), se cierra con «Cerrar», Escape o pulsando fuera,
+  y el foco vuelve al enlace que la abrió; el fondo queda inerte mientras está abierta (nativo).
 
 ## Contenido para revisar
 

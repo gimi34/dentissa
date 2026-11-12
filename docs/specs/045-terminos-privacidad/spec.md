@@ -86,7 +86,7 @@ design`). Se miden con `design/medir.mjs` (que llama a `evaluate.mjs`) sobre las
 | K8 | La ventana de los términos en el registro (refinado) | su título, «Cerrar» y la primera sección a la vista a 320, 390 y 1440 px | CA4 |
 
 Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren `G-sin-js`,
-`G-desborde`, `G-toque` y `G-foco`; CA3 y CA5 los prueban sus tests; CA4, la ventana, se mide sola con K8). Rúbrica: pesos por defecto.
+`G-desborde`, `G-toque` y `G-foco`; CA3 y CA5 los prueban sus tests; CA4 lo cubren sus tests y la verificación manual, y K8 mide la ventana). Rúbrica: pesos por defecto.
 
 ## Requisitos no funcionales
 - Accesibilidad: WCAG 2.1 AA (P9): un solo título principal por página y títulos en orden, contraste
@@ -119,7 +119,8 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
   indexables (sin `noindex`).
 - La casilla está en `resources/views/auth/register.blade.php` y `auth/registro-contacto.blade.php`
   (hoy con `href="#"` y `style` en línea); el mensaje, en `RegisterController` (`terminos.accepted`,
-  dos sitios). Pestaña nueva con `target="_blank"` y `rel="noopener"`.
+  dos sitios). En el registro, una ventana (`dialog`) con el texto de la página; sin JavaScript, el enlace
+  lleva a la página en la misma pestaña.
 - Los datos de la clínica (dirección, teléfono, horario) salen de `config('clinica.contacto')`, como en
   las demás páginas públicas.
 - Los enlaces del pie van en `layouts/publico.blade.php` (`pub-foot__links`).
