@@ -62,6 +62,17 @@ class PaginasPublicasTest extends TestCase
             'descripcion' => 'Fotos de tratamientos hechos en la consulta Dentissa en Lázaro Cárdenas.',
             'canonica' => self::DOMINIO.'/galeria',
         ],
+        // Spec 045 (T013, P10): los términos de uso y el aviso de privacidad, indexables con sus metadatos propios.
+        '/terminos' => [
+            'titulo' => 'Términos de uso · Dentissa',
+            'descripcion' => 'Las reglas para usar el sitio de la clínica Dentissa y tu cuenta de paciente: citas en línea, lo que no está permitido y cómo contactarnos.',
+            'canonica' => self::DOMINIO.'/terminos',
+        ],
+        '/aviso-de-privacidad' => [
+            'titulo' => 'Aviso de privacidad · Dentissa',
+            'descripcion' => 'Qué datos personales guarda la clínica Dentissa, para qué, con quién los comparte y cómo ejercer tus derechos de acceso, rectificación, cancelación y oposición.',
+            'canonica' => self::DOMINIO.'/aviso-de-privacidad',
+        ],
     ];
 
     private const SCRIPT = 'js/publico.js';
@@ -82,6 +93,9 @@ class PaginasPublicasTest extends TestCase
         'resources/views/layouts/publico.blade.php',
         'resources/views/publico/inicio.blade.php',
         'resources/views/publico/servicios.blade.php',
+        // Spec 045 (T013, TM2; /analyze A1): las vistas de los términos y del aviso, sin salida sin escapar.
+        'resources/views/publico/terminos.blade.php',
+        'resources/views/publico/aviso-privacidad.blade.php',
     ];
 
     /** Host de las peticiones del test (el de `APP_URL` de `phpunit.xml`): también es propio. */
