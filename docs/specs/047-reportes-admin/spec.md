@@ -1,8 +1,9 @@
 ---
 id: 047
 slug: reportes-admin
-status: implemented
+status: released
 created: 2026-11-10
+released: v0.17.0 (2026-11-12)
 extends: []
 ---
 
