@@ -1,7 +1,7 @@
 ---
 id: 045
 slug: terminos-privacidad
-status: approved
+status: draft
 created: 2026-11-12
 extends: [002, 038]
 ---
@@ -27,7 +27,7 @@ proyecto (LFPDPPP). Quien quiera consultarlo después de registrarse tampoco tie
 - [ ] CA2 · Dado cualquiera, con o sin sesión, cuando abre «Aviso de privacidad», entonces ve una página en español con el estilo de las páginas públicas, el título «Aviso de privacidad», la fecha de la última actualización y estas secciones: quién es el responsable de los datos (la clínica, con su domicilio); qué datos se recaban (los de identificación y contacto del registro, los que da Google al registrarse con él, y los de salud que el personal anota en la atención y en el expediente, señalados como datos sensibles; las fotos de la galería, solo con el consentimiento del paciente); para qué se usan (dar la atención, llevar la agenda y el expediente, y los avisos de la cuenta, como recuperar la contraseña) y que no se usan para publicidad; con quién se comparten (los proveedores que hacen funcionar el servicio, como el alojamiento, el inicio de sesión con Google y el envío de correos, y las autoridades cuando la ley lo exige); cuánto tiempo se conservan (el expediente, al menos cinco años); cómo ejercer los derechos de acceso, rectificación, cancelación y oposición y revocar el consentimiento, por qué medios y en qué plazo se responde; qué cookies usa el sitio (solo las necesarias para la sesión, sin rastreo ni publicidad), y cómo se avisan los cambios del aviso.
 - [ ] CA3 · Dado el aviso de privacidad, cuando se compara con el registro, entonces cada dato que pide el registro (en el normal y en el que se completa con Google) aparece en la lista de datos que se recaban, y el aviso no menciona datos que el sitio no pide ni usos que no tiene.
 - [ ] CA4 · Dado alguien en el registro (el normal o el que se completa tras entrar con Google), cuando lee la casilla de aceptación, entonces dice «Acepto los términos de uso y el aviso de privacidad de Dentissa», y «términos de uso» y «aviso de privacidad» son enlaces a sus páginas, que se abren en otra pestaña y lo anuncian, también a los lectores de pantalla, con «(se abre en otra pestaña)»; al volver a la pestaña del registro, lo escrito sigue ahí.
-- [ ] CA5 · Dado alguien que envía el registro (normal o con Google) sin marcar la casilla, cuando se rechaza el envío, entonces el mensaje es «Debes aceptar los términos de uso y el aviso de privacidad.» y no se crea ninguna cuenta, como hoy.
+- [ ] CA5 · Dado alguien que envía el registro (normal o con Google) sin marcar la casilla, cuando se rechaza el envío, entonces el mensaje es «Debes aceptar los términos de uso y el aviso de privacidad.» y no se crea ninguna cuenta (hoy el registro con Google ya lo rechaza; el normal solo lo impide el navegador).
 - [ ] CA6 · Dado cualquiera en una página pública (inicio, servicios, galería y las dos páginas de esta spec), cuando llega al pie, entonces encuentra «Términos de uso» y «Aviso de privacidad», que llevan a sus páginas en la misma pestaña, a 320, 390 y 1440 px de ancho.
 - [ ] CA7 · Dado cualquiera en «Términos de uso» o «Aviso de privacidad», cuando quiere salir, entonces tiene la cabecera y el pie de las páginas públicas (con sesión, «Ir a mi panel»; sin ella, «Iniciar sesión» y «Crear cuenta»), y con sesión la página se muestra igual, sin llevarlo a su panel.
 - [ ] CA8 · Dado cualquiera con JavaScript desactivado, cuando abre cualquiera de las dos páginas, entonces lee el texto completo y todos sus enlaces funcionan.
@@ -48,8 +48,9 @@ proyecto (LFPDPPP). Quien quiera consultarlo después de registrarse tampoco tie
 - Casos de abuso: no aplica. Las páginas no reciben datos, no dependen de quién las abre y sus enlaces van a páginas fijas del propio sitio.
 
 ## Auditoría
-No aplica: las páginas no tocan datos sensibles, autenticación ni permisos, y aceptar la casilla del
-registro sigue siendo parte del alta, que ya se registra como hoy.
+No aplica: las páginas no tocan datos sensibles, autenticación ni permisos, y aceptar la casilla sigue
+siendo parte del alta. El alta de cuentas aún no se audita (pendiente en `docs/observability.md`, para la spec 021): es
+código previo que esta spec no cambia.
 
 ## Diseño
 Páginas para **leer**: quien llega quiere encontrar rápido la parte que le importa (qué datos
@@ -126,3 +127,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 |---|---|---|
 | 2026-11-12 | Creada en `draft` y aprobada por el usuario | /specify 045 |
 | 2026-11-12 | Diseño aprobado por el usuario (`c4`, 82/100) con el texto de las dos páginas | /design-spec 045 |
+| 2026-11-12 | CA5 sin «como hoy» para el registro normal, y «Auditoría» dice que el alta aún no se audita; vuelve a `draft` hasta que el usuario la apruebe | /analyze 045 r1 A9, A13 |

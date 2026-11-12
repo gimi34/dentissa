@@ -129,9 +129,10 @@ movimiento reducido).
 
 El texto de las dos páginas está en `candidatos/c4/terminos.html` y `candidatos/c4/privacidad.html`. Es
 una base para un proyecto académico con datos ficticios, no asesoría legal. Se escribió con lo que la app
-hace hoy (campos del registro y de Google, regla de 24 horas para cancelar o cambiar citas, «Mi perfil»,
-correos de la cuenta, registro de seguridad de 5 años, copias cifradas con las 14 más recientes, cookies
-de sesión y «Recordarme», el mapa de Google del inicio). Conviene que revises sobre todo estos puntos, que
+hace hoy (campos del registro y de Google, contacto de emergencia de la ficha, regla de 24 horas para
+cancelar o cambiar citas, «Mi perfil», correos de la cuenta, registro de seguridad de 5 años con los
+accesos denegados y algunos cambios, copias cifradas con las 14 más recientes, cookies de sesión, el mapa de
+Google del inicio). Refinado tras `/analyze` r1 (A3, A8): ver «Decisiones». Conviene que revises sobre todo estos puntos, que
 no salen de ningún documento del proyecto:
 
 - **Menores de edad** (términos, «Tu cuenta»): «la crea y la usa su madre, su padre o su tutor».
@@ -155,3 +156,4 @@ no salen de ningún documento del proyecto:
 | 2026-11-12 | diseño | «Cuánto tiempo los conservamos» se partía en su píldora | El título de la sección pasa a «Cuánto los conservamos» (CA2 sigue cubierto: dice cuánto tiempo) | evaluador de c3 |
 | 2026-11-12 | supuesto | Lo que el evaluador aún señaló en c4: frases clave solo en negrita, índice sin la sección en curso, franja libre a 1440 px, una píldora partida a 320 px | Se acepta: c4 supera el umbral. Marcar la sección en curso pediría JavaScript nuevo (la spec no lo quiere) | evaluador de c4 |
 | 2026-11-12 | diseño | ¿Se aprueban el diseño (c4) y el texto de las dos páginas, con los puntos de «Contenido para revisar»? | Aprobados tal cual | usuario |
+| 2026-11-12 | refinado | `/analyze` r1 A3 y A8: el aviso describía una cookie de «Recordarme» que no existe (el inicio de sesión no la usa) y un registro de seguridad con «entradas y cambios» que hoy no se auditan, y no nombraba el contacto de emergencia ni el navegador de la sesión | El aviso describe lo que la app hace hoy: sin «Recordarme»; «Proteger el servicio y detectar accesos indebidos»; el registro de seguridad con «los accesos denegados y algunos cambios de la cuenta, como el restablecimiento de la contraseña»; datos técnicos con el navegador «en tu sesión»; y «En tu ficha de paciente: el nombre y el teléfono de un contacto de emergencia». `c4` vuelto a medir: puertas y KPIs en verde en las dos páginas | usuario |

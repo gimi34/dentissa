@@ -1,6 +1,6 @@
 ---
 spec: 045-terminos-privacidad
-status: approved  # draft | approved | blocked
+status: draft  # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-12
 ---
@@ -24,13 +24,13 @@ base de dependencias obliga a subir `phpseclib/phpseclib` a 3.0.58 (decisión de
 | P1 Spec aprobada antes de código | ✅ | Spec 045 y `design.md` aprobados; este plan y `tasks.md` se aprueban antes de `/implement` | manual: `python .ai/bin/aidd.py status` |
 | P2 Test que falla antes y pasa después | ✅ | Cada CA con su test (Trazabilidad). Son de **caracterización** la parte de CA5 del registro con Google (ya valida la casilla: se comprueba rompiendo la regla `terminos` de `contactoStore`) y la parte de CA7 que dice que con sesión la página no redirige (se comprueba añadiendo un redirect al método) | test: Trazabilidad; `/implement` anota el fallo previo o la rotura comprobada |
 | P3 Autorización en el servidor | ✅ | Las dos rutas son públicas y sin datos de ninguna cuenta: no hay recurso que autorizar. Con y sin sesión responden igual | test: `TerminosPrivacidadTest::test_con_y_sin_sesion_se_ven_igual` |
-| P4 Entrada validada y SQL con bindings | ✅ | Ninguna entrada nueva. El registro normal valida `terminos` en el servidor (`accepted`), como ya hace el de Google. En Blade solo la salida escapada (dobles llaves); el texto fijo de las vistas es HTML de la plantilla, no datos | test: `TerminosPrivacidadTest::test_el_registro_sin_la_casilla_se_rechaza` · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` (cubre `publico/*`) · lint: `semgrep` sobre lo tocado |
+| P4 Entrada validada y SQL con bindings | ✅ | Ninguna entrada nueva. El registro normal valida `terminos` en el servidor (`accepted`), como ya hace el de Google. En Blade solo la salida escapada (dobles llaves); el texto fijo de las vistas es HTML de la plantilla, no datos | test: `TerminosPrivacidadTest::test_el_registro_sin_la_casilla_se_rechaza` · `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` con las dos vistas nuevas en su lista `VISTAS` (A1) · lint: `semgrep` sobre lo tocado |
 | P5 Nada sensible en el repositorio | ✅ | Sin secretos ni datos: el texto usa los datos ficticios de la clínica de `config/clinica.php` | lint: `gitleaks detect --no-banner` |
-| P6 Sin vulnerabilidades críticas o altas | ✅ | Línea base del 2026-11-12: `composer audit --locked` con 1 aviso sin severidad en `phpseclib/phpseclib` 3.0.57 (PKSA-h7cz-q7zq-mdkt, DoS por CPU; la CI ya falla). Se sube a 3.0.58 en esta spec (D10). `npm audit`: 0. Sin dependencias nuevas | manual: `composer audit --locked` y el comando de la CI sin avisos en la tarea y en `/review` |
-| P7 Auditoría | ➖ | No toca datos sensibles, autenticación ni permisos: las páginas son texto fijo. El alta sigue igual (la casilla ya era obligatoria) | — |
+| P6 Sin vulnerabilidades críticas o altas | ✅ | Línea base del 2026-11-12: `composer audit --locked` con 1 aviso sin severidad en `phpseclib/phpseclib` 3.0.57 (PKSA-h7cz-q7zq-mdkt, DoS por CPU; la CI ya falla). Se sube a 3.0.58 en esta spec (D10), publicada el 2026-11-02: 10 días, cumple la antigüedad mínima de 7 días de `docs/security.md` (A4). `npm audit`: 0. Sin dependencias nuevas | manual: `composer audit --locked` y el comando de la CI sin avisos en la tarea y en `/review` |
+| P7 Auditoría | ➖ | No toca datos sensibles, autenticación ni permisos: las páginas son texto fijo. El alta de cuentas aún no se audita (pendiente en `docs/observability.md`, para la spec 021): es código previo que la 045 no cambia (A9) | — |
 | P8 Correlación y logs | ➖ | Sin logs nuevos; las rutas nuevas pasan por el middleware global de correlación como las demás públicas | — |
-| P9 Sistema de diseño | ✅ | Solo tokens de `system.md`; lo nuevo (`design.md` → «Cambios a incorporar al sistema») entra en `system.md` y `system.html` 1.15.0 en la primera tarea. En el registro se **quitan** los `style=""` de los dos enlaces (pasan a una regla de `auth.css` con `--p500`); el resto del registro es código previo (deuda DS). WCAG 2.1 AA | test: `PaginasPublicasCssTest` (solo tokens en `publico.css`; respaldo de Newsreader; reglas de la página legal) · `TerminosPrivacidadTest::test_la_casilla_del_registro` (sin `style` en los enlaces) · manual: `design/medir.mjs` sobre la app servida en local (puertas y KPIs de `criterios.json`) y verificación del usuario contra `candidatos/c4` a 320, 390 y 1440 px |
-| P10 Rutas indexables descubribles | ✅ | Las dos rutas son indexables, con título, descripción y canónica propios, sin `noindex` y con el contenido en el HTML del servidor; `docs/seo.md` las añade a su inventario | test: `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` y `test_el_contenido_va_en_el_html_del_servidor` con las dos rutas · manual: Lighthouse SEO ≥ 90 de las dos en `/review` |
+| P9 Sistema de diseño | ✅ | Solo tokens de `system.md`; lo nuevo (`design.md` → «Cambios a incorporar al sistema») entra en `system.md` y `system.html` 1.15.0 en la primera tarea. En el registro se **quitan** los `style=""` de los dos enlaces (pasan a una regla de `auth.css` con `--p500`); el resto del registro es código previo (deuda DS). WCAG 2.1 AA | test: `PaginasPublicasCssTest` (solo tokens en `publico.css`; respaldo de Newsreader; reglas de la página legal; `test_las_vistas_publicas_no_llevan_estilos_en_linea` con las dos vistas y las dos rutas nuevas, A2) · `TerminosPrivacidadTest::test_la_casilla_del_registro` (sin `style` en los enlaces) · manual: `design/medir.mjs` sobre la app servida en local (puertas y KPIs de `criterios.json`) y verificación del usuario contra `candidatos/c4` a 320, 390 y 1440 px |
+| P10 Rutas indexables descubribles | ✅ | Las dos rutas son indexables, con título, descripción y canónica propios, sin `noindex` y con el contenido en el HTML del servidor; `docs/seo.md` las añade a su inventario | test: `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica` con las dos rutas y `TerminosPrivacidadTest::test_el_texto_es_el_aprobado` (el texto completo en el HTML del servidor, A5) · manual: Lighthouse SEO ≥ 90 de las dos en `/review` |
 
 Resultado: 8 ✅, 2 ➖ y ninguna violación.
 
@@ -49,11 +49,12 @@ Resultado: 8 ✅, 2 ➖ y ninguna violación.
 | `public/css/auth.css` | `.page-register .checkbox-label a { color: var(--p500); }` (el color que llevaban en línea) | Bajo |
 | `app/Http/Controllers/RegisterController.php` | `register()`: regla `'terminos' => ['accepted']` y su mensaje; `contactoStore()`: mensaje nuevo. Texto: «Debes aceptar los términos de uso y el aviso de privacidad.» | Medio: el registro normal pasa a rechazar en el servidor un envío sin la casilla (antes solo lo frenaba el navegador) |
 | `tests/Feature/TerminosPrivacidadTest.php` (nuevo) | CA1–CA8, TM1, TM2 y el texto aprobado | — |
-| `tests/Feature/PaginasPublicasTest.php` | Las dos rutas en `METADATOS` (y con ello en los tests que la recorren) | Bajo |
-| `tests/Feature/PaginasPublicasCssTest.php` | `--font-display` nuevo en `TOKENS` y `EN_EL_SISTEMA`; el filtro de caras de respaldo admite las de Newsreader; test de sus medidas; test de las reglas de la página legal | Bajo |
+| `tests/Feature/PaginasPublicasTest.php` | Las dos rutas en `METADATOS` (y con ello en los tests que la recorren) y las dos vistas en `VISTAS` (salida sin escapar, A1) | Bajo |
+| `tests/Feature/PaginasPublicasCssTest.php` | `--font-display` nuevo en `TOKENS` y `EN_EL_SISTEMA`; el filtro de caras de respaldo admite las de Newsreader; test de sus medidas; test de las reglas de la página legal; las dos vistas y las dos rutas en `test_las_vistas_publicas_no_llevan_estilos_en_linea` (A2) | Bajo |
 | `tests/Feature/LimiteIntentosTest.php` | `altaValida()` envía `terminos` | Bajo: sin la casilla, el alta válida dejaría de serlo |
 | `docs/specs/045-terminos-privacidad/design/criterios.json` | `url` de cada pantalla (`terminos`, `aviso-de-privacidad`) para medir la app servida | Bajo |
 | `docs/seo.md`, `docs/architecture.md`, `AGENTS.md` | Inventario de rutas indexables; páginas públicas y validación del registro; layout público (T090) | — |
+| `docs/security.md` | Las dos rutas en los puntos de entrada públicos; anota el aviso de `phpseclib` (PKSA-h7cz-q7zq-mdkt) y su corrección con la 3.0.58 (A10) | — |
 
 ## Contratos y datos
 - **Rutas nuevas** (públicas, `GET`, sin sesión ni límite de intentos, como `/servicios`):
@@ -85,8 +86,9 @@ Resultado: 8 ✅, 2 ➖ y ninguna violación.
   páginas públicas (CA6); la cabecera y el pie con y sin sesión (CA7); el contenido en el HTML del servidor
   (CA8); `rel="noopener"` (TM1) y que el texto de `<main>` es el del candidato `c4` aprobado, normalizado.
 - **`PaginasPublicasTest`**: las dos rutas en `METADATOS` las meten en los tests de metadatos, un `h1`,
-  títulos en orden, nombres accesibles, un solo script con `defer`, sin recursos externos, contenido en el
-  HTML, sin salida sin escapar y enlaces internos que resuelven.
+  títulos en orden, nombres accesibles, un solo script con `defer`, sin recursos externos y enlaces internos
+  que resuelven; las dos vistas en `VISTAS`, en el de salida sin escapar (A1). El contenido en el HTML del
+  servidor (CA8) lo prueba `test_el_texto_es_el_aprobado`, que lee la respuesta sin JavaScript (A5).
 - **CSS (`PaginasPublicasCssTest`)**: el token `--font-display` igual en `app.css` y `system.md`; las seis
   caras de respaldo de Newsreader con sus `local()` y medidas; ninguna con `url()`; la rejilla de la página
   legal con su corte en 899 px, el texto a `--measure` (K4) y solo tokens.
@@ -104,7 +106,7 @@ Quedan dos amenazas menores del cambio:
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
 | TM1 | Tampering (la pestaña abierta desde el registro manipula la del formulario vía `window.opener`) | A05:2021 Security Misconfiguration | enlaces de la casilla | `rel="noopener"` en los dos enlaces con `target="_blank"`, con destinos fijos del propio sitio | `TerminosPrivacidadTest::test_la_casilla_del_registro` |
-| TM2 | Information disclosure / inyección (contenido de configuración pintado sin escapar) | A03:2021 Injection | vistas nuevas | Solo dobles llaves para los datos de la configuración; sin salida sin escapar | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` |
+| TM2 | Information disclosure / inyección (contenido de configuración pintado sin escapar) | A03:2021 Injection | vistas nuevas | Solo dobles llaves para los datos de la configuración; sin salida sin escapar | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar`, con las dos vistas en su lista `VISTAS` |
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
@@ -116,9 +118,9 @@ Quedan dos amenazas menores del cambio:
 | CA5: sin la casilla se rechaza con el mensaje y sin cuenta | `RegisterController` | Feature: `TerminosPrivacidadTest::test_el_registro_sin_la_casilla_se_rechaza` (falla antes en `/registro`) y `test_el_registro_con_google_sin_la_casilla_se_rechaza` (caracterización del rechazo; el mensaje nuevo falla antes) |
 | CA6: los dos enlaces en el pie de las páginas públicas | `layouts/publico` | Feature: `TerminosPrivacidadTest::test_el_pie_publico_enlaza_las_dos_paginas` (`/`, `/servicios`, `/galeria`, `/terminos`, `/aviso-de-privacidad`) · `design/medir.mjs` (K5) a 320, 390 y 1440 px |
 | CA7: cabecera y pie públicos, con sesión sin redirigir | `layouts/publico`, controlador | Feature: `TerminosPrivacidadTest::test_con_y_sin_sesion_se_ven_igual` (caracterización de la parte «sin redirigir») |
-| CA8: sin JavaScript, texto completo y enlaces | vistas nuevas | Feature: `PaginasPublicasTest::test_el_contenido_va_en_el_html_del_servidor` con las dos rutas · `design/medir.mjs` (puerta `G-sin-js`) |
+| CA8: sin JavaScript, texto completo y enlaces | vistas nuevas | Feature: `TerminosPrivacidadTest::test_el_texto_es_el_aprobado` (el texto completo en el HTML del servidor) y `PaginasPublicasTest::test_todos_los_enlaces_internos_resuelven` con las dos rutas · `design/medir.mjs` (puerta `G-sin-js`) (A5) |
 | TM1 | casilla del registro | `TerminosPrivacidadTest::test_la_casilla_del_registro` |
-| TM2 | vistas nuevas | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` |
+| TM2 | vistas nuevas | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` con las dos vistas en `VISTAS` (A1) |
 | Texto aprobado (`design.md`, decisión del usuario) | vistas nuevas | Feature: `TerminosPrivacidadTest::test_el_texto_es_el_aprobado` (texto de `<main>` igual al de `candidatos/c4`) |
 | Diseño: K3 lista de secciones antes de la primera | vistas nuevas | Feature: `TerminosPrivacidadTest::test_el_indice_va_antes_de_las_secciones` |
 | Diseño: K4 largo de línea | `publico.css` | CSS: `PaginasPublicasCssTest::test_la_pagina_legal_lee_a_la_medida` · verificación manual: ~62 caracteres a 1440 px en la app |
@@ -182,7 +184,8 @@ métricas nuevos; el alta sigue igual. Tras el deploy basta con que las dos ruta
 - **D10 · `phpseclib/phpseclib` 3.0.58 dentro de la 045.** La línea base del 2026-11-12 da un aviso sin
   severidad (PKSA-h7cz-q7zq-mdkt, DoS por CPU al leer claves cifradas) en la 3.0.57 del lock, que ya pone en
   rojo el `composer audit` de la CI y bloquearía el `/release`. Se sube solo ese paquete
-  (decisión del usuario, 2026-11-12).
+  (decisión del usuario, 2026-11-12). La 3.0.58 se publicó el 2026-11-02: cumple la antigüedad mínima de
+  7 días de `docs/security.md` (comprobado con `composer show phpseclib/phpseclib 3.0.58 --all`, A4).
 - Sin dependencias nuevas ni ADR.
 
 ## Impacto en arquitectura
@@ -191,6 +194,7 @@ métricas nuevos; el alta sigue igual. Tras el deploy basta con que las dos ruta
 - `AGENTS.md`: la lista de páginas de `layouts/publico.blade.php`.
 - `docs/seo.md`: las dos rutas en el inventario (indexables, con su evidencia).
 - `docs/design/system.md` y `system.html`: 1.15.0 (D9).
+- `docs/security.md`: las dos rutas en los puntos de entrada públicos y el aviso de `phpseclib` con su corrección (A10).
 
 ## Riesgos y mitigaciones
 - **El texto no tiene revisión legal.** Es una base para un proyecto académico (spec, «Fuera de alcance»);
@@ -205,6 +209,7 @@ métricas nuevos; el alta sigue igual. Tras el deploy basta con que las dos ruta
   (`.lb-legal`, `.lb-indice--legal`, `.lb-resumen`) y los tests de esas páginas siguen en la suite.
 - **El registro normal ahora valida la casilla:** un test que daba de alta sin ella deja de crear la cuenta;
   se ajusta `LimiteIntentosTest::altaValida()` y la suite completa lo confirma.
-- **Solape con specs abiertas:** la 040 (promociones, `approved` sin plan) añadirá una sección al inicio en
-  `publico.css`, y la 046 (navegación interna, sin spec) tocará la navegación. Ninguna está en curso; la que
+- **Solape con specs abiertas:** la 040 (promociones, `approved` sin plan) añadirá una sección al inicio y
+  tocará `publico.css`, `PaginasPublicasController`, `routes/web.php`, `PaginasPublicasTest` y
+  `docs/architecture.md`, que la 045 también cambia (A14); la 046 (navegación interna, sin spec) tocará la navegación. Ninguna está en curso; la que
   llegue después fusiona `main` con la 045 ya liberada.
