@@ -66,7 +66,7 @@ class PaginasPublicasCssTest extends TestCase
         '--stagger' => '80ms',
         // system.md 1.9.0 (ronda 5, plan D19).
         '--font-publica' => '"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif',
-        '--font-display' => '"Newsreader", ui-serif, Georgia, serif',
+        '--font-display' => '"Newsreader", "Newsreader respaldo", "Newsreader respaldo Times", ui-serif, Georgia, serif',
         '--text-display' => 'clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px)',
         '--text-statement' => 'clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px)',
         '--text-seccion' => 'clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px)',
@@ -105,7 +105,7 @@ class PaginasPublicasCssTest extends TestCase
         '--duration-reveal' => ['800ms'],
         '--stagger' => ['80ms'],
         '--font-publica' => ['"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif'],
-        '--font-display' => ['"Newsreader", ui-serif, Georgia, serif'],
+        '--font-display' => ['"Newsreader", "Newsreader respaldo", "Newsreader respaldo Times", ui-serif, Georgia, serif'],
         '--text-display' => ['52px', '120px'],
         '--text-statement' => ['28px', '44px'],
         '--text-seccion' => ['40px', '80px'],
@@ -148,6 +148,23 @@ class PaginasPublicasCssTest extends TestCase
         '600 700' => ['107.5%', '90%', '23.3%'],
     ];
 
+    /**
+     * Spec 045 (system.md 1.15.0, design.md → Cambios): respaldos de Newsreader con sus medidas. Familia →
+     * «peso estilo» → [primer `local()`, `size-adjust`, `ascent-override`, `descent-override`].
+     */
+    private const NEWSREADER_RESPALDO = [
+        'Newsreader respaldo' => [
+            '500 normal' => ['local("Georgia")', '97.25%', '76.1%', '27.8%'],
+            '600 700 normal' => ['local("Georgia Bold")', '85.28%', '86.8%', '31.7%'],
+            '500 italic' => ['local("Georgia Italic")', '91.1%', '81.2%', '29.6%'],
+        ],
+        'Newsreader respaldo Times' => [
+            '500 normal' => ['local("Times New Roman")', '106.65%', '69.4%', '25.3%'],
+            '600 700 normal' => ['local("Times New Roman Bold")', '102.74%', '72%', '26.3%'],
+            '500 italic' => ['local("Times New Roman Italic")', '101.15%', '73.2%', '26.7%'],
+        ],
+    ];
+
     /** Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). */
     private const TOQUE = [
         '.pub-nav a', '.pub-menu summary', '.pub-menu__panel a', '.pub-hero__facts a', '.pub-index a',
@@ -160,6 +177,9 @@ class PaginasPublicasCssTest extends TestCase
         'resources/views/publico/servicios.blade.php',
         // Spec 039 (T019, P9; /analyze A4): las vistas de la galería, pública y de la gestión.
         'resources/views/publico/galeria.blade.php',
+        // Spec 045 (T014, P9; /analyze A2): los términos de uso y el aviso de privacidad.
+        'resources/views/publico/terminos.blade.php',
+        'resources/views/publico/aviso-privacidad.blade.php',
         'resources/views/publico/_trabajo.blade.php',
         'resources/views/galeria/index.blade.php',
     ];
@@ -236,7 +256,8 @@ class PaginasPublicasCssTest extends TestCase
         // Ronda 6 (D23): Newsreader 500, 600 y cursiva 500, y Montserrat 400, 500 y 600; cada cara con su woff2.
         preg_match_all('/@font-face\s*\{([^}]*)\}/', file_get_contents(public_path(self::HOJA)), $caras);
         // Las de «Montserrat respaldo» son fuentes del sistema, sin archivo (test de abajo).
-        $caras[1] = array_values(array_filter($caras[1], fn ($cara) => ! str_contains($cara, '"'.self::RESPALDO.'"')));
+        // Spec 045: tampoco las de «Newsreader respaldo» y «Newsreader respaldo Times».
+        $caras[1] = array_values(array_filter($caras[1], fn ($cara) => ! preg_match('/font-family\s*:\s*"[^"]* respaldo[^"]*"/', $cara)));
         $this->assertCount(count(self::FUENTES), $caras[1], 'Las seis caras del sitio público.');
 
         $vistas = [];
@@ -282,6 +303,48 @@ class PaginasPublicasCssTest extends TestCase
         }
     }
 
+    public function test_newsreader_tiene_un_respaldo_con_sus_medidas(): void
+    {
+        // Spec 045 (T014): en una página de lectura, el cambio de fuente de los títulos movía el texto.
+        preg_match_all('/@font-face\s*\{([^}]*)\}/', file_get_contents(public_path(self::HOJA)), $caras);
+        foreach (self::NEWSREADER_RESPALDO as $familia => $porPeso) {
+            $deLaFamilia = array_values(array_filter($caras[1], fn ($cara) => str_contains($cara, '"'.$familia.'"')));
+            $this->assertCount(count($porPeso), $deLaFamilia, "Una cara de «{$familia}» por peso de Newsreader.");
+            foreach ($deLaFamilia as $cara) {
+                preg_match('/font-weight\s*:\s*([\d ]+);/', $cara, $peso);
+                preg_match('/font-style\s*:\s*(\w+)/', $cara, $estilo);
+                $clave = trim($peso[1] ?? '').' '.($estilo[1] ?? 'normal');
+                $this->assertArrayHasKey($clave, $porPeso, "{$familia} {$clave}: cara prevista.");
+                [$local, $tamano, $ascenso, $descenso] = $porPeso[$clave];
+                $this->assertStringContainsString($local, $cara, "{$familia} {$clave}: fuente del sistema, sin descarga.");
+                if (str_ends_with($familia, 'Times')) {
+                    $this->assertStringContainsString('local("Liberation Serif', $cara, "{$familia} {$clave}: o su equivalente métrico en Linux.");
+                }
+                $this->assertStringNotContainsString('url(', $cara, 'No descarga nada.');
+                $this->assertMatchesRegularExpression('/size-adjust\s*:\s*'.preg_quote($tamano, '/').'\s*;/', $cara);
+                $this->assertMatchesRegularExpression('/ascent-override\s*:\s*'.preg_quote($ascenso, '/').'\s*;/', $cara);
+                $this->assertMatchesRegularExpression('/descent-override\s*:\s*'.preg_quote($descenso, '/').'\s*;/', $cara);
+                $this->assertMatchesRegularExpression('/line-gap-override\s*:\s*0%\s*;/', $cara);
+            }
+        }
+    }
+
+    public function test_la_pagina_legal_lee_a_la_medida(): void
+    {
+        // Spec 045 (K4): el texto, y con él el filete de cada sección, a la medida de lectura.
+        $this->assertStringContainsString('max-width: var(--measure)', $this->declaraciones('.lb-legal .lb-texto', self::HOJA), 'La columna de texto a --measure.');
+        foreach (['.lb-texto p', '.lb-texto ul'] as $selector) {
+            $this->assertStringContainsString('max-width: var(--measure)', $this->declaraciones($selector, self::HOJA), "{$selector}: a --measure.");
+        }
+        // La rejilla de cuatro zonas en escritorio y una columna por debajo de 900 px (design.md → Cambios).
+        $rejilla = $this->declaraciones('.lb-legal', self::HOJA);
+        $this->assertStringContainsString('"cabeza cabeza resumen" "indice texto texto"', $rejilla);
+        $movil = array_filter($this->reglasCss(self::HOJA), fn ($r) => $r[0] === '.lb-legal' && in_array('@media (max-width: 899px)', $r[2], true));
+        $this->assertNotEmpty($movil, 'Por debajo de 900 px, la rejilla cambia.');
+        $this->assertStringContainsString('"cabeza" "indice" "resumen" "texto"', implode('
+', array_column($movil, 1)), 'En una columna, en el orden del documento.');
+    }
+
     public function test_body_publico_usa_la_familia_publica(): void
     {
         $cuerpo = $this->declaraciones('body.publico', self::HOJA);
@@ -301,7 +364,7 @@ class PaginasPublicasCssTest extends TestCase
             $this->assertDoesNotMatchRegularExpression('/\sstyle\s*=/i', file_get_contents(base_path($vista)), "{$vista} sin style=\"\".");
             $this->assertDoesNotMatchRegularExpression('/<style\b/i', file_get_contents(base_path($vista)), "{$vista} sin <style>.");
         }
-        foreach (['/', '/servicios', '/galeria'] as $ruta) {
+        foreach (['/', '/servicios', '/galeria', '/terminos', '/aviso-de-privacidad'] as $ruta) {
             $documento = new DOMDocument;
             libxml_use_internal_errors(true);
             $documento->loadHTML('<?xml encoding="utf-8"?>'.$this->get($ruta)->assertOk()->getContent());
