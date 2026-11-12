@@ -78,13 +78,17 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T028 Verificación final: suite completa, `--group=rnf` de la 047, Pint, `semgrep` y `gitleaks` sobre lo tocado — sin archivos — hecho cuando: `php artisan test` pasa completo, `php artisan test --group=rnf --filter=ReportesRendimientoTest` pasa (se anota el tiempo), `vendor/bin/pint --test` limpio sobre los archivos tocados y los dos escáneres sin hallazgos (la salida de `semgrep` sobre `ReporteCitas` se revisa: la expresión `COUNT(*)` es constante; ninguna supresión sin motivo) — depende: T015, T027
   - nota: 2026-11-11: `php artisan test` 980 pasados (911 de la línea base + 69 de la 047), 0 fallos; `--group=rnf --filter=ReportesRendimientoTest` pasa (el test completo, con la siembra de 10 000 citas, 3,04 s; la página, por debajo de los 2 s que aserta); Pint limpio en los 12 archivos PHP tocados; `gitleaks` sin hallazgos en los commits de la spec
   - nota: A17 — `semgrep scan --config p/php --metrics=off --error` sobre lo tocado, `ReporteCitas` incluido: 23 reglas, 0 hallazgos; la expresión `COUNT(*) AS citas` es constante y sin entrada del usuario; ninguna supresión añadida
+- [ ] T029 Subir `phpseclib/phpseclib` (dependencia transitiva) de 3.0.57 a la primera versión corregida, ≥ 3.0.58, sin tocar ninguna otra dependencia — `composer.lock` — hecho cuando: `composer audit --locked --ignore-severity=low --ignore-severity=medium` sale con 0 (hoy sale con 1 por PKSA-h7cz-q7zq-mdkt), el diff del lockfile solo cambia ese paquete, la versión elegida tiene al menos 7 días y viene del mismo repositorio (`shared/agent-security.md` §2, anotado en la tarea) y la suite completa pasa — depende: T028
+  - nota: añadida por /review: R1 (decisión del usuario, 2026-11-12: corregirlo dentro de la 047)
+- [ ] T030 Endurecer dos tests de la 047: `test_el_acceso_denegado_queda_en_el_registro_de_auditoria` busca el evento por el actor del test, y un test nuevo, `test_el_aviso_de_error_cumple_el_contraste`, comprueba `--red` sobre `--red-bg` ≥ 4,5:1 y que `.reporte-aviso` usa ese par — `tests/Feature/Reportes/ReportesAccesoTest.php`, `tests/Feature/Reportes/ReportesCssTest.php` — hecho cuando: los dos pasan y el del aviso se comprueba rompiendo un momento el color de `.reporte-aviso` en `reportes.css` (anotado) — cubre: CA7, CA9 — depende: T028
+  - nota: añadida por /review: R4, R5
 
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` si cambió la estructura: la frase de «Otras rutas» sobre `/admin/reportes`, el módulo `app/Reportes/` y el Gate `ver-reportes` — depende: T028
   - nota: `docs/architecture.md`: fila «Reportes» en los módulos (`app/Reportes/`, `ReportesController`, Gate `ver-reportes`) y la frase de «Otras rutas» sobre `/admin/reportes`
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: sin cambios en los dos (plan, Observabilidad y Rollout). Sí cambian: `docs/security.md` → «Dónde se aplica» (Gate `ver-reportes`) y una fila en «Superficie de ataque» para `GET /admin/reportes` (fechas `AAAA-MM-DD`, máximo de 366 días, solo lectura); `docs/specs/README.md` (quitar «Reportes» de «Funcionalidades no documentadas como spec»); `docs/roadmap.md` (la 037 prevista ya no adapta «reportes» al móvil; con confirmación del usuario); y `AGENTS.md` (mapa del repositorio: `app/Reportes/`, el número de controladores contado en ese momento, `reportes.css` y `reportes.js`; ruta protegida: pedir aprobación antes de editarla) — depende: T028
   - nota: A14 — controladores contados en el momento: 19 más el `Controller` base (`ls app/Http/Controllers`), no la cifra del plan. `AGENTS.md` editado con la aprobación del usuario (2026-11-11) y `docs/roadmap.md` con su confirmación; `docs/security.md` («Dónde se aplica» y «Superficie de ataque») y `docs/specs/README.md` actualizados; `deployment.md` y `observability.md`, sin cambios
-- [x] T092 Marcar spec como `implemented` — depende: T090, T091
+- [ ] T092 Marcar spec como `implemented` — depende: T090, T091, T029, T030
   - nota: 2026-11-11: los diez CA marcados con sus tests en verde (69 de `tests/Feature/Reportes`, suite completa 980); spec en `implemented` e índice de specs actualizado
 
 ## Despliegue (lo ejecuta `/release`)
@@ -102,9 +106,9 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | CA4 | T011, T013 | T022, T023 |
 | CA5 | T011, T013 | T022, T023 |
 | CA6 | T013 | T024 |
-| CA7 | T012, T013 | T021, T023, T024 |
+| CA7 | T012, T013, T030 | T021, T023, T024 |
 | CA8 | T013, T014 | T024, T025, T026 |
-| CA9 | T010 | T020, T023 |
+| CA9 | T010, T030 | T020, T023 |
 | CA10 | T013 | T022, T023 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
@@ -131,7 +135,8 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | `resources/views/placeholder.blade.php` | ninguna: se conserva sin cambios (plan D8) |
 | `docs/design/system.md`, `docs/design/system.html` | T001 |
 | `docs/design/capturar.mjs` | T027 |
-| `tests/Feature/Reportes/` | T010–T015 |
+| `tests/Feature/Reportes/` | T010–T015, T030 |
+| `composer.lock` (fuera del plan: /review R1) | T029 |
 | `tests/Feature/Concerns/EscenarioEstadosCita.php` | ninguna: se reutiliza sin cambios (T011) |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
