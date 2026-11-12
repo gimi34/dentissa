@@ -1,5 +1,5 @@
 /* Spec 047 · reportes de la administración (design.md, sin candidatos). Solo tokens del sistema
-   (app.css, system.md 1.14.0). Incluye la primera hoja de impresión del sistema (plan D6): se carga
+   (app.css, system.md 1.15.0). Incluye la primera hoja de impresión del sistema (plan D6): se carga
    solo en esta página, así que la impresión de las demás no cambia. */
 
 .reporte { display: flex; flex-direction: column; gap: var(--space-6); }

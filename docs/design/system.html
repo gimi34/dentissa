@@ -446,7 +446,7 @@
     --duration-respuesta: 150ms; --ease-clinico: cubic-bezier(0.2, 0.7, 0.2, 1); /* spec 041, 1.11.0 */
     --color-p800: #72243E; /* --p800 de app.css, para las muestras del acceso (spec 041) */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
-    --font-publica: "Montserrat", ui-sans-serif, system-ui, sans-serif; /* spec 038, 1.9.0 (antes Lexend) */
+    --font-publica: "Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif; /* spec 038, 1.9.0 (antes Lexend); respaldo, 1.14.0 */
     --font-display: "Newsreader", ui-serif, Georgia, serif; /* spec 038, 1.10.0 (en 1.9.0, Cormorant Garamond) */
     --text-display: clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px); --text-statement: clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px); /* spec 038, 1.9.0 */
     --text-seccion: clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px); --text-indice: clamp(28px, calc(28px + 28 * (100vw - 320px) / 1120), 56px); /* spec 038, 1.9.0 */
@@ -876,7 +876,7 @@
       <fieldset class="g-paciente"><legend>¿Aparece un paciente en la foto?</legend>
         <label><input type="radio" name="g-paciente-039"> Sí</label><label><input type="radio" name="g-paciente-039" checked> No</label></fieldset>
     </div></div></div>
-    <h3 id="reportes-047">Reportes de la administración (spec 047, 1.14.0)</h3>
+    <h3 id="reportes-047">Reportes de la administración (spec 047, 1.15.0)</h3>
     <p class="v-note">Muestra de las piezas de la 047 (<a href="../specs/047-reportes-admin/design.md">diseño</a>, sin candidatos ni tokens nuevos):
       la frase del periodo, una tasa en su tarjeta de cifra, la fila de totales de una tabla y la cabecera impresa, que solo lleva texto. Por debajo de
       900 px la frase del periodo y el total van antes del filtro y las tres tablas pasan a tarjetas, con los totales en una última tarjeta. Al

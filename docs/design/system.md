@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.14.0
+version: 1.15.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -99,8 +99,10 @@ Sitio público (spec 038; 1.9.0, ronda 5; 1.10.0, ronda 6; [diseño](../specs/03
 dos familias autoalojadas en `public/fonts/` (woff2 latino de `@fontsource` 5.3.0, OFL-1.1, cada una
 con su `OFL.txt`) y declaradas con `@font-face` en `public/css/publico.css`: `--font-display`
 (`"Newsreader", ui-serif, Georgia, serif`; 500, 600 y cursiva 500, `newsreader/`; desde 1.10.0) para los
-títulos y `--font-publica` (`"Montserrat", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
-`montserrat/`) para el texto. Newsreader sustituye en 1.10.0 a Cormorant Garamond (1.9.0), que coloca
+títulos y `--font-publica` (`"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
+`montserrat/`) para el texto. «Montserrat respaldo» (1.14.0) es Arial del sistema (o Liberation Sans) con
+`size-adjust` y la altura de Montserrat por peso, sin descarga: mientras llega Montserrat ocupa lo mismo y el
+cambio de fuente no mueve la página (K8 de la 038). Newsreader sustituye en 1.10.0 a Cormorant Garamond (1.9.0), que coloca
 las tildes corridas a la derecha y en titulares en español se leen rotas. Montserrat sustituye a Lexend, que se retira (D21). Tamaños fluidos de 320 a 1440 px:
 `--text-display` (52px a 120px, titular de cartel, una palabra por línea), `--text-statement` (28px a
 44px, frase de «Sobre nosotros»), `--text-seccion` (40px a 80px, títulos de sección), `--text-indice`
@@ -755,7 +757,7 @@ Gestión (`app.css`), dentro de `.formulario-accesible` y con su layout (`.topba
   /review R34). El contenido de la vista detrás queda `inert`.
 - **Menú del administrador:** entrada «Galería» después de «Servicios», con `aria-current` en sus rutas.
 
-### Reportes de la administración (spec 047, 1.14.0)
+### Reportes de la administración (spec 047, 1.15.0)
 Pantalla «Reportes» del administrador ([diseño](../specs/047-reportes-admin/design.md), sin candidatos
 ni tokens nuevos; `reportes.css`). Reutiliza `.formulario-accesible` (028) con el patrón de error del
 filtro de auditoría (020), `.stats-grid-3` con `.stat-card`, `.card-0` con tabla, `tabla-tarjetas`
@@ -1102,4 +1104,5 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-09 | diseño | ¿Qué incorpora el sistema para las salidas de las pantallas (spec 044)? | Versión 1.12.0, sin tokens nuevos: enlace «Volver al inicio», logo-enlace del panel de marca, entrada «Ver sitio web» de la barra lateral, aviso del sitio público (`.pub-aviso`), plantilla de página de error sobre el error genérico de la 020 y enlace secundario del error; DS7 en curso | usuario (spec 044, design.md sin candidatos y plan D1, D2) |
 | 2026-11-03 | diseño | El usuario prefiere el estilo anterior del acceso al carnet de `c7` (spec 041, D20) | Dentro de 1.11.0, aún sin liberar: sale el carnet (franja, tarjeta y troquel) y entran el panel y el formulario del login anterior, con sus valores como tokens; se mantienen el contraste, el foco y el toque que pide P9 | usuario |
 | 2026-11-08 | diseño | ¿Qué incorpora el sistema para la galería de trabajos (spec 039)? | Versión 1.13.0 (era 1.12.0; se renumeró al fusionar la v0.15.0, que liberó la 1.12.0 con la spec 044): tokens `--foto-ratio` (fijo), `--carrusel-foto-w` (cortes de 560 y 900 px) y `--thumb-w` (fijo); componentes públicos «Carrusel de trabajos», «Foto de trabajo», «Mosaico de `/galeria`», «Galería vacía» y la utilidad `.pub-solo-lector`; componentes de la gestión dentro de `.formulario-accesible` («Tarjeta de foto», «Pregunta del paciente», «Consentimiento», «Selector de archivo», «Aviso de error»), con radios y casilla de 44 px que generalizan `.remember-label`; entrada «Galería» del menú del administrador; M-1 de la 039. Sin colores nuevos. `--duration-firma`, que la 038 anunciaba para la 039, no hace falta | usuario (spec 039, design.md `c3` y plan) |
-| 2026-11-11 | diseño | ¿Qué incorpora el sistema para los reportes de la administración (spec 047)? | Versión 1.14.0, sin tokens nuevos: frase del periodo (`.reporte-periodo`), tasa en `.stat-card`, fila de totales de tabla (y su tarjeta «Total» en `tabla-tarjetas`), resumen antes del filtro por debajo de 900 px, cabecera impresa (`.solo-impresion`) y la primera hoja de impresión del sistema (`@media print` en `reportes.css`); controles con `--touch-min` a todos los anchos | usuario (spec 047, design.md sin candidatos) |
+| 2026-11-11 | diseño | ¿Qué incorpora el sistema para los reportes de la administración (spec 047)? | Versión 1.15.0 (era 1.14.0; se renumeró al fusionar `main`, donde la ficha `fix-cls-inicio-tableta-038` ya usa la 1.14.0), sin tokens nuevos: frase del periodo (`.reporte-periodo`), tasa en `.stat-card`, fila de totales de tabla (y su tarjeta «Total» en `tabla-tarjetas`), resumen antes del filtro por debajo de 900 px, cabecera impresa (`.solo-impresion`) y la primera hoja de impresión del sistema (`@media print` en `reportes.css`); controles con `--touch-min` a todos los anchos | usuario (spec 047, design.md sin candidatos) |
+| 2026-11-11 | diseño | El inicio salta entre 960 y 1024 px al llegar Montserrat: con el respaldo del sistema, más estrecho, los botones del hero caben en una fila y luego pasan a dos (CLS ~0,19, K8 de la 038) | Versión 1.14.0, sin tokens nuevos: `--font-publica` añade «Montserrat respaldo» (tres `@font-face` locales en `publico.css`, Arial o Liberation Sans con `size-adjust` 110,7 %, 112,5 % y 107,5 % para 400, 500 y 600–700). Ficha `docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md` | usuario (seguir en el carril `/fix`) |

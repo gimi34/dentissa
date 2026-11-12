@@ -65,7 +65,7 @@ class PaginasPublicasCssTest extends TestCase
         '--duration-reveal' => '800ms',
         '--stagger' => '80ms',
         // system.md 1.9.0 (ronda 5, plan D19).
-        '--font-publica' => '"Montserrat", ui-sans-serif, system-ui, sans-serif',
+        '--font-publica' => '"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif',
         '--font-display' => '"Newsreader", ui-serif, Georgia, serif',
         '--text-display' => 'clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px)',
         '--text-statement' => 'clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px)',
@@ -104,7 +104,7 @@ class PaginasPublicasCssTest extends TestCase
         '--ease-expo' => ['cubic-bezier(0.16, 1, 0.3, 1)'],
         '--duration-reveal' => ['800ms'],
         '--stagger' => ['80ms'],
-        '--font-publica' => ['"Montserrat", ui-sans-serif, system-ui, sans-serif'],
+        '--font-publica' => ['"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif'],
         '--font-display' => ['"Newsreader", ui-serif, Georgia, serif'],
         '--text-display' => ['52px', '120px'],
         '--text-statement' => ['28px', '44px'],
@@ -133,6 +133,19 @@ class PaginasPublicasCssTest extends TestCase
         'Montserrat 400 normal' => 'montserrat/montserrat-latin-400-normal.woff2',
         'Montserrat 500 normal' => 'montserrat/montserrat-latin-500-normal.woff2',
         'Montserrat 600 normal' => 'montserrat/montserrat-latin-600-normal.woff2',
+    ];
+
+    /**
+     * Ficha docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md: respaldo de Montserrat con sus medidas, para
+     * que el cambio de fuente no mueva nada (K8 de la 038). «peso» → `size-adjust` (ancho medido de Montserrat
+     * sobre Arial en ese peso), con la altura de Montserrat (ascenso 0,968 y descenso 0,251) sobre ese tamaño.
+     */
+    private const RESPALDO = 'Montserrat respaldo';
+
+    private const RESPALDO_CARAS = [
+        '400' => ['110.7%', '87.4%', '22.7%'],
+        '500' => ['112.5%', '86%', '22.3%'],
+        '600 700' => ['107.5%', '90%', '23.3%'],
     ];
 
     /** Llevan `--touch-min` como alto mínimo (plan, «Clases de los componentes»; /analyze A6). */
@@ -222,6 +235,8 @@ class PaginasPublicasCssTest extends TestCase
     {
         // Ronda 6 (D23): Newsreader 500, 600 y cursiva 500, y Montserrat 400, 500 y 600; cada cara con su woff2.
         preg_match_all('/@font-face\s*\{([^}]*)\}/', file_get_contents(public_path(self::HOJA)), $caras);
+        // Las de «Montserrat respaldo» son fuentes del sistema, sin archivo (test de abajo).
+        $caras[1] = array_values(array_filter($caras[1], fn ($cara) => ! str_contains($cara, '"'.self::RESPALDO.'"')));
         $this->assertCount(count(self::FUENTES), $caras[1], 'Las seis caras del sitio público.');
 
         $vistas = [];
@@ -241,6 +256,29 @@ class PaginasPublicasCssTest extends TestCase
         $this->assertCount(count(self::FUENTES), array_unique($vistas), 'Ninguna cara repetida.');
         foreach (['Lexend', 'Cormorant'] as $retirada) {
             $this->assertStringNotContainsString($retirada, file_get_contents(public_path(self::HOJA)), "{$retirada} se retira.");
+        }
+    }
+
+    public function test_montserrat_tiene_un_respaldo_con_sus_medidas(): void
+    {
+        // Ficha 2026-11-11-fix-cls-inicio-tableta-038: con el respaldo del sistema, más estrecho, los botones
+        // del hero caben en una fila entre 960 y 1024 px y, al llegar Montserrat, pasan a dos (CLS 0,19).
+        preg_match_all('/@font-face\s*\{([^}]*)\}/', file_get_contents(public_path(self::HOJA)), $caras);
+        $respaldo = array_values(array_filter($caras[1], fn ($cara) => str_contains($cara, '"'.self::RESPALDO.'"')));
+        $this->assertCount(count(self::RESPALDO_CARAS), $respaldo, 'Una cara de respaldo por peso de Montserrat.');
+
+        foreach ($respaldo as $cara) {
+            preg_match('/font-weight\s*:\s*([\d ]+);/', $cara, $peso);
+            $this->assertArrayHasKey(trim($peso[1] ?? ''), self::RESPALDO_CARAS, 'Peso previsto.');
+            [$tamano, $ascenso, $descenso] = self::RESPALDO_CARAS[trim($peso[1])];
+            $negrita = str_starts_with(trim($peso[1]), '6');
+            $this->assertStringContainsString($negrita ? 'local("Arial Bold")' : 'local("Arial")', $cara, 'Arial del sistema, sin descarga.');
+            $this->assertStringContainsString($negrita ? 'local("Liberation Sans Bold")' : 'local("Liberation Sans")', $cara, 'O su equivalente métrico en Linux.');
+            $this->assertStringNotContainsString('url(', $cara, 'No descarga nada.');
+            $this->assertMatchesRegularExpression('/size-adjust\s*:\s*'.preg_quote($tamano, '/').'\s*;/', $cara);
+            $this->assertMatchesRegularExpression('/ascent-override\s*:\s*'.preg_quote($ascenso, '/').'\s*;/', $cara);
+            $this->assertMatchesRegularExpression('/descent-override\s*:\s*'.preg_quote($descenso, '/').'\s*;/', $cara);
+            $this->assertMatchesRegularExpression('/line-gap-override\s*:\s*0%\s*;/', $cara);
         }
     }
 
@@ -372,7 +410,8 @@ class PaginasPublicasCssTest extends TestCase
 
         $this->assertContains('@media (max-width: 899px)', $condiciones, 'Corte de la navegación, las columnas y el título fijo.');
         $this->assertContains('@media (max-width: 559px)', $condiciones, 'Corte de los botones y la foto de la escena.');
-        $this->assertSame([], array_values(array_diff($condiciones, ['@media (max-width: 899px)', '@media (max-width: 559px)', self::SIN_MOVIMIENTO])), 'Sin otros cortes.');
+        // `scripting` no es un corte: reserva la fila de la pastilla con JavaScript (ficha 2026-11-11-fix-cls-inicio-038).
+        $this->assertSame([], array_values(array_diff($condiciones, ['@media (max-width: 899px)', '@media (max-width: 559px)', self::SIN_MOVIMIENTO, '@media (scripting: enabled)'])), 'Sin otros cortes.');
     }
 
     public function test_interlineado_y_proporciones_van_con_token(): void
@@ -424,6 +463,29 @@ class PaginasPublicasCssTest extends TestCase
             $this->assertStringStartsWith('.js ', $selector, "{$selector}: solo con JavaScript.");
             $this->assertStringContainsString('var(--p', $cuerpo, "{$selector}: el recorte sigue el progreso --p.");
         }
+    }
+
+    /**
+     * Ficha docs/changes/2026-11-11-fix-cls-inicio-038.md (K8 de la 038, CLS ≤ 0,1): la pastilla aparece
+     * cuando `publico.js` (con defer) le pone `data-open`, tras el primer pintado. Si su fila no está
+     * reservada, la lista del hero crece entre 50 y 57 px y todo el hero baja (CLS 0,212 a 1440 px).
+     * Con JavaScript, la fila se reserva desde el principio; sin él, la pastilla no está (plan de la 038).
+     */
+    public function test_la_pastilla_reserva_su_fila_antes_del_script(): void
+    {
+        $conScript = '@media (scripting: enabled)';
+        $reglas = $this->reglasCss(self::HOJA);
+        $de = fn (string $selector, ?string $media) => implode("\n", array_map(fn ($r) => $r[1], array_filter($reglas,
+            fn ($r) => $r[0] === $selector && ($media === null ? $r[2] === [] : in_array($media, $r[2], true)))));
+
+        $this->assertStringContainsString('display: none', $de('.pub-status:not([data-open])', null), 'Sin JavaScript, la pastilla no está.');
+
+        $reservada = $de('.pub-status:not([data-open])', $conScript);
+        $this->assertStringContainsString('display: inline-flex', $reservada, 'Con JavaScript, la pastilla ocupa su sitio antes de escribirse.');
+        $this->assertStringContainsString('visibility: hidden', $reservada, 'Pero no se ve hasta que el script la escribe.');
+        $this->assertStringContainsString('flex-basis: 100%', $de('.pub-hero__facts > li:has(> .pub-status:not([data-open]))', $conScript), 'Y su fila es suya mientras está vacía.');
+        // Review: escrita, la lista se coloca como siempre (de 750 a 899 px, pastilla y horario en la misma fila).
+        $this->assertSame('', $de('.pub-hero__facts > li:has(> .pub-status)', $conScript), 'Sin fila forzada una vez escrita.');
     }
 
     public function test_las_entradas_solo_ocultan_con_javascript(): void
