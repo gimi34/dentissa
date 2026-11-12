@@ -46,10 +46,12 @@
   },
   "pantallas": {
     "terminos": {
-      "file": "terminos.html"
+      "file": "terminos.html",
+      "url": "terminos"
     },
     "privacidad": {
-      "file": "privacidad.html"
+      "file": "privacidad.html",
+      "url": "aviso-de-privacidad"
     }
   },
   "kpis": [
