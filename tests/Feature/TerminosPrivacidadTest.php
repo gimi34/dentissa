@@ -19,6 +19,8 @@ use Tests\TestCase;
  *    `<main>` igual al del candidato `c4` aprobado, que también prueba que llega en el HTML del servidor (CA8).
  *  - El registro (T011): la casilla de los dos registros con «aviso de privacidad» y sus enlaces en otra
  *    pestaña, con `noopener` (CA4, TM1), y el rechazo sin la casilla, sin cuenta creada (CA5).
+ *  - El pie (T012): «Términos de uso» y «Aviso de privacidad» en el pie de las cinco páginas públicas, con y
+ *    sin sesión, en la misma pestaña (CA6).
  */
 class TerminosPrivacidadTest extends TestCase
 {
@@ -294,5 +296,26 @@ class TerminosPrivacidadTest extends TestCase
             ->assertSessionHasErrors(['terminos' => self::MENSAJE_CASILLA]);
 
         $this->assertDatabaseMissing('usuarios', ['email' => self::GOOGLE['email']]);
+    }
+
+    public function test_el_pie_publico_enlaza_las_dos_paginas(): void
+    {
+        $this->crearEscenario();
+
+        foreach (['/', '/servicios', '/galeria', self::TERMINOS, self::PRIVACIDAD] as $ruta) {
+            foreach (['sin sesión' => null, 'con sesión' => $this->paciente1] as $caso => $usuario) {
+                $respuesta = $usuario ? $this->actingAs($usuario)->get($ruta) : $this->get($ruta);
+                $xpath = $this->xpath($respuesta->assertOk()->getContent());
+                $pie = $xpath->query('//footer//ul[contains(concat(" ", normalize-space(@class), " "), " pub-foot__links ")]')->item(0);
+                $this->assertInstanceOf(DOMElement::class, $pie, "{$ruta}, {$caso}: el pie público.");
+                foreach ([url('/terminos') => 'Términos de uso', url('/aviso-de-privacidad') => 'Aviso de privacidad'] as $destino => $nombre) {
+                    $enlaces = $xpath->query(".//a[normalize-space()=\"{$nombre}\"]", $pie);
+                    $this->assertSame(1, $enlaces->length, "{$ruta}, {$caso}: «{$nombre}» en el pie (CA6).");
+                    $this->assertSame($destino, $enlaces->item(0)->getAttribute('href'));
+                    $this->assertFalse($enlaces->item(0)->hasAttribute('target'), "{$ruta}, {$caso}: «{$nombre}» en la misma pestaña.");
+                }
+            }
+            $this->app['auth']->forgetGuards();
+        }
     }
 }
