@@ -115,6 +115,18 @@ class ReportesCssTest extends TestCase
         }
     }
 
+    public function test_el_aviso_de_error_cumple_el_contraste(): void
+    {
+        // El aviso no se pinta sobre la tarjeta ni la página, sino sobre su propio fondo (/review R5).
+        $tokens = $this->tokensDeColor();
+        $aviso = $this->declaraciones('.reporte-aviso', self::HOJA);
+
+        $this->assertStringContainsString('background: var(--red-bg)', $aviso);
+        $this->assertMatchesRegularExpression('/(?<![\w-])color: var\(--red\)/', $aviso);
+        $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens['--red'], $tokens['--red-bg']),
+            '--red sobre --red-bg no llega a 4,5:1.');
+    }
+
     public function test_los_bordes_de_control_y_el_foco_cumplen_el_contraste(): void
     {
         $tokens = $this->tokensDeColor();

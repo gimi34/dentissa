@@ -87,7 +87,9 @@ class ReportesAccesoTest extends TestCase
     {
         $this->actingAs($this->dentista1)->get('/admin/reportes'.self::PERIODO)->assertForbidden();
 
-        $evento = DB::table('auditoria')->where('accion', 'acceso_denegado')->orderBy('id')->get()->sole();
+        // Solo los eventos de este actor: la tabla puede traer denegaciones ajenas al test (/review R4).
+        $evento = DB::table('auditoria')->where('accion', 'acceso_denegado')
+            ->where('actor_id', $this->dentista1->id)->get()->sole();
         $this->assertSame('denegado', $evento->resultado);
         $this->assertSame(['accion_solicitada' => 'admin.reportes'], json_decode($evento->detalle, true));
         $this->assertSame($this->dentista1->id, $evento->actor_id);
