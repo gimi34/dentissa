@@ -95,11 +95,14 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
   - nota: 2026-11-11: los diez CA marcados con sus tests en verde (69 de `tests/Feature/Reportes`, suite completa 980); spec en `implemented` e índice de specs actualizado
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097: como admin, `/admin/reportes` muestra el mes en curso con cifras o el estado vacío, un atajo cambia el periodo y la vista previa de impresión sale sin menú; con una cuenta de dentista, 403 y su fila en `/admin/auditoria`
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097: como admin, `/admin/reportes` muestra el mes en curso con cifras o el estado vacío, un atajo cambia el periodo y la vista previa de impresión sale sin menú; con una cuenta de dentista, 403 y su fila en `/admin/auditoria`
+  - nota: 2026-11-12 — sin staging; hecho en producción dentro de T097 por el usuario: «todo bien».
 - [x] T096 Aprobación humana para producción
   - aprobado por gimi34 el 2026-11-12 14:07 para v0.17.0 («desplegar v0.17.0 a producción»)
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar la alerta de 5xx. Rollback: `deploy/volver.sh <tag anterior>` sin copia
-- [ ] T098 Marcar spec como `released`; en la spec 012, una línea en su Historial: el placeholder de «Reportes» ya no existe (spec 047)
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar la alerta de 5xx. Rollback: `deploy/volver.sh <tag anterior>` sin copia
+  - nota: 2026-11-12 — `deploy/desplegar.sh v0.17.0`, `deploy/verificar.sh` y la comprobación de T095 (reportes del mes, atajo, «Descargar» y 403 del dentista), hechos por el usuario: «todo bien».
+- [x] T098 Marcar spec como `released`; en la spec 012, una línea en su Historial: el placeholder de «Reportes» ya no existe (spec 047)
+  - nota: 2026-11-12 — spec `released` (v0.17.0); README; A19 — línea en el Historial de la 012 (el placeholder de «Reportes» ya no existe), sin añadirla a `extends`; 047/R2 y 047/R3 al roadmap (aceptados por el usuario en `/review`); fichas `fix-tests-intermitentes-041`, `fix-cls-inicio-038` y `fix-cls-inicio-tableta-038` liberadas; historial de rondas en `history/README.md`.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
