@@ -2,7 +2,7 @@
 spec: 045-terminos-privacidad
 plan: plan.md
 impl_base: 4c67991
-status: approved
+status: draft
 ---
 
 # Tareas · 045 Términos de uso y aviso de privacidad
@@ -51,6 +51,7 @@ podía romper:
   - nota: 2026-11-12 — los siete fallan por el `404` de las dos rutas (el de CA3 pasa sus controles: lee los campos de los dos formularios y las claves de `google_registro`)
   - verificación de caracterización (CA7, «sin redirigir»): tras T023, se comprueba rompiendo el método con un `redirect()` para la sesión iniciada; debe fallar, se restaura y se anota aquí
 - [x] T011 Escribir en `TerminosPrivacidadTest` los tests del registro: `test_la_casilla_del_registro` (CA4 y TM1: en `/registro` y en `/registro/contacto` con la sesión de Google, el texto de la etiqueta sin las dos anotaciones «(se abre en otra pestaña)» es exactamente «Acepto los términos de uso y el aviso de privacidad de Dentissa» (A7), cada enlace a `route('terminos')` y `route('privacidad')` con `target="_blank"`, `rel` con `noopener` y «(se abre en otra pestaña)» dentro del enlace, sin atributo `style`), `test_el_registro_sin_la_casilla_se_rechaza` (CA5: `POST /registro` válido sin `terminos` → error en `terminos` con «Debes aceptar los términos de uso y el aviso de privacidad.» y ninguna cuenta nueva con ese correo) y `test_el_registro_con_google_sin_la_casilla_se_rechaza` (CA5 en `/registro/contacto`) — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: fallan por la razón esperada (el texto y los enlaces; en `/registro`, la cuenta se crea; con Google, el mensaje antiguo) — cubre: CA4, CA5 — depende: T010
+  - nota: 2026-11-12 — CA4 refinado (ventana en lugar de otra pestaña): `test_la_casilla_del_registro` lo actualiza T016, y TM1 queda retirada
   - nota: 2026-11-12 — fallan por la razón esperada: la casilla dice «política de privacidad» y sus enlaces van a `#`; `/registro` sin la casilla crea la cuenta y redirige a `/cliente`; con Google, el mensaje antiguo
   - verificación de caracterización (CA5 con Google, el rechazo): tras T026, se comprueba quitando la regla `terminos` de `contactoStore`; debe fallar, se restaura y se anota aquí
   - nota: 2026-11-12 — comprobado rompiendo la regla `terminos` de `contactoStore()`: `test_el_registro_con_google_sin_la_casilla_se_rechaza` falla; restaurada, pasa
@@ -63,6 +64,8 @@ podía romper:
 - [x] T015 [P] Añadir `'terminos' => 'on'` a `altaValida()` de `LimiteIntentosTest`, que da de alta sin la casilla — `tests/Feature/LimiteIntentosTest.php` — hecho cuando: `LimiteIntentosTest` sigue en verde (antes y después de T026) — cubre: CA5
   - nota: 2026-11-12 — `LimiteIntentosTest` en verde con la casilla (antes de T026); se vuelve a correr en T026
 
+- [ ] T016 Actualizar `test_la_casilla_del_registro` al CA4 refinado (texto de la etiqueta exactamente el de CA4; cada enlace a `url('/terminos')` y `url('/aviso-de-privacidad')` sin `target`, con `aria-haspopup="dialog"` y `data-dialogo` hacia una ventana que existe en la página; sin `style`) y añadir `test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina` (en `/registro` y en `/registro/contacto`: cada `dialog.dialogo-legal` con `aria-labelledby` a su título «Términos de uso» o «Aviso de privacidad», la fecha, un botón «Cerrar», y el texto normalizado de sus secciones igual al de las secciones de su página) y `test_la_ventana_del_registro_solo_usa_tokens` (las reglas de `.dialogo-legal` en `auth.css` solo con `var(--…)`, salvo `0`, porcentajes, `1.6` y `100dvh`) — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: fallan por la razón esperada (los enlaces aún llevan `target`; no hay ventanas ni reglas) — cubre: CA4 — depende: T011
+  - nota: añadida durante /implement: CA4 refinado por el usuario en la verificación manual de T025 (2026-11-12)
 ## Implementación
 - [x] T020 Aplicar el sistema 1.15.0 al CSS: en `app.css`, el valor nuevo de `--font-display`; en `publico.css`, las seis `@font-face` de respaldo de Newsreader tras las de Montserrat y las reglas de `candidatos/c4/legal.css` de la página legal (sin la redefinición del token), con su comentario — `public/css/app.css`, `public/css/publico.css` — hecho cuando: T014 pasa y `PaginasPublicasCssTest` entero en verde (solo tokens) — cubre: CA1, CA2 — depende: T001, T014
   - nota: 2026-11-12 — `app.css` con el `--font-display` nuevo; `publico.css` con las seis caras de respaldo tras las de Montserrat y las reglas de `c4/legal.css` tras `.lb-volver`. `PaginasPublicasCssTest`: 22 en verde; `test_las_vistas_publicas_no_llevan_estilos_en_linea` espera a las vistas de T022 y T023
@@ -71,10 +74,16 @@ podía romper:
 - [ ] T022 Crear la vista de términos con `@extends('layouts.publico')`, el título, la descripción y la canónica del plan, y el marcado y el texto de `candidatos/c4/terminos.html` (dirección, teléfono, `tel:` y horario desde la configuración; solo dobles llaves) — `resources/views/publico/terminos.blade.php` — hecho cuando: pasan `test_terminos_tiene_sus_secciones_y_la_fecha`, `test_los_datos_de_la_clinica_salen_de_la_configuracion`, `test_el_indice_va_antes_de_las_secciones` y `test_el_texto_es_el_aprobado` (términos) · verificación manual: `/terminos` a 320, 390 y 1440 px contra `candidatos/c4/terminos.html` — cubre: CA1, CA7, CA8 — depende: T020, T021
 - [ ] T023 Crear la vista del aviso de privacidad igual que T022, con el texto de `candidatos/c4/privacidad.html` — `resources/views/publico/aviso-privacidad.blade.php` — hecho cuando: pasan `test_el_aviso_tiene_sus_secciones_y_la_fecha`, `test_el_aviso_nombra_cada_dato_del_registro`, `test_el_texto_es_el_aprobado` (aviso) y T013 · verificación manual: `/aviso-de-privacidad` a 320, 390 y 1440 px contra `candidatos/c4/privacidad.html`, y que el aviso no menciona datos ni usos que el sitio no tiene (CA3) — cubre: CA2, CA3, CA7, CA8 — depende: T013, T022
 - [ ] T024 Añadir al final de `.pub-foot__links` «Términos de uso» (`route('terminos')`) y «Aviso de privacidad» (`route('privacidad')`) — `resources/views/layouts/publico.blade.php` — hecho cuando: T012 pasa y `PaginasPublicasTest` y `NavegacionSalidasTest` siguen en verde — cubre: CA6 — depende: T012, T022, T023
-- [ ] T025 Cambiar la casilla de los dos registros: «Acepto los términos de uso y el aviso de privacidad de Dentissa», con cada enlace a su ruta, `target="_blank"`, `rel="noopener"` y «(se abre en otra pestaña)» dentro del enlace, sin `style=""`; en `auth.css`, `.page-register .checkbox-label a { color: var(--p500); }` — `resources/views/auth/register.blade.php`, `resources/views/auth/registro-contacto.blade.php`, `public/css/auth.css` — hecho cuando: `test_la_casilla_del_registro` pasa · verificación manual: en el navegador, abrir «aviso de privacidad» desde el registro a medio rellenar y volver a su pestaña con lo escrito (CA4) — cubre: CA4 — depende: T011, T021
+- [ ] T025 Cambiar la casilla de los dos registros: «Acepto los términos de uso y el aviso de privacidad de Dentissa», cada enlace a su ruta en la misma pestaña, con `data-dialogo` y `aria-haspopup="dialog"`, sin `style=""`; e incluir en los dos el parcial nuevo de las ventanas (`<dialog class="dialogo-legal">` de términos y de aviso con los parciales de texto de T028 y T029 en modo ventana, y el script en línea de `candidatos/c4/registro-integracion.html`) — `resources/views/auth/register.blade.php`, `resources/views/auth/registro-contacto.blade.php`, `resources/views/auth/_dialogos-legales.blade.php` — hecho cuando: los tests de T016 pasan · verificación manual: en `/registro` y en `/registro/contacto`, cada enlace abre su ventana; se cierra con «Cerrar», con Escape y pulsando fuera; el foco vuelve al enlace; lo escrito sigue ahí; el enlace al otro texto dentro de la ventana abre su ventana; sin JavaScript, el enlace lleva a la página (CA4) — cubre: CA4 — depende: T016, T028, T029, T031
 - [x] T026 En `RegisterController`: regla `'terminos' => ['accepted']` en `register()` con el mensaje «Debes aceptar los términos de uso y el aviso de privacidad.», y el mismo mensaje en `contactoStore()` (D5) — `app/Http/Controllers/RegisterController.php` — hecho cuando: `test_el_registro_sin_la_casilla_se_rechaza` y `test_el_registro_con_google_sin_la_casilla_se_rechaza` pasan, y `LimiteIntentosTest` sigue en verde — cubre: CA5 — depende: T011, T015
   - nota: 2026-11-12 — los dos tests de CA5 y `LimiteIntentosTest` en verde (11)
-- [ ] T027 Verificación final: suite completa (`php artisan test`), Pint sobre los PHP tocados, `semgrep` y `gitleaks` sobre lo tocado, `composer audit --locked` sin avisos, `medir.mjs` en las dos páginas de la app (puertas y KPIs; K3 y K4 por sus tests) y Lighthouse SEO de `/terminos` y `/aviso-de-privacidad` en local — sin archivos — hecho cuando: todo en verde, Lighthouse SEO ≥ 90 en las dos, y el resultado anotado en esta tarea — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T002, T003, T013, T022, T023, T024, T025, T026
+- [ ] T028 Pasar las secciones de los términos a un parcial con el nivel del título (`h2` o `h3`), el prefijo de los ids y si los enlaces al otro texto abren su ventana (`data-dialogo`), e incluirlo en la vista de la página (D11) — `resources/views/publico/legal/terminos-texto.blade.php`, `resources/views/publico/terminos.blade.php` — hecho cuando: los tests de la página de términos siguen en verde (secciones, datos de la configuración, índice, texto aprobado) — cubre: CA1, CA4 — depende: T022
+  - nota: añadida durante /implement: CA4 refinado (2026-11-12)
+- [ ] T029 Lo mismo con el aviso de privacidad — `resources/views/publico/legal/privacidad-texto.blade.php`, `resources/views/publico/aviso-privacidad.blade.php` — hecho cuando: los tests del aviso siguen en verde (secciones, datos del registro, texto aprobado) — cubre: CA2, CA3, CA4 — depende: T023
+  - nota: añadida durante /implement: CA4 refinado (2026-11-12)
+- [ ] T031 Añadir a `auth.css` los tokens que copia de `app.css` con el mismo valor y las reglas de `.dialogo-legal` de `candidatos/c4/registro-dialogo.css` (sin la regla solo del candidato) — `public/css/auth.css` — hecho cuando: `test_la_ventana_del_registro_solo_usa_tokens` pasa — cubre: CA4 — depende: T016
+  - nota: añadida durante /implement: CA4 refinado (2026-11-12)
+- [ ] T027 Verificación final: suite completa (`php artisan test`), Pint sobre los PHP tocados, `semgrep` y `gitleaks` sobre lo tocado, `composer audit --locked` sin avisos, `medir.mjs --solo terminos,privacidad` en las dos páginas de la app y `--solo registro-dialogo` sobre `candidatos/c4` (K8; la ventana de la app solo se abre con JavaScript) (puertas y KPIs; K3 y K4 por sus tests) y Lighthouse SEO de `/terminos` y `/aviso-de-privacidad` en local — sin archivos — hecho cuando: todo en verde, Lighthouse SEO ≥ 90 en las dos, y el resultado anotado en esta tarea — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T002, T003, T013, T022, T023, T024, T025, T026, T028, T029, T031
 
 ## Integración y documentación
 - [ ] T030 Añadir `/terminos` y `/aviso-de-privacidad` al inventario de `docs/seo.md` (indexables, con título, descripción, canónica, un `h1` y su evidencia), a la lista de páginas de `layouts/publico.blade.php` en `AGENTS.md` y a los puntos de entrada públicos de `docs/security.md`, donde también se anota el aviso de `phpseclib` (PKSA-h7cz-q7zq-mdkt) y su corrección con la 3.0.58 (A10) — `docs/seo.md`, `AGENTS.md`, `docs/security.md` — hecho cuando: las filas y la línea de `AGENTS.md` dicen lo que hace el código — depende: T027
@@ -85,7 +94,7 @@ podía romper:
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
   - `/terminos` y `/aviso-de-privacidad` responden `200` con su texto, con el logo, y aparecen en el pie de `/`
-  - desde `/registro`, los dos enlaces abren otra pestaña y la del registro conserva lo escrito
+  - desde `/registro`, los dos enlaces abren su ventana sin salir de la página, que se cierra con «Cerrar», Escape o pulsando fuera, y lo escrito sigue ahí
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh` con la versión nueva, `verificar.sh` y la comprobación de T095; vigilar `5xx` en `/registro` la primera hora
 - [ ] T098 Marcar spec como `released`; en las specs 002 y 038 anotar en su Historial lo que cambia la 045 (casilla y validación del registro; pie público)
@@ -96,7 +105,7 @@ podía romper:
 | CA1 | T010, T014 | T020, T021, T022 |
 | CA2 | T010, T014 | T020, T021, T023 |
 | CA3 | T010 | T023 |
-| CA4 | T011 | T025 |
+| CA4 | T011, T016 | T025, T028, T029, T031 |
 | CA5 | T011, T015 | T026 |
 | CA6 | T012 | T024 |
 | CA7 | T010 | T021, T022, T023 |
@@ -104,7 +113,7 @@ podía romper:
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
-| TM1 | T025 | T011 |
+| TM1 (retirada: CA4 refinado) | T025 | T016 |
 | TM2 | T022, T023 | T013 |
 
 | Cambio del plan (módulo) | Tarea(s) |
@@ -117,8 +126,9 @@ podía romper:
 | `app/Http/Controllers/PaginasPublicasController.php` | T021 |
 | `resources/views/publico/terminos.blade.php`, `aviso-privacidad.blade.php` | T022, T023 |
 | `resources/views/layouts/publico.blade.php` | T024 |
-| `resources/views/auth/register.blade.php`, `registro-contacto.blade.php` | T025 |
-| `public/css/auth.css` | T025 |
+| `resources/views/auth/register.blade.php`, `registro-contacto.blade.php`, `_dialogos-legales.blade.php` | T025 |
+| `resources/views/publico/legal/terminos-texto.blade.php`, `privacidad-texto.blade.php` | T028, T029 |
+| `public/css/auth.css` | T025, T031 |
 | `app/Http/Controllers/RegisterController.php` | T026 |
 | `tests/Feature/TerminosPrivacidadTest.php` | T010, T011, T012 |
 | `tests/Feature/PaginasPublicasTest.php` | T013 |

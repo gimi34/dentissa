@@ -52,6 +52,16 @@
     "privacidad": {
       "file": "privacidad.html",
       "url": "aviso-de-privacidad"
+    },
+    "registro-dialogo": {
+      "file": "registro-dialogo.html",
+      "mode": "operar",
+      "gates": {
+        "external_hosts": [
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ]
+      }
     }
   },
   "kpis": [
@@ -114,7 +124,18 @@
     },
     {
       "id": "K5",
-      "pantalla": "*",
+      "pantalla": "terminos",
+      "name": "Enlaces del pie",
+      "type": "visible",
+      "texts": [
+        "Términos de uso",
+        "Aviso de privacidad"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K5-privacidad",
+      "pantalla": "privacidad",
       "name": "Enlaces del pie",
       "type": "visible",
       "texts": [
@@ -138,6 +159,18 @@
       "type": "max_js_bytes",
       "value": 102400,
       "ca": "P10"
+    },
+    {
+      "id": "K8",
+      "pantalla": "registro-dialogo",
+      "name": "Ventana de los términos en el registro",
+      "type": "above_fold_all",
+      "texts": [
+        "Términos de uso",
+        "Cerrar",
+        "Quién ofrece este sitio"
+      ],
+      "ca": "CA4"
     }
   ],
   "manual": [

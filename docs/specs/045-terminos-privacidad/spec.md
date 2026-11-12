@@ -1,7 +1,7 @@
 ---
 id: 045
 slug: terminos-privacidad
-status: approved
+status: draft
 created: 2026-11-12
 extends: [002, 038]
 ---
@@ -26,7 +26,7 @@ proyecto (LFPDPPP). Quien quiera consultarlo después de registrarse tampoco tie
 - [ ] CA1 · Dado cualquiera, con o sin sesión, cuando abre «Términos de uso», entonces ve una página en español con el estilo de las páginas públicas, el título «Términos de uso», la fecha de la última actualización y estas secciones: qué es el sitio y quién lo ofrece (la clínica, con su dirección y su teléfono); la cuenta (es personal, con datos verdaderos, y su titular cuida su contraseña); las citas en línea (se piden y se gestionan con las reglas de la agenda de la clínica, y el sitio no sirve para urgencias: para eso, el teléfono de la clínica); lo que no se permite (usar una cuenta ajena, intentar ver datos de otras personas o entorpecer el servicio) y qué puede hacer la clínica si pasa (desactivar la cuenta); que la información del sitio no sustituye la consulta; cómo se avisan los cambios de los términos, y el contacto.
 - [ ] CA2 · Dado cualquiera, con o sin sesión, cuando abre «Aviso de privacidad», entonces ve una página en español con el estilo de las páginas públicas, el título «Aviso de privacidad», la fecha de la última actualización y estas secciones: quién es el responsable de los datos (la clínica, con su domicilio); qué datos se recaban (los de identificación y contacto del registro, los que da Google al registrarse con él, y los de salud que el personal anota en la atención y en el expediente, señalados como datos sensibles; las fotos de la galería, solo con el consentimiento del paciente); para qué se usan (dar la atención, llevar la agenda y el expediente, y los avisos de la cuenta, como recuperar la contraseña) y que no se usan para publicidad; con quién se comparten (los proveedores que hacen funcionar el servicio, como el alojamiento, el inicio de sesión con Google y el envío de correos, y las autoridades cuando la ley lo exige); cuánto tiempo se conservan (el expediente, al menos cinco años); cómo ejercer los derechos de acceso, rectificación, cancelación y oposición y revocar el consentimiento, por qué medios y en qué plazo se responde; qué cookies usa el sitio (solo las necesarias para la sesión, sin rastreo ni publicidad), y cómo se avisan los cambios del aviso.
 - [ ] CA3 · Dado el aviso de privacidad, cuando se compara con el registro, entonces cada dato que pide el registro (en el normal y en el que se completa con Google) aparece en la lista de datos que se recaban, y el aviso no menciona datos que el sitio no pide ni usos que no tiene.
-- [ ] CA4 · Dado alguien en el registro (el normal o el que se completa tras entrar con Google), cuando lee la casilla de aceptación, entonces dice «Acepto los términos de uso y el aviso de privacidad de Dentissa», y «términos de uso» y «aviso de privacidad» son enlaces a sus páginas, que se abren en otra pestaña y lo anuncian, también a los lectores de pantalla, con «(se abre en otra pestaña)»; al volver a la pestaña del registro, lo escrito sigue ahí.
+- [ ] CA4 · Dado alguien en el registro (el normal o el que se completa tras entrar con Google), cuando lee la casilla de aceptación, entonces dice «Acepto los términos de uso y el aviso de privacidad de Dentissa», y «términos de uso» y «aviso de privacidad» abren, sin salir de la página, una ventana con el texto completo de esa página y su título; la ventana se cierra con «Cerrar», con Escape o pulsando fuera de ella, el foco vuelve al enlace y lo escrito en el registro sigue ahí. Sin JavaScript, cada enlace lleva a su página en la misma pestaña.
 - [ ] CA5 · Dado alguien que envía el registro (normal o con Google) sin marcar la casilla, cuando se rechaza el envío, entonces el mensaje es «Debes aceptar los términos de uso y el aviso de privacidad.» y no se crea ninguna cuenta (hoy el registro con Google ya lo rechaza; el normal solo lo impide el navegador).
 - [ ] CA6 · Dado cualquiera en una página pública (inicio, servicios, galería y las dos páginas de esta spec), cuando llega al pie, entonces encuentra «Términos de uso» y «Aviso de privacidad», que llevan a sus páginas en la misma pestaña, a 320, 390 y 1440 px de ancho.
 - [ ] CA7 · Dado cualquiera en «Términos de uso» o «Aviso de privacidad», cuando quiere salir, entonces tiene la cabecera y el pie de las páginas públicas (con sesión, «Ir a mi panel»; sin ella, «Iniciar sesión» y «Crear cuenta»), y con sesión la página se muestra igual, sin llevarlo a su panel.
@@ -61,12 +61,13 @@ Diseño aceptado: [design.md](design.md) (`/design-spec 045`, candidato `c4`, 82
 
 - **Qué debe lograr cada pantalla:** en «Aviso de privacidad», entender en cinco segundos que hay
   una lista de secciones y llegar a la que busca; en «Términos de uso», lo mismo con sus secciones.
-  En el registro, que los enlaces se vean como enlaces y quede claro que abren otra pestaña.
+  En el registro, que los enlaces se vean como enlaces y que el texto se lea en una ventana sin salir del
+  formulario.
 - **Recursos de marca que existen:** la cabecera, el pie, las fuentes y los colores de las páginas
   públicas; no hacen falta fotos ni ilustraciones.
 - **Qué debe diseñarse:** las dos páginas (con su lista de secciones al principio y la fecha de
   actualización), su estado sin JavaScript y con sesión, los dos enlaces nuevos del pie, y los
-  enlaces de la casilla del registro con su aviso de pestaña nueva.
+  enlaces de la casilla del registro y la ventana con el texto que abren.
 
 ## Criterios de diseño
 Modo: leer · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos (`.ai/project.yaml →
@@ -82,9 +83,10 @@ design`). Se miden con `design/medir.mjs` (que llama a `evaluate.mjs`) sobre las
 | K5 | Enlaces del pie | «Términos de uso» y «Aviso de privacidad» a 320, 390 y 1440 px | CA6 |
 | K6 | Estabilidad visual (CLS) | ≤ 0.1 | modo leer |
 | K7 | JavaScript de la ruta | ≤ 100 kB | P10 |
+| K8 | La ventana de los términos en el registro (refinado) | su título, «Cerrar» y la primera sección a la vista a 320, 390 y 1440 px | CA4 |
 
 Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren `G-sin-js`,
-`G-desborde`, `G-toque` y `G-foco`; CA3, CA4 y CA5 los prueban sus tests). Rúbrica: pesos por defecto.
+`G-desborde`, `G-toque` y `G-foco`; CA3 y CA5 los prueban sus tests; CA4, la ventana, se mide sola con K8). Rúbrica: pesos por defecto.
 
 ## Requisitos no funcionales
 - Accesibilidad: WCAG 2.1 AA (P9): un solo título principal por página y títulos en orden, contraste
@@ -102,7 +104,8 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 |---|---|---|---|---|
 | 2026-11-08 | brecha | Enlaces «términos de uso» y «política de privacidad» del registro que llevan a `#` | Crear páginas sencillas, en esta spec | usuario (spec 044, Decisiones) |
 | 2026-11-12 | brecha | ¿De dónde sale el texto de las dos páginas? | Lo redacta Claude con la estructura del aviso de privacidad integral de la LFPDPPP y unos términos de uso sencillos, con los datos de la clínica; el usuario lo revisa al aceptar el diseño (`/design-spec 045`). No es asesoría legal | usuario |
-| 2026-11-12 | brecha | ¿Cómo se abren los enlaces desde el registro? | En otra pestaña, anunciándolo; lo escrito en el registro no se pierde | usuario |
+| 2026-11-12 | brecha | ¿Cómo se abren los enlaces desde el registro? | En otra pestaña, anunciándolo; lo escrito en el registro no se pierde. **Sustituida** el mismo día (fila siguiente) | usuario |
+| 2026-11-12 | brecha | Revisión de `/implement`: en el registro, ¿otra pestaña o sin salir de la página? | Una ventana en la misma página con el texto completo de la página (la misma fuente), que se cierra con «Cerrar», Escape o pulsando fuera; sin JavaScript, el enlace lleva a la página en la misma pestaña. Las páginas propias se quedan | usuario |
 | 2026-11-12 | brecha | ¿Desde dónde más se llega a las páginas? | También desde el pie de todas las páginas públicas | usuario |
 | 2026-11-12 | implícita | ¿«Política de privacidad» o «aviso de privacidad»? | «Aviso de privacidad», el nombre que usa la LFPDPPP; cambian el texto de la casilla y el mensaje de error | `docs/constitution.md` → Restricciones (marco LFPDPPP) |
 | 2026-11-12 | implícita | ¿Cuánto se conserva el expediente? | Al menos cinco años | `docs/constitution.md` → Restricciones (NOM-004-SSA3) |
@@ -128,3 +131,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 | 2026-11-12 | Creada en `draft` y aprobada por el usuario | /specify 045 |
 | 2026-11-12 | Diseño aprobado por el usuario (`c4`, 82/100) con el texto de las dos páginas | /design-spec 045 |
 | 2026-11-12 | CA5 sin «como hoy» para el registro normal, y «Auditoría» dice que el alta aún no se audita; vuelve a `draft` hasta que el usuario la apruebe | /analyze 045 r1 A9, A13 |
+| 2026-11-12 | CA4: en el registro, el texto se abre en una ventana en la misma página en lugar de otra pestaña (decisión del usuario en la verificación manual de `/implement`); vuelve a `draft` | /specify --edit 045 |

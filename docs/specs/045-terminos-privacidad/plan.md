@@ -1,6 +1,6 @@
 ---
 spec: 045-terminos-privacidad
-status: approved # draft | approved | blocked
+status: draft # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-12
 ---
@@ -14,7 +14,8 @@ Dos páginas públicas nuevas, `/terminos` y `/aviso-de-privacidad`, servidas po
 página legal; los datos de la clínica (dirección, teléfono y horario) salen de `config('clinica.contacto')`.
 Los estilos nuevos y el respaldo de Newsreader entran en `publico.css`, `app.css` y el sistema de diseño
 (1.15.0) en la primera tarea. El pie público gana los dos enlaces, y la casilla del registro (normal y con
-Google) pasa a «aviso de privacidad», con enlaces reales que se abren en otra pestaña. El registro normal,
+Google) pasa a «aviso de privacidad», y sus enlaces abren el texto en una ventana (`<dialog>`) sin salir del
+registro; el texto de cada página vive en un parcial que usan la página y la ventana (D11). El registro normal,
 que hoy solo exige la casilla en el navegador, la valida también en el servidor (CA5, P4). Además, la línea
 base de dependencias obliga a subir `phpseclib/phpseclib` a 3.0.58 (decisión del usuario).
 
@@ -45,10 +46,12 @@ Resultado: 8 ✅, 2 ➖ y ninguna violación.
 | `app/Http/Controllers/PaginasPublicasController.php` | `terminos()` y `privacidad()`, que devuelven sus vistas con el horario en texto (`horarioEnTexto()`, de `config('clinica.contacto.horario')`) | Bajo |
 | `resources/views/publico/terminos.blade.php`, `publico/aviso-privacidad.blade.php` (nuevos) | El marcado y el texto de `candidatos/c4`, con `@section('titulo')`, `descripcion` y `canonica`; dirección, teléfono, enlace `tel:` y horario desde la configuración | Medio: el texto aprobado podría desviarse al pasarlo a Blade (test que lo compara con `c4`) |
 | `resources/views/layouts/publico.blade.php` | Dos `<li>` al final de `.pub-foot__links`: «Términos de uso» y «Aviso de privacidad» | Bajo: tests del pie existentes |
-| `resources/views/auth/register.blade.php`, `auth/registro-contacto.blade.php` | Casilla: «Acepto los términos de uso y el aviso de privacidad de Dentissa»; cada enlace a su ruta, con `target="_blank"`, `rel="noopener"` y «(se abre en otra pestaña)» dentro del enlace; sin `style=""` | Bajo |
-| `public/css/auth.css` | `.page-register .checkbox-label a { color: var(--p500); }` (el color que llevaban en línea) | Bajo |
+| `resources/views/auth/register.blade.php`, `auth/registro-contacto.blade.php` | Casilla: «Acepto los términos de uso y el aviso de privacidad de Dentissa»; cada enlace a su ruta, en la misma pestaña, con `data-dialogo` y `aria-haspopup="dialog"`; sin `style=""`; incluyen el parcial de las ventanas | Bajo |
+| `resources/views/auth/_dialogos-legales.blade.php` (nuevo) | Las dos ventanas (`<dialog class="dialogo-legal">` con `aria-labelledby`, cabecera con título, fecha y «Cerrar»; el texto con los parciales de D11, `h3` e ids con prefijo) y el script en línea que las abre con `showModal()`, las cierra con «Cerrar» o pulsando fuera (Escape es nativo) y devuelve el foco al enlace; el enlace al otro texto abre su ventana (`candidatos/c4/registro-integracion.html`) | Medio: comportamiento en el navegador, sin test automático (verificación manual) |
+| `resources/views/publico/legal/terminos-texto.blade.php`, `legal/privacidad-texto.blade.php` (nuevos) | Las secciones de cada página (del candidato `c4`), con el nivel del título (`h2` en la página, `h3` en la ventana), el prefijo de los ids y si los enlaces entre los dos textos abren la ventana | Bajo: `test_el_texto_es_el_aprobado` sigue vigilando las páginas |
+| `public/css/auth.css` | `.page-register .checkbox-label a { color: var(--p500); }` (el color que llevaban en línea); los tokens que copia de `app.css` y las reglas de `.dialogo-legal` (`candidatos/c4/registro-dialogo.css`, sin la regla solo del candidato) | Bajo |
 | `app/Http/Controllers/RegisterController.php` | `register()`: regla `'terminos' => ['accepted']` y su mensaje; `contactoStore()`: mensaje nuevo. Texto: «Debes aceptar los términos de uso y el aviso de privacidad.» | Medio: el registro normal pasa a rechazar en el servidor un envío sin la casilla (antes solo lo frenaba el navegador) |
-| `tests/Feature/TerminosPrivacidadTest.php` (nuevo) | CA1–CA8, TM1, TM2 y el texto aprobado | — |
+| `tests/Feature/TerminosPrivacidadTest.php` (nuevo) | CA1–CA8, el texto aprobado y las ventanas del registro | — |
 | `tests/Feature/PaginasPublicasTest.php` | Las dos rutas en `METADATOS` (y con ello en los tests que la recorren) y las dos vistas en `VISTAS` (salida sin escapar, A1) | Bajo |
 | `tests/Feature/PaginasPublicasCssTest.php` | `--font-display` nuevo en `TOKENS` y `EN_EL_SISTEMA`; el filtro de caras de respaldo admite las de Newsreader; test de sus medidas; test de las reglas de la página legal; las dos vistas y las dos rutas en `test_las_vistas_publicas_no_llevan_estilos_en_linea` (A2) | Bajo |
 | `tests/Feature/LimiteIntentosTest.php` | `altaValida()` envía `terminos` | Bajo: sin la casilla, el alta válida dejaría de serlo |
@@ -81,10 +84,12 @@ Resultado: 8 ✅, 2 ➖ y ninguna violación.
   `TerminosPrivacidadTest` comprueba las secciones de cada página en orden, la fecha, los datos de la clínica
   sacados de la configuración, los datos de salud como sensibles (CA1, CA2); que cada campo de los dos
   formularios del registro y cada dato que se guarda de Google aparecen en el aviso (CA3: un mapa campo →
-  texto; un campo nuevo sin entrada en el mapa hace fallar el test); la casilla y sus enlaces (CA4); el
+  texto; un campo nuevo sin entrada en el mapa hace fallar el test); la casilla, sus enlaces y las dos ventanas
+  con el mismo texto que las páginas (CA4); el
   rechazo sin la casilla en los dos registros, sin cuenta creada (CA5); los dos enlaces del pie en las cinco
   páginas públicas (CA6); la cabecera y el pie con y sin sesión (CA7); el contenido en el HTML del servidor
-  (CA8); `rel="noopener"` (TM1) y que el texto de `<main>` es el del candidato `c4` aprobado, normalizado.
+  (CA8) y que el texto de `<main>` es el del candidato `c4` aprobado, normalizado. Abrir y cerrar la ventana
+  (Escape, fuera, foco de vuelta) es comportamiento del navegador: verificación manual (D12).
 - **`PaginasPublicasTest`**: las dos rutas en `METADATOS` las meten en los tests de metadatos, un `h1`,
   títulos en orden, nombres accesibles, un solo script con `defer`, sin recursos externos y enlaces internos
   que resuelven; las dos vistas en `VISTAS`, en el de salida sin escapar (A1). El contenido en el HTML del
@@ -105,7 +110,7 @@ Quedan dos amenazas menores del cambio:
 
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
-| TM1 | Tampering (la pestaña abierta desde el registro manipula la del formulario vía `window.opener`) | A05:2021 Security Misconfiguration | enlaces de la casilla | `rel="noopener"` en los dos enlaces con `target="_blank"`, con destinos fijos del propio sitio | `TerminosPrivacidadTest::test_la_casilla_del_registro` |
+| TM1 | **Retirada** (CA4 refinado): los enlaces ya no abren otra pestaña, así que no hay `window.opener` que proteger | — | — | — | `TerminosPrivacidadTest::test_la_casilla_del_registro` comprueba que no llevan `target` |
 | TM2 | Information disclosure / inyección (contenido de configuración pintado sin escapar) | A03:2021 Injection | vistas nuevas | Solo dobles llaves para los datos de la configuración; sin salida sin escapar | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar`, con las dos vistas en su lista `VISTAS` |
 
 ## Trazabilidad
@@ -114,12 +119,12 @@ Quedan dos amenazas menores del cambio:
 | CA1: página «Términos de uso» con sus secciones y la fecha | rutas, controlador, `publico/terminos` | Feature: `TerminosPrivacidadTest::test_terminos_tiene_sus_secciones_y_la_fecha` y `test_los_datos_de_la_clinica_salen_de_la_configuracion` · `design/medir.mjs` (K1, K2) |
 | CA2: página «Aviso de privacidad» con sus secciones y la fecha | rutas, controlador, `publico/aviso-privacidad` | Feature: `TerminosPrivacidadTest::test_el_aviso_tiene_sus_secciones_y_la_fecha` (incluye los datos de salud como sensibles y los cinco años del expediente) · `design/medir.mjs` (K1-privacidad, K2-privacidad) |
 | CA3: el aviso cuadra con lo que pide el registro | `publico/aviso-privacidad` | Feature: `TerminosPrivacidadTest::test_el_aviso_nombra_cada_dato_del_registro` (campos de los dos formularios y de Google) · verificación manual: en `/review`, que el aviso no menciona datos ni usos que el sitio no tiene |
-| CA4: casilla con «aviso de privacidad» y enlaces en otra pestaña | `register`, `registro-contacto`, `auth.css` | Feature: `TerminosPrivacidadTest::test_la_casilla_del_registro` (texto, `href` de las rutas, `target`, `rel`, «(se abre en otra pestaña)» dentro del enlace, sin `style`) · verificación manual: en el navegador, abrir un enlace y volver a la pestaña del registro con lo escrito |
+| CA4: casilla con «aviso de privacidad» y su texto en una ventana sin salir del registro | `register`, `registro-contacto`, `_dialogos-legales`, parciales de texto, `auth.css` | Feature: `TerminosPrivacidadTest::test_la_casilla_del_registro` (texto, `href` a cada página sin `target`, `data-dialogo` a una ventana que existe, `aria-haspopup`, sin `style`) y `test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina` (en los dos registros: cada ventana con su título, la fecha, «Cerrar» y el mismo texto que la sección de su página) · CSS: `TerminosPrivacidadTest::test_la_ventana_del_registro_solo_usa_tokens` · `design/medir.mjs` sobre `candidatos/c4/registro-dialogo.html` (K8) · verificación manual: en el navegador, abrir cada ventana desde la casilla, cerrarla con «Cerrar», Escape y pulsando fuera, el foco de vuelta en el enlace, lo escrito sigue ahí, y sin JavaScript el enlace lleva a la página |
 | CA5: sin la casilla se rechaza con el mensaje y sin cuenta | `RegisterController` | Feature: `TerminosPrivacidadTest::test_el_registro_sin_la_casilla_se_rechaza` (falla antes en `/registro`) y `test_el_registro_con_google_sin_la_casilla_se_rechaza` (caracterización del rechazo; el mensaje nuevo falla antes) |
 | CA6: los dos enlaces en el pie de las páginas públicas | `layouts/publico` | Feature: `TerminosPrivacidadTest::test_el_pie_publico_enlaza_las_dos_paginas` (`/`, `/servicios`, `/galeria`, `/terminos`, `/aviso-de-privacidad`) · `design/medir.mjs` (K5) a 320, 390 y 1440 px |
 | CA7: cabecera y pie públicos, con sesión sin redirigir | `layouts/publico`, controlador | Feature: `TerminosPrivacidadTest::test_con_y_sin_sesion_se_ven_igual` (caracterización de la parte «sin redirigir») |
 | CA8: sin JavaScript, texto completo y enlaces | vistas nuevas | Feature: `TerminosPrivacidadTest::test_el_texto_es_el_aprobado` (el texto completo en el HTML del servidor) y `PaginasPublicasTest::test_todos_los_enlaces_internos_resuelven` con las dos rutas · `design/medir.mjs` (puerta `G-sin-js`) (A5) |
-| TM1 | casilla del registro | `TerminosPrivacidadTest::test_la_casilla_del_registro` |
+| TM1 | retirada (CA4 refinado) | `TerminosPrivacidadTest::test_la_casilla_del_registro` (sin `target`) |
 | TM2 | vistas nuevas | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar` con las dos vistas en `VISTAS` (A1) |
 | Texto aprobado (`design.md`, decisión del usuario) | vistas nuevas | Feature: `TerminosPrivacidadTest::test_el_texto_es_el_aprobado` (texto de `<main>` igual al de `candidatos/c4`) |
 | Diseño: K3 lista de secciones antes de la primera | vistas nuevas | Feature: `TerminosPrivacidadTest::test_el_indice_va_antes_de_las_secciones` |
@@ -170,11 +175,20 @@ métricas nuevos; el alta sigue igual. Tras el deploy basta con que las dos ruta
 - **D5 · Validación de la casilla en el registro normal.** Hoy solo la exige el navegador (`required`). CA5
   pide que el envío sin ella se rechace sin crear la cuenta; con P4, la regla va en el servidor
   (`accepted`), igual que en el registro con Google. Implícita: spec 045 CA5 y `docs/constitution.md` P4.
-- **D6 · Enlaces del registro en otra pestaña.** `target="_blank"` con `rel="noopener"` (TM1) y
-  «(se abre en otra pestaña)» dentro del enlace, visible y en el nombre accesible (decisión del usuario de
-  la spec; `design.md` → Accesibilidad).
+- **D6 · El texto en una ventana del registro** (sustituye a «en otra pestaña», decisión del usuario del
+  2026-11-12 en la verificación manual de T025). Opciones: `<dialog>` nativo con el texto en el HTML, un
+  `iframe` con la página o traer la página con JavaScript. Se elige `<dialog>`: es accesible y cierra con
+  Escape de serie, no necesita red ni escribir HTML desde el script, y sin JavaScript el enlace sigue llevando
+  a la página, en la misma pestaña (decisión del usuario).
 - **D7 · Fuera los `style=""` de los dos enlaces.** Pasan a `.page-register .checkbox-label a` en
   `auth.css` con el mismo token (`--p500`). El resto del registro sigue como código previo (P9).
+- **D11 · El texto de cada página en un parcial.** `publico/legal/terminos-texto` y `privacidad-texto` con
+  las secciones; la página los incluye con `h2` y sus ids, y la ventana con `h3`, ids con prefijo (`terminos-`,
+  `privacidad-`) y los enlaces al otro texto con `data-dialogo`. Una sola fuente: la ventana no puede
+  desfasarse de la página (`test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina`).
+- **D12 · El script de las ventanas va en línea en su parcial**, como el resto del registro, que ya lleva
+  su `<script>` en línea y no carga `publico.js`. Abrir y cerrar se comprueba a mano (no hay tests de
+  navegador del registro); si el navegador no tiene `showModal`, el enlace navega a la página.
 - **D8 · Medir la app con `design/medir.mjs`.** `criterios.json` gana `url` por pantalla para medir
   `http://localhost:8000/terminos` y `/aviso-de-privacidad`; por HTTP no se comprueba `G-red`, que cubre
   `PaginasPublicasTest::test_sin_recursos_externos_salvo_el_mapa` con las dos rutas.
@@ -197,6 +211,8 @@ métricas nuevos; el alta sigue igual. Tras el deploy basta con que las dos ruta
 - `docs/security.md`: las dos rutas en los puntos de entrada públicos y el aviso de `phpseclib` con su corrección (A10).
 
 ## Riesgos y mitigaciones
+- **El comportamiento de la ventana no tiene test automático** (abrir, cerrar, foco): verificación manual en
+  la tarea que la construye y en T095; el texto y la estructura sí los prueban los tests de CA4.
 - **El texto no tiene revisión legal.** Es una base para un proyecto académico (spec, «Fuera de alcance»);
   los puntos que no salen de documentos del proyecto están en `design.md` → «Contenido para revisar», y el
   usuario los aprobó.

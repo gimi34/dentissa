@@ -77,7 +77,8 @@ Ninguna. El único dibujo es el arco decorativo de la tarjeta de la agenda del s
 | Las dos · sin JavaScript | `*-sin-js.png` a 320 | — | a 1440 | CA8 |
 | Las dos · con sesión | la cabecera y el pie del layout con «Ir a mi panel» (sin pantalla propia) | — | — | CA7 |
 | Pie de las páginas públicas | los dos enlaces al final de `pub-foot__links` | — | — | CA6 |
-| Casilla del registro (normal y con Google) | sin pantalla nueva: el texto de CA4 en la casilla actual, con «(se abre en otra pestaña)» dentro de cada enlace, y el mensaje de CA5; lo prueban sus tests | — | — | CA4, CA5 |
+| Casilla del registro (normal y con Google) | el texto de CA4 en la casilla actual y el mensaje de CA5 | — | — | CA4, CA5 |
+| Ventana de los términos o del aviso en el registro (refinado) | `candidatos/c4/registro-dialogo.html` a 320 y 390 (la ventana sola, abierta en el HTML; la integración, sin medir, en `registro-integracion.html`) | — | a 1440 | CA4 |
 
 ## Componentes
 
@@ -86,6 +87,7 @@ Ninguna. El único dibujo es el arco decorativo de la tarjeta de la agenda del s
   `--text-lead` y `--p600`); índice en píldoras (`.lb-indice`, con su número en `small`, sticky en
   escritorio, una columna por debajo de 560 px y dos de 560 a 899 px); secciones (`.lb-lista section h2`
   con filete); tarjeta de la agenda (`.pub-book__card` con `.pub-book__arco`).
+- **Ventana del registro** (refinado, CA4; en `auth.css`): `<dialog class="dialogo-legal">` con `aria-labelledby` a su título; cabecera fija con el título (`h2`), la fecha y «Cerrar» (el botón `.btn-back` del registro); el texto de la página (las mismas secciones, con `h3`) se desplaza dentro; el enlace al otro texto abre su ventana.
 - **Nuevos de esta spec** (van al sistema, ver abajo): la rejilla de la página legal (`.lb-legal`), el
   texto corrido (`.lb-texto`), el número de sección (`.lb-num`), el título del índice
   (`.lb-indice--legal .pub-etiqueta`) y «En pocas palabras» (`.lb-resumen`, variante compacta de la
@@ -104,6 +106,9 @@ Ninguna. El único dibujo es el arco decorativo de la tarjeta de la agenda del s
 | Título del índice | fijo | «En esta página» con `.pub-etiqueta`, a todo el ancho del índice | — | Nombra el índice para todos (y lo enlaza con `aria-labelledby`) |
 | «En pocas palabras» (`.lb-resumen`) | fijo | `.pub-book__card` con `--space-8` de relleno, h2 en `--text-publico-h1`, puntos en párrafos `--p100` separados por un filete `--p600`, enlaces `--white` subrayados | — | Lo esencial de cada página con el contenido propio de la clínica (c2: `plantilla` 2) |
 | Secciones con ancla | fijo | `scroll-margin-top: calc(var(--touch-min) * 2 + var(--space-8))` | — | Que la cabecera fija no tape el título al saltar desde el índice |
+
+| Ventana del registro (`.dialogo-legal`, en `auth.css`) | corte 560 px | relleno lateral `--space-6` | ancho `calc(100% - var(--space-4) * 2)` hasta `calc(var(--measure) + var(--space-8) * 2)`, alto hasta `calc(100dvh - var(--space-8) * 2)`, `--radius-lg`, `--white`, `--shadow-soft`, velo `--overlay`; cabecera con filete `--border` y relleno `--space-6` `--space-8`; título `--text-marca` `--weight-bold`; fecha `--text-meta` `--p600`; texto `--text-publico-small` con interlineado 1.6, títulos `--text-marca`, números `--p600`, viñetas `--p400`, enlaces `--p600` subrayados; foco `--focus-ring` | CA4 (refinado): el texto sin salir del registro |
+| Tokens que `auth.css` copia de `app.css` con el mismo valor | fijo | `--space-3`, `--space-6`, `--space-8`, `--radius-lg`, `--border-width`, `--overlay`, `--shadow-soft`, `--measure`, `--text-marca`, `--text-publico-small`, `--weight-bold` | — | Como la spec 044 (D8): el registro no carga `app.css` |
 
 Ningún color nuevo: `criterios.json → tokens.colors` no cambia.
 
@@ -158,3 +163,4 @@ no salen de ningún documento del proyecto:
 | 2026-11-12 | diseño | ¿Se aprueban el diseño (c4) y el texto de las dos páginas, con los puntos de «Contenido para revisar»? | Aprobados tal cual | usuario |
 | 2026-11-12 | refinado | `/analyze` r1 A3 y A8: el aviso describía una cookie de «Recordarme» que no existe (el inicio de sesión no la usa) y un registro de seguridad con «entradas y cambios» que hoy no se auditan, y no nombraba el contacto de emergencia ni el navegador de la sesión | El aviso describe lo que la app hace hoy: sin «Recordarme»; «Proteger el servicio y detectar accesos indebidos»; el registro de seguridad con «los accesos denegados y algunos cambios de la cuenta, como el restablecimiento de la contraseña»; datos técnicos con el navegador «en tu sesión»; y «En tu ficha de paciente: el nombre y el teléfono de un contacto de emergencia». `c4` vuelto a medir: puertas y KPIs en verde en las dos páginas | usuario |
 | 2026-11-12 | refinado | `/analyze` r2 A15: la sesión no guarda la IP ni el navegador (driver `file` en local y producción), pero el log de acceso de nginx sí | Datos técnicos «en los registros del servidor y de seguridad del sitio», sin «en tu sesión»; `c4` vuelto a medir | `deploy/README.md` (`SESSION_DRIVER=file`), `docker/nginx/dentissa.prod.conf` (`log_format` con `$http_user_agent`) |
+| 2026-11-12 | refinado | Verificación manual de `/implement` (T025): el usuario prefiere que en el registro los enlaces abran el texto sin salir de la pestaña | Ventana (`dialog`) con el texto completo de la página, de la misma fuente; se cierra con «Cerrar», Escape o pulsando fuera; sin JavaScript, el enlace lleva a la página en la misma pestaña (spec CA4 reescrito). Medida sola y abierta en `registro-dialogo.html`: 11/11 puertas por HTTP (12/12 desde el archivo) y K8; el resto del registro no se mide: su contraste, toques, colores del logo de Google y logo sin `data-origen` son código previo (deuda DS) | usuario |
