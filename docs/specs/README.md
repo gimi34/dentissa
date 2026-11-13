@@ -46,6 +46,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 042 | contrasena-alta-google (descartada, número no reutilizable) | Identidad | descartada | — | — (2026-10-27) |
 | 043 | [contrasena-distinta](043-contrasena-distinta/spec.md) | Identidad | released (v0.14.1) | — | — (2026-11-03) |
 | 044 | [navegacion-salidas](044-navegacion-salidas/spec.md) | Transversal | released (v0.15.0) | — | — (2026-11-08) |
+| 045 | [terminos-privacidad](045-terminos-privacidad/spec.md) | Transversal | implemented | — | — (2026-11-12) |
 | 047 | [reportes-admin](047-reportes-admin/spec.md) | Transversal | released (v0.17.0) | — | — (2026-11-10) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):

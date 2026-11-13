@@ -5,6 +5,23 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-13
+
+### Added
+- Páginas «Términos de uso» y «Aviso de privacidad»: qué ofrece el sitio y sus reglas, y qué datos guarda la clínica,
+  para qué, con quién los comparte, cuánto tiempo y cómo pedir verlos, corregirlos o borrarlos. Se enlazan desde el
+  pie de todas las páginas públicas (spec 045).
+- En el registro (también al completarlo tras entrar con Google), «términos de uso» y «aviso de privacidad» abren el
+  texto completo en una ventana sin salir del formulario; se cierra con «Cerrar», con Escape o pulsando fuera
+  (spec 045).
+
+### Changed
+- La casilla del registro habla de «aviso de privacidad», y el alta se rechaza si no se marca, aunque el navegador no
+  lo impida (spec 045).
+
+### Fixed
+- Los títulos del sitio público ya no mueven el texto mientras llega su tipografía (spec 045).
+
 ## [0.17.0] - 2026-11-12
 
 ### Added

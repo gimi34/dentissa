@@ -1,0 +1,65 @@
+/* Candidato c4 · ventanas de los términos y del aviso en el registro (spec 045, CA4). Va a auth.css, con los tokens
+   que le faltan copiados de app.css con el mismo valor (como hizo la spec 044). */
+:root {
+    --space-3:            8px;
+    --space-6:            16px;
+    --space-8:            28px;
+    --radius-lg:          16px;
+    --border-width:       1px;
+    --overlay:            rgba(0, 0, 0, 0.45);
+    --shadow-soft:        0 1px 2px rgba(114, 36, 62, 0.05), 0 12px 32px -12px rgba(114, 36, 62, 0.24);
+    --measure:            62ch;
+    --text-marca:         16px;
+    --text-publico-small: 15px;
+    --weight-bold:        600;
+}
+
+.dialogo-legal {
+    margin: auto;
+    width: calc(100% - var(--space-4) * 2);
+    max-width: calc(var(--measure) + var(--space-8) * 2);
+    max-height: calc(100dvh - var(--space-8) * 2);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-soft);
+    color: var(--text);
+    font-size: var(--text-publico-small);
+    line-height: 1.6;
+}
+.dialogo-legal[open] { display: flex; flex-direction: column; }
+.dialogo-legal::backdrop { background: var(--overlay); }
+.dialogo-legal__cabeza {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-8);
+    border-bottom: var(--border-width) solid var(--border);
+}
+.dialogo-legal__cabeza h2 { margin: 0; font-size: var(--text-marca); font-weight: var(--weight-bold); }
+.dialogo-legal__fecha { margin: var(--space-2) 0 0; color: var(--p600); font-size: var(--text-meta); }
+.dialogo-legal__cerrar { flex: none; min-height: var(--touch-min); }
+.dialogo-legal__texto { overflow-y: auto; padding: var(--space-6) var(--space-8) var(--space-8); }
+.dialogo-legal__texto section + section { margin-top: var(--space-6); }
+.dialogo-legal__texto h3 { margin: 0 0 var(--space-3); font-size: var(--text-marca); font-weight: var(--weight-bold); }
+.dialogo-legal__texto .lb-num { margin-right: var(--space-2); color: var(--p600); }
+.dialogo-legal__texto p,
+.dialogo-legal__texto ul { margin: 0; }
+.dialogo-legal__texto p + p,
+.dialogo-legal__texto p + ul,
+.dialogo-legal__texto ul + p { margin-top: var(--space-3); }
+.dialogo-legal__texto ul { display: grid; gap: var(--space-2); padding-left: var(--space-6); }
+.dialogo-legal__texto li::marker { color: var(--p400); }
+.dialogo-legal__texto a { color: var(--p600); text-decoration: underline; }
+.dialogo-legal :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+@media (max-width: 559px) {
+    .dialogo-legal__cabeza,
+    .dialogo-legal__texto { padding-inline: var(--space-6); }
+}
+/* Solo en el candidato medido: la ventana abierta en el HTML (sin showModal) se coloca como en la app. */
+.dialogo-legal[open]:not(:modal) { position: fixed; inset: 0; margin: auto; }
