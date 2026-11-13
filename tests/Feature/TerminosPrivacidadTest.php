@@ -57,7 +57,14 @@ class TerminosPrivacidadTest extends TestCase
         'genero' => 'género',
         'direccion' => 'dirección',
         'ciudad' => 'ciudad',
+    ];
+
+    /** CA3 (/review R5): cada dato que se guarda de Google → su texto en la viñeta de Google del aviso. */
+    private const DATO_DE_GOOGLE_EN_EL_AVISO = [
         'google_id' => 'identificador de Google',
+        'nombre' => 'tu nombre',
+        'apellido' => 'tu nombre',
+        'email' => 'tu correo',
         'foto_url' => 'foto de perfil',
     ];
 
@@ -128,7 +135,7 @@ class TerminosPrivacidadTest extends TestCase
         $this->assertSame(self::SECCIONES_PRIVACIDAD, $this->secciones($xpath), 'Las secciones de CA2, en orden.');
 
         $datos = $this->texto($xpath->query('//section[@id="datos"]')->item(0));
-        $this->assertMatchesRegularExpression('/Datos de salud.*datos sensibles/u', $datos, 'CA2: los de salud, como datos sensibles.');
+        $this->assertStringContainsString('datos sensibles', $this->vineta($xpath, 'Datos de salud'), 'CA2: los de salud, como datos sensibles (/review R5: en su viñeta).');
         $this->assertStringContainsString('consentimiento', $datos, 'CA2: las fotos de la galería, con consentimiento.');
         $this->assertStringContainsString('No usamos tus datos para publicidad', $this->texto($xpath->query('//section[@id="usos"]')->item(0)));
         $this->assertStringContainsString('cinco años', $this->texto($xpath->query('//section[@id="conservacion"]')->item(0)), 'CA2: el expediente, al menos cinco años.');
@@ -194,29 +201,47 @@ class TerminosPrivacidadTest extends TestCase
 
     public function test_el_aviso_nombra_cada_dato_del_registro(): void
     {
-        $nombres = [];
+        $campos = [];
         foreach ([
             $this->get('/registro')->assertOk()->getContent(),
             $this->withSession(['google_registro' => self::GOOGLE])->get('/registro/contacto')->assertOk()->getContent(),
         ] as $html) {
             foreach ($this->xpath($html)->query('//form//*[self::input or self::select or self::textarea][@name]') as $campo) {
-                $nombres[] = $campo->getAttribute('name');
+                $campos[] = $campo->getAttribute('name');
             }
         }
+        $campos = array_values(array_unique(array_diff($campos, self::NO_SON_DATOS)));
+        $this->assertContains('fecha_nacimiento', $campos, 'Control: lee los campos del formulario.');
 
         // Lo que se guarda al registrarse con Google: las claves de `google_registro` en el controlador.
         $controlador = file_get_contents(app_path('Http/Controllers/GoogleAuthController.php'));
         $this->assertSame(1, preg_match("/put\('google_registro', \[(.*?)\]\);/s", $controlador, $bloque), 'Control: el controlador guarda google_registro.');
         preg_match_all("/'(\w+)' =>/", $bloque[1], $claves);
-        $nombres = array_values(array_unique(array_diff(array_merge($nombres, $claves[1]), self::NO_SON_DATOS)));
-        $this->assertContains('fecha_nacimiento', $nombres, 'Control: lee los campos del formulario.');
-        $this->assertContains('google_id', $nombres, 'Control: lee lo que se guarda de Google.');
+        $this->assertContains('google_id', $claves[1], 'Control: lee lo que se guarda de Google.');
 
-        $datos = $this->texto($this->pagina(self::PRIVACIDAD)->query('//section[@id="datos"]')->item(0));
-        foreach ($nombres as $nombre) {
-            $this->assertArrayHasKey($nombre, self::DATO_EN_EL_AVISO, "«{$nombre}» se pide o se guarda: el aviso tiene que nombrarlo (CA3).");
-            $this->assertStringContainsString(self::DATO_EN_EL_AVISO[$nombre], $datos, "El aviso nombra «{$nombre}».");
+        // /review R5: cada dato en su viñeta, no en cualquier parte de la sección.
+        $xpath = $this->pagina(self::PRIVACIDAD);
+        $cuenta = $this->vineta($xpath, 'Al crear tu cuenta');
+        foreach ($campos as $campo) {
+            $this->assertArrayHasKey($campo, self::DATO_EN_EL_AVISO, "«{$campo}» se pide en el registro: el aviso tiene que nombrarlo (CA3).");
+            $this->assertStringContainsString(self::DATO_EN_EL_AVISO[$campo], $cuenta, "La viñeta de la cuenta nombra «{$campo}».");
         }
+        $google = $this->vineta($xpath, 'Si te registras o entras con Google');
+        foreach ($claves[1] as $clave) {
+            $this->assertArrayHasKey($clave, self::DATO_DE_GOOGLE_EN_EL_AVISO, "«{$clave}» se guarda de Google: el aviso tiene que nombrarlo (CA3).");
+            $this->assertStringContainsString(self::DATO_DE_GOOGLE_EN_EL_AVISO[$clave], $google, "La viñeta de Google nombra «{$clave}».");
+        }
+    }
+
+    /** El texto de la viñeta de «Qué datos recabamos» que empieza por $inicio. */
+    private function vineta(DOMXPath $xpath, string $inicio): string
+    {
+        foreach ($xpath->query('//section[@id="datos"]//li') as $li) {
+            if (str_starts_with($this->texto($li), $inicio)) {
+                return $this->texto($li);
+            }
+        }
+        $this->fail("No hay una viñeta que empiece por «{$inicio}».");
     }
 
     public function test_el_indice_va_antes_de_las_secciones(): void
