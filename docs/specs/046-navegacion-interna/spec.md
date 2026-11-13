@@ -97,7 +97,7 @@ comporta un camino de tres elementos con un nombre largo a 320 px (CA10) y la ac
 «Migas de pan» en el sistema de diseño.
 
 Sin ciclo de candidatos de `/design-spec` (supuesto, como en la 044): `/plan` extiende el componente
-que ya existe y el usuario lo valida en pantalla durante `/implement`.
+que ya existe y el usuario lo valida en pantalla durante `/implement`. Acta: [design.md](design.md).
 
 ## Criterios de diseño
 Modo: operar · sin ciclo de candidatos (supuesto) · la verificación es la del usuario en pantalla y los tests de `/implement`.
@@ -133,6 +133,7 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-12 | supuesto | Padre del expediente | La ficha del paciente, como hoy, aunque se abra desde el listado de expedientes | razonable (destino fijo) |
 | 2026-11-12 | supuesto | «Volver al detalle de la cita» cuando la cita no se puede reprogramar | Se conserva: es la única acción de ese aviso, no un «Volver» añadido | razonable |
 | 2026-11-12 | supuesto | Ciclo de candidatos de `/design-spec` | Diseño directo con el componente existente; validación del usuario en pantalla en `/implement` | razonable (como la 044; prioridad de la entrega) |
+| 2026-11-12 | diseño | Acta de diseño | [design.md](design.md), sin exploración: enlace de las migas en `--p600` subrayado, camino que pasa de línea, sin tokens nuevos | `/design-spec 046` |
 | 2026-11-12 | implícita | Permisos y respuestas de acceso denegado o no encontrada | No cambian | `docs/security.md`, spec 044 CA11 |
 | 2026-11-12 | implícita | Auditoría | No aplica: sin accesos, permisos ni acciones nuevas | `docs/constitution.md` P7, `docs/observability.md` |
 
