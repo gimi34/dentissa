@@ -65,6 +65,7 @@ updated: 2026-10-18
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `GET /`, `GET /servicios` | HTTP público | no (con sesión, `/` redirige al panel del rol) | Páginas públicas (spec 038): sin parámetros; solo el catálogo activo (nombre, descripción y categoría), escapado (TM1, TM2), con una consulta por petición. Sin límite propio: riesgo aceptado TM6 de la 038 (Cloudflare delante, spec 030). `/` incrusta el mapa de Google: `frame-src https://www.google.com` solo en `/` (`docker/nginx/seguridad/marcos.conf`), y el navegador del visitante pide el mapa a Google al acercarse (`loading="lazy"`), enviando solo el dominio de origen (`referrerpolicy`); la página lo avisa («El mapa lo sirve Google.», TM4) |
 | `GET /galeria`, `GET /galeria/fotos/{foto}/{ancho}` | HTTP público | no | Spec 039: la galería y cada foto (`{foto}` UUID y `{ancho}` 800 o 1600; la ruta del archivo sale de la fila); fotos en `image/webp` con `nosniff`, `no-cache, private` y `ETag`; las de paciente, con `noindex` |
+| `GET /terminos`, `GET /aviso-de-privacidad` | HTTP público | no | Spec 045: texto fijo, sin parámetros ni datos de cuentas; los datos de la clínica salen de la configuración y se pintan escapados. El registro (`/registro`, `/registro/contacto`) lleva el mismo texto en dos ventanas y valida la casilla `terminos` en el servidor |
 | `POST /admin/galeria` y el resto de `admin.galeria.*` | HTTP, subida de archivos | sí, `role:admin` y Gate `gestionar-galeria` | Spec 039: JPG, PNG o WebP por contenido, como mucho 5 MB (nginx 20 MB) y 6000 px por lado (4000 px si es PNG, leído de la cabecera antes de decodificar), 12 fotos; se guardan solo los píxeles recodificados en WebP, nunca el original |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
@@ -352,6 +353,7 @@ introduce (no cambia `composer.lock`).
 
 Correcciones:
 - RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: mitigada (v0.4.1)
+- RS17.b Actualizar `phpseclib/phpseclib` a 3.0.58 o posterior: aviso PKSA-h7cz-q7zq-mdkt (2026-11-02, sin severidad asignada; consumo de CPU sin límite al leer claves cifradas, PFX o CMS), que hacía fallar el `composer audit` de la CI — estado: corregida en la rama de la spec 045 (3.0.58, publicada el 2026-11-02), pendiente de liberar
 
 ### RS18 · Alta — Imágenes base de producción con avisos sin corrección (A03 Software Supply Chain Failures)
 Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 030 (T033): la base
