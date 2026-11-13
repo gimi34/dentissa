@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\PaginasPublicasController;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -179,6 +180,16 @@ class TerminosPrivacidadTest extends TestCase
                 }
             }
         }
+    }
+
+    public function test_el_horario_en_texto_admite_un_tramo_sin_guion(): void
+    {
+        // /review R3: un tramo sin guion largo («Cerrado») se escribe tal cual, en minúsculas, y nada da error.
+        config(['clinica.contacto.horario' => ['Lunes a viernes' => '9:00–20:00', 'Domingos' => 'Cerrado']]);
+
+        $this->assertSame('de lunes a viernes de 9:00 a 20:00 y los domingos cerrado', PaginasPublicasController::horarioEnTexto());
+        $this->get(self::TERMINOS)->assertOk();
+        $this->get('/registro')->assertOk();
     }
 
     public function test_el_aviso_nombra_cada_dato_del_registro(): void
