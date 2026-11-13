@@ -4,7 +4,7 @@
 <section id="{{ $prefijo }}quien" aria-labelledby="{{ $prefijo }}titulo-quien">
     <{{ $nivel }} id="{{ $prefijo }}titulo-quien"><span class="lb-num" aria-hidden="true">01</span> Quién ofrece este sitio</{{ $nivel }}>
     <p>Dentissa es el sitio en línea de Melissa López N. · Odontología integral («la clínica»), en {{ $contacto['direccion'] }}, teléfono <a href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a>.</p>
-    <p>Aquí puedes conocer los servicios de la clínica y, con una cuenta de paciente, pedir y gestionar tus citas. Al crear tu cuenta aceptas estos términos y el <a href="{{ route('privacidad') }}"@if ($enVentana) data-dialogo="dialogo-privacidad"@endif>aviso de privacidad</a>.</p>
+    <p>Aquí puedes conocer los servicios de la clínica y, con una cuenta de paciente, pedir y gestionar tus citas. Al crear tu cuenta aceptas estos términos y el <a href="{{ route('privacidad') }}"@if ($enVentana) data-dialogo="dialogo-privacidad" aria-haspopup="dialog"@endif>aviso de privacidad</a>.</p>
 </section>
 <section id="{{ $prefijo }}cuenta" aria-labelledby="{{ $prefijo }}titulo-cuenta">
     <{{ $nivel }} id="{{ $prefijo }}titulo-cuenta"><span class="lb-num" aria-hidden="true">02</span> Tu cuenta</{{ $nivel }}>
