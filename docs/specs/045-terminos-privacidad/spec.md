@@ -1,7 +1,7 @@
 ---
 id: 045
 slug: terminos-privacidad
-status: approved
+status: implemented
 created: 2026-11-12
 extends: [002, 038]
 ---
@@ -135,3 +135,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 | 2026-11-12 | CA4: en el registro, el texto se abre en una ventana en la misma página en lugar de otra pestaña (decisión del usuario en la verificación manual de `/implement`); vuelve a `draft` | /specify --edit 045 |
 | 2026-11-12 | Implementada (T001–T033, T090–T092): las dos páginas, el pie, la casilla con sus ventanas y la validación del registro; suite 930 en verde | /implement 045 |
 | 2026-11-13 | /review r1 `changes_requested` (0 bloqueantes, 2 importantes): vuelve a `approved` con las tareas T034–T041 | /review 045 |
+| 2026-11-13 | Correcciones de /review r1 (T034–T041: R1, R2, R3, R5, R8, R13, R14); suite 931 en verde; vuelve a `implemented` | /implement 045 |
