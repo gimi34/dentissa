@@ -13,6 +13,7 @@
     <meta name="robots" content="noindex">
     @yield('cabecera')
     <title>Dentissa · @yield('titulo')</title>
+    @include('partials.iconos')
     <link href="{{ asset('css/acceso.css') }}?v={{ filemtime(public_path('css/acceso.css')) }}" rel="stylesheet">
 </head>
 <body>

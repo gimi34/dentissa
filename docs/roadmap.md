@@ -104,7 +104,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - K11 del inicio (CLS 0,212 de la página medida en `/design-spec`: la pastilla «abierto ahora» que
     inserta `publico.js` sobre el `h1` y el cambio de fuentes): un `/fix` de la 038 (plan D14, decisión del
     usuario en `/design-spec 039`). En la medición de la app con el carrusel (T028) K11 pasa; comprobar en
-    producción antes de abrir la ficha.
+    producción antes de abrir la ficha. Resuelto en v0.17.0 (2026-11-12) con las fichas
+    `2026-11-11-fix-cls-inicio-038` y `2026-11-11-fix-cls-inicio-tableta-038`.
   - aceptados sin tarea de `/review` (deuda menor, liberada en v0.16.0): 039/R14 con la galería llena, la foto se procesa
     antes de comprobar el límite; 039/R15 el bloqueo del límite de 12 sin test y posible *deadlock* con dos subidas sobre la
     tabla vacía; 039/R16 orientaciones EXIF 2, 4, 5 y 7 sin test; 039/R17 tope del grande en 500 KiB frente a los 500 kB
@@ -224,8 +225,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     producción), en tres specs por este orden: [035](specs/035-movil-pacientes-expedientes/spec.md)
     pacientes y expedientes, empezando por la ficha del paciente (`/admin/pacientes/{id}`: hay que
     alejar la vista para verla entera y tiene botones descentrados), con 034/R8 en esas pantallas;
-    036 formularios de agenda y servicios; y 037 administración (personal, usuarios, reportes y
-    doctores de la asistente). La 035 se liberó en v0.9.0 (2026-10-19): ficha y formulario del
+    036 formularios de agenda y servicios; y 037 administración (personal, usuarios y
+    doctores de la asistente; «reportes» ya nace adaptado al móvil con la spec 047). La 035 se liberó en v0.9.0 (2026-10-19): ficha y formulario del
     paciente y lista, ficha y alta de expedientes; quedan la 036 y la 037.
   - DS9: Roboto desde Google Fonts sin aprobar en `security.md`; 'DM Sans' y 'DM Mono' sin cargar.
   - DS10: el movimiento no respeta `prefers-reduced-motion`.
@@ -561,6 +562,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   2026-10-06). El login y la vuelta de Google ya emiten `Illuminate\Auth\Events\Lockout` en cada
   rechazo, y la vuelta de Google fallida emite `Illuminate\Auth\Events\Failed` (spec 031), para
   que la 021 los audite sin tocar el login (spec 030, /analyze A4; decisión del usuario, 2026-10-03).
+- Spec 047, aceptados sin tarea de `/review` (2026-11-12; deuda menor, liberada en v0.17.0): 047/R2 la vuelta de un periodo
+  rechazado en «Reportes» se detecta por la sesión: una consulta válida que llegue antes que la redirección muestra una vez
+  el error; 047/R3 el botón «Descargar» conserva el `id` y el nombre de test de «Imprimir», y el plan de la 047 no recoge el
+  rótulo nuevo.
 - Spec 044, aceptados en `/review` (2026-11-09 y 2026-11-10; liberada en v0.15.0):
   - 044/R9: el aviso «Has cerrado sesión» desaparece de golpe y el contenido sube (animar la altura o reservar el hueco);
   - 044/R11: la explicación de la 403 solo se prueba con una ruta sintética (falta un `Gate::authorize` real, p. ej. reprogramar como dentista);

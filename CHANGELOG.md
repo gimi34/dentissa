@@ -5,6 +5,26 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-12
+
+### Added
+- «Reportes» en el menú del administrador deja de estar en construcción: muestra las citas de un periodo por estado,
+  por dentista y por servicio, con el total y las tasas de cancelación e inasistencia. Abre con el mes en curso y se
+  puede elegir otro periodo de hasta 366 días o usar los atajos «Este mes», «Mes pasado» y «Este año» (spec 047).
+- «Descargar» en los reportes abre el diálogo del navegador para guardarlos como PDF o imprimirlos, en una hoja con el
+  nombre de la clínica, el periodo y la fecha (spec 047).
+
+### Fixed
+- La página de inicio ya no salta al cargar: sus elementos reservan su espacio desde el principio y el texto conserva
+  su ancho mientras llega la tipografía, también en tabletas (fix 2026-11-11-fix-cls-inicio-038,
+  fix 2026-11-11-fix-cls-inicio-tableta-038).
+
+### Security
+- Los reportes solo muestran totales, sin datos de pacientes ni de citas concretas, y solo los ve el administrador;
+  los intentos de entrar con otro rol quedan en el registro de auditoría (spec 047).
+- `phpseclib` 3.0.58 corrige un fallo que permitía agotar el servidor al leer una clave cifrada preparada
+  (GHSA-w3p9-g4p2-h3rr) (spec 047).
+
 ## [0.16.0] - 2026-11-10
 
 ### Added

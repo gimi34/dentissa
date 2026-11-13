@@ -1,6 +1,7 @@
 ---
 lane: fix
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released             # open → done → released · escalated (→ escalated_to)
+released: v0.17.0 (2026-11-12)
 base: d56afdf                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [038]               # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir (K8 es un KPI de diseño, no un CA)

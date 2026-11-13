@@ -149,7 +149,7 @@ class PaginasPublicasCssTest extends TestCase
     ];
 
     /**
-     * Spec 045 (system.md 1.15.0, design.md → Cambios): respaldos de Newsreader con sus medidas. Familia →
+     * Spec 045 (system.md 1.16.0, design.md → Cambios): respaldos de Newsreader con sus medidas. Familia →
      * «peso estilo» → [primer `local()`, `size-adjust`, `ascent-override`, `descent-override`].
      */
     private const NEWSREADER_RESPALDO = [

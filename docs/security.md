@@ -48,7 +48,9 @@ updated: 2026-10-18
   del dentista) y el Gate `reprogramar-cita` (`app/Autorizacion/ReprogramarCita.php`): primero el
   alcance de la 026 (personal fuera de alcance → 403; cita de otro paciente → 404) y después el
   rol (el dentista no reprograma); el paciente busca además la cita entre las suyas (spec 028). No
-  hay Policies. El registro de auditoría (`/admin/auditoria`) va bajo `role:admin` y es solo de
+  hay Policies. Los reportes de la administración (`GET /admin/reportes`) usan, además de
+  `role:admin`, el Gate `ver-reportes` (`app/Autorizacion/VerReportes.php`), comprobado antes de
+  validar el periodo (spec 047). El registro de auditoría (`/admin/auditoria`) va bajo `role:admin` y es solo de
   lectura; cada 403 de un usuario autenticado y cada 404 de un Gate que oculta un recurso
   (`denyAsNotFound`) dejan un evento `acceso_denegado`, y la cita de otro paciente que el paciente
   pide también, con el mismo 404 que una inexistente (spec 020).
@@ -65,6 +67,7 @@ updated: 2026-10-18
 | `GET /up` | HTTP público | no | health check de Laravel |
 | `GET /`, `GET /servicios` | HTTP público | no (con sesión, `/` redirige al panel del rol) | Páginas públicas (spec 038): sin parámetros; solo el catálogo activo (nombre, descripción y categoría), escapado (TM1, TM2), con una consulta por petición. Sin límite propio: riesgo aceptado TM6 de la 038 (Cloudflare delante, spec 030). `/` incrusta el mapa de Google: `frame-src https://www.google.com` solo en `/` (`docker/nginx/seguridad/marcos.conf`), y el navegador del visitante pide el mapa a Google al acercarse (`loading="lazy"`), enviando solo el dominio de origen (`referrerpolicy`); la página lo avisa («El mapa lo sirve Google.», TM4) |
 | `GET /galeria`, `GET /galeria/fotos/{foto}/{ancho}` | HTTP público | no | Spec 039: la galería y cada foto (`{foto}` UUID y `{ancho}` 800 o 1600; la ruta del archivo sale de la fila); fotos en `image/webp` con `nosniff`, `no-cache, private` y `ETag`; las de paciente, con `noindex` |
+| `GET /admin/reportes` | HTTP, parámetros de consulta | sí, `role:admin` y Gate `ver-reportes` | Spec 047: solo lectura y solo totales (sin datos de pacientes); `desde` y `hasta` como `AAAA-MM-DD`, las dos o ninguna, en orden y con 366 días como mucho; un periodo no válido vuelve a `/admin/reportes` con su error, sin calcular nada; consulta con bindings |
 | `GET /terminos`, `GET /aviso-de-privacidad` | HTTP público | no | Spec 045: texto fijo, sin parámetros ni datos de cuentas; los datos de la clínica salen de la configuración y se pintan escapados. El registro (`/registro`, `/registro/contacto`) lleva el mismo texto en dos ventanas y valida la casilla `terminos` en el servidor |
 | `POST /admin/galeria` y el resto de `admin.galeria.*` | HTTP, subida de archivos | sí, `role:admin` y Gate `gestionar-galeria` | Spec 039: JPG, PNG o WebP por contenido, como mucho 5 MB (nginx 20 MB) y 6000 px por lado (4000 px si es PNG, leído de la cabecera antes de decodificar), 12 fotos; se guardan solo los píxeles recodificados en WebP, nunca el original |
 | `/admin/*` | HTTP | sí, `role:admin` | |

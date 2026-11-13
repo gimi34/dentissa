@@ -36,7 +36,7 @@
     --focus-ring-offset:  2px;
     --focus-ring-inverso: var(--white);
     /* Spec 045 (CA4): tokens de las ventanas de los términos y del aviso, con los mismos valores de app.css
-       (system.md 1.15.0). */
+       (system.md 1.16.0). */
     --space-3:            8px;
     --space-6:            16px;
     --space-8:            28px;

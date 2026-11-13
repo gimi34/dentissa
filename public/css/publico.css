@@ -83,7 +83,7 @@
     line-gap-override: 0%;
 }
 
-/* Respaldos de Newsreader con sus medidas (system.md 1.15.0; spec 045): en una página de lectura los títulos pesan
+/* Respaldos de Newsreader con sus medidas (system.md 1.16.0; spec 045): en una página de lectura los títulos pesan
    más y el cambio de fuente movía el texto. Dos familias, porque Georgia y Times no tienen las mismas medidas: la
    primera que tenga el sistema. size-adjust = ancho de Newsreader / ancho de la de respaldo en ese peso (medido en
    Chromium con las fuentes de Windows); override = ascenso (0,74) y descenso (0,27) de Newsreader / size-adjust.
@@ -779,7 +779,7 @@ body.publico button:focus-visible {
 .lb-texto a { color: var(--text); text-decoration: underline; text-decoration-color: var(--p400); text-underline-offset: var(--space-1); }
 .lb-texto strong { font-weight: var(--weight-bold); }
 
-/* Página legal (spec 045, system.md 1.15.0; design.md, candidato c4): una rejilla con cuatro zonas. En escritorio, el título y «En pocas palabras» arriba, y el índice y el texto
+/* Página legal (spec 045, system.md 1.16.0; design.md, candidato c4): una rejilla con cuatro zonas. En escritorio, el título y «En pocas palabras» arriba, y el índice y el texto
    debajo (las columnas de /servicios: 1 : 3). Por debajo de 900 px, en el orden del documento: título, índice,
    resumen y texto, para que la primera pantalla muestre el título, la fecha y el comienzo del índice. */
 .lb-legal {

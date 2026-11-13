@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.15.0
+version: 1.16.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -99,10 +99,10 @@ Sitio público (spec 038; 1.9.0, ronda 5; 1.10.0, ronda 6; [diseño](../specs/03
 dos familias autoalojadas en `public/fonts/` (woff2 latino de `@fontsource` 5.3.0, OFL-1.1, cada una
 con su `OFL.txt`) y declaradas con `@font-face` en `public/css/publico.css`: `--font-display`
 (`"Newsreader", "Newsreader respaldo", "Newsreader respaldo Times", ui-serif, Georgia, serif`; 500, 600 y
-cursiva 500, `newsreader/`; desde 1.10.0, respaldos desde 1.15.0) para los títulos y `--font-publica` (`"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
+cursiva 500, `newsreader/`; desde 1.10.0, respaldos desde 1.16.0) para los títulos y `--font-publica` (`"Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif`; 400, 500 y 600,
 `montserrat/`) para el texto. «Montserrat respaldo» (1.14.0) es Arial del sistema (o Liberation Sans) con
 `size-adjust` y la altura de Montserrat por peso, sin descarga: mientras llega Montserrat ocupa lo mismo y el
-cambio de fuente no mueve la página (K8 de la 038). Igual con Newsreader (1.15.0, spec 045): «Newsreader
+cambio de fuente no mueve la página (K8 de la 038). Igual con Newsreader (1.16.0, spec 045): «Newsreader
 respaldo» es Georgia del sistema (500: `size-adjust` 97,25 %, `ascent-override` 76,1 %, `descent-override`
 27,8 %; 600–700, Georgia Bold: 85,28 %, 86,8 %, 31,7 %; cursiva 500, Georgia Italic: 91,1 %, 81,2 %, 29,6 %) y
 «Newsreader respaldo Times», Times New Roman o Liberation Serif (500: 106,65 %, 69,4 %, 25,3 %; 600–700:
@@ -762,7 +762,32 @@ Gestión (`app.css`), dentro de `.formulario-accesible` y con su layout (`.topba
   /review R34). El contenido de la vista detrás queda `inert`.
 - **Menú del administrador:** entrada «Galería» después de «Servicios», con `aria-current` en sus rutas.
 
-### Página legal (spec 045, 1.15.0)
+### Reportes de la administración (spec 047, 1.15.0)
+Pantalla «Reportes» del administrador ([diseño](../specs/047-reportes-admin/design.md), sin candidatos
+ni tokens nuevos; `reportes.css`). Reutiliza `.formulario-accesible` (028) con el patrón de error del
+filtro de auditoría (020), `.stats-grid-3` con `.stat-card`, `.card-0` con tabla, `tabla-tarjetas`
+(034) en sus tres tablas, `partials/badge-estado` y `.empty-state`. Piezas nuevas:
+- **Frase del periodo** (`.reporte-periodo`): texto `--text` en `--text-meta` y `--weight-strong`, bajo
+  el filtro; dice siempre el periodo consultado, también en el papel.
+- **Tasa en `.stat-card`:** el porcentaje como cifra, su etiqueta («Cancelación», «Inasistencia») y
+  la línea «n de m citas» en `--text-meta`. Sin color de alarma: el dato se lee en el texto.
+- **Fila de totales de tabla** (`tfoot`): `--weight-strong`, borde superior `--border-width` en
+  `--border` y «Total» como encabezado de fila. Por debajo de 900 px, dentro de `tabla-tarjetas`, se
+  muestra como una última tarjeta «Total», con la etiqueta de cada cifra.
+- **Resumen antes del filtro en el móvil** (punto de corte 900 px): la frase del periodo y la cifra
+  «Citas en el periodo» se muestran antes del filtro; desde 900 px, el filtro va primero. El orden del
+  HTML y del foco no cambia: el bloque que se adelanta no tiene controles.
+- **Controles:** «Ver reporte» (`btn-primary`), los atajos y «Descargar» (abre el diálogo de impresión del navegador, donde se guarda como PDF; `btn-outline` con borde
+  `--border-control`) miden `--touch-min` a todos los anchos; el atajo del periodo en pantalla lleva
+  `aria-current="true"`. Los `th` van en `--p600`, como la tabla de auditoría (los `th` globales, DS1).
+- **Cabecera impresa** (`.solo-impresion`): oculta en pantalla; al imprimir, solo texto: el nombre de
+  la clínica, «Reportes», el periodo y «Generado el …».
+- **Hoja de impresión** (`@media print`, la primera del sistema; vive en `reportes.css` y se
+  reutiliza cuando otra pantalla la necesite): se ocultan la barra lateral, la barra superior, el
+  filtro y los botones; fondo `--white`, texto `--text`, tarjetas sin sombra y con borde `--border`;
+  las filas no se parten entre páginas (`break-inside: avoid`).
+
+### Página legal (spec 045, 1.16.0)
 «Términos de uso» (`/terminos`) y «Aviso de privacidad» (`/aviso-de-privacidad`), con la composición de
 `/servicios` ([diseño](../specs/045-terminos-privacidad/design.md), candidato `c4`), en `publico.css`:
 - **Rejilla** (`.lb-legal`): cuatro zonas. Desde 900 px, «cabeza cabeza resumen» sobre «indice texto
@@ -980,7 +1005,7 @@ rehacer el resto de la galería.
 | Ficha de asistente | /admin/personal/{id} · personal/show | admin | capturas/personal-show-asistente-390.png · capturas/personal-show-asistente-1440.png | capturada |
 | Ficha de administrativo | /admin/personal/{id} · personal/show | admin | capturas/personal-show-administrador-390.png · capturas/personal-show-administrador-1440.png | capturada |
 | Editar personal | /admin/personal/{id}/edit · personal/edit → create | admin | capturas/personal-edit-390.png · capturas/personal-edit-1440.png | capturada |
-| Reportes (en construcción) | /admin/reportes · placeholder | admin | capturas/admin-reportes-390.png · capturas/admin-reportes-1440.png | capturada |
+| Reportes | /admin/reportes · reportes/index | admin | capturas/admin-reportes-390.png · capturas/admin-reportes-1440.png | capturada |
 | Usuarios | /admin/usuarios · usuarios/index | admin | capturas/usuarios-index-390.png · capturas/usuarios-index-1440.png | capturada |
 | Usuarios: diálogo de activar o desactivar | /admin/usuarios (`abrirModalEstado`) · usuarios/index | admin | capturas/usuarios-modal-estado-390.png · capturas/usuarios-modal-estado-1440.png | capturada |
 | Nuevo usuario | /admin/usuarios/crear · usuarios/create | admin | capturas/usuarios-create-390.png · capturas/usuarios-create-1440.png | capturada |
@@ -1106,5 +1131,6 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-09 | diseño | ¿Qué incorpora el sistema para las salidas de las pantallas (spec 044)? | Versión 1.12.0, sin tokens nuevos: enlace «Volver al inicio», logo-enlace del panel de marca, entrada «Ver sitio web» de la barra lateral, aviso del sitio público (`.pub-aviso`), plantilla de página de error sobre el error genérico de la 020 y enlace secundario del error; DS7 en curso | usuario (spec 044, design.md sin candidatos y plan D1, D2) |
 | 2026-11-03 | diseño | El usuario prefiere el estilo anterior del acceso al carnet de `c7` (spec 041, D20) | Dentro de 1.11.0, aún sin liberar: sale el carnet (franja, tarjeta y troquel) y entran el panel y el formulario del login anterior, con sus valores como tokens; se mantienen el contraste, el foco y el toque que pide P9 | usuario |
 | 2026-11-08 | diseño | ¿Qué incorpora el sistema para la galería de trabajos (spec 039)? | Versión 1.13.0 (era 1.12.0; se renumeró al fusionar la v0.15.0, que liberó la 1.12.0 con la spec 044): tokens `--foto-ratio` (fijo), `--carrusel-foto-w` (cortes de 560 y 900 px) y `--thumb-w` (fijo); componentes públicos «Carrusel de trabajos», «Foto de trabajo», «Mosaico de `/galeria`», «Galería vacía» y la utilidad `.pub-solo-lector`; componentes de la gestión dentro de `.formulario-accesible` («Tarjeta de foto», «Pregunta del paciente», «Consentimiento», «Selector de archivo», «Aviso de error»), con radios y casilla de 44 px que generalizan `.remember-label`; entrada «Galería» del menú del administrador; M-1 de la 039. Sin colores nuevos. `--duration-firma`, que la 038 anunciaba para la 039, no hace falta | usuario (spec 039, design.md `c3` y plan) |
+| 2026-11-11 | diseño | ¿Qué incorpora el sistema para los reportes de la administración (spec 047)? | Versión 1.15.0 (era 1.14.0; se renumeró al fusionar `main`, donde la ficha `fix-cls-inicio-tableta-038` ya usa la 1.14.0), sin tokens nuevos: frase del periodo (`.reporte-periodo`), tasa en `.stat-card`, fila de totales de tabla (y su tarjeta «Total» en `tabla-tarjetas`), resumen antes del filtro por debajo de 900 px, cabecera impresa (`.solo-impresion`) y la primera hoja de impresión del sistema (`@media print` en `reportes.css`); controles con `--touch-min` a todos los anchos | usuario (spec 047, design.md sin candidatos) |
 | 2026-11-11 | diseño | El inicio salta entre 960 y 1024 px al llegar Montserrat: con el respaldo del sistema, más estrecho, los botones del hero caben en una fila y luego pasan a dos (CLS ~0,19, K8 de la 038) | Versión 1.14.0, sin tokens nuevos: `--font-publica` añade «Montserrat respaldo» (tres `@font-face` locales en `publico.css`, Arial o Liberation Sans con `size-adjust` 110,7 %, 112,5 % y 107,5 % para 400, 500 y 600–700). Ficha `docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md` | usuario (seguir en el carril `/fix`) |
-| 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.15.0, sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
+| 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.16.0 (era 1.15.0; se renumeró al fusionar la v0.17.0, que liberó la 1.15.0 con la spec 047), sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
