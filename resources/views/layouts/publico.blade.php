@@ -81,6 +81,9 @@
                     <li><a href="{{ route('login') }}">Iniciar sesión</a></li>
                     <li><a href="{{ route('register') }}">Crear cuenta</a></li>
                 @endif
+                {{-- Spec 045 (CA6): los términos de uso y el aviso de privacidad, en la misma pestaña. --}}
+                <li><a href="{{ route('terminos') }}">Términos de uso</a></li>
+                <li><a href="{{ route('privacidad') }}">Aviso de privacidad</a></li>
             </ul>
         </nav>
         <div class="pub-foot__info">
