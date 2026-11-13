@@ -139,7 +139,8 @@ podía romper:
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
   - `/terminos` y `/aviso-de-privacidad` responden `200` con su texto, con el logo, y aparecen en el pie de `/`
   - desde `/registro`, los dos enlaces abren su ventana sin salir de la página, que se cierra con «Cerrar», Escape o pulsando fuera, y lo escrito sigue ahí
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-12 21:00 (hora local) para v0.18.0: «desplegar v0.18.0 a producción»
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh` con la versión nueva, `verificar.sh` y la comprobación de T095; vigilar `5xx` en `/registro` la primera hora
 - [ ] T098 Marcar spec como `released`; en las specs 002, 038 y 044 anotar en su Historial lo que cambia la 045 (casilla y validación del registro; pie público; recuento de `style=""` del registro en `NavegacionSalidasCssTest`)
 
