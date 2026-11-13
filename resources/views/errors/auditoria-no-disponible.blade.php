@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <title>No se realizó la acción · Dentissa</title>
+    @include('partials.iconos')
     <link href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/errores.css') }}?v={{ filemtime(public_path('css/errores.css')) }}" rel="stylesheet">
 </head>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dentissa · @yield('title', 'Dashboard')</title>
+    @include('partials.iconos')
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/movil.css') }}?v={{ filemtime(public_path('css/movil.css')) }}" rel="stylesheet">

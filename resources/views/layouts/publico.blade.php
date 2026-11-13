@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{-- Spec 038 (CA10): título, descripción y canónica propios de cada página. --}}
     <title>@yield('titulo')</title>
+    @include('partials.iconos')
     <meta name="description" content="@yield('descripcion')">
     <link rel="canonical" href="@yield('canonica')">
     {{-- app.css por los tokens de :root; publico.css, las fuentes autoalojadas y la superficie «Sitio público». --}}
