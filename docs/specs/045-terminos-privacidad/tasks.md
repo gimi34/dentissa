@@ -106,7 +106,8 @@ podía romper:
   - nota: 2026-11-12 — fila «Páginas públicas» (rutas, `horarioEnTexto()`, parciales de `publico/legal/`), fila «Registro» (casilla validada en el servidor y ventanas) y la lista del layout público con sus enlaces del pie
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: en `deployment.md` → «Verificación post-deploy», que `/terminos` y `/aviso-de-privacidad` respondan `200`; `observability.md` sin cambios (sin logs ni eventos nuevos) — depende: T027
   - nota: 2026-11-12 — `deployment.md` → «Verificación post-deploy»: `/terminos` y `/aviso-de-privacidad` 200 y la ventana del registro; `observability.md` sin cambios (sin logs ni eventos nuevos)
-- [ ] T092 Marcar spec como `implemented` — depende: T030, T090, T091
+- [x] T092 Marcar spec como `implemented` — depende: T030, T090, T091
+  - nota: 2026-11-12 — CA1–CA8 marcados (sus tests en verde), spec en `implemented` y `docs/specs/README.md` al día
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
