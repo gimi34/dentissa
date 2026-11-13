@@ -5,7 +5,7 @@ round: 3
 date: 2026-11-13
 base: a2e2dfa
 head: 1ed6982
-human_signoff: pending
+human_signoff: gimi34 2026-11-13
 ---
 
 # Review · 045 Términos de uso y aviso de privacidad
