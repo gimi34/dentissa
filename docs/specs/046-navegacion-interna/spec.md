@@ -1,7 +1,7 @@
 ---
 id: 046
 slug: navegacion-interna
-status: draft
+status: approved
 created: 2026-11-12
 extends: [008, 009, 010, 028, 033, 034, 035]
 ---
@@ -162,3 +162,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-12 | Aprobada, con sus supuestos y sin dividir | Aprobación del usuario |
 | 2026-11-12 | «Agendar cita» sale de la tabla y queda sin migas (CA1, CA9, Problema); 18 pantallas | Contradicción hallada en /plan 046 (es una entrada del menú), resuelta y aprobada por el usuario |
 | 2026-11-12 | CA1 (posición bajo el aviso), CA6 (diez formularios; «Editar usuario» vuelve a la ficha), CA12 nuevo (reemplaza parte de 033 CA8, 034 CA11 y 035 CA10), texto del primer elemento igual al del menú, fuera de alcance de DS15 precisado; vuelve a `draft` | /analyze r1: A1, A2, A4, A8, A12, A13, A15, A16 (decisiones del usuario) |
+| 2026-11-12 | Aprobada de nuevo | Aprobación del usuario («si, apruebo») |
