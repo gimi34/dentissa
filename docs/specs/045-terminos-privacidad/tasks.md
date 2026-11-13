@@ -94,7 +94,9 @@ podía romper:
 - [x] T031 Añadir a `auth.css` los tokens que copia de `app.css` con el mismo valor y las reglas de `.dialogo-legal` de `candidatos/c4/registro-dialogo.css` (sin la regla solo del candidato) — `public/css/auth.css` — hecho cuando: `test_la_ventana_del_registro_solo_usa_tokens` pasa — cubre: CA4 — depende: T016
   - nota: añadida durante /implement: CA4 refinado (2026-11-12)
   - nota: 2026-11-12 — tokens en el `:root` de `auth.css` (mismos valores que `app.css`) y las reglas de `.dialogo-legal` de `registro-dialogo.css`, sin la regla solo del candidato. `test_la_ventana_del_registro_solo_usa_tokens` en verde; se ajustó (era más estricto que `system.md`: rechazaba el factor `* 2` de `calc()`, que el sistema admite) a «sin medidas con unidad ni colores literales», y sigue fallando con un `12px` de control
-- [ ] T027 Verificación final: suite completa (`php artisan test`), Pint sobre los PHP tocados, `semgrep` y `gitleaks` sobre lo tocado, `composer audit --locked` sin avisos, `medir.mjs --solo terminos,privacidad` en las dos páginas de la app y `--solo registro-dialogo` sobre `candidatos/c4` (K8; la ventana de la app solo se abre con JavaScript) (puertas y KPIs; K3 y K4 por sus tests) y Lighthouse SEO de `/terminos`, `/aviso-de-privacidad` y `/registro` en local (A20) — sin archivos — hecho cuando: todo en verde, Lighthouse SEO ≥ 90 en las tres, y el resultado anotado en esta tarea — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T002, T003, T013, T022, T023, T024, T025, T026, T028, T029, T031
+- [x] T033 Bajar en `NavegacionSalidasCssTest::ESTILOS_PREVIOS` los `style=""` previos de `auth/register` (17 → 15) y `auth/registro-contacto` (6 → 4), porque T025 quitó los de los dos enlaces de la casilla (D7) — `tests/Feature/NavegacionSalidasCssTest.php` — hecho cuando: `test_las_vistas_tocadas_no_ganan_estilos_en_linea` pasa con los recuentos nuevos (más estricto) — cubre: CA4 — depende: T025
+  - nota: añadida durante /implement: la suite completa de T027 falló en este test de la 044 (17 ≠ 15); aprobada por el usuario el 2026-11-12. T098 lo anota en el Historial de la 044
+- [ ] T027 Verificación final: suite completa (`php artisan test`), Pint sobre los PHP tocados, `semgrep` y `gitleaks` sobre lo tocado, `composer audit --locked` sin avisos, `medir.mjs --solo terminos,privacidad` en las dos páginas de la app y `--solo registro-dialogo` sobre `candidatos/c4` (K8; la ventana de la app solo se abre con JavaScript) (puertas y KPIs; K3 y K4 por sus tests) y Lighthouse SEO de `/terminos`, `/aviso-de-privacidad` y `/registro` en local (A20) — sin archivos — hecho cuando: todo en verde, Lighthouse SEO ≥ 90 en las tres, y el resultado anotado en esta tarea — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T002, T003, T013, T022, T023, T024, T025, T026, T028, T029, T031, T033
 
 ## Integración y documentación
 - [ ] T030 Añadir `/terminos` y `/aviso-de-privacidad` al inventario de `docs/seo.md` (indexables, con título, descripción, canónica, un `h1` y su evidencia), a la lista de páginas de `layouts/publico.blade.php` en `AGENTS.md` y a los puntos de entrada públicos de `docs/security.md`, donde también se anota el aviso de `phpseclib` (PKSA-h7cz-q7zq-mdkt) y su corrección con la 3.0.58 (A10) — `docs/seo.md`, `AGENTS.md`, `docs/security.md` — hecho cuando: las filas y la línea de `AGENTS.md` dicen lo que hace el código — depende: T027
@@ -108,7 +110,7 @@ podía romper:
   - desde `/registro`, los dos enlaces abren su ventana sin salir de la página, que se cierra con «Cerrar», Escape o pulsando fuera, y lo escrito sigue ahí
 - [ ] T096 Aprobación humana para producción
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh` con la versión nueva, `verificar.sh` y la comprobación de T095; vigilar `5xx` en `/registro` la primera hora
-- [ ] T098 Marcar spec como `released`; en las specs 002 y 038 anotar en su Historial lo que cambia la 045 (casilla y validación del registro; pie público)
+- [ ] T098 Marcar spec como `released`; en las specs 002, 038 y 044 anotar en su Historial lo que cambia la 045 (casilla y validación del registro; pie público; recuento de `style=""` del registro en `NavegacionSalidasCssTest`)
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
@@ -145,6 +147,7 @@ podía romper:
 | `tests/Feature/PaginasPublicasTest.php` | T013, T032 |
 | `tests/Feature/PaginasPublicasCssTest.php` | T014, T032 |
 | `tests/Feature/LimiteIntentosTest.php` | T015 |
+| `tests/Feature/NavegacionSalidasCssTest.php` | T033 |
 | `design/criterios.json` | T003 |
 | `docs/seo.md`, `docs/architecture.md`, `AGENTS.md` | T030, T090 |
 | `docs/security.md` | T030 |

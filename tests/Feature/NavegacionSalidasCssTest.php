@@ -24,8 +24,9 @@ class NavegacionSalidasCssTest extends TestCase
         'layouts/acceso' => 0,
         'layouts/publico' => 0,
         'publico/inicio' => 0,
-        'auth/register' => 17,
-        'auth/registro-contacto' => 6,
+        // Spec 045 (T033, D7): sin los style="" de los dos enlaces de la casilla (antes 17 y 6).
+        'auth/register' => 15,
+        'auth/registro-contacto' => 4,
         'auth/recuperar/nueva' => 0,
         'auth/recuperar/solicitud' => 0,
         'auth/recuperar/enviada' => 0,
