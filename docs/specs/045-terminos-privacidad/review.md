@@ -5,7 +5,7 @@ round: 2
 date: 2026-11-13
 base: cbc2224
 head: 24af13e
-human_signoff: pending
+human_signoff: gimi34 2026-11-13
 ---
 
 # Review · 045 Términos de uso y aviso de privacidad
