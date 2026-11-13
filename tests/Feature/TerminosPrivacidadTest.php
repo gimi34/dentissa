@@ -154,6 +154,31 @@ class TerminosPrivacidadTest extends TestCase
         }
         $this->assertStringContainsString($horario, $this->texto($this->pagina(self::TERMINOS)->query('//section[@id="contacto"]')->item(0)), 'El horario en texto.');
         $this->assertStringContainsString($horario, $this->texto($this->pagina(self::PRIVACIDAD)->query('//section[@id="derechos"]')->item(0)));
+
+        // /review R2: con otra configuración, las páginas y las ventanas del registro muestran la nueva (D4).
+        config([
+            'clinica.contacto.direccion' => 'Calle de Prueba 45, Lázaro Cárdenas',
+            'clinica.contacto.telefono' => '753 111 2222',
+            'clinica.contacto.telefono_enlace' => 'tel:+527531112222',
+            'clinica.contacto.horario' => ['Martes' => '10:00–11:00'],
+        ]);
+        $registro = $this->xpath($this->get('/registro')->assertOk()->getContent());
+        foreach ([
+            [$this->pagina(self::TERMINOS), ['quien', 'contacto']],
+            [$this->pagina(self::PRIVACIDAD), ['responsable', 'derechos']],
+            [$registro, ['terminos-quien', 'terminos-contacto', 'privacidad-responsable', 'privacidad-derechos']],
+        ] as [$xpath, $secciones]) {
+            foreach ($secciones as $seccion) {
+                $texto = $this->texto($xpath->query("//section[@id=\"{$seccion}\"]")->item(0));
+                $this->assertStringNotContainsString($contacto['telefono'], $texto, "{$seccion}: sin el teléfono anterior.");
+                $this->assertSame(1, $xpath->query("//section[@id=\"{$seccion}\"]//a[@href=\"tel:+527531112222\"][normalize-space()=\"753 111 2222\"]")->length, "{$seccion}: el teléfono de la configuración.");
+                if (in_array($seccion, ['quien', 'responsable', 'terminos-quien', 'privacidad-responsable'], true)) {
+                    $this->assertStringContainsString('Calle de Prueba 45, Lázaro Cárdenas', $texto, "{$seccion}: la dirección de la configuración.");
+                } else {
+                    $this->assertStringContainsString('de martes de 10:00 a 11:00', $texto, "{$seccion}: el horario de la configuración.");
+                }
+            }
+        }
     }
 
     public function test_el_aviso_nombra_cada_dato_del_registro(): void
