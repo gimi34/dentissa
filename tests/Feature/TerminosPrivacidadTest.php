@@ -253,7 +253,7 @@ class TerminosPrivacidadTest extends TestCase
 
             $enlaces = $xpath->query('.//a', $etiqueta);
             $this->assertSame(2, $enlaces->length, "{$pantalla}: dos enlaces en la casilla.");
-            foreach ([[url('/terminos'), 'términos de uso'], [url('/aviso-de-privacidad'), 'aviso de privacidad']] as $n => [$destino, $nombre]) {
+            foreach ([[url('/terminos'), 'términos de uso', 'Términos de uso'], [url('/aviso-de-privacidad'), 'aviso de privacidad', 'Aviso de privacidad']] as $n => [$destino, $nombre, $tituloVentana]) {
                 $enlace = $enlaces->item($n);
                 $this->assertSame($nombre, $this->texto($enlace));
                 $this->assertSame($destino, $enlace->getAttribute('href'), "{$pantalla}: sin JavaScript, «{$nombre}» lleva a su página.");
@@ -261,6 +261,9 @@ class TerminosPrivacidadTest extends TestCase
                 $this->assertSame('dialog', $enlace->getAttribute('aria-haspopup'), "{$pantalla}: «{$nombre}» anuncia que abre una ventana.");
                 $ventana = $xpath->query('//dialog[@id="'.$enlace->getAttribute('data-dialogo').'"]');
                 $this->assertSame(1, $ventana->length, "{$pantalla}: «{$nombre}» abre una ventana que existe.");
+                // /review R1: y es la suya, no la del otro texto.
+                $titulo = $xpath->query('//*[@id="'.$ventana->item(0)->getAttribute('aria-labelledby').'"]')->item(0);
+                $this->assertSame($tituloVentana, $this->texto($titulo), "{$pantalla}: «{$nombre}» abre la ventana «{$tituloVentana}».");
                 $this->assertFalse($enlace->hasAttribute('style'), "{$pantalla}: «{$nombre}» sin estilo en línea (P9).");
             }
         }
@@ -295,9 +298,11 @@ class TerminosPrivacidadTest extends TestCase
         foreach ($this->registros() as $pantalla => $xpath) {
             $ventanas = $xpath->query('//dialog[contains(concat(" ", normalize-space(@class), " "), " dialogo-legal ")]');
             $this->assertSame(2, $ventanas->length, "{$pantalla}: una ventana por texto.");
+            $titulos = [];
             foreach ($ventanas as $ventana) {
                 $titulo = $xpath->query('//*[@id="'.$ventana->getAttribute('aria-labelledby').'"]')->item(0);
                 $nombre = $this->texto($titulo);
+                $titulos[] = $nombre;
                 $this->assertArrayHasKey($nombre, $paginas, "{$pantalla}: la ventana se nombra con su título.");
                 $this->assertStringContainsString(self::FECHA, $this->texto($ventana), "{$pantalla}, {$nombre}: con la fecha.");
                 $this->assertSame(1, $xpath->query('.//button[@type="button"][@data-cerrar][normalize-space()="Cerrar"]', $ventana)->length, "{$pantalla}, {$nombre}: botón «Cerrar».");
@@ -308,6 +313,8 @@ class TerminosPrivacidadTest extends TestCase
                     "{$pantalla}, {$nombre}: el mismo texto que la página (D11)."
                 );
             }
+            // /review R1: una ventana de cada texto, no dos iguales.
+            $this->assertEqualsCanonicalizing(array_keys($paginas), $titulos, "{$pantalla}: una ventana de los términos y otra del aviso.");
         }
     }
 
