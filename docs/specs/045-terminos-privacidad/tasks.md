@@ -96,6 +96,22 @@ podía romper:
   - nota: 2026-11-12 — tokens en el `:root` de `auth.css` (mismos valores que `app.css`) y las reglas de `.dialogo-legal` de `registro-dialogo.css`, sin la regla solo del candidato. `test_la_ventana_del_registro_solo_usa_tokens` en verde; se ajustó (era más estricto que `system.md`: rechazaba el factor `* 2` de `calc()`, que el sistema admite) a «sin medidas con unidad ni colores literales», y sigue fallando con un `12px` de control
 - [x] T033 Bajar en `NavegacionSalidasCssTest::ESTILOS_PREVIOS` los `style=""` previos de `auth/register` (17 → 15) y `auth/registro-contacto` (6 → 4), porque T025 quitó los de los dos enlaces de la casilla (D7) — `tests/Feature/NavegacionSalidasCssTest.php` — hecho cuando: `test_las_vistas_tocadas_no_ganan_estilos_en_linea` pasa con los recuentos nuevos (más estricto) — cubre: CA4 — depende: T025
   - nota: añadida durante /implement: la suite completa de T027 falló en este test de la 044 (17 ≠ 15); aprobada por el usuario el 2026-11-12. T098 lo anota en el Historial de la 044
+- [ ] T034 Reforzar los tests de CA4: en `test_la_casilla_del_registro`, el título de la ventana que abre cada enlace (el elemento de su `aria-labelledby`) es «Términos de uso» para «términos de uso» y «Aviso de privacidad» para «aviso de privacidad»; en `test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina`, los títulos de las dos ventanas son exactamente esos dos, sin repetirse — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: pasan, y fallan si se intercambian un momento los `data-dialogo` de la casilla en `register.blade.php` (caracterización: el comportamiento ya es correcto; se restaura y se anota) — cubre: CA4
+  - nota: añadida por /review: R1
+- [ ] T035 Hacer que `test_los_datos_de_la_clinica_salen_de_la_configuracion` cambie la configuración (`clinica.contacto.direccion`, `telefono`, `telefono_enlace` y `horario` con un solo tramo, `['Martes' => '10:00–11:00']`) y compruebe esos valores en las secciones `quien`, `contacto`, `responsable` y `derechos` de las dos páginas y en las dos ventanas de `/registro` — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: pasa, y falla si se escribe a mano un momento la dirección en `publico/legal/terminos-texto.blade.php` (caracterización; se restaura y se anota) — cubre: CA1, CA2, CA4 — depende: T034
+  - nota: añadida por /review: R2
+- [ ] T036 Escribir `test_el_horario_en_texto_admite_un_tramo_sin_guion`: con `clinica.contacto.horario` = `['Lunes a viernes' => '9:00–20:00', 'Domingos' => 'Cerrado']`, `PaginasPublicasController::horarioEnTexto()` devuelve «de lunes a viernes de 9:00 a 20:00 y los domingos cerrado» y `/terminos` y `/registro` responden `200` — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: falla hoy por el error de la desestructuración — cubre: CA1 — depende: T035
+  - nota: añadida por /review: R3
+- [ ] T037 En `horarioEnTexto()`, un tramo sin guion largo se escribe con su valor en minúsculas tras los días («los domingos cerrado») en lugar de partirlo — `app/Http/Controllers/PaginasPublicasController.php` — hecho cuando: T036 pasa y los demás tests de la 045 siguen en verde — cubre: CA1 — depende: T036
+  - nota: añadida por /review: R3
+- [ ] T038 Acotar las búsquedas de CA3 y CA2 a su viñeta: cada dato del registro, en el `<li>` que empieza por «Al crear tu cuenta»; los de Google, en el que empieza por «Si te registras o entras con Google»; «datos sensibles», en el de «Datos de salud» — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: pasan, y `test_el_aviso_nombra_cada_dato_del_registro` falla si se quita un momento «teléfono» de la viñeta de la cuenta en `publico/legal/privacidad-texto.blade.php` (caracterización; se restaura y se anota) — cubre: CA2, CA3 — depende: T036
+  - nota: añadida por /review: R5
+- [ ] T039 Añadir a `test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina` que todo enlace con `data-dialogo` dentro de una ventana lleva `aria-haspopup="dialog"` — `tests/Feature/TerminosPrivacidadTest.php` — hecho cuando: falla hoy por el enlace al aviso dentro de la ventana de términos — cubre: CA4 — depende: T038
+  - nota: añadida por /review: R13
+- [ ] T040 Añadir `aria-haspopup="dialog"` al enlace al otro texto dentro del mismo `@if ($enVentana)` — `resources/views/publico/legal/terminos-texto.blade.php` — hecho cuando: T039 pasa y `test_el_texto_es_el_aprobado` sigue en verde — cubre: CA4 — depende: T039
+  - nota: añadida por /review: R13
+- [ ] T041 Anotar en `docs/security.md` → RS8.d que el registro gana el script en línea de las ventanas de la 045 (`auth/_dialogos-legales.blade.php`, a mover a `public/js/` cuando se pague RS8.d) y cambiar en el Modelo de amenazas del plan la categoría de TM2 a «A05:2025 Injection» — `docs/security.md`, `docs/specs/045-terminos-privacidad/plan.md` — hecho cuando: los dos documentos lo dicen y `python .ai/bin/aidd.py validate docs/specs/045-terminos-privacidad` no da errores
+  - nota: añadida por /review: R8, R14
 - [x] T027 Verificación final: suite completa (`php artisan test`), Pint sobre los PHP tocados, `semgrep` y `gitleaks` sobre lo tocado, `composer audit --locked` sin avisos, `medir.mjs --solo terminos,privacidad` en las dos páginas de la app y `--solo registro-dialogo` sobre `candidatos/c4` (K8; la ventana de la app solo se abre con JavaScript) (puertas y KPIs; K3 y K4 por sus tests) y Lighthouse SEO de `/terminos`, `/aviso-de-privacidad` y `/registro` en local (A20) — sin archivos — hecho cuando: todo en verde, Lighthouse SEO ≥ 90 en las tres, y el resultado anotado en esta tarea — cubre: CA1, CA2, CA3, CA4, CA5, CA6, CA7, CA8 — depende: T002, T003, T013, T022, T023, T024, T025, T026, T028, T029, T031, T033
   - nota: 2026-11-12 — suite completa 930 en verde (14 744 aserciones; línea base 914 de `main`: 16 nuevos, ninguno roto tras T033); Pint PASS en los 7 PHP tocados; semgrep `p/php` (imagen 1.99.0) sin hallazgos en lo tocado; gitleaks 8.21.2 sin fugas en los 32 archivos cambiados desde `impl_base` (modo archivos: dentro del contenedor no lee el historial de git); `composer audit --locked` (también el de la CI) y `npm audit` sin avisos. `medir.mjs` sobre la app (`http://dentissa_nginx`): `terminos` y `privacidad` 11/11 puertas y 5/5 KPIs; `registro-dialogo` sobre el candidato 11/11 y 3/3 (K8). Lighthouse 13.5.0 SEO: `/terminos` 100/100 y `/aviso-de-privacidad` 100/100 (móvil/escritorio), `/registro` 91/92 (solo resta la meta descripción que le falta desde antes, SE1.a)
 
@@ -106,7 +122,7 @@ podía romper:
   - nota: 2026-11-12 — fila «Páginas públicas» (rutas, `horarioEnTexto()`, parciales de `publico/legal/`), fila «Registro» (casilla validada en el servidor y ventanas) y la lista del layout público con sus enlaces del pie
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: en `deployment.md` → «Verificación post-deploy», que `/terminos` y `/aviso-de-privacidad` respondan `200`; `observability.md` sin cambios (sin logs ni eventos nuevos) — depende: T027
   - nota: 2026-11-12 — `deployment.md` → «Verificación post-deploy»: `/terminos` y `/aviso-de-privacidad` 200 y la ventana del registro; `observability.md` sin cambios (sin logs ni eventos nuevos)
-- [x] T092 Marcar spec como `implemented` — depende: T030, T090, T091
+- [ ] T092 Marcar spec como `implemented` — depende: T030, T090, T091
   - nota: 2026-11-12 — CA1–CA8 marcados (sus tests en verde), spec en `implemented` y `docs/specs/README.md` al día
 
 ## Despliegue (lo ejecuta `/release`)
@@ -120,10 +136,10 @@ podía romper:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T010, T014 | T020, T021, T022 |
-| CA2 | T010, T014 | T020, T021, T023 |
-| CA3 | T010 | T023 |
-| CA4 | T011, T016 | T025, T028, T029, T031 |
+| CA1 | T010, T014, T035, T036 | T020, T021, T022, T037 |
+| CA2 | T010, T014, T035, T038 | T020, T021, T023 |
+| CA3 | T010, T038 | T023 |
+| CA4 | T011, T016, T034, T035, T039 | T025, T028, T029, T031, T040 |
 | CA5 | T011, T015 | T026 |
 | CA6 | T012 | T024 |
 | CA7 | T010 | T021, T022, T023 |
@@ -141,21 +157,21 @@ podía romper:
 | `public/css/app.css` | T020 |
 | `public/css/publico.css` | T020 |
 | `routes/web.php` | T021 |
-| `app/Http/Controllers/PaginasPublicasController.php` | T021 |
+| `app/Http/Controllers/PaginasPublicasController.php` | T021, T037 |
 | `resources/views/publico/terminos.blade.php`, `aviso-privacidad.blade.php` | T022, T023 |
 | `resources/views/layouts/publico.blade.php` | T024 |
 | `resources/views/auth/register.blade.php`, `registro-contacto.blade.php`, `_dialogos-legales.blade.php` | T025 |
-| `resources/views/publico/legal/terminos-texto.blade.php`, `privacidad-texto.blade.php` | T028, T029 |
+| `resources/views/publico/legal/terminos-texto.blade.php`, `privacidad-texto.blade.php` | T028, T029, T040 |
 | `public/css/auth.css` | T025, T031 |
 | `app/Http/Controllers/RegisterController.php` | T026 |
-| `tests/Feature/TerminosPrivacidadTest.php` | T010, T011, T012 |
+| `tests/Feature/TerminosPrivacidadTest.php` | T010, T011, T012, T016, T034, T035, T036, T038, T039 |
 | `tests/Feature/PaginasPublicasTest.php` | T013, T032 |
 | `tests/Feature/PaginasPublicasCssTest.php` | T014, T032 |
 | `tests/Feature/LimiteIntentosTest.php` | T015 |
 | `tests/Feature/NavegacionSalidasCssTest.php` | T033 |
 | `design/criterios.json` | T003 |
 | `docs/seo.md`, `docs/architecture.md`, `AGENTS.md` | T030, T090 |
-| `docs/security.md` | T030 |
+| `docs/security.md` | T030, T041 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
