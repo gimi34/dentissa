@@ -15,6 +15,7 @@
 }
 
 .dialogo-legal {
+    margin: auto;
     width: calc(100% - var(--space-4) * 2);
     max-width: calc(var(--measure) + var(--space-8) * 2);
     max-height: calc(100dvh - var(--space-8) * 2);

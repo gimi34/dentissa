@@ -288,8 +288,8 @@
                     <div class="field-group">
                         <label class="checkbox-label">
                             <input type="checkbox" name="terminos" id="terminos" required>
-                            Acepto los <a href="{{ route('terminos') }}" target="_blank" rel="noopener">términos de uso (se abre en otra pestaña)</a> y el
-                            <a href="{{ route('privacidad') }}" target="_blank" rel="noopener">aviso de privacidad (se abre en otra pestaña)</a> de Dentissa
+                            Acepto los <a href="{{ route('terminos') }}" data-dialogo="dialogo-terminos" aria-haspopup="dialog">términos de uso</a> y el
+                            <a href="{{ route('privacidad') }}" data-dialogo="dialogo-privacidad" aria-haspopup="dialog">aviso de privacidad</a> de Dentissa
                         </label>
                     </div>
 
@@ -415,5 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     @endif
 });
 </script>
+{{-- Spec 045 (CA4): las ventanas de los términos y del aviso. --}}
+@include('auth._dialogos-legales')
 </body>
 </html>

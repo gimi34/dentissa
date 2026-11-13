@@ -375,6 +375,7 @@ body {
 /* Spec 045 (CA4, design.md → «Cambios a incorporar al sistema»): las ventanas de los términos y del aviso del
    registro, sin salir de la página. Solo tokens. */
 .dialogo-legal {
+    margin: auto; /* el reset de este archivo (* { margin: 0 }) quitaría el centrado nativo del dialog modal */
     width: calc(100% - var(--space-4) * 2);
     max-width: calc(var(--measure) + var(--space-8) * 2);
     max-height: calc(100dvh - var(--space-8) * 2);
