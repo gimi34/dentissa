@@ -255,7 +255,7 @@ Correcciones:
 - RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: mitigada (v0.10.0)
 - RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: mitigada (v0.10.0)
 - RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
-- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05). El inicio de sesión ya no tiene `style=""` ni scripts incrustados (spec 041)
+- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05). El inicio de sesión ya no tiene `style=""` ni scripts incrustados (spec 041); la spec 045 quitó del registro los `style=""` de los dos enlaces de la casilla, pero le añadió el script en línea de las ventanas de los términos y del aviso (`resources/views/auth/_dialogos-legales.blade.php`), que se moverá a `public/js/` al pagar esta corrección
 
 ### RS9 · Media — Sesión y email no protegidos al cambiar credenciales (A07 Authentication Failures)
 Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar el email del

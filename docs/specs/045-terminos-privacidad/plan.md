@@ -111,7 +111,7 @@ Quedan dos amenazas menores del cambio:
 | ID | Amenaza (STRIDE) | Categoría OWASP | Componente | Control | Test |
 |---|---|---|---|---|---|
 | TM1 | **Retirada** (CA4 refinado): los enlaces ya no abren otra pestaña, así que no hay `window.opener` que proteger | — | — | — | `TerminosPrivacidadTest::test_la_casilla_del_registro` comprueba que no llevan `target` |
-| TM2 | Information disclosure / inyección (contenido de configuración pintado sin escapar) | A03:2021 Injection | vistas nuevas | Solo dobles llaves para los datos de la configuración; sin salida sin escapar | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar`, con las dos vistas en su lista `VISTAS` |
+| TM2 | Information disclosure / inyección (contenido de configuración pintado sin escapar) | A05:2025 Injection (`docs/security.md` usa la edición 2025; /review R14) | vistas nuevas | Solo dobles llaves para los datos de la configuración; sin salida sin escapar | `PaginasPublicasTest::test_las_vistas_publicas_no_usan_html_sin_escapar`, con las dos vistas en su lista `VISTAS` |
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
