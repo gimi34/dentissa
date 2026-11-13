@@ -313,13 +313,14 @@ class TerminosPrivacidadTest extends TestCase
 
     public function test_la_ventana_del_registro_solo_usa_tokens(): void
     {
-        // P9: las reglas nuevas de la ventana, solo con tokens (salvo 0, porcentajes, 1.6 y 100dvh).
+        // P9: las reglas nuevas de la ventana, solo con tokens: ni medidas con unidad ni colores literales. Se permiten
+        // los porcentajes, 100dvh y los números sin unidad (interlineado y factores de calc() sobre tokens).
         $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents(public_path('css/auth.css')));
         preg_match_all('/([^{}]*\.dialogo-legal[^{}]*)\{([^}]*)\}/', $css, $reglas, PREG_SET_ORDER);
         $this->assertNotEmpty($reglas, 'auth.css tiene las reglas de la ventana.');
         foreach ($reglas as [, $selector, $cuerpo]) {
-            $sinTokens = preg_replace('/var\(--[\w-]+\)|100dvh|\b1\.6\b|\b0\b|\d+%|calc\(|[()*+\-\/,]/', '', $cuerpo);
-            $this->assertDoesNotMatchRegularExpression('/\d|#[0-9a-f]{3}|rgba?\(/i', $sinTokens, trim($selector).': solo tokens.');
+            $sinTokens = preg_replace('/var\(--[\w-]+\)|100dvh/', '', $cuerpo);
+            $this->assertDoesNotMatchRegularExpression('/\d(px|rem|em|ch|vh|vw|ms|s)\b|#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i', $sinTokens, trim($selector).': solo tokens.');
         }
     }
 
