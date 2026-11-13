@@ -1,130 +1,96 @@
 ---
 spec: 045-terminos-privacidad
-verdict: changes_requested
-round: 1
+verdict: approved
+round: 2
 date: 2026-11-13
-base: 4c67991
-head: cbc2224
+base: cbc2224
+head: 24af13e
 human_signoff: pending
 ---
 
 # Review · 045 Términos de uso y aviso de privacidad
 
 ## Resumen
-`changes_requested`: sin bloqueantes, pero dos tests no prueban del todo lo que dicen (R1: qué ventana abre
-cada enlace; R2: que los datos de la clínica salgan de verdad de la configuración) y el usuario decide
-corregirlos antes de liberar, junto con cinco menores (R3, R5, R8, R13, R14). El comportamiento es correcto:
-suite completa en verde, herramientas de seguridad limpias, diseño medido y verificado por el usuario. Los otros
-siete menores van al roadmap. Revisores independientes: spec (`critical`), constitución y calidad (`standard`),
-seguridad (`critical`), accesibilidad (`standard`) y SEO (`standard`, sobre el HTML servido).
-Conteo: bloqueante 0 · importante 2 · menor 12
+`approved`: las siete correcciones que decidió el usuario en la ronda 1
+([history/review.r1.md](history/review.r1.md)) están hechas y probadas (R1, R2, R3, R5, R8, R13, R14), sin
+hallazgos nuevos. Ronda `--rerun` sobre `cbc2224..24af13e` (14 KB de código), revisada sin subagentes releyendo
+los archivos, con la verificación automática completa. Los siete menores aceptados en la ronda 1 van al roadmap.
+Conteo (abiertos): bloqueante 0 · importante 0 · menor 0 (7 menores aceptados sin tarea)
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `php artisan test` (suite completa, en `cbc2224`) | ✅ 930 en verde (14 744 aserciones); línea base 914 de `main`, sin fallos previos |
-| Pint sobre los PHP tocados | ✅ PASS (7 archivos; T027) |
+| `php artisan test` (suite completa, en `dbc9775`, mismo código que `24af13e`) | ✅ 931 en verde (14 790 aserciones); línea base 914 de `main`, sin fallos previos |
+| Pint sobre `PaginasPublicasController.php` y `TerminosPrivacidadTest.php` | ✅ PASS |
 | `python .ai/bin/aidd.py validate docs/specs/045-terminos-privacidad` | ✅ 0 errores |
-| `design/medir.mjs` sobre la app servida (`terminos`, `privacidad`) y sobre `candidatos/c4` (`registro-dialogo`) | ✅ 11/11 puertas y 5/5 KPIs en cada página; 11/11 y 3/3 (K8) en la ventana |
-| Build | ➖ sin build de assets que cambie (`npm run build` solo afecta a `welcome.blade.php`) |
+| Build | ➖ sin cambios de assets |
 
 ## Criterios de aceptación
 | CA | Test | Estado | Nota |
 |---|---|---|---|
-| CA1 | `TerminosPrivacidadTest::test_terminos_tiene_sus_secciones_y_la_fecha`, `test_los_datos_de_la_clinica_salen_de_la_configuracion`, `test_el_texto_es_el_aprobado` | ✅ | R2: el de la configuración no la cambia |
-| CA2 | `test_el_aviso_tiene_sus_secciones_y_la_fecha`, `test_el_texto_es_el_aprobado` | ✅ | R5: búsquedas en toda la sección |
-| CA3 | `test_el_aviso_nombra_cada_dato_del_registro` + verificación manual (T023) | ✅ | R5: «nombre», «teléfono» y «dirección» aparecen también en otras viñetas |
-| CA4 | `test_la_casilla_del_registro`, `test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina`, `test_la_ventana_del_registro_solo_usa_tokens`, `test_el_script_de_las_ventanas_abre_y_cierra` + verificación manual (T025, usuario) | ⚠ | R1: no comprueba qué ventana abre cada enlace ni que las dos sean distintas |
+| CA1 | `test_terminos_tiene_sus_secciones_y_la_fecha`, `test_los_datos_de_la_clinica_salen_de_la_configuracion` (ahora cambia la configuración), `test_el_horario_en_texto_admite_un_tramo_sin_guion`, `test_el_texto_es_el_aprobado` | ✅ | R2, R3 |
+| CA2 | `test_el_aviso_tiene_sus_secciones_y_la_fecha` («datos sensibles» en su viñeta), `test_el_texto_es_el_aprobado` | ✅ | R5 |
+| CA3 | `test_el_aviso_nombra_cada_dato_del_registro` (cada dato en su viñeta) + verificación manual (T023) | ✅ | R5 |
+| CA4 | `test_la_casilla_del_registro` (cada enlace abre su ventana), `test_las_ventanas_del_registro_llevan_el_texto_de_la_pagina` (dos ventanas distintas; enlaces internos con `aria-haspopup`), `test_la_ventana_del_registro_solo_usa_tokens`, `test_el_script_de_las_ventanas_abre_y_cierra` + verificación manual (usuario) | ✅ | R1, R13 |
 | CA5 | `test_el_registro_sin_la_casilla_se_rechaza`, `test_el_registro_con_google_sin_la_casilla_se_rechaza` | ✅ | |
 | CA6 | `test_el_pie_publico_enlaza_las_dos_paginas` + K5 | ✅ | |
-| CA7 | `test_con_y_sin_sesion_se_ven_igual` (caracterización comprobada) | ✅ | |
+| CA7 | `test_con_y_sin_sesion_se_ven_igual` | ✅ | |
 | CA8 | `test_el_texto_es_el_aprobado`, `PaginasPublicasTest::test_todos_los_enlaces_internos_resuelven` + `G-sin-js` | ✅ | |
 
+## Seguimiento de la ronda 1
+| ID | Severidad | Estado | Evidencia |
+|---|---|---|---|
+| R1 | importante | corregido (T034) | cada enlace de la casilla abre la ventana con su título y las dos ventanas tienen títulos distintos; comprobado intercambiando los `data-dialogo` (falla) |
+| R2 | importante | corregido (T035) | el test cambia dirección, teléfono y horario y los encuentra en las dos páginas y en las dos ventanas; comprobado escribiendo la dirección a mano (falla) |
+| R3 | menor | corregido (T036, T037) | un tramo sin guion largo da «los domingos cerrado»; antes `ErrorException` |
+| R4 | menor | aceptado → roadmap | |
+| R5 | menor | corregido (T038) | cada dato en su viñeta; comprobado quitando «teléfono» de la de la cuenta (falla) |
+| R6 | menor | aceptado → roadmap | |
+| R7 | menor | aceptado → roadmap | |
+| R8 | menor | corregido (T041) | `docs/security.md` → RS8.d anota el script de las ventanas |
+| R9 | menor | aceptado → roadmap | |
+| R10 | menor | aceptado → roadmap | |
+| R11 | menor | aceptado → roadmap | |
+| R12 | menor | aceptado → roadmap | |
+| R13 | menor | corregido (T039, T040) | `aria-haspopup="dialog"` en el enlace al aviso dentro de la ventana de términos |
+| R14 | menor | corregido (T041) | TM2 en «A05:2025 Injection» |
+
 ## Conformidad con el plan
-- Cambios fuera del plan: ninguno (`scope.md`: 0 archivos sin tarea; T032 y T033, añadidas en `/implement` con aprobación del usuario).
-- Partes del plan sin implementar: ninguna (T001 y T003 sin diff de código: son de documentación, `system.md` y `criterios.json`).
+- Cambios fuera del plan: ninguno (`scope.md` de `cbc2224..HEAD`: 3 archivos de código, todos de tareas de la review).
+- Partes del plan sin implementar: ninguna.
 
 ## Constitution Check (sobre el código)
-| Principio | Resultado | Evidencia |
-|---|---|---|
-| P1 Spec aprobada | ✅ | spec, diseño, plan y tareas aprobados; análisis r5 `pass` |
-| P2 Test que falla antes | ✅ | cada CA con test; caracterizaciones de CA5 (Google) y CA7 comprobadas rompiendo el código (notas de T010 y T011). R1 y R2: dos tests que pasarían con lo protegido roto |
-| P3 Autorización | ✅ | rutas públicas sin datos de cuentas; `test_con_y_sin_sesion_se_ven_igual` |
-| P4 Entrada y SQL | ✅ | `'terminos' => ['accepted']` en `RegisterController::register`; vistas y parciales en `VISTAS` del test de salida sin escapar; sin `{!!` |
-| P5 Nada sensible | ✅ | gitleaks sin fugas |
-| P6 Sin vulnerabilidades altas | ✅ | `composer audit`, `npm audit` y trivy limpios; `phpseclib` 3.0.58 |
-| P7 Auditoría | ➖ | sin datos sensibles, autenticación ni permisos nuevos (el alta sigue sin auditarse, código previo) |
-| P8 Correlación y logs | ➖ | sin logs nuevos |
-| P9 Sistema de diseño | ✅ | `test_las_vistas_publicas_no_llevan_estilos_en_linea` (vistas, parciales y rutas), `test_la_ventana_del_registro_solo_usa_tokens`, `test_newsreader_tiene_un_respaldo_con_sus_medidas`; `system.md` 1.15.0 |
-| P10 Descubribilidad | ✅ | `test_metadatos_de_cada_ruta_publica` con las dos rutas; Lighthouse SEO 100/100 en las dos y 91/92 en `/registro` (solo SE1.a, previa) |
+Sin cambios respecto a la ronda 1 salvo P2, reforzado: R1, R2 y R5 eran tests que pasarían con lo protegido roto;
+ahora fallan si se rompe (comprobado en cada tarea).
 
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks 8.21.2 (32 archivos cambiados desde `4c67991`, modo archivos) | ✅ 0 hallazgos |
-| semgrep 1.99.0 `p/php` (PHP y Blade tocados) | ✅ 0 hallazgos |
-| `composer audit --locked` (y el de la CI) · `npm audit --audit-level=high` | crít: 0 · alta: 0 · media: 0 |
-| trivy 0.58.1 `fs --severity HIGH,CRITICAL` | ✅ 0 hallazgos |
+| gitleaks 8.21.2 (archivos cambiados en `cbc2224..HEAD`) | ✅ 0 hallazgos |
+| semgrep 1.99.0 `p/php` (los 3 archivos de código) | ✅ 0 hallazgos |
+| SCA | ➖ sin cambios en lockfiles desde la ronda 1 (allí: 0 críticas, 0 altas, 0 medias) |
+| trivy | ➖ sin cambios desde la ronda 1 (allí: 0 HIGH/CRITICAL) |
 
-| Tema OWASP (2025) | Resultado | Evidencia |
-|---|---|---|
-| A01 Control de acceso | ✅ | `routes/web.php`: dos GET públicos de texto fijo; ninguna ruta protegida tocada; `throttle:registro` intacto |
-| A02 Configuración | ✅ | sin secretos ni debug; la ventana funciona con la CSP actual (R8: amplía RS8.d) |
-| A03 Cadena de suministro | ✅ | solo `phpseclib` 3.0.57 → 3.0.58, verificada en D10 y T002 |
-| A04 Criptografía y datos sensibles | ➖ | no guarda ni pinta datos sensibles |
-| A05 Inyección / XSS | ✅ | todo lo de la configuración con dobles llaves; el script no usa `innerHTML` ni `eval` |
-| A06 Diseño inseguro | ✅ | TM2 con control y test; TM1 retirada con su test |
-| A07 Autenticación | ➖ | no tocada |
-| A08 Integridad | ✅ | `@csrf` intacto |
-| A09 Registro y auditoría | ➖ | sin logs nuevos |
-| A10 Manejo de errores | ✅ | el registro sin casilla se rechaza cerrado, sin crear la cuenta (R3: un horario mal escrito daría 500) |
+Temas OWASP: sin cambios respecto a la ronda 1; `horarioEnTexto()` deja de poder romper el registro con un horario
+mal escrito (A10).
 
 ## Observabilidad
-- Eventos de auditoría de la spec emitidos y probados: no aplica (la spec no tiene sección de auditoría con eventos).
-- Datos sensibles en logs del código tocado: ninguno (sin `Log::` nuevos).
-- `request_id` presente en los logs nuevos: no hay logs nuevos.
+- Eventos de auditoría: no aplica. Datos sensibles en logs: ninguno. Logs nuevos: ninguno.
 
 ## SEO
-| Tema | Resultado | Evidencia |
-|---|---|---|
-| Indexación y canónica | ✅ | `/terminos` y `/aviso-de-privacidad` sin `noindex`, una canónica absoluta (en producción `https://dentissa.app/…`, que fija el test) |
-| Título, descripción e idioma | ✅ | propios y únicos; `lang="es"`, viewport |
-| Encabezados y contenido en el HTML | ✅ | un `h1`, `h2` sin saltos; texto completo en la respuesta del servidor |
-| `robots.txt` y sitemap | ✅ / ➖ | `robots.txt` permite rastrear; sin sitemap (SE3, fuera de alcance) |
-- Sección "Descubribilidad" del plan aplicada: sí, en las dos rutas, con `PaginasPublicasTest::test_metadatos_de_cada_ruta_publica`.
+Sin cambios en las rutas ni en los metadatos desde la ronda 1 (allí, todos los temas ✅; Lighthouse SEO 100 en
+`/terminos` y `/aviso-de-privacidad`).
 
 ## Hallazgos
-| ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
-|---|---|---|---|---|
-| R1 | importante | `tests/Feature/TerminosPrivacidadTest.php:262-263`, `:301` | `test_la_casilla_del_registro` solo comprueba que existe un `dialog` con el id de `data-dialogo`, no cuál; `test_las_ventanas_…` acepta dos títulos iguales. Seguirían en verde si se intercambian los `data-dialogo` o si las dos ventanas fueran la misma | El título de la ventana de cada enlace es el suyo («Términos de uso» / «Aviso de privacidad») y las dos ventanas tienen títulos distintos |
-| R2 | importante | `tests/Feature/TerminosPrivacidadTest.php:141-157` | `test_los_datos_de_la_clinica_salen_de_la_configuracion` usa la configuración actual, igual al texto aprobado: pasaría con los datos escritos a mano | Cambiar la configuración en el test y comprobar que los valores nuevos salen en las dos páginas y en las ventanas |
-| R3 | menor | `app/Http/Controllers/PaginasPublicasController.php:65` | `explode('–', $horas)` con desestructuración: un tramo sin guion largo daría error en las dos páginas y en los dos registros | Un tramo sin guion largo se usa tal cual; test con ese caso |
-| R4 | menor | `publico/terminos.blade.php:17`, `aviso-privacidad.blade.php:17`, `auth/_dialogos-legales.blade.php:16`, test (`FECHA`) | La fecha de actualización está repetida y es una sola para las dos ventanas | Una fecha por texto, en una sola fuente |
-| R5 | menor | `tests/Feature/TerminosPrivacidadTest.php:130`, `:179-183` | Las búsquedas de CA3 y CA2 recorren toda la sección: «nombre», «teléfono» y «dirección» aparecen en otras viñetas | Buscar cada dato en su viñeta |
-| R6 | menor | `tests/Feature/TerminosPrivacidadTest.php:~326` | `test_el_script_de_las_ventanas_abre_y_cierra` solo mira la estructura del script (aceptado en el análisis, A17) | Documentarlo en el test; un runner JS si se mueve a `public/js/` |
-| R7 | menor | `resources/views/auth/_dialogos-legales.blade.php:5-8` | El parcial llama a un método estático del controlador desde `@php` | Llevar `horarioEnTexto()` a una clase de dominio o pasarlo desde `RegisterController` |
-| R8 | menor | `resources/views/auth/_dialogos-legales.blade.php:25`, `plan.md` D12 | El script en línea nuevo amplía la deuda de la CSP estricta (RS8.d) sin anotarlo | Anotar en RS8.d que el registro gana este script |
-| R9 | menor | `auth/register.blade.php:291-292`, `registro-contacto.blade.php:135-136` | `aria-haspopup="dialog"` también sin JavaScript, cuando el enlace navega | Ponerlo desde el script, solo si existe `showModal` |
-| R10 | menor | `publico/legal/terminos-texto.blade.php:6…`, `privacidad-texto.blade.php` | Cada `section` con `aria-labelledby` crea una región: 7 y 8 por página, más las de las ventanas | Quitar `aria-labelledby` de las secciones |
-| R11 | menor | `auth/_dialogos-legales.blade.php:20`, `public/css/auth.css` (`.dialogo-legal__texto`) | El texto desplazable de la ventana no es enfocable con el teclado en navegadores antiguos (Safari, Chromium < 130) | `tabindex="0"` con su nombre |
-| R12 | menor | `auth/_dialogos-legales.blade.php:43` | Seleccionar texto y soltar el ratón sobre el velo cierra la ventana | Cerrar solo si el `pointerdown` empezó en el velo |
-| R13 | menor | `publico/legal/terminos-texto.blade.php:5` | El enlace al aviso dentro de la ventana de términos abre otra ventana sin `aria-haspopup="dialog"` | Añadirlo dentro del mismo `@if ($enVentana)` |
-| R14 | menor | `plan.md` → Modelo de amenazas (TM2) | TM2 con «A03:2021 Injection»; `docs/security.md` usa la edición 2025 (A05:2025) | Cambiar la etiqueta |
+Ninguno nuevo.
 
 ## Preparación para release
-- Rollback factible: sí, el de `docs/deployment.md` al tag anterior; sin migraciones ni datos.
-- Migraciones compatibles con la versión anterior: no hay migraciones.
-- Feature flags: ninguno (el plan no pide).
-- Docs actualizadas (architecture, deployment): sí (T090, T091); también `seo.md`, `security.md` y `AGENTS.md` (T030).
-- SCA: sin críticas ni altas. Cobertura de riesgos: RS17.b anotada como corregida en la rama, pendiente de liberar (no mitigada); la spec no declara otras correcciones.
+- Rollback factible: sí, al tag anterior con `docs/deployment.md`; sin migraciones ni datos.
+- Docs actualizadas: `architecture.md`, `deployment.md`, `seo.md`, `security.md` (RS17.b, RS8.d) y `AGENTS.md`.
+- Feature flags: ninguno.
 
 ## Tareas añadidas
-- T034 ← R1
-- T035 ← R2
-- T036, T037 ← R3
-- T038 ← R5
-- T039, T040 ← R13
-- T041 ← R8, R14
+- T034 ← R1 · T035 ← R2 · T036, T037 ← R3 · T038 ← R5 · T039, T040 ← R13 · T041 ← R8, R14 (ronda 1)
 
 ## Aceptados sin tarea
 - **R4** → roadmap: la fecha de actualización de los términos y del aviso, en una sola fuente y una por texto
