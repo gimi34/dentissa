@@ -62,8 +62,11 @@ class PaginasPublicasController extends Controller
     {
         $tramos = [];
         foreach (config('clinica.contacto.horario') as $dias => $horas) {
-            [$abre, $cierra] = explode('–', $horas);
-            $tramos[] = ($tramos === [] ? 'de ' : 'los ').mb_strtolower($dias)." de {$abre} a {$cierra}";
+            // /review R3: un tramo sin guion largo («Cerrado») se escribe tal cual, en minúsculas.
+            $partes = explode('–', $horas);
+            $tramos[] = ($tramos === [] ? 'de ' : 'los ').mb_strtolower($dias).(count($partes) === 2
+                ? " de {$partes[0]} a {$partes[1]}"
+                : ' '.mb_strtolower(trim($horas)));
         }
 
         return count($tramos) > 1
