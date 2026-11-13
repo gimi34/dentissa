@@ -374,6 +374,12 @@ class TerminosPrivacidadTest extends TestCase
                     "{$pantalla}, {$nombre}: el mismo texto que la página (D11)."
                 );
             }
+            // /review R13: los enlaces que, dentro de una ventana, abren la otra lo anuncian como los de la casilla.
+            $internos = $xpath->query('//dialog//a[@data-dialogo]');
+            $this->assertGreaterThan(0, $internos->length, "{$pantalla}: control, hay enlaces entre las dos ventanas.");
+            foreach ($internos as $interno) {
+                $this->assertSame('dialog', $interno->getAttribute('aria-haspopup'), "{$pantalla}: «{$this->texto($interno)}» dentro de una ventana anuncia que abre otra.");
+            }
             // /review R1: una ventana de cada texto, no dos iguales.
             $this->assertEqualsCanonicalizing(array_keys($paginas), $titulos, "{$pantalla}: una ventana de los términos y otra del aviso.");
         }
