@@ -37,8 +37,9 @@ Ninguna.
 ## Pantallas
 
 Las 18 de «Pantallas y caminos» de la spec. En todas, las migas son el primer elemento del
-contenido, bajo la barra superior y encima de avisos, tarjetas y formularios, como hoy en el detalle
-de la cita.
+contenido de la pantalla, bajo la barra superior y encima de sus tarjetas y formularios, como hoy en
+el detalle de la cita. Si el sistema muestra un aviso arriba (éxito, error o contraseña generada),
+las migas quedan debajo de él, como hoy.
 
 | Pantalla y estado | Ancho menor (320/390) | Ancho mayor (1440) | Criterios |
 |---|---|---|---|
@@ -67,9 +68,9 @@ puede tomar la 1.16.0).
 | Migas: estructura | fijo | una navegación con el nombre «Migas de pan» y, dentro, una lista ordenada; el último elemento marcado como página actual; los separadores «›» son decorativos y no se leen | igual | CA3; cierra 033/R6 |
 | Migas: enlace | fijo | `--p600`, subrayado; al pasar el puntero, `--p800`; alto y ancho mínimos `--touch-min` | `--p600`, subrayado; al pasar el puntero, `--p800` | CA4: hoy `--text-muted` y `--text` valen lo mismo y el enlace no se distingue; el subrayado lo distingue sin color |
 | Migas: elemento actual | fijo | `--text`, sin subrayado, sin enlace | igual | CA2, CA4 |
-| Migas: separador | fijo | «›» en `--text`, con `--space-3` a cada lado (el `gap` de hoy) | igual | sin cambio de aspecto |
+| Migas: separador | fijo | «›» en `--text`, dentro de cada elemento de la lista menos el primero, delante de su texto, con `--space-3` a cada lado (el `gap` de hoy) | igual | sin cambio de aspecto |
 | Migas: camino largo | fijo | el camino puede pasar de línea (hoy ya lo hace en el móvil) y los nombres parten por cualquier punto | puede pasar de línea también en el escritorio | CA10 |
-| Migas: dónde se usan | regla | toda pantalla de segundo nivel del panel las lleva como primer elemento del contenido; las pantallas del menú, no; el primer elemento es la entrada del menú de la sección | igual | CA1 |
+| Migas: dónde se usan | regla | toda pantalla de segundo nivel del panel las lleva como primer elemento del contenido de la pantalla (debajo del aviso del sistema, si lo hay); las pantallas del menú, no; el primer elemento es la entrada del menú de la sección, con su mismo texto para cada rol | igual | CA1 |
 | Título de pantalla | regla | toda pantalla del panel define su título; ninguna usa el título por defecto | igual | CA8; cierra la parte de títulos de DS15 para servicios |
 
 ## Movimiento
@@ -98,3 +99,4 @@ Ninguno.
 | 2026-11-12 | diseño | Versión del sistema | La siguiente a la vigente cuando se fusione `main`, porque la 045 también lo cambia | razonable |
 | 2026-11-12 | diseño | Aprobación del acta | Aprobada | usuario |
 | 2026-11-12 | refinado | «Agendar cita» es una entrada del menú (hallado en /plan 046) | Sale de las pantallas con migas: quedan 18; el componente no cambia | usuario |
+| 2026-11-12 | refinado | /analyze r1 (A4, A7, A8): texto del primer elemento, sitio del separador y posición respecto de los avisos | El texto es el de la entrada del menú de cada rol; el separador va dentro del elemento de la lista; las migas van debajo del aviso del sistema, como hoy | usuario |
