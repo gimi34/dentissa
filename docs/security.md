@@ -356,7 +356,11 @@ introduce (no cambia `composer.lock`).
 
 Correcciones:
 - RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: mitigada (v0.4.1)
-- RS17.b Actualizar `phpseclib/phpseclib` a 3.0.58 o posterior: aviso PKSA-h7cz-q7zq-mdkt (2026-11-02, sin severidad asignada; consumo de CPU sin límite al leer claves cifradas, PFX o CMS), que hacía fallar el `composer audit` de la CI — estado: corregida en la rama de la spec 045 (3.0.58, publicada el 2026-11-02), pendiente de liberar
+
+Aviso posterior, fuera de las correcciones de la spec 029: PKSA-h7cz-q7zq-mdkt (GHSA-w3p9-g4p2-h3rr,
+2026-11-02, sin severidad asignada; consumo de CPU sin límite al leer claves cifradas, PFX o CMS), que hacía
+fallar el `composer audit` de la CI. Corregido con `phpseclib/phpseclib` 3.0.58 en v0.17.0 (spec 047; la spec 045
+hizo la misma subida en su rama).
 
 ### RS18 · Alta — Imágenes base de producción con avisos sin corrección (A03 Software Supply Chain Failures)
 Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 030 (T033): la base
