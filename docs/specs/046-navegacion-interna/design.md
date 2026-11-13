@@ -23,8 +23,8 @@ corrige en lo que pide la deuda 033/R6. La spec pide diseño directo (Decisiones
 
 | Puerta o KPI | Objetivo | Cómo se comprueba |
 |---|---|---|
-| K1 · Migas en las 19 pantallas de la tabla (CA1) | un solo bloque, visible sin desplazarse a 320, 390 y 1440 px | test sobre el HTML de cada pantalla + verificación del usuario a los tres anchos |
-| K2 · Mismo aspecto (CA1) | el componente del sistema en las 19, sin `style=""` | test sobre el HTML |
+| K1 · Migas en las 18 pantallas de la tabla (CA1) | un solo bloque, visible sin desplazarse a 320, 390 y 1440 px | test sobre el HTML de cada pantalla + verificación del usuario a los tres anchos |
+| K2 · Mismo aspecto (CA1) | el componente del sistema en las 18, sin `style=""` | test sobre el HTML |
 | K3 · Enlace frente a elemento actual (CA4) | se distinguen sin color; contraste ≥ 4,5:1 los dos | test de las reglas y del contraste de los tokens + verificación del usuario |
 | K4 · Camino largo a 320 px (CA10) | sin desplazamiento horizontal; enlaces ≥ 44 px de alto en el móvil | `capturar.mjs --medir` con un nombre largo + verificación del usuario |
 | K5 · Títulos (CA8) | ninguno es «Dashboard» | test sobre el HTML |
@@ -36,7 +36,7 @@ Ninguna.
 
 ## Pantallas
 
-Las 19 de «Pantallas y caminos» de la spec. En todas, las migas son el primer elemento del
+Las 18 de «Pantallas y caminos» de la spec. En todas, las migas son el primer elemento del
 contenido, bajo la barra superior y encima de avisos, tarjetas y formularios, como hoy en el detalle
 de la cita.
 
@@ -97,3 +97,4 @@ Ninguno.
 | 2026-11-12 | diseño | Camino largo a 320 px (CA10) | Pasa de línea y parte el nombre; no se acorta con puntos suspensivos, para no ocultar de qué paciente se trata | razonable (regla de la 035 para textos largos) |
 | 2026-11-12 | diseño | Versión del sistema | La siguiente a la vigente cuando se fusione `main`, porque la 045 también lo cambia | razonable |
 | 2026-11-12 | diseño | Aprobación del acta | Aprobada | usuario |
+| 2026-11-12 | refinado | «Agendar cita» es una entrada del menú (hallado en /plan 046) | Sale de las pantallas con migas: quedan 18; el componente no cambia | usuario |

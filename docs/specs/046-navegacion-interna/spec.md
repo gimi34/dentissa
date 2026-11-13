@@ -13,20 +13,20 @@ Dentro del panel, saber dónde se está y cómo volver depende de la pantalla. U
 con el componente del sistema (detalle de cita, agendar, ficha del paciente, expediente); otras las
 tienen hechas a mano y con otro aspecto (nueva cita, personal, usuarios), y otras no tienen ninguna
 salida visible: reprogramar una cita y el alta y la edición de un servicio, que además muestran
-«Dashboard» como título. El expediente repite la salida con un botón «Volver al paciente» y la miga
-de agendar parte de «Inicio» mientras la del detalle de la cita parte de «Mis citas». Las migas
+«Dashboard» como título. El expediente repite la salida con un botón «Volver al paciente», y «Agendar cita», que es una
+entrada del menú del paciente, lleva migas cuando ninguna otra pantalla del menú las lleva. Las migas
 tampoco se anuncian como navegación a los lectores de pantalla ni marcan la página actual, y el
 enlace no se distingue del texto (deuda 033/R6). Quien trabaja en la clínica o el paciente tienen
 que usar el botón Atrás del navegador o el menú y pierden el hilo de la tarea.
 
 ## Historias de usuario
 - Como miembro del personal (administración, dentista o asistente) en un detalle, una ficha o un formulario, quiero ver en qué parte del sistema estoy y volver un nivel con un clic, para no depender del botón Atrás.
-- Como paciente que agenda, consulta o reprograma una cita, quiero una salida visible hacia «Mis citas», para no quedarme atrapado en la pantalla.
+- Como paciente que consulta o reprograma una cita, quiero una salida visible hacia «Mis citas», para no quedarme atrapado en la pantalla.
 - Como persona que usa un lector de pantalla o el teclado, quiero que las migas se anuncien como navegación y digan cuál es la página actual, para orientarme igual que quien las ve.
 - Como administración, quiero que el alta y la edición de un servicio tengan su propio título, para saber en qué pantalla estoy.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un usuario con sesión, cuando abre a 320, 390 o 1440 px de ancho cualquiera de las pantallas de segundo nivel de la tabla «Pantallas y caminos», entonces ve sin desplazarse, entre la barra superior y el contenido, un único bloque de migas de pan con el camino de esa tabla, con el mismo aspecto en todas; las pantallas a las que se llega desde el menú (paneles, listados, mis doctores, perfil, galería, reportes y auditoría) no llevan migas.
+- [ ] CA1 · Dado un usuario con sesión, cuando abre a 320, 390 o 1440 px de ancho cualquiera de las pantallas de segundo nivel de la tabla «Pantallas y caminos», entonces ve sin desplazarse, entre la barra superior y el contenido, un único bloque de migas de pan con el camino de esa tabla, con el mismo aspecto en todas; las pantallas a las que se llega desde el menú (paneles, listados, agendar cita, mis doctores, perfil, galería, reportes y auditoría) no llevan migas; «Agendar cita» pierde las que tiene hoy.
 - [ ] CA2 · Dado un usuario en una pantalla con migas, cuando pulsa cualquier elemento del camino que no sea el último, entonces llega a la pantalla que ese elemento nombra, que es siempre la misma venga de donde venga; el último elemento nombra la pantalla actual y no es un enlace.
 - [ ] CA3 · Dada una persona que usa un lector de pantalla o el teclado, cuando recorre una pantalla con migas, entonces las migas se anuncian como una navegación con el nombre «Migas de pan», el último elemento se anuncia como la página actual, los separadores no se leen y cada enlace recibe el foco con el indicador de foco del sistema.
 - [ ] CA4 · Dado cualquier usuario, cuando mira las migas, entonces distingue los enlaces del elemento actual sin depender solo del color, y el texto de unos y otro cumple el contraste AA sobre el fondo.
@@ -34,7 +34,7 @@ que usar el botón Atrás del navegador o el menú y pierden el hilo de la tarea
 - [ ] CA6 · Dado un usuario en un formulario de alta o de edición de la tabla, cuando pulsa «Cancelar», entonces llega a la misma pantalla que el penúltimo elemento de las migas y no se guarda nada.
 - [ ] CA7 · Dado un miembro del personal en el expediente de un paciente, cuando lo abre, entonces vuelve a la ficha del paciente por las migas y ya no hay un botón «Volver al paciente» (reemplaza esa parte de 035 CA7).
 - [ ] CA8 · Dada la administración en «Nuevo servicio» o «Editar servicio», cuando abre la pantalla, entonces la barra superior y la pestaña del navegador muestran ese título y no «Dashboard»; ninguna pantalla de la tabla muestra el título por defecto.
-- [ ] CA9 · Dado un usuario en una pantalla de segundo nivel, cuando mira el menú (barra lateral en el escritorio, menú en el móvil), entonces la entrada de la sección a la que pertenece la pantalla (el primer elemento de sus migas) aparece marcada como la actual, también en «Agendar cita».
+- [ ] CA9 · Dado un usuario en una pantalla de segundo nivel, cuando mira el menú (barra lateral en el escritorio, menú en el móvil), entonces la entrada de la sección a la que pertenece la pantalla (el primer elemento de sus migas) aparece marcada como la actual.
 - [ ] CA10 · Dado un camino con un nombre largo (un paciente o un miembro del personal con nombre y apellidos largos), cuando se ve a 320 px de ancho, entonces las migas pasan a otra línea o acortan el nombre sin que la página se desplace en horizontal ni se corte texto que impida entender el camino, y cada enlace mide al menos 44 px de alto en el móvil.
 - [ ] CA11 · (abuso) Dado un usuario que añade a la dirección un destino de vuelta, o cuyo nombre o el de un paciente contiene código, cuando se pintan las migas, entonces los enlaces llevan solo a las pantallas fijas de la tabla dentro del área de su propio rol, el nombre se muestra como texto y no se ejecuta, y una pantalla que su rol no puede abrir responde igual que hoy, sin mostrar migas ni nombres.
 
@@ -59,14 +59,13 @@ El primer elemento es la entrada del menú de la sección; cada elemento menos e
 | Administración | Editar usuario | Usuarios › *usuario* › Editar | «Usuarios › Editar: *usuario*», a mano |
 | Administración | Nuevo servicio | Servicios › Nuevo servicio | sin migas, título «Dashboard» |
 | Administración | Editar servicio | Servicios › Editar servicio | sin migas, título «Dashboard» |
-| Paciente | Agendar cita | Mis citas › Agendar cita | «Inicio › Agendar cita» |
 | Paciente | Detalle de cita | Mis citas › Detalle | migas del sistema |
 | Paciente | Reprogramar cita | Mis citas › Detalle › Reprogramar | sin migas |
 
 ## Fuera de alcance
 - Un botón «← Volver» además de las migas: la salida de cada pantalla son las migas y, en los formularios, «Cancelar».
 - Recordar de qué pantalla venía alguien para devolverlo allí (p. ej. volver a la ficha del paciente desde una cita abierta desde ella): los caminos son fijos.
-- Migas en las pantallas del menú (paneles, listados, mis doctores, perfil, galería, reportes, auditoría).
+- Migas en las pantallas del menú (paneles, listados, agendar cita, mis doctores, perfil, galería, reportes, auditoría).
 - Las pantallas de acceso, las páginas públicas y las de error: sus salidas son de la spec 044.
 - Cambiar qué puede ver o hacer cada rol, los textos de los botones de acción o el contenido de las pantallas.
 - Rehacer el diseño de las pantallas de personal, usuarios y servicios más allá de sus migas y títulos.
@@ -90,7 +89,7 @@ Quien está tres clics dentro de una tarea tiene que entender en un vistazo dón
 paso atrás a mano, sin que las migas compitan con el título ni con la acción principal de la
 pantalla. Sistema: [docs/design/system.md](../../design/system.md) («Migas de pan», spec 033).
 
-Pantallas que toca: las 19 de la tabla «Pantallas y caminos», en el escritorio y en el móvil, y el
+Pantallas que toca: las 18 de la tabla «Pantallas y caminos», en el escritorio y en el móvil, y el
 menú del panel (entrada marcada). Recursos que existen: el componente de migas del sistema. Qué debe
 diseñarse: cómo se distingue el enlace del elemento actual sin depender del color (CA4), cómo se
 comporta un camino de tres elementos con un nombre largo a 320 px (CA10) y la actualización de
@@ -105,7 +104,7 @@ Modo: operar · sin ciclo de candidatos (supuesto) · la verificación es la del
 | ID | Qué se mide | Objetivo | Sale de |
 |---|---|---|---|
 | K1 | Migas en las pantallas de la tabla | presentes, un solo bloque, visibles sin desplazarse a 320, 390 y 1440 px | CA1 |
-| K2 | Aspecto de las migas | el mismo componente en las 19 pantallas, sin estilos propios de una pantalla | CA1 |
+| K2 | Aspecto de las migas | el mismo componente en las 18 pantallas, sin estilos propios de una pantalla | CA1 |
 | K3 | Enlace frente a elemento actual | se distinguen sin color; contraste ≥ 4,5:1 los dos | CA4 |
 | K4 | Camino largo a 320 px | sin desplazamiento horizontal; enlaces ≥ 44 px de alto en el móvil | CA10 |
 | K5 | Títulos de las pantallas de la tabla | ninguno es «Dashboard» | CA8 |
@@ -128,7 +127,7 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-12 | brecha | Destino de las migas | Siempre el padre fijo, venga de donde venga | usuario |
 | 2026-11-12 | brecha | Deudas vecinas | Entran la 033/R6 (accesibilidad de las migas) y los títulos «Dashboard» de servicios (parte de DS15) | usuario |
 | 2026-11-12 | brecha | Extiende 7 specs (008, 009, 010, 028, 033, 034, 035), por encima de 4 | Se mantiene junta: es el mismo cambio pequeño de navegación en cada una y solo tiene sentido igual en todas | usuario (división 044/045/046 del 2026-11-08; confirmada al aprobar, 2026-11-12) |
-| 2026-11-12 | supuesto | Camino de «Agendar cita» del paciente | «Mis citas › Agendar cita» (hoy parte de «Inicio»), igual que «Citas › Nueva cita» del personal; «Cancelar» lleva a «Mis citas» | razonable |
+| 2026-11-12 | contradicción | La spec ponía migas «Mis citas › Agendar cita», pero «Agendar cita» es una entrada del menú del paciente y las pantallas del menú no llevan migas (hallado en /plan 046) | «Agendar cita» queda sin migas, como las demás pantallas del menú; su «Cancelar» sigue llevando al panel | usuario (2026-11-12, /plan 046) |
 | 2026-11-12 | supuesto | Camino de las pantallas de edición | Con ficha: «sección › nombre › Editar» (hoy «sección › Editar: nombre»); servicios, que no tiene ficha: «Servicios › Editar servicio» | razonable (coincide con el destino de «Cancelar») |
 | 2026-11-12 | supuesto | Padre del expediente | La ficha del paciente, como hoy, aunque se abra desde el listado de expedientes | razonable (destino fijo) |
 | 2026-11-12 | supuesto | «Volver al detalle de la cita» cuando la cita no se puede reprogramar | Se conserva: es la única acción de ese aviso, no un «Volver» añadido | razonable |
@@ -142,8 +141,8 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
   - con `.migas`: `citas/show`, `citas/cliente-show`, `citas/cliente-agendar`, `pacientes/show`, `pacientes/create` (también la edición, vía `pacientes/edit`), `expedientes/create`, `expedientes/show`;
   - con migas en `style=""`: `citas/create`, `personal/create` (y `personal/edit`), `personal/show`, `usuarios/create` (y `usuarios/edit`), `usuarios/show`;
   - sin migas: `citas/partials/reprogramar` (lo usan `citas/reprogramar` y `citas/cliente-reprogramar`), `servicios/create`, `servicios/edit` (las dos sin `@section('title')`);
-  - `expedientes/show`: botón «← Volver al paciente» junto a las migas; `citas/cliente-agendar`: «Cancelar» lleva al panel.
-- El menú de `layouts/app.blade.php` marca la sección con `request()->is('…/citas*')`: `/cliente/agendar` no queda marcado (CA9).
+  - `expedientes/show`: botón «← Volver al paciente» junto a las migas; `citas/cliente-agendar`: migas «Inicio › Agendar cita» que se quitan (es una entrada del menú).
+- El menú de `layouts/app.blade.php` marca la sección con `request()->is('…/citas*')`; las pantallas de expedientes (`…/expedientes/…`) no marcan «Pacientes», que es el primer elemento de sus migas (CA9).
 - Tests que fijan el marcado actual de las migas: `MovilPacienteTest` (`#migas`, `.migas`, `.migas-actual`, reglas de `.migas a`), `MovilPacientesExpedientesTest` (`div#migas`), `MovilPersonalTest`. Cambiar el elemento o las reglas obliga a actualizarlos.
 - «Migas de pan» de `docs/design/system.md` cambia (cierra 033/R6): versión nueva del sistema.
 - Tocar `layouts/app.blade.php` obliga a `node docs/design/capturar.mjs --medir` en la verificación final de `/implement` y en `/review` (AGENTS.md).
@@ -154,3 +153,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 |---|---|---|
 | 2026-11-12 | Creada en `draft` | Petición del usuario: «arranca con la 046» (reservada en la 044) |
 | 2026-11-12 | Aprobada, con sus supuestos y sin dividir | Aprobación del usuario |
+| 2026-11-12 | «Agendar cita» sale de la tabla y queda sin migas (CA1, CA9, Problema); 18 pantallas | Contradicción hallada en /plan 046 (es una entrada del menú), resuelta y aprobada por el usuario |
