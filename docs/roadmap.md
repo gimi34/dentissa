@@ -566,6 +566,14 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   rechazado en «Reportes» se detecta por la sesión: una consulta válida que llegue antes que la redirección muestra una vez
   el error; 047/R3 el botón «Descargar» conserva el `id` y el nombre de test de «Imprimir», y el plan de la 047 no recoge el
   rótulo nuevo.
+- Spec 045, aceptados sin tarea de `/review` (2026-11-13; deuda menor, liberada en v0.18.0):
+  - 045/R4: la fecha de actualización de los términos y del aviso está repetida en las dos páginas y en las ventanas (y es una sola para las dos ventanas): una sola fuente y una por texto;
+  - 045/R6: el comportamiento de las ventanas del registro solo tiene un test de la estructura de su script; con un runner JS si el script pasa a `public/js/`;
+  - 045/R7: `horarioEnTexto()` vive en `PaginasPublicasController` y el parcial de las ventanas lo llama desde `@php` (llevarlo a una clase de dominio o pasarlo desde `RegisterController`);
+  - 045/R9: `aria-haspopup="dialog"` en los enlaces de la casilla también sin JavaScript, cuando navegan (ponerlo desde el script si hay `showModal`);
+  - 045/R10: cada sección de los textos legales con `aria-labelledby` crea una región para el lector de pantalla (7 y 8 por página, más las de las ventanas);
+  - 045/R11: el texto desplazable de la ventana no es enfocable con el teclado en navegadores antiguos (Safari, Chromium < 130);
+  - 045/R12: seleccionar texto dentro de la ventana y soltar sobre el velo la cierra.
 - Spec 044, aceptados en `/review` (2026-11-09 y 2026-11-10; liberada en v0.15.0):
   - 044/R9: el aviso «Has cerrado sesión» desaparece de golpe y el contenido sube (animar la altura o reservar el hueco);
   - 044/R11: la explicación de la 403 solo se prueba con una ruta sintética (falta un `Gate::authorize` real, p. ej. reprogramar como dentista);

@@ -59,7 +59,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
   El grupo `cliente` solo lleva `auth` y pone `role:cliente` ruta a ruta (RS2.a en docs/security.md).
 - Vistas en `resources/views/<modulo>/` en kebab-case, con tres layouts: `layouts/app.blade.php` para la
   app, `layouts/acceso.blade.php` para el inicio de sesión y la recuperación de contraseña (spec 041, con
-  `public/css/acceso.css`) y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038; `/galeria`, spec 039; con
+  `public/css/acceso.css`) y `layouts/publico.blade.php` para las páginas públicas (`/`, `/servicios`; spec 038; `/galeria`, spec 039; `/terminos` y `/aviso-de-privacidad`, spec 045; con
   `public/css/publico.css` y `public/js/publico.js` con `defer`; la página está completa sin él). El
   registro sigue con su propio HTML y `auth.css`.
 - Código nuevo: validación en servidor con `$request->validate()` y las reglas en la clase de

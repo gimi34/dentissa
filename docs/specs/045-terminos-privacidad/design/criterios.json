@@ -1,0 +1,199 @@
+{
+  "spec": "045-terminos-privacidad",
+  "mode": "leer",
+  "widths": [
+    320,
+    390,
+    1440
+  ],
+  "threshold": 80,
+  "floor": 3,
+  "budget": 5,
+  "tokens": {
+    "colors": [
+      "#000000",
+      "#137A5A",
+      "#185FA5",
+      "#1D9E75",
+      "#4B1528",
+      "#72243E",
+      "#7A1F3A",
+      "#854F0B",
+      "#8B4B61",
+      "#993556",
+      "#9B8290",
+      "#A32D2D",
+      "#B83C65",
+      "#C75078",
+      "#D4537E",
+      "#E1F5EE",
+      "#E6F1FB",
+      "#ED93B1",
+      "#F0DCE4",
+      "#F4C0D1",
+      "#FAEEDA",
+      "#FBEAF0",
+      "#FCEBEB",
+      "#FDF0F4",
+      "#FDF5F8",
+      "#FFFFFF"
+    ]
+  },
+  "gates": {
+    "contrast": 4.5,
+    "touch": 44,
+    "external_hosts": []
+  },
+  "pantallas": {
+    "terminos": {
+      "file": "terminos.html",
+      "url": "terminos"
+    },
+    "privacidad": {
+      "file": "privacidad.html",
+      "url": "aviso-de-privacidad"
+    },
+    "registro-dialogo": {
+      "file": "registro-dialogo.html",
+      "mode": "operar",
+      "gates": {
+        "external_hosts": [
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ]
+      }
+    }
+  },
+  "kpis": [
+    {
+      "id": "K1",
+      "pantalla": "terminos",
+      "name": "Título y primer párrafo en la primera pantalla",
+      "type": "above_fold_all",
+      "texts": [
+        "Términos de uso",
+        "Las reglas para usar este sitio y la cuenta de paciente."
+      ],
+      "ca": "modo leer"
+    },
+    {
+      "id": "K1-privacidad",
+      "pantalla": "privacidad",
+      "name": "Título y primer párrafo en la primera pantalla",
+      "type": "above_fold_all",
+      "texts": [
+        "Aviso de privacidad",
+        "Qué datos tuyos guarda la clínica, para qué y cómo puedes verlos, corregirlos o borrarlos."
+      ],
+      "ca": "modo leer"
+    },
+    {
+      "id": "K2",
+      "pantalla": "terminos",
+      "name": "Secciones en orden y fecha",
+      "type": "order",
+      "texts": [
+        "Última actualización",
+        "Quién ofrece este sitio",
+        "Tu cuenta",
+        "Citas en línea",
+        "Lo que no está permitido",
+        "No sustituye la consulta",
+        "Cambios a estos términos",
+        "Contacto"
+      ],
+      "ca": "CA1"
+    },
+    {
+      "id": "K2-privacidad",
+      "pantalla": "privacidad",
+      "name": "Secciones en orden y fecha",
+      "type": "order",
+      "texts": [
+        "Última actualización",
+        "Quién es responsable",
+        "Qué datos recabamos",
+        "Para qué los usamos",
+        "Con quién los compartimos",
+        "Cuánto los conservamos",
+        "Tus derechos",
+        "Cookies",
+        "Cambios a este aviso"
+      ],
+      "ca": "CA2"
+    },
+    {
+      "id": "K5",
+      "pantalla": "terminos",
+      "name": "Enlaces del pie",
+      "type": "visible",
+      "texts": [
+        "Términos de uso",
+        "Aviso de privacidad"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K5-privacidad",
+      "pantalla": "privacidad",
+      "name": "Enlaces del pie",
+      "type": "visible",
+      "texts": [
+        "Términos de uso",
+        "Aviso de privacidad"
+      ],
+      "ca": "CA6"
+    },
+    {
+      "id": "K6",
+      "pantalla": "*",
+      "name": "Estabilidad visual",
+      "type": "max_cls",
+      "value": 0.1,
+      "ca": "modo leer"
+    },
+    {
+      "id": "K7",
+      "pantalla": "*",
+      "name": "JavaScript de la ruta",
+      "type": "max_js_bytes",
+      "value": 102400,
+      "ca": "P10"
+    },
+    {
+      "id": "K8",
+      "pantalla": "registro-dialogo",
+      "name": "Ventana de los términos en el registro",
+      "type": "above_fold_all",
+      "texts": [
+        "Términos de uso",
+        "Cerrar",
+        "Quién ofrece este sitio"
+      ],
+      "ca": "CA4"
+    }
+  ],
+  "manual": [
+    {
+      "id": "K3",
+      "name": "Lista de secciones al principio",
+      "objetivo": "un enlace por sección, antes de la primera",
+      "como": "evaluate.mjs no tiene un tipo para esto: lo comprueba el test de la vista y la revisión del acta"
+    },
+    {
+      "id": "K4",
+      "name": "Largo de línea del texto",
+      "objetivo": "≤ 80 caracteres a 1440 px",
+      "como": "el texto lleva max-width: var(--measure) (62ch); lo comprueba el test de CSS y se mide a mano en el acta"
+    }
+  ],
+  "rubric": {
+    "weights": {
+      "jerarquia": 25,
+      "primera_pantalla": 25,
+      "sistema": 20,
+      "lectura": 15,
+      "plantilla": 15
+    }
+  }
+}

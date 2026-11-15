@@ -1,0 +1,114 @@
+/* Candidato c4 de la 045: lo que añaden las páginas legales a la composición de /servicios. Solo tokens.
+   Propone al sistema (1.15.0) un respaldo de Newsreader con sus medidas, como el de Montserrat (1.14.0): en una
+   página de lectura los títulos pesan más y el cambio de fuente movía el texto (c1: CLS 0,115 a 1440 px).
+   Dos familias, porque Georgia y Times no tienen las mismas medidas: la primera que tenga el sistema.
+   size-adjust = ancho de Newsreader / ancho de la de respaldo en ese peso (medido en Chromium con las fuentes de
+   Windows); override = ascenso (0,74) y descenso (0,27) de Newsreader / size-adjust. */
+@font-face {
+    font-family: "Newsreader respaldo";
+    font-weight: 500;
+    src: local("Georgia");
+    size-adjust: 97.25%;
+    ascent-override: 76.1%;
+    descent-override: 27.8%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Newsreader respaldo";
+    font-weight: 600 700;
+    src: local("Georgia Bold"), local("Georgia-Bold");
+    size-adjust: 85.28%;
+    ascent-override: 86.8%;
+    descent-override: 31.7%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Newsreader respaldo";
+    font-style: italic;
+    font-weight: 500;
+    src: local("Georgia Italic"), local("Georgia-Italic");
+    size-adjust: 91.1%;
+    ascent-override: 81.2%;
+    descent-override: 29.6%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Newsreader respaldo Times";
+    font-weight: 500;
+    src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif"), local("LiberationSerif");
+    size-adjust: 106.65%;
+    ascent-override: 69.4%;
+    descent-override: 25.3%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Newsreader respaldo Times";
+    font-weight: 600 700;
+    src: local("Times New Roman Bold"), local("TimesNewRomanPS-BoldMT"), local("Liberation Serif Bold"), local("LiberationSerif-Bold");
+    size-adjust: 102.74%;
+    ascent-override: 72%;
+    descent-override: 26.3%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "Newsreader respaldo Times";
+    font-style: italic;
+    font-weight: 500;
+    src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"), local("Liberation Serif Italic"), local("LiberationSerif-Italic");
+    size-adjust: 101.15%;
+    ascent-override: 73.2%;
+    descent-override: 26.7%;
+    line-gap-override: 0%;
+}
+:root { --font-display: "Newsreader", "Newsreader respaldo", "Newsreader respaldo Times", ui-serif, Georgia, serif; }
+
+.lb-texto p,
+.lb-texto ul { max-width: var(--measure); margin: 0; }
+.lb-texto p + p,
+.lb-texto p + ul,
+.lb-texto ul + p { margin-top: var(--space-4); }
+.lb-texto ul { display: grid; gap: var(--space-3); padding-left: var(--space-6); list-style: disc; }
+.lb-texto li::marker { color: var(--p400); }
+.lb-texto a { color: var(--text); text-decoration: underline; text-decoration-color: var(--p400); text-underline-offset: var(--space-1); }
+.lb-texto strong { font-weight: var(--weight-bold); }
+
+/* c4: una rejilla con cuatro zonas. En escritorio, el título y «En pocas palabras» arriba, y el índice y el texto
+   debajo (las columnas de /servicios: 1 : 3). Por debajo de 900 px, en el orden del documento: título, índice,
+   resumen y texto, para que la primera pantalla muestre el título, la fecha y el comienzo del índice. */
+.lb-legal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.4fr);
+    grid-template-areas: "cabeza cabeza resumen" "indice texto texto";
+    gap: var(--space-seccion) var(--space-8);
+    align-items: start;
+}
+.lb-legal__cabeza { grid-area: cabeza; align-self: end; margin-bottom: 0; }
+.lb-indice--legal { grid-area: indice; }
+.lb-resumen { grid-area: resumen; }
+.lb-legal .lb-texto { grid-area: texto; max-width: var(--measure); }
+
+/* «En pocas palabras»: la tarjeta de la agenda del inicio (.pub-book__card, con su arco), más compacta. */
+.lb-resumen { gap: var(--space-5); padding: var(--space-8); }
+.lb-resumen > :not(svg) { position: relative; }
+.lb-resumen h2 { font-size: var(--text-publico-h1); }
+.lb-resumen ul { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.lb-resumen li { padding-top: var(--space-4); border-top: var(--border-width) solid var(--p600); }
+.lb-resumen p { margin: 0; color: var(--p100); }
+.lb-resumen a { color: var(--white); text-decoration: underline; text-underline-offset: var(--space-1); }
+
+/* El índice de /servicios con su título y el número de cada sección, que también lleva el título de la sección. */
+.lb-indice--legal .pub-etiqueta { grid-column: 1 / -1; margin-bottom: var(--space-2); }
+.lb-num {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--p600);
+    font-family: var(--font-publica);
+    font-size: var(--text-publico-small);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-etiqueta);
+}
+.lb-texto section { scroll-margin-top: calc(var(--touch-min) * 2 + var(--space-8)); }
+
+@media (max-width: 899px) {
+    .lb-legal { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cabeza" "indice" "resumen" "texto"; gap: var(--space-8); }
+}

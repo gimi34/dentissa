@@ -146,3 +146,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-09 | CA1 y CA3: la recuperación de contraseña sale al inicio de sesión | Decisión del usuario al verificar T020 (/implement 044); aprobada por el usuario |
 | 2026-11-09 | CA5: la entrada del panel se llama «Ver sitio web» | Decisión del usuario al verificar T023 (/implement 044) |
 | 2026-11-10 | Liberada en v0.15.0 (PR #70, tag sobre 60d7324; producción verificada por el usuario) | /release |
+| 2026-11-13 | La 045 (v0.18.0) bajó en `NavegacionSalidasCssTest::ESTILOS_PREVIOS` los `style=""` del registro (17 → 15 y 6 → 4) al quitar los de los enlaces de la casilla | /release |

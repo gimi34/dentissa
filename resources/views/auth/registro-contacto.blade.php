@@ -133,8 +133,8 @@
                 <div class="field-group">
                     <label class="checkbox-label">
                         <input type="checkbox" name="terminos" id="terminos" required>
-                        Acepto los <a href="#" style="color:var(--p500)">términos de uso</a> y la
-                        <a href="#" style="color:var(--p500)">política de privacidad</a> de Dentissa
+                        Acepto los <a href="{{ route('terminos') }}" data-dialogo="dialogo-terminos" aria-haspopup="dialog">términos de uso</a> y el
+                        <a href="{{ route('privacidad') }}" data-dialogo="dialogo-privacidad" aria-haspopup="dialog">aviso de privacidad</a> de Dentissa
                     </label>
                 </div>
 
@@ -151,5 +151,7 @@
         </div>
     </div>
 </div>
+{{-- Spec 045 (CA4): las ventanas de los términos y del aviso. --}}
+@include('auth._dialogos-legales')
 </body>
 </html>

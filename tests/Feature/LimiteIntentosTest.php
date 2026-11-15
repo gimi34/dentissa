@@ -120,6 +120,8 @@ class LimiteIntentosTest extends TestCase
             'email' => $email,
             'password' => 'secreto-de-pruebas',
             'password_confirmation' => 'secreto-de-pruebas',
+            // Spec 045 (T015, CA5): el alta exige la casilla de los términos y el aviso también en el servidor.
+            'terminos' => 'on',
         ];
     }
 

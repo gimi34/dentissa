@@ -447,7 +447,7 @@
     --color-p800: #72243E; /* --p800 de app.css, para las muestras del acceso (spec 041) */
     --focus-ring-width: 2px; --focus-ring-offset: 2px;
     --font-publica: "Montserrat", "Montserrat respaldo", ui-sans-serif, system-ui, sans-serif; /* spec 038, 1.9.0 (antes Lexend); respaldo, 1.14.0 */
-    --font-display: "Newsreader", ui-serif, Georgia, serif; /* spec 038, 1.10.0 (en 1.9.0, Cormorant Garamond) */
+    --font-display: "Newsreader", "Newsreader respaldo", "Newsreader respaldo Times", ui-serif, Georgia, serif; /* spec 038, 1.10.0 (en 1.9.0, Cormorant Garamond); respaldos, 1.16.0 (spec 045) */
     --text-display: clamp(52px, calc(52px + 68 * (100vw - 320px) / 1120), 120px); --text-statement: clamp(28px, calc(28px + 16 * (100vw - 320px) / 1120), 44px); /* spec 038, 1.9.0 */
     --text-seccion: clamp(40px, calc(40px + 40 * (100vw - 320px) / 1120), 80px); --text-indice: clamp(28px, calc(28px + 28 * (100vw - 320px) / 1120), 56px); /* spec 038, 1.9.0 */
     --text-firma: clamp(76px, calc(76px + 284 * (100vw - 320px) / 1120), 360px); --text-lead: clamp(18px, calc(18px + 3 * (100vw - 320px) / 1120), 21px); /* spec 038, 1.9.0 */
@@ -890,6 +890,14 @@
         <tfoot><tr><th scope="row">Total</th><td>40</td><td>31</td></tr></tfoot></table>
       <p class="r47-impresa">Melissa López N. · Odontología integral — Reportes — Del 1 al 30 de noviembre de 2026 — Generado el 11 de noviembre de 2026</p>
     </div></div></div>
+    <h3 id="legal-045">Página legal (spec 045, 1.16.0)</h3>
+    <p class="v-note">«Términos de uso» y «Aviso de privacidad» con la composición de <code>/servicios</code>
+      (<a href="../specs/045-terminos-privacidad/design.md">diseño</a>, <a href="../specs/045-terminos-privacidad/design/candidatos/c4/privacidad.html">candidato <code>c4</code></a>):
+      rejilla <code>.lb-legal</code> de cuatro zonas (desde 900 px, título y «En pocas palabras» arriba, índice y texto debajo, en
+      <code>1fr 1.6fr 1.4fr</code>; por debajo, una columna: título, índice, resumen y texto); índice de <code>/servicios</code> con su
+      título «En esta página» y el número de cada sección; texto corrido <code>.lb-texto</code> a <code>--measure</code>; número de
+      sección <code>.lb-num</code> encima del título; «En pocas palabras» <code>.lb-resumen</code>, la tarjeta de la agenda más
+      compacta. Sin colores nuevos. Respaldos de Newsreader con sus medidas en <code>--font-display</code> (Georgia y Times).</p>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
     <p class="v-note">Muestra viva de la paginación de la consulta de auditoría
       (<a href="../specs/020-auditoria-base/design.md">diseño</a>, <code>c4</code>), con los tokens de

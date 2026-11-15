@@ -37,6 +37,9 @@ class RegisterController extends Controller
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
+
+            // Spec 045 (CA5, D5): la casilla de los términos y el aviso, también en el servidor.
+            'terminos' => ['accepted'],
         ], [
             'nombre.required' => 'El nombre es obligatorio.',
             'apellido.required' => 'El apellido es obligatorio.',
@@ -47,6 +50,7 @@ class RegisterController extends Controller
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'terminos.accepted' => 'Debes aceptar los términos de uso y el aviso de privacidad.',
         ]);
 
         // Crear usuario y paciente en una sola transacción
@@ -126,7 +130,7 @@ class RegisterController extends Controller
             'terminos' => ['accepted'],
         ], [
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
-            'terminos.accepted' => 'Debes aceptar los términos de uso y la política de privacidad.',
+            'terminos.accepted' => 'Debes aceptar los términos de uso y el aviso de privacidad.',
         ]);
 
         $usuario = DB::transaction(function () use ($google, $data) {

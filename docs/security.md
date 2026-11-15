@@ -68,6 +68,7 @@ updated: 2026-10-18
 | `GET /`, `GET /servicios` | HTTP público | no (con sesión, `/` redirige al panel del rol) | Páginas públicas (spec 038): sin parámetros; solo el catálogo activo (nombre, descripción y categoría), escapado (TM1, TM2), con una consulta por petición. Sin límite propio: riesgo aceptado TM6 de la 038 (Cloudflare delante, spec 030). `/` incrusta el mapa de Google: `frame-src https://www.google.com` solo en `/` (`docker/nginx/seguridad/marcos.conf`), y el navegador del visitante pide el mapa a Google al acercarse (`loading="lazy"`), enviando solo el dominio de origen (`referrerpolicy`); la página lo avisa («El mapa lo sirve Google.», TM4) |
 | `GET /galeria`, `GET /galeria/fotos/{foto}/{ancho}` | HTTP público | no | Spec 039: la galería y cada foto (`{foto}` UUID y `{ancho}` 800 o 1600; la ruta del archivo sale de la fila); fotos en `image/webp` con `nosniff`, `no-cache, private` y `ETag`; las de paciente, con `noindex` |
 | `GET /admin/reportes` | HTTP, parámetros de consulta | sí, `role:admin` y Gate `ver-reportes` | Spec 047: solo lectura y solo totales (sin datos de pacientes); `desde` y `hasta` como `AAAA-MM-DD`, las dos o ninguna, en orden y con 366 días como mucho; un periodo no válido vuelve a `/admin/reportes` con su error, sin calcular nada; consulta con bindings |
+| `GET /terminos`, `GET /aviso-de-privacidad` | HTTP público | no | Spec 045: texto fijo, sin parámetros ni datos de cuentas; los datos de la clínica salen de la configuración y se pintan escapados. El registro (`/registro`, `/registro/contacto`) lleva el mismo texto en dos ventanas y valida la casilla `terminos` en el servidor |
 | `POST /admin/galeria` y el resto de `admin.galeria.*` | HTTP, subida de archivos | sí, `role:admin` y Gate `gestionar-galeria` | Spec 039: JPG, PNG o WebP por contenido, como mucho 5 MB (nginx 20 MB) y 6000 px por lado (4000 px si es PNG, leído de la cabecera antes de decodificar), 12 fotos; se guardan solo los píxeles recodificados en WebP, nunca el original |
 | `/admin/*` | HTTP | sí, `role:admin` | |
 | `/dentista/*` | HTTP | sí, `role:dentista` | pacientes y expedientes sin filtro de alcance |
@@ -257,7 +258,7 @@ Correcciones:
 - RS8.a `add_header` en nginx con CSP, X-Frame-Options/frame-ancestors, X-Content-Type-Options y Referrer-Policy (fragmento `docker/nginx/seguridad/comunes.conf`) — estado: mitigada (v0.10.0)
 - RS8.b HSTS en producción detrás de TLS (fragmento `produccion.conf`) — estado: mitigada (v0.10.0)
 - RS8.c HSTS en staging — estado: pendiente (→ objetivo 5, cuando exista staging)
-- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05). El inicio de sesión ya no tiene `style=""` ni scripts incrustados (spec 041)
+- RS8.d CSP estricta, sin `'unsafe-inline'`: sacar de las vistas los scripts incrustados, los manejadores `on…` y los `style=""`, por pantallas — estado: pendiente (→ roadmap, decisión del usuario, 2026-10-05). El inicio de sesión ya no tiene `style=""` ni scripts incrustados (spec 041); la spec 045 quitó del registro los `style=""` de los dos enlaces de la casilla, pero le añadió el script en línea de las ventanas de los términos y del aviso (`resources/views/auth/_dialogos-legales.blade.php`), que se moverá a `public/js/` al pagar esta corrección
 
 ### RS9 · Media — Sesión y email no protegidos al cambiar credenciales (A07 Authentication Failures)
 Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar el email del
@@ -355,6 +356,11 @@ introduce (no cambia `composer.lock`).
 
 Correcciones:
 - RS17.a Actualizar `phpseclib/phpseclib` a 3.0.57 o posterior — estado: mitigada (v0.4.1)
+
+Aviso posterior, fuera de las correcciones de la spec 029: PKSA-h7cz-q7zq-mdkt (GHSA-w3p9-g4p2-h3rr,
+2026-11-02, sin severidad asignada; consumo de CPU sin límite al leer claves cifradas, PFX o CMS), que hacía
+fallar el `composer audit` de la CI. Corregido con `phpseclib/phpseclib` 3.0.58 en v0.17.0 (spec 047; la spec 045
+hizo la misma subida en su rama).
 
 ### RS18 · Alta — Imágenes base de producción con avisos sin corrección (A03 Software Supply Chain Failures)
 Detectado el 2026-10-04 al escanear con `trivy image` las imágenes de la spec 030 (T033): la base

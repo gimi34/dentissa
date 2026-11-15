@@ -17,6 +17,9 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Spec 039: las fotos de la galería en el inicio y en `/galeria`, y la entrega de cada foto
  * (`foto()`, plan → «Entrega de las fotos»).
+ *
+ * Spec 045: los términos de uso y el aviso de privacidad, texto fijo con los datos de la clínica de
+ * `config('clinica.contacto')` (D4).
  */
 class PaginasPublicasController extends Controller
 {
@@ -37,6 +40,38 @@ class PaginasPublicasController extends Controller
     public function servicios()
     {
         return view('publico.servicios', ['categorias' => Servicio::porCategoria()]);
+    }
+
+    // ── Términos de uso y aviso de privacidad (spec 045) ─────────────────────
+    public function terminos()
+    {
+        return view('publico.terminos', ['contacto' => config('clinica.contacto'), 'horario' => self::horarioEnTexto()]);
+    }
+
+    public function privacidad()
+    {
+        return view('publico.aviso-privacidad', ['contacto' => config('clinica.contacto'), 'horario' => self::horarioEnTexto()]);
+    }
+
+    /**
+     * El horario de la clínica en una frase, para el texto de las dos páginas: ['Lunes a viernes' =>
+     * '9:00–20:00', 'Sábados' => '9:00–14:00'] → «de lunes a viernes de 9:00 a 20:00 y los sábados de 9:00 a
+     * 14:00». El primer tramo va con «de» y los siguientes con «los» (días en plural).
+     */
+    public static function horarioEnTexto(): string
+    {
+        $tramos = [];
+        foreach (config('clinica.contacto.horario') as $dias => $horas) {
+            // /review R3: un tramo sin guion largo («Cerrado») se escribe tal cual, en minúsculas.
+            $partes = explode('–', $horas);
+            $tramos[] = ($tramos === [] ? 'de ' : 'los ').mb_strtolower($dias).(count($partes) === 2
+                ? " de {$partes[0]} a {$partes[1]}"
+                : ' '.mb_strtolower(trim($horas)));
+        }
+
+        return count($tramos) > 1
+            ? implode(', ', array_slice($tramos, 0, -1)).' y '.end($tramos)
+            : ($tramos[0] ?? '');
     }
 
     // ── Galería (spec 039) ───────────────────────────────────────────────────
