@@ -534,8 +534,9 @@ class MovilPacienteTest extends TestCase
             '.pestanas-citas a' => ['padding: var(--space-4) var(--space-1)', 'font-size: var(--text-body)', 'font-weight: var(--weight-strong)', 'text-decoration: none', 'color: var(--text-muted)', 'border-bottom: var(--border-width-strong) solid transparent'],
             '.pestanas-citas a:first-child' => ['margin-right: var(--space-7)'],
             '.pestanas-citas a.activa' => ['color: var(--p500)', 'border-bottom-color: var(--p400)'],
-            '.migas' => ['display: flex', 'align-items: center', 'gap: var(--space-3)', 'margin-bottom: var(--space-7)', 'font-size: var(--text-meta)', 'color: var(--text-muted)'],
-            '.migas a' => ['color: var(--text-muted)', 'text-decoration: none'],
+            // Spec 046: las migas pasan a nav con lista; el enlace, en --p600 subrayado (cierra 033/R6).
+            '.migas' => ['margin-bottom: var(--space-7)', 'font-size: var(--text-meta)', 'color: var(--text)'],
+            '.migas a' => ['color: var(--p600)', 'text-decoration: underline'],
             '.migas-actual' => ['color: var(--text)'],
         ];
         foreach ($esperadas as $selector => $declaraciones) {

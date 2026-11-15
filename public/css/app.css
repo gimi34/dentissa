@@ -624,8 +624,12 @@ tr:hover td { background: var(--p50); }
 .pestanas-citas a:first-child { margin-right: var(--space-7); }
 .pestanas-citas a.activa { color: var(--p500); border-bottom-color: var(--p400); }
 /* Migas de pan del detalle de la cita y de agendar (T025). */
-.migas { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-7); font-size: var(--text-meta); color: var(--text-muted); }
-.migas a { color: var(--text-muted); text-decoration: none; }
+/* Migas de pan: navegación con lista ordenada (spec 046). El enlace se distingue por el subrayado. */
+.migas { margin-bottom: var(--space-7); font-size: var(--text-meta); color: var(--text); }
+.migas ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.migas li { display: flex; align-items: center; gap: var(--space-3); min-width: 0; overflow-wrap: anywhere; }
+.migas a { color: var(--p600); text-decoration: underline; }
+.migas a:hover { color: var(--p800); }
 .migas-actual { color: var(--text); }
 /* Foco del sistema en pestañas y migas (/review 033 R7). */
 .pestanas-citas a:focus-visible, .migas a:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
