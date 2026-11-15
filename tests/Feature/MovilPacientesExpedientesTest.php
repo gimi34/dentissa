@@ -168,8 +168,9 @@ class MovilPacientesExpedientesTest extends TestCase
         ];
         foreach ($vistas as [$usuario, $url]) {
             $xpath = $this->xpath($this->actingAs($usuario)->get($url)->assertOk()->getContent());
-            $migas = $xpath->query("//div[@id='migas'][contains(concat(' ', normalize-space(@class), ' '), ' migas ')]");
-            $this->assertSame(1, $migas->length, "{$url}: las migas son div#migas.migas.");
+            $migas = $xpath->query("//*[@id='migas'][contains(concat(' ', normalize-space(@class), ' '), ' migas ')]");
+            // El elemento (nav con lista) lo fija NavegacionInternaTest desde la spec 046.
+            $this->assertSame(1, $migas->length, "{$url}: las migas son #migas.migas.");
             $this->assertSame(0, $xpath->query("//*[@id='migas']/descendant-or-self::*[@style]")->length, "{$url}: migas sin style=\"\".");
             $this->assertSame(1, $xpath->query("//*[@id='migas']//*[contains(@class,'migas-actual')]")->length, "{$url}: página actual en .migas-actual.");
         }
