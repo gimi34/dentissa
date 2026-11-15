@@ -44,7 +44,7 @@
                 </svg>
                 Citas
             </a>
-            <a href="/admin/pacientes" class="nav-item {{ request()->is('admin/pacientes*') ? 'active' : '' }}" @if(request()->is('admin/pacientes*')) aria-current="page" @endif>
+            <a href="/admin/pacientes" class="nav-item {{ request()->is('admin/pacientes*', 'admin/expedientes*') ? 'active' : '' }}" @if(request()->is('admin/pacientes*', 'admin/expedientes*')) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
@@ -113,14 +113,14 @@
                 </svg>
                 Mis Citas
             </a>
-            <a href="/dentista/pacientes" class="nav-item {{ request()->is('dentista/pacientes*') ? 'active' : '' }}" @if(request()->is('dentista/pacientes*')) aria-current="page" @endif>
+            <a href="/dentista/pacientes" class="nav-item {{ request()->is('dentista/pacientes*', 'dentista/expedientes/*') ? 'active' : '' }}" @if(request()->is('dentista/pacientes*', 'dentista/expedientes/*')) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                 </svg>
                 Pacientes
             </a>
-            <a href="/dentista/expedientes" class="nav-item {{ request()->is('dentista/expedientes*') ? 'active' : '' }}" @if(request()->is('dentista/expedientes*')) aria-current="page" @endif>
+            <a href="/dentista/expedientes" class="nav-item {{ request()->is('dentista/expedientes') ? 'active' : '' }}" @if(request()->is('dentista/expedientes')) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
@@ -152,7 +152,7 @@
                 </svg>
                 Citas
             </a>
-            <a href="/asistente/pacientes" class="nav-item {{ request()->is('asistente/pacientes*') ? 'active' : '' }}" @if(request()->is('asistente/pacientes*')) aria-current="page" @endif>
+            <a href="/asistente/pacientes" class="nav-item {{ request()->is('asistente/pacientes*', 'asistente/expedientes*') ? 'active' : '' }}" @if(request()->is('asistente/pacientes*', 'asistente/expedientes*')) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
