@@ -1,7 +1,7 @@
 ---
 id: 048
 slug: citas-panel-detalle
-status: approved
+status: implemented
 created: 2026-11-14
 extends: [012, 034]
 ---
@@ -22,15 +22,15 @@ consultar la cita de alguien que acaba de llegar.
 - Como paciente, quiero abrir una cita de mi historial desde el panel, para ver cómo quedó sin ir a «Mis citas».
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un administrador en su panel con citas hoy, cuando pulsa en cualquier parte de la fila de una cita de «Citas de hoy» (en el móvil, de la tarjeta), entonces llega al detalle de esa cita, el mismo que abre desde «Citas».
-- [ ] CA2 · Dada una asistente en su panel con citas hoy, cuando pulsa en cualquier parte de la fila de una cita de «Agenda de hoy» (en el móvil, de la tarjeta), entonces llega al detalle de esa cita.
-- [ ] CA3 · Dada una dentista en su panel con citas hoy, cuando pulsa en cualquier parte de una cita de «Agenda de hoy» (hora, nombre, servicio o el botón «Ver detalle»), entonces llega al detalle de esa cita; la tarjeta «Próximo paciente» sigue abriendo la misma cita, como hoy.
-- [ ] CA4 · Dado un paciente en su panel con citas pasadas, cuando pulsa en cualquier parte de una fila del «Historial» (en el móvil, de la tarjeta), entonces llega al detalle de esa cita, el mismo que abre desde «Mis citas»; «Tu próxima cita» sigue con su botón «Ver detalles», «Reprogramar» y «Cancelar» como hoy.
-- [ ] CA5 · Dada cualquiera de esas listas, cuando se recorre con el teclado, entonces cada cita es una sola parada de foco, con el foco visible alrededor de toda la fila o tarjeta, y un lector de pantalla la anuncia como enlace con la hora (o la fecha, en el historial) y el nombre del paciente (en el historial, el servicio); Intro la abre.
-- [ ] CA6 · Dada una fila o tarjeta de cita, cuando el puntero pasa por encima, entonces el cursor es el de un enlace y, en el escritorio, la fila cambia de fondo para indicar que se puede abrir; en el móvil (por debajo de 900 px) la tarjeta conserva su fondo blanco, como decidió la 034 (A57); el resto del panel no cambia.
-- [ ] CA7 · Dado un panel sin citas hoy (o un paciente sin historial), cuando se abre, entonces se ve el mismo estado vacío de hoy, sin nada que pulsar de más.
-- [ ] CA8 (abuso) · Como usuario con sesión, cambio a mano la dirección del detalle al que lleva una cita del panel por la de una cita que no puedo ver (de otro paciente, o de un dentista que no es mío como asistente o dentista) → la respuesta es la misma de hoy para esa cita (no encontrada o acceso denegado) y no muestra nada de ella.
-- [ ] CA9 · Dado el panel de cada rol en el escritorio y en el móvil (320, 390 y 1440 px), cuando se compara con el de antes de la 048, entonces solo cambian el aspecto al pasar el puntero y el foco de las citas; ni las columnas ni el contenido de cada cita cambian, y en el móvil cada cita sigue siendo una tarjeta sin desplazamiento lateral.
+- [x] CA1 · Dado un administrador en su panel con citas hoy, cuando pulsa en cualquier parte de la fila de una cita de «Citas de hoy» (en el móvil, de la tarjeta), entonces llega al detalle de esa cita, el mismo que abre desde «Citas».
+- [x] CA2 · Dada una asistente en su panel con citas hoy, cuando pulsa en cualquier parte de la fila de una cita de «Agenda de hoy» (en el móvil, de la tarjeta), entonces llega al detalle de esa cita.
+- [x] CA3 · Dada una dentista en su panel con citas hoy, cuando pulsa en cualquier parte de una cita de «Agenda de hoy» (hora, nombre, servicio o el botón «Ver detalle»), entonces llega al detalle de esa cita; la tarjeta «Próximo paciente» sigue abriendo la misma cita, como hoy.
+- [x] CA4 · Dado un paciente en su panel con citas pasadas, cuando pulsa en cualquier parte de una fila del «Historial» (en el móvil, de la tarjeta), entonces llega al detalle de esa cita, el mismo que abre desde «Mis citas»; «Tu próxima cita» sigue con su botón «Ver detalles», «Reprogramar» y «Cancelar» como hoy.
+- [x] CA5 · Dada cualquiera de esas listas, cuando se recorre con el teclado, entonces cada cita es una sola parada de foco, con el foco visible alrededor de toda la fila o tarjeta, y un lector de pantalla la anuncia como enlace con la hora (o la fecha, en el historial) y el nombre del paciente (en el historial, el servicio); Intro la abre.
+- [x] CA6 · Dada una fila o tarjeta de cita, cuando el puntero pasa por encima, entonces el cursor es el de un enlace y, en el escritorio, la fila cambia de fondo para indicar que se puede abrir; en el móvil (por debajo de 900 px) la tarjeta conserva su fondo blanco, como decidió la 034 (A57); el resto del panel no cambia.
+- [x] CA7 · Dado un panel sin citas hoy (o un paciente sin historial), cuando se abre, entonces se ve el mismo estado vacío de hoy, sin nada que pulsar de más.
+- [x] CA8 (abuso) · Como usuario con sesión, cambio a mano la dirección del detalle al que lleva una cita del panel por la de una cita que no puedo ver (de otro paciente, o de un dentista que no es mío como asistente o dentista) → la respuesta es la misma de hoy para esa cita (no encontrada o acceso denegado) y no muestra nada de ella.
+- [x] CA9 · Dado el panel de cada rol en el escritorio y en el móvil (320, 390 y 1440 px), cuando se compara con el de antes de la 048, entonces solo cambian el aspecto al pasar el puntero y el foco de las citas; ni las columnas ni el contenido de cada cita cambian, y en el móvil cada cita sigue siendo una tarjeta sin desplazamiento lateral.
 
 ## Fuera de alcance
 - El calendario y la lista compacta del apartado «Citas» (spec 049).
@@ -109,3 +109,4 @@ Ninguna.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-11-14 | CA6 (sin fondo al pasar el puntero en la tarjeta del móvil), K1 y RNF (44 px solo en el móvil), Decisiones (A1, A4, A14); vuelve a `draft` | `/analyze` r1: A1, A4, A14 |
+| 2026-11-14 | Implementada (T001, T010–T014, T019–T024, T090–T092); suite 1011 en verde; verificación manual del usuario | /implement 048 |
