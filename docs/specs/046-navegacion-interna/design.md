@@ -4,13 +4,13 @@ status: approved            # draft | approved (solo el usuario aprueba)
 exploration: none        # sin ciclo de candidatos (supuesto de la spec, aprobado por el usuario el 2026-11-12); motivo en "Resultado"
 system_version: 1.15.0
 created: 2026-11-12
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 # Diseño · 046 Navegación interna
 
 Hecho con `/design-spec 046` en modo sin exploración, sobre `docs/design/system.md` 1.15.0. Los
-criterios están en la spec («Criterios de diseño», K1–K5). No hay `design/criterios.json` ni
+criterios están en la spec («Criterios de diseño», K1–K6). No hay `design/criterios.json` ni
 candidatos.
 
 ## Resultado
@@ -28,6 +28,7 @@ corrige en lo que pide la deuda 033/R6. La spec pide diseño directo (Decisiones
 | K3 · Enlace frente a elemento actual (CA4) | se distinguen sin color; contraste ≥ 4,5:1 los dos | test de las reglas y del contraste de los tokens + verificación del usuario |
 | K4 · Camino largo a 320 px (CA10) | sin desplazamiento horizontal; enlaces ≥ 44 px de alto en el móvil | `capturar.mjs --medir` con un nombre largo + verificación del usuario |
 | K5 · Títulos (CA8) | ninguno es «Dashboard» | test sobre el HTML |
+| K6 · Escritorio de las pantallas de la 033–035 (CA12) | fuera de las migas, el botón quitado y la entrada marcada, igual que antes | `capturar.mjs --medir` contra producción, con esas zonas excluidas; «Agendar cita» y «Reprogramar» del paciente, verificación del usuario |
 | Puertas | contraste AA, foco visible, toque ≥ 44 px, sin desborde a 320 px | revisión contra `system.html` en `/review` y `capturar.mjs --medir` |
 
 ## Imágenes de muestra
@@ -100,3 +101,4 @@ Ninguno.
 | 2026-11-12 | diseño | Aprobación del acta | Aprobada | usuario |
 | 2026-11-12 | refinado | «Agendar cita» es una entrada del menú (hallado en /plan 046) | Sale de las pantallas con migas: quedan 18; el componente no cambia | usuario |
 | 2026-11-12 | refinado | /analyze r1 (A4, A7, A8): texto del primer elemento, sitio del separador y posición respecto de los avisos | El texto es el de la entrada del menú de cada rol; el separador va dentro del elemento de la lista; las migas van debajo del aviso del sistema, como hoy | usuario |
+| 2026-11-14 | refinado | /analyze r2 (A17, A23): K6 no figuraba en el acta y la «línea base nueva» no es realizable | K6 se comprueba con `capturar.mjs --medir` contra producción, excluyendo las zonas que la 046 cambia; el componente no cambia | usuario (opción 1, 2026-11-12) |

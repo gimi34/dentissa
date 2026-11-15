@@ -1,6 +1,6 @@
 ---
 spec: 046-navegacion-interna
-status: approved   # draft | approved | blocked
+status: draft   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-12
 ---
@@ -17,20 +17,22 @@ botón «Volver al paciente» del expediente. El aspecto nuevo (enlace en `--p60
 pasa de línea) va en las reglas `.migas` de `public/css/app.css`. El menú de `layouts/app.blade.php`
 amplía los patrones que marcan «Pacientes» para las pantallas de expedientes, y las dos pantallas de
 servicios declaran su título. Un test nuevo, `NavegacionInternaTest`, recorre las 18 pantallas con
-los roles que las abren.
+los roles que las abren, con un caso por pantalla y rol. La comparación del escritorio de
+`docs/design/capturar.mjs --medir` sigue siendo contra producción y deja fuera las zonas que la 046
+cambia a propósito (D12).
 
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste | Cómo se verifica |
 |---|---|---|---|
 | P1 Spec aprobada antes de código | ✅ | Spec 046 y su acta de diseño aprobadas; nada se implementa sin `tasks.md` aprobado | `python .ai/bin/aidd.py status`; hook del plugin |
-| P2 Test que falla antes y pasa después | ✅ | Cada CA con test en `NavegacionInternaTest` que falla hoy (pantallas sin migas, sin navegación con nombre, reglas de color, «Cancelar» de «Editar usuario»); CA6 en los otros nueve formularios y la parte de permisos de CA11 son de caracterización | test: Trazabilidad; las caracterizaciones se comprueban rompiendo el destino de «Cancelar» y el middleware de rol |
+| P2 Test que falla antes y pasa después | ✅ | Cada CA con test en `NavegacionInternaTest` que falla hoy (pantallas sin migas, sin navegación con nombre, reglas de color, «Cancelar» de «Editar usuario»); el test de CA6 compara con el destino fijo de la tabla, así que antes de implementar falla solo en «Editar usuario»; en los otros nueve formularios y en la parte de permisos de CA11 es de caracterización | test: Trazabilidad; las caracterizaciones se comprueban rompiendo el destino de «Cancelar» y el middleware de rol |
 | P3 Autorización en el servidor | ✅ | Ninguna ruta ni Gate cambia; las migas no deciden acceso y solo se pintan en pantallas ya autorizadas | test: `test_una_pantalla_de_otro_rol_responde_como_hoy_sin_migas` (caracterización) |
 | P4 Entrada validada y SQL con bindings | ✅ | Sin entradas ni consultas nuevas; el parcial pinta con la salida escapada de Blade (dobles llaves), nunca la salida sin escapar | test: `test_el_nombre_con_codigo_se_pinta_como_texto`; semgrep sobre lo tocado |
 | P5 Nada sensible en el repositorio | ✅ | Los tests crean sus datos con nombres sintéticos | `gitleaks detect --no-banner` en `/implement` y CI |
 | P6 Sin vulnerabilidades críticas o altas | ✅ | Sin dependencias nuevas; línea base del 2026-11-12: `composer audit` y `npm audit --audit-level=high` sin hallazgos | las herramientas en `/review` y `/release` |
 | P7 Auditoría | ➖ | Sin accesos, permisos ni acciones nuevas; lo que hoy se audita no cambia (spec, «Auditoría») | — |
 | P8 Correlación y logs | ➖ | No añade logs ni peticiones | — |
-| P9 Solo el sistema de diseño | ✅ | Reglas `.migas` con tokens de 1.15.0, sin `style=""`; se eliminan cinco bloques con estilos en línea; «Migas de pan» se actualiza primero en `system.md`; WCAG AA | test: reglas y contraste (`test_las_reglas_de_las_migas…`, `test_el_contraste…`), ningún `style` dentro de `#migas`; manual: `/review` contra `system.html` y `capturar.mjs --medir` |
+| P9 Solo el sistema de diseño | ✅ | Reglas `.migas` con tokens de 1.15.0, sin `style=""`; se eliminan cinco bloques con estilos en línea; «Migas de pan» se actualiza primero en `system.md`; WCAG AA | test: reglas y contraste (`test_las_reglas_de_las_migas…`, `test_el_contraste…`), ningún `style` dentro de `#migas`; las reglas nuevas van en el bloque `/* Spec 033 */` de `app.css`, donde `MovilPacienteTest::test_las_reglas_nuevas_de_app_css_solo_usan_tokens` exige solo tokens en todas sus reglas; manual: `/review` contra `system.html` y `capturar.mjs --medir` |
 | P10 Rutas indexables | ➖ | Todas las pantallas exigen sesión; ninguna ruta pública cambia | — |
 
 ## Cambios por módulo
@@ -43,11 +45,11 @@ los roles que las abren.
 | `resources/views/servicios/create.blade.php`, `servicios/edit.blade.php` | `@section('title', 'Nuevo servicio')` y `'Editar servicio'`; migas «Servicios › Nuevo servicio» y «Servicios › Editar servicio» | bajo |
 | `resources/views/citas/cliente-agendar.blade.php` | Quitar el bloque de migas | bajo: `MovilPacienteTest` lo asierta (se actualiza) |
 | `resources/views/layouts/app.blade.php` | «Pacientes» se marca también en `admin/expedientes*`, `asistente/expedientes*` y `dentista/expedientes/*`; «Expedientes» de la dentista solo en su listado (`dentista/expedientes`). Los avisos del layout no se tocan | medio: es el menú de todos los roles; obliga a `capturar.mjs --medir` |
-| `public/css/app.css` | Reglas `.migas`: la fila flexible pasa al `ol` (sin viñetas ni sangría, `flex-wrap: wrap`, `gap: var(--space-3)`); `.migas li` en fila con su separador; `.migas a` en `--p600` con subrayado y `--p800` al pasar el puntero; `.migas-actual` en `--text` con `min-width: 0`; `overflow-wrap: anywhere` en los elementos; el foco no cambia | bajo |
+| `public/css/app.css` | Dentro del bloque `/* Spec 033 */`, donde ya están (así las vigila el test de solo tokens de la 033). Declaraciones exactas: `.migas` = `margin-bottom: var(--space-7)`, `font-size: var(--text-meta)`, `color: var(--text)`; `.migas ol` (nueva) = `display: flex`, `flex-wrap: wrap`, `align-items: center`, `gap: var(--space-3)`, `margin: 0`, `padding: 0`, `list-style: none`; `.migas li` (nueva) = `display: flex`, `align-items: center`, `gap: var(--space-3)`, `min-width: 0`, `overflow-wrap: anywhere`; `.migas a` = `color: var(--p600)`, `text-decoration: underline`; `.migas a:hover` (nueva) = `color: var(--p800)`; `.migas-actual` no cambia (`color: var(--text)`); la regla de foco no cambia. En una línea, el bloque conserva en el escritorio el alto y el margen de hoy (mismo tamaño de letra y mismo `margin-bottom`), para no desplazar el contenido | bajo |
 | `public/css/movil.css` | Sin cambios: conserva `--touch-min` de `.migas a` y las reglas de salto de línea que fija `MovilPacientesExpedientesTest` (035), ahora redundantes con las de `app.css` | — |
 | `tests/Feature/NavegacionInternaTest.php` (nuevo) | Tests de CA1–CA11 | — |
-| `tests/Feature/MovilPacienteTest.php`, `MovilPacientesExpedientesTest.php` | Actualizar lo que fija el marcado anterior: en el primero, las reglas de `.migas` y `.migas a` de `app.css` y «Agendar cita» fuera de las pantallas con migas; en el segundo, solo `div#migas` → cualquier elemento con `id="migas"` (sus aserciones de `movil.css` siguen valiendo). `MovilPersonalTest` no cambia | medio: son tests de specs liberadas; se cambian solo las aserciones que la 046 reemplaza |
-| Línea base de `docs/design/capturar.mjs` (fuera del repo, `--linea-base`) | Se toma de nuevo al terminar la interfaz, validada por el usuario (CA12); el script no cambia | medio: antes de sustituirla se comprueba contra la anterior que solo difieren las migas, el botón y la entrada marcada |
+| `tests/Feature/MovilPacienteTest.php`, `MovilPacientesExpedientesTest.php` | Actualizar lo que fija el marcado anterior. En el primero: en `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, las entradas `.migas` y `.migas a` de `$esperadas` pasan a las declaraciones de la fila de `app.css` (`.migas-actual` se queda igual; las reglas nuevas `.migas ol`, `.migas li` y `.migas a:hover` las recorre ya su bucle de solo tokens y sus declaraciones las fija `NavegacionInternaTest`); y `/cliente/agendar` sale del bucle de pantallas con `#migas`. En el segundo, solo `div#migas` → cualquier elemento con `id="migas"` (sus aserciones de `movil.css` siguen valiendo). `MovilPersonalTest` no cambia | medio: son tests de specs liberadas; se cambian solo las aserciones que la 046 reemplaza |
+| `docs/design/capturar.mjs` | La comparación del escritorio sigue contra la línea base del tag en producción (cabecera, paso 7b) y excluye lo que la 046 cambia a propósito. `EN_PAGINA.excluidos` añade, con el margen de 4 px de los demás: (a) el rectángulo de `#migas`, si existe; (b) en la ficha del expediente, la franja derecha de la cabecera donde estaba «← Volver al paciente» (desde el borde derecho de la cabecera, el ancho del botón medido en la línea base, que se anota en la tarea); (c) en las direcciones `…/expedientes/…` y `…/expedientes/crear`, las entradas «Pacientes» y, para la dentista, «Expedientes» de la barra lateral. `cliente-agendar` y `citas-reprogramar-cliente` salen de `COMPARADAS` con una lista propia y su comentario (las migas desaparecen o aparecen y desplazan todo lo de debajo); siguen en las demás comprobaciones de `--medir`. Se actualizan el texto de la comprobación «034 escritorio» de `COMPROBACIONES` y la cabecera (paso 7b: qué excluye la 046 y cuándo vuelven esas dos pantallas a la comparación) | medio: una zona mal calculada taparía una diferencia real; se comprueba con un control positivo (un cambio fuera de las zonas hace fallar la comparación) |
 | `docs/design/system.md`, `docs/design/system.html` | «Migas de pan» y las dos reglas del acta («Cambios a incorporar al sistema»); versión siguiente a la vigente al fusionar `main`; DS15 (parte de títulos de servicios) y 033/R6 cerradas | bajo |
 | `docs/roadmap.md`, `docs/architecture.md`, `AGENTS.md` | 033/R6 hecha; el parcial de migas en «Frontend» y en las reglas de vistas | bajo |
 
@@ -75,19 +77,29 @@ Qué ve cada rol: no cambia. Cada camino usa el prefijo de rutas del rol que abr
   escenario como el de `MovilPersonalTest` (cuentas de los cuatro roles, un paciente, una cita, un
   expediente, un servicio) y recorre una tabla de `[rol, dirección, camino esperado]` con las 18
   pantallas en los roles que las abren. Sobre el HTML (DOM y XPath) comprueba estructura, textos,
-  destinos, títulos y entrada marcada del menú.
+  destinos, títulos y entrada marcada del menú. Los tests que recorren la tabla usan un proveedor de
+  datos de PHPUnit con un caso con nombre por pantalla y rol (p. ej. `admin · nueva cita`): cada
+  caso pasa o falla por separado y cada tarea se comprueba con el filtro de sus casos
+  (`--filter`), sin esperar a las demás pantallas. El proveedor solo da la clave del caso; la
+  dirección se resuelve con los datos del escenario.
 - **CSS:** con el trait `Concerns/ReglasCss` (reglas de `app.css` y `movil.css`, y `contraste()`).
 - **Navegador:** `node docs/design/capturar.mjs --medir` en la verificación final de `/implement` y
-  en `/review` (obligatorio por tocar `layouts/app.blade.php`). Mide las pantallas de la 033–035
-  (entre ellas el expediente con un nombre largo). Primero contra la línea base anterior: solo pueden
-  fallar en la comparación de escritorio las pantallas con migas, el expediente y «Agendar cita», y
-  solo por esas tres diferencias (CA12); después se toma la línea base nueva y `--medir` pasa
-  completo.
-- **Manual:** el usuario valida a 320, 390 y 1440 px una muestra de cinco pantallas: una de dos
+  en `/review` (obligatorio por tocar `layouts/app.blade.php`), con el procedimiento de su cabecera:
+  la línea base se toma en la misma sesión del tag en producción. Mide las pantallas de la 033–035
+  (entre ellas el expediente con un nombre largo). La comparación de escritorio falla si una
+  pantalla comparada difiere de producción en más de 0,1 % de píxeles fuera de las zonas excluidas
+  (migas, hueco del botón, entradas del menú de las pantallas de expedientes); «Agendar cita» y
+  «Reprogramar» del paciente no se comparan en el escritorio hasta que la 046 esté en producción
+  (D12) y las valida el usuario con sus capturas de antes y de después. Control positivo, una vez:
+  un cambio provisional fuera de las zonas hace fallar la comparación.
+- **Manual:** el usuario valida a 320, 390 y 1440 px una muestra de seis pantallas: una de dos
   elementos («Nueva cita»), la ficha del expediente, «Editar personal» y «Editar usuario» con un
-  nombre largo, y «Reprogramar» del personal después de un rechazo (con aviso arriba). La muestra
-  basta porque las 18 pantallas pintan el mismo parcial con las mismas reglas; cubre los caminos de
-  tres elementos que `--medir` no mide (personal, usuarios y reprogramar).
+  nombre largo, «Reprogramar» del personal y el detalle de una cita del personal justo después de
+  reprogramarla con éxito, que muestra arriba el aviso del sistema «Cita reprogramada
+  correctamente» (un rechazo por hueco no disponible no sirve: se muestra junto al campo). La
+  muestra basta porque las 18 pantallas pintan el mismo parcial con las mismas reglas; cubre los
+  caminos de tres elementos que `--medir` no mide (personal, usuarios y reprogramar). Además, en
+  el escritorio, «Agendar cita» y «Reprogramar» del paciente (D12).
 - Los tests nuevos de interfaz se ejecutan dos veces.
 
 ## Modelo de amenazas
@@ -102,18 +114,18 @@ La spec no toca datos, autenticación ni permisos, pero pinta nombres de persona
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
 |---|---|---|
-| CA1: migas en las 18 pantallas, un bloque, mismo aspecto; las del menú sin migas | parcial, 15 archivos de vista (18 pantallas), `cliente-agendar` | `NavegacionInternaTest::test_cada_pantalla_de_segundo_nivel_lleva_sus_migas` (una `nav#migas`, sin `style`, camino esperado) y `::test_las_pantallas_del_menu_no_llevan_migas`; verificación manual: visibles sin desplazarse a 320, 390 y 1440 px, con `capturar.mjs --medir` y la muestra de cinco pantallas del usuario, una de ellas con aviso arriba |
+| CA1: migas en las 18 pantallas, un bloque, mismo aspecto; las del menú sin migas | parcial, 15 archivos de vista (18 pantallas), `cliente-agendar` | `NavegacionInternaTest::test_cada_pantalla_de_segundo_nivel_lleva_sus_migas` (una `nav#migas`, sin `style`, camino esperado) y `::test_las_pantallas_del_menu_no_llevan_migas`; verificación manual: visibles sin desplazarse a 320, 390 y 1440 px, con `capturar.mjs --medir` y la muestra de seis pantallas del usuario, una de ellas con el aviso del sistema arriba |
 | CA2: cada elemento lleva a su pantalla fija; el último no es enlace | parcial, vistas | `::test_los_enlaces_de_las_migas_llevan_a_destinos_fijos` (cada `href` es el de la tabla; el último elemento no tiene `a`) |
 | CA3: navegación con nombre, página actual, separadores ocultos, foco | parcial, `app.css` | `::test_las_migas_son_una_navegacion_accesible` (`aria-label`, un `aria-current="page"`, todos los hijos del `ol` son `li`, n−1 separadores con `aria-hidden`) y la regla de foco de `.migas a:focus-visible` |
 | CA4: enlace distinto del actual sin color; contraste AA | `app.css` | `::test_las_reglas_de_las_migas_distinguen_el_enlace` (subrayado, `--p600`, actual en `--text` sin subrayar) y `::test_el_contraste_de_las_migas_es_aa` |
 | CA5: reprogramar con migas en los dos estados | `citas/reprogramar`, `citas/cliente-reprogramar` | `::test_reprogramar_lleva_migas_se_pueda_o_no` (personal y paciente, cita reprogramable y no) |
-| CA6: «Cancelar» lleva al penúltimo elemento | `usuarios/create` en edición; los otros nueve formularios no cambian | `::test_cancelar_lleva_al_mismo_sitio_que_las_migas` recorre los diez formularios, sin contar «Cancelar la cita definitivamente»: falla antes en «Editar usuario» y es de caracterización en los otros nueve (comprobado rompiendo el `href` de un «Cancelar») |
+| CA6: «Cancelar» lleva al penúltimo elemento | `usuarios/create` en edición; los otros nueve formularios no cambian | `::test_cancelar_lleva_al_mismo_sitio_que_las_migas`, un caso por formulario (diez, sin contar «Cancelar la cita definitivamente»): compara el destino de «Cancelar» con el destino fijo del penúltimo elemento según la tabla de la spec, no con las migas pintadas. Antes de implementar falla solo en «Editar usuario» y pasa en los otros nueve (caracterización, comprobada rompiendo el `href` de un «Cancelar»); que las migas pintan ese mismo destino lo prueba el test de CA2 |
 | CA7: expediente sin «Volver al paciente» | `expedientes/show` | `::test_el_expediente_ya_no_tiene_volver_al_paciente` |
 | CA8: títulos de servicios; ninguno por defecto | `servicios/create`, `servicios/edit` | `::test_ninguna_pantalla_usa_el_titulo_por_defecto` (`.topbar-title` y `<title>` de las 18) |
-| CA9: el menú marca la sección | `layouts/app` | `::test_el_menu_marca_la_seccion_de_la_pantalla` (un solo `.nav-item[aria-current="page"]`, con el mismo destino y el mismo texto que el primer elemento de las migas, para cada rol); `capturar.mjs --medir` |
+| CA9: el menú marca la sección | `layouts/app` | `::test_el_menu_marca_la_seccion_de_la_pantalla` (un solo `.nav-item[aria-current="page"]`, con el mismo texto y el mismo destino que el primer elemento de las migas, para cada rol; el destino se compara por la ruta, sin esquema ni dominio, porque el menú usa direcciones relativas y las migas, absolutas); `capturar.mjs --medir` |
 | CA10: camino largo a 320 px | `app.css`, `movil.css` | `::test_las_migas_pueden_pasar_de_linea` (reglas `flex-wrap`, `overflow-wrap`, `--touch-min`); verificación manual: `capturar.mjs --medir` a 320 px con un nombre largo, sin desplazamiento horizontal |
 | CA11 (abuso): destinos fijos, nombre como texto, sin migas para otro rol | parcial; sin cambios en permisos | TM1, TM2, TM3 |
-| CA12: el escritorio de las pantallas de la 033–035 solo cambia en las migas, el botón y la entrada marcada | línea base nueva de `capturar.mjs` | verificación manual: `--medir` contra la línea base anterior falla solo en esas pantallas y por esas diferencias (se anota la lista); el usuario valida las capturas nuevas; `--medir` pasa completo con la línea base nueva |
+| CA12: el escritorio de las pantallas de la 033–035 solo cambia en las migas, el botón y la entrada marcada | `docs/design/capturar.mjs` (zonas excluidas y las dos pantallas fuera de la comparación) | `capturar.mjs --medir`, comprobación «034 escritorio», con la línea base del tag en producción: pasa con las zonas excluidas y falla con un cambio fuera de ellas (control positivo); `--seco --medir` lista el texto nuevo de la comprobación; verificación manual: el usuario compara en el escritorio las capturas de antes y de después de «Agendar cita» y «Reprogramar» del paciente |
 | TM1 | parcial, vistas | `::test_las_migas_ignoran_un_destino_de_vuelta_en_la_direccion` |
 | TM2 | parcial | `::test_el_nombre_con_codigo_se_pinta_como_texto` |
 | TM3 | — | `::test_una_pantalla_de_otro_rol_responde_como_hoy_sin_migas` |
@@ -156,20 +168,27 @@ No aplica: ninguna ruta pública se crea ni cambia; las 18 pantallas exigen sesi
 - **D6 · Las reglas de salto de línea se añaden a `app.css`** para valer a todos los anchos (acta de
   diseño, «camino largo»); las de `movil.css` se quedan como están, aunque sean redundantes, porque
   las fija un test de la 035 y quitarlas no aporta nada (/analyze A3).
+- **D7 · Orden respecto de la 045:** plan, tareas y análisis ahora; `/implement` empieza cuando la
+  045 esté fusionada en `main`, y la versión de `system.md` es la siguiente a la que deje
+  (decisión del usuario, 2026-11-12).
+- **D8 · Tamaño:** 12 criterios y 7 specs extendidas; se mantiene junta (decisión del usuario,
+  2026-11-12, al aprobar la spec).
+- **D9 · «Agendar cita» sin migas:** es una entrada del menú (decisión del usuario, 2026-11-12;
+  spec corregida).
 - **D10 · El texto del primer elemento es el de la entrada del menú de cada rol** («Mis Citas» para
   la dentista y el paciente): cada vista lo elige con el rol, igual que el prefijo de rutas
   (decisión del usuario, 2026-11-12; /analyze A4).
 - **D11 · Las migas van dentro del contenido de cada vista**, debajo de los avisos del layout, que
   no cambia (decisión del usuario, 2026-11-12; /analyze A8).
-- **D12 · Línea base nueva de `capturar.mjs --medir`** tras la interfaz, validada por el usuario; el
-  script no cambia (decisión del usuario, 2026-11-12; /analyze A2).
-- **D7 · Orden respecto de la 045:** plan, tareas y análisis ahora; `/implement` empieza cuando la
-  045 esté fusionada en `main`, y la versión de `system.md` es la siguiente a la que deje
-  (decisión del usuario, 2026-11-12).
-- **D8 · Tamaño:** 11 criterios y 7 specs extendidas; se mantiene junta (decisión del usuario,
-  2026-11-12, al aprobar la spec).
-- **D9 · «Agendar cita» sin migas:** es una entrada del menú (decisión del usuario, 2026-11-12;
-  spec corregida).
+- **D12 · La comparación del escritorio excluye lo que la 046 cambia.** Opciones: (a) una línea
+  base nueva tomada de la 046: no existe en el procedimiento, la línea base se toma en cada sesión
+  del tag en producción y se borra, y compararía la rama consigo misma (/analyze A17); (b) excluir
+  zonas en `capturar.mjs`, como ya hacen las specs 020, 034 y 039; (c) aceptar el fallo y validar a
+  mano. Se elige (b) (decisión del usuario, 2026-11-12): migas, hueco del botón «Volver al
+  paciente» y entradas del menú de las pantallas de expedientes. «Agendar cita» y «Reprogramar» del
+  paciente salen de la comparación de escritorio hasta que la 046 esté en producción, porque el
+  contenido se desplaza entero; el usuario las valida en pantalla y el roadmap anota devolverlas a
+  la comparación entonces.
 - Sin ADR: no hay dependencias nuevas ni cambio de arquitectura.
 
 ## Impacto en arquitectura
@@ -177,6 +196,9 @@ No aplica: ninguna ruta pública se crea ni cambia; las 18 pantallas exigen sesi
   llevan.
 - `AGENTS.md` → «Reglas y estilo» (vistas): una línea sobre las migas en pantallas de segundo nivel.
 - `docs/design/system.md` → «Migas de pan», tabla de deuda (DS15, parte de títulos) y Decisiones.
+- `docs/roadmap.md` → 033/R6 hecha; en 033/R11, lo que la 046 ya prueba de la entrada marcada; la
+  nota de la 014; y devolver «Agendar cita» y «Reprogramar» del paciente a la comparación de
+  `capturar.mjs` cuando la 046 esté en producción.
 
 ## Riesgos y mitigaciones
 - **Tests de specs liberadas que fijan el marcado anterior** (`MovilPacienteTest`,
@@ -191,3 +213,9 @@ No aplica: ninguna ruta pública se crea ni cambia; las 18 pantallas exigen sesi
   en el acta de diseño y validado por el usuario en pantalla.
 - **Contraste de `--p600` sobre `--bg`** calculado a mano (≈ 6,5:1): lo fija el test de contraste; si
   no llegara a 4,5:1, se vuelve a `/design-spec 046 --fix`.
+- **Choque con la 014** (aprobada, sin implementar): su plan toca `pacientes/create`,
+  `expedientes/show` y `expedientes/create`. Va después de la 046; al retomarla con
+  `/plan 014 --fix` debe partir del parcial de migas y conservarlo (nota del roadmap).
+- **Zonas excluidas de `capturar.mjs`:** tapan lo que hay debajo de ellas y dos pantallas del
+  paciente quedan sin comparar en el escritorio hasta la versión siguiente; lo cubren el control
+  positivo, la validación del usuario y la nota del roadmap para retirarlo.
