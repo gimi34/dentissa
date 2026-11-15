@@ -1,10 +1,11 @@
 ---
 lane: chore
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released                 # open → done → released · escalated (→ escalated_to)
 base: fdcfa2e                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: []                  # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir
 escalated_to: null           # NNN de la spec si el cambio se escaló al flujo completo
+released: v0.18.0 (2026-11-13)
 ---
 
 # Chore: favicon del sitio
