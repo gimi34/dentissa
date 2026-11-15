@@ -1,7 +1,7 @@
 ---
 id: 048
 slug: citas-panel-detalle
-status: approved
+status: implemented
 created: 2026-11-14
 extends: [012, 034]
 ---
@@ -111,3 +111,4 @@ Ninguna.
 | 2026-11-14 | CA6 (sin fondo al pasar el puntero en la tarjeta del móvil), K1 y RNF (44 px solo en el móvil), Decisiones (A1, A4, A14); vuelve a `draft` | `/analyze` r1: A1, A4, A14 |
 | 2026-11-14 | Implementada (T001, T010–T014, T019–T024, T090–T092); suite 1011 en verde; verificación manual del usuario | /implement 048 |
 | 2026-11-14 | /review r1 `changes_requested` (0 bloqueantes, 2 importantes de tests): vuelve a `approved` con las tareas T025–T031 | /review 048 |
+| 2026-11-14 | Correcciones de /review r1 (T025–T031: R1–R6, R12, R16–R18); suite 1011 en verde; vuelve a `implemented` | /implement 048 |

@@ -96,7 +96,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: 2026-11-14 — sin cambios en `docs/architecture.md`: no hay módulos, rutas ni datos nuevos (plan, «Impacto en arquitectura»)
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
   - nota: 2026-11-14 — sin cambios en `docs/deployment.md` ni `docs/observability.md`: sin variables, pasos, logs, auditoría ni métricas nuevas
-- [ ] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
+- [x] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
+  - nota: 2026-11-14 (tras /review r1) — suite completa 1011 en verde (15 547 aserciones); Pint limpio; spec `implemented` de nuevo
   - nota: 2026-11-14 — suite completa 1011 en verde (15 532 aserciones; línea base 1001 + 10 de la 048); Pint limpio en los tests tocados; gitleaks sin hallazgos en los 13 archivos del diff; semgrep `p/php` 0 hallazgos en las vistas y los tests; el diff no toca `app/`, `routes/` ni `database/` (RNF sin consultas nuevas); CA1–CA9 marcados; spec `implemented` y README
 
 ## Despliegue (lo ejecuta `/release`)
