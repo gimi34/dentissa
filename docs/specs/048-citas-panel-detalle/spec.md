@@ -1,7 +1,7 @@
 ---
 id: 048
 slug: citas-panel-detalle
-status: draft
+status: approved
 created: 2026-11-14
 extends: [012, 034]
 ---

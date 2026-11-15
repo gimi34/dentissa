@@ -1,7 +1,7 @@
 ---
 spec: 048-citas-panel-detalle
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 048 Abrir las citas del panel de inicio
