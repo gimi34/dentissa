@@ -14,12 +14,11 @@
 
 @section('content')
 
-{{-- Breadcrumb[cite: 1] --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route('admin.usuarios.index') }}" style="color:var(--text-muted);text-decoration:none">Usuarios</a>
-    <span>›</span>
-    <span style="color:var(--text)">{{ $usuario->nombre }} {{ $usuario->apellido }}</span>
-</div>
+{{-- Migas de pan (spec 046) --}}
+@include('partials.migas', ['migas' => [
+    ['texto' => 'Usuarios', 'url' => route('admin.usuarios.index')],
+    ['texto' => $usuario->nombre.' '.$usuario->apellido],
+]])
 
 {{-- Cuadrícula principal[cite: 1] --}}
 <div style="display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start">
