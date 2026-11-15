@@ -29,11 +29,10 @@
 
 {{-- Migas (spec 035, D14): el componente de la 033. --}}
 @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
-<div id="migas" class="migas">
-    <a href="{{ route("{$base}.pacientes") }}">Pacientes</a>
-    <span>›</span>
-    <span class="migas-actual">{{ $paciente->nombre_completo }}</span>
-</div>
+@include('partials.migas', ['migas' => [
+    ['texto' => 'Pacientes', 'url' => route("{$base}.pacientes")],
+    ['texto' => $paciente->nombre_completo],
+]])
 
 {{-- Ficha (spec 035, D1): dos columnas en el escritorio y una en el móvil, en el orden del HTML. --}}
 <div class="ficha-paciente">
