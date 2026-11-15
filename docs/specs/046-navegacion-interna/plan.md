@@ -1,6 +1,6 @@
 ---
 spec: 046-navegacion-interna
-status: approved   # draft | approved | blocked
+status: draft   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-12
 ---
@@ -49,7 +49,7 @@ cambia a propósito (D12).
 | `public/css/movil.css` | Sin cambios: conserva `--touch-min` de `.migas a` y las reglas de salto de línea que fija `MovilPacientesExpedientesTest` (035), ahora redundantes con las de `app.css` | — |
 | `tests/Feature/NavegacionInternaTest.php` (nuevo) | Tests de CA1–CA11 | — |
 | `tests/Feature/MovilPacienteTest.php`, `MovilPacientesExpedientesTest.php` | Actualizar lo que fija el marcado anterior. En el primero: en `test_las_reglas_nuevas_de_app_css_solo_usan_tokens`, las entradas `.migas` y `.migas a` de `$esperadas` pasan a las declaraciones de la fila de `app.css` (`.migas-actual` se queda igual; las reglas nuevas `.migas ol`, `.migas li` y `.migas a:hover` las recorre ya su bucle de solo tokens y sus declaraciones las fija `NavegacionInternaTest`); y `/cliente/agendar` sale del bucle de pantallas con `#migas`. En el segundo, solo `div#migas` → cualquier elemento con `id="migas"` (sus aserciones de `movil.css` siguen valiendo). `MovilPersonalTest` no cambia | medio: son tests de specs liberadas; se cambian solo las aserciones que la 046 reemplaza |
-| `docs/design/capturar.mjs` | La comparación del escritorio sigue contra la línea base del tag en producción (cabecera, paso 7b) y excluye lo que la 046 cambia a propósito. `EN_PAGINA.excluidos` añade, con el margen de 4 px de los demás: (a) el rectángulo de `#migas`, si existe; (b) en la ficha del expediente, la franja derecha de la cabecera donde estaba «← Volver al paciente» (desde el borde derecho de la cabecera, el ancho del botón medido en la línea base, que se anota en la tarea); (c) en las direcciones `…/expedientes/…` y `…/expedientes/crear`, las entradas «Pacientes» y, para la dentista, «Expedientes» de la barra lateral. `cliente-agendar` y `citas-reprogramar-cliente` salen de `COMPARADAS` con una lista propia y su comentario (las migas desaparecen o aparecen y desplazan todo lo de debajo); siguen en las demás comprobaciones de `--medir`. Se actualizan el texto de la comprobación «034 escritorio» de `COMPROBACIONES` y la cabecera (paso 7b: qué excluye la 046 y cuándo vuelven esas dos pantallas a la comparación) | medio: una zona mal calculada taparía una diferencia real; se comprueba con un control positivo (un cambio fuera de las zonas hace fallar la comparación) |
+| `docs/design/capturar.mjs` | La comparación del escritorio sigue contra la línea base del tag en producción (cabecera, paso 7b) y excluye lo que la 046 cambia a propósito. `EN_PAGINA.excluidos` añade, con el margen de 4 px de los demás: (a) el rectángulo de `#migas`, si existe; (b) en la ficha del expediente, la cabecera entera (`.expediente-cabecera`): al quitar «← Volver al paciente» el título gana ancho y con un nombre largo se parte por otro sitio. Antes de fijar la zona se mide el alto de esa cabecera en la línea base y en la rama, a 1024 y 1440 px, con los datos de captura: si es el mismo en los dos anchos, basta la zona; si cambia en alguno, lo de debajo se desplaza y las tres pantallas `*-ficha-expediente` salen de `COMPARADAS` junto a las dos del paciente; (c) en las direcciones `…/expedientes/…` y `…/expedientes/crear`, las entradas «Pacientes» y, para la dentista, «Expedientes» de la barra lateral. `cliente-agendar` y `citas-reprogramar-cliente` salen de `COMPARADAS` con una lista propia y su comentario (las migas desaparecen o aparecen y desplazan todo lo de debajo); siguen en las demás comprobaciones de `--medir`. Los dos pendientes del roadmap atados a «la spec que toque el guion» se aplazan (D13). Se actualizan el texto de la comprobación «034 escritorio» de `COMPROBACIONES` y la cabecera (paso 7b: qué excluye la 046 y cuándo vuelven esas dos pantallas a la comparación) | medio: una zona mal calculada taparía una diferencia real; se comprueba con un control positivo (un cambio fuera de las zonas hace fallar la comparación) |
 | `docs/design/system.md`, `docs/design/system.html` | «Migas de pan» y las dos reglas del acta («Cambios a incorporar al sistema»); versión siguiente a la vigente al fusionar `main`; DS15 (parte de títulos de servicios) y 033/R6 cerradas | bajo |
 | `docs/roadmap.md`, `docs/architecture.md`, `AGENTS.md` | 033/R6 hecha; el parcial de migas en «Frontend» y en las reglas de vistas | bajo |
 
@@ -88,18 +88,24 @@ Qué ve cada rol: no cambia. Cada camino usa el prefijo de rutas del rol que abr
   la línea base se toma en la misma sesión del tag en producción. Mide las pantallas de la 033–035
   (entre ellas el expediente con un nombre largo). La comparación de escritorio falla si una
   pantalla comparada difiere de producción en más de 0,1 % de píxeles fuera de las zonas excluidas
-  (migas, hueco del botón, entradas del menú de las pantallas de expedientes); «Agendar cita» y
-  «Reprogramar» del paciente no se comparan en el escritorio hasta que la 046 esté en producción
-  (D12) y las valida el usuario con sus capturas de antes y de después. Control positivo, una vez:
+  (migas, cabecera de la ficha del expediente, entradas del menú de las pantallas de expedientes);
+  «Agendar cita» y «Reprogramar» del paciente, y las tres fichas del expediente si el alto de su
+  cabecera cambia, no se comparan en el escritorio hasta que la 046 esté en producción (D12) y las
+  valida el usuario con sus capturas de antes y de después. Si aparece la diferencia intermitente
+  de las pantallas de la asistente que anota el roadmap, se repite la pasada una vez y se anota; si
+  se repite, es un fallo (D13). Control positivo, una vez:
   un cambio provisional fuera de las zonas hace fallar la comparación.
 - **Manual:** el usuario valida a 320, 390 y 1440 px una muestra de seis pantallas: una de dos
   elementos («Nueva cita»), la ficha del expediente, «Editar personal» y «Editar usuario» con un
   nombre largo, «Reprogramar» del personal y el detalle de una cita del personal justo después de
   reprogramarla con éxito, que muestra arriba el aviso del sistema «Cita reprogramada
-  correctamente» (un rechazo por hueco no disponible no sirve: se muestra junto al campo). La
+  correctamente» (un rechazo por hueco no disponible no sirve: se muestra junto al campo). El aviso
+  se retira solo a los 4 s: hace falta una reprogramación por ancho, se mira antes de que
+  desaparezca (aviso arriba, migas debajo) y después (las migas suben y siguen visibles). La
   muestra basta porque las 18 pantallas pintan el mismo parcial con las mismas reglas; cubre los
   caminos de tres elementos que `--medir` no mide (personal, usuarios y reprogramar). Además, en
-  el escritorio, «Agendar cita» y «Reprogramar» del paciente (D12).
+  el escritorio, «Agendar cita» y «Reprogramar» del paciente, y la ficha del expediente si sale de
+  la comparación (D12).
 - Los tests nuevos de interfaz se ejecutan dos veces.
 
 ## Modelo de amenazas
@@ -125,7 +131,7 @@ La spec no toca datos, autenticación ni permisos, pero pinta nombres de persona
 | CA9: el menú marca la sección | `layouts/app` | `::test_el_menu_marca_la_seccion_de_la_pantalla` (un solo `.nav-item[aria-current="page"]`, con el mismo texto y el mismo destino que el primer elemento de las migas, para cada rol; el destino se compara por la ruta, sin esquema ni dominio, porque el menú usa direcciones relativas y las migas, absolutas); `capturar.mjs --medir` |
 | CA10: camino largo a 320 px | `app.css`, `movil.css` | `::test_las_migas_pueden_pasar_de_linea` (reglas `flex-wrap`, `overflow-wrap`, `--touch-min`); verificación manual: `capturar.mjs --medir` a 320 px con un nombre largo, sin desplazamiento horizontal |
 | CA11 (abuso): destinos fijos, nombre como texto, sin migas para otro rol | parcial; sin cambios en permisos | TM1, TM2, TM3 |
-| CA12: el escritorio de las pantallas de la 033–035 solo cambia en las migas, el botón y la entrada marcada | `docs/design/capturar.mjs` (zonas excluidas y las dos pantallas fuera de la comparación) | `capturar.mjs --medir`, comprobación «034 escritorio», con la línea base del tag en producción: pasa con las zonas excluidas y falla con un cambio fuera de ellas (control positivo); `--seco --medir` lista el texto nuevo de la comprobación; verificación manual: el usuario compara en el escritorio las capturas de antes y de después de «Agendar cita» y «Reprogramar» del paciente |
+| CA12: el escritorio de las pantallas de la 033–035 solo cambia en las migas, el botón y la entrada marcada | `docs/design/capturar.mjs` (zonas excluidas y pantallas fuera de la comparación) | `capturar.mjs --medir`, comprobación «034 escritorio», con la línea base del tag en producción: pasa con las zonas excluidas y falla con un cambio fuera de ellas (control positivo); `--seco --medir` lista el texto nuevo de la comprobación; pasa en las tres fichas del expediente a 1024 y 1440 px si el alto de su cabecera no cambia; verificación manual: el usuario compara en el escritorio las capturas de antes y de después de «Agendar cita» y «Reprogramar» del paciente, y de la ficha del expediente si sale de la comparación |
 | TM1 | parcial, vistas | `::test_las_migas_ignoran_un_destino_de_vuelta_en_la_direccion` |
 | TM2 | parcial | `::test_el_nombre_con_codigo_se_pinta_como_texto` |
 | TM3 | — | `::test_una_pantalla_de_otro_rol_responde_como_hoy_sin_migas` |
@@ -184,11 +190,19 @@ No aplica: ninguna ruta pública se crea ni cambia; las 18 pantallas exigen sesi
   base nueva tomada de la 046: no existe en el procedimiento, la línea base se toma en cada sesión
   del tag en producción y se borra, y compararía la rama consigo misma (/analyze A17); (b) excluir
   zonas en `capturar.mjs`, como ya hacen las specs 020, 034 y 039; (c) aceptar el fallo y validar a
-  mano. Se elige (b) (decisión del usuario, 2026-11-12): migas, hueco del botón «Volver al
-  paciente» y entradas del menú de las pantallas de expedientes. «Agendar cita» y «Reprogramar» del
+  mano. Se elige (b) (decisión del usuario, 2026-11-12): migas, cabecera de la ficha del expediente
+  (se recompone al quitar «Volver al paciente»; /analyze A27, decisión del usuario, 2026-11-14) y
+  entradas del menú de las pantallas de expedientes. Si el alto de esa cabecera cambia a 1024 o
+  1440 px con los datos de captura, las tres fichas del expediente reciben el trato de las dos
+  pantallas del paciente. «Agendar cita» y «Reprogramar» del
   paciente salen de la comparación de escritorio hasta que la 046 esté en producción, porque el
   contenido se desplaza entero; el usuario las valida en pantalla y el roadmap anota devolverlas a
   la comparación entonces.
+- **D13 · Pendientes del roadmap atados a `capturar.mjs`, aplazados:** la diferencia intermitente
+  del escritorio en las pantallas de la asistente (buscar la causa) y 035/R22 (envío con errores de
+  «Guardar fecha» a 320 px) no entran en la 046, que solo añade zonas excluidas; siguen en el
+  roadmap con la nota de que la 046 tocó el guion sin atenderlos. Si la diferencia intermitente
+  aparece, se repite la pasada una vez y se anota (/analyze A29).
 - Sin ADR: no hay dependencias nuevas ni cambio de arquitectura.
 
 ## Impacto en arquitectura
