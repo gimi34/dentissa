@@ -9,6 +9,7 @@ use DOMElement;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\Feature\Concerns\ReglasCss;
 use Tests\TestCase;
@@ -91,11 +92,17 @@ class CitasPanelDetalleTest extends TestCase
         $this->assertSame('01/10/2026', trim($enlace->textContent), 'El enlace es la fecha.');
         $this->assertContains('celda-cab', $this->clases($enlace->parentNode), 'La fecha sigue en la celda principal.');
 
-        // «Tu próxima cita» conserva sus acciones (la cita de hoy a las 10:00 es la próxima).
-        $proxima = $xpath->query("//a[@href='".route('cliente.citas.show', $this->citaHoy)."'][normalize-space()='Ver detalles']");
-        $this->assertSame(1, $proxima->length, '«Tu próxima cita» sigue con «Ver detalles».');
-
         $this->actingAs($this->paciente1)->get($href)->assertOk();
+
+        // /review R1: «Tu próxima cita» conserva sus tres acciones. Hace falta una próxima cita a más de
+        // 24 h (con menos, «Reprogramar» y «Cancelar» no se pintan): sin la de hoy, la del día 16.
+        DB::table('citas')->where('id', $this->citaHoy)->delete();
+        $futura = $this->cita($this->d1, $this->p1, 'agendada', '2026-10-16 10:00');
+        $xpath = $this->xpath($this->actingAs($this->paciente1)->get('/cliente')->assertOk()->getContent());
+        $acciones = "//div[@id='acciones-proxima']";
+        $this->assertSame(1, $xpath->query("{$acciones}//a[@href='".route('cliente.citas.show', $futura)."'][normalize-space()='Ver detalles']")->length, '«Tu próxima cita» sigue con «Ver detalles».');
+        $this->assertSame(1, $xpath->query("{$acciones}//a[@href='".route('cliente.citas.reprogramar', $futura)."'][normalize-space()='Reprogramar']")->length, '«Tu próxima cita» sigue con «Reprogramar».');
+        $this->assertSame(1, $xpath->query("{$acciones}//form[@action='".route('cliente.citas.cancelar', $futura)."']//button[normalize-space()='Cancelar']")->length, '«Tu próxima cita» sigue con «Cancelar».');
     }
 
     // ── CA5, A8, A10, A11, A15: un solo enlace por cita y su nombre ──────
@@ -105,15 +112,17 @@ class CitasPanelDetalleTest extends TestCase
         // A15: el nombre lo escribe el paciente; sale escapado en el atributo.
         DB::table('usuarios')->where('id', $this->paciente1->id)->update(['nombre' => 'Pa"blo <b>']);
         $paciente = 'Pa"blo <b> '.$this->paciente1->apellido;
+        $servicio = $this->servicioConCita('2026-10-05 10:00');
 
         $casos = [
             [$this->admin, '/admin', "10:00, {$paciente}, ver detalle"],
             [$this->asistente, '/asistente', "10:00, {$paciente}, ver detalle"],
             [$this->dentista1, '/dentista', "10:00, {$paciente}, ver detalle"],
-            // A11: la cita no tiene servicio; la celda dice «—» y el nombre, «sin servicio».
-            [$this->paciente1, '/cliente', '01/10/2026, sin servicio, ver detalle'],
+            // A11: una cita sin servicio (la celda dice «—» y el nombre, «sin servicio») y, /review R2,
+            // otra con servicio, que lo nombra.
+            [$this->paciente1, '/cliente', ['01/10/2026, sin servicio, ver detalle', "05/10/2026, {$servicio}, ver detalle"]],
         ];
-        foreach ($casos as [$usuario, $panel, $nombre]) {
+        foreach ($casos as [$usuario, $panel, $nombres]) {
             $html = $this->actingAs($usuario)->get($panel)->assertOk()->getContent();
             $this->assertStringNotContainsString('<b> ', $html, "{$panel}: el nombre del paciente sale escapado (A15).");
             $xpath = $this->xpath($html);
@@ -138,7 +147,14 @@ class CitasPanelDetalleTest extends TestCase
                 $this->assertNotSame('', $visible, "{$panel}: el enlace tiene un texto visible de referencia.");
                 $this->assertStringStartsWith($visible.', ', $etiqueta, "{$panel}: el nombre empieza por «{$visible}».");
             }
-            $this->assertContains($nombre, array_map(fn ($a) => $a->getAttribute('aria-label'), iterator_to_array($xpath->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' cita-enlace ')]"))), "{$panel}: la cita se llama «{$nombre}».");
+            // /review R16: los nombres de las citas del panel, antes de compararlos.
+            $etiquetas = [];
+            foreach ($xpath->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' cita-enlace ')]") as $a) {
+                $etiquetas[] = $a->getAttribute('aria-label');
+            }
+            foreach ((array) $nombres as $nombre) {
+                $this->assertContains($nombre, $etiquetas, "{$panel}: la cita se llama «{$nombre}».");
+            }
         }
     }
 
@@ -152,15 +168,13 @@ class CitasPanelDetalleTest extends TestCase
             [$this->admin, '/admin', 'No hay citas programadas para hoy'],
             [$this->asistente, '/asistente', 'No hay citas programadas para hoy'],
             [$this->dentista1, '/dentista', 'No tienes citas programadas para hoy'],
-            [$this->paciente2, '/cliente', null],
+            [$this->paciente2, '/cliente', 'Aún no tienes citas anteriores'],
         ];
         foreach ($casos as [$usuario, $panel, $vacio]) {
             $html = $this->actingAs($usuario)->get($panel)->assertOk()->getContent();
             $xpath = $this->xpath($html);
             $this->assertSame(0, $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' cita-enlace ') or contains(concat(' ', normalize-space(@class), ' '), ' fila-cita ')]")->length, "{$panel}: sin citas no hay enlaces de cita.");
-            if ($vacio !== null) {
-                $this->assertStringContainsString($vacio, $html, "{$panel}: se ve el estado vacío de hoy.");
-            }
+            $this->assertStringContainsString($vacio, $html, "{$panel}: se ve el estado vacío de hoy.");
         }
     }
 
@@ -239,8 +253,16 @@ class CitasPanelDetalleTest extends TestCase
         $this->assertDeclara048('.fila-cita .cita-enlace:focus-visible', 'outline: none');
         $this->assertDeclara048('.fila-cita .cita-enlace:focus-visible::after', 'outline: var(--focus-ring-width) solid var(--focus-ring)');
         $this->assertDeclara048('.fila-cita .cita-enlace:focus-visible::after', 'outline-offset: calc(-1 * var(--focus-ring-width))');
-        // A5: en la tarjeta del móvil, el anillo sigue su radio.
-        $this->assertDeclara048('.fila-cita .cita-enlace:focus-visible::after', 'border-radius: var(--radius)', ['@media (max-width: 899px)']);
+        // A5: en la tarjeta del móvil, el anillo sigue su radio; /review R4: solo en la tarjeta, la agenda
+        // de la dentista no lo es.
+        $this->assertDeclara048('.tabla-tarjetas .fila-cita .cita-enlace:focus-visible::after', 'border-radius: var(--radius)', ['@media (max-width: 899px)']);
+        foreach ($this->analizarCss($bloque) as [$selectores, $cuerpo]) {
+            if (in_array('.fila-cita .cita-enlace:focus-visible::after', array_map('trim', explode(',', $selectores)), true)) {
+                $this->assertStringNotContainsString('border-radius', $cuerpo, 'El anillo de una cita que no es tarjeta no lleva radio.');
+            }
+        }
+        // /review R5: el fondo de las tablas al pasar el puntero en el escritorio es el tr:hover de siempre.
+        $this->assertMatchesRegularExpression('/(^|;)\s*background\s*:\s*var\(--p50\)\s*(;|$)/', trim($this->declaraciones('tr:hover td')), 'tr:hover td sigue con el fondo --p50 (CA6 en las tablas).');
         // CA6 y A16: fondo al pasar el puntero en la agenda de la dentista, solo en el escritorio.
         $this->assertDeclara048('.timeline-item.fila-cita:hover', 'background: var(--p50)', ['@media (min-width: 900px)']);
 
@@ -262,6 +284,21 @@ class CitasPanelDetalleTest extends TestCase
     }
 
     // ── Ayudantes ─────────────────────────────────────────────────────────
+
+    /** Crea un servicio y una cita pasada del paciente con él; devuelve el nombre del servicio. */
+    private function servicioConCita(string $inicio): string
+    {
+        $nombre = 'Limpieza 048';
+        $id = (string) Str::uuid();
+        DB::table('servicios')->insert([
+            'id' => $id, 'nombre' => $nombre, 'descripcion' => 'Servicio de CitasPanelDetalleTest.', 'categoria' => 'Preventiva',
+            'duracion_min' => 30, 'precio' => 500.00, 'color_agenda' => '#ED93B1', 'activo' => 1,
+        ]);
+        $cita = $this->cita($this->d1, $this->p1, 'completada', $inicio);
+        DB::table('citas')->where('id', $cita)->update(['servicio_id' => $id]);
+
+        return $nombre;
+    }
 
     /** Bloque `/* Spec 048 *\/` de app.css, hasta su cierre. */
     private function bloque048(): string

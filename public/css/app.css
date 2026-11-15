@@ -875,8 +875,9 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
 @media (min-width: 900px) {
     .timeline-item.fila-cita:hover { background: var(--p50); }
 }
-/* En la tarjeta del móvil, el anillo sigue su radio (A5). */
+/* En la tarjeta del móvil, el anillo sigue su radio (A5); solo en la tarjeta: la agenda de la dentista
+   no lo es (/review R4). */
 @media (max-width: 899px) {
-    .fila-cita .cita-enlace:focus-visible::after { border-radius: var(--radius); }
+    .tabla-tarjetas .fila-cita .cita-enlace:focus-visible::after { border-radius: var(--radius); }
 }
 /* Fin spec 048 */
