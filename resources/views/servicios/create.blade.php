@@ -1,6 +1,12 @@
 @extends('layouts.app')
+@section('title', 'Nuevo servicio')
 @section('content')
 <div style="max-width:800px">
+    {{-- Migas de pan (spec 046) --}}
+    @include('partials.migas', ['migas' => [
+        ['texto' => 'Servicios', 'url' => route('admin.servicios.index')],
+        ['texto' => 'Nuevo servicio'],
+    ]])
     @if ($errors->any())
         <div class="alerta-errores" data-testid="servicio-errores">
             <strong>Revisa los datos del formulario:</strong>
