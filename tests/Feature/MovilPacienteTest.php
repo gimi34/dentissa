@@ -505,7 +505,8 @@ class MovilPacienteTest extends TestCase
             $this->assertSame(1, $xpath->query("//*[@id='pestanas-citas']//a[contains(concat(' ', normalize-space(@class), ' '), ' activa ')]")->length, "{$url}: una sola .activa.");
         }
 
-        foreach (["/cliente/citas/{$cita}", '/cliente/agendar'] as $url) {
+        // Spec 046: «Agendar cita» es una pantalla del menú y ya no lleva migas.
+        foreach (["/cliente/citas/{$cita}"] as $url) {
             $xpath = $this->xpath($this->actingAs($this->paciente1)->get($url)->assertOk()->getContent());
             $migas = $xpath->query("//*[@id='migas']");
             $this->assertSame(1, $migas->length, "{$url}: bloque #migas.");

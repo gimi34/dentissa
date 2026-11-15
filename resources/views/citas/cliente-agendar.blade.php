@@ -5,13 +5,6 @@
 
 <div style="max-width:640px">
 
-    {{-- Migas de pan: clases con tokens en lugar de style="" (spec 033, T025). --}}
-    <div id="migas" class="migas">
-        <a href="{{ route('cliente.dashboard') }}">Inicio</a>
-        <span>›</span>
-        <span class="migas-actual">Agendar cita</span>
-    </div>
-
     <form method="POST" action="{{ route('cliente.agendar.store') }}">
         @csrf
 
