@@ -143,4 +143,5 @@ Ninguno en `docs/architecture.md` (sin módulos, rutas ni datos nuevos). `docs/d
 | El `::after` tapa algo pulsable de la fila | Las filas del panel no tienen otros controles (comprobado en las cuatro vistas); el test asegura un solo `<a>` y ningún `<button>` por cita |
 | `.tabla-wrap` recorta el anillo de foco | `outline-offset` negativo (por dentro) |
 | Choque con la 046 en `system.md`, `system.html` y `app.css` | Bloques separados; la segunda en fusionarse renumera la versión del sistema |
+| Línea base de dependencias (2026-11-14): `composer audit` da un aviso **bajo** de `laravel/framework` (CVE-2026-128083, corregido en 12.71.0; hoy 12.69.2), ajeno a la 048 | No bloquea `/release` (solo críticos y altos; la CI ignora bajos y medios); actualizarlo con un `/chore` aparte cuando la versión cumpla los 7 días |
 | `.timeline` también es el historial de la cita (spec 028) | Las reglas se limitan a `.fila-cita`, que solo lleva la agenda del panel |
