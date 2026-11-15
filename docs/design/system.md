@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.16.0
+version: 1.17.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-10
+updated: 2026-11-14
 ---
 
 # Sistema de diseño de Dentissa
@@ -434,10 +434,25 @@ transparente de `--border-width-strong`; el primero, `margin-right` `--space-7`.
 `aria-current="page"`): texto `--p500` (5,06:1 sobre `--bg`) y borde `--p400` (3,67:1). En el móvil,
 cada enlace mide al menos `--touch-min` × `--touch-min`.
 
-### Migas de pan (spec 033)
-`.migas` (detalle de la cita y agendar): fila flexible centrada con `gap` `--space-3`, `margin-bottom`
-`--space-7`, `--text-meta` y `--text-muted`; enlaces en `--text-muted` sin subrayado y la página actual
-en `.migas-actual` (`--text`). En el móvil, cada enlace mide al menos `--touch-min` × `--touch-min`.
+### Migas de pan (spec 033; navegación accesible desde 1.17.0, spec 046)
+Parcial `partials/migas` (`nav#migas.migas`): una navegación con el nombre «Migas de pan» y, dentro, una
+lista ordenada. `.migas` lleva `margin-bottom` `--space-7`, `--text-meta` y `--text`; la lista es una
+fila flexible centrada con `gap` `--space-3` que puede pasar de línea, también en el escritorio, y los
+nombres largos parten por cualquier punto (nada se acorta con puntos suspensivos).
+- **Enlace:** `--p600`, subrayado; al pasar el puntero, `--p800`; con el anillo de foco del sistema. En
+  el móvil mide al menos `--touch-min` × `--touch-min`.
+- **Elemento actual:** el último, `.migas-actual` en `--text`, sin subrayado y sin enlace, marcado como
+  página actual (`aria-current="page"`). Enlace y elemento actual se distinguen sin depender del color.
+- **Separador:** «›» en `--text`, dentro de cada elemento de la lista menos el primero, delante de su
+  texto; es decorativo y no se lee (`aria-hidden="true"`).
+- **Dónde se usan:** toda pantalla de segundo nivel del panel las lleva como primer elemento del
+  contenido de la pantalla, debajo del aviso del sistema si lo hay. Las pantallas a las que se llega
+  desde el menú (paneles, listados, agendar cita, mis doctores, perfil, galería, reportes y auditoría)
+  no las llevan. El primer elemento es la entrada del menú de la sección, con su mismo texto para cada
+  rol («Mis Citas» para la dentista y el paciente).
+
+**Título de pantalla (1.17.0, spec 046):** toda pantalla del panel define su título (barra superior y
+pestaña del navegador); ninguna usa el título por defecto.
 
 ### Lista, tabla y tarjeta
 - **Tarjetas:**
@@ -1134,3 +1149,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-11 | diseño | ¿Qué incorpora el sistema para los reportes de la administración (spec 047)? | Versión 1.15.0 (era 1.14.0; se renumeró al fusionar `main`, donde la ficha `fix-cls-inicio-tableta-038` ya usa la 1.14.0), sin tokens nuevos: frase del periodo (`.reporte-periodo`), tasa en `.stat-card`, fila de totales de tabla (y su tarjeta «Total» en `tabla-tarjetas`), resumen antes del filtro por debajo de 900 px, cabecera impresa (`.solo-impresion`) y la primera hoja de impresión del sistema (`@media print` en `reportes.css`); controles con `--touch-min` a todos los anchos | usuario (spec 047, design.md sin candidatos) |
 | 2026-11-11 | diseño | El inicio salta entre 960 y 1024 px al llegar Montserrat: con el respaldo del sistema, más estrecho, los botones del hero caben en una fila y luego pasan a dos (CLS ~0,19, K8 de la 038) | Versión 1.14.0, sin tokens nuevos: `--font-publica` añade «Montserrat respaldo» (tres `@font-face` locales en `publico.css`, Arial o Liberation Sans con `size-adjust` 110,7 %, 112,5 % y 107,5 % para 400, 500 y 600–700). Ficha `docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md` | usuario (seguir en el carril `/fix`) |
 | 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.16.0 (era 1.15.0; se renumeró al fusionar la v0.17.0, que liberó la 1.15.0 con la spec 047), sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
+| 2026-11-14 | diseño | ¿Qué incorpora el sistema para la navegación interna (spec 046)? | Versión 1.17.0, sin tokens nuevos: las migas de pan pasan a ser una navegación con nombre y lista ordenada, con la página actual marcada y los separadores ocultos a los lectores de pantalla; el enlace va en `--p600` subrayado (`--p800` al pasar el puntero) y el elemento actual en `--text` sin subrayar; el camino puede pasar de línea a todos los anchos; regla de dónde se usan las migas y regla del título de pantalla. Cierra 033/R6 | usuario (spec 046, design.md sin candidatos) |

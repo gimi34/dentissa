@@ -157,9 +157,13 @@
                        border-bottom: var(--border-width-strong) solid transparent; }
   .opt .m-pestanas a:first-child { margin-right: var(--space-7); }
   .opt .m-pestanas a[aria-current] { color: var(--color-link); border-bottom-color: var(--color-primary); }
-  .opt .m-migas { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--color-text-muted); }
+  /* Migas de pan (spec 033; navegación con lista desde 1.17.0, spec 046). */
+  .opt .m-migas { font-size: var(--text-meta); color: var(--color-text); }
+  .opt .m-migas ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+  .opt .m-migas li { display: flex; align-items: center; gap: var(--space-3); min-width: 0; overflow-wrap: anywhere; }
   .opt .m-migas a { display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch-min);
-                    min-width: var(--touch-min); color: var(--color-text-muted); text-decoration: none; }
+                    min-width: var(--touch-min); color: var(--color-accent-text); text-decoration: underline; }
+  .opt .m-migas a:hover { color: var(--color-p800); }
   .opt .m-migas .m-actual { color: var(--color-text); }
 </style>
 <style id="componentes-038-r5">
@@ -555,6 +559,7 @@
       <li class="v-pair" data-fg="--color-focus" data-bg="--color-surface" data-min="3">Foco del filtro, de las tarjetas y del botón de icono (spec 034)</li>
       <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-surface" data-min="3">Logo del menú del móvil (máscara en --p600, spec 034)</li>
       <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-bg" data-min="4.5">Texto secundario de las páginas públicas (--p600, spec 038)</li>
+      <li class="v-pair" data-fg="--color-accent-text" data-bg="--color-bg" data-min="4.5">Enlace de las migas de pan (--p600, spec 046)</li>
       <li class="v-pair" data-fg="--color-success-text" data-bg="--color-surface" data-min="4.5">Éxito en texto sobre blanco (--green-texto, spec 038)</li>
       <li class="v-pair" data-fg="--color-success-text" data-bg="--color-bg" data-min="4.5">Éxito en texto sobre fondo (--green-texto, spec 038)</li>
       <li class="v-pair" data-fg="--color-on-primary" data-bg="--color-link" data-min="4.5">Botón principal de las páginas públicas (--p500, spec 038)</li>
@@ -669,7 +674,7 @@
           <p class="t-body">Pestañas de mis citas</p>
           <nav class="m-pestanas" aria-label="Muestra de pestañas"><a href="#" aria-current="page">Próximas</a><a href="#">Pasadas</a></nav>
           <p class="t-body">Migas de pan</p>
-          <div class="m-migas"><a href="#">Mis citas</a><span>›</span><span class="m-actual">Detalle</span></div>
+          <nav class="m-migas" aria-label="Muestra de migas de pan"><ol><li><a href="#">Pacientes</a></li><li><span aria-hidden="true">›</span><a href="#">Carlos Paciente 1</a></li><li class="m-actual" aria-current="page"><span aria-hidden="true">›</span>Expediente</li></ol></nav>
         </div>
       </div>
     </div></div>
