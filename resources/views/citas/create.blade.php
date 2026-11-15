@@ -13,12 +13,11 @@
 
 <div style="max-width:760px">
 
-    {{-- Breadcrumb --}}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-        <a href="{{ route("$rp.citas") }}" style="color:var(--text-muted);text-decoration:none">Citas</a>
-        <span>›</span>
-        <span style="color:var(--text)">Nueva cita</span>
-    </div>
+    {{-- Migas de pan (spec 046) --}}
+    @include('partials.migas', ['migas' => [
+        ['texto' => auth()->user()->rol === 'dentista' ? 'Mis Citas' : 'Citas', 'url' => route("$rp.citas")],
+        ['texto' => 'Nueva cita'],
+    ]])
 
     <form method="POST" action="{{ route("$rp.citas.store") }}">
         @csrf

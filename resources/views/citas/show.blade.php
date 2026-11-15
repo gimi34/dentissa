@@ -24,12 +24,11 @@
 
 @section('content')
 
-{{-- Breadcrumb --}}
-<div id="migas" class="migas">
-    <a href="{{ route("$rp.citas") }}">Citas</a>
-    <span>›</span>
-    <span class="migas-actual">{{ $cita->paciente }}</span>
-</div>
+{{-- Migas de pan (spec 046) --}}
+@include('partials.migas', ['migas' => [
+    ['texto' => auth()->user()->rol === 'dentista' ? 'Mis Citas' : 'Citas', 'url' => route("$rp.citas")],
+    ['texto' => $cita->paciente],
+]])
 
 {{-- Detalle (spec 034, D7): el HTML va en el orden de la spec, que es también el de la lectura y el foco
      en el móvil. En el escritorio, una rejilla con la columna lateral sobre todas las filas lo deja como antes. --}}
