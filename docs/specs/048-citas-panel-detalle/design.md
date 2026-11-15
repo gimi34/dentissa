@@ -1,6 +1,6 @@
 ---
 spec: 048-citas-panel-detalle
-status: draft               # draft | approved (solo el usuario aprueba)
+status: approved            # draft | approved (solo el usuario aprueba)
 exploration: none           # sin ciclo de candidatos (propuesta de la spec, aprobada con ella el 2026-11-14); motivo en "Resultado"
 system_version: 1.16.0
 created: 2026-11-14

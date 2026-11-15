@@ -1,6 +1,6 @@
 ---
 spec: 048-citas-panel-detalle
-status: draft   # draft | approved | blocked
+status: approved   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-14
 ---
