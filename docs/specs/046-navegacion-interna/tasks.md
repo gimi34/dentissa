@@ -2,6 +2,7 @@
 spec: 046-navegacion-interna
 plan: plan.md
 status: approved
+impl_base: e6c2bbd
 ---
 
 # Tareas · 046 Navegación interna
@@ -36,7 +37,8 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 | P10 Rutas indexables | ➖ | Sin rutas públicas (plan) |
 
 ## Preparación
-- [ ] T001 Traer a la rama `main` con la spec 045 ya fusionada (plan D7) — sin archivos propios (fusión de `origin/main` en `feature/046-navegacion-interna`) — hecho cuando: `git log` de la rama contiene la fusión de la 045 y `php artisan test` pasa completo
+- [x] T001 Traer a la rama `main` con la spec 045 ya fusionada (plan D7) — sin archivos propios (fusión de `origin/main` en `feature/046-navegacion-interna`) — hecho cuando: `git log` de la rama contiene la fusión de la 045 y `php artisan test` pasa completo
+  - nota: fusión e6c2bbd (un conflicto en docs/specs/README.md, resuelto dejando las dos filas); suite 1001 en verde; sin fallos de línea base. El sistema de diseño queda en 1.16.0: la 046 toma la 1.17.0.
 - [ ] T002 Actualizar «Migas de pan» y las reglas «dónde se usan las migas» y «título de pantalla» del acta (`design.md` → «Cambios a incorporar al sistema»), con la versión siguiente a la vigente y su fila en Decisiones — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: `system.md` describe la navegación con lista, el enlace en `--p600` subrayado, el elemento actual en `--text` y el camino que pasa de línea, `system.html` lo muestra y `python .ai/bin/aidd.py validate` no da errores — cubre: CA1, CA3, CA4, CA10 — depende: T001
 
 ## Tests (antes de implementar)
