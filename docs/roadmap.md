@@ -235,7 +235,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     desplegable gris.
   - DS13: el campo de hora del horario (110px) recorta "AM/PM" con el formato de 12 h.
   - DS14: emojis mezclados con los iconos SVG en el panel del paciente.
-  - DS15: favicon vacío, isotipo sin uso y títulos "Dashboard" por defecto en servicios.
+  - DS15: isotipo sin uso (el favicon lo corrigió la ficha `2026-11-12-chore-favicon` y los títulos
+    de servicios, la spec 046).
   (DS12–DS15 añadidas en la re-extracción del 2026-10-04, decisión del usuario.)
 - `layouts/app.blade.php:244` mete la contraseña generada con `{{ }}` dentro de un `onclick` de
   JavaScript en lugar de `@js()` (P4); riesgo bajo, porque la genera el sistema. Corregirlo en la spec
@@ -312,6 +313,18 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   intermitente en las pantallas de la asistente a 1024 y 1440 (0,04–0,11 % de píxeles, diferencia
   máxima 48–72/255), que desaparece al repetir (2026-10-17 y 2026-10-18, spec 035 T024 y T040).
   Buscar la causa (esperar por condición antes de capturar) en la spec que toque el guion.
+  La spec 046 tocó el guion sin atenderlo (plan D13). Dato nuevo (2026-11-14, 046 T032): el defecto
+  está en la toma de la línea base, no en la pantalla medida: con la misma línea base la diferencia
+  se repite idéntica en las 14 comparaciones de la asistente, y la rama y el tag dan la misma
+  imagen píxel a píxel; desaparece al tomar la línea base de nuevo.
+- `capturar.mjs` tras la spec 046 (CA12, D12): cuando la 046 esté en producción, vaciar
+  `SIN_COMPARAR_046` para devolver a la comparación del escritorio «Agendar cita» y «Reprogramar»
+  del paciente y la ficha del expediente de los tres roles.
+- «Nuevo miembro» y «Editar personal» a 320 px se desplazan de lado (361 px): las tarjetas del
+  tipo de personal no caben. Ya ocurre en producción (v0.18.0); visto en la spec 046 (T031), que
+  deja fuera de alcance rehacer esas pantallas. Para `/fix` o la spec del móvil de personal.
+- `composer audit` (2026-11-14): aviso de gravedad baja en `laravel/framework`
+  (CVE-2026-128083, corregido en 12.71.0) → `/chore` de dependencias.
 - Mensajes de validación en inglés en las pantallas del paciente: al enviar vacíos agendar y el
   perfil salen «The fecha field is required.», «The hora field is required.» y «The nombre field is
   required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
@@ -378,19 +391,22 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 035/R20: la «Contraseña temporal» del alta del paciente va en `type="text"`; `type="password"`
     con `autocomplete="new-password"` o generarla siempre (relacionada con RS10).
   - 035/R22: `--medir` no envía con errores el formulario «Guardar fecha» de la ficha del
-    expediente a 320; añadir ese envío cuando se toque `capturar.mjs`.
+    expediente a 320; añadir ese envío cuando se toque `capturar.mjs`. La spec 046 tocó el guion
+    sin atenderlo (plan D13).
 - Esqueletos de carga (decisión del usuario, 2026-10-16): mostrar un esqueleto mientras la página
   carga en lugar de solo cambiar de pantalla → spec propia (la app se dibuja en el servidor y cada
   clic carga una página nueva: la spec decide dónde y cómo).
 - Deuda de la spec 033 (liberada en v0.7.0; /review r1 y r2, aceptada sin tarea, decisión del usuario):
-  - 033/R6: migas de pan sin `<nav>` con nombre ni `aria-current`, con el enlace indistinguible del
-    texto actual (`--text-muted` = `--text`); cambia `system.md` («Migas de pan»).
+  - ~~033/R6: migas de pan sin `<nav>` con nombre ni `aria-current`, con el enlace indistinguible del
+    texto actual (`--text-muted` = `--text`); cambia `system.md` («Migas de pan»).~~ Hecho por la
+    spec 046 (parcial `partials/migas`, sistema de diseño 1.17.0).
   - 033/R9: «Menú» lleva `aria-expanded` dentro de `<main>`, que queda inerte al abrir: el estado
     abierto no se percibe en el botón. Resuelto por la 034 (v0.8.0, CA9).
   - 033/R10: ampliar `literales()` de `ReglasCss` a colores con nombre, `hsl()` y unidades
     relativas (con DS4).
   - 033/R11: la condición de `request()->is()` se repite en los 19 enlaces del menú; `aria-current`
-    solo se prueba en el panel de cada rol.
+    solo se prueba en el panel de cada rol. La spec 046 prueba ya la entrada marcada en las 18
+    pantallas de segundo nivel (`NavegacionInternaTest`); sigue pendiente la condición repetida.
   - 033/R12: límites del analizador de CSS de `ReglasCss` (sentencias `@` sin bloque, llaves en
     cadenas, CSS anidado, comas en `:is()`/`:not()`).
   - 033/R13: `movil()` de `MovilPacienteTest` duplica `declaraciones()`; docblock de esta.
@@ -537,7 +553,9 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio
   para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el
   marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`,
-  los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas;
+  los `for`/`id`, los mensajes de error con su `aria-describedby` y las migas, que desde la spec 046
+  son el parcial `partials/migas` en `pacientes/create`, `expedientes/show` y `expedientes/create`
+  (se parte de él y se conserva; `NavegacionInternaTest` falla si no);
   `MovilPacientesExpedientesTest` falla si no.
 - Pregunta abierta de la spec 013 sobre `trg_historial_cita`: resuelta. La spec 026 lo retira con
   una migración y el historial lo escribe la aplicación, con autor (spec 026, D2; decisión del
