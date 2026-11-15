@@ -136,13 +136,16 @@ podía romper:
   - nota: 2026-11-12 — CA1–CA8 marcados (sus tests en verde), spec en `implemented` y `docs/specs/README.md` al día
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
+  - nota: 2026-11-13 — sin staging; hecho en producción dentro de T097 (https://dentissa.app): `/terminos` y `/aviso-de-privacidad` 200 con su `h1`, título, descripción y canónica, sin `noindex`, y los dos enlaces en el pie de `/`; en `/registro`, 2 ventanas: abrir desde la casilla con el foco en «Cerrar», cerrar con «Cerrar», Escape y pulsando fuera, foco de vuelta al enlace, el enlace al aviso dentro de los términos abre su ventana, lo escrito sigue; sin JavaScript, la página en la misma pestaña (Playwright contra producción)
   - `/terminos` y `/aviso-de-privacidad` responden `200` con su texto, con el logo, y aparecen en el pie de `/`
   - desde `/registro`, los dos enlaces abren su ventana sin salir de la página, que se cierra con «Cerrar», Escape o pulsando fuera, y lo escrito sigue ahí
 - [x] T096 Aprobación humana para producción
   - aprobado por gimi34 el 2026-11-12 21:00 (hora local) para v0.18.0: «desplegar v0.18.0 a producción»
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh` con la versión nueva, `verificar.sh` y la comprobación de T095; vigilar `5xx` en `/registro` la primera hora
-- [ ] T098 Marcar spec como `released`; en las specs 002, 038 y 044 anotar en su Historial lo que cambia la 045 (casilla y validación del registro; pie público; recuento de `style=""` del registro en `NavegacionSalidasCssTest`)
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh` con la versión nueva, `verificar.sh` y la comprobación de T095; vigilar `5xx` en `/registro` la primera hora
+  - nota: 2026-11-13 — `deploy/desplegar.sh v0.18.0` en 141 s (anterior v0.17.0; copia `dentissa-20261113-030143.sql.gz.gpg`), `verificar.sh --interna` y `verificar.sh` (dirección pública): todo OK. SEO en producción: canónicas absolutas en `https://dentissa.app/…`, `robots.txt` sin `Disallow: /`. Los `5xx` de `/registro` en la primera hora, del lado del usuario (el agente no tiene acceso a los logs del servidor). Rollback, si hiciera falta: `bash deploy/volver.sh v0.17.0` (sin migraciones)
+- [x] T098 Marcar spec como `released`; en las specs 002, 038 y 044 anotar en su Historial lo que cambia la 045 (casilla y validación del registro; pie público; recuento de `style=""` del registro en `NavegacionSalidasCssTest`)
+  - nota: 2026-11-13 — spec `released`; deuda 045/R4, R6, R7, R9, R10, R11 y R12 en `docs/roadmap.md`; Historial de las specs 002, 038 y 044; ficha `2026-11-12-chore-favicon` liberada en v0.18.0
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
