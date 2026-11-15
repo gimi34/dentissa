@@ -1,7 +1,7 @@
 ---
 id: 046
 slug: navegacion-interna
-status: draft
+status: approved
 created: 2026-11-12
 extends: [008, 009, 010, 028, 033, 034, 035]
 ---
@@ -165,3 +165,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-12 | CA1 (posición bajo el aviso), CA6 (diez formularios; «Editar usuario» vuelve a la ficha), CA12 nuevo (reemplaza parte de 033 CA8, 034 CA11 y 035 CA10), texto del primer elemento igual al del menú, fuera de alcance de DS15 precisado; vuelve a `draft` | /analyze r1: A1, A2, A4, A8, A12, A13, A15, A16 (decisiones del usuario) |
 | 2026-11-12 | Aprobada de nuevo | Aprobación del usuario («si, apruebo») |
 | 2026-11-14 | CA12 nombra la aparición de migas en «Reprogramar» del paciente y pasa al final de la lista; la comparación del escritorio excluye las zonas que la 046 cambia en lugar de usar una línea base nueva; vuelve a `draft` | /analyze r2: A17 (decisión del usuario, opción 1), A22, A23 |
+| 2026-11-14 | Aprobada de nuevo, con el plan y las tareas | Aprobación del usuario («si apruebo») |

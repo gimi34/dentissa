@@ -1,7 +1,7 @@
 ---
 spec: 046-navegacion-interna
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 046 Navegación interna
