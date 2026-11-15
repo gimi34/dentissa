@@ -98,6 +98,9 @@
 //    `-e OUT=/tmp/capturas/base` y `--linea-base`; luego --medir con `-e LINEA_BASE=/tmp/capturas/base`.
 //    La línea base muestra el menú de la 033 con sesión iniciada en los cuatro roles. Si una cita cruza
 //    el plazo de 24 h de «Reprogramar» y «Cancelar» entre las dos capturas, se repiten las dos.
+//    Spec 046 (CA12): la comparación deja fuera el bloque de migas y, en las pantallas de expedientes,
+//    las entradas «Pacientes» y «Expedientes» de la barra; y no compara las pantallas de SIN_COMPARAR_046
+//    mientras la línea base sea de una versión anterior a la 046 (después, vaciar esa lista).
 //    Al terminar: docker rm -f dentissa_base_app; rm <carpeta temporal>/v070/.env;
 //    git worktree remove <carpeta temporal>/v070.
 //
@@ -325,7 +328,7 @@ const COMPROBACIONES = [
   '034 menú: a 390, «Menú» sin texto visible, con nombre y 44 × 44; con el menú abierto, el logo de --logo-max-w con fondo --p600 (CA9, CA10)',
   '034 cambios de modo (033 T064 y R21): (a) foco en «Cerrar menú» y paso a 1000 px → enlace actual; (b) foco en un enlace del menú y paso a 390 → «Menú»; (c) Intro y Escape → cerrado y foco en «Menú»; (d) «Atrás» → cerrado y sin inert; (R21) a 1000, foco en un enlace de la barra, clic en una zona sin foco y paso a 390 → el foco no se mueve (CA9, A10)',
   '034 sin JS: a 390, las pantallas del personal sin desplazamiento horizontal (CA8)',
-  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro, el enlace «Auditoría» del admin (spec 020) ni la barra del admin desde «Galería» (spec 039)) (CA11, D13)',
+  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro, el enlace «Auditoría» del admin (spec 020) ni la barra del admin desde «Galería» (spec 039), ni, por la spec 046, el bloque de migas y, en las pantallas de expedientes, las entradas «Pacientes» y «Expedientes» de la barra; fuera de la comparación hasta que la 046 esté en producción: «Agendar cita» y «Reprogramar» del paciente y la ficha del expediente de los tres roles) (CA11, D13; 046 CA12)',
   '035 pantallas: ficha, alta y edición del paciente, lista, ficha y alta de expediente de cada rol que las ve, a 320, 390, 844x390 y 1440 sin desplazamiento horizontal; a 320, 390 y 844x390, sin recortes, toque ≥ 44 × 44 (también las migas), sin solapes y tarjetas con su etiqueta; y en las palabras de 30 letras (también el título de la barra y las migas) (CA1–CA4, CA8, CA9)',
   '035 fichas: a 320, 390 y 844x390, las dos fichas en una columna; en la del paciente, iniciales de 48 px con el nombre, la edad y el tipo de sangre a su derecha y las etiquetas de contacto visibles, que a 1440 no se ven; las acciones de la barra bajo el título y a partes iguales; los botones de las acciones con el texto centrado (±2 px) y alineados en su fila (CA1, CA4, CA7, D12)',
   '035 formularios: a 320, el alta y la edición del paciente, el alta del expediente y la ficha del expediente (admin y dentista) enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13, /review R12)',
@@ -359,13 +362,21 @@ const PANTALLAS_035 = [
   ['admin-alta-expediente', 'admin', '/admin/expedientes/crear?paciente_id={paciente}'],
   ['dentista-alta-expediente', 'dentista', '/dentista/expedientes/crear?paciente_id={paciente}'],
 ];
+// Spec 046 (CA12, D12): pantallas que la 046 recompone a propósito y que no se comparan con la línea
+// base hasta que la 046 esté en producción (entonces esta lista se vacía). En «Agendar cita» las migas
+// desaparecen y en «Reprogramar» del paciente aparecen: todo lo de debajo se desplaza. En la ficha del
+// expediente, al quitar «← Volver al paciente» el título gana ancho y la cabecera cambia de alto (medido
+// el 2026-11-14 con los datos de captura: 157 → 133 px a 1024 y 96 → 83 px a 1440). Siguen en las demás
+// comprobaciones de --medir.
+const SIN_COMPARAR_046 = ['cliente-agendar', 'citas-reprogramar-cliente',
+  'admin-ficha-expediente', 'dentista-ficha-expediente', 'asistente-ficha-expediente'];
 // Las que --medir compara con la línea base a 1024 y 1440 (D13).
 const COMPARADAS = [
   ...PANTALLAS_PERSONAL,
   ...PANTALLAS_035,
   ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-detalle-historial`, rol, `/${rol}/citas/{cita_historial_largo}`]),
   ...Object.entries(RUTAS_PACIENTE).map(([id, ruta]) => [id, 'cliente', ruta]),
-];
+].filter(([id]) => !SIN_COMPARAR_046.includes(id));
 
 // Funciones que se evalúan en la página.
 const EN_PAGINA = {
@@ -726,8 +737,11 @@ const EN_PAGINA = {
   // Spec 039 (T034): la entrada «Galería», que tampoco tiene la línea base, va después de «Servicios» y
   // desplaza las de debajo; se excluye la barra desde ella hasta el final de su lista de enlaces. Lo de
   // encima de «Galería» y el resto de la pantalla se siguen comparando.
+  // Spec 046 (CA12, D12): el bloque de migas (cambia de aspecto y de texto sin cambiar de alto) y, en las
+  // pantallas de expedientes, las entradas «Pacientes» y «Expedientes» de la barra, que cambian de marca.
   excluidos: () => {
-    const rects = [...document.querySelectorAll('.filtro-citas .field, .sidebar a[href="/admin/auditoria"]')].map((e) => {
+    const de046 = '#migas' + (/\/expedientes\//.test(location.pathname) ? ', .sidebar a[href$="/pacientes"], .sidebar a[href$="/expedientes"]' : '');
+    const rects = [...document.querySelectorAll(`.filtro-citas .field, .sidebar a[href="/admin/auditoria"], ${de046}`)].map((e) => {
       const r = e.getBoundingClientRect();
       return [Math.floor(r.left + scrollX - 4), Math.floor(r.top + scrollY - 4), Math.ceil(r.width + 8), Math.ceil(r.height + 8)];
     });
