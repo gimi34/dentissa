@@ -271,7 +271,9 @@ class CitasPanelDetalleTest extends TestCase
             if (in_array('@media (max-width: 899px)', $condiciones, true)) {
                 $this->assertDoesNotMatchRegularExpression('/(^|;)\s*background(-color)?\s*:/', trim($cuerpo), "{$selectores}: sin fondo en el móvil.");
             }
-            $this->assertStringContainsString('fila-cita', $selectores, "{$selectores}: las reglas 048 se limitan a .fila-cita.");
+            // Plan, «Cambios por módulo» y Riesgos: las reglas solo tocan las citas del panel, no `.timeline`
+            // del historial de la cita (spec 028) ni otras tablas.
+            $this->assertStringContainsString('fila-cita', $selectores, "{$selectores}: las reglas 048 se limitan a .fila-cita, para no tocar otras listas.");
         }
     }
 
@@ -330,7 +332,7 @@ class CitasPanelDetalleTest extends TestCase
     }
 
     /** La fila de la cita lleva `fila-cita` y un único enlace, en su `td.celda-cab`, que abre su detalle. */
-    private function assertAbreLaCitaDesdeLaTabla(Usuario $usuario, string $panel, string $ruta, string $cita): DOMElement
+    private function assertAbreLaCitaDesdeLaTabla(Usuario $usuario, string $panel, string $ruta, string $cita): void
     {
         $xpath = $this->xpath($this->actingAs($usuario)->get($panel)->assertOk()->getContent());
         $href = route($ruta, $cita);
@@ -350,8 +352,6 @@ class CitasPanelDetalleTest extends TestCase
 
         $this->actingAs($usuario)->get($href)->assertOk()
             ->assertSee("{$this->paciente1->nombre} {$this->paciente1->apellido}");
-
-        return $enlace;
     }
 
     /** @return string[] */

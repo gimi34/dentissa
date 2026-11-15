@@ -6,7 +6,7 @@
 //   - CA1–CA4: pulsar otra parte de la cita (la celda «Servicio»; en la dentista, el nombre) abre su detalle;
 //   - K1: por debajo de 900 px, cada cita mide ≥ 44 px de alto;
 //   - K4/CA9: sin desplazamiento lateral (scrollWidth ≤ ancho de la ventana);
-//   - CA5/K2: con Tab, cada cita es una sola parada; el enlace no dibuja anillo propio y el ::after sí,
+//   - CA5/K2: con Tab, cada cita es una sola parada e Intro la abre; el enlace no dibuja anillo propio y el ::after sí,
 //     con contraste ≥ 3:1 sobre el fondo de la cita;
 //   - A2: en reposo, la hora o fecha tiene el color de su celda y sin subrayado;
 //   - CA6/A16: en el escritorio, la agenda de la dentista cambia de fondo al pasar el puntero;
@@ -152,7 +152,14 @@ for (const [nombre, motor, anchos] of PASADAS) {
       ok(foco.propio === 'none' && foco.anillo === 'solid', `${etiqueta}: un solo anillo (enlace ${foco.propio}, ::after ${foco.anillo})`);
       ok(c >= 3, `${etiqueta}: anillo ${foco.color} sobre ${foco.fondo}, ${c.toFixed(2)}:1 (≥ 3)`);
       if (ancho < 900 && panel.rol !== 'dentista') ok(foco.radio !== '0px', `${etiqueta}: el anillo sigue el radio de la tarjeta (${foco.radio})`);
+      // /review R4: la agenda de la dentista no es tarjeta; su anillo no lleva radio.
+      if (ancho < 900 && panel.rol === 'dentista') ok(foco.radio === '0px', `${etiqueta}: el anillo de la agenda va sin radio (${foco.radio})`);
       if (nombre === 'chromium' && ancho !== 320) await citas.first().screenshot({ path: `${OUT}/${panel.rol}-${ancho}-foco.png` });
+
+      // /review R6 (CA5): con el foco en la cita, Intro la abre.
+      const destino = await citas.first().locator('.cita-enlace').getAttribute('href');
+      await Promise.all([pagina.waitForURL(destino), pagina.keyboard.press('Enter')]).catch(() => {});
+      ok(pagina.url() === destino, `${etiqueta}: Intro abre ${new URL(destino).pathname}`);
 
       await contexto.close();
     }

@@ -81,8 +81,8 @@
                             'confirmada'  => 'var(--blue)',
                             default       => 'var(--p200)',
                         };
+                        $hora = \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i');
                     @endphp
-                    @php $hora = \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i'); @endphp
                     {{-- Spec 048: toda la cita abre el detalle; el enlace es el ojo (.cita-enlace::after la cubre). --}}
                     <div class="timeline-item fila-cita">
                         <div class="timeline-time">{{ $hora }}</div>
