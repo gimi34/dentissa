@@ -1,7 +1,7 @@
 ---
 id: 048
 slug: citas-panel-detalle
-status: draft
+status: approved
 created: 2026-11-14
 extends: [012, 034]
 ---
@@ -60,8 +60,8 @@ Pantallas que toca: el panel de inicio de la administración («Citas de hoy»),
 («Historial»), en escritorio y en móvil. Qué debe diseñarse: el aspecto de la fila o tarjeta al
 pasar el puntero y con el foco, con los componentes que ya existen.
 
-Sin ciclo de candidatos de `/design-spec` (propuesta): `/plan` usa los componentes del sistema y el
-usuario lo valida en pantalla durante `/implement`.
+Sin ciclo de candidatos de `/design-spec`: `/plan` usa los componentes del sistema y el usuario lo
+valida en pantalla durante `/implement`. Acta: [design.md](design.md).
 
 ## Criterios de diseño
 Modo: operar · sin ciclo de candidatos · la verificación es la del usuario en pantalla y los tests de `/implement`.
@@ -93,6 +93,7 @@ Ninguna.
 | 2026-11-14 | implícita | Adónde vuelve el detalle abierto desde el panel | Sus migas siguen el camino fijo hacia «Citas»; no se recuerda la pantalla de origen | `docs/specs/046-navegacion-interna/spec.md` (Fuera de alcance) |
 | 2026-11-14 | implícita | Permisos sobre el detalle de cada cita | No cambian: los de cada rol en su apartado «Citas» | `docs/security.md` (modelo de autorización) |
 | 2026-11-14 | implícita | Auditoría | No aplica: no hay accesos, permisos ni acciones nuevas; abrir un detalle ya existe | `docs/constitution.md` P7, `docs/observability.md` |
+| 2026-11-14 | diseño | Ciclo de candidatos | Sin exploración; acta en [design.md](design.md) | usuario (aprobó la spec con esa propuesta, 2026-11-14) |
 | 2026-11-14 | implícita | Descubribilidad | No aplica: los paneles son privados y no se indexan | `docs/seo.md` |
 
 ## Notas para /plan
