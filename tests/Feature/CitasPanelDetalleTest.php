@@ -220,7 +220,10 @@ class CitasPanelDetalleTest extends TestCase
 
         // P9 (A9): sin literales, con control positivo de la comprobación.
         $this->assertNotEmpty($this->literales('padding: 4px; color: #ffffff;'), 'Control: literales() detecta px y colores.');
-        $this->assertSame([], $this->literales($bloque), 'El bloque 048 solo usa tokens.');
+        // Solo los cuerpos de las reglas: los puntos de corte de las @media (900 px) no son valores de estilo.
+        $cuerpos = implode(' ', array_column($this->analizarCss($bloque), 1));
+        $this->assertNotSame('', trim($cuerpos), 'Control: el bloque tiene reglas.');
+        $this->assertSame([], $this->literales($cuerpos), 'El bloque 048 solo usa tokens.');
 
         $this->assertDeclara048('.fila-cita', 'position: relative');
         // A2: en reposo, la hora o fecha se ve como hoy; el ojo conserva su .btn-ghost.
