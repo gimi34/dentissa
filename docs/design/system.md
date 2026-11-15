@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.16.0
+version: 1.17.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-10
+updated: 2026-11-14
 ---
 
 # Sistema de diseño de Dentissa
@@ -454,6 +454,26 @@ en `.migas-actual` (`--text`). En el móvil, cada enlace mide al menos `--touch-
 - **Línea de tiempo del panel de la dentista (spec 034):** en el móvil, `.timeline-item` baja de
   línea y el estado y el enlace («Ver detalle», `.btn-icono`) van debajo del nombre
   (`.timeline-acciones`), que usa todo el ancho que dejan la hora y el punto. No es tarjeta.
+- **Cita que abre su detalle (spec 048, 1.17.0):** en las listas de citas del panel de inicio
+  (`.fila-cita`: la fila de la tabla, la tarjeta del móvil o el `.timeline-item` de la dentista) toda
+  la cita es pulsable y abre su detalle ([diseño](../specs/048-citas-panel-detalle/design.md)).
+  - **Un solo enlace por cita** (`.cita-enlace`), en el dato principal que ya existe: la hora, la
+    fecha del historial o el ojo «Ver detalle» de la dentista. Su `::after` cubre toda la cita, así
+    que no hay enlaces anidados, ni celdas nuevas, ni JavaScript.
+  - **Reposo:** igual que hoy; la hora o fecha conserva el color de su celda, sin subrayado, también
+    después de visitada; el ojo conserva su `.btn-ghost`.
+  - **Puntero encima:** cursor de enlace; en el escritorio, fondo `--p50` (el `tr:hover` de siempre
+    y, en la agenda de la dentista, el del elemento); en el móvil la tarjeta conserva su `--white`
+    (A57 de la 034: `--p50` es el fondo de la lista).
+  - **Foco:** un solo anillo de `--focus-ring-width` en `--focus-ring`, por dentro del borde de la
+    cita (no lo recortan `.table-wrap` ni `.card-0`) y con `--radius` en la tarjeta del móvil; la hora
+    y el ojo no dibujan un segundo anillo. `--focus-ring` contrasta ≥ 3:1 sobre `--white` y `--p50`.
+  - **Nombre accesible:** empieza por el texto visible y sigue con el resto: «10:00, Ana López, ver
+    detalle»; en el historial, «14/10/2026, Limpieza, ver detalle»; el ojo, por la hora de su elemento.
+  - **Toque:** la tarjeta entera, ≥ `--touch-min` de alto por debajo de 900 px; en el escritorio, la
+    fila entera con su altura (el toque mínimo no se aplica en el escritorio, D8 de la 033).
+  - No se puede seleccionar texto de la cita con el ratón: el teléfono y el nombre se copian desde el
+    detalle (decisión del usuario, spec 048).
 
 ### Tarjeta de lista en el móvil (spec 034)
 Opción A de la spec 034 ([maqueta](../specs/034-movil-personal/design/opcion-a.html)). Por debajo de
@@ -1134,3 +1154,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-11 | diseño | ¿Qué incorpora el sistema para los reportes de la administración (spec 047)? | Versión 1.15.0 (era 1.14.0; se renumeró al fusionar `main`, donde la ficha `fix-cls-inicio-tableta-038` ya usa la 1.14.0), sin tokens nuevos: frase del periodo (`.reporte-periodo`), tasa en `.stat-card`, fila de totales de tabla (y su tarjeta «Total» en `tabla-tarjetas`), resumen antes del filtro por debajo de 900 px, cabecera impresa (`.solo-impresion`) y la primera hoja de impresión del sistema (`@media print` en `reportes.css`); controles con `--touch-min` a todos los anchos | usuario (spec 047, design.md sin candidatos) |
 | 2026-11-11 | diseño | El inicio salta entre 960 y 1024 px al llegar Montserrat: con el respaldo del sistema, más estrecho, los botones del hero caben en una fila y luego pasan a dos (CLS ~0,19, K8 de la 038) | Versión 1.14.0, sin tokens nuevos: `--font-publica` añade «Montserrat respaldo» (tres `@font-face` locales en `publico.css`, Arial o Liberation Sans con `size-adjust` 110,7 %, 112,5 % y 107,5 % para 400, 500 y 600–700). Ficha `docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md` | usuario (seguir en el carril `/fix`) |
 | 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.16.0 (era 1.15.0; se renumeró al fusionar la v0.17.0, que liberó la 1.15.0 con la spec 047), sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
+| 2026-11-14 | diseño | ¿Qué incorpora el sistema para abrir las citas del panel de inicio (spec 048)? | Versión 1.17.0, sin tokens nuevos: el componente «Cita que abre su detalle» (`.fila-cita` y `.cita-enlace`) en «Lista, tabla y tarjeta»: un solo enlace por cita en su dato principal con un `::after` que la cubre, reposo igual que hoy, fondo `--p50` al pasar el puntero solo en el escritorio (A57 de la 034), un solo anillo de foco por dentro y nombre accesible que empieza por el texto visible. Diseño: [048](../specs/048-citas-panel-detalle/design.md), sin exploración | `/design-spec 048` y `/analyze` 048 (A1, A4, A14), aprobado por el usuario |

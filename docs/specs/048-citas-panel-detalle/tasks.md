@@ -1,6 +1,7 @@
 ---
 spec: 048-citas-panel-detalle
 plan: plan.md
+impl_base: a69c10b
 status: approved
 ---
 
@@ -30,7 +31,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - ➖ P4, P6, P7, P8, P10: sin entradas, dependencias, auditoría, logs ni rutas indexables nuevas (plan).
 
 ## Preparación
-- [ ] T001 Añadir el componente «Cita que abre su detalle» (reposo, puntero `--p50`, foco con `--focus-ring` por dentro, nombre accesible «texto visible, paciente o servicio, ver detalle», una sola parada) en «Lista, tabla y tarjeta», con la versión siguiente a la vigente y su fila en el historial de versiones — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los dos documentos describen el componente del acta («Cambios a incorporar al sistema») y `python .ai/bin/aidd.py validate` no da errores
+- [x] T001 Añadir el componente «Cita que abre su detalle» (reposo, puntero `--p50`, foco con `--focus-ring` por dentro, nombre accesible «texto visible, paciente o servicio, ver detalle», una sola parada) en «Lista, tabla y tarjeta», con la versión siguiente a la vigente y su fila en el historial de versiones — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los dos documentos describen el componente del acta («Cambios a incorporar al sistema») y `python .ai/bin/aidd.py validate` no da errores
+  - nota: 2026-11-14 — `system.md` 1.17.0 (componente en «Lista, tabla y tarjeta» y su fila en Decisiones) y `system.html` con una muestra viva (`#cita-048`, estilos `componentes-048` con los tokens de `.opt`); validate del repo sin errores. Si la 046 se fusiona antes y toma la 1.17.0, esta pasa a la siguiente
 
 ## Tests (antes de implementar)
 - [ ] T010 Escribir `test_el_administrador_abre_la_cita_desde_el_panel` y `test_la_asistente_abre_la_cita_desde_el_panel` (reloj fijo y `EscenarioEstadosCita`, como `MovilPersonalTest`): la fila de la cita de hoy lleva `fila-cita` y exactamente un `<a class="cita-enlace">` dentro de su `td.celda-cab`, con `href` a `<rol>.citas.show` de esa cita; seguir esa `href` da 200 con el detalle de la cita — `tests/Feature/CitasPanelDetalleTest.php` — hecho cuando: los dos fallan por la ausencia del enlace — cubre: CA1, CA2
