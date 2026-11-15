@@ -52,7 +52,7 @@ Sin cambios de rutas, respuestas, esquema ni migraciones.
 - en su `td.celda-cab` (que conserva `data-label` y sus clases), el texto de la hora dentro de
   `<a class="cita-enlace">`, con `href` = `route('<rol>.citas.show', $cita->id)` y `aria-label` =
   «<hora>, <paciente>, ver detalle»;
-- en el historial del paciente, la fecha y «<fecha>, <servicio o el mismo «—» de la celda>, ver detalle»;
+- en el historial del paciente, la fecha y «<fecha>, <servicio o «sin servicio» (la celda sigue con «—»; A11)>, ver detalle»;
 - en la dentista, el enlace es el ojo (`btn-icono`) con el mismo nombre que las tablas, que empieza
   por la hora de su `.timeline-time`;
 - las cuatro vistas construyen la `href` con `route()` (A7).

@@ -41,7 +41,7 @@ tarjeta o elemento, así que pulsar en cualquier parte lo abre.
   tarjeta (con su `--radius` en el móvil), para que no lo recorte el contenedor de la tabla; la hora
   y el ojo no dibujan un segundo anillo.
 - **Nombre accesible:** el texto visible primero y después el resto: «10:00, Ana López, ver
-  detalle»; en el historial, «14/10/2026, Limpieza, ver detalle» (sin servicio, el mismo «—» de la celda); en el ojo de la dentista, empieza por la hora de su elemento.
+  detalle»; en el historial, «14/10/2026, Limpieza, ver detalle» (sin servicio, «sin servicio», aunque la celda muestre «—»; A11); en el ojo de la dentista, empieza por la hora de su elemento.
 
 ## Cambios a incorporar al sistema
 

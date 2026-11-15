@@ -82,8 +82,10 @@
                             default       => 'var(--p200)',
                         };
                     @endphp
-                    <div class="timeline-item">
-                        <div class="timeline-time">{{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}</div>
+                    @php $hora = \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i'); @endphp
+                    {{-- Spec 048: toda la cita abre el detalle; el enlace es el ojo (.cita-enlace::after la cubre). --}}
+                    <div class="timeline-item fila-cita">
+                        <div class="timeline-time">{{ $hora }}</div>
                         <div class="timeline-dot" style="background:{{ $dotColor }}"></div>
                         <div class="timeline-content">
                             <div class="timeline-title">{{ $cita->paciente }}</div>
@@ -97,7 +99,7 @@
                         </div>
                         <div class="timeline-acciones">
                             @include('partials.badge-estado', ['estado' => $cita->estado])
-                            <a href="/dentista/citas/{{ $cita->id }}" class="btn btn-ghost btn-sm btn-icono" aria-label="Ver detalle">
+                            <a href="{{ route('dentista.citas.show', $cita->id) }}" class="btn btn-ghost btn-sm btn-icono cita-enlace" aria-label="{{ $hora }}, {{ $cita->paciente }}, ver detalle">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                     <circle cx="12" cy="12" r="3"/>
