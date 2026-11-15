@@ -69,12 +69,27 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: A13 — WebKit y Firefox a 1440 px: pulsar otra columna abre la cita (el `::after` cubre el `<tr>` en los tres motores)
   - nota: Datos: `.ai/inspect/048-cuentas.php crear|borrar` (no versionado) crea en la base local cuentas `@medicion-048.test` con citas de hoy y pasadas; servidor `php artisan serve` en el puerto 8048 con `SESSION_DOMAIN=null`. Al terminar: cuentas borradas y servidor parado
 
+- [ ] T025 Ampliar `test_el_paciente_abre_una_cita_del_historial`: una cita del paciente a más de 24 h (2026-10-16 10:00) que pasa a ser la próxima, y dentro de `#acciones-proxima` los tres controles hacia esa cita: «Ver detalles» (`cliente.citas.show`), «Reprogramar» (`cliente.citas.reprogramar`) y el formulario de «Cancelar» (`cliente.citas.cancelar`) — `tests/Feature/CitasPanelDetalleTest.php` — hecho cuando: pasa (caracterización) y se comprueba quitando un momento «Reprogramar» de la vista — cubre: CA4
+  - nota: añadida por /review: R1
+- [ ] T026 Añadir al historial una cita pasada con servicio y comprobar su nombre «dd/mm/aaaa, <nombre del servicio>, ver detalle» (la cita sin servicio sigue para A11) — `tests/Feature/CitasPanelDetalleTest.php` — hecho cuando: pasa y se comprueba escribiendo un momento siempre «sin servicio» en la vista — cubre: CA5 — depende: T025
+  - nota: añadida por /review: R2
+- [ ] T027 Comprobar en `test_sin_citas_el_panel_no_tiene_enlaces_de_cita` el estado vacío del historial del paciente («Aún no tienes citas anteriores») y en `test_las_reglas_048_usan_tokens` que `tr:hover td` declara `background: var(--p50)` en `app.css` (el fondo de las tablas en el escritorio, CA6) — `tests/Feature/CitasPanelDetalleTest.php` — hecho cuando: los dos pasan y se comprueban rompiendo un momento el texto del vacío y la regla `tr:hover td` — cubre: CA6, CA7 — depende: T026
+  - nota: añadida por /review: R3, R5
+- [ ] T028 Exigir en `test_las_reglas_048_usan_tokens` que el radio del anillo por debajo de 900 px esté solo en `.tabla-tarjetas .fila-cita .cita-enlace:focus-visible::after` y que `.fila-cita .cita-enlace:focus-visible::after` no declare `border-radius` (la agenda de la dentista no es tarjeta) — `tests/Feature/CitasPanelDetalleTest.php` — hecho cuando: falla porque la regla de hoy no se limita a la tarjeta — cubre: CA5 — depende: T027
+  - nota: añadida por /review: R4
+- [ ] T029 Limitar a la tarjeta (`.tabla-tarjetas .fila-cita …`) la regla del radio del anillo por debajo de 900 px — `public/css/app.css` — hecho cuando: T028 pasa — cubre: CA5 — depende: T028
+  - nota: añadida por /review: R4
+- [ ] T030 Añadir a `medir.mjs` que, con el foco en la primera cita, Intro abre su detalle, y que el anillo de la agenda de la dentista por debajo de 900 px no lleva radio; repetir la medición completa — `docs/specs/048-citas-panel-detalle/design/medir.mjs` — hecho cuando: la medición termina sin fallos (informe en la nota) — cubre: CA5 — depende: T029
+  - nota: añadida por /review: R6
+- [ ] T031 Retoques sin cambio de comportamiento: `assertAbreLaCitaDesdeLaTabla` devuelve `void` (R12); la lista de nombres en una variable antes de su aserción (R16); el mensaje de «las reglas 048 se limitan a .fila-cita» con su motivo (R17); `$hora` dentro del bloque `@php` de `$dotColor` en la agenda de la dentista (R18) — `tests/Feature/CitasPanelDetalleTest.php`, `resources/views/dashboard/dentista.blade.php` — hecho cuando: `CitasPanelDetalleTest` y `MovilPersonalTest` siguen en verde y Pint limpio — depende: T030
+  - nota: añadida por /review: R12, R16, R17, R18
+
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` si cambió la estructura (el plan dice que no: dejar nota)
   - nota: 2026-11-14 — sin cambios en `docs/architecture.md`: no hay módulos, rutas ni datos nuevos (plan, «Impacto en arquitectura»)
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
   - nota: 2026-11-14 — sin cambios en `docs/deployment.md` ni `docs/observability.md`: sin variables, pasos, logs, auditoría ni métricas nuevas
-- [x] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
+- [ ] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
   - nota: 2026-11-14 — suite completa 1011 en verde (15 532 aserciones; línea base 1001 + 10 de la 048); Pint limpio en los tests tocados; gitleaks sin hallazgos en los 13 archivos del diff; semgrep `p/php` 0 hallazgos en las vistas y los tests; el diff no toca `app/`, `routes/` ni `database/` (RNF sin consultas nuevas); CA1–CA9 marcados; spec `implemented` y README
 
 ## Despliegue (lo ejecuta `/release`)
@@ -89,10 +104,10 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | CA1 | T010, T024 | T020 |
 | CA2 | T010, T024 | T021 |
 | CA3 | T011, T024 | T022 |
-| CA4 | T012, T024 | T023 |
-| CA5 | T011, T012, T014, T024 | T019, T020, T021, T022, T023 |
-| CA6 | T014 | T019 |
-| CA7 | T012 | T020, T021, T022, T023 |
+| CA4 | T012, T024, T025 | T023 |
+| CA5 | T011, T012, T014, T024, T026, T028, T030 | T019, T020, T021, T022, T023, T029 |
+| CA6 | T014, T027 | T019 |
+| CA7 | T012, T027 | T020, T021, T022, T023 |
 | CA8 | T013 | T020, T021, T022, T023 |
 | CA9 | T012, T024 | T020, T021, T022, T023 |
 
@@ -103,14 +118,14 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | `docs/design/system.md`, `docs/design/system.html` | T001 |
-| `public/css/app.css` | T019 |
+| `public/css/app.css` | T019, T029 |
 | `resources/views/dashboard/admin.blade.php` | T020 |
 | `resources/views/dashboard/asistente.blade.php` | T021 |
-| `resources/views/dashboard/dentista.blade.php` | T022 |
+| `resources/views/dashboard/dentista.blade.php` | T022, T031 |
 | `resources/views/dashboard/cliente.blade.php` | T023 |
-| `tests/Feature/CitasPanelDetalleTest.php` | T010, T011, T012, T013, T014 |
+| `tests/Feature/CitasPanelDetalleTest.php` | T010, T011, T012, T013, T014, T025, T026, T027, T028, T031 |
 | `tests/Feature/MovilPersonalTest.php` | T011 |
-| `docs/specs/048-citas-panel-detalle/design/medir.mjs` | T024 |
+| `docs/specs/048-citas-panel-detalle/design/medir.mjs` | T024, T030 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
