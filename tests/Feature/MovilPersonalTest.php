@@ -190,10 +190,12 @@ class MovilPersonalTest extends TestCase
     {
         $xpath = $this->xpath($this->actingAs($this->dentista1)->get('/dentista')->assertOk()->getContent());
 
-        $enlace = $xpath->query("//*[contains(@class,'timeline-item')]//a[@href='/dentista/citas/{$this->citaHoy}']");
+        // Spec 048 (D6, A7): la href sale de route() y el nombre dice de qué cita es.
+        $href = route('dentista.citas.show', $this->citaHoy);
+        $enlace = $xpath->query("//*[contains(@class,'timeline-item')]//a[@href='{$href}']");
         $this->assertSame(1, $enlace->length, 'La cita de hoy está en la línea de tiempo con su enlace.');
         $enlace = $enlace->item(0);
-        $this->assertSame('Ver detalle', $enlace->getAttribute('aria-label'), 'El enlace se llama «Ver detalle».');
+        $this->assertSame("10:00, {$this->paciente1->nombre} {$this->paciente1->apellido}, ver detalle", $enlace->getAttribute('aria-label'), 'El enlace se llama «hora, paciente, ver detalle» (spec 048).');
         $this->assertContains('btn-icono', $this->clases($enlace), 'El enlace lleva btn-icono.');
         $this->assertStringNotContainsString('padding', $enlace->getAttribute('style'), 'Sin padding en su style="".');
 

@@ -326,6 +326,19 @@
   .opt .g-paciente label { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-min); }
   .opt .g-paciente input { width: var(--icon-md); height: var(--icon-md); margin: 0; accent-color: var(--color-link); }
 </style>
+<style id="componentes-048">
+  /* Muestra viva de la spec 048 (cita que abre su detalle), con los tokens de .opt. */
+  .opt .c48-tabla { width: 100%; max-width: 560px; border-collapse: collapse; background: var(--color-surface);
+                    border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); }
+  .opt .c48-tabla th { text-align: start; font-size: var(--text-small); text-transform: uppercase; color: var(--color-text-muted); padding: var(--space-3) var(--space-5); }
+  .opt .c48-tabla td { padding: var(--space-4) var(--space-5); border-top: var(--border-width) solid var(--color-border); }
+  .opt .c48-fila { position: relative; }
+  .opt .c48-fila:hover td { background: var(--color-bg); }
+  .opt .c48-enlace { color: inherit; text-decoration: none; font-weight: var(--weight-strong); }
+  .opt .c48-enlace::after { content: ""; position: absolute; inset: 0; cursor: pointer; }
+  .opt .c48-enlace:focus-visible { outline: none; }
+  .opt .c48-enlace:focus-visible::after { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: calc(-1 * var(--focus-ring-width)); }
+</style>
 <style id="componentes-020">
   /* Muestras vivas de la spec 020 (paginación, con y sin «Anterior»), con los tokens de .opt. */
   .opt .m-paginacion { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4) var(--space-6);
@@ -898,6 +911,18 @@
       título «En esta página» y el número de cada sección; texto corrido <code>.lb-texto</code> a <code>--measure</code>; número de
       sección <code>.lb-num</code> encima del título; «En pocas palabras» <code>.lb-resumen</code>, la tarjeta de la agenda más
       compacta. Sin colores nuevos. Respaldos de Newsreader con sus medidas en <code>--font-display</code> (Georgia y Times).</p>
+    <h3 id="cita-048">Cita que abre su detalle (spec 048, 1.17.0)</h3>
+    <p class="v-note">Las citas del panel de inicio (<a href="../specs/048-citas-panel-detalle/design.md">diseño</a>, sin candidatos ni
+      tokens nuevos): un solo enlace por cita (<code>.cita-enlace</code>) en la hora, la fecha del historial o el ojo de la dentista,
+      con un <code>::after</code> que cubre toda la fila (<code>.fila-cita</code>), así que pulsar en cualquier parte la abre. En reposo
+      se ve igual que hoy; al pasar el puntero, fondo <code>--p50</code> solo en el escritorio (en la tarjeta del móvil, ninguno: A57 de
+      la 034); con Tab, un solo anillo por dentro de la fila (con <code>--radius</code> en la tarjeta). Nombre: «10:00, Ana López, ver
+      detalle». Pasa el puntero o el foco por la fila de muestra.</p>
+    <div class="v-stage"><div class="opt">
+      <table class="c48-tabla"><thead><tr><th scope="col">Hora</th><th scope="col">Paciente</th><th scope="col">Servicio</th></tr></thead>
+        <tbody><tr class="c48-fila"><td><a class="c48-enlace" href="#cita-048" aria-label="10:00, Paciente de muestra, ver detalle">10:00</a></td>
+          <td>Paciente de muestra</td><td>Limpieza dental</td></tr></tbody></table>
+    </div></div>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
     <p class="v-note">Muestra viva de la paginación de la consulta de auditoría
       (<a href="../specs/020-auditoria-base/design.md">diseño</a>, <code>c4</code>), con los tokens de

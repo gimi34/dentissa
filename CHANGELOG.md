@@ -5,6 +5,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-15
+
+### Added
+- En el panel de inicio, las citas se abren con un solo clic: pulsar en cualquier parte de una cita de hoy (administración,
+  asistente y dentista) o del historial (paciente) lleva a su detalle, también con el teclado y en el móvil (spec 048).
+
 ## [0.18.0] - 2026-11-13
 
 ### Added

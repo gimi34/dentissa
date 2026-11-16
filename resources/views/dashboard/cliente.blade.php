@@ -110,9 +110,11 @@
                             </thead>
                             <tbody>
                                 @foreach($citasPasadas as $cita)
-                                <tr>
+                                @php $fecha = \Carbon\Carbon::parse($cita->fecha_hora)->format('d/m/Y'); @endphp
+                                {{-- Spec 048: toda la fila abre el detalle; el enlace es la fecha (.cita-enlace::after la cubre). --}}
+                                <tr class="fila-cita">
                                     <td class="celda-cab" data-label="Fecha" style="white-space:nowrap;color:var(--text-muted)">
-                                        {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('d/m/Y') }}
+                                        <a class="cita-enlace" href="{{ route('cliente.citas.show', $cita->id) }}" aria-label="{{ $fecha }}, {{ $cita->servicio ?? 'sin servicio' }}, ver detalle">{{ $fecha }}</a>
                                     </td>
                                     <td data-label="Servicio" style="font-weight:500">{{ $cita->servicio ?? '—' }}</td>
                                     <td data-label="Dentista" style="color:var(--text-muted)">{{ $cita->dentista }}</td>
