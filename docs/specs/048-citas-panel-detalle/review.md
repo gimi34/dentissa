@@ -5,7 +5,7 @@ round: 2
 date: 2026-11-14
 base: f794c12
 head: c887bca
-human_signoff: pending
+human_signoff: gimi34 2026-11-15
 ---
 
 # Review · 048 Abrir las citas del panel de inicio
