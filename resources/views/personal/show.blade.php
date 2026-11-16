@@ -15,12 +15,11 @@
 
 @section('content')
 
-{{-- Breadcrumb --}}
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-    <a href="{{ route('admin.personal') }}" style="color:var(--text-muted);text-decoration:none">Personal</a>
-    <span>›</span>
-    <span style="color:var(--text)">{{ $miembro->nombre_completo }}</span>
-</div>
+{{-- Migas de pan (spec 046) --}}
+@include('partials.migas', ['migas' => [
+    ['texto' => 'Personal', 'url' => route('admin.personal')],
+    ['texto' => $miembro->nombre_completo],
+]])
 
 @php
     $tipoColor  = match($miembro->tipo) { 'dentista' => 'var(--p500)', 'asistente' => 'var(--blue)', default => 'var(--green)' };

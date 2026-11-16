@@ -4,12 +4,17 @@
 @section('content')
 <div style="max-width:800px">
 
-    {{-- Breadcrumb --}}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-        <a href="{{ route('admin.usuarios.index') }}" style="color:var(--text-muted);text-decoration:none">Usuarios</a>
-        <span>›</span>
-        <span style="color:var(--text)">{{ isset($usuario) ? 'Editar: '.$usuario->nombre.' '.$usuario->apellido : 'Nuevo Usuario' }}</span>
-    </div>
+    {{-- Migas de pan (spec 046) --}}
+    @include('partials.migas', ['migas' => isset($usuario)
+        ? [
+            ['texto' => 'Usuarios', 'url' => route('admin.usuarios.index')],
+            ['texto' => $usuario->nombre.' '.$usuario->apellido, 'url' => route('admin.usuarios.show', $usuario->id)],
+            ['texto' => 'Editar'],
+        ]
+        : [
+            ['texto' => 'Usuarios', 'url' => route('admin.usuarios.index')],
+            ['texto' => 'Nuevo usuario'],
+        ]])
 
     @if ($errors->any())
         <div class="alerta-errores" data-testid="usuario-errores">
@@ -109,7 +114,7 @@
 
             {{-- Acciones --}}
             <div style="display:flex;gap:10px;justify-content:flex-end">
-                <a href="{{ route('admin.usuarios.index') }}" class="btn btn-ghost">Cancelar</a>
+                <a href="{{ isset($usuario) ? route('admin.usuarios.show', $usuario->id) : route('admin.usuarios.index') }}" class="btn btn-ghost">Cancelar</a>
                 <button type="submit" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
                         <polyline points="20 6 9 17 4 12"/>

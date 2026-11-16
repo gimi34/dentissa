@@ -47,6 +47,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 043 | [contrasena-distinta](043-contrasena-distinta/spec.md) | Identidad | released (v0.14.1) | — | — (2026-11-03) |
 | 044 | [navegacion-salidas](044-navegacion-salidas/spec.md) | Transversal | released (v0.15.0) | — | — (2026-11-08) |
 | 045 | [terminos-privacidad](045-terminos-privacidad/spec.md) | Transversal | released (v0.18.0) | — | — (2026-11-12) |
+| 046 | [navegacion-interna](046-navegacion-interna/spec.md) | Transversal | implemented | — | — (2026-11-12) |
 | 047 | [reportes-admin](047-reportes-admin/spec.md) | Transversal | released (v0.17.0) | — | — (2026-11-10) |
 | 048 | [citas-panel-detalle](048-citas-panel-detalle/spec.md) | Agenda | released (v0.19.0) | — | — (2026-11-14) |
 

@@ -6,14 +6,12 @@
 
     @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
 
-    {{-- Breadcrumb --}}
-    <div id="migas" class="migas">
-        <a href="{{ route("{$base}.pacientes") }}">Pacientes</a>
-        <span>›</span>
-        <a href="{{ route("{$base}.pacientes.show", $paciente->id) }}">{{ $paciente->nombre_completo }}</a>
-        <span>›</span>
-        <span class="migas-actual">Nuevo expediente</span>
-    </div>
+    {{-- Migas de pan (spec 046) --}}
+    @include('partials.migas', ['migas' => [
+        ['texto' => 'Pacientes', 'url' => route("{$base}.pacientes")],
+        ['texto' => $paciente->nombre_completo, 'url' => route("{$base}.pacientes.show", $paciente->id)],
+        ['texto' => 'Nuevo expediente'],
+    ]])
 
     {{-- Paciente info --}}
     <div class="card" style="margin-bottom:18px;padding:14px 18px;background:var(--p50);border-color:var(--p200)">
