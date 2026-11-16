@@ -49,6 +49,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 045 | [terminos-privacidad](045-terminos-privacidad/spec.md) | Transversal | released (v0.18.0) | — | — (2026-11-12) |
 | 047 | [reportes-admin](047-reportes-admin/spec.md) | Transversal | released (v0.17.0) | — | — (2026-11-10) |
 | 048 | [citas-panel-detalle](048-citas-panel-detalle/spec.md) | Agenda | released (v0.19.0) | — | — (2026-11-14) |
+| 049 | [calendario-citas](049-calendario-citas/spec.md) | Agenda | draft | — | — (2026-11-15) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
