@@ -5,7 +5,7 @@ round: 2
 date: 2026-11-16
 base: 53cc84f
 head: 4e4adbb
-human_signoff: pending
+human_signoff: gimi34 2026-11-16
 ---
 
 # Review · 046 Navegación interna
