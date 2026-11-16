@@ -101,11 +101,14 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: 2026-11-14 — suite completa 1011 en verde (15 532 aserciones; línea base 1001 + 10 de la 048); Pint limpio en los tests tocados; gitleaks sin hallazgos en los 13 archivos del diff; semgrep `p/php` 0 hallazgos en las vistas y los tests; el diff no toca `app/`, `routes/` ni `database/` (RNF sin consultas nuevas); CA1–CA9 marcados; spec `implemented` y README
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (cada panel abre sus citas; sin citas, el estado vacío)
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (cada panel abre sus citas; sin citas, el estado vacío)
+  - nota: 2026-11-15 — sin staging; hecho en producción dentro de T097 por el usuario: en el panel de inicio, pulsar una cita (en otra columna) abre su detalle
 - [x] T096 Aprobación humana para producción
   - aprobado por gimi34 el 2026-11-15 para v0.19.0 («desplegar v0.19.0 a producción»)
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; `5xx` de los cuatro paneles la primera hora. Rollback: `bash deploy/volver.sh <tag anterior>`
-- [ ] T098 Marcar spec como `released`; en las specs 012 y 034 anotar en su Historial que las citas del panel se abren (048), y en la 034 el nombre nuevo del ojo de la dentista; recordar que la 012 es `inferred`
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; `5xx` de los cuatro paneles la primera hora. Rollback: `bash deploy/volver.sh <tag anterior>`
+  - nota: 2026-11-15 — `deploy/desplegar.sh v0.19.0` y `verificar.sh --interna` y pública: todo OK (usuario). Desde fuera: `/` y `/up` 200, `app.css` sirve el bloque de la 048, `/admin` sin sesión → `/login`, `robots.txt` sin `Disallow: /`. Rollback, si hiciera falta: `bash deploy/volver.sh v0.18.0` (sin migraciones)
+- [x] T098 Marcar spec como `released`; en las specs 012 y 034 anotar en su Historial que las citas del panel se abren (048), y en la 034 el nombre nuevo del ojo de la dentista; recordar que la 012 es `inferred`
+  - nota: 2026-11-15 — spec `released` (v0.19.0); README; deuda 048/R7–R11, R13–R15 y R19 en `docs/roadmap.md`; Historial de las specs 012 y 034; historial de rondas en `history/README.md`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

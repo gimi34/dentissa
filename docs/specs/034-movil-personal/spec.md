@@ -224,3 +224,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-13 | RNF 2.4.7 acotado y Fuera de alcance (textos del filtro por debajo de AA y foco de campos que no cambian) | /analyze 034 r3: A59, A60 (decisiones del usuario) |
 | 2026-10-16 | Liberada en v0.8.0 | /release |
 | 2026-10-19 | Comportamiento modificado por 035 en v0.9.0 (migas que parten en todo el móvil y menú sin recuadro; las tarjetas de la 034 se aplican también al historial de la ficha y a la lista de expedientes) | /release |
+| 2026-11-15 | Comportamiento modificado por 048 en v0.19.0: las tarjetas de cita del panel de inicio se abren al pulsarlas en cualquier parte, sin cambiar de fondo (A57); el ojo de la agenda de la dentista se llama «hora, paciente, ver detalle» y su `href` sale de `route()` | /release |

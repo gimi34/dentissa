@@ -1,8 +1,9 @@
 ---
 id: 048
 slug: citas-panel-detalle
-status: implemented
+status: released
 created: 2026-11-14
+released: v0.19.0 (2026-11-15)
 extends: [012, 034]
 ---
 
@@ -113,3 +114,4 @@ Ninguna.
 | 2026-11-14 | /review r1 `changes_requested` (0 bloqueantes, 2 importantes de tests): vuelve a `approved` con las tareas T025–T031 | /review 048 |
 | 2026-11-14 | Correcciones de /review r1 (T025–T031: R1–R6, R12, R16–R18); suite 1011 en verde; vuelve a `implemented` | /implement 048 |
 | 2026-11-14 | /review r2 `approved` (sin hallazgos; 9 menores al roadmap en /release) | /review 048 |
+| 2026-11-15 | Liberada en v0.19.0 (PR #82, tag sobre `5f42c16`); comprobada en producción por el usuario | /release 048 |
