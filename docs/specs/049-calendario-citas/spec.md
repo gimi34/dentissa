@@ -1,7 +1,7 @@
 ---
 id: 049
 slug: calendario-citas
-status: approved
+status: draft
 created: 2026-11-15
 extends: [034]
 ---
@@ -29,7 +29,7 @@ hora en «Nueva cita».
 - [ ] CA5 · Dada una cita en el calendario o en la lista, cuando se pulsa en cualquier parte de ella (o se elige con el teclado y se pulsa Intro), entonces se abre su detalle, como en el panel de inicio (spec 048); cada cita es una sola parada de foco y su nombre accesible dice hora, paciente y dentista.
 - [ ] CA6 · Dadas dos o más citas que coinciden en el tiempo (de dentistas distintos), cuando se ven en la semana, entonces aparecen una junto a otra, todas legibles y pulsables. Las canceladas y las de «no asistió» se ven atenuadas, con su estado en texto, sin tapar a las vigentes.
 - [ ] CA7 · Dado un hueco libre del calendario semanal, dentro del horario de la clínica y a partir de ahora, cuando el personal lo pulsa, entonces llega a «Nueva cita» con ese día y esa hora (en tramos de 30 minutos) ya puestos y, si el calendario muestra un solo dentista (la vista de la dentista o el filtro de uno), también ese dentista. Los huecos pasados o fuera del horario no se pueden pulsar. Agendar sigue las reglas de hoy (agenda única, spec 025; horarios, spec 027).
-- [ ] CA8 · Dado el personal en el móvil (por debajo de 900 px), cuando abre «Citas», entonces la semana se ve como una tira de los siete días con el número de citas de cada uno y, debajo, la lista del día elegido (por defecto, hoy); la vista «Mes» es una cuadrícula compacta con el número de citas por día. No hay desplazamiento lateral a 320 px y cada día, cita o control mide al menos 44 px.
+- [ ] CA8 · Dado el personal en el móvil (por debajo de 900 px), cuando abre «Citas», entonces la semana se ve como una tira de los seis días de apertura (lunes a sábado) con el número de citas de cada uno y, debajo, la lista del día elegido (por defecto, hoy); la vista «Mes» es una cuadrícula compacta con el número de citas por día. No hay desplazamiento lateral a 320 px y cada día, cita o control mide al menos 44 px.
 - [ ] CA9 · Dado un periodo sin citas (o sin resultados para el buscador o los filtros), cuando se abre, entonces el calendario se ve vacío y la lista dice que no hay citas en ese periodo, con el acceso a «Nueva cita».
 - [ ] CA10 (abuso) · Como dentista o asistente, intento ver citas que no son mías cambiando en la dirección el dentista del filtro, el periodo o la vista → solo se muestran las citas que hoy puedo ver (la dentista, las suyas; la asistente, las de sus dentistas), en el calendario, en la lista y en los números por día. Como cualquier rol, escribo en la dirección un día, una hora o un dentista no válidos para «Nueva cita» → el formulario los ignora o los muestra para corregir, y la cita se valida al guardarla como hoy.
 
@@ -63,16 +63,16 @@ móvil: el calendario semanal por horas, el mensual, la tira de días del móvil
 (franjas, citas que coinciden, huecos pulsables, fuera de horario, citas atenuadas), la cuadrícula
 del mes, la tira de días, la lista compacta agrupada por día, la navegación del periodo y el
 interruptor «Semana · Mes». Recursos de marca: los del sistema; colores por estado (los de las
-pastillas de estado). `/design-spec 049` genera candidatos y los mide.
+pastillas de estado). `/design-spec 049` genera candidatos y los mide. Acta: [design.md](design.md) (c6, aceptado por el usuario con 78/100 y cuatro correcciones).
 
 ## Criterios de diseño
-Modo: operar · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos · anchos 320, 390 y 1440 px. Pantallas medidas (datos ficticios, semana del 16 al 21 de noviembre de 2026): semana, semana con un día elegido, mes y semana vacía. Archivo: [design/criterios.json](design/criterios.json).
+Modo: operar · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos (6, ampliado por el usuario) · anchos 320, 390 y 1440 px. Pantallas medidas (datos ficticios, semana del 16 al 21 de noviembre de 2026): semana, semana con un día elegido, mes y semana vacía. Archivo: [design/criterios.json](design/criterios.json).
 
 | ID | Qué se mide | Objetivo | Sale de |
 |---|---|---|---|
 | K1 | «Nueva cita», «Anterior», «Hoy», «Siguiente», «Semana» y «Mes» | visibles sin desplazarse a los tres anchos | CA1, CA2 |
 | K2 | Estados y dentistas en texto | visibles «Agendada», «Confirmada», «Cancelada», «No asistió» y los nombres de las dentistas | CA1, CA6 |
-| K3 | El calendario antes que la lista | orden: «Semana», «Mes», «Citas de la semana» | CA4 |
+| K3 | El calendario antes que la lista | orden: «Semana», «Mes», «Citas de la semana», a 1440 px (en el móvil el título nombra el día) | CA4 |
 | K4 | Volver a todo el periodo con un día elegido | visibles «Ver toda la semana» y el día elegido | CA4 |
 | K5 | Mes con el número de citas por día | visibles el mes y «3 citas» | CA3 |
 | K6 | Semana vacía | visibles «No hay citas en esta semana» y «Nueva cita» | CA9 |
@@ -105,9 +105,11 @@ Ninguna.
 | 2026-11-15 | implícita | Horas del calendario | Las del horario de la clínica: lunes a viernes 9:00–20:00, sábado 9:00–14:00, domingo cerrado | `config/clinica.php` (`horario_semanal`) |
 | 2026-11-15 | implícita | Qué citas ve cada rol | Las de hoy en «Citas»: todas, las suyas o las de sus dentistas | `docs/security.md` (modelo de autorización), spec 014 |
 | 2026-11-15 | contradicción | La 034 fija para la lista de citas tarjetas con todas sus columnas y acciones (CA2), filtros de fechas con los atajos «Hoy» y «Esta semana» (CA5) y que en el escritorio la tabla se vea igual que antes (CA11) | La 049 los reemplaza para la lista de «Citas»: lista compacta de cuatro datos que abre el detalle, y el periodo lo elige el calendario («Hoy», «Anterior», «Siguiente», «Semana · Mes») en lugar de las fechas «Desde» y «Hasta». El resto de la 034 (otras listas, el panel, el detalle) no cambia | usuario (respuestas del 2026-11-14 y 2026-11-15) |
-| 2026-11-15 | supuesto | Móvil | Tira de los siete días con su número de citas y la lista del día elegido; mes en cuadrícula compacta | razonable (propuesta del 2026-11-14 que el usuario aceptó al elegir calendario y lista) |
+| 2026-11-15 | supuesto | Móvil | Tira de los días con su número de citas y la lista del día elegido; mes en cuadrícula compacta | razonable (propuesta del 2026-11-14 que el usuario aceptó al elegir calendario y lista) |
 | 2026-11-15 | supuesto | Tramos de los huecos | 30 minutos, la duración por defecto de una cita | razonable |
 | 2026-11-15 | diseño | Criterios de diseño (K1–K10, rúbrica con `jerarquia` 30 y `plantilla` 10) | Aprobados | usuario (2026-11-15) |
+| 2026-11-16 | diseño | Diseño del calendario | c6 aceptado bajo el umbral (78) con cuatro correcciones; acta en [design.md](design.md) | usuario (2026-11-16) |
+| 2026-11-16 | supuesto | La tira del móvil (CA8) | Seis días (lunes a sábado), no siete: el domingo la clínica cierra y siete no caben a 320 px con objetivos de 44 px | `config/clinica.php`, /design-spec 049 |
 | 2026-11-15 | implícita | Descubribilidad | No aplica: «Citas» exige sesión y no se indexa | `docs/seo.md` |
 
 ## Notas para /plan
@@ -116,3 +118,8 @@ Ninguna.
 - Reemplaza de la 034: CA2 (para la lista de «Citas»; las citas del panel siguen), CA5 y CA11 (para la lista de «Citas»). `MovilPersonalTest` fija hoy la tabla `citas-personal` (D2, filtro, atajos): habrá que actualizarlo.
 - Reutiliza el componente «Cita que abre su detalle» (spec 048, `system.md` 1.17.0).
 - Choques posibles: la 046 (otra sesión, sin liberar) añade migas en `citas/show` y toca `layouts/app`; no toca `citas/index`.
+
+## Historial
+| Fecha | Cambio | Motivo |
+|---|---|---|
+| 2026-11-16 | CA8: tira de seis días (lunes a sábado) en lugar de siete; K3 medido a 1440 px; presupuesto 6; enlace al acta; vuelve a `draft` | /design-spec 049 (puerta G-toque y correcciones aceptadas por el usuario) |

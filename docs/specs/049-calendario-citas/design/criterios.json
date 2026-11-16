@@ -8,7 +8,7 @@
   ],
   "threshold": 80,
   "floor": 3,
-  "budget": 5,
+  "budget": 6,
   "tokens": {
     "colors": [
       "#000000",
@@ -106,7 +106,10 @@
         "Mes",
         "Citas de la semana"
       ],
-      "ca": "CA4"
+      "ca": "CA4",
+      "widths": [
+        1440
+      ]
     },
     {
       "id": "K4",
