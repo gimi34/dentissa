@@ -102,7 +102,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (cada panel abre sus citas; sin citas, el estado vacío)
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-15 para v0.19.0 («desplegar v0.19.0 a producción»)
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; `5xx` de los cuatro paneles la primera hora. Rollback: `bash deploy/volver.sh <tag anterior>`
 - [ ] T098 Marcar spec como `released`; en las specs 012 y 034 anotar en su Historial que las citas del panel se abren (048), y en la 034 el nombre nuevo del ojo de la dentista; recordar que la 012 es `inferred`
 
