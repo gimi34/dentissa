@@ -106,7 +106,8 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097: como administración, el detalle de una cita, «Reprogramar» y «Editar servicio» muestran sus migas y vuelven a su listado; como paciente, «Agendar cita» no tiene migas
-- [ ] T096 Aprobación humana para producción
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-16 para v0.20.0 («desplegar v0.20.0 a producción»)
 - [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): sin migraciones; vigilar la alerta de 5xx. Rollback: la imagen anterior
 - [ ] T098 Marcar spec como `released`; en cada spec extendida (008, 009, 010, 028, 033, 034 y 035), una línea en su Historial con lo que la 046 cambia en sus pantallas (migas; 033/R6; 035 CA7 sin «Volver al paciente»; 033 CA8, 034 CA11 y 035 CA10 por CA12; títulos de la 009; «Cancelar» de editar usuario en la 010)
 

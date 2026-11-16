@@ -5,6 +5,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-16
+
+### Added
+- Migas de pan en todas las pantallas de segundo nivel del panel (detalles, fichas y formularios de citas, pacientes,
+  expedientes, personal, usuarios y servicios): dicen dónde estás y permiten volver un nivel con un clic, también al
+  reprogramar una cita, como personal o como paciente (spec 046).
+- «Nuevo servicio» y «Editar servicio» muestran su propio título en la barra y en la pestaña del navegador (spec 046).
+
+### Changed
+- Las migas se anuncian como navegación a los lectores de pantalla, marcan la página actual y sus enlaces van
+  subrayados; un nombre largo pasa a otra línea en el móvil (spec 046).
+- El menú marca «Pacientes» también en las pantallas de expedientes (spec 046).
+- «Cancelar» en «Editar usuario» vuelve a la ficha del usuario, igual que las migas (spec 046).
+
+### Removed
+- El botón «Volver al paciente» del expediente y las migas de «Agendar cita»: la salida son las migas y el menú
+  (spec 046).
+
 ## [0.19.0] - 2026-11-15
 
 ### Added
