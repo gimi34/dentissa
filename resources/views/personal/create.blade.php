@@ -4,12 +4,17 @@
 @section('content')
 <div style="max-width:760px">
 
-    {{-- Breadcrumb --}}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--text-muted)">
-        <a href="{{ route('admin.personal') }}" style="color:var(--text-muted);text-decoration:none">Personal</a>
-        <span>›</span>
-        <span style="color:var(--text)">{{ isset($miembro) ? 'Editar: '.$miembro->nombre.' '.$miembro->apellido : 'Nuevo miembro' }}</span>
-    </div>
+    {{-- Migas de pan (spec 046) --}}
+    @include('partials.migas', ['migas' => isset($miembro)
+        ? [
+            ['texto' => 'Personal', 'url' => route('admin.personal')],
+            ['texto' => $miembro->nombre.' '.$miembro->apellido, 'url' => route('admin.personal.show', $miembro->id)],
+            ['texto' => 'Editar'],
+        ]
+        : [
+            ['texto' => 'Personal', 'url' => route('admin.personal')],
+            ['texto' => 'Nuevo miembro'],
+        ]])
 
     <form method="POST"
           action="{{ isset($miembro) ? route('admin.personal.update', $miembro->id) : route('admin.personal.store') }}">

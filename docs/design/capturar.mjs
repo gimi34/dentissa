@@ -98,6 +98,11 @@
 //    `-e OUT=/tmp/capturas/base` y `--linea-base`; luego --medir con `-e LINEA_BASE=/tmp/capturas/base`.
 //    La línea base muestra el menú de la 033 con sesión iniciada en los cuatro roles. Si una cita cruza
 //    el plazo de 24 h de «Reprogramar» y «Cancelar» entre las dos capturas, se repiten las dos.
+//    Spec 046 (CA12): la comparación deja fuera el bloque de migas y, en las pantallas de expedientes,
+//    las entradas «Pacientes» y «Expedientes» de la barra; y no compara las pantallas de SIN_COMPARAR_046
+//    mientras la línea base sea de una versión anterior a la 046 (después, vaciar esa lista).
+//    Spec 048 (046 T036): el toque del enlace de una cita del panel se mide por la cita entera que cubre su
+//    ::after, y su foco, por el contorno de ese ::after.
 //    Al terminar: docker rm -f dentissa_base_app; rm <carpeta temporal>/v070/.env;
 //    git worktree remove <carpeta temporal>/v070.
 //
@@ -307,7 +312,7 @@ const MEDIR = () => {
 const COMPROBACIONES = [
   'anchos: las 7 vistas del paciente a 320, 390, 844x390, 900, 1024 y 1440 sin desplazamiento horizontal, y ninguna .table-wrap más ancha que su contenedor (CA1, CA6, CA7)',
   'recortes: a 320 y 390, ningún control ni texto visible de .main sale de la pantalla ni de un antecesor que recorta; con control positivo (CA1)',
-  'toque: a 320, 390 y 844x390, controles visibles de .main y, a 390, del menú abierto ≥ 44 × 44 (sin enlaces dentro de un <p>; la casilla, por su <label>) (033 CA4, 034 CA8, A44)',
+  'toque: a 320, 390 y 844x390, controles visibles de .main y, a 390, del menú abierto ≥ 44 × 44 (sin enlaces dentro de un <p>; la casilla, por su <label>; el enlace de una cita del panel, `.fila-cita .cita-enlace`, por la cita entera que cubre su ::after, spec 048) (033 CA4, 034 CA8, A44; 046 T036)',
   'casilla: a 390, en reprogramar, la etiqueta ≥ 44 px de alto y centrada (±2 px) con la casilla (A41)',
   'formularios: a 320, en agendar, perfil y reprogramar, cada etiqueta a ≤ 16 px de su campo; enviados vacíos, cada error dentro del ancho y junto a su campo (CA5)',
   'menú: a 320 y 390, para los 4 roles, botón visible y panel oculto; al abrir, aria-expanded, foco en la sección actual, <main> inerte, secciones, nombre y «Cerrar sesión» visibles; Escape, «Cerrar menú» (≥ 44 × 44, con nombre) y el velo cierran y devuelven el foco (CA2, CA3)',
@@ -319,13 +324,13 @@ const COMPROBACIONES = [
   '034 tarjetas: a 320, 390 y 844x390, toda tabla visible es tabla-tarjetas; cada celda de valor muestra su etiqueta a la izquierda, en la línea de su primera línea, también con un valor de dos líneas; el estado, arriba a la derecha junto a la cabecera; y cada tarjeta, con un fondo distinto del de su contenedor, también la de hoy (CA1–CA4, A37, A39, A57)',
   '034 palabras largas: a 320 y 390, con una palabra de 30 letras en los nombres de paciente, dentista, servicio y usuario (banner y menú), ninguna pantalla incluida ni de las 7 del paciente se desplaza de lado ni recorta texto, y ninguna palabra que cabe en el ancho de su diseño (tarjeta o .card, menos la etiqueta) queda partida; con control positivo (CA7, A34, A38)',
   '034 filtro: a 390, plegado al cargar, «Filtros» lo despliega y cambia aria-expanded; a 320 y 390, desplegado, buscador al ancho del formulario y orden buscador < atajos < panel, atajos en una línea, sin solapes ni campos fuera de su tarjeta, y con dos filtros aplicados sin palabras partidas; sin JS, desplegado y sin «Filtros»; foco visible en los campos, «Hoy», «Filtros» y «Filtrar» (CA5, A33, A45, A55, A68, A69)',
-  '034 foco: a 390, foco visible en un botón de tarjeta y en el enlace de la dentista (A60)',
+  '034 foco: a 390, foco visible en un botón de tarjeta y en el enlace de la dentista, que desde la spec 048 dibuja el anillo en su ::after, sobre la cita entera (A60; 046 T036)',
   '034 detalle: a 320, 390 y 844x390, los bloques del detalle en una columna, en el orden de D7, a todo el ancho (CA6)',
   '034 panel de la dentista: a 320, 390 y 844x390, el estado y el enlace bajo el nombre en cada elemento de la línea de tiempo (CA2, A35)',
   '034 menú: a 390, «Menú» sin texto visible, con nombre y 44 × 44; con el menú abierto, el logo de --logo-max-w con fondo --p600 (CA9, CA10)',
   '034 cambios de modo (033 T064 y R21): (a) foco en «Cerrar menú» y paso a 1000 px → enlace actual; (b) foco en un enlace del menú y paso a 390 → «Menú»; (c) Intro y Escape → cerrado y foco en «Menú»; (d) «Atrás» → cerrado y sin inert; (R21) a 1000, foco en un enlace de la barra, clic en una zona sin foco y paso a 390 → el foco no se mueve (CA9, A10)',
   '034 sin JS: a 390, las pantallas del personal sin desplazamiento horizontal (CA8)',
-  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro, el enlace «Auditoría» del admin (spec 020) ni la barra del admin desde «Galería» (spec 039)) (CA11, D13)',
+  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro, el enlace «Auditoría» del admin (spec 020) ni la barra del admin desde «Galería» (spec 039), ni, por la spec 046, el bloque de migas y, en las pantallas de expedientes, las entradas «Pacientes» y «Expedientes» de la barra; fuera de la comparación hasta que la 046 esté en producción: «Agendar cita» y «Reprogramar» del paciente y la ficha del expediente de los tres roles) (CA11, D13; 046 CA12)',
   '035 pantallas: ficha, alta y edición del paciente, lista, ficha y alta de expediente de cada rol que las ve, a 320, 390, 844x390 y 1440 sin desplazamiento horizontal; a 320, 390 y 844x390, sin recortes, toque ≥ 44 × 44 (también las migas), sin solapes y tarjetas con su etiqueta; y en las palabras de 30 letras (también el título de la barra y las migas) (CA1–CA4, CA8, CA9)',
   '035 fichas: a 320, 390 y 844x390, las dos fichas en una columna; en la del paciente, iniciales de 48 px con el nombre, la edad y el tipo de sangre a su derecha y las etiquetas de contacto visibles, que a 1440 no se ven; las acciones de la barra bajo el título y a partes iguales; los botones de las acciones con el texto centrado (±2 px) y alineados en su fila (CA1, CA4, CA7, D12)',
   '035 formularios: a 320, el alta y la edición del paciente, el alta del expediente y la ficha del expediente (admin y dentista) enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13, /review R12)',
@@ -359,13 +364,21 @@ const PANTALLAS_035 = [
   ['admin-alta-expediente', 'admin', '/admin/expedientes/crear?paciente_id={paciente}'],
   ['dentista-alta-expediente', 'dentista', '/dentista/expedientes/crear?paciente_id={paciente}'],
 ];
+// Spec 046 (CA12, D12): pantallas que la 046 recompone a propósito y que no se comparan con la línea
+// base hasta que la 046 esté en producción (entonces esta lista se vacía). En «Agendar cita» las migas
+// desaparecen y en «Reprogramar» del paciente aparecen: todo lo de debajo se desplaza. En la ficha del
+// expediente, al quitar «← Volver al paciente» el título gana ancho y la cabecera cambia de alto (medido
+// el 2026-11-14 con los datos de captura: 157 → 133 px a 1024 y 96 → 83 px a 1440). Siguen en las demás
+// comprobaciones de --medir.
+const SIN_COMPARAR_046 = ['cliente-agendar', 'citas-reprogramar-cliente',
+  'admin-ficha-expediente', 'dentista-ficha-expediente', 'asistente-ficha-expediente'];
 // Las que --medir compara con la línea base a 1024 y 1440 (D13).
 const COMPARADAS = [
   ...PANTALLAS_PERSONAL,
   ...PANTALLAS_035,
   ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-detalle-historial`, rol, `/${rol}/citas/{cita_historial_largo}`]),
   ...Object.entries(RUTAS_PACIENTE).map(([id, ruta]) => [id, 'cliente', ruta]),
-];
+].filter(([id]) => !SIN_COMPARAR_046.includes(id));
 
 // Funciones que se evalúan en la página.
 const EN_PAGINA = {
@@ -407,6 +420,12 @@ const EN_PAGINA = {
       if (!visible(el) || el.closest('p')) continue;
       let caja = el;
       if (el.matches('input[type=checkbox], input[type=radio]')) caja = (el.id && document.querySelector(`label[for="${el.id}"]`)) || el.closest('label') || el;
+      // Spec 048: el enlace de una cita del panel se pulsa en toda la cita, que cubre su ::after. Solo si
+      // el ::after existe y está posicionado; si no, se mide el enlace, como cualquier otro (046 T036).
+      if (el.matches('.fila-cita .cita-enlace')) {
+        const tras = getComputedStyle(el, '::after');
+        if (tras.content !== 'none' && tras.position === 'absolute') caja = el.closest('.fila-cita');
+      }
       const r = caja.getBoundingClientRect();
       if (r.width < 43.5 || r.height < 43.5) pequenos.push(`${caja.tagName.toLowerCase()}.${[...caja.classList].join('.')} «${(caja.textContent || caja.getAttribute('aria-label') || caja.name || '').trim().slice(0, 25)}» ${Math.round(r.width)}×${Math.round(r.height)}`);
     }
@@ -726,8 +745,11 @@ const EN_PAGINA = {
   // Spec 039 (T034): la entrada «Galería», que tampoco tiene la línea base, va después de «Servicios» y
   // desplaza las de debajo; se excluye la barra desde ella hasta el final de su lista de enlaces. Lo de
   // encima de «Galería» y el resto de la pantalla se siguen comparando.
+  // Spec 046 (CA12, D12): el bloque de migas (cambia de aspecto y de texto sin cambiar de alto) y, en las
+  // pantallas de expedientes, las entradas «Pacientes» y «Expedientes» de la barra, que cambian de marca.
   excluidos: () => {
-    const rects = [...document.querySelectorAll('.filtro-citas .field, .sidebar a[href="/admin/auditoria"]')].map((e) => {
+    const de046 = '#migas' + (/\/expedientes\//.test(location.pathname) ? ', .sidebar a[href$="/pacientes"], .sidebar a[href$="/expedientes"]' : '');
+    const rects = [...document.querySelectorAll(`.filtro-citas .field, .sidebar a[href="/admin/auditoria"], ${de046}`)].map((e) => {
       const r = e.getBoundingClientRect();
       return [Math.floor(r.left + scrollX - 4), Math.floor(r.top + scrollY - 4), Math.ceil(r.width + 8), Math.ceil(r.height + 8)];
     });
@@ -1275,7 +1297,9 @@ async function focoVisible(page, selector) {
   if (!(await elemento.count())) return `no hay ${selector}`;
   await elemento.focus();
   return elemento.evaluate((el) => {
-    const cs = getComputedStyle(el);
+    let cs = getComputedStyle(el);
+    // Spec 048: el enlace de una cita del panel quita su contorno y lo dibuja en el ::after (046 T036).
+    if (cs.outlineStyle === 'none' && el.matches('.fila-cita .cita-enlace') && getComputedStyle(el, '::after').content !== 'none') cs = getComputedStyle(el, '::after');
     return cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2 ? '' : `sin foco visible (outline ${cs.outlineStyle} ${cs.outlineWidth})`;
   });
 }

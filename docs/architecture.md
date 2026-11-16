@@ -152,7 +152,10 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   inicio de sesión y la recuperación de contraseña (spec 041, con `acceso.css`; `acceso.js` solo en el
   inicio de sesión, para ver la contraseña) y `layouts/publico.blade.php` para las páginas públicas `/`, `/servicios`, `/galeria`, `/terminos` y `/aviso-de-privacidad` (spec 038: cabecera y pie propios, con los enlaces a los términos y al aviso desde la spec 045; menú `<details>` sin
   JavaScript, `app.css` por los tokens y `publico.css`); el registro tiene su propio HTML
-  con `auth.css`; parciales en `partials/` y en `<modulo>/partials/`. Sin componentes `<x-…>`. En
+  con `auth.css`; parciales en `partials/` y en `<modulo>/partials/`. Las migas de pan son el parcial
+  `partials/migas` (spec 046): cada pantalla de segundo nivel del panel declara su camino con
+  `route()` y lo incluye como primer elemento de su contenido; las pantallas del menú no lo llevan.
+  Sin componentes `<x-…>`. En
   pacientes, personal y usuarios, `edit` reutiliza `create` con `@include`; servicios tiene su
   propio formulario de edición.
 - Estado: sin estado de cliente; JS inline mínimo (`@push('scripts')`) para modales y rellenar

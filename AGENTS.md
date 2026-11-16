@@ -66,6 +66,9 @@ Nunca escribas secretos en el código, los logs ni los docs.
   dominio (`reglasDeEntrada()` en `app/Agenda/`) o en un helper del controlador; autorización con
   Gates sobre clases de `app/Autorizacion/` registrados en `AppServiceProvider` (ADR 0003); SQL con
   bindings, `{{ }}`/`@js()` en Blade (principios P3 y P4) (decisión del usuario, 2026-10-18).
+- Migas de pan: toda pantalla de segundo nivel del panel las lleva como primer elemento de su
+  contenido con el parcial `partials/migas` (camino con `route()`, último elemento sin enlace); las
+  pantallas a las que se llega desde el menú no las llevan (spec 046; `NavegacionInternaTest`).
 - Tests: PHPUnit, nombres `test_snake_case_en_español`, `DatabaseTransactions` (nunca
   `RefreshDatabase`) contra `dentissa_test`.
 - Una spec que toque `resources/views/layouts/app.blade.php`, `public/js/menu.js` o

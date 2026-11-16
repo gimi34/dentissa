@@ -5,13 +5,11 @@
 @php $base = auth()->user()->rol === 'admin' ? 'admin' : (auth()->user()->rol === 'dentista' ? 'dentista' : 'asistente'); @endphp
 
 {{-- Migas (spec 035, D14): el componente de la 033. --}}
-<div id="migas" class="migas">
-    <a href="{{ route("{$base}.pacientes") }}">Pacientes</a>
-    <span>›</span>
-    <a href="{{ route("{$base}.pacientes.show", $expediente->paciente_id) }}">{{ $expediente->paciente }}</a>
-    <span>›</span>
-    <span class="migas-actual">Expediente</span>
-</div>
+@include('partials.migas', ['migas' => [
+    ['texto' => 'Pacientes', 'url' => route("{$base}.pacientes")],
+    ['texto' => $expediente->paciente, 'url' => route("{$base}.pacientes.show", $expediente->paciente_id)],
+    ['texto' => 'Expediente'],
+]])
 
 {{-- Ficha (spec 035, D2): contenido y columna lateral; en el móvil, una columna en este orden. --}}
 <div class="ficha-expediente">
@@ -37,8 +35,6 @@
                         @endif
                     </div>
                 </div>
-                <a href="{{ route("{$base}.pacientes.show", $expediente->paciente_id) }}"
-                   class="btn btn-ghost btn-sm">← Volver al paciente</a>
             </div>
 
             {{-- Alertas médicas del paciente --}}

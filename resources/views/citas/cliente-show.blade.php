@@ -24,12 +24,11 @@
 
 @section('content')
 
-{{-- Migas de pan: clases con tokens en lugar de style="" (spec 033, T025). --}}
-<div id="migas" class="migas">
-    <a href="{{ route('cliente.citas') }}">Mis citas</a>
-    <span>›</span>
-    <span class="migas-actual">Detalle</span>
-</div>
+{{-- Migas de pan (spec 046) --}}
+@include('partials.migas', ['migas' => [
+    ['texto' => 'Mis Citas', 'url' => route('cliente.citas')],
+    ['texto' => 'Detalle'],
+]])
 
 <div style="max-width:640px">
     <div class="card">

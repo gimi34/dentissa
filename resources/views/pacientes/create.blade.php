@@ -12,11 +12,16 @@
             default    => 'asistente',
         };
     @endphp
-    <div id="migas" class="migas">
-        <a href="{{ route("{$base}.pacientes") }}">Pacientes</a>
-        <span>›</span>
-        <span class="migas-actual">{{ isset($paciente) ? 'Editar: '.$paciente->nombre.' '.$paciente->apellido : 'Nuevo paciente' }}</span>
-    </div>
+    @include('partials.migas', ['migas' => isset($paciente)
+        ? [
+            ['texto' => 'Pacientes', 'url' => route("{$base}.pacientes")],
+            ['texto' => $paciente->nombre.' '.$paciente->apellido, 'url' => route("{$base}.pacientes.show", $paciente->id)],
+            ['texto' => 'Editar'],
+        ]
+        : [
+            ['texto' => 'Pacientes', 'url' => route("{$base}.pacientes")],
+            ['texto' => 'Nuevo paciente'],
+        ]])
 
     <form method="POST" class="form-paciente"
           action="{{ isset($paciente) ? route("{$base}.pacientes.update", $paciente->id) : route("{$base}.pacientes.store") }}">

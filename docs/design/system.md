@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.17.0
+version: 1.18.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-14
+updated: 2026-11-15
 ---
 
 # Sistema de diseño de Dentissa
@@ -434,10 +434,25 @@ transparente de `--border-width-strong`; el primero, `margin-right` `--space-7`.
 `aria-current="page"`): texto `--p500` (5,06:1 sobre `--bg`) y borde `--p400` (3,67:1). En el móvil,
 cada enlace mide al menos `--touch-min` × `--touch-min`.
 
-### Migas de pan (spec 033)
-`.migas` (detalle de la cita y agendar): fila flexible centrada con `gap` `--space-3`, `margin-bottom`
-`--space-7`, `--text-meta` y `--text-muted`; enlaces en `--text-muted` sin subrayado y la página actual
-en `.migas-actual` (`--text`). En el móvil, cada enlace mide al menos `--touch-min` × `--touch-min`.
+### Migas de pan (spec 033; navegación accesible desde 1.18.0, spec 046)
+Parcial `partials/migas` (`nav#migas.migas`): una navegación con el nombre «Migas de pan» y, dentro, una
+lista ordenada. `.migas` lleva `margin-bottom` `--space-7`, `--text-meta` y `--text`; la lista es una
+fila flexible centrada con `gap` `--space-3` que puede pasar de línea, también en el escritorio, y los
+nombres largos parten por cualquier punto (nada se acorta con puntos suspensivos).
+- **Enlace:** `--p600`, subrayado; al pasar el puntero, `--p800`; con el anillo de foco del sistema. En
+  el móvil mide al menos `--touch-min` × `--touch-min`.
+- **Elemento actual:** el último, `.migas-actual` en `--text`, sin subrayado y sin enlace, marcado como
+  página actual (`aria-current="page"`). Enlace y elemento actual se distinguen sin depender del color.
+- **Separador:** «›» en `--text`, dentro de cada elemento de la lista menos el primero, delante de su
+  texto; es decorativo y no se lee (`aria-hidden="true"`).
+- **Dónde se usan:** toda pantalla de segundo nivel del panel las lleva como primer elemento del
+  contenido de la pantalla, debajo del aviso del sistema si lo hay. Las pantallas a las que se llega
+  desde el menú (paneles, listados, agendar cita, mis doctores, perfil, galería, reportes y auditoría)
+  no las llevan. El primer elemento es la entrada del menú de la sección, con su mismo texto para cada
+  rol («Mis Citas» para la dentista y el paciente).
+
+**Título de pantalla (1.18.0, spec 046):** toda pantalla del panel define su título (barra superior y
+pestaña del navegador); ninguna usa el título por defecto.
 
 ### Lista, tabla y tarjeta
 - **Tarjetas:**
@@ -1113,7 +1128,7 @@ se corrige cuando una spec toca la pantalla o como objetivo del roadmap. Se conc
 | DS12 | Declarado ≠ cargado en servicios: crear y editar servicio no cargan `citas.css` y su `.field` local no declara familia ni color; los campos se ven en Arial de 13.33px, radio 5px y el desplegable en gris del navegador (medido) | `servicios/create:54-56`, `servicios/edit:60,121-122`; capturas `servicios-create-1440`, `servicios-edit-1440` | Cargar los estilos comunes de campo en el layout (ver DS5) | pendiente |
 | DS13 | El campo de hora del horario (`--field-time-width` 110px) recorta "AM/PM" con el formato de 12 h del navegador ("09:00 A") | `public/css/app.css:48`, `personal/show:257-266`; captura `personal-show-dentista-1440` | Ancho mínimo que quepa en 12 h, o formato de 24 h | pendiente |
 | DS14 | Iconos mezclados: emojis (🕐, 👨‍⚕️, 💡) junto a los iconos SVG de línea en el panel del paciente | `dashboard/cliente.blade.php`; captura `cliente-dashboard-1440` | Iconos SVG de la misma familia | pendiente |
-| DS15 | Marca y títulos: favicon vacío (0 bytes), isotipo `logo-icon1.png` sin uso, y títulos de página por defecto ("Dashboard" en la barra superior de crear y editar servicio, que no definen `title`) | `public/favicon.ico`, `public/images/logo-icon1.png`, `servicios/create`, `servicios/edit`; captura `servicios-create-1440` | Favicon con el isotipo y un título en cada vista | pendiente |
+| DS15 | Marca y títulos: favicon vacío (0 bytes), isotipo `logo-icon1.png` sin uso, y títulos de página por defecto ("Dashboard" en la barra superior de crear y editar servicio, que no definen `title`) | `public/favicon.ico`, `public/images/logo-icon1.png`, `servicios/create`, `servicios/edit`; captura `servicios-create-1440` | Favicon con el isotipo y un título en cada vista | parcial: títulos de servicios hechos por la spec 046 (1.18.0) y favicon por la ficha `2026-11-12-chore-favicon`; isotipo pendiente |
 
 Estados: `pendiente` · `la resuelve NNN` · `resuelta por NNN` · `no se confirma (re-extracción
 AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
@@ -1155,3 +1170,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-11 | diseño | El inicio salta entre 960 y 1024 px al llegar Montserrat: con el respaldo del sistema, más estrecho, los botones del hero caben en una fila y luego pasan a dos (CLS ~0,19, K8 de la 038) | Versión 1.14.0, sin tokens nuevos: `--font-publica` añade «Montserrat respaldo» (tres `@font-face` locales en `publico.css`, Arial o Liberation Sans con `size-adjust` 110,7 %, 112,5 % y 107,5 % para 400, 500 y 600–700). Ficha `docs/changes/2026-11-11-fix-cls-inicio-tableta-038.md` | usuario (seguir en el carril `/fix`) |
 | 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.16.0 (era 1.15.0; se renumeró al fusionar la v0.17.0, que liberó la 1.15.0 con la spec 047), sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
 | 2026-11-14 | diseño | ¿Qué incorpora el sistema para abrir las citas del panel de inicio (spec 048)? | Versión 1.17.0, sin tokens nuevos: el componente «Cita que abre su detalle» (`.fila-cita` y `.cita-enlace`) en «Lista, tabla y tarjeta»: un solo enlace por cita en su dato principal con un `::after` que la cubre, reposo igual que hoy, fondo `--p50` al pasar el puntero solo en el escritorio (A57 de la 034), un solo anillo de foco por dentro y nombre accesible que empieza por el texto visible. Diseño: [048](../specs/048-citas-panel-detalle/design.md), sin exploración | `/design-spec 048` y `/analyze` 048 (A1, A4, A14), aprobado por el usuario |
+| 2026-11-14 | diseño | ¿Qué incorpora el sistema para la navegación interna (spec 046)? | Versión 1.18.0 (era 1.17.0; se renumeró al fusionar la v0.19.0, que liberó la 1.17.0 con la spec 048; decisión del usuario, 2026-11-15), sin tokens nuevos: las migas de pan pasan a ser una navegación con nombre y lista ordenada, con la página actual marcada y los separadores ocultos a los lectores de pantalla; el enlace va en `--p600` subrayado (`--p800` al pasar el puntero) y el elemento actual en `--text` sin subrayar; el camino puede pasar de línea a todos los anchos; regla de dónde se usan las migas y regla del título de pantalla. Cierra 033/R6 | usuario (spec 046, design.md sin candidatos) |
