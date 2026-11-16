@@ -66,7 +66,22 @@ interruptor «Semana · Mes». Recursos de marca: los del sistema; colores por e
 pastillas de estado). `/design-spec 049` genera candidatos y los mide.
 
 ## Criterios de diseño
-Modo: operar · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos (`.ai/project.yaml`). `/design-spec 049` completa los KPIs y puertas.
+Modo: operar · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos · anchos 320, 390 y 1440 px. Pantallas medidas (datos ficticios, semana del 16 al 21 de noviembre de 2026): semana, semana con un día elegido, mes y semana vacía. Archivo: [design/criterios.json](design/criterios.json).
+
+| ID | Qué se mide | Objetivo | Sale de |
+|---|---|---|---|
+| K1 | «Nueva cita», «Anterior», «Hoy», «Siguiente», «Semana» y «Mes» | visibles sin desplazarse a los tres anchos | CA1, CA2 |
+| K2 | Estados y dentistas en texto | visibles «Agendada», «Confirmada», «Cancelada», «No asistió» y los nombres de las dentistas | CA1, CA6 |
+| K3 | El calendario antes que la lista | orden: «Semana», «Mes», «Citas de la semana» | CA4 |
+| K4 | Volver a todo el periodo con un día elegido | visibles «Ver toda la semana» y el día elegido | CA4 |
+| K5 | Mes con el número de citas por día | visibles el mes y «3 citas» | CA3 |
+| K6 | Semana vacía | visibles «No hay citas en esta semana» y «Nueva cita» | CA9 |
+| K7 | Tira de días del móvil | el día de hoy («Mar 17») sin desplazarse a 320 y 390 px | CA8 |
+| K8 | JavaScript de la página | ≤ 50 kB | P9 |
+| K9 | Estabilidad visual | CLS ≤ 0,1 | modo operar |
+| K10 | Títulos | ≤ 2 líneas | modo operar |
+
+Puertas: las de `design-spec/references/criterios.md` §2 (contraste AA, toque ≥ 44 px por debajo de 1024, foco visible, solo colores del sistema, sin desbordes, todo sin JavaScript); fuentes de Google permitidas por la barra de la app, y la barra lateral fuera de la medida (no la diseña esta spec). Sin KPI propio: los huecos que agendan (CA7) y abrir la cita (CA5) son enlaces sin texto visible propio; los comprueban la medición en navegador y los tests de `/implement`. Rúbrica: `jerarquia` 30, `primera_pantalla` 25, `sistema` 20, `lectura` 15, `plantilla` 10 (en un calendario denso manda leerlo de un golpe; la diferencia frente a una plantilla pesa menos).
 
 ## Requisitos no funcionales
 - Accesibilidad (WCAG 2.1 AA, constitución P9): el estado de cada cita en texto, no solo por color; contraste AA; foco visible; navegación del calendario y de la lista con teclado; objetivos de toque ≥ 44 px en el móvil; a 320, 390 y 1440 px.
@@ -92,6 +107,7 @@ Ninguna.
 | 2026-11-15 | contradicción | La 034 fija para la lista de citas tarjetas con todas sus columnas y acciones (CA2), filtros de fechas con los atajos «Hoy» y «Esta semana» (CA5) y que en el escritorio la tabla se vea igual que antes (CA11) | La 049 los reemplaza para la lista de «Citas»: lista compacta de cuatro datos que abre el detalle, y el periodo lo elige el calendario («Hoy», «Anterior», «Siguiente», «Semana · Mes») en lugar de las fechas «Desde» y «Hasta». El resto de la 034 (otras listas, el panel, el detalle) no cambia | usuario (respuestas del 2026-11-14 y 2026-11-15) |
 | 2026-11-15 | supuesto | Móvil | Tira de los siete días con su número de citas y la lista del día elegido; mes en cuadrícula compacta | razonable (propuesta del 2026-11-14 que el usuario aceptó al elegir calendario y lista) |
 | 2026-11-15 | supuesto | Tramos de los huecos | 30 minutos, la duración por defecto de una cita | razonable |
+| 2026-11-15 | diseño | Criterios de diseño (K1–K10, rúbrica con `jerarquia` 30 y `plantilla` 10) | Aprobados | usuario (2026-11-15) |
 | 2026-11-15 | implícita | Descubribilidad | No aplica: «Citas» exige sesión y no se indexa | `docs/seo.md` |
 
 ## Notas para /plan

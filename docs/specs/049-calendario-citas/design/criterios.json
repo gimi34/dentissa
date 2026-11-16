@@ -1,0 +1,190 @@
+{
+  "spec": "049-calendario-citas",
+  "mode": "operar",
+  "widths": [
+    320,
+    390,
+    1440
+  ],
+  "threshold": 80,
+  "floor": 3,
+  "budget": 5,
+  "tokens": {
+    "colors": [
+      "#000000",
+      "#137A5A",
+      "#185FA5",
+      "#1D9E75",
+      "#4B1528",
+      "#72243E",
+      "#7A1F3A",
+      "#854F0B",
+      "#8B4B61",
+      "#993556",
+      "#9B8290",
+      "#A32D2D",
+      "#B83C65",
+      "#C75078",
+      "#D4537E",
+      "#E1F5EE",
+      "#E6F1FB",
+      "#ED93B1",
+      "#F0DCE4",
+      "#F4C0D1",
+      "#FAEEDA",
+      "#FBEAF0",
+      "#FCEBEB",
+      "#FDF0F4",
+      "#FDF5F8",
+      "#FFFFFF"
+    ]
+  },
+  "gates": {
+    "contrast": 4.5,
+    "touch": 44,
+    "external_hosts": [
+      "fonts.googleapis.com",
+      "fonts.gstatic.com"
+    ]
+  },
+  "pantallas": {
+    "semana": {
+      "file": "semana.html",
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    },
+    "semana-dia": {
+      "file": "semana-dia.html",
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    },
+    "mes": {
+      "file": "mes.html",
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    },
+    "vacia": {
+      "file": "vacia.html",
+      "quitar": "<aside class=\"sidebar\"[\\s\\S]*?</aside>"
+    }
+  },
+  "kpis": [
+    {
+      "id": "K1",
+      "pantalla": "*",
+      "name": "Nueva cita y navegación sin desplazarse",
+      "type": "above_fold_all",
+      "texts": [
+        "Nueva cita",
+        "Anterior",
+        "Hoy",
+        "Siguiente",
+        "Semana",
+        "Mes"
+      ],
+      "ca": "CA1, CA2"
+    },
+    {
+      "id": "K2",
+      "pantalla": "semana",
+      "name": "Estados y dentistas en texto",
+      "type": "visible",
+      "texts": [
+        "Agendada",
+        "Confirmada",
+        "Cancelada",
+        "No asistió",
+        "Dra. Lucía Herrera",
+        "Dr. Andrés Molina"
+      ],
+      "ca": "CA1, CA6"
+    },
+    {
+      "id": "K3",
+      "pantalla": "semana",
+      "name": "Calendario antes que la lista",
+      "type": "order",
+      "texts": [
+        "Semana",
+        "Mes",
+        "Citas de la semana"
+      ],
+      "ca": "CA4"
+    },
+    {
+      "id": "K4",
+      "pantalla": "semana-dia",
+      "name": "Volver a todo el periodo",
+      "type": "visible",
+      "texts": [
+        "Ver toda la semana",
+        "Miércoles 18 de noviembre"
+      ],
+      "ca": "CA4"
+    },
+    {
+      "id": "K5",
+      "pantalla": "mes",
+      "name": "Mes con citas por día",
+      "type": "visible",
+      "texts": [
+        "Noviembre de 2026",
+        "3 citas"
+      ],
+      "ca": "CA3"
+    },
+    {
+      "id": "K6",
+      "pantalla": "vacia",
+      "name": "Semana vacía",
+      "type": "visible",
+      "texts": [
+        "No hay citas en esta semana",
+        "Nueva cita"
+      ],
+      "ca": "CA9"
+    },
+    {
+      "id": "K7",
+      "pantalla": "semana",
+      "name": "Tira de días: hoy sin desplazarse en el móvil",
+      "type": "above_fold",
+      "text": "Mar 17",
+      "widths": [
+        320,
+        390
+      ],
+      "ca": "CA8"
+    },
+    {
+      "id": "K8",
+      "pantalla": "*",
+      "name": "JavaScript de la página",
+      "type": "max_js_bytes",
+      "value": 51200,
+      "ca": "P9"
+    },
+    {
+      "id": "K9",
+      "pantalla": "*",
+      "name": "Estabilidad visual",
+      "type": "max_cls",
+      "value": 0.1,
+      "ca": "modo operar"
+    },
+    {
+      "id": "K10",
+      "pantalla": "*",
+      "name": "Títulos",
+      "type": "max_heading_lines",
+      "value": 2,
+      "ca": "modo operar"
+    }
+  ],
+  "rubric": {
+    "weights": {
+      "jerarquia": 30,
+      "primera_pantalla": 25,
+      "sistema": 20,
+      "lectura": 15,
+      "plantilla": 10
+    }
+  }
+}
