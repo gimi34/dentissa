@@ -1,7 +1,7 @@
 ---
 spec: 049-calendario-citas
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 049 Calendario de citas
