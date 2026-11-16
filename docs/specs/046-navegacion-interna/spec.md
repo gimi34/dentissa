@@ -1,7 +1,7 @@
 ---
 id: 046
 slug: navegacion-interna
-status: approved
+status: implemented
 created: 2026-11-12
 extends: [008, 009, 010, 028, 033, 034, 035]
 ---
