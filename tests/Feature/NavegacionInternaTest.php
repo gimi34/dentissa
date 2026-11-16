@@ -132,7 +132,8 @@ class NavegacionInternaTest extends TestCase
 
     public static function formularios(): array
     {
-        return array_combine(self::FORMULARIOS, array_map(fn ($f) => [$f], self::FORMULARIOS));
+        // Cada formulario con todos los roles que lo abren: «Cancelar» se calcula por rol (/review R1).
+        return array_filter(self::pantallas(), fn (array $caso) => in_array($caso[1], self::FORMULARIOS, true));
     }
 
     public static function expedientes(): array
@@ -298,11 +299,11 @@ class NavegacionInternaTest extends TestCase
     }
 
     #[DataProvider('formularios')]
-    public function test_cancelar_lleva_al_mismo_sitio_que_las_migas(string $pantalla): void
+    public function test_cancelar_lleva_al_mismo_sitio_que_las_migas(string $rol, string $pantalla): void
     {
         // Contra el destino fijo del penúltimo elemento según la tabla de la spec, no contra las migas
         // pintadas (/analyze A20): que las migas pintan ese destino lo prueba el test de CA2.
-        [$usuario, $direccion, $camino] = $this->caso('admin', $pantalla);
+        [$usuario, $direccion, $camino] = $this->caso($rol, $pantalla);
         $xpath = $this->xpath($this->actingAs($usuario)->get($direccion)->assertOk()->getContent());
 
         $cancelar = $xpath->query("//a[normalize-space()='Cancelar']");
