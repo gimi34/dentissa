@@ -1,7 +1,7 @@
 ---
 id: 049
 slug: calendario-citas
-status: draft
+status: approved
 created: 2026-11-15
 extends: [034]
 ---
