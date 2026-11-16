@@ -1,35 +1,35 @@
 ---
 spec: 046-navegacion-interna
-verdict: changes_requested
-round: 1
-date: 2026-11-15
-base: e6c2bbd
-head: 53cc84f
+verdict: approved
+round: 2
+date: 2026-11-16
+base: 53cc84f
+head: 4e4adbb
 human_signoff: pending
 ---
 
 # Review · 046 Navegación interna
 
 ## Resumen
-El código cumple los doce criterios y no hay hallazgos bloqueantes: la suite, Pint, el validador y
-los escáneres pasan, y los cuatro revisores independientes (spec, constitución y calidad, seguridad,
-accesibilidad) no encontraron ningún incumplimiento. Se piden cambios por dos hallazgos importantes
-que el usuario decidió corregir antes de liberar (2026-11-15): el test de CA6 solo recorre los
-formularios como administración (R1) y la rama quedó por detrás de `main`, que ya tiene la spec 048
-en producción (v0.19.0), con un choque en `docs/design/system.md` porque las dos specs tomaron la
-versión 1.17.0 del sistema de diseño (R2). El plugin `design` de Anthropic no está habilitado: la
-revisión de accesibilidad aplicó la lista propia de `/review`.
-Conteo: bloqueante 0 · importante 2 · menor 7
+Aprobada, a falta de la confirmación del usuario (`human_signoff`). Los dos hallazgos importantes de
+la ronda 1 están corregidos: la rama contiene la v0.19.0 con la 046 en la versión 1.18.0 del sistema
+de diseño (R2, T033 y T035) y el test de «Cancelar» recorre cada formulario con todos sus roles (R1,
+T034). Durante la verificación apareció un defecto ajeno a la 046, `capturar.mjs --medir` no medía
+bien el componente de la 048, y se corrigió en el guion por decisión del usuario (R10, T036). El
+diff propio de esta ronda son 7 líneas de test y 16 del guion de capturas, revisadas sin subagentes
+(`--rerun`); el resto del rango es la spec 048, ya revisada y liberada. Los siete menores de la
+ronda 1 siguen aceptados al roadmap. El plugin `design` de Anthropic no está habilitado.
+Conteo: bloqueante 0 · importante 0 abiertos (2 corregidos) · menor 7 aceptados (1 corregido)
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `docker compose exec app php artisan test` | ✅ 1242 pasan (17187 aserciones); línea base de `/implement`: 1242 |
-| `php artisan test tests/Feature/NavegacionInternaTest.php` (segunda pasada) | ✅ 241 pasan las dos veces; sin intermitentes |
-| `vendor/bin/pint --test` sobre los tres tests tocados | ✅ |
-| `python .ai/bin/aidd.py validate docs/specs/046-navegacion-interna` | ✅ 0 errores (un aviso heredado de una spec cerrada) |
+| `docker compose exec app php artisan test` | ✅ 1257 pasan (17407 aserciones) sobre `af62873`, ya con la 048 fusionada; los commits posteriores solo tocan `docs/` |
+| `php artisan test tests/Feature/NavegacionInternaTest.php` (segunda pasada) | ✅ 246 pasan las dos veces |
+| `vendor/bin/pint --test tests/Feature/NavegacionInternaTest.php` | ✅ |
+| `python .ai/bin/aidd.py validate docs/specs/046-navegacion-interna` | ✅ 0 errores |
 | `npm run build` | ➖ no se ejecuta: solo afecta a `welcome.blade.php`, sin uso (`.ai/project.yaml`) |
-| `node docs/design/capturar.mjs --medir` (línea base v0.18.0, tomada en la misma sesión) | ✅ «todo en orden» en la segunda pasada. La primera dio 10 fallos «escritorio» en las cinco pantallas del paciente (0,03–0,14 % de píxeles, máxima 64/255): al tomar la línea base otra vez desaparecieron, y las dos líneas base, del mismo código, difieren entre sí. Es el defecto conocido de la captura guardada (roadmap, plan D13), no un cambio de la 046. Falta repetirlo contra v0.19.0 tras la fusión (R2) |
+| `node docs/design/capturar.mjs --medir` (línea base v0.19.0, tomada en la misma sesión) | ✅ «todo en orden» en una pasada completa con el guion de T036. Antes, dos pasadas con otras líneas base dieron solo fallos «escritorio» de 0,03–0,14 % en pantallas de un rol distinto cada vez: el defecto conocido de la captura guardada (roadmap, plan D13). Control positivo de T036: con la regla `::after` de la 048 quitada vuelven los 27 fallos |
 
 ## Criterios de aceptación
 | CA | Test | Estado | Nota |
@@ -39,38 +39,42 @@ Conteo: bloqueante 0 · importante 2 · menor 7
 | CA3 | `::test_las_migas_son_una_navegacion_accesible` | ✅ | Sin otra `nav` con el mismo nombre; foco con el anillo del sistema |
 | CA4 | `::test_las_reglas_de_las_migas_distinguen_el_enlace`, `::test_el_contraste_de_las_migas_es_aa` | ✅ | Enlace `--p600` sobre `--bg`: 6,53:1; actual y separador: 19,6:1 |
 | CA5 | `::test_reprogramar_lleva_migas_se_pueda_o_no` | ✅ | |
-| CA6 | `::test_cancelar_lleva_al_mismo_sitio_que_las_migas` | ⚠ | El comportamiento es correcto en todos los roles; el test solo lo prueba como administración (R1) |
+| CA6 | `::test_cancelar_lleva_al_mismo_sitio_que_las_migas` | ✅ | Desde T034, 15 casos: cada formulario con todos los roles que lo abren (R1 corregido) |
 | CA7 | `::test_el_expediente_ya_no_tiene_volver_al_paciente` | ✅ | |
 | CA8 | `::test_ninguna_pantalla_usa_el_titulo_por_defecto` | ✅ | |
 | CA9 | `::test_el_menu_marca_la_seccion_de_la_pantalla`; `capturar.mjs --medir` | ✅ | |
 | CA10 | `::test_las_migas_pueden_pasar_de_linea`; `capturar.mjs --medir` | ✅ | |
 | CA11 | TM1, TM2 y TM3 (ver Seguridad) | ✅ | |
-| CA12 | `capturar.mjs --medir`, comprobación del escritorio con zonas excluidas | ⚠ | Pasa contra v0.18.0; producción es ahora v0.19.0 y hay que repetirlo tras la fusión (R2) |
+| CA12 | `capturar.mjs --medir`, comprobación del escritorio con zonas excluidas | ✅ | Pasa contra la línea base de v0.19.0, la versión en producción (T035; R2 corregido) |
 
 ## Conformidad con el plan
-- Cambios fuera del plan: ninguno (`scope.md`: 22 archivos de código, 0 sin tarea que los cite).
-- Partes del plan sin implementar: ninguna. T001, T002 y T032 no aparecen en el diff de código
-  porque son la fusión de `main` y cambios en `docs/` (`system.md`, `system.html`, `capturar.mjs`).
+- Cambios fuera del plan: ninguno propio. `scope.md` lista seis archivos sin tarea
+  (`dashboard/*.blade.php`, `CitasPanelDetalleTest`, `MovilPersonalTest`): son de la spec 048 y
+  entran por la fusión de `main` (T033).
+- Partes del plan sin implementar: ninguna. T033 no aparece en el diff de código porque solo toca
+  `docs/`.
+- `docs/design/capturar.mjs` recibe en T036 un cambio que el plan no preveía (medir el componente de
+  la 048), añadido durante `/implement` por decisión del usuario (2026-11-16).
 
 ## Constitution Check (sobre el código)
 | Principio | Resultado | Evidencia |
 |---|---|---|
 | P1 Spec aprobada antes de código | ✅ | Todos los commits del rango citan su tarea de la 046 |
-| P2 Test que falla antes y pasa después | ✅ | `NavegacionInternaTest` (241 casos); caracterizaciones comprobadas rompiendo el código (notas de T031). La de CA6 queda corta de roles (R1) |
+| P2 Test que falla antes y pasa después | ✅ | `NavegacionInternaTest` (246 casos); caracterizaciones comprobadas rompiendo el código (notas de T031 y T034) |
 | P3 Autorización en el servidor | ✅ | `routes/web.php`, middleware y Gates sin cambios; `::test_una_pantalla_de_otro_rol_responde_como_hoy_sin_migas` |
 | P4 Entrada validada y SQL con bindings | ✅ | `partials/migas.blade.php:11,13` solo con `{{ }}`; sin entradas ni consultas nuevas; semgrep 0 hallazgos |
-| P5 Nada sensible en el repositorio | ✅ | gitleaks sin hallazgos en los 18 commits; datos sintéticos en los tests |
+| P5 Nada sensible en el repositorio | ✅ | gitleaks sin hallazgos en el rango; datos sintéticos en los tests |
 | P6 Sin vulnerabilidades críticas o altas | ✅ | Sin cambios en lockfiles; `composer audit` y `npm audit` sin críticas ni altas |
 | P7 Auditoría | ➖ | Sin accesos, permisos ni acciones nuevas |
 | P8 Correlación y logs | ➖ | No añade logs |
-| P9 Solo el sistema de diseño | ✅ | Reglas `.migas` solo con tokens; ningún `style=""` (se retiran los de las migas antiguas); acta aplicada en `system.md` y `system.html`. La versión del sistema choca con la de la 048 (R2) |
+| P9 Solo el sistema de diseño | ✅ | Reglas `.migas` solo con tokens; ningún `style=""` (se retiran los de las migas antiguas); acta aplicada en `system.md` y `system.html`. La 046 queda en la versión 1.18.0 del sistema (T033) |
 | P10 Rutas indexables | ➖ | Todas las pantallas exigen sesión |
 
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks (`e6c2bbd..HEAD`, 18 commits) | ✅ sin hallazgos |
-| semgrep `p/php` (21 archivos del rango) | ✅ 0 hallazgos |
+| gitleaks (`53cc84f..HEAD`, los commits de esta ronda y los de la 048 fusionada) | ✅ sin hallazgos |
+| semgrep `p/php` (27 archivos de `e6c2bbd..HEAD`) | ✅ 0 hallazgos |
 | `composer audit --locked` + `npm audit --audit-level=high` | ✅ crít: 0 · alta: 0. Un aviso de gravedad baja en `laravel/framework` (GHSA-63hm-g96r-2m2q, corregido en 12.71.0), ya anotado en el roadmap para un `/chore` |
 | trivy `fs --severity HIGH,CRITICAL` | ✅ `composer.lock`: 0. Descartado como falso positivo: 10 avisos en `vendor/mockery/mockery/docs/requirements.txt`, que son los requisitos de Python para construir la documentación de una dependencia de desarrollo; `vendor/` no se versiona, ese archivo no se instala ni se ejecuta y no llega a la imagen de producción |
 
@@ -103,8 +107,8 @@ el layout del panel, no indexable.
 ## Hallazgos
 | ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
 |---|---|---|---|---|
-| R1 | importante | `tests/Feature/NavegacionInternaTest.php:133`, `:305` | El test de CA6 recorre los diez formularios solo como administración (`caso('admin', $pantalla)`). En nueva cita, nuevo y editar paciente y nuevo expediente el destino de «Cancelar» se calcula por rol (`citas/create.blade.php:172`, `pacientes/create.blade.php:203-205`, `expedientes/create.blade.php:127`): si el de la dentista o la asistente apuntara a otra área, el test seguiría en verde. Hoy el código es correcto | Que `formularios()` dé `[rol, pantalla]` desde `PANTALLAS` filtrado por `FORMULARIOS` |
-| R2 | importante | `docs/design/system.md:4`, `:437`, `:454`, `:1152` | La spec 048 se liberó el 2026-11-15 (v0.19.0) y la rama no la contiene: `git merge-tree HEAD origin/main` da conflicto en `docs/design/system.md`, y las dos specs tomaron la versión 1.17.0 del sistema de diseño. Sin fusionar no se puede abrir el PR, y la comparación del escritorio (CA12) está hecha contra v0.18.0, que ya no es producción | Fusionar `origin/main`, pasar la 046 a 1.18.0 (decisión del usuario, 2026-11-15) y repetir la suite y `--medir` contra v0.19.0 |
+| R1 | importante (corregido, T034) | `tests/Feature/NavegacionInternaTest.php:133`, `:305` | El test de CA6 recorre los diez formularios solo como administración (`caso('admin', $pantalla)`). En nueva cita, nuevo y editar paciente y nuevo expediente el destino de «Cancelar» se calcula por rol (`citas/create.blade.php:172`, `pacientes/create.blade.php:203-205`, `expedientes/create.blade.php:127`): si el de la dentista o la asistente apuntara a otra área, el test seguiría en verde. Hoy el código es correcto | Que `formularios()` dé `[rol, pantalla]` desde `PANTALLAS` filtrado por `FORMULARIOS` |
+| R2 | importante (corregido, T033 y T035) | `docs/design/system.md:4`, `:437`, `:454`, `:1152` | La spec 048 se liberó el 2026-11-15 (v0.19.0) y la rama no la contiene: `git merge-tree HEAD origin/main` da conflicto en `docs/design/system.md`, y las dos specs tomaron la versión 1.17.0 del sistema de diseño. Sin fusionar no se puede abrir el PR, y la comparación del escritorio (CA12) está hecha contra v0.18.0, que ya no es producción | Fusionar `origin/main`, pasar la 046 a 1.18.0 (decisión del usuario, 2026-11-15) y repetir la suite y `--medir` contra v0.19.0 |
 | R3 | menor | `tests/Feature/NavegacionInternaTest.php:188` | «Las migas van en el contenido de la pantalla» es una unión de XPath cuya primera rama (`.//main//*[@id='migas']`) se cumple en cualquier lugar de `<main>`: con las migas al final de la página seguiría pasando. La posición la sostiene hoy la verificación manual de CA1 | Quitar la rama `main` y comprobar que nada con contenido de la vista va antes de `#migas` dentro de `.content` |
 | R4 | menor | `public/css/movil.css:268-272` | `.migas { flex-wrap: wrap; }` ya no hace nada (`.migas` es una `nav` en bloque; quien pasa de línea es `.migas ol`, `app.css:629`) y las reglas de salto de las líneas 268 y 271 repiten las de `app.css`. El plan lo declara redundante (D6) porque las fija `MovilPacientesExpedientesTest` | Quitarlas y ajustar ese test cuando se toque `movil.css` |
 | R5 | menor | `public/css/app.css:626` | Queda el comentario antiguo «Migas de pan del detalle de la cita y de agendar (T025)»; «Agendar» ya no lleva migas | Borrar la línea |
@@ -112,6 +116,7 @@ el layout del panel, no indexable.
 | R7 | menor | `tests/Feature/NavegacionInternaTest.php:245` | `range(1, $elementos->length - 1)` con un camino de un solo elemento daría `[1, 0]` y un error en lugar de un fallo legible. Hoy todos los caminos tienen dos o más | Usar un `for` |
 | R8 | menor | `resources/views/citas/create.blade.php:16`, `citas/show.blade.php`, `citas/reprogramar.blade.php`, `partials/migas.blade.php:11-13`, `pacientes/create.blade.php`, `tests/Feature/MovilPacienteTest.php:463` | Duplicación: el texto «Mis Citas»/«Citas» por rol está copiado en tres vistas y el prefijo del rol se recalcula en `reprogramar`; el separador se repite en las dos ramas del parcial; el nombre del paciente se compone de dos formas; queda un `foreach` sobre una lista de un solo elemento | Un helper para el texto y el prefijo; sacar el separador antes del `@if`; `nombre_completo` en las dos vistas; quitar el bucle |
 | R9 | menor | `resources/views/partials/migas.blade.php:13`, `bootstrap/app.php:29` | Anterior a la 046: `route()` genera direcciones absolutas con el `Host` de la petición y la aplicación no activa `trustHosts`. Sin vector práctico (un navegador no deja falsear el `Host` de otra persona; las pantallas exigen sesión y no se guardan en caché) | Activar `trustHosts()` en una spec o ficha de seguridad |
+| R10 | menor (corregido, T036) | `docs/design/capturar.mjs:414`, `:1287` | Visto en T035: `capturar.mjs --medir` no conocía el componente «Cita que abre su detalle» de la 048 y daba 27 fallos de toque y de foco en los paneles de inicio, también en la propia v0.19.0 (la 048 no ejecutó este guion, su plan D4). No lo causa la 046 | Hecho: el toque se mide por la cita entera que cubre el `::after` y el foco por el contorno de ese `::after`, con control positivo |
 
 ## Preparación para release
 - Rollback factible: sí. Una sola imagen, sin migraciones ni datos que revertir; volver a la imagen
@@ -123,13 +128,14 @@ el layout del panel, no indexable.
 - Vulnerabilidades críticas o altas de SCA sin excepción: ninguna.
 - Cobertura de riesgos: la spec no declara correcciones de riesgos `RS`, `OB`, `RD` ni `SE`; ningún
   estado cambia en `security.md`, `observability.md` ni `deployment.md`.
-- Pendiente antes de abrir el PR: la fusión de `main` con la 048 (R2, T033) y la verificación
-  posterior (T035).
+- La rama contiene `main` (v0.19.0): se puede abrir el PR sin conflictos.
+- Tras liberar: vaciar `SIN_COMPARAR_046` en `capturar.mjs` (ya anotado en el roadmap).
 
 ## Tareas añadidas
-- T033 ← R2 (fusionar `origin/main` con la 048; la 046 pasa al sistema de diseño 1.18.0)
-- T034 ← R1 (el test de «Cancelar» con todos los roles de cada formulario)
-- T035 ← R2 (verificación tras las correcciones, con `--medir` contra v0.19.0)
+- T033 ← R2 (hecha: fusión de `origin/main`; la 046 pasa al sistema de diseño 1.18.0)
+- T034 ← R1 (hecha: el test de «Cancelar» con todos los roles de cada formulario)
+- T035 ← R2 (hecha: verificación tras las correcciones, con `--medir` contra v0.19.0)
+- T036 ← R10 (hecha; añadida durante `/implement`: `capturar.mjs` mide el componente de la 048)
 
 ## Aceptados sin tarea
 - **R3** → roadmap: la aserción de posición de las migas de `NavegacionInternaTest` se cumple en cualquier lugar de `<main>`; comprobar que van antes del contenido de la vista
