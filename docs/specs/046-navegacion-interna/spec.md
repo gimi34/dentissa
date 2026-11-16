@@ -1,7 +1,8 @@
 ---
 id: 046
 slug: navegacion-interna
-status: implemented
+status: released
+released: v0.20.0 (2026-11-16)
 created: 2026-11-12
 extends: [008, 009, 010, 028, 033, 034, 035]
 ---
@@ -169,3 +170,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 que apliquen (contrast
 | 2026-11-14 | Aprobada de nuevo, con el plan y las tareas | Aprobación del usuario («si apruebo») |
 | 2026-11-14 | CA12 nombra la cabecera de la ficha del expediente, que se recompone al quitar el botón; vuelve a `draft` | /analyze r3: A27 (decisión del usuario) |
 | 2026-11-14 | Aprobada de nuevo, con el plan y las tareas | Aprobación del usuario («apruebo») |
+| 2026-11-16 | Liberada en v0.20.0 (PR #84 y #85, tag sobre `5a0d16b`); comprobada en producción por el usuario | /release 046 |

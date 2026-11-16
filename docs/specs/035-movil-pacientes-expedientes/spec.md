@@ -81,7 +81,7 @@ Las «pantallas incluidas» son, para cada rol que hoy las ve:
   acciones de la cabecera, como «Nuevo expediente» y «Nueva cita», «Editar» y activar o desactivar
   del perfil, «+ Nuevo», «Ver», «Guardar», «Cancelar», «Volver al paciente»), cuando se ven,
   entonces cada uno tiene su texto y su icono centrados dentro del botón y los botones de un mismo
-  grupo quedan alineados entre sí, sin que ninguno se salga de su tarjeta ni tape a otro.
+  grupo quedan alineados entre sí, sin que ninguno se salga de su tarjeta ni tape a otro. → reemplazado en parte por 046 CA7
 - [x] CA8 · Dado un texto en las pantallas incluidas (nombres, correos, direcciones, alergias,
   diagnósticos, tratamientos, notas), cuando se ve en el móvil, entonces ninguna palabra que cabe en
   su línea se parte letra a letra. Una palabra más larga que el ancho disponible pasa a la línea
@@ -94,7 +94,7 @@ Las «pantallas incluidas» son, para cada rol que hoy las ve:
 - [x] CA10 · Dadas las pantallas incluidas en el escritorio (1024 y 1440 px), cuando se abren,
   entonces se ven igual que antes, comprobado contra capturas de la versión anterior. La única
   diferencia admitida es el foco visible con los colores del sistema en lo que esta spec toque
-  (como en la 034, decisión del usuario).
+  (como en la 034, decisión del usuario). → reemplazado en parte por 046 CA12
 - [x] CA11 · Dado cualquier rol en el móvil, en cualquier pantalla, cuando ve el botón que abre el
   menú y, con el menú abierto, el que lo cierra, entonces cada uno muestra solo su icono (las tres
   líneas y la cruz), sin recuadro ni borde alrededor. El icono se distingue del fondo con un
@@ -195,3 +195,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-10-19 | Liberada en v0.9.0 | /release |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: el expediente ya no tiene «Volver al paciente» (CA7, por 046 CA7): se vuelve por las migas; el menú marca «Pacientes» en las pantallas de expedientes; CA10 reemplazado en esa parte por 046 CA12 | /release |
