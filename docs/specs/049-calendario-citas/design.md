@@ -1,6 +1,6 @@
 ---
 spec: 049-calendario-citas
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: loop        # ciclo por criterios
 threshold: 80
 floor: 3
