@@ -399,7 +399,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Deuda de la spec 033 (liberada en v0.7.0; /review r1 y r2, aceptada sin tarea, decisión del usuario):
   - ~~033/R6: migas de pan sin `<nav>` con nombre ni `aria-current`, con el enlace indistinguible del
     texto actual (`--text-muted` = `--text`); cambia `system.md` («Migas de pan»).~~ Hecho por la
-    spec 046 (parcial `partials/migas`, sistema de diseño 1.17.0).
+    spec 046 (parcial `partials/migas`, sistema de diseño 1.18.0).
   - 033/R9: «Menú» lleva `aria-expanded` dentro de `<main>`, que queda inerte al abrir: el estado
     abierto no se percibe en el botón. Resuelto por la 034 (v0.8.0, CA9).
   - 033/R10: ampliar `literales()` de `ReglasCss` a colores con nombre, `hsl()` y unidades
@@ -584,6 +584,16 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   rechazado en «Reportes» se detecta por la sesión: una consulta válida que llegue antes que la redirección muestra una vez
   el error; 047/R3 el botón «Descargar» conserva el `id` y el nombre de test de «Imprimir», y el plan de la 047 no recoge el
   rótulo nuevo.
+- Spec 048, aceptados sin tarea de `/review` (2026-11-14; deuda menor, liberada en v0.19.0):
+  - 048/R7: el fondo y el anillo de la agenda de la dentista llegan a los bordes de la tarjeta en el escritorio (hoy 20 px hacia dentro por el `padding` en línea de `.timeline`);
+  - 048/R8: el nombre accesible del historial del paciente distingue dos citas del mismo día y servicio (p. ej. con el dentista);
+  - 048/R9: en la navegación por celdas, la celda «Hora» no repite el paciente de la columna siguiente (p. ej. `aria-describedby` en lugar de meterlo en el `aria-label`);
+  - 048/R10: regla «nada posicionado dentro de `.fila-cita`» en `system.md`, o `z-index` del `::after` con un token de capa;
+  - 048/R11: trait `Concerns/ConsultaDom` con `xpath()` y `clases()` para los tests que los copian (`CitasPanelDetalleTest`, `MovilPersonalTest` y otros siete);
+  - 048/R13: restaurar `libxml_use_internal_errors` en ese trait;
+  - 048/R14: comprobar en la CI que las reglas 048 ganan en la cascada (hoy solo lo mide `design/medir.mjs`);
+  - 048/R15: dividir `test_las_reglas_048_usan_tokens` por grupos (tokens, cobertura y foco, móvil);
+  - 048/R19: documentar en `system.md` el punto de corte de 900 px, que las `@media` escriben como literal.
 - Spec 045, aceptados sin tarea de `/review` (2026-11-13; deuda menor, liberada en v0.18.0):
   - 045/R4: la fecha de actualización de los términos y del aviso está repetida en las dos páginas y en las ventanas (y es una sola para las dos ventanas): una sola fuente y una por texto;
   - 045/R6: el comportamiento de las ventanas del registro solo tiene un test de la estructura de su script; con un runner JS si el script pasa a `public/js/`;

@@ -66,9 +66,11 @@
                         </thead>
                         <tbody>
                             @foreach($citasHoyLista as $cita)
-                            <tr>
+                            @php $hora = \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i'); @endphp
+                            {{-- Spec 048: toda la fila abre el detalle; el enlace es la hora (.cita-enlace::after la cubre). --}}
+                            <tr class="fila-cita">
                                 <td class="celda-cab" data-label="Hora" style="font-weight:500;color:var(--p600);white-space:nowrap">
-                                    {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}
+                                    <a class="cita-enlace" href="{{ route('asistente.citas.show', $cita->id) }}" aria-label="{{ $hora }}, {{ $cita->paciente }}, ver detalle">{{ $hora }}</a>
                                 </td>
                                 <td data-label="Paciente">
                                     <div class="celda-valor">
