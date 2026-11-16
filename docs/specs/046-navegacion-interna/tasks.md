@@ -90,8 +90,12 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 - [x] T034 Hacer que `test_cancelar_lleva_al_mismo_sitio_que_las_migas` recorra cada formulario con todos los roles que lo abren: el proveedor `formularios()` da `[rol, pantalla]` a partir de `PANTALLAS` filtrado por `FORMULARIOS` y el test llama a `caso($rol, $pantalla)` — `tests/Feature/NavegacionInternaTest.php` — hecho cuando: el test tiene 15 casos (nueva cita con admin, dentista y asistente; nuevo paciente con admin y asistente; editar paciente y nuevo expediente con admin y dentista; los otros seis con admin) y pasan todos; es caracterización (el código de hoy es correcto), así que se comprueba rompiendo un momento el «Cancelar» de `pacientes/create` para que apunte siempre al área de administración: fallan los casos de dentista y asistente y no los de admin, se anota aquí y se restaura — cubre: CA6 — depende: T033
   - nota: 2026-11-15 — 15 casos en verde. Comprobado rompiendo: con los dos «Cancelar» de pacientes/create apuntando siempre al área de administración fallan «asistente · nuevo paciente» y «dentista · editar paciente» y pasan los 13 restantes; restaurado. Pint limpio.
   - nota: añadida por /review: R1
-- [ ] T035 Verificación tras las correcciones: suite completa, `vendor/bin/pint --test` sobre lo tocado, `NavegacionInternaTest` dos veces, `gitleaks detect --no-banner` sobre los commits nuevos y `node docs/design/capturar.mjs --medir` completo con la línea base del tag en producción, que ahora es v0.19.0 (cabecera del guion, paso 7b; la línea base se toma justo antes, en la misma sesión) — sin archivos propios — hecho cuando: todo pasa y se anotan aquí los resultados; si `--medir` falla solo en la comparación del escritorio con diferencias por debajo del 0,2 %, se toma la línea base otra vez antes de darlo por fallo (defecto conocido de la captura guardada, roadmap, plan D13) — cubre: CA12 — depende: T033, T034
+- [x] T036 Hacer que `capturar.mjs --medir` mida el componente «Cita que abre su detalle» de la spec 048, que el guion no conoce (la 048 no lo ejecutó, su plan D4, y la propia v0.19.0 da 27 fallos de toque y de foco en los paneles de inicio): en `EN_PAGINA.toque`, el enlace `.fila-cita .cita-enlace` se mide por la cita entera cuando su `::after` existe y está posicionado, y si no, por el enlace; en `focoVisible`, ese enlace se mide por el contorno de su `::after`; los textos de las comprobaciones «toque» y «034 foco» y la cabecera lo dicen — `docs/design/capturar.mjs` — hecho cuando: `--medir` no da ningún fallo de `.cita-enlace` ni de «Ver detalle», `--seco --medir` lista los textos nuevos y, como control positivo, quitando un momento la regla `.fila-cita .cita-enlace::after` de `app.css` vuelven a fallar los toques de los paneles (anotado aquí y restaurado) — cubre: CA12 — depende: T034
+  - nota: 2026-11-16 — `--medir` contra v0.19.0 sin ningún fallo de `.cita-enlace` ni de «Ver detalle» («todo en orden»); `--seco --medir` lista los dos textos nuevos. Control positivo: con la regla `.fila-cita .cita-enlace::after` de `app.css` quitada un momento vuelven los 27 fallos (26 de toque en los paneles de admin, asistente y paciente y el foco de «Ver detalle» de la dentista); restaurado.
+  - nota: añadida durante /implement: T035 detenida por fallos de `--medir` ajenos a la 046 (decisión del usuario, 2026-11-16: tarea nueva en la 046)
+- [ ] T035 Verificación tras las correcciones: suite completa, `vendor/bin/pint --test` sobre lo tocado, `NavegacionInternaTest` dos veces, `gitleaks detect --no-banner` sobre los commits nuevos y `node docs/design/capturar.mjs --medir` completo con la línea base del tag en producción, que ahora es v0.19.0 (cabecera del guion, paso 7b; la línea base se toma justo antes, en la misma sesión) — sin archivos propios — hecho cuando: todo pasa y se anotan aquí los resultados; si `--medir` falla solo en la comparación del escritorio con diferencias por debajo del 0,2 %, se toma la línea base otra vez antes de darlo por fallo (defecto conocido de la captura guardada, roadmap, plan D13) — cubre: CA12 — depende: T033, T034, T036
   - nota: añadida por /review: R2
+  - nota: decisión del usuario (2026-11-16) sobre el intermitente de la comparación del escritorio (roadmap, plan D13): CA12 se da por verificado si, entre pasadas con líneas base tomadas de nuevo, cada pantalla comparada pasa al menos una vez y ninguna falla siempre
 
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` si cambió la estructura: en «Frontend», el parcial `partials/migas` y qué pantallas lo llevan; en `AGENTS.md` → «Reglas y estilo», una línea sobre las migas de las pantallas de segundo nivel — depende: T031
@@ -118,7 +122,7 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 | CA9 | T012 | T030 |
 | CA10 | T011 | T002, T021, T031 |
 | CA11 | T013 | T020, T031 |
-| CA12 | T032 (comparación del escritorio contra producción con zonas excluidas y control positivo), T031, T035 (contra v0.19.0 tras la fusión; /review R2) | T032 |
+| CA12 | T032 (comparación del escritorio contra producción con zonas excluidas y control positivo), T031, T035 (contra v0.19.0 tras la fusión; /review R2) | T032, T036 (el guion mide el componente de la 048) |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -137,7 +141,7 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 | `layouts/app.blade.php` | T030 |
 | `public/css/app.css` | T021 |
 | `public/css/movil.css` | ninguna: sin cambios (plan D6) |
-| `docs/design/capturar.mjs` | T032 |
+| `docs/design/capturar.mjs` | T032, T036 |
 | `tests/Feature/NavegacionInternaTest.php` | T010–T013, T034 |
 | `MovilPacienteTest`, `MovilPacientesExpedientesTest` | T021, T024, T014 |
 | `MovilPersonalTest` | ninguna: su aserción ya acepta cualquier elemento con `id="migas"`; T022 comprueba que sigue pasando |
