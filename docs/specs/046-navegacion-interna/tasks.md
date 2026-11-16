@@ -83,10 +83,18 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
   - nota: control positivo — con «Editar» cambiado a «Editor» en la ficha del paciente, fallan «escritorio admin-ficha-paciente» y «dentista-ficha-paciente» a 1024 y 1440; revertido.
   - nota: verificación manual OK 2026-11-14 (usuario): capturas de antes y de después en %TEMP%/dentissa-046-cap/ver (antes-*.png, despues-*.png).
 
+## Correcciones de `/review` r1 (2026-11-15)
+- [ ] T033 Fusionar `origin/main` con la spec 048 ya liberada (v0.19.0) en `feature/046-navegacion-interna` y resolver el choque de `docs/design/system.md`: la 048 conserva la versión 1.17.0 del sistema de diseño y la 046 pasa a 1.18.0 (decisión del usuario, 2026-11-15) en el frontmatter, en «Migas de pan», en «Título de pantalla» y en su fila de Decisiones, en el comentario de las migas de `system.html` y en la nota de 033/R6 del roadmap; se conservan enteros el componente «Cita que abre su detalle» de la 048 y el de migas de la 046 — `docs/design/system.md`, `docs/design/system.html`, `docs/roadmap.md` — hecho cuando: `git log` de la rama contiene la fusión de v0.19.0, `system.md` declara `version: 1.18.0`, las únicas menciones de «1.17.0» que quedan en esos tres archivos son las de la 048 y `python .ai/bin/aidd.py validate` no da errores — cubre: CA1, CA3, CA4, CA10 — depende: T032
+  - nota: añadida por /review: R2
+- [ ] T034 Hacer que `test_cancelar_lleva_al_mismo_sitio_que_las_migas` recorra cada formulario con todos los roles que lo abren: el proveedor `formularios()` da `[rol, pantalla]` a partir de `PANTALLAS` filtrado por `FORMULARIOS` y el test llama a `caso($rol, $pantalla)` — `tests/Feature/NavegacionInternaTest.php` — hecho cuando: el test tiene 15 casos (nueva cita con admin, dentista y asistente; nuevo paciente con admin y asistente; editar paciente y nuevo expediente con admin y dentista; los otros seis con admin) y pasan todos; es caracterización (el código de hoy es correcto), así que se comprueba rompiendo un momento el «Cancelar» de `pacientes/create` para que apunte siempre al área de administración: fallan los casos de dentista y asistente y no los de admin, se anota aquí y se restaura — cubre: CA6 — depende: T033
+  - nota: añadida por /review: R1
+- [ ] T035 Verificación tras las correcciones: suite completa, `vendor/bin/pint --test` sobre lo tocado, `NavegacionInternaTest` dos veces, `gitleaks detect --no-banner` sobre los commits nuevos y `node docs/design/capturar.mjs --medir` completo con la línea base del tag en producción, que ahora es v0.19.0 (cabecera del guion, paso 7b; la línea base se toma justo antes, en la misma sesión) — sin archivos propios — hecho cuando: todo pasa y se anotan aquí los resultados; si `--medir` falla solo en la comparación del escritorio con diferencias por debajo del 0,2 %, se toma la línea base otra vez antes de darlo por fallo (defecto conocido de la captura guardada, roadmap, plan D13) — cubre: CA12 — depende: T033, T034
+  - nota: añadida por /review: R2
+
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` si cambió la estructura: en «Frontend», el parcial `partials/migas` y qué pantallas lo llevan; en `AGENTS.md` → «Reglas y estilo», una línea sobre las migas de las pantallas de segundo nivel — depende: T031
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: sin cambios en los dos (plan, Observabilidad y Rollout). Sí cambian: `docs/roadmap.md` (033/R6 hecha; en 033/R11, que la 046 ya prueba la entrada marcada en las 18 pantallas de segundo nivel y queda pendiente la condición repetida; en la nota de la 014, que al retomarla parta del parcial de migas de `pacientes/create`, `expedientes/show` y `expedientes/create` y lo conserve; una nota nueva: devolver a la comparación de `capturar.mjs` las pantallas que T032 sacó cuando la 046 esté en producción; y, en los pendientes de la diferencia intermitente de la asistente y de 035/R22, que la 046 tocó el guion sin atenderlos (plan D13)) y la tabla de deuda de `docs/design/system.md` (DS15: títulos hechos por la 046, favicon hecho por la ficha `2026-11-12-chore-favicon`, isotipo pendiente) — depende: T031
-- [x] T092 Marcar spec como `implemented` — depende: T090, T091
+- [ ] T092 Marcar spec como `implemented` — depende: T090, T091, T035
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097: como administración, el detalle de una cita, «Reprogramar» y «Editar servicio» muestran sus migas y vuelven a su listado; como paciente, «Agendar cita» no tiene migas
@@ -102,13 +110,13 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 | CA3 | T011 | T002, T020 |
 | CA4 | T011 | T002, T021 |
 | CA5 | T012 | T022, T023 |
-| CA6 | T012 | T028 («Editar usuario»), T031 (los otros nueve formularios: caracterización, se comprueba rompiendo un destino) |
+| CA6 | T012, T034 (cada formulario con todos sus roles; /review R1) | T028 («Editar usuario»), T031 (los otros nueve formularios: caracterización, se comprueba rompiendo un destino) |
 | CA7 | T012 | T026 |
 | CA8 | T012 | T029 |
 | CA9 | T012 | T030 |
 | CA10 | T011 | T002, T021, T031 |
 | CA11 | T013 | T020, T031 |
-| CA12 | T032 (comparación del escritorio contra producción con zonas excluidas y control positivo), T031 | T032 |
+| CA12 | T032 (comparación del escritorio contra producción con zonas excluidas y control positivo), T031, T035 (contra v0.19.0 tras la fusión; /review R2) | T032 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -128,11 +136,11 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 | `public/css/app.css` | T021 |
 | `public/css/movil.css` | ninguna: sin cambios (plan D6) |
 | `docs/design/capturar.mjs` | T032 |
-| `tests/Feature/NavegacionInternaTest.php` | T010–T013 |
+| `tests/Feature/NavegacionInternaTest.php` | T010–T013, T034 |
 | `MovilPacienteTest`, `MovilPacientesExpedientesTest` | T021, T024, T014 |
 | `MovilPersonalTest` | ninguna: su aserción ya acepta cualquier elemento con `id="migas"`; T022 comprueba que sigue pasando |
-| `docs/design/system.md`, `docs/design/system.html` | T002, T091 |
-| `docs/roadmap.md`, `docs/architecture.md`, `AGENTS.md` | T090, T091 |
+| `docs/design/system.md`, `docs/design/system.html` | T002, T091, T033 |
+| `docs/roadmap.md`, `docs/architecture.md`, `AGENTS.md` | T090, T091, T033 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
