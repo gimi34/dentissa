@@ -11,7 +11,9 @@ use LogicException;
  *
  * Cada cita es un objeto con `id`, `fecha_hora` ('Y-m-d H:i:s', hora de la clínica), `duracion_min`,
  * `estado`, `paciente` y `dentista`. `$ocupacion` son las citas que ocupan los huecos: las del mismo
- * periodo y alcance, sin aplicar `buscar` ni `estado` (A28).
+ * periodo y alcance, sin aplicar `buscar` ni `estado` (A28). `$dentista` es la dentista que muestra el
+ * calendario cuando muestra una sola (su vista o el filtro): los huecos son entonces sus tramos libres y
+ * su enlace la lleva.
  */
 final class CalendarioCitas
 {
@@ -34,6 +36,7 @@ final class CalendarioCitas
         iterable $ocupacion,
         public readonly array $horarioSemanal,
         public readonly CarbonImmutable $ahora,
+        public readonly ?string $dentista = null,
     ) {
         throw new LogicException('sin implementar');
     }
