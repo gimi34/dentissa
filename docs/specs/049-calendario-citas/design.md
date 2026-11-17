@@ -1,6 +1,6 @@
 ---
 spec: 049-calendario-citas
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved         # draft | approved (solo el usuario aprueba)
 exploration: loop        # ciclo por criterios
 threshold: 80
 floor: 3
@@ -9,7 +9,7 @@ accepted: c6             # aceptado por el usuario bajo el umbral (78), con cinc
 score: 78
 system_version: 1.17.0
 created: 2026-11-15
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 
 # Diseño · 049 Calendario de citas

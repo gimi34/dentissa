@@ -4,8 +4,8 @@ round: 3
 mode: delta
 constitution_version: 1.3.0
 date: 2026-11-17
-spec_sha: 05b8b6fe0247
-plan_sha: bdfd0f82c39c
+spec_sha: 87e00a619123
+plan_sha: bd2fcb23a50b
 tasks_sha: 656c82aea7b3
 ---
 
@@ -18,6 +18,9 @@ nuevos; solo se reformula el CA7 por decisión del usuario). Se releyeron desde 
 Al releer las correcciones apareció un efecto de A28 sobre la «consulta única» del plan, y se corrigió en la
 misma pasada de `--fix` (ver Seguimiento).
 Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 0 · BAJA 0
+
+Huellas actualizadas el 2026-11-17 al reaprobar el usuario: solo cambian una fila del Historial de la spec
+(reaprobación) y el texto de P1 del plan (fecha de aprobación); no hay cambios de contenido.
 
 ## Cobertura
 | Métrica | Valor |

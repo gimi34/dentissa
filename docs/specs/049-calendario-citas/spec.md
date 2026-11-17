@@ -1,7 +1,7 @@
 ---
 id: 049
 slug: calendario-citas
-status: draft
+status: approved
 created: 2026-11-15
 extends: [034]
 ---
@@ -130,3 +130,4 @@ Ninguna.
 | 2026-11-16 | Spec, acta y criterios aprobados de nuevo | usuario |
 | 2026-11-16 | CA7 (qué es un hueco libre; desde el siguiente tramo), «Fuera de alcance» (el resumen cuenta el periodo, refinado 5), RNF de rendimiento (local y comprobación en producción), «cinco refinados»; vuelve a `draft` | `/analyze` r1: A8, A9, A16, A24, A26 |
 | 2026-11-17 | CA7: el buscador y el filtro de estado no cuentan para los huecos; un tramo que empieza justo ahora ya no se ofrece | `/analyze` r2: A28, A30 |
+| 2026-11-17 | Spec, acta, plan y tareas aprobados de nuevo tras `/analyze` r3 pass | usuario |

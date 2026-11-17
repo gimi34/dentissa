@@ -1,6 +1,6 @@
 ---
 spec: 049-calendario-citas
-status: draft   # draft | approved | blocked
+status: approved   # draft | approved | blocked
 constitution_version: 1.3.0
 created: 2026-11-16
 ---
@@ -26,7 +26,7 @@ hoy, que ya acepta `fecha`, `hora` y `dentista`.
 ## Constitution Check
 | Principio | Resultado | Cómo se cumple | Cómo se verifica |
 |---|---|---|---|
-| P1 Spec aprobada | ✅ | Spec 049 y acta aprobadas por el usuario (la fecha se anota al reaprobar tras `/analyze`); el código empieza con `tasks.md` aprobado | manual: `aidd.py status` |
+| P1 Spec aprobada | ✅ | Spec 049 y acta `approved` (reaprobadas el 2026-11-17 tras `/analyze` r3); el código empieza con `tasks.md` aprobado | manual: `aidd.py status` |
 | P2 Test que falla antes | ✅ | Cada CA cambia comportamiento salvo el alcance por rol y el 403 por grupo (CA10), que se fijan con tests de caracterización comprobados rompiendo `aplicarAlcanceRol` y `role:`; la redirección nueva de `store` tiene su test que falla antes (A2) | test: tareas de Tests (Trazabilidad) |
 | P3 Autorización en servidor | ✅ | Sin rutas nuevas; `index` conserva `role:` del grupo y `aplicarAlcanceRol` en la consulta del periodo (calendario, lista, cuentas y resumen salen de ella) y en la de ocupación de los huecos (A28); el filtro `dentista_id` se suma al alcance, nunca lo amplía. Excepción al Gate (A14): el listado no autoriza un recurso sino que filtra una colección; `aplicarAlcanceRol` usa `AlcanceClinico` (la clase de `app/Autorizacion/` de los Gates de la 026) y la 049 no lo cambia | test: `CalendarioCitasAlcanceTest` (dentista y asistente con `dentista_id` ajeno, periodo y vista manipulados → solo sus citas, cuentas y resumen incluidos; 403 del paciente en los tres grupos y del personal en los grupos ajenos) |
 | P4 Entrada validada, bindings | ✅ | `vista` en `semana` o `mes`; `fecha` y `dia` con `date_format:Y-m-d`; `dentista_id` UUID; `estado` en la lista de estados; `buscar` ≤ 100 caracteres; lo no válido (también un valor no escalar, `?fecha[]=…`) se descarta sin error (CA2); `create` ignora los valores no escalares o mal formados de `fecha`, `hora`, `dentista` y `paciente_id` (A13, A29). Consulta con Query Builder y bindings (el `whereRaw` con `?` del buscador es de hoy y no cambia). Salida con el eco escapado de Blade | test: `CalendarioCitasParametrosTest` (cada parámetro no válido o no escalar → semana actual, 200, sin 500) y `test_el_alta_ignora_parametros_no_validos` (también no escalares) |
