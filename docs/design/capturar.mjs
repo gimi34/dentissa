@@ -99,8 +99,8 @@
 //    La línea base muestra el menú de la 033 con sesión iniciada en los cuatro roles. Si una cita cruza
 //    el plazo de 24 h de «Reprogramar» y «Cancelar» entre las dos capturas, se repiten las dos.
 //    Spec 046 (CA12): la comparación deja fuera el bloque de migas y, en las pantallas de expedientes,
-//    las entradas «Pacientes» y «Expedientes» de la barra; y no compara las pantallas de SIN_COMPARAR_046
-//    mientras la línea base sea de una versión anterior a la 046 (después, vaciar esa lista).
+//    las entradas «Pacientes» y «Expedientes» de la barra. Hasta la v0.20.0 tampoco comparaba cinco
+//    pantallas que la 046 recompone (lista SIN_COMPARAR_046, retirada con la 046 en producción).
 //    Spec 048 (046 T036): el toque del enlace de una cita del panel se mide por la cita entera que cubre su
 //    ::after, y su foco, por el contorno de ese ::after.
 //    Al terminar: docker rm -f dentissa_base_app; rm <carpeta temporal>/v070/.env;
@@ -364,21 +364,16 @@ const PANTALLAS_035 = [
   ['admin-alta-expediente', 'admin', '/admin/expedientes/crear?paciente_id={paciente}'],
   ['dentista-alta-expediente', 'dentista', '/dentista/expedientes/crear?paciente_id={paciente}'],
 ];
-// Spec 046 (CA12, D12): pantallas que la 046 recompone a propósito y que no se comparan con la línea
-// base hasta que la 046 esté en producción (entonces esta lista se vacía). En «Agendar cita» las migas
-// desaparecen y en «Reprogramar» del paciente aparecen: todo lo de debajo se desplaza. En la ficha del
-// expediente, al quitar «← Volver al paciente» el título gana ancho y la cabecera cambia de alto (medido
-// el 2026-11-14 con los datos de captura: 157 → 133 px a 1024 y 96 → 83 px a 1440). Siguen en las demás
-// comprobaciones de --medir.
-const SIN_COMPARAR_046 = ['cliente-agendar', 'citas-reprogramar-cliente',
-  'admin-ficha-expediente', 'dentista-ficha-expediente', 'asistente-ficha-expediente'];
-// Las que --medir compara con la línea base a 1024 y 1440 (D13).
+// Las que --medir compara con la línea base a 1024 y 1440 (D13). Con la línea base de la v0.20.0 o
+// posterior vuelven a incluir «Agendar cita», «Reprogramar» del paciente y la ficha del expediente de
+// los tres roles, que la 046 dejó fuera mientras la línea base fuera anterior a ella (CA12, D12;
+// ficha docs/changes/2026-11-17-chore-capturar-tras-046.md).
 const COMPARADAS = [
   ...PANTALLAS_PERSONAL,
   ...PANTALLAS_035,
   ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-detalle-historial`, rol, `/${rol}/citas/{cita_historial_largo}`]),
   ...Object.entries(RUTAS_PACIENTE).map(([id, ruta]) => [id, 'cliente', ruta]),
-].filter(([id]) => !SIN_COMPARAR_046.includes(id));
+];
 
 // Funciones que se evalúan en la página.
 const EN_PAGINA = {

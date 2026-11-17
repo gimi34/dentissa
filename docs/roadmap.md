@@ -317,9 +317,6 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   está en la toma de la línea base, no en la pantalla medida: con la misma línea base la diferencia
   se repite idéntica en las 14 comparaciones de la asistente, y la rama y el tag dan la misma
   imagen píxel a píxel; desaparece al tomar la línea base de nuevo.
-- `capturar.mjs` tras la spec 046 (CA12, D12): cuando la 046 esté en producción, vaciar
-  `SIN_COMPARAR_046` para devolver a la comparación del escritorio «Agendar cita» y «Reprogramar»
-  del paciente y la ficha del expediente de los tres roles.
 - «Nuevo miembro» y «Editar personal» a 320 px se desplazan de lado (361 px): las tarjetas del
   tipo de personal no caben. Ya ocurre en producción (v0.18.0); visto en la spec 046 (T031), que
   deja fuera de alcance rehacer esas pantallas. Para `/fix` o la spec del móvil de personal.
