@@ -243,11 +243,14 @@ class CitasController extends Controller
             ->orderBy('categoria')->orderBy('nombre')
             ->get();
 
-        // Preselección al venir desde el perfil de un paciente
-        $pacienteSeleccionado = $request->get('paciente_id');
-        $dentistaSeleccionado = $request->get('dentista');
+        // Preselección al venir desde el perfil de un paciente o desde un hueco del calendario
+        // (spec 049): solo se proponen valores de texto con su formato; lo demás se ignora (A13, A29).
+        $ahora = CarbonImmutable::now(config('clinica.zona_horaria'));
+        $uuid = fn (string $clave) => Str::isUuid((string) $this->textoDe($request, $clave)) ? $this->textoDe($request, $clave) : null;
+        $pacienteSeleccionado = $uuid('paciente_id');
+        $dentistaSeleccionado = $uuid('dentista');
 
-        $fechaSugerida = $request->get('fecha');
+        $fechaSugerida = $this->fechaDe($request, 'fecha', $ahora)?->toDateString();
 
         if ($pacienteSeleccionado) {
             // Si el paciente tiene doctor asignado, preseleccionarlo
@@ -272,7 +275,8 @@ class CitasController extends Controller
         }
 
         $fechaSugerida = $fechaSugerida ?: now()->addDay()->format('Y-m-d');
-        $horaSugerida = $request->get('hora', '09:00');
+        $hora = (string) $this->textoDe($request, 'hora');
+        $horaSugerida = preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora) ? $hora : '09:00';
 
         return view('citas.create', compact(
             'pacientes', 'dentistas', 'servicios', 'fechaSugerida', 'horaSugerida',
