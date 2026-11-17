@@ -396,6 +396,20 @@ class CalendarioCitasTest extends TestCase
         }
     }
 
+    // ── T018 · Tras agendar se vuelve a la semana y al día de la cita ───
+
+    public function test_tras_agendar_se_vuelve_a_la_semana_y_al_dia_de_la_cita(): void
+    {
+        $this->conHorarios();
+
+        $respuesta = $this->actingAs($this->admin)->post('/admin/citas', [
+            'paciente_id' => $this->p1, 'dentista_id' => $this->d1, 'fecha' => '2026-11-26', 'hora' => '09:00', 'duracion_min' => 30,
+        ]);
+
+        $respuesta->assertRedirect(route('admin.citas', ['vista' => 'semana', 'fecha' => '2026-11-26', 'dia' => '2026-11-26']));
+        $this->assertSame('Cita agendada correctamente.', session('success'));
+    }
+
     // ── Utilidades ───────────────────────────────────────────────────────
 
     private function pagina(Usuario $usuario, string $url): DOMXPath
