@@ -2,6 +2,7 @@
 spec: 049-calendario-citas
 plan: plan.md
 status: approved
+impl_base: eb65b90
 ---
 
 # Tareas · 049 Calendario de citas
@@ -32,7 +33,7 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - ➖ P6, P7, P8, P10: sin dependencias, auditoría, logs ni rutas indexables nuevas (plan).
 
 ## Preparación
-- [ ] T001 Añadir el componente «Calendario de citas» (barra del periodo, semana por horas con carriles, huecos y fuera de horario, tira de seis días, mes, lista del periodo con clases `.cal-lista-*`, resumen del periodo) con los cinco refinados del acta, en 1.19.0 y con su fila en Decisiones; y actualizar «Filtro plegable (spec 034)»: en «Citas» ya no hay «Desde/Hasta» ni atajos — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los dos describen el componente y el filtro como quedan, y `python .ai/bin/aidd.py validate` no da errores
+- [x] T001 Añadir el componente «Calendario de citas» (barra del periodo, semana por horas con carriles, huecos y fuera de horario, tira de seis días, mes, lista del periodo con clases `.cal-lista-*`, resumen del periodo) con los cinco refinados del acta, en 1.19.0 y con su fila en Decisiones; y actualizar «Filtro plegable (spec 034)»: en «Citas» ya no hay «Desde/Hasta» ni atajos — `docs/design/system.md`, `docs/design/system.html` — hecho cuando: los dos describen el componente y el filtro como quedan, y `python .ai/bin/aidd.py validate` no da errores
 
 ## Tests (antes de implementar)
 - [ ] T010 Escribir los unitarios del periodo y la cuadrícula de `CalendarioCitas` (firma vacía que lanza «sin implementar»): semana de lunes a sábado para un lunes, un miércoles y un domingo; mes con sus celdas de lunes a sábado; filas de 9:00 a 20:00 (sábado hasta 14:00, el resto fuera de horario); filas y domingo añadidos cuando hay citas fuera del horario; una cita de 10:15 y 45 min ocupa los tramos de 10:00 y 10:30 — `tests/Unit/CalendarioCitasTest.php`, `app/Agenda/CalendarioCitas.php` (firma) — hecho cuando: fallan por «sin implementar» — cubre: CA1, CA3
