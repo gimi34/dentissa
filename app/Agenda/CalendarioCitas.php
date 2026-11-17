@@ -561,7 +561,8 @@ final class CalendarioCitas
         foreach ($citas as $cita) {
             $lista[] = $cita;
         }
-        usort($lista, fn (object $a, object $b) => [(string) $a->fecha_hora, (string) $a->id] <=> [(string) $b->fecha_hora, (string) $b->id]);
+        // Orden estable por hora: a la misma hora se conserva el orden de la consulta (por paciente).
+        usort($lista, fn (object $a, object $b) => (string) $a->fecha_hora <=> (string) $b->fecha_hora);
 
         return $lista;
     }

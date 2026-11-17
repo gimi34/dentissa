@@ -112,6 +112,130 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame(0, $delMes->query("//*[{$this->clase('cal-semana')}]")->length);
     }
 
+    // ── T013 · CA3: el mes ──────────────────────────────────────────────
+
+    public function test_el_mes_cuenta_las_citas_y_filtra_por_dia(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas?vista=mes&fecha=2026-11-17');
+
+        foreach (['2026-11-17' => '1 cita', '2026-11-18' => '2 citas', '2026-11-24' => '1 cita', '2026-11-20' => '0 citas'] as $dia => $cuenta) {
+            $celda = $this->uno($x, "//a[{$this->clase('mes-dia')}][@data-dia='{$dia}']");
+            $this->assertStringContainsString($cuenta, $this->texto($celda), $dia);
+        }
+        $dia18 = $this->uno($x, "//a[{$this->clase('mes-dia')}][@data-dia='2026-11-18']");
+        $this->assertSame(['vista' => 'mes', 'fecha' => '2026-11-01', 'dia' => '2026-11-18'], $this->parametros($dia18));
+        $this->assertSame(0, $x->query("//a[{$this->clase('mes-dia')}][@data-dia='2026-10-26']")->length, 'Los días de otro mes no son enlaces');
+
+        // Pulsar un día deja en la lista solo sus citas, con la forma de volver a todo el mes.
+        $soloEse = $this->pagina($this->admin, $dia18->getAttribute('href'));
+        $this->assertSame(['2026-11-18'], $this->atributos($soloEse->query("//*[@id='lista']//*[{$this->clase('cal-lista-grupo')}]"), 'data-dia'));
+        $volver = $this->uno($soloEse, "//*[@id='lista']//a[normalize-space(.)='Ver todo el mes']");
+        $this->assertSame(['vista' => 'mes', 'fecha' => '2026-11-01'], $this->parametros($volver));
+    }
+
+    // ── T013 · CA4: la lista del periodo ────────────────────────────────
+
+    public function test_la_lista_agrupa_el_periodo_y_el_dia_elegido(): void
+    {
+        $tarde = $this->cita($this->d1, $this->p1, 'agendada', '2026-11-18 16:00');
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        $this->assertSame('Citas de la semana', $this->texto($this->uno($x, "//*[@id='lista-titulo']")));
+        $this->assertSame(
+            ['2026-11-17', '2026-11-18', '2026-11-19'],
+            $this->atributos($x->query("//*[@id='lista']//*[{$this->clase('cal-lista-grupo')}]"), 'data-dia'),
+            'Un grupo por día con citas, en orden',
+        );
+        $this->assertSame(
+            [$this->c18a, $this->c18b, $tarde],
+            $this->idsDeCitas($x->query("//*[@id='lista']//*[@data-dia='2026-11-18']//a[{$this->clase('cal-lista-cita')}]")),
+            'En orden de hora',
+        );
+        $fila = $this->uno($x, "//*[@id='lista']//a[@href='".route('admin.citas.show', $this->c19)."']");
+        foreach (['9:00', 'Paula Otra', 'Dora Segunda', 'Cancelada'] as $parte) {
+            $this->assertStringContainsString($parte, $this->texto($fila));
+        }
+
+        // Con un día elegido, solo ese día y «Ver toda la semana».
+        $dia = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18');
+        $this->assertSame(['2026-11-18'], $this->atributos($dia->query("//*[@id='lista']//*[{$this->clase('cal-lista-grupo')}]"), 'data-dia'));
+        $this->assertSame('Citas del miércoles 18 de noviembre', $this->texto($this->uno($dia, "//*[@id='lista-titulo']")));
+        $volver = $this->uno($dia, "//*[@id='lista']//a[normalize-space(.)='Ver toda la semana']");
+        $this->assertSame(['vista' => 'semana', 'fecha' => '2026-11-16'], $this->parametros($volver));
+        $this->assertContains('cal-dia-cab--elegido', $this->clases($this->uno($dia, "//a[{$this->clase('cal-dia-cab')}][@data-dia='2026-11-18']")));
+    }
+
+    public function test_los_filtros_se_aplican_al_calendario_y_a_la_lista(): void
+    {
+        $casos = [
+            'buscar=Paula' => [$this->c18b, $this->c19],
+            "dentista_id={$this->d1}" => [$this->c17, $this->c18a],
+            'estado=confirmada' => [$this->c18a],
+        ];
+
+        foreach ($casos as $filtro => $esperadas) {
+            $x = $this->pagina($this->admin, "/admin/citas?{$filtro}");
+            $this->assertSame($esperadas, $this->idsDeCitas($x->query("//a[{$this->clase('cal-cita')}]")), "Calendario con {$filtro}");
+            $this->assertSame($esperadas, $this->idsDeCitas($x->query("//*[@id='lista']//a[{$this->clase('cal-lista-cita')}]")), "Lista con {$filtro}");
+        }
+    }
+
+    public function test_el_filtro_conserva_el_periodo_y_limpiar_tambien(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-23&dia=2026-11-24&buscar=Pablo');
+        $formulario = $this->uno($x, "//form[{$this->clase('filtro-citas')}]");
+
+        $ocultos = [];
+        foreach ($x->query(".//input[@type='hidden']", $formulario) as $campo) {
+            $ocultos[$campo->getAttribute('name')] = $campo->getAttribute('value');
+        }
+        $this->assertSame(['vista' => 'semana', 'fecha' => '2026-11-23', 'dia' => '2026-11-24'], array_intersect_key($ocultos, array_flip(['vista', 'fecha', 'dia'])));
+        $this->assertSame('Pablo', $this->uno($x, ".//input[@name='buscar']", $formulario)->getAttribute('value'));
+        $this->assertSame(0, $x->query(".//input[@name='fecha_desde' or @name='fecha_hasta']", $formulario)->length, 'Sin «Desde» ni «Hasta»');
+
+        $limpiar = $this->uno($x, ".//a[normalize-space(.)='Limpiar']", $formulario);
+        $this->assertSame(['vista' => 'semana', 'fecha' => '2026-11-23'], $this->parametros($limpiar));
+    }
+
+    // ── T013 · CA9: periodo vacío ───────────────────────────────────────
+
+    public function test_un_periodo_sin_citas_lo_dice(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas?fecha=2026-12-07');
+
+        $this->assertSame(0, $x->query("//a[{$this->clase('cal-cita')}]")->length);
+        $this->assertStringContainsString('No hay citas en esta semana', $this->texto($this->uno($x, "//*[@id='lista']")));
+        $agendar = $this->uno($x, "//*[@id='lista']//a[normalize-space(.)='Agendar una cita']");
+        $this->assertSame(route('admin.citas.create'), $agendar->getAttribute('href'));
+
+        $mes = $this->pagina($this->admin, '/admin/citas?vista=mes&fecha=2027-02-10');
+        $this->assertStringContainsString('No hay citas en este mes', $this->texto($this->uno($mes, "//*[@id='lista']")));
+
+        $buscado = $this->pagina($this->admin, '/admin/citas?buscar=Nadie+Existe');
+        $this->assertStringContainsString('No hay citas en esta semana', $this->texto($this->uno($buscado, "//*[@id='lista']")));
+    }
+
+    // ── T013 · D5: el resumen es del periodo ────────────────────────────
+
+    public function test_el_resumen_de_cifras_es_del_periodo_o_del_dia_y_su_titulo_lo_dice(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas');
+        $this->assertSame('Resumen de la semana del 16 al 21 de noviembre', $this->texto($this->uno($x, "//*[@id='resumen-titulo']")));
+        $this->assertSame('4', $this->cifra($x, 'Total'));
+        $this->assertSame('1', $this->cifra($x, 'Canceladas'));
+
+        $dia = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18');
+        $this->assertSame('Resumen del miércoles 18 de noviembre', $this->texto($this->uno($dia, "//*[@id='resumen-titulo']")));
+        $this->assertSame('2', $this->cifra($dia, 'Total'));
+
+        $mes = $this->pagina($this->admin, '/admin/citas?vista=mes&fecha=2026-11-17');
+        $this->assertSame('Resumen de noviembre de 2026', $this->texto($this->uno($mes, "//*[@id='resumen-titulo']")));
+        $this->assertSame('5', $this->cifra($mes, 'Total'));
+
+        // El filtro de estado no cambia las cifras (como hoy): cuentan todos los estados del periodo.
+        $this->assertSame('4', $this->cifra($this->pagina($this->admin, '/admin/citas?estado=confirmada'), 'Total'));
+    }
+
     // ── Utilidades ───────────────────────────────────────────────────────
 
     private function pagina(Usuario $usuario, string $url): DOMXPath
@@ -180,5 +304,17 @@ class CalendarioCitasTest extends TestCase
         uksort($parametros, fn ($a, $b) => array_search($a, $orden, true) <=> array_search($b, $orden, true));
 
         return $parametros;
+    }
+
+    /** @return list<string> ids de las citas que enlazan esos nodos (por el final de su `href`) */
+    private function idsDeCitas(DOMNodeList $enlaces): array
+    {
+        return array_map(fn (DOMElement $a) => basename((string) parse_url($a->getAttribute('href'), PHP_URL_PATH)), iterator_to_array($enlaces));
+    }
+
+    /** Cifra de una tarjeta del resumen («Total», «Agendadas»…). */
+    private function cifra(DOMXPath $x, string $etiqueta): string
+    {
+        return $this->texto($this->uno($x, "//*[{$this->clase('cal-resumen')}]//*[{$this->clase('stat-card')}][.//*[{$this->clase('stat-label')}][normalize-space(.)='{$etiqueta}']]//*[{$this->clase('stat-value')}]"));
     }
 }
