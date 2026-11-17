@@ -68,13 +68,7 @@ final class CalendarioCitas
         public readonly CarbonImmutable $ahora,
         public readonly ?string $dentista = null,
     ) {
-        if ($vista === 'mes') {
-            $this->inicio = $fecha->startOfMonth();
-            $this->fin = $fecha->endOfMonth();
-        } else {
-            $this->inicio = $fecha->startOfWeek(CarbonInterface::MONDAY);
-            $this->fin = $this->inicio->addDays(6)->endOfDay();
-        }
+        [$this->inicio, $this->fin] = self::periodo($vista, $fecha);
 
         $this->citas = array_values(array_filter(
             $this->ordenadas($citas),
@@ -99,6 +93,22 @@ final class CalendarioCitas
     }
 
     // ── Periodo ────────────────────────────────────────────────────────
+
+    /**
+     * Periodo que se consulta para una vista y una fecha, sin construir el calendario: la semana de
+     * lunes a domingo (un domingo pertenece a la semana que termina el sábado anterior) o el mes.
+     *
+     * @return array{0: CarbonImmutable, 1: CarbonImmutable}
+     */
+    public static function periodo(string $vista, CarbonImmutable $fecha): array
+    {
+        if ($vista === 'mes') {
+            return [$fecha->startOfMonth(), $fecha->endOfMonth()];
+        }
+        $lunes = $fecha->startOfWeek(CarbonInterface::MONDAY);
+
+        return [$lunes, $lunes->addDays(6)->endOfDay()];
+    }
 
     /** Primer instante del periodo que se consulta (lunes de la semana o día 1 del mes). */
     public function inicio(): CarbonImmutable

@@ -48,7 +48,9 @@ class CalendarioCitasAlcanceTest extends TestCase
 
                 $this->assertSame(0, $x->query("//a[@href='{$ajena}']")->length, "{$url}: la cita ajena no aparece");
                 $this->assertNotContains($this->ajena, $respuesta->viewData('citas')->pluck('id')->all(), $url);
-                $this->assertSame('1', $this->cifra($x, 'Total'), "{$url}: el resumen solo la cuenta a ella");
+                // El filtro de dentista se suma al alcance y nunca lo amplía: con una dentista ajena, nada.
+                $total = str_contains($consulta, 'dentista_id') ? '0' : '1';
+                $this->assertSame($total, $this->cifra($x, 'Total'), "{$url}: el resumen solo cuenta lo que puede ver");
 
                 if (! str_contains($consulta, 'dentista_id')) {
                     $propia = route("{$rol}.citas.show", $this->propia);

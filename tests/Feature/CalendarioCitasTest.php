@@ -382,11 +382,11 @@ class CalendarioCitasTest extends TestCase
         $this->actingAs($this->admin)->get('/admin/citas/crear?fecha=ayer&hora=25:99&dentista=nadie')->assertOk();
 
         // El alta valida como hoy: una hora fuera del horario de la dentista no se guarda.
-        $antes = \DB::table('citas')->count();
+        $antes = DB::table('citas')->count();
         $this->actingAs($this->admin)->post('/admin/citas', [
             'paciente_id' => $this->p1, 'dentista_id' => $this->d1, 'fecha' => '2026-11-18', 'hora' => '19:00', 'duracion_min' => 30,
         ])->assertSessionHasErrors('hora');
-        $this->assertSame($antes, \DB::table('citas')->count());
+        $this->assertSame($antes, DB::table('citas')->count());
     }
 
     public function test_nueva_cita_responde_con_parametros_no_escalares(): void
