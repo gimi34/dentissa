@@ -1,11 +1,11 @@
 ---
 spec: 049-calendario-citas
-status: approved         # draft | approved (solo el usuario aprueba)
+status: draft            # draft | approved (solo el usuario aprueba)
 exploration: loop        # ciclo por criterios
 threshold: 80
 floor: 3
 budget: 6                # 5 de project.yaml + 1 ampliado por el usuario (2026-11-16)
-accepted: c6             # aceptado por el usuario bajo el umbral (78), con cuatro correcciones: ver Decisiones
+accepted: c6             # aceptado por el usuario bajo el umbral (78), con cinco refinados: ver Decisiones
 score: 78
 system_version: 1.17.0
 created: 2026-11-15
@@ -30,11 +30,11 @@ Medidos con `design/medir.mjs` (que llama a `evaluate.mjs` por pantalla) a 320, 
 | `c3` | 12/12 | 7/7 | 64 | descartado: las cifras y los filtros tapaban la agenda en el móvil; cifras sin decir de qué periodo; estados cortados y filas de la lista altas | `.ai/inspect/049-c3/` |
 | `c4` | 12/12 | 7/7 | 69 | descartado: buscador entre la tira y su lista; lista del escritorio estirada; en el mes, la cifra era el texto más débil | `.ai/inspect/049-c4/` |
 | `c5` | 12/12 | 7/7 | 75 | descartado: filas de la lista altas con el 40 % vacío; nombres cortados a 320 px; título de la lista y día elegido confusos en el móvil | `.ai/inspect/049-c5/` |
-| `c6` | 12/12 | 7/7 | 78 | **aceptado por el usuario bajo el umbral**, con cuatro correcciones (Decisiones) | `.ai/inspect/049-c6/` |
+| `c6` | 12/12 | 7/7 | 78 | **aceptado por el usuario bajo el umbral**, con cinco refinados (Decisiones) | `.ai/inspect/049-c6/` |
 
 ## Resultado
 
-**c6**, aceptado por el usuario con 78/100 (umbral 80, ningún punto bajo 3) y cuatro correcciones que
+**c6**, aceptado por el usuario con 78/100 (umbral 80, ningún punto bajo 3) y cinco refinados que
 aplica `/implement` y se verifican en pantalla (ver Decisiones). Páginas:
 `design/candidatos/c6/{semana,semana-dia,mes,vacia}.html` con `calendario.css`.
 
@@ -79,10 +79,10 @@ Ninguna.
 - **Del sistema:** carcasa de la app (barra superior con «Nueva cita»), `.stats-grid` / `.stat-card` (resumen de hoy, con su título), `.card`, filtro de citas de la 034 (`.filtro-citas`, `filtros.js`), `.btn` (`-primary`, `-outline`, `-sm`, `-ghost`), `.badge-*` de estado, `.empty-state`, `.formulario-accesible` (botón principal sobre `--p500` y pastilla verde en `--text`: el contenido y «Nueva cita» de esta pantalla van dentro, por DS1).
 - **Exclusivos de esta pantalla** (`calendario.css`, solo tokens):
   - **Barra del periodo:** título del periodo; «‹ Anterior», «Hoy», «Siguiente ›» y el interruptor «Semana · Mes» (`.cal-vista`, opción actual con `aria-current="page"`, fondo `--p600`), agrupados con `role="group"`, todos a la misma altura.
-  - **Semana por horas** (≥ 900 px): columna de horas y una columna por día (lunes a sábado) con su cabecera (enlace al día, número de citas, marca «Hoy»; el día elegido, relleno `--p600`); filas de 30 min de `--touch-min + --space-3`; los días con citas que coinciden ocupan el doble de ancho y cada cita va en su carril. Cita (`.cal-cita`): enlace al detalle, tres líneas (hora y paciente · dentista · estado), fondo y borde izquierdo por estado (agendada `--p100`/`--p400`, confirmada `--blue-bg`/`--blue`, en curso `--amber-bg`/`--amber`, completada `--green-bg`/`--green-texto`); canceladas y «no asistió» sin relleno, borde discontinuo `--text-light` y, la cancelada, tachada. Hueco (`.cal-hueco`): enlace a «Nueva cita» con día y hora, nombre «Agendar el <día> a las <hora>», sin nada visible hasta el puntero o el foco. Fuera de horario: rayado con «Cerrado desde las 14:00». Enlace «Saltar a la lista de citas» antes de la cuadrícula.
+  - **Semana por horas** (≥ 900 px): columna de horas y una columna por día (lunes a sábado) con su cabecera (enlace al día, número de citas, marca «Hoy»; el día elegido, relleno `--p600`); filas de 30 min de `--touch-min + --space-3`; los días con citas que coinciden ocupan el doble de ancho y cada cita va en su carril. Cita (`.cal-cita`): enlace al detalle, tres líneas (hora y paciente · dentista · estado), fondo y borde izquierdo por estado (agendada `--p100`/`--p400`, confirmada `--blue-bg`/`--blue`, en curso `--amber-bg`/`--amber`, completada `--green-bg`/`--green-texto`); canceladas y «no asistió» sin relleno, borde discontinuo `--text-light` y, la cancelada, tachada. Hueco (`.cal-hueco`): tramo sin cita vigente a la vista (las canceladas y «no asistió» no lo ocupan: el hueco va en un carril junto a ellas; con una sola dentista a la vista, sus tramos libres), desde el siguiente tramo; enlace a «Nueva cita» con día y hora en `H:i` con cero inicial (`09:00`; el candidato escribía `9:00`, que el alta no acepta: /analyze A5), nombre «Agendar el <día> a las <hora>», sin nada visible hasta el puntero o el foco. Fuera de horario: rayado con «Cerrado desde las 14:00». Enlace «Saltar a la lista de citas» antes de la cuadrícula.
   - **Tira de días** (< 900 px): seis días (lunes a sábado; el domingo la clínica cierra) con su número de citas, dentro de la sección de la lista y bajo su título; día elegido relleno `--p600`, hoy con borde `--p400`.
   - **Mes:** cuadrícula de lunes a sábado; en cada día, el número del día y «N citas» como dato principal (`--p600`, negrita); sin citas, «0 citas» normal; días de otro mes sin borde ni enlace; hoy con borde `--p400`.
-  - **Lista del periodo:** un grupo por día (título con la fecha y «Hoy»), en columnas que llenan el ancho en el escritorio y una sola en el móvil; cada cita es un enlace (hora · paciente y dentista en dos líneas · pastilla de estado) que abre el detalle; en el móvil, solo el día elegido (por defecto, hoy).
+  - **Lista del periodo** (clases propias `.cal-lista-*`: `.lista-citas` ya es el componente de la 027, /analyze A20): un grupo por día (título con la fecha y «Hoy»), en columnas que llenan el ancho en el escritorio y una sola en el móvil; cada cita es un enlace (hora · paciente y dentista en dos líneas · pastilla de estado) que abre el detalle; es una variante de «Cita que abre su detalle» (048): la fila o el bloque entero es el enlace, con nombre «<hora>, <paciente>, <dentista>, <estado>»; en el móvil, solo el día elegido (por defecto, hoy si está en el periodo y, si no, el primero).
 
 ## Cambios a incorporar al sistema
 
@@ -109,7 +109,7 @@ Ninguno.
 | 2026-11-15 | supuesto | La tira del móvil: ¿siete días? | Seis (lunes a sábado): el domingo la clínica cierra y siete no caben a 320 px con objetivos de 44 px | `config/clinica.php`; puerta G-toque (cambia el texto de CA8: ver Historial de la spec) |
 | 2026-11-15 | diseño | Botón del estado vacío | «Agendar una cita» (el «Nueva cita» de la barra superior sigue siendo el acceso de CA9) | medida de K1 |
 | 2026-11-16 | diseño | Presupuesto agotado con c5 (75) | Un candidato más (c6) | usuario |
-| 2026-11-16 | diseño | c6 con 78/100, bajo el umbral, sin presupuesto | Aceptado con cuatro correcciones que aplica `/implement` y se verifican en pantalla | usuario |
+| 2026-11-16 | diseño | c6 con 78/100, bajo el umbral, sin presupuesto | Aceptado con las correcciones que aplica `/implement` (refinados 1–4; el 5 salió en `/plan`) y se verifican en pantalla | usuario |
 | 2026-11-16 | refinado | 1 · Título de la lista en el móvil | Nombra el día que muestra («Citas de hoy, martes 17» o del día elegido) y ofrece «Ver toda la semana» o «Ver todo el mes»; K3 (orden con «Citas de la semana») se mide solo a 1440 | usuario (corrección del evaluador sobre c6) |
 | 2026-11-16 | refinado | 2 · Huecos en la lista del escritorio | Con un solo día, la lista ocupa todo el ancho; en el periodo, los días se leen en orden de filas (izquierda a derecha, arriba abajo) sin huecos irregulares | usuario (ídem) |
 | 2026-11-16 | refinado | 3 · Alto antes de la tira en el móvil | Navegación del periodo y cambio de vista en menos alto (una sola banda si caben con objetivos de 44 px) | usuario (ídem) |
