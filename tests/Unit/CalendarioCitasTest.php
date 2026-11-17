@@ -137,7 +137,8 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame('20:00', end($filas)['hora']);
         $this->assertCount(25, $filas);
 
-        $this->assertSame('2026-11-22', end($calendario->dias())['iso'], 'El domingo con cita se añade');
+        $dias = $calendario->dias();
+        $this->assertSame('2026-11-22', $dias[array_key_last($dias)]['iso'], 'El domingo con cita se añade');
         $this->assertSame(1, $this->dia($calendario, '2026-11-18')['citas'][0]['fila']);
         $this->assertSame(2, $this->dia($calendario, '2026-11-18')['citas'][0]['tramos']);
 
@@ -169,7 +170,7 @@ class CalendarioCitasTest extends TestCase
         $dos = [$this->cita('2026-11-17 11:00', 60), $this->cita('2026-11-17 11:30', 30, 'confirmada', 'D2')];
         $tres = [
             $this->cita('2026-11-18 15:00', 90), $this->cita('2026-11-18 15:30', 30, 'agendada', 'D2'),
-            $this->cita('2026-11-18 16:00', 30, 'agendada', 'D3'),
+            $this->cita('2026-11-18 15:30', 30, 'agendada', 'D3'),
         ];
         $sola = $this->cita('2026-11-18 09:00', 30);
         $calendario = $this->calendario(citas: [...$dos, ...$tres, $sola]);
