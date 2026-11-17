@@ -10,6 +10,7 @@ use DOMNode;
 use DOMNodeList;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\TestCase;
 
@@ -236,6 +237,165 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame('4', $this->cifra($this->pagina($this->admin, '/admin/citas?estado=confirmada'), 'Total'));
     }
 
+    // ── T014 · CA5: cada cita abre su detalle ───────────────────────────
+
+    public function test_cada_cita_abre_su_detalle_con_un_enlace(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas');
+        $href = route('admin.citas.show', $this->c18a);
+        $nombre = '12:00, Pablo Paciente, Diego Primero, Confirmada';
+
+        $enCalendario = $x->query("//*[@id='calendario']//a[@href='{$href}']");
+        $this->assertSame(1, $enCalendario->length, 'Un solo enlace por cita en el calendario');
+        $this->assertContains('cal-cita', $this->clases($enCalendario->item(0)), 'El bloque entero es el enlace');
+        $this->assertSame($nombre, $enCalendario->item(0)->getAttribute('aria-label'));
+        $this->assertSame(0, $x->query('.//a', $enCalendario->item(0))->length, 'Sin enlaces dentro');
+
+        $enLista = $x->query("//*[@id='lista']//a[@href='{$href}']");
+        $this->assertSame(1, $enLista->length, 'Un solo enlace por cita en la lista');
+        $this->assertContains('cal-lista-cita', $this->clases($enLista->item(0)), 'La fila entera es el enlace');
+        $this->assertSame($nombre, $enLista->item(0)->getAttribute('aria-label'));
+
+        // Cada cita del calendario y de la lista tiene su nombre de cuatro partes.
+        foreach ($x->query("//a[{$this->clase('cal-cita')} or {$this->clase('cal-lista-cita')}]") as $enlace) {
+            $this->assertMatchesRegularExpression('/^\d{1,2}:\d{2}, .+, .+, .+$/u', $enlace->getAttribute('aria-label'));
+        }
+    }
+
+    // ── T014 · CA6: coincidencias y atenuadas ───────────────────────────
+
+    public function test_las_citas_que_coinciden_van_en_carriles(): void
+    {
+        $noAsistio = $this->cita($this->d1, $this->p1, 'no_asistio', '2026-11-16 09:00');
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        $this->assertContains('cal-carril-1', $this->clases($this->citaEnCalendario($x, '2026-11-18', $this->c18a, 'admin')));
+        $this->assertContains('cal-carril-2', $this->clases($this->citaEnCalendario($x, '2026-11-18', $this->c18b, 'admin')));
+        $this->assertContains('cal-col--carriles-2', $this->clases($this->columna($x, '2026-11-18')), 'El día se ensancha');
+        $this->assertNotContains('cal-col--carriles-2', $this->clases($this->columna($x, '2026-11-17')));
+
+        $cancelada = $this->citaEnCalendario($x, '2026-11-19', $this->c19, 'admin');
+        $this->assertContains('cal-cita--cancelada', $this->clases($cancelada));
+        $this->assertStringContainsString('Cancelada', $this->texto($cancelada));
+        $ausente = $this->citaEnCalendario($x, '2026-11-16', $noAsistio, 'admin');
+        $this->assertContains('cal-cita--no_asistio', $this->clases($ausente));
+        $this->assertStringContainsString('No asistió', $this->texto($ausente));
+    }
+
+    // ── T014 · CA7: huecos ──────────────────────────────────────────────
+
+    public function test_los_huecos_llevan_a_nueva_cita(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        $primero = $this->uno($x, "//*[{$this->clase('cal-dia')}][@data-dia='2026-11-17']//a[{$this->clase('cal-hueco')}]");
+        $this->assertSame(route('admin.citas.create', ['fecha' => '2026-11-17', 'hora' => '11:30']), $primero->getAttribute('href'), 'Desde el tramo siguiente');
+        $this->assertSame('Agendar el martes 17 a las 11:30', $primero->getAttribute('aria-label'));
+        $this->assertSame(0, $this->huecos($x, '2026-11-16')->length, 'El lunes ya pasó');
+
+        $miercoles = $this->horasDeHuecos($x, '2026-11-18');
+        $this->assertSame('09:00', $miercoles[0], 'La hora lleva cero');
+        $this->assertNotContains('12:00', $miercoles, 'Ocupado por citas vigentes');
+        $this->assertContains('09:00', $this->horasDeHuecos($x, '2026-11-19'), 'La cancelada no ocupa el tramo');
+        $this->assertSame(0, $this->pagina($this->admin, '/admin/citas?vista=mes')->query("//a[{$this->clase('cal-hueco')}]")->length, 'El mes no tiene huecos');
+
+        // Con una sola dentista, el hueco la lleva.
+        foreach ([[$this->admin, "/admin/citas?dentista_id={$this->d1}", 'admin'], [$this->dentista1, '/dentista/citas', 'dentista']] as [$usuario, $url, $rol]) {
+            $pagina = $this->pagina($usuario, $url);
+            $hueco = $this->uno($pagina, "//*[{$this->clase('cal-dia')}][@data-dia='2026-11-18']//a[{$this->clase('cal-hueco')}]");
+            $this->assertSame(
+                route("{$rol}.citas.create", ['fecha' => '2026-11-18', 'hora' => '09:00', 'dentista' => $this->d1]),
+                $hueco->getAttribute('href'),
+                $url,
+            );
+            $this->assertNotContains('12:00', $this->horasDeHuecos($pagina, '2026-11-18'), "{$url}: su cita ocupa el tramo");
+        }
+    }
+
+    public function test_el_buscador_y_el_estado_no_ofrecen_huecos_sobre_citas_vigentes_ocultas(): void
+    {
+        // A28: los filtros ocultan las citas de las 12:00 del miércoles, pero siguen ocupando el tramo.
+        foreach (['estado=cancelada', 'buscar=Nadie', "dentista_id={$this->d1}&buscar=Paula"] as $filtro) {
+            $x = $this->pagina($this->admin, "/admin/citas?{$filtro}");
+            $this->assertSame(0, $x->query("//*[{$this->clase('cal-dia')}][@data-dia='2026-11-18']//a[{$this->clase('cal-cita')}][contains(@aria-label, '12:00')]")->length, "{$filtro}: la cita no se ve");
+            $this->assertNotContains('12:00', $this->horasDeHuecos($x, '2026-11-18'), "{$filtro}: sin hueco sobre la cita oculta");
+            $this->assertContains('12:30', $this->horasDeHuecos($x, '2026-11-18'), "{$filtro}: el tramo libre de al lado sí");
+        }
+    }
+
+    // ── T014 · CA8: la tira y el día del móvil ──────────────────────────
+
+    public function test_la_tira_tiene_los_dias_con_sus_cuentas(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas');
+        $dias = $x->query("//ol[{$this->clase('cal-tira')}]//a[{$this->clase('tira-dia')}]");
+
+        $this->assertSame(['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21'], $this->atributos($dias, 'data-dia'));
+        $cuentas = array_map(fn (DOMElement $a) => $this->texto($this->uno($x, ".//*[{$this->clase('tira-total')}]", $a)), iterator_to_array($dias));
+        $this->assertSame(['0 citas', '1 cita', '2 citas', '1 cita', '0 citas', '0 citas'], $cuentas);
+        $this->assertSame(['2026-11-17'], $this->atributos($x->query("//ol[{$this->clase('cal-tira')}]//a[@aria-current='date']"), 'data-dia'), 'Hoy, por defecto');
+        $this->assertSame(['vista' => 'semana', 'fecha' => '2026-11-16', 'dia' => '2026-11-18'], $this->parametros($dias->item(2)));
+
+        $elegido = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18');
+        $this->assertSame(['2026-11-18'], $this->atributos($elegido->query("//ol[{$this->clase('cal-tira')}]//a[@aria-current='date']"), 'data-dia'));
+    }
+
+    public function test_el_dia_del_movil_es_el_elegido_hoy_o_el_primero_y_su_titulo_lo_nombra(): void
+    {
+        $casos = [
+            '/admin/citas' => ['2026-11-17', 'Citas de hoy, martes 17'],
+            '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18' => ['2026-11-18', 'Citas del miércoles 18'],
+            '/admin/citas?fecha=2026-11-25' => ['2026-11-23', 'Citas del lunes 23'],
+            '/admin/citas?vista=mes&fecha=2026-12-01' => ['2026-12-01', 'Citas del martes 1'],
+        ];
+
+        foreach ($casos as $url => [$dia, $titulo]) {
+            $x = $this->pagina($this->admin, $url);
+            $this->assertSame($dia, $this->uno($x, "//*[@id='lista']")->getAttribute('data-dia-movil'), $url);
+            $this->assertSame($titulo, $this->texto($this->uno($x, "//*[@id='lista']//*[{$this->clase('cal-lista-titulo-movil')}]")), $url);
+        }
+    }
+
+    // ── T014 · Sin JavaScript nuevo ni estilos en línea (A7) ────────────
+
+    public function test_la_pagina_no_lleva_scripts_nuevos_ni_estilos_en_linea(): void
+    {
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        foreach ($x->query('//script') as $script) {
+            $this->assertMatchesRegularExpression('#/js/(menu|filtros)\.js\?v=\d+$#', $script->getAttribute('src'), 'Solo menu.js y filtros.js');
+        }
+        $this->assertSame(0, $x->query("//*[{$this->clase('content')}]//*[@style]")->length, 'Ningún style="" en la página');
+    }
+
+    // ── T014 · CA10: el alta con parámetros manipulados ─────────────────
+
+    public function test_el_alta_ignora_parametros_no_validos(): void
+    {
+        $this->conHorarios();
+
+        $x = $this->pagina($this->admin, '/admin/citas/crear?fecha=2026-11-18&hora=09:00&dentista='.$this->d1);
+        $this->assertSame('2026-11-18', $this->uno($x, "//input[@name='fecha']")->getAttribute('value'));
+        $this->assertSame('09:00', $this->uno($x, "//input[@name='hora']")->getAttribute('value'));
+        $this->assertSame($this->d1, $this->uno($x, "//select[@name='dentista_id']/option[@selected]")->getAttribute('value'));
+
+        $this->actingAs($this->admin)->get('/admin/citas/crear?fecha=ayer&hora=25:99&dentista=nadie')->assertOk();
+
+        // El alta valida como hoy: una hora fuera del horario de la dentista no se guarda.
+        $antes = \DB::table('citas')->count();
+        $this->actingAs($this->admin)->post('/admin/citas', [
+            'paciente_id' => $this->p1, 'dentista_id' => $this->d1, 'fecha' => '2026-11-18', 'hora' => '19:00', 'duracion_min' => 30,
+        ])->assertSessionHasErrors('hora');
+        $this->assertSame($antes, \DB::table('citas')->count());
+    }
+
+    public function test_nueva_cita_responde_con_parametros_no_escalares(): void
+    {
+        foreach (['fecha', 'hora', 'dentista', 'paciente_id'] as $parametro) {
+            $this->actingAs($this->admin)->get("/admin/citas/crear?{$parametro}[]=x")->assertOk();
+        }
+    }
+
     // ── Utilidades ───────────────────────────────────────────────────────
 
     private function pagina(Usuario $usuario, string $url): DOMXPath
@@ -316,5 +476,25 @@ class CalendarioCitasTest extends TestCase
     private function cifra(DOMXPath $x, string $etiqueta): string
     {
         return $this->texto($this->uno($x, "//*[{$this->clase('cal-resumen')}]//*[{$this->clase('stat-card')}][.//*[{$this->clase('stat-label')}][normalize-space(.)='{$etiqueta}']]//*[{$this->clase('stat-value')}]"));
+    }
+
+    private function columna(DOMXPath $x, string $dia): DOMElement
+    {
+        return $this->uno($x, "//*[{$this->clase('cal-col')}][.//*[{$this->clase('cal-dia')}][@data-dia='{$dia}']]");
+    }
+
+    private function huecos(DOMXPath $x, string $dia): DOMNodeList
+    {
+        return $x->query("//*[{$this->clase('cal-dia')}][@data-dia='{$dia}']//a[{$this->clase('cal-hueco')}]");
+    }
+
+    /** @return list<string> horas de los huecos de un día, en el orden de la página */
+    private function horasDeHuecos(DOMXPath $x, string $dia): array
+    {
+        return array_map(function (DOMElement $a) {
+            parse_str((string) parse_url($a->getAttribute('href'), PHP_URL_QUERY), $parametros);
+
+            return $parametros['hora'] ?? '';
+        }, iterator_to_array($this->huecos($x, $dia)));
     }
 }
