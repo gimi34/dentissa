@@ -60,3 +60,4 @@ Hoy no se registran altas, cambios de rol ni desactivaciones. Eventos requeridos
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: la ficha, el alta y la edición del personal llevan las migas del parcial `partials/migas` (antes, hechas a mano) | /release |

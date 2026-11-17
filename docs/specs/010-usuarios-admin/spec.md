@@ -64,3 +64,4 @@ Hoy no se registran altas, cambios de rol ni desactivaciones. Eventos requeridos
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-11-10 | Test de rutas cambiado por 044 en v0.15.0: con la ruta de reserva, un identificador sin forma de UUID no llega a `@show` y responde 404 (`AdminUsuariosRutasTest`, 044 /analyze A16) | /release |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: la ficha, el alta y la edición de usuario llevan las migas del parcial; «Cancelar» de «Editar usuario» vuelve a la ficha del usuario y no al listado | /release |

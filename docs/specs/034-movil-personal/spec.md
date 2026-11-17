@@ -104,7 +104,7 @@ Las «pantallas incluidas» son:
   entonces se ven igual que antes: tablas con todas sus columnas, el filtro de citas completo y la
   barra lateral con su logo. La única diferencia es el borde de los campos del filtro de citas, que
   pasa a distinguirse del fondo con un contraste de al menos 3:1 (WCAG 1.4.11, decisión del
-  usuario).
+  usuario). → reemplazado en parte por 046 CA12
 
 ## Fuera de alcance
 - El resto de las pantallas del personal: crear y editar cita, paciente o servicio, reprogramar
@@ -225,3 +225,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-16 | Liberada en v0.8.0 | /release |
 | 2026-10-19 | Comportamiento modificado por 035 en v0.9.0 (migas que parten en todo el móvil y menú sin recuadro; las tarjetas de la 034 se aplican también al historial de la ficha y a la lista de expedientes) | /release |
 | 2026-11-15 | Comportamiento modificado por 048 en v0.19.0: las tarjetas de cita del panel de inicio se abren al pulsarlas en cualquier parte, sin cambiar de fondo (A57); el ojo de la agenda de la dentista se llama «hora, paciente, ver detalle» y su `href` sale de `route()` | /release |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: migas en nueva cita, detalle y reprogramar del personal con el parcial; CA11 reemplazado en esa parte por 046 CA12 | /release |

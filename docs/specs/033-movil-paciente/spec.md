@@ -71,7 +71,7 @@ pantallas.
 - [x] CA8 · Dado el escritorio a 1440 px, cuando se abren las 7 pantallas del paciente y el menú de
   cada rol, entonces muestran el mismo contenido, en el mismo orden y con las mismas acciones que
   antes de esta spec. Solo cambia el tamaño de lo que CA4 obliga a agrandar. Se compara con las
-  capturas actuales a 1440 px.
+  capturas actuales a 1440 px. → reemplazado en parte por 046 CA12
 
 ## Fuera de alcance
 - El contenido de las pantallas del personal (agenda, pacientes, expedientes, personal, servicios,
@@ -144,3 +144,4 @@ Ninguna.
 | 2026-10-16 | Comportamiento modificado por 034 en v0.8.0 (tarjetas en «Mis citas» y el panel, 033/R20; botón «Menú» con icono y logo en el menú, 033/R9 y R21) | /release |
 | 2026-10-19 | Comportamiento modificado por 035 en v0.9.0 (los iconos «Menú» y «Cerrar menú» sin recuadro, CA11; la regla de textos largos del título de la barra y las migas en todo el móvil) | /release |
 | 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: el menú tiene «Ver sitio web» al final para los cuatro roles (`MovilPacienteTest`, T035) | /release |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: las migas son una navegación con nombre, página actual y enlace subrayado (033/R6); «Agendar cita» pierde las suyas y «Reprogramar» del paciente las gana; CA8 reemplazado en esa parte por 046 CA12 | /release |

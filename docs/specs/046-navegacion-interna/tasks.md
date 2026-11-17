@@ -105,11 +105,14 @@ Contra `docs/constitution.md` 1.3.0; el análisis completo está en `plan.md`.
 - [x] T092 Marcar spec como `implemented` — depende: T090, T091, T035
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097: como administración, el detalle de una cita, «Reprogramar» y «Editar servicio» muestran sus migas y vuelven a su listado; como paciente, «Agendar cita» no tiene migas
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097: como administración, el detalle de una cita, «Reprogramar» y «Editar servicio» muestran sus migas y vuelven a su listado; como paciente, «Agendar cita» no tiene migas
+  - nota: no hay staging; comprobado en producción dentro de T097
 - [x] T096 Aprobación humana para producción
   - aprobado por gimi34 el 2026-11-16 para v0.20.0 («desplegar v0.20.0 a producción»)
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): sin migraciones; vigilar la alerta de 5xx. Rollback: la imagen anterior
-- [ ] T098 Marcar spec como `released`; en cada spec extendida (008, 009, 010, 028, 033, 034 y 035), una línea en su Historial con lo que la 046 cambia en sus pantallas (migas; 033/R6; 035 CA7 sin «Volver al paciente»; 033 CA8, 034 CA11 y 035 CA10 por CA12; títulos de la 009; «Cancelar» de editar usuario en la 010)
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): sin migraciones; vigilar la alerta de 5xx. Rollback: la imagen anterior
+  - nota: 2026-11-16 — `deploy/desplegar.sh v0.20.0` en 137 s (anterior v0.19.0; copia de la base tomada antes); `verificar.sh` interna y pública: todo OK. Comprobado en producción por el usuario: el detalle de una cita, «Reprogramar» y «Editar servicio» muestran sus migas. Dos intentos anteriores se detuvieron antes de construir porque el tag aún no estaba en el remoto; producción no cambió. Sin migraciones; rollback: `deploy/volver.sh v0.19.0`.
+- [x] T098 Marcar spec como `released`; en cada spec extendida (008, 009, 010, 028, 033, 034 y 035), una línea en su Historial con lo que la 046 cambia en sus pantallas (migas; 033/R6; 035 CA7 sin «Volver al paciente»; 033 CA8, 034 CA11 y 035 CA10 por CA12; títulos de la 009; «Cancelar» de editar usuario en la 010)
+  - nota: 2026-11-16 — spec `released`; Historial de 008, 009, 010, 028, 033, 034 y 035; aceptados 046/R3–R9 en el roadmap (confirmado por el usuario); history/README.md.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

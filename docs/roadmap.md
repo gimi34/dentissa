@@ -317,9 +317,6 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   está en la toma de la línea base, no en la pantalla medida: con la misma línea base la diferencia
   se repite idéntica en las 14 comparaciones de la asistente, y la rama y el tag dan la misma
   imagen píxel a píxel; desaparece al tomar la línea base de nuevo.
-- `capturar.mjs` tras la spec 046 (CA12, D12): cuando la 046 esté en producción, vaciar
-  `SIN_COMPARAR_046` para devolver a la comparación del escritorio «Agendar cita» y «Reprogramar»
-  del paciente y la ficha del expediente de los tres roles.
 - «Nuevo miembro» y «Editar personal» a 320 px se desplazan de lado (361 px): las tarjetas del
   tipo de personal no caben. Ya ocurre en producción (v0.18.0); visto en la spec 046 (T031), que
   deja fuera de alcance rehacer esas pantallas. Para `/fix` o la spec del móvil de personal.
@@ -594,6 +591,14 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 048/R14: comprobar en la CI que las reglas 048 ganan en la cascada (hoy solo lo mide `design/medir.mjs`);
   - 048/R15: dividir `test_las_reglas_048_usan_tokens` por grupos (tokens, cobertura y foco, móvil);
   - 048/R19: documentar en `system.md` el punto de corte de 900 px, que las `@media` escriben como literal.
+- Spec 046, aceptados sin tarea de `/review` (2026-11-15; deuda menor, liberada en v0.20.0):
+  - 046/R3: la aserción de posición de las migas de `NavegacionInternaTest` se cumple en cualquier lugar de `<main>`; comprobar que van antes del contenido de la vista;
+  - 046/R4: reglas de `.migas` sin efecto o repetidas en `movil.css` (las fija el test de la 035); quitarlas al tocar ese archivo;
+  - 046/R5: comentario antiguo de las migas en `app.css` («del detalle de la cita y de agendar»);
+  - 046/R6: la caracterización de TM3 no busca el nombre de `paciente2`;
+  - 046/R7: `range()` frágil con caminos de un solo elemento en el test de accesibilidad de las migas;
+  - 046/R8: duplicación en las vistas de citas y pacientes y en el parcial de migas (texto por rol, prefijo, separador, nombre compuesto) y un bucle de un solo elemento en `MovilPacienteTest`;
+  - 046/R9: `trustHosts` sin activar (anterior a la 046), para una spec o ficha de seguridad.
 - Spec 045, aceptados sin tarea de `/review` (2026-11-13; deuda menor, liberada en v0.18.0):
   - 045/R4: la fecha de actualización de los términos y del aviso está repetida en las dos páginas y en las ventanas (y es una sola para las dos ventanas): una sola fuente y una por texto;
   - 045/R6: el comportamiento de las ventanas del registro solo tiene un test de la estructura de su script; con un runner JS si el script pasa a `public/js/`;
