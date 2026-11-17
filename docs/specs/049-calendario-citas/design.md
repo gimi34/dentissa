@@ -96,7 +96,7 @@ Ninguno.
 ## Accesibilidad
 
 - **Contraste, toque y foco:** medidos por `evaluate.mjs` (puertas en verde en las cuatro pantallas). El estado de cada cita va en texto; el color lo refuerza.
-- **Encabezados y estructura:** `h1` «Citas» (barra superior); `h2` «Hoy, martes 17 de noviembre» (resumen), el periodo (calendario) y la lista; `h3` por día en la lista. Cada columna de día es un grupo con el nombre de la fecha.
+- **Encabezados y estructura:** `h1` «Citas» (barra superior); `h2` del resumen (en el candidato, «Hoy, martes 17 de noviembre»; en la build, el periodo o el día elegido: refinado 5), el periodo (calendario) y la lista; `h3` por día en la lista. Cada columna de día es un grupo con el nombre de la fecha.
 - **Teclado:** resumen → navegación del periodo → vista → buscador y filtros → «Saltar a la lista» → citas y huecos de cada día → lista. Una parada por cita (todo el bloque o toda la fila es el enlace).
 - **Sin JavaScript:** todo es HTML del servidor; el panel de filtros se ve desplegado.
 

@@ -12,7 +12,9 @@ Todo se pinta en el servidor, sin JavaScript nuevo: el calendario, la navegació
 son enlaces con el periodo en la dirección (`?vista=semana|mes&fecha=AAAA-MM-DD&dia=AAAA-MM-DD`, más los
 filtros de hoy `dentista_id`, `estado` y `buscar`). `CitasController::index` valida esos parámetros (los no
 válidos se ignoran y se usa la semana actual), calcula el periodo y hace **una** consulta con el alcance
-del rol de hoy (`aplicarAlcanceRol`) y los filtros, sin paginar. Una clase de dominio nueva,
+del rol de hoy (`aplicarAlcanceRol`) y los filtros, sin paginar; en la vista de semana, una segunda consulta
+del mismo periodo con el alcance y el filtro de dentista, pero sin `buscar` ni `estado`, da las citas vigentes
+que ocupan los huecos (A28). Una clase de dominio nueva,
 `App\Agenda\CalendarioCitas`, sin base de datos, convierte esas citas, el horario de la clínica
 (`config('clinica.contacto.horario_semanal')`) y la hora actual de la clínica en la estructura que pinta
 la vista: días con sus citas en tramos de 30 minutos y carriles, huecos pulsables, cuentas por día y la
@@ -24,10 +26,10 @@ hoy, que ya acepta `fecha`, `hora` y `dentista`.
 ## Constitution Check
 | Principio | Resultado | Cómo se cumple | Cómo se verifica |
 |---|---|---|---|
-| P1 Spec aprobada | ✅ | Spec 049 y acta `approved` (2026-11-16); el código empieza con `tasks.md` aprobado | manual: `aidd.py status` |
+| P1 Spec aprobada | ✅ | Spec 049 y acta aprobadas por el usuario (la fecha se anota al reaprobar tras `/analyze`); el código empieza con `tasks.md` aprobado | manual: `aidd.py status` |
 | P2 Test que falla antes | ✅ | Cada CA cambia comportamiento salvo el alcance por rol y el 403 por grupo (CA10), que se fijan con tests de caracterización comprobados rompiendo `aplicarAlcanceRol` y `role:`; la redirección nueva de `store` tiene su test que falla antes (A2) | test: tareas de Tests (Trazabilidad) |
-| P3 Autorización en servidor | ✅ | Sin rutas nuevas; `index` conserva `role:` del grupo y `aplicarAlcanceRol` en la consulta única (calendario, lista, cuentas y resumen salen de ella); el filtro `dentista_id` se suma al alcance, nunca lo amplía. Excepción al Gate (A14): el listado no autoriza un recurso sino que filtra una colección; `aplicarAlcanceRol` usa `AlcanceClinico` (la clase de `app/Autorizacion/` de los Gates de la 026) y la 049 no lo cambia | test: `CalendarioCitasAlcanceTest` (dentista y asistente con `dentista_id` ajeno, periodo y vista manipulados → solo sus citas, cuentas y resumen incluidos; 403 del paciente en los tres grupos y del personal en los grupos ajenos) |
-| P4 Entrada validada, bindings | ✅ | `vista` en `semana` o `mes`; `fecha` y `dia` con `date_format:Y-m-d`; `dentista_id` UUID; `estado` en la lista de estados; `buscar` ≤ 100 caracteres; lo no válido (también un valor no escalar, `?fecha[]=…`) se descarta sin error (CA2); `create` ignora los valores no escalares o mal formados de `fecha`, `hora` y `dentista` (A13). Consulta con Query Builder y bindings (el `whereRaw` con `?` del buscador es de hoy y no cambia). Salida con el eco escapado de Blade | test: `CalendarioCitasParametrosTest` (cada parámetro no válido o no escalar → semana actual, 200, sin 500) y `test_el_alta_ignora_parametros_no_validos` (también no escalares) |
+| P3 Autorización en servidor | ✅ | Sin rutas nuevas; `index` conserva `role:` del grupo y `aplicarAlcanceRol` en la consulta del periodo (calendario, lista, cuentas y resumen salen de ella) y en la de ocupación de los huecos (A28); el filtro `dentista_id` se suma al alcance, nunca lo amplía. Excepción al Gate (A14): el listado no autoriza un recurso sino que filtra una colección; `aplicarAlcanceRol` usa `AlcanceClinico` (la clase de `app/Autorizacion/` de los Gates de la 026) y la 049 no lo cambia | test: `CalendarioCitasAlcanceTest` (dentista y asistente con `dentista_id` ajeno, periodo y vista manipulados → solo sus citas, cuentas y resumen incluidos; 403 del paciente en los tres grupos y del personal en los grupos ajenos) |
+| P4 Entrada validada, bindings | ✅ | `vista` en `semana` o `mes`; `fecha` y `dia` con `date_format:Y-m-d`; `dentista_id` UUID; `estado` en la lista de estados; `buscar` ≤ 100 caracteres; lo no válido (también un valor no escalar, `?fecha[]=…`) se descarta sin error (CA2); `create` ignora los valores no escalares o mal formados de `fecha`, `hora`, `dentista` y `paciente_id` (A13, A29). Consulta con Query Builder y bindings (el `whereRaw` con `?` del buscador es de hoy y no cambia). Salida con el eco escapado de Blade | test: `CalendarioCitasParametrosTest` (cada parámetro no válido o no escalar → semana actual, 200, sin 500) y `test_el_alta_ignora_parametros_no_validos` (también no escalares) |
 | P5 Nada sensible en el repo | ✅ | Datos de prueba del escenario sintético | lint: gitleaks en T092 |
 | P6 Sin vulnerabilidades altas | ✅ | Sin dependencias nuevas | test: `composer audit` y `npm audit` en `/review` y `/release` |
 | P7 Auditoría | ➖ | Sin accesos, permisos ni acciones nuevas; agendar sigue por el alta de hoy | — |
@@ -40,8 +42,8 @@ hoy, que ya acepta `fecha`, `hora` y `dentista`.
 |---|---|---|
 | (rama) | Fusionar `origin/main` (v0.20.0, spec 046, sistema 1.18.0) antes de empezar; hecho en `/analyze` r1 (A15) | bajo |
 | `docs/design/system.md`, `system.html` | Componente «Calendario de citas» (barra del periodo, semana por horas, tira, mes, lista del periodo) con los cinco refinados del acta, en 1.19.0; «Filtro plegable (spec 034)» dice cómo queda el filtro de «Citas» (sin «Desde/Hasta» ni atajos, A20) | bajo |
-| `app/Agenda/CalendarioCitas.php` (nuevo) | Periodo (semana lunes–sábado o mes), filas de 30 min del horario de la clínica ampliadas si hay citas fuera de él, carriles por coincidencia, huecos (desde el siguiente tramo, en horario, sin cita vigente a la vista o de la dentista mostrada; hora `H:i` con cero), cuentas por día, cuadrícula del mes, títulos del periodo y del resumen | medio: cálculo de carriles y huecos (tests unitarios) |
-| `app/Http/Controllers/CitasController.php` | `index`: validación de parámetros, periodo, consulta única sin paginar, resumen del periodo (antes del filtro de estado, como hoy), `CalendarioCitas`; `fecha_desde` como alias de `fecha` (enlaces y tests anteriores); `store` redirige a la semana y al día de la cita nueva; `create` ignora `fecha`, `hora` y `dentista` no escalares o mal formados (A13) | medio |
+| `app/Agenda/CalendarioCitas.php` (nuevo) | Periodo (semana lunes–sábado o mes), filas de 30 min del horario de la clínica ampliadas si hay citas fuera de él, carriles por coincidencia, huecos (desde el siguiente tramo, en horario, sin cita vigente del alcance sin aplicar `buscar` ni `estado`, o de la dentista mostrada; hora `H:i` con cero), cuentas por día, cuadrícula del mes, títulos del periodo y del resumen | medio: cálculo de carriles y huecos (tests unitarios) |
+| `app/Http/Controllers/CitasController.php` | `index`: validación de parámetros, periodo, consulta del periodo sin paginar, consulta de ocupación de los huecos (alcance y dentista, sin `buscar` ni `estado`; A28), resumen del periodo (antes del filtro de estado, como hoy), `CalendarioCitas`; `fecha_desde` como alias de `fecha` (enlaces y tests anteriores); `store` redirige a la semana y al día de la cita nueva; `create` ignora `fecha`, `hora`, `dentista` y `paciente_id` no escalares o mal formados (A13, A29) | medio |
 | `resources/views/citas/index.blade.php` | Rehecha: resumen del periodo sin `style=""`, tarjeta del calendario (barra, filtro, semana o mes), lista del periodo; «Nueva cita» de la barra dentro de `.formulario-accesible`; `@push('styles')` de `calendario.css`; `filtros.js` sigue en `<head>` sin `defer` (034 D6, A22) | medio |
 | `resources/views/citas/calendario/barra.blade.php`, `semana.blade.php`, `mes.blade.php`, `lista.blade.php` (nuevos) | Parciales del candidato `c6` | bajo |
 | `public/css/calendario.css` (nuevo) | Estilos del `c6` con las correcciones; cargado solo en «Citas» | bajo |
@@ -71,10 +73,13 @@ periodo empieza antes o termina después, o cae en domingo, la cuadrícula se am
 citas nunca se ocultan). «Ahora» es `now(config('clinica.zona_horaria'))`, la zona en que se guardan las
 citas.
 
-**Huecos** (decisión del usuario, 2026-11-16): tramos de 30 min sin ninguna cita vigente a la vista (las
-canceladas y «no asistió» no ocupan: el hueco va en un carril junto a ellas); con una sola dentista a la
-vista (la vista de la dentista o el filtro de una), los tramos libres de esa dentista; dentro del horario y
-desde el **siguiente** tramo (a las 11:20 el primero es el de las 11:30, A24). Hora siempre `H:i` con cero
+**Huecos** (decisiones del usuario, 2026-11-16 y 2026-11-17): tramos de 30 min sin ninguna cita vigente (las
+canceladas y «no asistió» no ocupan: el hueco va en un carril junto a ellas). Se calculan con **todas** las
+citas vigentes del alcance del rol, sin aplicar `buscar` ni `estado` (A28): un hueco nunca se ofrece sobre una
+cita vigente que un filtro oculta. Con una sola dentista a la vista (la vista de la dentista o el filtro de
+una), los tramos libres de esa dentista. Dentro del horario y desde el **siguiente** tramo: se ofrecen los
+tramos que empiezan estrictamente después de «ahora» (a las 11:20 el primero es el de las 11:30, A24; a las
+11:30:00 en punto, el de las 12:00, A30). Hora siempre `H:i` con cero
 (`09:00`, A5). Enlace a
 `route('<rol>.citas.create', ['fecha' => …, 'hora' => …, 'dentista' => …])`, con `dentista` solo si el
 calendario muestra un dentista (la dentista o el filtro de uno). Nombre accesible «Agendar el <día> <n> a
@@ -133,9 +138,9 @@ bloque o la fila entera es el enlace, con nombre «<hora>, <paciente>, <dentista
 ## Modelo de amenazas
 | ID | Amenaza (STRIDE) | Punto de entrada | Control | Test |
 |---|---|---|---|---|
-| TM1 | Divulgación: dentista o asistente cambia `dentista_id`, `fecha`, `vista` o `dia` para ver citas ajenas (A01) | `GET /{rol}/citas` | `aplicarAlcanceRol` en la consulta única; `dentista_id` solo restringe | `CalendarioCitasAlcanceTest` (caracterización, comprobada rompiendo el alcance) |
+| TM1 | Divulgación: dentista o asistente cambia `dentista_id`, `fecha`, `vista` o `dia` para ver citas ajenas (A01) | `GET /{rol}/citas` | `aplicarAlcanceRol` en la consulta del periodo y en la de ocupación de los huecos; `dentista_id` solo restringe | `CalendarioCitasAlcanceTest` (caracterización, comprobada rompiendo el alcance) |
 | TM2 | Manipulación / DoS: parámetros mal formados o no escalares, o periodos enormes, provocan errores o consultas pesadas (A03, A04) | `GET /{rol}/citas` | Validación de cada parámetro (escalar y con formato); el periodo es como mucho un mes | `CalendarioCitasParametrosTest` |
-| TM3 | Manipulación: enlace de hueco con fecha, hora o dentista alterados (o no escalares) para agendar fuera de las reglas o romper el formulario (A04) | `GET /{rol}/citas/crear?…` y `POST /{rol}/citas` | `create` descarta lo no escalar o mal formado (A13); los valores solo se proponen; `store` valida horario, agenda única (025, 027) y alcance (014) | `CalendarioCitasTest::test_el_alta_ignora_parametros_no_validos` (caracterización) más los tests de 025/027 |
+| TM3 | Manipulación: enlace de hueco con fecha, hora, dentista o paciente alterados (o no escalares) para agendar fuera de las reglas o romper el formulario (A04) | `GET /{rol}/citas/crear?…` y `POST /{rol}/citas` | `create` descarta lo no escalar o mal formado (A13); los valores solo se proponen; `store` valida horario, agenda única (025, 027) y alcance (014) | `CalendarioCitasTest::test_el_alta_ignora_parametros_no_validos` (caracterización) más los tests de 025/027 |
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
@@ -156,7 +161,7 @@ bloque o la fila entera es el enlace, con nombre «<hora>, <paciente>, <dentista
 | TM3 | alta y `store` de hoy | `test_el_alta_ignora_parametros_no_validos` |
 | RNF: WCAG 2.1 AA, 44 px en el móvil | `calendario.css` | `CalendarioCitasCssTest` · `medir.mjs` |
 | RNF: sin JavaScript | vistas | Feature: enlaces en el HTML, ningún `<script>` nuevo · `medir.mjs` (`G-sin-js`) |
-| RNF: mes de ~300 citas en < 1 s | consulta única | manual: medida en local en T026; comprobación del usuario en producción en T097 |
+| RNF: mes de ~300 citas en < 1 s | una consulta en el mes (la de ocupación solo en la semana) | manual: medida en local en T026; comprobación del usuario en producción en T097 |
 
 ## Observabilidad
 No aplica: sin logs, eventos de auditoría ni métricas nuevas; agendar y abrir el detalle ya existen.
@@ -177,7 +182,7 @@ No aplica: «Citas» exige sesión (sin ella redirige al inicio de sesión) y no
 | ID | Incógnita | Opciones | Decisión y motivo |
 |---|---|---|---|
 | D1 | Dónde se calcula el calendario | en la vista; en el controlador; clase de dominio | `App\Agenda\CalendarioCitas`, sin base de datos: carriles y huecos se prueban en unitarios; el controlador solo consulta y valida (convención de `app/Agenda/`) |
-| D2 | Una consulta o varias | por día; una del periodo | Una del periodo (≤ un mes), sin paginar: calendario, lista, cuentas y resumen salen de la misma; RNF < 1 s |
+| D2 | Una consulta o varias | por día; una del periodo | Una del periodo (≤ un mes), sin paginar: calendario, lista, cuentas y resumen salen de la misma; RNF < 1 s. En la semana, una segunda del mismo periodo, sin `buscar` ni `estado`, para la ocupación de los huecos (A28, decisión del usuario 2026-11-17) |
 | D3 | Parámetros del periodo | rango libre `desde/hasta`; `vista` + `fecha` + `dia` | `vista`, `fecha`, `dia`: el periodo siempre es una semana o un mes (TM2) y la dirección se puede compartir (CA2); `fecha_desde` queda como alias |
 | D4 | CSS | en `app.css`; hoja propia | `public/css/calendario.css` con `@push('styles')`, como `reportes.css`; no se toca `app.css`, `movil.css` ni `layouts/app`. Aun así `capturar.mjs` comprueba la lista de «Citas» y se adapta (A3) |
 | D5 | Resumen de cifras | de hoy; del periodo | Del periodo que se ve (o del día elegido), como hoy calcula la app, con título que lo dice (decisión del usuario, 2026-11-16); el acta dice «Hoy, martes 17»: refinado en `design.md` |
