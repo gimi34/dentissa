@@ -599,6 +599,28 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 046/R7: `range()` frágil con caminos de un solo elemento en el test de accesibilidad de las migas;
   - 046/R8: duplicación en las vistas de citas y pacientes y en el parcial de migas (texto por rol, prefijo, separador, nombre compuesto) y un bucle de un solo elemento en `MovilPacienteTest`;
   - 046/R9: `trustHosts` sin activar (anterior a la 046), para una spec o ficha de seguridad.
+- Spec 049, aceptados sin tarea de `/review` (2026-11-17; deuda menor, liberada en v0.21.0):
+  - 049/R13: `npm audit` con 6 altas de `picomatch` vía `vite`: resuelto en la v0.20.1 (chore de npm, EX5);
+  - 049/R15: muchas paradas de tabulador en los huecos; «Saltar a la lista» las evita;
+  - 049/R16: nombre de la región de la lista en el móvil;
+  - 049/R17: días de la lista como landmarks;
+  - 049/R18: grupo con nombre en la cuadrícula del mes;
+  - 049/R19: cita agendada sobre el día elegido, mismo fondo;
+  - 049/R20: zoom de texto al 200 % en el calendario;
+  - 049/R22: test de `style=""` en más vistas;
+  - 049/R23: comparaciones exactas de «N citas»;
+  - 049/R24: estados y etiquetas centralizados;
+  - 049/R25: hora y etiqueta desde `CalendarioCitas`;
+  - 049/R28: `buscar` en los enlaces (excepción en `security.md` o no propagarlo);
+  - 049/R29: `vista=mes` con fecha no válida;
+  - 049/R30: «Hoy» un domingo;
+  - 049/R31: citas en domingo en el mes y la tira;
+  - 049/R32: primera fila del mes que empieza en domingo;
+  - 049/R33: consulta de ocupación de la dentista;
+  - 049/R34: tests de títulos y navegación del mes;
+  - 049/R35: test Feature de «Cerrado desde las 14:00»;
+  - 049/R39: la semana del 27-12-2100 ofrece huecos de 2101 (fuera del rango de fechas admitido);
+  - 049/R40: la parte de dentista y paciente del test del alta manipulada es solo caracterización.
 - Spec 045, aceptados sin tarea de `/review` (2026-11-13; deuda menor, liberada en v0.18.0):
   - 045/R4: la fecha de actualización de los términos y del aviso está repetida en las dos páginas y en las ventanas (y es una sola para las dos ventanas): una sola fuente y una por texto;
   - 045/R6: el comportamiento de las ventanas del registro solo tiene un test de la estructura de su script; con un runner JS si el script pasa a `public/js/`;

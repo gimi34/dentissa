@@ -67,7 +67,7 @@ Las «pantallas incluidas» son:
   cabecera (la hora, o la hora y fecha) y el estado. La cita de hoy se sigue distinguiendo de las
   demás, y no solo por el color. La agenda de hoy del panel de la dentista conserva su línea de
   tiempo (no pasa a tarjetas): en el móvil, el estado y «Ver detalle» van debajo del nombre del
-  paciente, cumple CA7 y CA8, y «Ver detalle» tiene nombre accesible.
+  paciente, cumple CA7 y CA8, y «Ver detalle» tiene nombre accesible. → reemplazado en la lista de «Citas» del personal por 049 CA4, CA5 y CA8
 - [x] CA3 · Dado el personal en la lista de pacientes, cuando la abre en el móvil, entonces cada
   paciente aparece como una tarjeta con solo su nombre, su teléfono, sus alergias (con el aviso que
   ya tiene cuando las hay) y sus acciones. El correo, el doctor, la ciudad, el tipo de sangre y la
@@ -78,7 +78,7 @@ Las «pantallas incluidas» son:
 - [x] CA5 · Dado el personal en la lista de citas en el móvil, cuando la abre, entonces ve el
   buscador y los atajos «Hoy» y «Esta semana», y un botón «Filtros» que despliega y repliega las
   fechas, el dentista y el estado. Si hay filtros aplicados, el botón lo indica y, al desplegarlo,
-  se ven con sus valores. Sin JavaScript, todos los filtros se ven desplegados.
+  se ven con sus valores. Sin JavaScript, todos los filtros se ven desplegados. → reemplazado por 049 CA2 y CA4 (el periodo lo elige el calendario; sin «Desde», «Hasta» ni atajos)
 - [x] CA6 · Dado el personal en el detalle de una cita, cuando lo abre en el móvil, entonces la
   página va en una sola columna: los datos de la cita, cambiar estado, información y acciones,
   control interno e historial. No se desplaza de lado y ningún bloque se monta sobre otro.
@@ -104,7 +104,7 @@ Las «pantallas incluidas» son:
   entonces se ven igual que antes: tablas con todas sus columnas, el filtro de citas completo y la
   barra lateral con su logo. La única diferencia es el borde de los campos del filtro de citas, que
   pasa a distinguirse del fondo con un contraste de al menos 3:1 (WCAG 1.4.11, decisión del
-  usuario). → reemplazado en parte por 046 CA12
+  usuario). → reemplazado en parte por 046 CA12 y, en la lista de «Citas» del personal, por 049 CA1
 
 ## Fuera de alcance
 - El resto de las pantallas del personal: crear y editar cita, paciente o servicio, reprogramar
@@ -226,3 +226,4 @@ Sistema: [docs/design/system.md](../../design/system.md).
 | 2026-10-19 | Comportamiento modificado por 035 en v0.9.0 (migas que parten en todo el móvil y menú sin recuadro; las tarjetas de la 034 se aplican también al historial de la ficha y a la lista de expedientes) | /release |
 | 2026-11-15 | Comportamiento modificado por 048 en v0.19.0: las tarjetas de cita del panel de inicio se abren al pulsarlas en cualquier parte, sin cambiar de fondo (A57); el ojo de la agenda de la dentista se llama «hora, paciente, ver detalle» y su `href` sale de `route()` | /release |
 | 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: migas en nueva cita, detalle y reprogramar del personal con el parcial; CA11 reemplazado en esa parte por 046 CA12 | /release |
+| 2026-11-18 | Comportamiento modificado por 049 en v0.21.0: la lista de «Citas» del personal pasa a ser el calendario (semana, mes y lista del periodo); CA2, CA5 y CA11 reemplazados para esa lista; CA8 sigue | /release |
