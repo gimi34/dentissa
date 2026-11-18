@@ -59,7 +59,7 @@
     @foreach($dias as $dia)
         <li><a class="tira-dia @if($dia['iso'] === $diaMovil) tira-dia--elegido @endif @if($dia['hoy']) tira-dia--hoy @endif"
                data-dia="{{ $dia['iso'] }}" href="{{ $enlace(['dia' => $dia['iso']]) }}" @if($dia['iso'] === $diaMovil) aria-current="date" @endif
-               aria-label="{{ $dia['nombre'] }}, {{ $dia['total'] }} {{ $dia['total'] === 1 ? 'cita' : 'citas' }}{{ $dia['hoy'] ? ', hoy' : '' }}">
+               aria-label="{{ $dia['corto'] }} {{ $dia['numero'] }}, {{ $dia['total'] }} {{ $dia['total'] === 1 ? 'cita' : 'citas' }}{{ $dia['hoy'] ? ', hoy' : '' }}">
             <span class="tira-nombre">{{ $dia['corto'] }} <b>{{ $dia['numero'] }}</b></span>
             {{-- Hoy, también sin color: en el nombre y con borde grueso (/review R12). --}}
             <span class="tira-total">{{ $dia['total'] }}<span class="cal-oculto"> {{ $dia['total'] === 1 ? 'cita' : 'citas' }}</span></span>

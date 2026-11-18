@@ -36,6 +36,11 @@
    dentro (/review R10, R11). Con .cal-pagina para ganar a `.formulario-accesible a:focus-visible` de app.css. */
 .cal-pagina .cal-vista-op:focus-visible, .cal-pagina .cal-dia-cab:focus-visible,
 .cal-pagina .cal-cita:focus-visible, .cal-pagina .cal-hueco:focus-visible { outline-offset: calc(-1 * var(--focus-ring-width)); }
+/* Sobre la opción actual y el día elegido (fondo --p600) el anillo granate no se vería: va en blanco y separado del
+   borde, para que quede rodeado de granate y no se funda con el blanco de fuera (/review R36). */
+.cal-pagina .cal-vista-op[aria-current="page"]:focus-visible, .cal-pagina .cal-dia-cab--elegido:focus-visible {
+    outline-color: var(--focus-ring-inverso); outline-offset: calc(-2 * var(--focus-ring-width));
+}
 
 /* Saltar el calendario con el teclado: solo se ve con el foco (patrón de .pub-solo-lector). */
 .cal-saltar { color: var(--p600); }
