@@ -84,7 +84,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | Ruta | Contenido |
 |---|---|
 | `app/Http/Controllers/` | 19 controladores (más el `Controller` base; `PaginasPublicasController`, spec 038; `FotosGaleriaController`, spec 039; `ReportesController`, spec 047) con casi toda la lógica (ver docs/architecture.md) |
-| `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación y horario (specs 025–028) |
+| `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación, horario (specs 025–028) y calendario de «Citas» (`CalendarioCitas`, spec 049) |
 | `app/Autorizacion/` | alcance del personal y Gates de citas y de personal (ADR 0003) |
 | `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
 | `app/Galeria/` | galería de trabajos: `ProcesadorFoto` (dos WebP sin datos de la cámara) y `Galeria` (publicar, mover y quitar con auditoría), con el disco `galeria` en `storage/app/galeria` (spec 039, ADR 0009) |
@@ -96,7 +96,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | `app/Models/` | `Usuario` (auth), `Servicio`; `User` es un resto sin uso |
 | `routes/web.php` | todas las rutas |
 | `resources/views/` | vistas Blade por módulo |
-| `public/css/`, `public/js/` | CSS real de la aplicación (`publico.css`, páginas públicas, spec 038); `menu.js` y `filtros.js` (specs 033 y 034); `acceso.css` y `acceso.js`, el botón para ver la contraseña (spec 041); `reportes.css` (con la hoja de impresión) y `reportes.js` (spec 047) |
+| `public/css/`, `public/js/` | CSS real de la aplicación (`publico.css`, páginas públicas, spec 038); `menu.js` y `filtros.js` (specs 033 y 034); `acceso.css` y `acceso.js`, el botón para ver la contraseña (spec 041); `reportes.css` (con la hoja de impresión) y `reportes.js` (spec 047); `calendario.css`, el calendario de «Citas» (spec 049) |
 | `public/fonts/` | `newsreader/` y `montserrat/` (páginas públicas, spec 038) y `roboto/` (spec 020), autoalojadas, cada una con su `OFL.txt` |
 | `database/dentissa.sql` | volcado con el esquema del dominio y datos ficticios |
 | `database/migrations/` | infraestructura + 3 migraciones de julio y 2 de octubre de 2026 (specs 026 y 028) |

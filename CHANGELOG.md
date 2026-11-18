@@ -5,6 +5,47 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-18
+
+### Added
+- «Citas» del personal es ahora un calendario: la semana por horas, de lunes a sábado y con el horario de la
+  clínica, con cada cita en su día y su hora, del color de su estado, y debajo la lista compacta de las citas del
+  periodo, agrupada por día (spec 049).
+- Vista «Mes», con el número de citas de cada día; al pulsar un día, la lista muestra solo sus citas y ofrece volver
+  a todo el mes (spec 049).
+- Al pulsar un hueco libre de la semana se abre «Nueva cita» con el día y la hora ya puestos y, si el calendario
+  muestra una sola dentista, también ella (spec 049).
+- En el móvil, una tira con los seis días de la semana y su número de citas, y la lista del día elegido (por
+  defecto, hoy) (spec 049).
+
+### Changed
+- «Anterior», «Hoy», «Siguiente» y «Semana · Mes» cambian el periodo, y la dirección lo recuerda al recargar o
+  compartir; el buscador y los filtros de dentista y estado se aplican a la vez al calendario y a la lista (spec 049).
+- Las cifras de arriba cuentan el periodo que se ve (o el día elegido) y su título lo dice (spec 049).
+- Cada cita del calendario y de la lista abre su detalle al pulsarla en cualquier parte (spec 049).
+- Después de agendar una cita se vuelve al calendario, en la semana y el día de la cita nueva (spec 049).
+- «Nueva cita» ignora una fecha, una hora, una dentista o un paciente mal escritos en la dirección (spec 049).
+
+### Removed
+- La tabla paginada de la lista de citas del personal y sus filtros «Desde», «Hasta», «Esta semana» y «Hoy»: el
+  periodo lo elige el calendario (spec 049).
+
+## [0.20.1] - 2026-11-17
+
+### Fixed
+- Desactivar una cuenta (desde Usuarios, Personal o Pacientes, o desmarcando «Activo» al editar un usuario) cierra
+  también la sesión que esa persona tuviera abierta: en su siguiente paso vuelve a «Iniciar sesión»
+  (fix 2026-11-17-fix-sesion-cuenta-desactivada).
+- Un administrador ya no puede desactivar su propia cuenta ni quitarse el rol de administrador, ni desde Usuarios,
+  ni desde Personal, ni desde Pacientes: la aplicación lo explica y no lo aplica. Así no puede quedarse sin nadie que
+  la administre (fix 2026-11-17-fix-admin-no-se-desactiva).
+- El buscador de «Servicios» filtra por nombre, descripción o categoría, y lo dice cuando no encuentra nada; la
+  dirección de un servicio suelto responde «no encontrado» en lugar de un error (fix 2026-11-17-fix-detalles-servicios-usuarios).
+- Dar de alta, editar o eliminar un servicio, y crear o editar un usuario, muestra el aviso de que se guardó
+  (fix 2026-11-17-fix-detalles-servicios-usuarios).
+- «Usuarios» cuenta, filtra y agrupa también a los asistentes, y un filtro sin resultados ofrece ver todos en lugar
+  de decir que no hay usuarios (fix 2026-11-17-fix-detalles-servicios-usuarios).
+
 ## [0.20.0] - 2026-11-16
 
 ### Added

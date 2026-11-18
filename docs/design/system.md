@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.18.0
+version: 1.19.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-15
+updated: 2026-11-17
 ---
 
 # Sistema de diseño de Dentissa
@@ -508,7 +508,11 @@ Opción A de la spec 034 ([maqueta](../specs/034-movil-personal/design/opcion-a.
 - En el escritorio, la tabla de siempre.
 
 ### Filtro plegable (spec 034)
-Filtro de la lista de citas del personal (`.filtro-citas`):
+Filtro de la lista de citas del personal (`.filtro-citas`). En «Citas» (spec 049, 1.19.0) va dentro de la
+tarjeta del calendario (`.cal-filtro`) y ya no tiene «Desde», «Hasta» ni los atajos «Hoy» y «Esta semana»:
+el periodo lo elige la barra del periodo; quedan el buscador, «Filtros» (dentista y estado), «Filtrar» y
+«Limpiar», y el formulario lleva `vista`, `fecha` y `dia` ocultos para no perder el periodo. Lo que sigue
+describe el filtro con fechas y atajos, que conservan las demás pantallas que lo usan:
 - **Móvil:** una columna con el buscador a lo ancho, la fila «Esta semana · Hoy · Filtros» (los tres
   botones se reparten el ancho, `--space-3`) y el panel (`#filtro-panel`) con desde y hasta lado a
   lado, dentista y estado a lo ancho, y «Filtrar» y «Limpiar». Con JavaScript (`filtros.js`) el panel
@@ -844,6 +848,52 @@ filtro de auditoría (020), `.stats-grid-3` con `.stat-card`, `.card-0` con tabl
   `--space-8` de relleno, el `h2` en `--text-publico-h1`, los puntos en párrafos `--p100` separados por un
   filete `--p600` y los enlaces `--white` subrayados; es un `aside` con su título.
 
+### Calendario de citas (spec 049, 1.19.0)
+Pantalla «Citas» del personal ([diseño](../specs/049-calendario-citas/design.md), candidato `c6` con cinco
+refinados; `calendario.css`, cargada solo ahí con `@push('styles')`; sin tokens nuevos). El contenido y el
+«Nueva cita» de la barra superior van dentro de `.formulario-accesible` (DS1). Todo son enlaces del
+servidor: funciona igual sin JavaScript. Corte en 900 px.
+- **Resumen del periodo** (`.cal-resumen`): `.stats-grid` con `.stat-card` y un título `h2` que dice de qué
+  periodo son las cifras («Resumen de la semana del 16 al 21 de noviembre» o del día elegido; refinado 5).
+  Sin `style=""`: el color de cada cifra va con clases. Por debajo de 900 px las tarjetas se compactan en una
+  línea (cifra y etiqueta).
+- **Barra del periodo** (`.cal-barra`): título del periodo (`h2`, `--text-marca`), «‹ Anterior», «Hoy» y
+  «Siguiente ›» (`btn-outline btn-sm`, grupo «Periodo») y el interruptor «Semana · Mes» (`.cal-vista`, borde
+  `--border-control`; la opción actual con `aria-current="page"`, `--white` sobre `--p600`), todos a la misma
+  altura. Por debajo de 900 px, navegación y vista comparten una banda si caben con `--touch-min` (refinado 3).
+- **Semana por horas** (≥ 900 px, `.cal-semana`): columna de horas y una por día, de lunes a sábado; cabecera
+  del día (`.cal-dia-cab`, enlace al día con «N citas»; hoy con fondo `--p50` y raya `--p400`; el día elegido,
+  `--white` sobre `--p600`); filas de 30 min de `--touch-min + --space-3` desde la apertura hasta el cierre,
+  ampliadas si alguna cita cae fuera (ninguna cita se oculta). Los días con citas que coinciden se ensanchan
+  en proporción a sus carriles (hasta 4). Posición sin `style=""`: clases de tramo de inicio y de duración.
+- **Cita del calendario** (`.cal-cita`): variante de «Cita que abre su detalle» (048): todo el bloque es el
+  enlace, una sola parada de foco, nombre «<hora>, <paciente>, <dentista>, <estado>». Tres líneas: hora y
+  paciente destacados (`--weight-bold` y `--weight-strong`; refinado 4), dentista y estado en texto. Fondo y
+  raya izquierda por estado: agendada `--p100`/`--p400`, confirmada `--blue-bg`/`--blue`, en curso
+  `--amber-bg`/`--amber`, completada `--green-bg`/`--green-texto`. Canceladas y «no asistió», atenuadas: fondo
+  `--white` y borde discontinuo `--text-light`; la cancelada, con el paciente tachado; el texto conserva su
+  contraste y no tapan a las vigentes.
+- **Hueco** (`.cal-hueco`): tramo de 30 min sin cita vigente (las canceladas y «no asistió» no lo ocupan; el
+  buscador y el filtro de estado no cuentan; con una sola dentista a la vista, sus tramos libres), en
+  horario y desde el tramo siguiente a «ahora». Enlace a «Nueva cita» con `fecha`, `hora` (`H:i`, con cero) y,
+  con una sola dentista, `dentista`; nombre «Agendar el <día> <n> a las <hora>»; no se ve hasta el puntero o
+  el foco (fondo `--p100` y un «+»). Fuera de horario: rayado con «Cerrado desde las 14:00».
+- **Saltar el calendario:** enlace «Saltar a la lista de citas» antes de la cuadrícula, visible con el foco.
+- **Tira de días** (< 900 px, `.cal-tira`): seis días (lunes a sábado) con su número de citas, bajo el título
+  de la lista; cada día mide al menos `--touch-min`; el elegido, `--white` sobre `--p600` con
+  `aria-current="date"`; hoy, borde `--p400`.
+- **Mes** (`.cal-mes`): cuadrícula de lunes a sábado; cada día es un enlace al día con su número y «N citas»
+  como dato principal (`--p600`, `--weight-bold`); «0 citas» en `--text` normal; hoy con borde `--p400` y
+  «Hoy»; los días de otro mes, sin borde ni enlace. En el móvil, la cifra con «citas» debajo.
+- **Lista del periodo** (`.cal-lista-*`; `.lista-citas` es de la 027): un grupo por día (`h3` con la fecha y
+  «Hoy»), en columnas que llenan el ancho y se leen por filas; con un solo día, todo el ancho (refinado 2).
+  Cada cita es un enlace (variante de 048: la fila entera) con la hora (`--p600`, negrita), el paciente y la
+  dentista en dos líneas y la pastilla de estado; mínimo `--touch-min`. Con un día elegido, «Ver toda la
+  semana» o «Ver todo el mes». En el móvil, solo el día elegido (o hoy si está en el periodo, o el primero) y
+  el título lo nombra («Citas de hoy, martes 17»; refinado 1). Vacía: «No hay citas en esta semana / en este
+  mes» y «Agendar una cita».
+- **Foco:** los tokens de foco en todos los enlaces; dentro de la cuadrícula, el anillo va por dentro.
+
 ### Badge de estado
 `.badge` es una píldora de 11px/500, 19px de alto y radio 20px. `partials/badge-estado` asigna:
 - agendada → pink (`--p600` sobre `--p100`, 6.05:1);
@@ -1171,3 +1221,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-12 | diseño | ¿Qué incorpora el sistema para los términos de uso y el aviso de privacidad (spec 045)? | Versión 1.16.0 (era 1.15.0; se renumeró al fusionar la v0.17.0, que liberó la 1.15.0 con la spec 047), sin colores nuevos: `--font-display` con «Newsreader respaldo» (Georgia) y «Newsreader respaldo Times» (Times New Roman o Liberation Serif) con sus medidas, porque en una página de lectura el cambio de fuente de los títulos movía el texto (CLS 0,115 en el candidato `c1`); y la página legal (rejilla `.lb-legal`, índice con título y número, texto corrido a `--measure`, número de sección y «En pocas palabras»). Diseño: [045](../specs/045-terminos-privacidad/design.md) | `/design-spec 045`, aprobado por el usuario |
 | 2026-11-14 | diseño | ¿Qué incorpora el sistema para abrir las citas del panel de inicio (spec 048)? | Versión 1.17.0, sin tokens nuevos: el componente «Cita que abre su detalle» (`.fila-cita` y `.cita-enlace`) en «Lista, tabla y tarjeta»: un solo enlace por cita en su dato principal con un `::after` que la cubre, reposo igual que hoy, fondo `--p50` al pasar el puntero solo en el escritorio (A57 de la 034), un solo anillo de foco por dentro y nombre accesible que empieza por el texto visible. Diseño: [048](../specs/048-citas-panel-detalle/design.md), sin exploración | `/design-spec 048` y `/analyze` 048 (A1, A4, A14), aprobado por el usuario |
 | 2026-11-14 | diseño | ¿Qué incorpora el sistema para la navegación interna (spec 046)? | Versión 1.18.0 (era 1.17.0; se renumeró al fusionar la v0.19.0, que liberó la 1.17.0 con la spec 048; decisión del usuario, 2026-11-15), sin tokens nuevos: las migas de pan pasan a ser una navegación con nombre y lista ordenada, con la página actual marcada y los separadores ocultos a los lectores de pantalla; el enlace va en `--p600` subrayado (`--p800` al pasar el puntero) y el elemento actual en `--text` sin subrayar; el camino puede pasar de línea a todos los anchos; regla de dónde se usan las migas y regla del título de pantalla. Cierra 033/R6 | usuario (spec 046, design.md sin candidatos) |
+| 2026-11-17 | diseño | ¿Qué incorpora el sistema para el calendario de citas (spec 049)? | Versión 1.19.0, sin tokens nuevos: componente «Calendario de citas» (resumen del periodo, barra del periodo, semana por horas con carriles, huecos y fuera de horario, tira de seis días, mes y lista del periodo con clases `.cal-lista-*`), con los cinco refinados del acta; las citas son una variante de «Cita que abre su detalle» (048); el filtro plegable de «Citas» pierde las fechas y los atajos. Diseño: [049](../specs/049-calendario-citas/design.md), candidato `c6` | `/design-spec 049`, aprobado por el usuario |

@@ -50,6 +50,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 046 | [navegacion-interna](046-navegacion-interna/spec.md) | Transversal | released (v0.20.0) | — | — (2026-11-12) |
 | 047 | [reportes-admin](047-reportes-admin/spec.md) | Transversal | released (v0.17.0) | — | — (2026-11-10) |
 | 048 | [citas-panel-detalle](048-citas-panel-detalle/spec.md) | Agenda | released (v0.19.0) | — | — (2026-11-14) |
+| 049 | [calendario-citas](049-calendario-citas/spec.md) | Agenda | released (v0.21.0) | — | — (2026-11-15) |
 | 050 | [hora-clinica](050-hora-clinica/spec.md) | Transversal | approved | — | — (2026-11-17) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):

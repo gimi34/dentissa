@@ -47,9 +47,19 @@ class ServiciosController extends Controller
 
     public function index(Request $request)
     {
-        $servicios = Servicio::all();
+        // El buscador filtra por nombre, descripción o categoría; el total no cambia con él
+        // (ficha docs/changes/2026-11-17-fix-detalles-servicios-usuarios.md).
+        $total = Servicio::count();
+        $servicios = Servicio::query()
+            ->when($request->filled('buscar'), function ($consulta) use ($request) {
+                $texto = '%'.$request->string('buscar')->trim().'%';
+                $consulta->where(fn ($o) => $o->where('nombre', 'LIKE', $texto)
+                    ->orWhere('descripcion', 'LIKE', $texto)
+                    ->orWhere('categoria', 'LIKE', $texto));
+            })
+            ->get();
 
-        return view('servicios.index', compact('servicios'));
+        return view('servicios.index', compact('servicios', 'total'));
     }
 
     public function create()
@@ -69,7 +79,7 @@ class ServiciosController extends Controller
 
         Servicio::create($data);
 
-        return redirect()->route('admin.servicios.index');
+        return redirect()->route('admin.servicios.index')->with('success', 'Servicio registrado correctamente.');
     }
 
     public function edit($id)
@@ -90,13 +100,13 @@ class ServiciosController extends Controller
         $servicio = Servicio::findOrFail($id);
         $servicio->update($data);
 
-        return redirect()->route('admin.servicios.index');
+        return redirect()->route('admin.servicios.index')->with('success', 'Servicio actualizado correctamente.');
     }
 
     public function destroy($id)
     {
         Servicio::findOrFail($id)->delete();
 
-        return redirect()->route('admin.servicios.index');
+        return redirect()->route('admin.servicios.index')->with('success', 'Servicio eliminado.');
     }
 }

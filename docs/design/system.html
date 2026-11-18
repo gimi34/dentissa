@@ -928,6 +928,18 @@
         <tbody><tr class="c48-fila"><td><a class="c48-enlace" href="#cita-048" aria-label="10:00, Paciente de muestra, ver detalle">10:00</a></td>
           <td>Paciente de muestra</td><td>Limpieza dental</td></tr></tbody></table>
     </div></div>
+    <h3 id="calendario-049">Calendario de citas (spec 049, 1.19.0)</h3>
+    <p class="v-note">La pantalla «Citas» del personal (<a href="../specs/049-calendario-citas/design.md">diseño</a>,
+      <a href="../specs/049-calendario-citas/design/candidatos/c6/semana.html">candidato <code>c6</code></a> con cinco refinados;
+      <code>calendario.css</code>, sin tokens nuevos), dentro de <code>.formulario-accesible</code>: resumen con el periodo en su
+      título; barra del periodo con «‹ Anterior», «Hoy», «Siguiente ›» y el interruptor «Semana · Mes» (opción actual
+      <code>--white</code> sobre <code>--p600</code>); desde 900 px, semana por horas de lunes a sábado con filas de 30 min, citas
+      coloreadas por estado (agendada <code>--p100</code>, confirmada <code>--blue-bg</code>, en curso <code>--amber-bg</code>,
+      completada <code>--green-bg</code>; canceladas y «no asistió» atenuadas con borde discontinuo), carriles para las que
+      coinciden, huecos que llevan a «Nueva cita» con día y hora (<code>09:00</code>) y el tramo cerrado rayado; por debajo, tira de
+      seis días con sus cuentas. Vista del mes con «N citas» por día y lista del periodo (<code>.cal-lista-*</code>) agrupada por
+      día, en la que cada fila es un enlace al detalle (variante de la 048). El filtro plegable de la 034 va dentro de la tarjeta,
+      sin «Desde», «Hasta» ni atajos. Todo son enlaces del servidor: sin JavaScript funciona igual.</p>
     <h3 id="paginacion-020">Paginación (spec 020)</h3>
     <p class="v-note">Muestra viva de la paginación de la consulta de auditoría
       (<a href="../specs/020-auditoria-base/design.md">diseño</a>, <code>c4</code>), con los tokens de

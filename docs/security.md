@@ -148,7 +148,8 @@ Reglas base en `shared/agent-security.md` del plugin. Específicas de este proye
 - Dominios de red que el agente necesita: packagist.org, registry.npmjs.org, github.com, hub.docker.com (solo para consultar la fecha de publicación de las etiquetas de imagen al fijar versiones; aprobado por el usuario el 2026-10-03, spec 030, /analyze A28)
 
 ## Excepciones aceptadas
-Vigentes: EX2 y EX3 (aprobada el 2026-10-27 en la v0.11.0, spec 032). EX1 (avisos bajos de
+Vigentes: EX2, EX3 (aprobada el 2026-10-27 en la v0.11.0, spec 032) y EX5 (aprobada el 2026-11-17,
+ficha `docs/changes/2026-11-17-chore-npm-audit-picomatch.md`). EX1 (avisos bajos de
 `laravel/framework` y `league/flysystem`, aprobada el 2026-09-29) se retiró en v0.4.1 (spec 029,
 2026-10-03): sus avisos quedaron corregidos. EX4 (seis avisos de Symfony del 2026-11-04, aprobada el
 2026-11-05) se retiró el 2026-11-10 al subir `symfony/http-foundation`, `symfony/http-kernel` y
@@ -158,6 +159,7 @@ Vigentes: EX2 y EX3 (aprobada el 2026-10-27 en la v0.11.0, spec 032). EX1 (aviso
 |---|---|---|---|---|---|
 | EX2 | Avisos sin corrección aplicable en las imágenes de producción (`trivy image`; 2026-10-04, spec 030 T033/T035; repetido el 2026-10-19, spec 031 T031, y el 2026-10-27, ficha 2026-10-27-chore-imagenes-031-r4, RS18). `app` (`php:8.4.26-fpm`, Debian 13, construida sin caché y con `apt-get upgrade` el 2026-10-27): 122 altas y 4 críticas, ninguna con corrección publicada (118 altas y las 4 críticas «affected», 4 altas «fix_deferred»; `linux-libc-dev` 60, libxml2, util-linux, login, systemd, perl). `mariadb:10.11.19`: 25 altas y 1 crítica en el Go `stdlib` con que se compiló `gosu`; las reconstrucciones de la etiqueta del 2026-10-17 y del 2026-10-27 las tienen igual, sin imagen corregida. `cloudflare/cloudflared:2026.10.2`: 1 alta (`github.com/klauspost/compress`), corregida en la 2026.10.4, que cumple 7 días el 2026-11-02. `web` (nginx 1.30.5) construida sin caché: sin avisos. La imagen `composer` no llega a producción (solo se copia su binario, que se borra) | Alta y crítica | Debian no publica corrección para lo que queda en `app`; casi la mitad es `linux-libc-dev`, cabeceras del kernel que no se ejecutan en el contenedor (el kernel es el del servidor). `gosu` solo se ejecuta al arrancar `db` para bajar de privilegios, sin red. La de `cloudflared` se corrige al refrescarla cuando cumpla 7 días (RS18.a) y volver a escanear antes del vencimiento. Sin puertos publicados, la única entrada es el túnel hacia nginx | usuario, 2026-10-04; renovada por el usuario el 2026-10-19 y el 2026-10-27 | 2026-12-31 |
 | EX3 | Disco del servidor de producción sin cifrar (RS15.c; spec 032 CA10) | Media | Cifrarlo exige reinstalar el servidor. Los datos de hoy son ficticios; las copias ya van cifradas (RS15.b) y la clave secreta no está en el servidor. Residuo: un archivo borrado puede quedar en el disco (`shred` no garantiza el borrado en ext4 con journal), por ejemplo las copias en claro de antes de la 032 | el responsable (gimi34), 2026-10-27, en la liberación de la v0.11.0 (spec 032, T096) | al cargar el primer dato real de pacientes |
+| EX5 | `npm audit`: GHSA-fc5q-39xc-vjpf, ReDoS en `picomatch` ≤ 4.0.7 (2026-11-17). Cuenta como 6 altas: `picomatch` 4.0.7 y 2.3.2 y los paquetes que dependen de él (`fdir`, `tinyglobby`, `vite`, `vite-plugin-full-reload`, `laravel-vite-plugin`) | Alta | No hay versión corregida: la 4.0.7 es la última publicada, y `npm audit fix --force` solo propone bajar `vite` y `laravel-vite-plugin` de versión mayor. Todo son `devDependencies` de build: producción no ejecuta `npm`, y Vite solo construye `welcome.blade.php` con patrones de archivo fijos del repositorio, sin entrada de usuarios. `.github/scripts/auditar-npm.mjs` ignora **solo** este aviso (cualquier otro alto o crítico falla) y vuelve a fallar cuando vence. Se retira al publicarse `picomatch` 4.0.8 o posterior con 7 días de antigüedad | usuario, 2026-11-17 | 2026-12-31 |
 
 Falsos positivos del escaneo de secretos: `.gitleaksignore`, cada uno con su motivo. No son excepciones: no hay
 ningún secreto real detrás (hoy, una contraseña ficticia de un test de la spec 041; decisión del usuario, 2026-11-03).
@@ -199,7 +201,7 @@ sesiones abiertas. Evidencia: `RoleMiddleware.php`, `UsuarioController::toggleAc
 `PersonalController::toggleActivo`, `PacientesController::toggleActivo`; specs 001, 006, 008, 010.
 
 Correcciones:
-- RS3.a Comprobar `activo` en cada petición autenticada (middleware) y cerrar la sesión si es falso — estado: en curso (`SesionVigente`, ficha `docs/changes/2026-11-17-fix-sesion-cuenta-desactivada.md`)
+- RS3.a Comprobar `activo` en cada petición autenticada (middleware) y cerrar la sesión si es falso — estado: mitigada (v0.20.1; `SesionVigente`, ficha `docs/changes/2026-11-17-fix-sesion-cuenta-desactivada.md`)
 - RS3.b Borrar las sesiones del usuario al desactivarlo — estado: pendiente (defensa en profundidad: con RS3.a la sesión de una cuenta inactiva ya se cierra en su siguiente petición; RS3.b solo borraría antes las filas de sesión)
 
 ### RS4 · Alta — Sin límite de intentos en login, registro y OAuth (A07 Authentication Failures)
@@ -384,7 +386,7 @@ el nuevo rol necesita. Evidencia: `app/Http/Controllers/UsuarioController.php` (
 `toggleActivo`); spec 010.
 
 Correcciones:
-- RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: en curso (usuarios, personal y pacientes, ficha `docs/changes/2026-11-17-fix-admin-no-se-desactiva.md`)
+- RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: mitigada (v0.20.1; usuarios, personal y pacientes, ficha `docs/changes/2026-11-17-fix-admin-no-se-desactiva.md`)
 - RS19.b No se puede desactivar ni quitar el rol al último admin activo — estado: pendiente (→ objetivo 2). Con RS19.a ya no se llega a eso desde la aplicación: quien desactiva o degrada a otro admin es un admin activo que sigue siéndolo. Solo quedaría un cambio directo en la base
 - RS19.c Al cambiar el rol, crear o retirar la ficha de `personal` o `pacientes` que corresponde (o impedir el cambio si no se puede) — estado: pendiente (→ objetivo 2)
 

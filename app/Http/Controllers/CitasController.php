@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\CalendarioCitas;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
@@ -9,9 +10,11 @@ use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
 use App\Autorizacion\AlcanceClinico;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class CitasController extends Controller
 {
@@ -90,55 +93,117 @@ class CitasController extends Controller
         return false;
     }
 
-    // ── INDEX ──────────────────────────────────────────────────────────
+    // ── INDEX: calendario de citas (spec 049) ──────────────────────────
     public function index(Request $request)
     {
-        $query = $this->aplicarAlcanceRol($this->queryBase());
+        $ahora = CarbonImmutable::now(config('clinica.zona_horaria'));
 
-        // Filtros de fecha / dentista / búsqueda (aplican tanto a la tabla como al resumen)
-        if ($request->filled('fecha_desde')) {
-            $query->whereDate('citas.fecha_hora', '>=', $request->fecha_desde);
+        // Parámetros (contrato del plan 049): lo que no es escalar o no tiene su formato se ignora.
+        $vista = in_array($this->textoDe($request, 'vista'), ['semana', 'mes'], true) ? $this->textoDe($request, 'vista') : 'semana';
+        $fecha = $this->fechaDe($request, 'fecha', $ahora) ?? $this->fechaDe($request, 'fecha_desde', $ahora) ?? $ahora->startOfDay();
+        [$inicio, $fin] = CalendarioCitas::periodo($vista, $fecha);
+        $dia = $this->fechaDe($request, 'dia', $ahora);
+        if ($dia !== null && ($dia->lessThan($inicio) || $dia->greaterThan($fin))) {
+            $dia = null;
         }
-        if ($request->filled('fecha_hasta')) {
-            $query->whereDate('citas.fecha_hora', '<=', $request->fecha_hasta);
+        $dentistaId = Str::isUuid((string) $this->textoDe($request, 'dentista_id')) ? $this->textoDe($request, 'dentista_id') : null;
+        $estado = in_array($this->textoDe($request, 'estado'), self::ESTADOS, true) ? $this->textoDe($request, 'estado') : null;
+        $buscar = trim((string) $this->textoDe($request, 'buscar'));
+        $buscar = $buscar !== '' && mb_strlen($buscar) <= 100 ? $buscar : null;
+
+        $dentistas = $this->dentistasDelFiltro();
+
+        // Una sola consulta del periodo con el alcance del rol y los filtros (D2). El filtro de
+        // dentista se suma al alcance, nunca lo amplía (P3).
+        $consulta = $this->aplicarAlcanceRol($this->queryBase())
+            ->addSelect('ud.apellido AS dentista_apellido')
+            ->whereBetween('citas.fecha_hora', [$inicio->format('Y-m-d H:i:s'), $fin->format('Y-m-d H:i:s')]);
+        if ($dentistaId !== null) {
+            $consulta->where('citas.dentista_id', $dentistaId);
         }
-        if ($request->filled('dentista_id')) {
-            $query->where('citas.dentista_id', $request->dentista_id);
-        }
-        if ($request->filled('buscar')) {
-            $buscar = '%'.$request->buscar.'%';
-            $query->where(function ($q) use ($buscar) {
-                $q->whereRaw("CONCAT(up.nombre, ' ', up.apellido) LIKE ?", [$buscar])
-                    ->orWhereRaw("CONCAT(ud.nombre, ' ', ud.apellido) LIKE ?", [$buscar])
-                    ->orWhere('servicios.nombre', 'LIKE', $buscar)
-                    ->orWhere('up.telefono', 'LIKE', $buscar);
+        if ($buscar !== null) {
+            $patron = '%'.$buscar.'%';
+            $consulta->where(function ($q) use ($patron) {
+                $q->whereRaw("CONCAT(up.nombre, ' ', up.apellido) LIKE ?", [$patron])
+                    ->orWhereRaw("CONCAT(ud.nombre, ' ', ud.apellido) LIKE ?", [$patron])
+                    ->orWhere('servicios.nombre', 'LIKE', $patron)
+                    ->orWhere('up.telefono', 'LIKE', $patron);
             });
         }
+        $delPeriodo = $consulta->orderBy('citas.fecha_hora')->orderBy('up.nombre')->orderBy('up.apellido')->get();
 
-        // Por defecto: citas del día actual si no hay filtros de fecha
-        if (! $request->filled('fecha_desde') && ! $request->filled('fecha_hasta') && ! $request->filled('vista')) {
-            $query->whereDate('citas.fecha_hora', '>=', Carbon::today())
-                ->whereDate('citas.fecha_hora', '<=', Carbon::today()->addDays(7));
+        // El resumen cuenta todos los estados del periodo (o del día elegido), antes del filtro de
+        // estado, como hoy (D5).
+        $paraResumen = $dia === null ? $delPeriodo : $delPeriodo->filter(fn ($c) => str_starts_with($c->fecha_hora, $dia->toDateString()));
+        $resumen = (object) [
+            'total' => $paraResumen->count(),
+            'agendadas' => $paraResumen->where('estado', 'agendada')->count(),
+            'completadas' => $paraResumen->where('estado', 'completada')->count(),
+            'canceladas' => $paraResumen->where('estado', 'cancelada')->count(),
+        ];
+
+        $citas = $estado === null ? $delPeriodo : $delPeriodo->where('estado', $estado)->values();
+
+        // Dentista que muestra el calendario cuando muestra una sola: la propia en la vista de la
+        // dentista, o la del filtro si está en el desplegable del rol. Los huecos son sus tramos libres.
+        $dentistaUnico = auth()->user()->rol === 'dentista'
+            ? $this->personalIdPropio()
+            : ($dentistas->contains('id', $dentistaId) ? $dentistaId : null);
+
+        // Ocupación de los huecos (A28): mismo periodo y alcance, sin `buscar` ni `estado`, y solo de
+        // la dentista que se muestra. Si la consulta del periodo ya es eso (sin buscador y con el
+        // mismo filtro de dentista), sirve; si no, una segunda consulta, solo en la semana.
+        $ocupacion = [];
+        if ($vista === 'semana') {
+            $ocupacion = $buscar === null && $dentistaUnico === $dentistaId
+                ? $delPeriodo
+                : $this->aplicarAlcanceRol(DB::table('citas'))
+                    ->whereBetween('citas.fecha_hora', [$inicio->format('Y-m-d H:i:s'), $fin->format('Y-m-d H:i:s')])
+                    ->when($dentistaUnico !== null, fn ($q) => $q->where('citas.dentista_id', $dentistaUnico))
+                    ->get(['citas.fecha_hora', 'citas.duracion_min', 'citas.estado', 'citas.dentista_id']);
         }
 
-        // Resumen del rango mostrado (antes de aplicar el filtro de estado y la paginación,
-        // para que las tarjetas reflejen todos los estados del mismo rango de fechas visible)
-        $resumenHoy = (clone $query)
-            ->select(DB::raw("
-                COUNT(*) AS total,
-                COALESCE(SUM(CASE WHEN citas.estado = 'completada' THEN 1 ELSE 0 END), 0) AS completadas,
-                COALESCE(SUM(CASE WHEN citas.estado = 'agendada'   THEN 1 ELSE 0 END), 0) AS agendadas,
-                COALESCE(SUM(CASE WHEN citas.estado = 'cancelada'  THEN 1 ELSE 0 END), 0) AS canceladas
-            "))
-            ->first();
+        $calendario = new CalendarioCitas(
+            $vista, $fecha, $dia, $citas, $ocupacion,
+            config('clinica.contacto.horario_semanal'), $ahora, $dentistaUnico,
+        );
+        $tituloResumen = $calendario->tituloResumen();
+        $filtros = array_filter(['buscar' => $buscar, 'dentista_id' => $dentistaId, 'estado' => $estado], fn ($v) => $v !== null);
 
-        if ($request->filled('estado')) {
-            $query->where('citas.estado', $request->estado);
+        return view('citas.index', compact('calendario', 'citas', 'dentistas', 'resumen', 'tituloResumen', 'filtros'));
+    }
+
+    /** Estados de una cita, para validar el filtro (spec 026). */
+    private const ESTADOS = ['agendada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio'];
+
+    /** Valor de texto de un parámetro de la dirección; un array u otro tipo cuenta como ausente. */
+    private function textoDe(Request $request, string $clave): ?string
+    {
+        $valor = $request->query($clave);
+
+        return is_string($valor) ? $valor : null;
+    }
+
+    /** Primer y último año que admite un parámetro de fecha (/review R27): fuera, no es válido. */
+    private const ANIOS = [2000, 2100];
+
+    /** Fecha `AAAA-MM-DD` válida de un parámetro, entre 2000 y 2100, en la zona de la clínica, o null. */
+    private function fechaDe(Request $request, string $clave, CarbonImmutable $ahora): ?CarbonImmutable
+    {
+        $valor = $this->textoDe($request, $clave);
+        if ($valor === null || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $m) || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            return null;
+        }
+        if ((int) $m[1] < self::ANIOS[0] || (int) $m[1] > self::ANIOS[1]) {
+            return null;
         }
 
-        $citas = $query->orderBy('citas.fecha_hora')->paginate(25)->withQueryString();
+        return CarbonImmutable::createFromFormat('!Y-m-d', $valor, $ahora->getTimezone());
+    }
 
-        // Datos para filtros del formulario (respetando el alcance del rol)
+    /** Dentistas del desplegable del filtro, respetando el alcance del rol (como hoy). */
+    private function dentistasDelFiltro()
+    {
         $dentistasQuery = DB::table('personal')
             ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
             ->where('personal.tipo', 'dentista')
@@ -150,9 +215,7 @@ class CitasController extends Controller
             $dentistasQuery->whereIn('personal.id', $this->dentistaIdsAsistente());
         }
 
-        $dentistas = $dentistasQuery->get();
-
-        return view('citas.index', compact('citas', 'dentistas', 'resumenHoy'));
+        return $dentistasQuery->get();
     }
 
     // ── CREATE ─────────────────────────────────────────────────────────
@@ -186,11 +249,14 @@ class CitasController extends Controller
             ->orderBy('categoria')->orderBy('nombre')
             ->get();
 
-        // Preselección al venir desde el perfil de un paciente
-        $pacienteSeleccionado = $request->get('paciente_id');
-        $dentistaSeleccionado = $request->get('dentista');
+        // Preselección al venir desde el perfil de un paciente o desde un hueco del calendario
+        // (spec 049): solo se proponen valores de texto con su formato; lo demás se ignora (A13, A29).
+        $ahora = CarbonImmutable::now(config('clinica.zona_horaria'));
+        $uuid = fn (string $clave) => Str::isUuid((string) $this->textoDe($request, $clave)) ? $this->textoDe($request, $clave) : null;
+        $pacienteSeleccionado = $uuid('paciente_id');
+        $dentistaSeleccionado = $uuid('dentista');
 
-        $fechaSugerida = $request->get('fecha');
+        $fechaSugerida = $this->fechaDe($request, 'fecha', $ahora)?->toDateString();
 
         if ($pacienteSeleccionado) {
             // Si el paciente tiene doctor asignado, preseleccionarlo
@@ -215,7 +281,8 @@ class CitasController extends Controller
         }
 
         $fechaSugerida = $fechaSugerida ?: now()->addDay()->format('Y-m-d');
-        $horaSugerida = $request->get('hora', '09:00');
+        $hora = (string) $this->textoDe($request, 'hora');
+        $horaSugerida = preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora) ? $hora : '09:00';
 
         return view('citas.create', compact(
             'pacientes', 'dentistas', 'servicios', 'fechaSugerida', 'horaSugerida',
@@ -264,9 +331,11 @@ class CitasController extends Controller
             default => 'admin',
         };
 
+        // Vuelve al calendario, en la semana y el día de la cita nueva (spec 049).
         return redirect()->route("$base.citas", [
-            'fecha_desde' => $data['fecha'],
-            'fecha_hasta' => $data['fecha'],
+            'vista' => 'semana',
+            'fecha' => $data['fecha'],
+            'dia' => $data['fecha'],
         ])->with('success', 'Cita agendada correctamente.');
     }
 

@@ -44,7 +44,7 @@ security:
                                # sus imágenes Docker (decisión del usuario, 2026-10-02).
     secrets: { command: "gitleaks detect --no-banner", status: en-ci }
     sast: { command: "semgrep scan --config p/php --metrics=off --error", status: en-ci }
-    sca: { command: "composer audit --locked --ignore-severity=low --ignore-severity=medium && npm audit --audit-level=high", status: en-ci }
+    sca: { command: "composer audit --locked --ignore-severity=low --ignore-severity=medium && node .github/scripts/auditar-npm.mjs", status: en-ci }
     containers: { command: "trivy fs --severity HIGH,CRITICAL .", status: en-ci }
     dast: { command: null, status: no-aplica }   # solo contra staging, que no existe (docs/security.md)
   agent:

@@ -1,0 +1,317 @@
+/* Calendario de citas del personal (spec 049; system.md 1.19.0, «Calendario de citas»). Hecha desde el
+   candidato c6 del acta (docs/specs/049-calendario-citas/design/candidatos/c6/calendario.css) con los
+   refinados 3 (en el móvil, navegación y vista en una banda si caben) y 4 (hora y paciente destacados),
+   las clases propias de la lista (.cal-lista-*; .lista-citas es de la 027) y las de posición que la vista
+   necesita sin style="" (P9). Solo tokens de app.css; se carga solo en «Citas» con @push('styles'). */
+
+/* ── Resumen del periodo ────────────────────────────────────────────── */
+.cal-resumen-titulo { margin: 0 0 var(--space-4); font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text); }
+.cal-cifra--agendada { color: var(--p500); }
+.cal-cifra--completada { color: var(--green-texto); }
+.cal-cifra--cancelada { color: var(--red); }
+
+/* ── Tarjeta del calendario y barra del periodo ─────────────────────── */
+.cal-tarjeta { margin-top: var(--space-7); padding: var(--space-6); }
+.cal-filtro { margin-bottom: var(--space-6); padding: 0; border: 0; background: transparent; box-shadow: none; }
+.cal-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-5); margin-bottom: var(--space-6); }
+.cal-titulo { margin: 0; font-size: var(--text-marca); font-weight: var(--weight-bold); color: var(--text); }
+.cal-controles { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5); }
+.cal-nav { display: flex; gap: var(--space-3); }
+.cal-control, .cal-vista-op { min-height: calc(var(--touch-min) - var(--space-3)); box-sizing: border-box; }
+.cal-control { display: inline-flex; align-items: center; }
+.cal-vista { display: inline-flex; border: var(--border-width) solid var(--border-control); border-radius: var(--radius-sm); overflow: hidden; }
+.cal-vista-op {
+    display: inline-flex; align-items: center; padding: var(--space-2) var(--space-6);
+    font-size: var(--text-body); font-weight: var(--weight-strong); color: var(--p600); text-decoration: none; background: var(--white);
+}
+.cal-vista-op + .cal-vista-op { border-left: var(--border-width) solid var(--border-control); }
+.cal-vista-op[aria-current="page"] { background: var(--p600); color: var(--white); }
+
+/* Foco del sistema en todo lo pulsable del calendario. */
+.cal-vista-op:focus-visible, .cal-control:focus-visible, .cal-dia-cab:focus-visible, .tira-dia:focus-visible,
+.mes-dia:focus-visible, .cal-lista-cita:focus-visible, .cal-saltar:focus-visible, .cal-lista-ver-todo:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset);
+}
+/* «Semana · Mes», las cabeceras de día, las citas y los huecos están en cajas que recortan: el anillo va por
+   dentro (/review R10, R11). Con .cal-pagina para ganar a `.formulario-accesible a:focus-visible` de app.css. */
+.cal-pagina .cal-vista-op:focus-visible, .cal-pagina .cal-dia-cab:focus-visible,
+.cal-pagina .cal-cita:focus-visible, .cal-pagina .cal-hueco:focus-visible { outline-offset: calc(-1 * var(--focus-ring-width)); }
+/* Sobre la opción actual y el día elegido (fondo --p600) el anillo granate no se vería: va en blanco y separado del
+   borde, para que quede rodeado de granate y no se funda con el blanco de fuera (/review R36). */
+.cal-pagina .cal-vista-op[aria-current="page"]:focus-visible, .cal-pagina .cal-dia-cab--elegido:focus-visible {
+    outline-color: var(--focus-ring-inverso); outline-offset: calc(-2 * var(--focus-ring-width));
+}
+
+/* Saltar el calendario con el teclado: solo se ve con el foco (patrón de .pub-solo-lector). */
+.cal-saltar { color: var(--p600); }
+.cal-saltar:not(:focus) { position: absolute; left: -100vw; width: var(--border-width); height: var(--border-width); overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cal-saltar:focus { display: inline-block; margin-bottom: var(--space-4); }
+.cal-oculto { position: absolute; width: var(--border-width); height: var(--border-width); overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ── Semana por horas (escritorio) ──────────────────────────────────── */
+.cal-semana {
+    --cal-fila: calc(var(--touch-min) + var(--space-3));
+    display: flex; border: var(--border-width) solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+}
+/* Cada día es una columna con su cabecera; los días con citas a la vez se ensanchan por carril. */
+.cal-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+.cal-col--carriles-2 { flex-grow: 2; }
+.cal-col--carriles-3 { flex-grow: 3; }
+.cal-col--carriles-4 { flex-grow: 4; }
+.cal-col--carriles-5 { flex-grow: 5; }
+.cal-col--carriles-6 { flex-grow: 6; }
+.cal-col--carriles-7 { flex-grow: 7; }
+.cal-col--carriles-8 { flex-grow: 8; }
+.cal-col--horas { flex: 0 0 calc(var(--space-8) * 2); }
+.cal-esquina { height: calc(var(--touch-min) * 1.5); border-bottom: var(--border-width) solid var(--border); }
+.cal-dia-cab {
+    position: relative; height: calc(var(--touch-min) * 1.5); box-sizing: border-box; overflow: hidden;
+    display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width) solid var(--border); border-left: var(--border-width) solid var(--border);
+    color: var(--text); text-decoration: none; background: var(--white);
+}
+.cal-dia-cab:hover { background: var(--p50); }
+.cal-dia-nombre { font-size: var(--text-body); }
+.cal-dia-nombre b { font-size: var(--text-marca); font-weight: var(--weight-bold); }
+.cal-dia-total { font-size: var(--text-small); }
+.cal-dia-cab--hoy { background: var(--p50); box-shadow: inset 0 calc(-1 * var(--border-width-strong)) 0 var(--p400); }
+.cal-dia-cab--elegido { background: var(--p600); color: var(--white); }
+/* Al pasar el puntero, el día elegido se oscurece en lugar de aclararse: el texto blanco sigue leyéndose. */
+.cal-dia-cab--elegido:hover { background: var(--p800); }
+.cal-dia-cab--elegido .cal-hoy-marca { color: var(--white); }
+.cal-dia-cab .cal-hoy-marca { position: absolute; top: var(--space-3); right: var(--space-4); }
+.cal-hoy-marca { font-size: var(--text-small); font-weight: var(--weight-strong); color: var(--p600); }
+
+.cal-horas, .cal-dia { display: grid; grid-auto-rows: var(--cal-fila); }
+.cal-hora { padding: var(--space-1) var(--space-3) 0 0; font-size: var(--text-small); color: var(--text); text-align: right; }
+.cal-dia {
+    grid-template-columns: minmax(0, 1fr);
+    border-left: var(--border-width) solid var(--border);
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--cal-fila) - var(--border-width)), var(--border) calc(var(--cal-fila) - var(--border-width)), var(--border) var(--cal-fila));
+}
+.cal-carriles-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cal-carriles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cal-carriles-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cal-carriles-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.cal-carriles-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.cal-carriles-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-carriles-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.cal-dia--hoy { background-color: var(--p50); }
+.cal-dia--elegido { background-color: var(--p100); }
+
+/* Hueco libre: no se ve hasta pasar el puntero o enfocarlo. */
+.cal-hueco { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; color: var(--p600); text-decoration: none; }
+.cal-hueco svg { display: none; width: var(--space-6); height: var(--space-6); stroke: currentColor; stroke-width: 2; fill: none; }
+.cal-hueco:hover, .cal-hueco:focus-visible { background: var(--p100); }
+.cal-hueco:hover svg, .cal-hueco:focus-visible svg { display: block; }
+.cal-hueco:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: calc(-1 * var(--focus-ring-width)); }
+
+/* Fuera del horario de la clínica. */
+.cal-cerrado {
+    grid-column: 1 / -1; display: flex; align-items: flex-start; justify-content: center; padding-top: var(--space-4);
+    background: repeating-linear-gradient(135deg, var(--bg) 0, var(--bg) var(--space-3), var(--border) var(--space-3), var(--border) calc(var(--space-3) + var(--border-width)));
+}
+.cal-cerrado span { background: var(--white); padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); font-size: var(--text-small); color: var(--text); }
+
+/* Cita: el color dice el estado; el estado va también en texto. Hora y paciente destacan (refinado 4). */
+.cal-cita {
+    grid-column: 1 / -1; z-index: 1; display: flex; flex-direction: column; justify-content: center; gap: 0;
+    min-width: 0; margin: var(--border-width); padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm); border-left: var(--border-width-strong) solid var(--p400);
+    background: var(--p100); color: var(--text); text-decoration: none; font-size: var(--text-small); overflow: hidden;
+}
+.cal-carril-1 { grid-column: 1; }
+.cal-carril-2 { grid-column: 2; }
+.cal-carril-3 { grid-column: 3; }
+.cal-carril-4 { grid-column: 4; }
+.cal-carril-5 { grid-column: 5; }
+.cal-carril-6 { grid-column: 6; }
+.cal-carril-7 { grid-column: 7; }
+.cal-carril-8 { grid-column: 8; }
+.cal-cita-linea, .cal-cita-meta, .cal-cita-estado { display: block; max-width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-cita-linea { font-size: var(--text-body); }
+.cal-cita-hora { font-weight: var(--weight-bold); }
+.cal-cita-paciente { font-weight: var(--weight-bold); }
+.cal-cita-estado { font-weight: var(--weight-strong); }
+.cal-cita:hover { box-shadow: inset 0 0 0 var(--border-width) var(--p600); }
+.cal-cita:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: calc(-1 * var(--focus-ring-width)); }
+.cal-cita--confirmada { background: var(--blue-bg); border-left-color: var(--blue); }
+.cal-cita--en_curso { background: var(--amber-bg); border-left-color: var(--amber); }
+.cal-cita--completada { background: var(--green-bg); border-left-color: var(--green-texto); }
+/* Atenuadas: sin relleno y con borde discontinuo; el texto conserva su contraste y no tapan a las vigentes. */
+.cal-cita--cancelada { z-index: 0; background: var(--white); border: var(--border-width) dashed var(--text-light); border-left-width: var(--border-width-strong); }
+.cal-cita--no_asistio { z-index: 0; background: var(--white); border: var(--border-width) dashed var(--text-light); border-left-width: var(--border-width-strong); }
+.cal-cita--cancelada .cal-cita-paciente { text-decoration: line-through; }
+
+/* Posición sin style="": tramo de inicio, número de tramos y filas de la cuadrícula (hasta 48 tramos de 30 min). */
+.cal-r1 { grid-row-start: 1; } .cal-r2 { grid-row-start: 2; } .cal-r3 { grid-row-start: 3; } .cal-r4 { grid-row-start: 4; }
+.cal-r5 { grid-row-start: 5; } .cal-r6 { grid-row-start: 6; } .cal-r7 { grid-row-start: 7; } .cal-r8 { grid-row-start: 8; }
+.cal-r9 { grid-row-start: 9; } .cal-r10 { grid-row-start: 10; } .cal-r11 { grid-row-start: 11; } .cal-r12 { grid-row-start: 12; }
+.cal-r13 { grid-row-start: 13; } .cal-r14 { grid-row-start: 14; } .cal-r15 { grid-row-start: 15; } .cal-r16 { grid-row-start: 16; }
+.cal-r17 { grid-row-start: 17; } .cal-r18 { grid-row-start: 18; } .cal-r19 { grid-row-start: 19; } .cal-r20 { grid-row-start: 20; }
+.cal-r21 { grid-row-start: 21; } .cal-r22 { grid-row-start: 22; } .cal-r23 { grid-row-start: 23; } .cal-r24 { grid-row-start: 24; }
+.cal-r25 { grid-row-start: 25; } .cal-r26 { grid-row-start: 26; } .cal-r27 { grid-row-start: 27; } .cal-r28 { grid-row-start: 28; }
+.cal-r29 { grid-row-start: 29; } .cal-r30 { grid-row-start: 30; } .cal-r31 { grid-row-start: 31; } .cal-r32 { grid-row-start: 32; }
+.cal-r33 { grid-row-start: 33; } .cal-r34 { grid-row-start: 34; } .cal-r35 { grid-row-start: 35; } .cal-r36 { grid-row-start: 36; }
+.cal-r37 { grid-row-start: 37; } .cal-r38 { grid-row-start: 38; } .cal-r39 { grid-row-start: 39; } .cal-r40 { grid-row-start: 40; }
+.cal-r41 { grid-row-start: 41; } .cal-r42 { grid-row-start: 42; } .cal-r43 { grid-row-start: 43; } .cal-r44 { grid-row-start: 44; }
+.cal-r45 { grid-row-start: 45; } .cal-r46 { grid-row-start: 46; } .cal-r47 { grid-row-start: 47; } .cal-r48 { grid-row-start: 48; }
+.cal-s1 { grid-row-end: span 1; } .cal-s2 { grid-row-end: span 2; } .cal-s3 { grid-row-end: span 3; } .cal-s4 { grid-row-end: span 4; }
+.cal-s5 { grid-row-end: span 5; } .cal-s6 { grid-row-end: span 6; } .cal-s7 { grid-row-end: span 7; } .cal-s8 { grid-row-end: span 8; }
+.cal-s9 { grid-row-end: span 9; } .cal-s10 { grid-row-end: span 10; } .cal-s11 { grid-row-end: span 11; } .cal-s12 { grid-row-end: span 12; }
+.cal-s13 { grid-row-end: span 13; } .cal-s14 { grid-row-end: span 14; } .cal-s15 { grid-row-end: span 15; } .cal-s16 { grid-row-end: span 16; }
+.cal-s17 { grid-row-end: span 17; } .cal-s18 { grid-row-end: span 18; } .cal-s19 { grid-row-end: span 19; } .cal-s20 { grid-row-end: span 20; }
+.cal-s21 { grid-row-end: span 21; } .cal-s22 { grid-row-end: span 22; } .cal-s23 { grid-row-end: span 23; } .cal-s24 { grid-row-end: span 24; }
+.cal-s25 { grid-row-end: span 25; } .cal-s26 { grid-row-end: span 26; } .cal-s27 { grid-row-end: span 27; } .cal-s28 { grid-row-end: span 28; }
+.cal-s29 { grid-row-end: span 29; } .cal-s30 { grid-row-end: span 30; } .cal-s31 { grid-row-end: span 31; } .cal-s32 { grid-row-end: span 32; }
+.cal-s33 { grid-row-end: span 33; } .cal-s34 { grid-row-end: span 34; } .cal-s35 { grid-row-end: span 35; } .cal-s36 { grid-row-end: span 36; }
+.cal-s37 { grid-row-end: span 37; } .cal-s38 { grid-row-end: span 38; } .cal-s39 { grid-row-end: span 39; } .cal-s40 { grid-row-end: span 40; }
+.cal-s41 { grid-row-end: span 41; } .cal-s42 { grid-row-end: span 42; } .cal-s43 { grid-row-end: span 43; } .cal-s44 { grid-row-end: span 44; }
+.cal-s45 { grid-row-end: span 45; } .cal-s46 { grid-row-end: span 46; } .cal-s47 { grid-row-end: span 47; } .cal-s48 { grid-row-end: span 48; }
+.cal-filas-1 .cal-horas, .cal-filas-1 .cal-dia { grid-template-rows: repeat(1, var(--cal-fila)); }
+.cal-filas-2 .cal-horas, .cal-filas-2 .cal-dia { grid-template-rows: repeat(2, var(--cal-fila)); }
+.cal-filas-3 .cal-horas, .cal-filas-3 .cal-dia { grid-template-rows: repeat(3, var(--cal-fila)); }
+.cal-filas-4 .cal-horas, .cal-filas-4 .cal-dia { grid-template-rows: repeat(4, var(--cal-fila)); }
+.cal-filas-5 .cal-horas, .cal-filas-5 .cal-dia { grid-template-rows: repeat(5, var(--cal-fila)); }
+.cal-filas-6 .cal-horas, .cal-filas-6 .cal-dia { grid-template-rows: repeat(6, var(--cal-fila)); }
+.cal-filas-7 .cal-horas, .cal-filas-7 .cal-dia { grid-template-rows: repeat(7, var(--cal-fila)); }
+.cal-filas-8 .cal-horas, .cal-filas-8 .cal-dia { grid-template-rows: repeat(8, var(--cal-fila)); }
+.cal-filas-9 .cal-horas, .cal-filas-9 .cal-dia { grid-template-rows: repeat(9, var(--cal-fila)); }
+.cal-filas-10 .cal-horas, .cal-filas-10 .cal-dia { grid-template-rows: repeat(10, var(--cal-fila)); }
+.cal-filas-11 .cal-horas, .cal-filas-11 .cal-dia { grid-template-rows: repeat(11, var(--cal-fila)); }
+.cal-filas-12 .cal-horas, .cal-filas-12 .cal-dia { grid-template-rows: repeat(12, var(--cal-fila)); }
+.cal-filas-13 .cal-horas, .cal-filas-13 .cal-dia { grid-template-rows: repeat(13, var(--cal-fila)); }
+.cal-filas-14 .cal-horas, .cal-filas-14 .cal-dia { grid-template-rows: repeat(14, var(--cal-fila)); }
+.cal-filas-15 .cal-horas, .cal-filas-15 .cal-dia { grid-template-rows: repeat(15, var(--cal-fila)); }
+.cal-filas-16 .cal-horas, .cal-filas-16 .cal-dia { grid-template-rows: repeat(16, var(--cal-fila)); }
+.cal-filas-17 .cal-horas, .cal-filas-17 .cal-dia { grid-template-rows: repeat(17, var(--cal-fila)); }
+.cal-filas-18 .cal-horas, .cal-filas-18 .cal-dia { grid-template-rows: repeat(18, var(--cal-fila)); }
+.cal-filas-19 .cal-horas, .cal-filas-19 .cal-dia { grid-template-rows: repeat(19, var(--cal-fila)); }
+.cal-filas-20 .cal-horas, .cal-filas-20 .cal-dia { grid-template-rows: repeat(20, var(--cal-fila)); }
+.cal-filas-21 .cal-horas, .cal-filas-21 .cal-dia { grid-template-rows: repeat(21, var(--cal-fila)); }
+.cal-filas-22 .cal-horas, .cal-filas-22 .cal-dia { grid-template-rows: repeat(22, var(--cal-fila)); }
+.cal-filas-23 .cal-horas, .cal-filas-23 .cal-dia { grid-template-rows: repeat(23, var(--cal-fila)); }
+.cal-filas-24 .cal-horas, .cal-filas-24 .cal-dia { grid-template-rows: repeat(24, var(--cal-fila)); }
+.cal-filas-25 .cal-horas, .cal-filas-25 .cal-dia { grid-template-rows: repeat(25, var(--cal-fila)); }
+.cal-filas-26 .cal-horas, .cal-filas-26 .cal-dia { grid-template-rows: repeat(26, var(--cal-fila)); }
+.cal-filas-27 .cal-horas, .cal-filas-27 .cal-dia { grid-template-rows: repeat(27, var(--cal-fila)); }
+.cal-filas-28 .cal-horas, .cal-filas-28 .cal-dia { grid-template-rows: repeat(28, var(--cal-fila)); }
+.cal-filas-29 .cal-horas, .cal-filas-29 .cal-dia { grid-template-rows: repeat(29, var(--cal-fila)); }
+.cal-filas-30 .cal-horas, .cal-filas-30 .cal-dia { grid-template-rows: repeat(30, var(--cal-fila)); }
+.cal-filas-31 .cal-horas, .cal-filas-31 .cal-dia { grid-template-rows: repeat(31, var(--cal-fila)); }
+.cal-filas-32 .cal-horas, .cal-filas-32 .cal-dia { grid-template-rows: repeat(32, var(--cal-fila)); }
+.cal-filas-33 .cal-horas, .cal-filas-33 .cal-dia { grid-template-rows: repeat(33, var(--cal-fila)); }
+.cal-filas-34 .cal-horas, .cal-filas-34 .cal-dia { grid-template-rows: repeat(34, var(--cal-fila)); }
+.cal-filas-35 .cal-horas, .cal-filas-35 .cal-dia { grid-template-rows: repeat(35, var(--cal-fila)); }
+.cal-filas-36 .cal-horas, .cal-filas-36 .cal-dia { grid-template-rows: repeat(36, var(--cal-fila)); }
+.cal-filas-37 .cal-horas, .cal-filas-37 .cal-dia { grid-template-rows: repeat(37, var(--cal-fila)); }
+.cal-filas-38 .cal-horas, .cal-filas-38 .cal-dia { grid-template-rows: repeat(38, var(--cal-fila)); }
+.cal-filas-39 .cal-horas, .cal-filas-39 .cal-dia { grid-template-rows: repeat(39, var(--cal-fila)); }
+.cal-filas-40 .cal-horas, .cal-filas-40 .cal-dia { grid-template-rows: repeat(40, var(--cal-fila)); }
+.cal-filas-41 .cal-horas, .cal-filas-41 .cal-dia { grid-template-rows: repeat(41, var(--cal-fila)); }
+.cal-filas-42 .cal-horas, .cal-filas-42 .cal-dia { grid-template-rows: repeat(42, var(--cal-fila)); }
+.cal-filas-43 .cal-horas, .cal-filas-43 .cal-dia { grid-template-rows: repeat(43, var(--cal-fila)); }
+.cal-filas-44 .cal-horas, .cal-filas-44 .cal-dia { grid-template-rows: repeat(44, var(--cal-fila)); }
+.cal-filas-45 .cal-horas, .cal-filas-45 .cal-dia { grid-template-rows: repeat(45, var(--cal-fila)); }
+.cal-filas-46 .cal-horas, .cal-filas-46 .cal-dia { grid-template-rows: repeat(46, var(--cal-fila)); }
+.cal-filas-47 .cal-horas, .cal-filas-47 .cal-dia { grid-template-rows: repeat(47, var(--cal-fila)); }
+.cal-filas-48 .cal-horas, .cal-filas-48 .cal-dia { grid-template-rows: repeat(48, var(--cal-fila)); }
+
+/* ── Tira de días (móvil) ───────────────────────────────────────────── */
+.cal-tira { display: none; }
+.tira-dia { position: relative; color: var(--text); text-decoration: none; }
+.tira-total { color: var(--p600); }
+
+/* ── Mes ────────────────────────────────────────────────────────────── */
+.cal-mes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-1); }
+.mes-nombre { padding: var(--space-3) var(--space-4); font-size: var(--text-small); font-weight: var(--weight-strong); color: var(--text); text-transform: uppercase; }
+.mes-dia {
+    position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-3);
+    min-height: calc(var(--touch-min) * 2); padding: var(--space-3) var(--space-4);
+    border: var(--border-width) solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); text-decoration: none; background: var(--white);
+}
+.mes-dia:hover { background: var(--p50); }
+.mes-dia--hoy { border-color: var(--p400); box-shadow: inset 0 0 0 var(--border-width) var(--p400); }
+.mes-dia--elegido { box-shadow: inset 0 0 0 var(--border-width-strong) var(--p600); }
+.mes-dia--fuera { background: transparent; border-color: transparent; color: var(--text); }
+.mes-num { font-size: var(--text-body); font-weight: var(--weight-strong); }
+.mes-dia--fuera .mes-num { font-weight: var(--weight-regular); }
+.mes-total { font-size: var(--text-marca); font-weight: var(--weight-bold); color: var(--p600); }
+.mes-citas { font-size: var(--text-small); font-weight: var(--weight-regular); }
+.mes-dia--cero .mes-total { font-size: var(--text-small); font-weight: var(--weight-regular); color: var(--text); }
+.mes-hoy { font-size: var(--text-small); font-weight: var(--weight-strong); color: var(--p600); }
+.mes-dia--hoy .mes-num { color: var(--p600); }
+
+/* ── Lista del periodo ──────────────────────────────────────────────── */
+.cal-lista { margin-top: var(--space-7); padding: var(--space-6); }
+.cal-lista-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
+.cal-lista-titulo, .cal-lista-titulo-movil { margin: 0; font-size: var(--text-marca); font-weight: var(--weight-bold); color: var(--text); }
+.cal-lista-titulo-movil, .cal-lista-vacia-movil { display: none; }
+.cal-lista-ver-todo { display: inline-flex; align-items: center; }
+/* Los días se leen por filas (izquierda a derecha); un solo día ocupa todo el ancho (refinado 2). */
+.cal-lista-grupos { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-8) * 11), 1fr)); gap: var(--space-6); align-items: start; }
+.cal-lista-grupos--uno { grid-template-columns: minmax(0, 1fr); }
+.cal-lista-dia { margin: 0 0 var(--space-3); font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text); }
+.cal-lista-hoy { margin-left: var(--space-3); font-size: var(--text-small); font-weight: var(--weight-strong); color: var(--p600); }
+.cal-lista-citas { list-style: none; margin: 0; padding: 0; border: var(--border-width) solid var(--border); border-radius: var(--radius-sm); background: var(--white); }
+.cal-lista-citas li { display: block; }
+.cal-lista-citas li + li { border-top: var(--border-width) solid var(--border); }
+.cal-lista-cita {
+    display: grid; width: 100%; box-sizing: border-box;
+    grid-template-columns: calc(var(--space-8) * 1.6) minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center;
+    column-gap: var(--space-4); row-gap: 0; min-height: var(--touch-min); padding: var(--space-2) var(--space-4);
+    color: var(--text); text-decoration: none; font-size: var(--text-body);
+}
+.cal-lista-cita:hover { background: var(--p50); }
+.cal-lista-hora { grid-row: 1 / span 2; font-weight: var(--weight-bold); color: var(--p600); }
+.cal-lista-paciente { grid-column: 2; font-weight: var(--weight-strong); overflow-wrap: anywhere; }
+.cal-lista-dentista { grid-column: 2; grid-row: 2; font-size: var(--text-small); overflow-wrap: anywhere; }
+.cal-lista-cita .badge { grid-column: 3; grid-row: 1 / span 2; }
+.cal-lista-cita--cancelada .cal-lista-paciente { text-decoration: line-through; }
+.cal-lista .empty-state p { margin-bottom: var(--space-6); }
+
+/* ── Móvil: tira de días en lugar de la semana por horas ────────────── */
+@media (max-width: 899px) {
+    .cal-resumen .stats-grid { gap: var(--space-3); }
+    .cal-resumen .stat-card { display: flex; align-items: baseline; gap: var(--space-3); padding: var(--space-3) var(--space-5); }
+    .cal-tarjeta, .cal-lista { padding: 0; background: transparent; border: 0; box-shadow: none; }
+    .cal-filtro .filtro-citas { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); align-items: end; }
+    .cal-filtro .filtro-buscar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); align-items: end; }
+    .cal-filtro .btn { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .cal-filtro .filtro-buscar .field-label { grid-column: 1 / -1; }
+    .cal-filtro .filtro-atajos { margin: 0; }
+    .cal-filtro .filtro-panel { grid-column: 1 / -1; }
+    /* Refinado 3: navegación y vista en una banda si caben con objetivos de 44 px. */
+    .cal-barra { flex-direction: column; align-items: stretch; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .cal-controles { justify-content: space-between; gap: var(--space-3); }
+    .cal-nav { gap: var(--space-2); }
+    .cal-control { min-width: var(--touch-min); justify-content: center; padding-left: var(--space-4); padding-right: var(--space-4); }
+    .cal-vista-op { padding-left: var(--space-5); padding-right: var(--space-5); }
+    .cal-control, .cal-vista-op { min-height: var(--touch-min); }
+    .cal-semana, .cal-saltar { display: none; }
+    .cal-tira { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-1); list-style: none; margin: 0 0 var(--space-6); padding: 0; }
+    .tira-dia {
+        display: flex; flex-direction: column; align-items: center; gap: var(--space-1);
+        min-height: calc(var(--touch-min) + var(--space-6)); padding: var(--space-3) 0;
+        border: var(--border-width) solid var(--border); border-radius: var(--radius-sm);
+        background: var(--white); color: var(--text); text-decoration: none; font-size: var(--text-small);
+    }
+    .tira-nombre { display: flex; flex-direction: column; align-items: center; }
+    .tira-nombre b { font-size: var(--text-marca); font-weight: var(--weight-bold); }
+    .tira-total { font-weight: var(--weight-strong); color: var(--p600); }
+    /* Hoy, también sin color: borde más grueso (/review R12). */
+    .tira-dia--hoy { border-color: var(--p400); border-width: var(--border-width-strong); }
+    .tira-dia--elegido { background: var(--p600); border-color: var(--p600); color: var(--white); }
+    .tira-dia--elegido .tira-total { color: var(--white); }
+    .mes-nombre { padding: var(--space-2) 0; text-align: center; }
+    .mes-dia { min-height: calc(var(--touch-min) + var(--space-6)); padding: var(--space-2) var(--space-1); align-items: center; justify-content: center; gap: var(--space-1); }
+    .mes-total { display: flex; flex-direction: column; align-items: center; font-size: var(--text-marca); text-align: center; }
+    /* La lista muestra en el móvil solo el día del móvil, con un título que lo nombra (refinado 1). */
+    .cal-lista-titulo { display: none; }
+    .cal-lista-titulo-movil, .cal-lista-vacia-movil { display: block; }
+    .cal-lista-grupo:not(.cal-lista-grupo--movil) { display: none; }
+    .cal-lista-grupos { grid-template-columns: minmax(0, 1fr); }
+    .cal-lista-cita { background: var(--white); }
+}
