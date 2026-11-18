@@ -1,7 +1,8 @@
 ---
 id: 049
 slug: calendario-citas
-status: implemented
+status: released
+released: v0.21.0 (2026-11-18)
 created: 2026-11-15
 extends: [034]
 ---
@@ -136,3 +137,4 @@ Ninguna.
 | 2026-11-17 | Correcciones de /review r1 (T030–T037); suite 1318; `implemented` | /implement 049 |
 | 2026-11-17 | `/review` r2 `changes_requested` (R36, R37, R38, R41 y R42 se corrigen con T038–T040); vuelve a `approved` | /review 049 --rerun |
 | 2026-11-17 | Correcciones de /review r2 (T038–T040); suite 1322; `implemented` | /implement 049 |
+| 2026-11-18 | Liberada en v0.21.0 | /release |

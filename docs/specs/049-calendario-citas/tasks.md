@@ -112,10 +112,14 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: suite completa 1303 en verde (línea base 1257 + 46 de la 049; 1069 s); Pint limpio en los 13 PHP de la spec; gitleaks y semgrep limpios sobre el diff de la spec (código, vistas, CSS, tests, `capturar.mjs`, `system.*`, documentos de la 049 y `architecture.md`); CA1–CA10 marcados; `docs/specs/README.md` en `implemented`.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (semana, mes, día elegido, un hueco que abre «Nueva cita», en escritorio y móvil)
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; `5xx` en las tres rutas de «Citas» la primera hora; el usuario abre el mes en producción y comprueba que carga sin esperas (RNF). Rollback: `bash deploy/volver.sh <tag anterior>`
-- [ ] T098 Marcar spec como `released`; en la spec 034, una línea en su Historial: la lista de «Citas» del personal la reemplaza la 049 (CA2, CA5 y CA11 para esa lista; CA8 sigue)
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (semana, mes, día elegido, un hueco que abre «Nueva cita», en escritorio y móvil)
+  - nota: sin staging; comprobado en producción por el usuario el 2026-11-18 tras desplegar (T097): semana, mes, día elegido, hueco que abre «Nueva cita» y tira del móvil.
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-18 16:59 para v0.21.0 («desplegar v0.21.0 a producción»)
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; `5xx` en las tres rutas de «Citas» la primera hora; el usuario abre el mes en producción y comprueba que carga sin esperas (RNF). Rollback: `bash deploy/volver.sh <tag anterior>`
+  - nota: `deploy/desplegar.sh v0.21.0` en 148 s (anterior v0.20.1; copia `dentissa-20261118-230031.sql.gz.gpg`), `verificar.sh` todo OK, también por la dirección pública; tag v0.21.0 sobre 8478e64 (PR #93). El usuario comprobó «Citas» en producción, con el mes sin esperas (RNF).
+- [x] T098 Marcar spec como `released`; en la spec 034, una línea en su Historial: la lista de «Citas» del personal la reemplaza la 049 (CA2, CA5 y CA11 para esa lista; CA8 sigue)
+  - nota: spec `released`; Historial de la 034 con CA2, CA5 y CA11 reemplazados en lo que toca a la lista de «Citas»; 21 aceptados de /review al roadmap (049/R13…R40).
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
