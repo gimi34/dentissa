@@ -1,6 +1,7 @@
 ---
 lane: chore
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released                 # open → done → released · escalated (→ escalated_to)
+released: v0.20.1 (2026-11-17)
 base: ab10377                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [046]               # specs cuyo comportamiento toca ([] si ninguna)
 covers: []
@@ -44,6 +45,7 @@ commit: AI-DLC está en pausa y esos archivos no se editan (AGENTS.md).
   repite una `--medir` completa, porque la línea base y la rama tendrían el mismo código (v0.20.0) y
   la comparación saldría igual por construcción.
 - `python .ai/bin/aidd.py validate`: sin errores.
+- Liberada en v0.20.1: producción aprobada por el responsable (gimi34) el 2026-11-17 con «desplegar v0.20.1 a producción»; `desplegar.sh v0.20.1` en 138 s y `verificar.sh` interna y pública, todo OK.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |

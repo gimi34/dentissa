@@ -31,7 +31,7 @@ de Google para no recordar otra contraseña.
 - [ ] CA8 · Dado un usuario autenticado, cuando envía `POST /logout`, entonces la sesión se invalida y el token CSRF se regenera.
 - [ ] CA9 (abuso) · Como atacante, pruebo muchas contraseñas contra una cuenta → los intentos se limitan por IP y cuenta y se registran. **HOY NO SE CUMPLE: no se registran los intentos.** Atendido en parte por 030 (v0.5.0): los intentos fallidos se limitan por cuenta e IP (5 por minuto, `LimiteIntentosTest`); falta registrarlos (→ spec 020). El canal `seguridad` de la 032 (v0.11.0) registra los fallos para avisar, pero no es el registro de auditoría: sigue → 020/021.
 - [ ] CA10 (abuso) · Como atacante con una cuenta de Google cuyo email coincide con la de un admin, intento entrar → no se vincula sin email verificado ni confirmación. **HOY NO SE CUMPLE: se vincula por coincidencia de email.**
-- [ ] CA11 (abuso) · Como usuario desactivado con sesión abierta, sigo navegando → la sesión se cierra. **HOY NO SE CUMPLE: `activo` solo se comprueba al hacer login.**
+- [x] CA11 (abuso) · Como usuario desactivado con sesión abierta, sigo navegando → la sesión se cierra. Resuelto por la ficha 2026-11-17-fix-sesion-cuenta-desactivada (v0.20.1).
 
 ## Fuera de alcance
 - Recuperación de contraseña (el enlace de la pantalla de login es `href="#"`).
@@ -77,3 +77,4 @@ Eventos requeridos en `docs/observability.md`.
 | 2026-11-02 | Comportamiento modificado por 038 en v0.13.0: sin sesión, `/` muestra la página de inicio pública (CA4 → 038 CA1) | /release |
 | 2026-11-03 | Comportamiento modificado por 041 en v0.14.0: «¿Olvidaste tu contraseña?» lleva a la recuperación por correo (fuera de alcance de la 001), el login cambia de aspecto y no se indexa | /release |
 | 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: cerrar sesión lleva a `/` con el aviso «Has cerrado sesión»; con sesión, `/` muestra la página de inicio (CA5 → reemplazado por 044 CA5); salidas en el inicio de sesión | /release |
+| 2026-11-17 | Corregido por la ficha 2026-11-17-fix-sesion-cuenta-desactivada en v0.20.1 (CA11): desactivar una cuenta cierra su sesión abierta | /release |
