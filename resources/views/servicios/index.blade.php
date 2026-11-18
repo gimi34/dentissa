@@ -15,7 +15,7 @@
 {{-- ── Tarjetas de Estadísticas ────────────────────────────────── --}}
 <div class="stats-grid stats-grid-2" style="max-width:600px">
     <div class="stat-card">
-        <div class="stat-value">{{ $servicios->count() }}</div>
+        <div class="stat-value">{{ $total }}</div>
         <div class="stat-label">Servicios registrados</div>
     </div>
     <div class="stat-card">
@@ -106,8 +106,17 @@
                 </tbody>
             </table>
         </div>
+    @elseif(request()->filled('buscar'))
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <p>Ningún servicio coincide con la búsqueda.</p>
+            <a href="{{ route('admin.servicios.index') }}" class="btn btn-ghost" style="margin-top:12px;display:inline-flex">
+                Ver todos los servicios
+            </a>
+        </div>
     @else
-    <!-- Resto del empty-state igual... -->
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>

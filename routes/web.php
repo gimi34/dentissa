@@ -79,7 +79,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/', [DashboardController::class, 'admin'])->name('dashboard');
 
     // Servicios
-    Route::resource('servicios', ServiciosController::class);
+    // Sin ficha de servicio: la lista y la edición bastan (ficha 2026-11-17-fix-detalles-servicios-usuarios).
+    Route::resource('servicios', ServiciosController::class)->except('show');
 
     // Citas
     Route::get('/citas', [CitasController::class, 'index'])->name('citas');
