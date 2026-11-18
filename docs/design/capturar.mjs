@@ -271,9 +271,9 @@ const COMPONENTES = [
   ['boton-contorno', '/admin/citas/{cita}', '.btn-outline'],
   ['boton-pequeno', '/admin/pacientes', '.btn-sm'],
   ['campo', '/admin/citas/crear', '.field'],
-  ['tabla', '/admin/citas', 'table'],
+  ['tabla', '/admin/pacientes', 'table'],
   ['tarjeta-resumen', '/admin', '.stat-card'],
-  ['badges-estado', '/admin/citas', 'table tbody'],
+  ['badges-estado', '/admin/citas', '.cal-lista-grupos'],
   ['barra-lateral', '/admin', '.sidebar'],
   ['barra-superior', '/admin', '.topbar'],
   ['estado-vacio', '/admin/reportes?desde=2000-01-01&hasta=2000-01-31', '.content'],
@@ -323,14 +323,14 @@ const COMPROBACIONES = [
   '034 solapes: a 320, 390 y 844x390, en las pantallas incluidas, ningún control visible se cruza con otro ni sale de su tarjeta; con control positivo (CA8)',
   '034 tarjetas: a 320, 390 y 844x390, toda tabla visible es tabla-tarjetas; cada celda de valor muestra su etiqueta a la izquierda, en la línea de su primera línea, también con un valor de dos líneas; el estado, arriba a la derecha junto a la cabecera; y cada tarjeta, con un fondo distinto del de su contenedor, también la de hoy (CA1–CA4, A37, A39, A57)',
   '034 palabras largas: a 320 y 390, con una palabra de 30 letras en los nombres de paciente, dentista, servicio y usuario (banner y menú), ninguna pantalla incluida ni de las 7 del paciente se desplaza de lado ni recorta texto, y ninguna palabra que cabe en el ancho de su diseño (tarjeta o .card, menos la etiqueta) queda partida; con control positivo (CA7, A34, A38)',
-  '034 filtro: a 390, plegado al cargar, «Filtros» lo despliega y cambia aria-expanded; a 320 y 390, desplegado, buscador al ancho del formulario y orden buscador < atajos < panel, atajos en una línea, sin solapes ni campos fuera de su tarjeta, y con dos filtros aplicados sin palabras partidas; sin JS, desplegado y sin «Filtros»; foco visible en los campos, «Hoy», «Filtros» y «Filtrar» (CA5, A33, A45, A55, A68, A69)',
+  '034 filtro: a 390, plegado al cargar, «Filtros» lo despliega y cambia aria-expanded; a 320 y 390, desplegado, el buscador y «Filtros» en la fila de arriba (spec 049; antes, buscador al ancho del formulario y atajos debajo) y el panel debajo, sin solapes ni campos fuera de su tarjeta, y con un filtro aplicado sin palabras partidas; sin JS, desplegado y sin «Filtros»; foco visible en los campos, «Hoy» de la barra del periodo (049), «Filtros» y «Filtrar» (CA5, A33, A45, A55, A68, A69)',
   '034 foco: a 390, foco visible en un botón de tarjeta y en el enlace de la dentista, que desde la spec 048 dibuja el anillo en su ::after, sobre la cita entera (A60; 046 T036)',
   '034 detalle: a 320, 390 y 844x390, los bloques del detalle en una columna, en el orden de D7, a todo el ancho (CA6)',
   '034 panel de la dentista: a 320, 390 y 844x390, el estado y el enlace bajo el nombre en cada elemento de la línea de tiempo (CA2, A35)',
   '034 menú: a 390, «Menú» sin texto visible, con nombre y 44 × 44; con el menú abierto, el logo de --logo-max-w con fondo --p600 (CA9, CA10)',
   '034 cambios de modo (033 T064 y R21): (a) foco en «Cerrar menú» y paso a 1000 px → enlace actual; (b) foco en un enlace del menú y paso a 390 → «Menú»; (c) Intro y Escape → cerrado y foco en «Menú»; (d) «Atrás» → cerrado y sin inert; (R21) a 1000, foco en un enlace de la barra, clic en una zona sin foco y paso a 390 → el foco no se mueve (CA9, A10)',
   '034 sin JS: a 390, las pantallas del personal sin desplazamiento horizontal (CA8)',
-  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro, el enlace «Auditoría» del admin (spec 020) ni la barra del admin desde «Galería» (spec 039), ni, por la spec 046, el bloque de migas y, en las pantallas de expedientes, las entradas «Pacientes» y «Expedientes» de la barra; fuera de la comparación hasta que la 046 esté en producción: «Agendar cita» y «Reprogramar» del paciente y la ficha del expediente de los tres roles) (CA11, D13; 046 CA12)',
+  '034 escritorio: a 1024 y 1440, las pantallas incluidas del personal y del paciente y el detalle con historial largo de los tres roles, iguales a la línea base de LINEA_BASE (≤ 0,1 % de píxeles distintos, ninguno con diferencia > 2/255, sin los campos del filtro, el enlace «Auditoría» del admin (spec 020) ni la barra del admin desde «Galería» (spec 039), ni, por la spec 046, el bloque de migas y, en las pantallas de expedientes, las entradas «Pacientes» y «Expedientes» de la barra; fuera de la comparación hasta que la 046 esté en producción: «Agendar cita» y «Reprogramar» del paciente y la ficha del expediente de los tres roles; y «Citas» del personal, que la 049 rehace como calendario) (CA11, D13; 046 CA12; 049 T028)',
   '035 pantallas: ficha, alta y edición del paciente, lista, ficha y alta de expediente de cada rol que las ve, a 320, 390, 844x390 y 1440 sin desplazamiento horizontal; a 320, 390 y 844x390, sin recortes, toque ≥ 44 × 44 (también las migas), sin solapes y tarjetas con su etiqueta; y en las palabras de 30 letras (también el título de la barra y las migas) (CA1–CA4, CA8, CA9)',
   '035 fichas: a 320, 390 y 844x390, las dos fichas en una columna; en la del paciente, iniciales de 48 px con el nombre, la edad y el tipo de sangre a su derecha y las etiquetas de contacto visibles, que a 1440 no se ven; las acciones de la barra bajo el título y a partes iguales; los botones de las acciones con el texto centrado (±2 px) y alineados en su fila (CA1, CA4, CA7, D12)',
   '035 formularios: a 320, el alta y la edición del paciente, el alta del expediente y la ficha del expediente (admin y dentista) enviadas con errores muestran cada error dentro del ancho y junto a su campo; a 390, foco visible en sus campos (CA6, D13, /review R12)',
@@ -372,13 +372,17 @@ const PANTALLAS_035 = [
 // comprobaciones de --medir.
 const SIN_COMPARAR_046 = ['cliente-agendar', 'citas-reprogramar-cliente',
   'admin-ficha-expediente', 'dentista-ficha-expediente', 'asistente-ficha-expediente'];
+// Spec 049 (T028): la lista de «Citas» del personal pasa a ser el calendario, así que su escritorio ya no
+// se parece a la línea base de la 034 (la 049 reemplaza 034 CA11 para esa lista). Sigue en las demás
+// comprobaciones de --medir.
+const SIN_COMPARAR_049 = ['admin-citas', 'dentista-citas', 'asistente-citas'];
 // Las que --medir compara con la línea base a 1024 y 1440 (D13).
 const COMPARADAS = [
   ...PANTALLAS_PERSONAL,
   ...PANTALLAS_035,
   ...['admin', 'dentista', 'asistente'].map((rol) => [`${rol}-detalle-historial`, rol, `/${rol}/citas/{cita_historial_largo}`]),
   ...Object.entries(RUTAS_PACIENTE).map(([id, ruta]) => [id, 'cliente', ruta]),
-].filter(([id]) => !SIN_COMPARAR_046.includes(id));
+].filter(([id]) => !SIN_COMPARAR_046.includes(id) && !SIN_COMPARAR_049.includes(id));
 
 // Funciones que se evalúan en la página.
 const EN_PAGINA = {
@@ -653,8 +657,10 @@ const EN_PAGINA = {
     const panelVisible = !!panel && getComputedStyle(panel).display !== 'none' && panel.getClientRects().length > 0;
     return {
       panelVisible, expandido: boton?.getAttribute('aria-expanded') ?? 'falta', boton: boton ? getComputedStyle(boton).display : 'falta',
-      orden: !!(buscador && atajos && panel) && r(buscador).bottom <= r(atajos).top + 1 && (!panelVisible || r(atajos).bottom <= r(panel).top + 1),
-      anchoBuscador: !!buscador && Math.abs(r(buscador).width - (f.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))) <= 2,
+      // Spec 049: el buscador y «Filtros» van en la misma fila, y el panel debajo de los dos.
+      orden: !!(buscador && atajos && panel) && Math.abs(r(buscador).bottom - r(atajos).bottom) <= 2 && r(buscador).right <= r(atajos).left + 1
+        && (!panelVisible || Math.max(r(buscador).bottom, r(atajos).bottom) <= r(panel).top + 1),
+      anchoBuscador: !!buscador && Math.abs(r(buscador).left - r(f).left - parseFloat(cs.paddingLeft)) <= 2 && Math.abs(r(atajos).right - (r(f).right - parseFloat(cs.paddingRight))) <= 2,
       atajosEnUnaLinea: !!atajos && new Set([...atajos.children].filter((c) => c.getClientRects().length).map((c) => Math.round(r(c).top))).size === 1,
     };
   },
@@ -997,24 +1003,26 @@ async function medir() {
           f = await page.evaluate(EN_PAGINA.filtro);
           if (!f.panelVisible) falla(donde, '«Filtros» no despliega el panel');
           if (f.expandido !== 'true') falla(donde, 'aria-expanded no pasa a true');
-          if (!f.orden) falla(donde, 'el filtro no va en el orden buscador < atajos < panel');
-          if (!f.anchoBuscador) falla(donde, 'el buscador no ocupa el ancho del formulario');
-          if (!f.atajosEnUnaLinea) falla(donde, '«Esta semana», «Hoy» y «Filtros» no van en una línea');
+          if (!f.orden) falla(donde, 'el filtro no va con el buscador y «Filtros» en una fila y el panel debajo');
+          if (!f.anchoBuscador) falla(donde, 'el buscador y «Filtros» no ocupan juntos el ancho del formulario');
+          if (!f.atajosEnUnaLinea) falla(donde, '«Filtros» no va en una línea');
           for (const s of await page.evaluate(EN_PAGINA.solapes)) falla(donde, `filtro desplegado: ${s}`);
-          // Con dos filtros aplicados, «Filtros» lleva contador: ningún texto del filtro se parte.
-          await page.goto(u(`${ruta}?estado=agendada&fecha_hasta=2099-12-31`), { waitUntil: 'networkidle' });
+          // Con un filtro aplicado, «Filtros» lleva contador: ningún texto del filtro se parte (las fechas ya no
+          // cuentan como filtro desde la spec 049).
+          await page.goto(u(`${ruta}?estado=agendada`), { waitUntil: 'networkidle' });
           await page.locator('.filtro-btn').click(); await page.waitForTimeout(200);
           for (const p of await page.evaluate(EN_PAGINA.palabrasPartidas, '.filtro-citas')) falla(donde, `filtro con filtros aplicados: ${p}`);
           for (const s of await page.evaluate(EN_PAGINA.solapes)) falla(donde, `filtro con filtros aplicados: ${s}`);
           for (const r of await page.evaluate(EN_PAGINA.recortes)) falla(donde, `filtro desplegado, recortado: ${r}`);
           if (ancho === '390') {
             await page.keyboard.press('Tab');
-            for (const [nombre, selector] of [['campo', '.filtro-citas .field'], ['«Hoy»', '.filtro-atajos a:nth-child(2)'], ['«Filtros»', '.filtro-btn'], ['«Filtrar»', '.filtro-citas button[type=submit]']]) {
+            for (const [nombre, selector] of [['campo', '.filtro-citas .field'], ['«Hoy»', '.cal-nav a:nth-child(2)'], ['«Filtros»', '.filtro-btn'], ['«Filtrar»', '.filtro-citas button[type=submit]']]) {
               const foco = await focoVisible(page, selector);
               if (foco) falla(donde, `${nombre}: ${foco}`);
             }
-            const tarjeta = await focoVisible(page, '.tabla-tarjetas .celda-acciones a, .tabla-tarjetas .celda-acciones button');
-            if (tarjeta) falla(donde, `botón de tarjeta: ${tarjeta}`);
+            // Spec 049: la lista ya no tiene botones de tarjeta; cada cita es un enlace.
+            const cita = await focoVisible(page, '.cal-lista-grupo--movil .cal-lista-cita, .tira-dia');
+            if (cita) falla(donde, `cita de la lista: ${cita}`);
           }
         }
         if (ruta === '/dentista' && ancho === '390') {
