@@ -91,7 +91,7 @@ class CalendarioCitasTest extends TestCase
         $filtros = ['buscar' => 'Pablo', 'dentista_id' => $this->d1, 'estado' => 'agendada'];
         $x = $this->pagina($this->admin, '/admin/citas?'.http_build_query($filtros));
 
-        foreach (['‹ Anterior semana' => '2026-11-09', 'Hoy' => '2026-11-16', 'Siguiente semana ›' => '2026-11-23'] as $texto => $fecha) {
+        foreach (['‹ Anterior' => '2026-11-09', 'Hoy' => '2026-11-16', 'Siguiente ›' => '2026-11-23'] as $texto => $fecha) {
             $enlace = $this->enlaceDeBarra($x, $texto);
             $this->assertSame(['vista' => 'semana', 'fecha' => $fecha] + $filtros, $this->parametros($enlace), $texto);
         }
@@ -103,7 +103,7 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame(['vista' => 'mes', 'fecha' => '2026-11-01'] + $filtros, $this->parametros($mes));
 
         // La página que piden esos enlaces es la del periodo y la vista.
-        $siguiente = $this->pagina($this->admin, $this->enlaceDeBarra($x, 'Siguiente semana ›')->getAttribute('href'));
+        $siguiente = $this->pagina($this->admin, $this->enlaceDeBarra($x, 'Siguiente ›')->getAttribute('href'));
         $this->assertSame('23 – 28 de noviembre de 2026', $this->texto($this->uno($siguiente, "//*[@id='cal-titulo']")));
 
         $delMes = $this->pagina($this->admin, $mes->getAttribute('href'));
@@ -447,8 +447,8 @@ class CalendarioCitasTest extends TestCase
         $x = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18');
         $hoy = $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-17']");
 
-        $this->assertSame(1, $x->query(".//*[{$this->clase('cal-oculto')}][normalize-space(.)=', hoy']", $hoy)->length, 'Hoy dice «, hoy» en su nombre');
-        $this->assertSame(0, $x->query(".//*[{$this->clase('cal-oculto')}][contains(., 'hoy')]", $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-18']"))->length);
+        $this->assertSame('Martes 17 de noviembre, 1 cita, hoy', $hoy->getAttribute('aria-label'), 'Hoy lo dice en su nombre');
+        $this->assertSame('Miércoles 18 de noviembre, 2 citas', $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-18']")->getAttribute('aria-label'));
     }
 
     public function test_anterior_y_siguiente_dicen_que_recorren_y_sus_flechas_no_se_leen(): void
@@ -456,11 +456,11 @@ class CalendarioCitasTest extends TestCase
         // R14: «‹» y «›» en aria-hidden; el nombre dice «semana» o «mes».
         foreach (['/admin/citas' => 'semana', '/admin/citas?vista=mes' => 'mes'] as $url => $periodo) {
             $x = $this->pagina($this->admin, $url);
-            foreach (["‹ Anterior {$periodo}", "Siguiente {$periodo} ›"] as $texto) {
+            foreach (['‹ Anterior' => "Anterior {$periodo}", 'Siguiente ›' => "Siguiente {$periodo}"] as $texto => $nombre) {
                 $enlace = $this->enlaceDeBarra($x, $texto);
                 $flecha = $this->uno($x, ".//*[@aria-hidden='true']", $enlace);
                 $this->assertContains(trim($flecha->textContent), ['‹', '›'], "{$url}: {$texto}");
-                $this->assertSame(" {$periodo}", $this->uno($x, ".//*[{$this->clase('cal-oculto')}]", $enlace)->textContent, "{$url}: {$texto}");
+                $this->assertSame($nombre, $enlace->getAttribute('aria-label'), "{$url}: el nombre empieza por el texto visible y dice qué recorre");
             }
         }
     }

@@ -58,11 +58,11 @@
     @php $diaMovil = $calendario->diaMovil()->toDateString(); @endphp
     @foreach($dias as $dia)
         <li><a class="tira-dia @if($dia['iso'] === $diaMovil) tira-dia--elegido @endif @if($dia['hoy']) tira-dia--hoy @endif"
-               data-dia="{{ $dia['iso'] }}" href="{{ $enlace(['dia' => $dia['iso']]) }}" @if($dia['iso'] === $diaMovil) aria-current="date" @endif>
+               data-dia="{{ $dia['iso'] }}" href="{{ $enlace(['dia' => $dia['iso']]) }}" @if($dia['iso'] === $diaMovil) aria-current="date" @endif
+               aria-label="{{ $dia['nombre'] }}, {{ $dia['total'] }} {{ $dia['total'] === 1 ? 'cita' : 'citas' }}{{ $dia['hoy'] ? ', hoy' : '' }}">
             <span class="tira-nombre">{{ $dia['corto'] }} <b>{{ $dia['numero'] }}</b></span>
-            <span class="tira-total">{{ $dia['total'] }}<span class="cal-oculto"> {{ $dia['total'] === 1 ? 'cita' : 'citas' }}</span></span>
             {{-- Hoy, también sin color: en el nombre y con borde grueso (/review R12). --}}
-            @if($dia['hoy'])<span class="cal-oculto">, hoy</span>@endif
+            <span class="tira-total">{{ $dia['total'] }}<span class="cal-oculto"> {{ $dia['total'] === 1 ? 'cita' : 'citas' }}</span></span>
         </a></li>
     @endforeach
 </ol>

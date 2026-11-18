@@ -32,6 +32,10 @@
 .mes-dia:focus-visible, .cal-lista-cita:focus-visible, .cal-saltar:focus-visible, .cal-lista-ver-todo:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset);
 }
+/* «Semana · Mes», las cabeceras de día, las citas y los huecos están en cajas que recortan: el anillo va por
+   dentro (/review R10, R11). Con .cal-pagina para ganar a `.formulario-accesible a:focus-visible` de app.css. */
+.cal-pagina .cal-vista-op:focus-visible, .cal-pagina .cal-dia-cab:focus-visible,
+.cal-pagina .cal-cita:focus-visible, .cal-pagina .cal-hueco:focus-visible { outline-offset: calc(-1 * var(--focus-ring-width)); }
 
 /* Saltar el calendario con el teclado: solo se ve con el foco (patrón de .pub-solo-lector). */
 .cal-saltar { color: var(--p600); }
@@ -49,6 +53,10 @@
 .cal-col--carriles-2 { flex-grow: 2; }
 .cal-col--carriles-3 { flex-grow: 3; }
 .cal-col--carriles-4 { flex-grow: 4; }
+.cal-col--carriles-5 { flex-grow: 5; }
+.cal-col--carriles-6 { flex-grow: 6; }
+.cal-col--carriles-7 { flex-grow: 7; }
+.cal-col--carriles-8 { flex-grow: 8; }
 .cal-col--horas { flex: 0 0 calc(var(--space-8) * 2); }
 .cal-esquina { height: calc(var(--touch-min) * 1.5); border-bottom: var(--border-width) solid var(--border); }
 .cal-dia-cab {
@@ -78,6 +86,10 @@
 .cal-carriles-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .cal-carriles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .cal-carriles-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cal-carriles-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.cal-carriles-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.cal-carriles-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-carriles-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 .cal-dia--hoy { background-color: var(--p50); }
 .cal-dia--elegido { background-color: var(--p100); }
 
@@ -106,6 +118,10 @@
 .cal-carril-2 { grid-column: 2; }
 .cal-carril-3 { grid-column: 3; }
 .cal-carril-4 { grid-column: 4; }
+.cal-carril-5 { grid-column: 5; }
+.cal-carril-6 { grid-column: 6; }
+.cal-carril-7 { grid-column: 7; }
+.cal-carril-8 { grid-column: 8; }
 .cal-cita-linea, .cal-cita-meta, .cal-cita-estado { display: block; max-width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cal-cita-linea { font-size: var(--text-body); }
 .cal-cita-hora { font-weight: var(--weight-bold); }
@@ -278,7 +294,8 @@
     .tira-nombre { display: flex; flex-direction: column; align-items: center; }
     .tira-nombre b { font-size: var(--text-marca); font-weight: var(--weight-bold); }
     .tira-total { font-weight: var(--weight-strong); color: var(--p600); }
-    .tira-dia--hoy { border-color: var(--p400); }
+    /* Hoy, también sin color: borde más grueso (/review R12). */
+    .tira-dia--hoy { border-color: var(--p400); border-width: var(--border-width-strong); }
     .tira-dia--elegido { background: var(--p600); border-color: var(--p600); color: var(--white); }
     .tira-dia--elegido .tira-total { color: var(--white); }
     .mes-nombre { padding: var(--space-2) 0; text-align: center; }

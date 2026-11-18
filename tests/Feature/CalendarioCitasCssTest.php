@@ -139,11 +139,16 @@ class CalendarioCitasCssTest extends TestCase
         $this->assertArrayNotHasKey($control[0][0], self::TEXTO);
     }
 
-    /** R10, R11: el foco de la vista y de las cabeceras se dibuja por dentro (sus cajas recortan). */
+    /**
+     * R10, R11: el foco de la vista, de las cabeceras, de las citas y de los huecos se dibuja por dentro
+     * (sus cajas recortan). La regla lleva `.cal-pagina` delante para ganar en especificidad (0,3,0) a
+     * `.formulario-accesible a:focus-visible` de app.css (0,2,1), que pone el anillo por fuera.
+     */
     public function test_el_foco_de_la_vista_y_de_las_cabeceras_va_por_dentro(): void
     {
         $this->assertFileExists(public_path(self::HOJA));
-        foreach (['.cal-vista-op:focus-visible', '.cal-dia-cab:focus-visible'] as $selector) {
+        $this->assertStringContainsString('outline-offset: var(--focus-ring-offset)', $this->declaraciones('.formulario-accesible a:focus-visible'), 'app.css pone el anillo por fuera en los enlaces de .formulario-accesible.');
+        foreach (['.cal-pagina .cal-vista-op:focus-visible', '.cal-pagina .cal-dia-cab:focus-visible', '.cal-pagina .cal-cita:focus-visible', '.cal-pagina .cal-hueco:focus-visible'] as $selector) {
             preg_match_all('/outline-offset\s*:\s*([^;]+);/', $this->declaraciones($selector, self::HOJA), $m);
             $this->assertNotSame([], $m[1], "{$selector} declara outline-offset.");
             $this->assertSame('calc(-1 * var(--focus-ring-width))', trim(end($m[1])), "{$selector}: el último outline-offset va por dentro.");
