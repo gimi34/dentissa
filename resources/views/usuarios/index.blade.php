@@ -12,8 +12,8 @@
 
 @section('content')
 
-{{-- Tarjetas de Estadísticas --}}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px">
+{{-- Tarjetas de Estadísticas: una por rol (.stats-grid: 4 columnas, 2 en el móvil) --}}
+<div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon" style="background:var(--green-bg)">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8">
@@ -35,6 +35,17 @@
         </div>
         <div class="stat-value">{{ $totales['dentista'] }}</div>
         <div class="stat-label">Dentistas</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:var(--amber-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.8">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+        </div>
+        <div class="stat-value">{{ $totales['asistente'] }}</div>
+        <div class="stat-label">Asistentes</div>
     </div>
 
     <div class="stat-card">
@@ -69,6 +80,7 @@
                 <option value="">Todos</option>
                 <option value="admin"    {{ request('tipo') === 'admin'    ? 'selected' : '' }}>Administradores</option>
                 <option value="dentista" {{ request('tipo') === 'dentista' ? 'selected' : '' }}>Dentistas</option>
+                <option value="asistente" {{ request('tipo') === 'asistente' ? 'selected' : '' }}>Asistentes</option>
                 <option value="cliente"  {{ request('tipo') === 'cliente'  ? 'selected' : '' }}>Pacientes</option>
             </select>
         </div>
@@ -83,9 +95,9 @@
     $grupos = $usuarios->groupBy('rol');
     
     // Configuramos colores y etiquetas según los roles de tu tabla usuarios
-    $tipoLabels = ['admin' => 'Administradores', 'dentista' => 'Dentistas', 'cliente' => 'Pacientes / Clientes'];
-    $tipoColors = ['admin' => 'var(--green)', 'dentista' => 'var(--p500)', 'cliente' => 'var(--blue)'];
-    $tipoBg     = ['admin' => 'var(--green-bg)', 'dentista' => 'var(--p100)', 'cliente' => 'var(--blue-bg)'];
+    $tipoLabels = ['admin' => 'Administradores', 'dentista' => 'Dentistas', 'asistente' => 'Asistentes', 'cliente' => 'Pacientes / Clientes'];
+    $tipoColors = ['admin' => 'var(--green)', 'dentista' => 'var(--p500)', 'asistente' => 'var(--amber)', 'cliente' => 'var(--blue)'];
+    $tipoBg     = ['admin' => 'var(--green-bg)', 'dentista' => 'var(--p100)', 'asistente' => 'var(--amber-bg)', 'cliente' => 'var(--blue-bg)'];
 @endphp
 
 @forelse($grupos as $tipo => $miembros)
@@ -197,10 +209,17 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
             </svg>
-            <p style="color:var(--text-muted); font-size:15px;">No hay usuarios registrados aún</p>
-            <a href="#" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
-                Agregar primer usuario
-            </a>
+            @if(request()->filled('buscar') || request()->filled('tipo'))
+                <p style="color:var(--text-muted); font-size:15px;">Ningún usuario coincide con el filtro.</p>
+                <a href="{{ route('admin.usuarios.index') }}" class="btn btn-ghost" style="margin-top:12px;display:inline-flex">
+                    Ver todos los usuarios
+                </a>
+            @else
+                <p style="color:var(--text-muted); font-size:15px;">No hay usuarios registrados aún</p>
+                <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
+                    Agregar primer usuario
+                </a>
+            @endif
         </div>
     </div>
 @endforelse

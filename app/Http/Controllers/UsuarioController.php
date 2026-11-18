@@ -56,6 +56,7 @@ class UsuarioController extends Controller
         $totales = [
             'admin' => Usuario::where('rol', 'admin')->count(),
             'dentista' => Usuario::where('rol', 'dentista')->count(),
+            'asistente' => Usuario::where('rol', 'asistente')->count(),
             'cliente' => Usuario::where('rol', 'cliente')->count(),
         ];
 
@@ -108,7 +109,7 @@ class UsuarioController extends Controller
         ]);
 
         // 4. Lo regresamos al panel principal
-        return redirect()->route('admin.usuarios.index');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Usuario registrado correctamente.');
     }
 
     public function edit($id)
@@ -157,7 +158,7 @@ class UsuarioController extends Controller
         $usuario->save();
 
         // Lo regresamos a la tabla principal
-        return redirect()->route('admin.usuarios.index');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Datos del usuario actualizados.');
     }
 
     /**
