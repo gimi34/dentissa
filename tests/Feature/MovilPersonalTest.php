@@ -31,8 +31,9 @@ class MovilPersonalTest extends TestCase
     private const CLASES_D2 = ['celda-cab', 'celda-estado', 'celda-acciones', 'solo-escritorio'];
 
     /** Columnas con clase de celda de cada tabla incluida (plan D2), por el texto de su `<th>`. */
+    // La lista de «Citas» del personal (`citas-personal`) ya no es una tabla: la reemplaza el calendario
+    // de la spec 049, que la prueba en CalendarioCitasTest.
     private const D2 = [
-        'citas-personal' => ['Hora / Fecha' => ['celda-cab'], 'Estado' => ['celda-estado'], 'Acciones' => ['celda-acciones']],
         'mis-citas' => ['Fecha / Hora' => ['celda-cab'], 'Estado' => ['celda-estado'], 'Acciones' => ['celda-acciones']],
         'panel-paciente' => ['Fecha' => ['celda-cab'], 'Estado' => ['celda-estado']],
         'panel-personal' => ['Hora' => ['celda-cab'], 'Estado' => ['celda-estado']],
@@ -141,31 +142,28 @@ class MovilPersonalTest extends TestCase
                 }
             }
         }
-
-        // Caso con dos datos: nombre y teléfono del paciente, dentro de un único celda-valor.
-        $xpath = $this->xpath($this->actingAs($this->admin)->get('/admin/citas')->assertOk()->getContent());
-        $valor = $xpath->query("(//table//td[@data-label='Paciente'][contains(., '".self::TELEFONO."')])[1]/*");
-        $this->assertSame(1, $valor->length, 'La celda del paciente con teléfono tiene un solo hijo.');
-        $this->assertContains('celda-valor', $this->clases($valor->item(0)), 'Ese hijo es .celda-valor.');
+        // El caso con dos datos (nombre y teléfono del paciente en un .celda-valor) era de la tabla de
+        // «Citas», que la spec 049 reemplaza por la lista del periodo (hora, paciente, dentista y estado).
     }
 
+    /** Spec 049: en la lista del periodo, el día de hoy se distingue con «Hoy» y sin fondo en línea. */
     public function test_la_cita_de_hoy_se_distingue_sin_fondo_en_linea(): void
     {
         $xpath = $this->xpath($this->actingAs($this->admin)->get('/admin/citas')->assertOk()->getContent());
 
-        $hoy = $this->filaDeLaCita($xpath, $this->citaHoy);
-        $this->assertContains('fila-hoy', $this->clases($hoy), 'La fila de hoy lleva fila-hoy.');
-        $this->assertStringContainsString('Hoy', $hoy->textContent, 'La fila de hoy dice «Hoy».');
-        $this->assertStringNotContainsString('background', $hoy->getAttribute('style'), 'Su fondo no va en style="" (A57).');
+        $hoy = $this->grupoDeLaCita($xpath, $this->citaHoy);
+        $this->assertSame('2026-10-14', $hoy->getAttribute('data-dia'), 'La cita de hoy está en el grupo de hoy.');
+        $this->assertSame(1, $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' cal-lista-hoy ')][normalize-space()='Hoy']", $hoy)->length, 'El grupo de hoy dice «Hoy».');
+        $this->assertSame(0, $xpath->query('.//*[@style]', $hoy)->length, 'Sin style="" (A57).');
 
-        $manana = $this->filaDeLaCita($xpath, $this->citaManana);
-        $this->assertNotContains('fila-hoy', $this->clases($manana), 'La de mañana no es fila-hoy.');
+        $manana = $this->grupoDeLaCita($xpath, $this->citaManana);
+        $this->assertSame(0, $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' cal-lista-hoy ')]", $manana)->length, 'El de mañana no dice «Hoy».');
     }
 
     public function test_los_botones_de_icono_tienen_nombre_y_texto_en_el_movil(): void
     {
+        // «Citas» ya no tiene el botón «Ver detalle»: cada fila de la lista es el enlace (spec 049).
         $casos = [
-            [$this->admin, '/admin/citas', ['Ver detalle']],
             [$this->admin, '/admin/pacientes', ['Ver perfil', 'Editar']],
             [$this->asistente, '/asistente/pacientes', ['Ver perfil']],
             [$this->admin, '/admin/servicios', ['Editar', 'Eliminar']],
@@ -261,25 +259,25 @@ class MovilPersonalTest extends TestCase
             $this->assertSame('', $form->getAttribute('style'), "{$rol}: el <form> sin style=\"\".");
 
             // Cada contenedor con su clase y sin los style="" que impiden el móvil (control positivo abajo).
+            // Spec 049: «Citas» ya no tiene «Desde», «Hasta» ni los atajos «Esta semana» y «Hoy»; el
+            // periodo lo elige la barra del calendario y va oculto en el formulario.
             $contenedores = [
                 'filtro-tarjeta' => $form->parentNode,
                 'filtro-buscar' => $xpath->query(".//input[@name='buscar']/..", $form)->item(0),
-                'filtro-fecha' => $xpath->query(".//input[@name='fecha_desde']/..", $form)->item(0),
                 'filtro-estado' => $xpath->query(".//select[@name='estado']/..", $form)->item(0),
-                'filtro-atajos' => $xpath->query(".//a[normalize-space()='Hoy']/..", $form)->item(0),
+                'filtro-atajos' => $xpath->query(".//button[contains(concat(' ', normalize-space(@class), ' '), ' filtro-btn ')]/..", $form)->item(0),
             ];
-            $hasta = $xpath->query(".//input[@name='fecha_hasta']/..", $form)->item(0);
-            $this->assertContains('filtro-fecha', $this->clases($hasta), "{$rol}: «Hasta» lleva .filtro-fecha.");
+            $this->assertSame(0, $xpath->query(".//input[@name='fecha_desde' or @name='fecha_hasta']", $form)->length, "{$rol}: sin «Desde» ni «Hasta» (spec 049).");
             if ($rol !== 'dentista') {
                 $contenedores['filtro-dentista'] = $xpath->query(".//select[@name='dentista_id']/..", $form)->item(0);
             }
-            foreach ($contenedores + ['filtro-fecha (hasta)' => $hasta] as $clase => $nodo) {
+            foreach ($contenedores as $clase => $nodo) {
                 $this->assertInstanceOf(DOMElement::class, $nodo, "{$rol}: existe {$clase}.");
                 $this->assertContains(strtok($clase, ' '), $this->clases($nodo), "{$rol}: lleva .{$clase}.");
                 $this->assertFalse($this->estiloDeMaqueta($nodo->getAttribute('style')), "{$rol}: .{$clase} sin min-width, flex, margin ni padding en style=\"\".");
             }
 
-            // Orden: buscador, fila de atajos (Esta semana, Hoy, Filtros) y el panel.
+            // Orden: buscador, fila de atajos (solo «Filtros» desde la spec 049) y el panel.
             $hijos = array_values(array_filter(iterator_to_array($xpath->query('./*', $form)), fn ($n) => $n->nodeName !== 'input' || $n->getAttribute('type') !== 'hidden'));
             $this->assertContains('filtro-buscar', $this->clases($hijos[0]), "{$rol}: primero el buscador.");
             $this->assertContains('filtro-atajos', $this->clases($hijos[1]), "{$rol}: después la fila de atajos.");
@@ -290,7 +288,7 @@ class MovilPersonalTest extends TestCase
             foreach ($xpath->query('./*', $hijos[1]) as $atajo) {
                 $atajos[] = trim(preg_replace('/\s+/', ' ', $atajo->textContent));
             }
-            $this->assertSame(['Esta semana', 'Hoy', 'Filtros'], $atajos, "{$rol}: «Esta semana · Hoy · Filtros» (A15).");
+            $this->assertSame(['Filtros'], $atajos, "{$rol}: solo «Filtros» (spec 049; antes «Esta semana · Hoy · Filtros», A15).");
 
             $boton = $xpath->query("./button[contains(concat(' ', normalize-space(@class), ' '), ' filtro-btn ')]", $hijos[1]);
             $this->assertSame(1, $boton->length, "{$rol}: el botón «Filtros».");
@@ -307,13 +305,13 @@ class MovilPersonalTest extends TestCase
                 $panel[] = $control->getAttribute('name') ?: trim($control->textContent);
             }
             $esperado = $rol === 'dentista'
-                ? ['fecha_desde', 'fecha_hasta', 'estado', 'Filtrar', 'Limpiar']
-                : ['fecha_desde', 'fecha_hasta', 'dentista_id', 'estado', 'Filtrar', 'Limpiar'];
-            $this->assertSame($esperado, $panel, "{$rol}: el panel con desde, hasta, dentista, estado, «Filtrar» y «Limpiar».");
+                ? ['estado', 'Filtrar', 'Limpiar']
+                : ['dentista_id', 'estado', 'Filtrar', 'Limpiar'];
+            $this->assertSame($esperado, $panel, "{$rol}: el panel con dentista, estado, «Filtrar» y «Limpiar».");
 
             // Cada etiqueta asociada a su campo (A4).
             $etiquetas = $xpath->query('.//label', $form);
-            $this->assertSame($rol === 'dentista' ? 4 : 5, $etiquetas->length, "{$rol}: una etiqueta por campo.");
+            $this->assertSame($rol === 'dentista' ? 2 : 3, $etiquetas->length, "{$rol}: una etiqueta por campo.");
             foreach ($etiquetas as $etiqueta) {
                 $para = $etiqueta->getAttribute('for');
                 $this->assertNotSame('', $para, "{$rol}: «{$etiqueta->textContent}» con for.");
@@ -333,7 +331,7 @@ class MovilPersonalTest extends TestCase
         $casos = [
             '/admin/citas' => null,
             '/admin/citas?estado=agendada' => 1,
-            '/admin/citas?fecha_hasta=2026-10-20&estado=agendada' => 2,
+            "/admin/citas?dentista_id={$this->d1}&estado=agendada" => 2,
         ];
         foreach ($casos as $url => $aplicados) {
             $xpath = $this->xpath($this->actingAs($this->admin)->get($url)->assertOk()->getContent());
@@ -354,19 +352,23 @@ class MovilPersonalTest extends TestCase
         }
     }
 
-    /** /review R3: las fechas cuentan como un solo filtro, aplicado si «Desde» o «Hasta» vienen rellenos. */
-    public function test_el_contador_cuenta_las_fechas_como_un_filtro(): void
+    /**
+     * /review R3 de la 034 contaba las fechas como un filtro. Desde la spec 049 el periodo lo elige el
+     * calendario (`vista`, `fecha`, `dia`) y no cuenta como filtro aplicado; tampoco `fecha_desde`, que
+     * queda como alias de `fecha`.
+     */
+    public function test_el_periodo_del_calendario_no_cuenta_como_filtro(): void
     {
-        // Lunes 12 y miércoles 14 de octubre de 2026: «Esta semana» cuenta igual cualquier día.
         foreach (['2026-10-12 08:00:00', '2026-10-14 08:00:00'] as $dia) {
             $this->travelTo(Carbon::parse($dia, 'UTC'));
-            $semana = '/admin/citas?fecha_desde='.now()->startOfWeek()->format('Y-m-d').'&fecha_hasta='.now()->endOfWeek()->format('Y-m-d');
+            $semana = '/admin/citas?vista=semana&fecha='.now()->format('Y-m-d');
             $casos = [
                 '/admin/citas' => 0,
-                '/admin/citas?fecha_desde='.now()->format('Y-m-d') => 1,
-                '/admin/citas?fecha_desde='.now()->format('Y-m-d').'&fecha_hasta=' => 1,
-                $semana => 1,
-                $semana.'&estado=agendada' => 2,
+                '/admin/citas?fecha_desde='.now()->format('Y-m-d') => 0,
+                $semana => 0,
+                $semana.'&dia='.now()->format('Y-m-d') => 0,
+                '/admin/citas?vista=mes&fecha='.now()->format('Y-m-d') => 0,
+                $semana.'&estado=agendada' => 1,
             ];
             foreach ($casos as $url => $aplicados) {
                 $xpath = $this->xpath($this->actingAs($this->admin)->get($url)->assertOk()->getContent());
@@ -721,9 +723,6 @@ class MovilPersonalTest extends TestCase
             [$this->paciente1, '/cliente/citas', 'mis-citas'],
             [$this->paciente1, '/cliente/citas?filtro=pasadas', 'mis-citas'],
             [$this->paciente1, '/cliente', 'panel-paciente'],
-            [$this->admin, '/admin/citas', 'citas-personal'],
-            [$this->dentista1, '/dentista/citas', 'citas-personal'],
-            [$this->asistente, '/asistente/citas', 'citas-personal'],
             [$this->admin, '/admin', 'panel-personal'],
             [$this->asistente, '/asistente', 'panel-personal'],
             [$this->admin, '/admin/pacientes', 'pacientes'],
@@ -753,12 +752,13 @@ class MovilPersonalTest extends TestCase
         ));
     }
 
-    private function filaDeLaCita(DOMXPath $xpath, string $cita): DOMElement
+    /** Grupo del día de la lista de «Citas» (spec 049) que contiene la cita. */
+    private function grupoDeLaCita(DOMXPath $xpath, string $cita): DOMElement
     {
-        $fila = $xpath->query("//table/tbody/tr[.//a[contains(@href, '/citas/{$cita}')]]")->item(0);
-        $this->assertInstanceOf(DOMElement::class, $fila, "La lista tiene la fila de la cita {$cita}.");
+        $grupo = $xpath->query("//*[@id='lista']//*[contains(concat(' ', normalize-space(@class), ' '), ' cal-lista-grupo ')][.//a[contains(@href, '/citas/{$cita}')]]")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $grupo, "La lista tiene el grupo de la cita {$cita}.");
 
-        return $fila;
+        return $grupo;
     }
 
     /** @return string[] */
