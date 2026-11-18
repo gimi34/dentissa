@@ -109,14 +109,14 @@
         </div>
 
         @if($calendario->vista === 'mes')
-            @includeIf('citas.calendario.mes')
+            @include('citas.calendario.mes')
         @else
             @include('citas.calendario.semana')
         @endif
     </section>
 
-    {{-- La lista del periodo (y la tira del móvil) se añaden con su parcial (T023, A27). --}}
-    @includeIf('citas.calendario.lista')
+    {{-- Lista del periodo; la tira del móvil la añade la semana con @push('cal-tira'). --}}
+    @include('citas.calendario.lista')
 </div>
 @endsection
 

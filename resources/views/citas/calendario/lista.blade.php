@@ -12,7 +12,7 @@
 @endphp
 <section class="card cal-lista @if($calendario->dia) cal-lista--dia @endif" id="lista" aria-labelledby="lista-titulo" data-dia-movil="{{ $diaMovil }}">
     <div class="cal-lista-cabecera">
-        <h2 id="lista-titulo" class="cal-lista-titulo">{{ $calendario->tituloLista() }}</h2>
+        <h2 id="lista-titulo" class="cal-lista-titulo" tabindex="-1">{{ $calendario->tituloLista() }}</h2>
         <p class="cal-lista-titulo-movil" role="heading" aria-level="2">{{ $calendario->tituloMovil() }}</p>
         @if($calendario->dia)
             <a class="btn btn-outline btn-sm cal-lista-ver-todo" href="{{ $enlace(['dia' => null]) }}">{{ $calendario->verTodo() }}</a>
@@ -23,7 +23,8 @@
 
     @if($grupos === [])
         <div class="empty-state">
-            <p>{{ $calendario->sinCitas() }}</p>
+            {{-- Con un día elegido sin citas, se nombra el día, no el periodo (/review R2). --}}
+            <p>{{ $calendario->dia ? 'No hay citas el '.$calendario->nombreDia($calendario->dia, false) : $calendario->sinCitas() }}</p>
             <a class="btn btn-primary" href="{{ route("$rp.citas.create") }}">Agendar una cita</a>
         </div>
     @else
