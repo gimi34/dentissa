@@ -199,8 +199,8 @@ sesiones abiertas. Evidencia: `RoleMiddleware.php`, `UsuarioController::toggleAc
 `PersonalController::toggleActivo`, `PacientesController::toggleActivo`; specs 001, 006, 008, 010.
 
 Correcciones:
-- RS3.a Comprobar `activo` en cada petición autenticada (middleware) y cerrar la sesión si es falso — estado: pendiente
-- RS3.b Borrar las sesiones del usuario al desactivarlo — estado: pendiente
+- RS3.a Comprobar `activo` en cada petición autenticada (middleware) y cerrar la sesión si es falso — estado: en curso (`SesionVigente`, ficha `docs/changes/2026-11-17-fix-sesion-cuenta-desactivada.md`)
+- RS3.b Borrar las sesiones del usuario al desactivarlo — estado: pendiente (defensa en profundidad: con RS3.a la sesión de una cuenta inactiva ya se cierra en su siguiente petición; RS3.b solo borraría antes las filas de sesión)
 
 ### RS4 · Alta — Sin límite de intentos en login, registro y OAuth (A07 Authentication Failures)
 No hay `throttle` ni `RateLimiter` en `POST /login`, `POST /registro`, `/registro/contacto` ni
