@@ -184,11 +184,17 @@ class CitasController extends Controller
         return is_string($valor) ? $valor : null;
     }
 
-    /** Fecha `AAAA-MM-DD` válida de un parámetro, en la zona de la clínica, o null. */
+    /** Primer y último año que admite un parámetro de fecha (/review R27): fuera, no es válido. */
+    private const ANIOS = [2000, 2100];
+
+    /** Fecha `AAAA-MM-DD` válida de un parámetro, entre 2000 y 2100, en la zona de la clínica, o null. */
     private function fechaDe(Request $request, string $clave, CarbonImmutable $ahora): ?CarbonImmutable
     {
         $valor = $this->textoDe($request, $clave);
         if ($valor === null || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $m) || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            return null;
+        }
+        if ((int) $m[1] < self::ANIOS[0] || (int) $m[1] > self::ANIOS[1]) {
             return null;
         }
 
