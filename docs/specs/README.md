@@ -50,6 +50,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 046 | [navegacion-interna](046-navegacion-interna/spec.md) | Transversal | released (v0.20.0) | — | — (2026-11-12) |
 | 047 | [reportes-admin](047-reportes-admin/spec.md) | Transversal | released (v0.17.0) | — | — (2026-11-10) |
 | 048 | [citas-panel-detalle](048-citas-panel-detalle/spec.md) | Agenda | released (v0.19.0) | — | — (2026-11-14) |
+| 050 | [hora-clinica](050-hora-clinica/spec.md) | Transversal | draft | — | — (2026-11-17) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·

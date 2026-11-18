@@ -533,7 +533,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Comparaciones de fecha que siguen en UTC aunque las citas guardan la hora local de la clínica:
   paneles, próximas y pasadas del paciente, `after_or_equal:today` del alta y fechas del historial
   de la cita, mostradas sin convertir. La spec 026 solo usa `config('clinica.zona_horaria')` para
-  decidir si una cita ya empezó (spec 026, D4; decisión del usuario, 2026-10-02).
+  decidir si una cita ya empezó (spec 026, D4; decisión del usuario, 2026-10-02). → spec
+  [050](specs/050-hora-clinica/spec.md), con 026/R6 (visto en producción el 2026-11-17).
 - Al retomar la 014: debe incorporar con `/specify --edit 014` el Gate del detalle de cita del
   personal (`GET /{rol}/citas/{id}`), y en `/plan 014 --fix` partir de `App\Autorizacion\AlcanceClinico`
   ya creado (con `personalId` y `dentistasDelAlcance`), de los Gates `gestionar-cita` y
