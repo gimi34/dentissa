@@ -120,8 +120,19 @@ class CalendarioCitasCssTest extends TestCase
     public function test_todo_color_de_texto_de_la_hoja_tiene_su_par_de_contraste(): void
     {
         $this->assertFileExists(public_path(self::HOJA));
+
+        $this->assertSame([], $this->selectoresSinPar($this->reglasCss(self::HOJA)), 'Selectores con color de texto sin par de contraste en la lista.');
+
+        // Control positivo (/review R41): el mismo detector ve una regla nueva con color y no ve un fondo.
+        $control = $this->analizarCss('.cal-nueva { color: var(--p500); } .cal-fondo { background-color: var(--p50); } .cal-titulo { color: var(--text); }');
+        $this->assertSame(['.cal-nueva'], $this->selectoresSinPar($control));
+    }
+
+    /** @return list<string> selectores de esas reglas que declaran `color:` sin par en TEXTO ni en SIN_PAR */
+    private function selectoresSinPar(array $reglas): array
+    {
         $sinPar = [];
-        foreach ($this->reglasCss(self::HOJA) as [$selectores, $cuerpo]) {
+        foreach ($reglas as [$selectores, $cuerpo]) {
             if (! preg_match('/(?<![\w-])color\s*:/', $cuerpo)) {
                 continue;
             }
@@ -132,11 +143,23 @@ class CalendarioCitasCssTest extends TestCase
             }
         }
 
-        $this->assertSame([], array_values(array_unique($sinPar)), 'Selectores con color de texto sin par de contraste en la lista.');
+        return array_values(array_unique($sinPar));
+    }
 
-        // Control positivo: una regla nueva con color se detecta.
-        $control = $this->analizarCss('.cal-nueva { color: var(--p500); }');
-        $this->assertArrayNotHasKey($control[0][0], self::TEXTO);
+    /**
+     * R36: sobre la opción actual de «Semana · Mes» y la cabecera del día elegido (fondo `--p600`), el anillo
+     * por dentro (`--focus-ring` = `--p600`) sería 1:1; ahí va el anillo inverso, blanco.
+     */
+    public function test_el_foco_sobre_la_opcion_actual_y_el_dia_elegido_se_ve(): void
+    {
+        $this->assertFileExists(public_path(self::HOJA));
+        $tokens = $this->tokensDeColor();
+
+        $this->assertLessThan(3.0, $this->contraste($tokens['--focus-ring'], $tokens['--p600']), 'El anillo normal no se ve sobre --p600.');
+        foreach (['.cal-pagina .cal-vista-op[aria-current="page"]:focus-visible', '.cal-pagina .cal-dia-cab--elegido:focus-visible'] as $selector) {
+            $this->assertStringContainsString('outline-color: var(--focus-ring-inverso)', $this->declaraciones($selector, self::HOJA), "{$selector} con el anillo inverso.");
+        }
+        $this->assertGreaterThanOrEqual(3.0, $this->contraste($tokens['--focus-ring-inverso'], $tokens['--p600']), 'El anillo inverso sobre --p600 llega a 3:1.');
     }
 
     /**

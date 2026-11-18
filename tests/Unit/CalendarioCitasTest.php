@@ -346,6 +346,14 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame('2026-03-02', $calendario->fechaOtraVista());
     }
 
+    public function test_semana_desde_el_mes_un_domingo_abre_la_semana_de_ese_domingo(): void
+    {
+        // R38: el domingo 22/11/2026 pertenece a la semana del 16; un día elegido el domingo 31/01/2027,
+        // a la del 25 de enero (no a la de febrero).
+        $this->assertSame('2026-11-16', $this->calendario('2026-11-22', vista: 'mes', ahora: '2026-11-22 11:00')->fechaOtraVista());
+        $this->assertSame('2027-01-25', $this->calendario('2027-01-15', vista: 'mes', dia: '2027-01-31')->fechaOtraVista());
+    }
+
     public function test_el_titulo_del_resumen_lleva_el_anio_cuando_la_semana_cruza_el_anio(): void
     {
         // R26: la semana del 28 de diciembre de 2026 al 2 de enero de 2027.

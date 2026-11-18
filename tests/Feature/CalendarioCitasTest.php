@@ -447,8 +447,13 @@ class CalendarioCitasTest extends TestCase
         $x = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18');
         $hoy = $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-17']");
 
-        $this->assertSame('Martes 17 de noviembre, 1 cita, hoy', $hoy->getAttribute('aria-label'), 'Hoy lo dice en su nombre');
-        $this->assertSame('Miércoles 18 de noviembre, 2 citas', $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-18']")->getAttribute('aria-label'));
+        // R37 (2.5.3): el nombre empieza por el texto visible («Mar 17»).
+        $this->assertSame('Mar 17, 1 cita, hoy', $hoy->getAttribute('aria-label'), 'Hoy lo dice en su nombre');
+        $this->assertSame('Mié 18, 2 citas', $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-18']")->getAttribute('aria-label'));
+        foreach ($x->query("//ol[{$this->clase('cal-tira')}]//a") as $dia) {
+            $visible = $this->texto($this->uno($x, ".//*[{$this->clase('tira-nombre')}]", $dia));
+            $this->assertStringStartsWith($visible, $dia->getAttribute('aria-label'), 'El nombre empieza por lo que se ve');
+        }
     }
 
     public function test_anterior_y_siguiente_dicen_que_recorren_y_sus_flechas_no_se_leen(): void
@@ -463,6 +468,15 @@ class CalendarioCitasTest extends TestCase
                 $this->assertSame($nombre, $enlace->getAttribute('aria-label'), "{$url}: el nombre empieza por el texto visible y dice qué recorre");
             }
         }
+    }
+
+    public function test_el_calendario_va_dentro_de_cal_pagina(): void
+    {
+        // R42: la regla del foco por dentro (`.cal-pagina … :focus-visible`) necesita esta clase.
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        $this->uno($x, "//*[{$this->clase('cal-pagina')}]//*[{$this->clase('cal-vista')}]");
+        $this->uno($x, "//*[{$this->clase('cal-pagina')}]//a[{$this->clase('cal-dia-cab')}]");
     }
 
     public function test_el_destino_de_saltar_a_la_lista_recibe_el_foco(): void
