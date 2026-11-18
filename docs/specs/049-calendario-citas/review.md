@@ -1,98 +1,79 @@
 ---
 spec: 049-calendario-citas
-verdict: changes_requested
-round: 2
+verdict: approved
+round: 3
 date: 2026-11-17
-base: da2d873
-head: d791377
+base: d791377
+head: 8163d14
 human_signoff: no requerido
 ---
 
 # Review · 049 Calendario de citas
 
 ## Resumen
-`changes_requested`: los 16 hallazgos que la ronda 1 mandó corregir están resueltos (R4, R10, R11, R12 y R27
-con efecto nuevo), sin bloqueantes. Las correcciones dejan dos importantes nuevos de accesibilidad (R36: el
-anillo del foco por dentro no se ve sobre la opción actual y el día elegido, que son granates; R37: el nombre
-de los días de la tira no contiene su texto visible) y cinco menores. El usuario decide corregir R36, R37, R38,
-R41 y R42 (T038–T040); R39 y R40 van al roadmap. Ronda 2 con un revisor independiente (encargos A, C+D y S
-juntos, perfil crítico) sobre el diff desde la ronda 1 (37 KB).
-Conteo: bloqueante 0 · importante 2 · menor 5
+`approved`: los cinco hallazgos que la ronda 2 mandó corregir (R36, R37, R38, R41, R42) están resueltos y no hay
+hallazgos nuevos. En la verificación manual de T040 el usuario encontró que el día elegido se ponía en blanco al
+pasar el puntero; se corrigió dentro de la tarea con su test. Ronda 3 sin subagente: diff de 12 KB desde la
+ronda 2, releído desde cero. La firma humana no la exige la definición de terminado (solo producción).
+Conteo: bloqueante 0 · importante 0 · menor 0
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `php artisan test` (suite completa) | ✅ 1318 en verde (ronda 1: 1303) |
-| `vendor/bin/pint --test` (11 PHP tocados) | ✅ |
+| `php artisan test` (suite completa) | ✅ 1322 en verde (ronda 2: 1318) |
+| `vendor/bin/pint --test` (archivos tocados) | ✅ |
 | semgrep `p/php` y gitleaks (archivos tocados) | ✅ sin hallazgos |
 | `python .ai/bin/aidd.py validate docs/specs/049-calendario-citas` | ✅ 0 errores |
 | `design/medir.mjs` sobre la build renderizada | ✅ 12/12 puertas y todos los KPIs en las cuatro pantallas |
-| Verificación manual del foco (T037) | ✅ usuario, 2026-11-17 («Semana», «Mes» no seleccionado y una cabecera) |
+| Verificación manual (T040) | ✅ usuario, 2026-11-17: foco en la opción actual y en el día elegido, y el día elegido con el puntero encima |
 
 ## Criterios de aceptación
-Sin cambios respecto a la ronda 1 salvo: CA2 ✅ (R4, R6), CA4 ✅ (R2), CA6 ✅ (R1), CA7 ✅ (R3), CA10 ✅ (R5,
-R7); CA8 ⚠ por R37 (nombre de los días de la tira) y R36 (foco del día elegido).
+CA1–CA10 ✅ (los avisos de CA8 de la ronda 2, R36 y R37, quedan resueltos).
 
-## Seguimiento de la ronda 1
+## Seguimiento de la ronda 2
 | ID | Estado | Evidencia |
 |---|---|---|
-| R1 | corregido | `semana.blade.php:18,25,36,45` hasta 8; `calendario.css`; `CalendarioCitasTest::test_cinco_citas_a_la_vez_se_ven_cada_una_en_su_carril` y `CalendarioCitasCssTest` (carriles 2–8) |
-| R2 | corregido | `lista.blade.php:27`; `test_un_dia_elegido_sin_citas_lo_dice_y_ofrece_volver_al_periodo` |
-| R3 | corregido | `CalendarioCitas.php:87-91, 415-420`; Unit `test_una_cita_oculta_antes_de_abrir_no_quita_el_hueco_de_las_9` |
-| R4 | corregido con efecto nuevo (→ R38) | `CalendarioCitas.php:152-156`; Unit `test_semana_desde_un_mes_que_empieza_en_domingo_…` |
-| R5 | corregido (dentista y paciente, solo caracterización → R40) | `test_el_alta_deja_los_valores_por_defecto_ante_parametros_manipulados` |
-| R6 | corregido | `CalendarioCitasParametrosTest.php:50-60` |
-| R7 | corregido | `test_la_ocupacion_de_los_huecos_respeta_el_alcance_con_buscador_o_dentista_ajena` |
-| R8 | corregido (control positivo débil → R41) | `test_todo_color_de_texto_de_la_hoja_tiene_su_par_de_contraste` |
-| R9 | corregido | `index.blade.php:112,119` con `@include` |
-| R10 | corregido con efecto nuevo (→ R36) | `calendario.css:37-38` (`.cal-pagina`, gana a `app.css:592`) |
-| R11 | corregido con efecto nuevo (→ R36) | La misma regla, en `.cal-dia-cab` |
-| R12 | corregido con efecto nuevo (→ R37) | Borde `--border-width-strong` y «, hoy» en el `aria-label` |
-| R14 | corregido | `barra.blade.php:12,14`: «Anterior semana / mes», flechas `aria-hidden` |
-| R21 | corregido | `lista.blade.php:15` `tabindex="-1"`; `test_el_destino_de_saltar_a_la_lista_recibe_el_foco` |
-| R26 | corregido | `CalendarioCitas.php:312-315`; Unit `test_el_titulo_del_resumen_lleva_el_anio_…` |
-| R27 | corregido con efecto nuevo (→ R39) | `CitasController.php:188, 197-199`; `test_un_anio_fuera_de_rango_muestra_la_semana_actual` |
+| R36 | corregido | `calendario.css:41-43`: anillo `--focus-ring-inverso` separado del borde (0,4,0 > 0,3,0); `CalendarioCitasCssTest::test_el_foco_sobre_la_opcion_actual_y_el_dia_elegido_se_ve`; verificación manual |
+| R37 | corregido | `semana.blade.php:62`: «Mar 17, 1 cita, hoy»; `CalendarioCitasTest::test_en_la_tira_el_dia_de_hoy_lo_dice_tambien_sin_color` comprueba que el nombre empieza por el texto visible en todos los días |
+| R38 | corregido | `CalendarioCitas.php:154`: el salto solo desde el día 1 en domingo; Unit `test_semana_desde_el_mes_un_domingo_abre_la_semana_de_ese_domingo` (falla con el código anterior) |
+| R41 | corregido | `selectoresSinPar()` se aplica a la hoja y al CSS de control (`['.cal-nueva']`); comprobado rompiendo la expresión |
+| R42 | corregido | `CalendarioCitasTest::test_el_calendario_va_dentro_de_cal_pagina`; comprobado quitando la clase |
+
+Además, hallado en la verificación manual: `.cal-dia-cab:hover` (fondo `--p50`) ganaba a `.cal-dia-cab--elegido`
+y dejaba el texto blanco sobre casi blanco. Ahora `.cal-dia-cab--elegido:hover` va a `--p800` (`calendario.css:81`);
+`test_el_dia_elegido_conserva_el_contraste_al_pasar_el_puntero` falla antes del arreglo.
 
 ## Constitution Check (sobre el código)
 | Principio | Resultado | Evidencia |
 |---|---|---|
-| P2 Test que falla antes | ✅ | T030–T033 en commits anteriores a T034–T037; caracterizaciones comprobadas rompiendo |
-| P3 Autorización en servidor | ✅ | La segunda consulta ya tiene test (R7) |
-| P4 Entrada validada | ✅ | `fechaDe` acotada; salidas nuevas con `{{ }}` |
-| P9 Solo el sistema de diseño | ⚠ | Solo tokens; R36 (foco 1:1 sobre `--p600`), R37 (nombre ≠ texto visible) |
+| P2 Test que falla antes | ✅ | T038 antes que T039 y T040; el test del hover, antes de su arreglo |
+| P3 Autorización en servidor | ✅ | Sin cambios |
+| P4 Entrada validada | ✅ | Sin cambios |
+| P9 Solo el sistema de diseño | ✅ | Solo tokens (`--focus-ring-inverso`, `--p800`, `calc(-2 * var(--focus-ring-width))`); contraste probado |
 
 ## Seguridad
-Sin cambios en dependencias ni en el alcance; semgrep y gitleaks limpios; nada nuevo explotable.
+Sin cambios en el alcance, la validación ni las dependencias; semgrep y gitleaks limpios. R13 (`npm audit`, ajeno a
+la 049) sigue pendiente de un `/chore` antes del `/release`.
 
 ## Observabilidad
 Sin cambios: sin logs ni eventos de auditoría nuevos.
 
 ## Hallazgos
-| ID | Severidad | Archivo:línea | Hallazgo | Sugerencia |
-|---|---|---|---|---|
-| R36 | importante | `public/css/calendario.css:37-38` (con `:28` y `:74`); `CalendarioCitasCssTest.php:81` | El anillo por dentro (`--focus-ring` = `--p600`) cae sobre el fondo `--p600` de la opción actual de «Semana · Mes» y de la cabecera del día elegido: 1:1, foco invisible (2.4.7); `FONDOS_FOCO` no incluye `--p600` | Anillo `--focus-ring-inverso` (blanco) en esos dos estados; par en el test, comprobado rompiendo; verificación manual con el foco en la opción actual y en el día elegido |
-| R37 | importante | `semana.blade.php:62`; `CalendarioCitasTest.php:448-449` | El `aria-label` de la tira («Martes 17 de noviembre, 1 cita, hoy») no contiene el texto visible «Mar 17» (2.5.3, F96) | Nombre que empiece por lo visible: «Mar 17, 1 cita, hoy»; ajustar el test |
-| R38 | menor | `CalendarioCitas.php:154-156` | El salto al lunes se aplica a cualquier base en domingo: desde «Mes» un domingo con hoy dentro, «Semana» abre la semana siguiente; el 31-01-2027 sale del mes | Saltar solo cuando la base es el día 1; unitario con hoy en domingo |
-| R39 | menor | `CitasController.php:197-199` | La semana del 27-12-2100 ofrece huecos de 2101 cuyo enlace pierde la fecha | Límite aceptado (casi inalcanzable) |
-| R40 | menor | `CalendarioCitasTest.php:477-486` | «Ningún dentista ni paciente elegido» pasaría sin `Str::isUuid`: un valor que no es UUID nunca coincide con un `<option>` | Decirlo en el test o usar un UUID válido ajeno al desplegable |
-| R41 | menor | `CalendarioCitasCssTest.php:136-138` | El control positivo del test exhaustivo no pasa por el detector | Detector en un helper aplicado a la hoja y al CSS de control (debe dar `['.cal-nueva']`) |
-| R42 | menor | `CalendarioCitasCssTest.php:147-157`; `index.blade.php:41` | Ningún test comprueba que `.cal-pagina` envuelva el calendario: sin la clase vuelve el foco por fuera | Aserto Feature: `.cal-vista` dentro de `.cal-pagina` |
+Ninguno nuevo.
 
 ## Preparación para release
-Sin cambios respecto a la ronda 1: rollback factible, sin migraciones ni feature flags; R13 (`npm audit`) se
-corrige con un `/chore` antes del `/release`.
+- Rollback factible: sí, `bash deploy/volver.sh <tag anterior>`; sin migraciones ni datos nuevos.
+- Migraciones compatibles: no hay migraciones. Feature flags: no (D9).
+- Docs: `architecture.md` y `AGENTS.md` (T090); `deployment.md` sin cambios (T091). `system.md` 1.19.0 (T001).
+- SCA: `composer audit` limpio; `npm audit` con 6 altas de `picomatch` (R13) → `/chore` de npm antes del `/release`.
 
 ## Tareas añadidas
-- T038 ← R36, R37, R38, R41, R42 (tests)
-- T039 ← R38 (`CalendarioCitas`)
-- T040 ← R36, R37 (hoja y tira)
+Ninguna en esta ronda (ronda 1: T030–T037; ronda 2: T038–T040).
 
 ## Aceptados sin tarea
-Aceptados por el usuario el 2026-11-17:
+Aceptados por el usuario el 2026-11-17 (rondas 1 y 2):
 - **R39** → roadmap: la semana del 27-12-2100 ofrece huecos de 2101 (fuera del rango de fechas admitido)
 - **R40** → roadmap: la parte de dentista y paciente del test del alta manipulada es solo caracterización
-
-De la ronda 1 (`history/review.r1.md`), siguen aceptados:
 - **R13** → roadmap: `npm audit` con 6 altas de `picomatch` vía `vite` (dependencias de build ajenas a la 049); se corrige con un `/chore` de npm antes del `/release`
 - **R15** → roadmap: muchas paradas de tabulador en los huecos; «Saltar a la lista» las evita
 - **R16** → roadmap: nombre de la región de la lista en el móvil
