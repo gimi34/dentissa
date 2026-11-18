@@ -70,7 +70,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 
 ## Integración y documentación
 - [ ] T090 Actualizar `docs/architecture.md` (`App\Agenda\CalendarioCitas`, `calendario.css`) y el mapa de `AGENTS.md` (ruta protegida: con aprobación del usuario)
-- [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
+- [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
+  - nota: sin cambios en ninguno de los dos: la 049 no añade variables, entornos, pasos de despliegue, migraciones, logs, eventos de auditoría ni métricas (plan, Observabilidad y Rollout); `calendario.css` se sirve como las demás hojas de `public/css/`.
 - [ ] T092 Marcar spec como `implemented`: suite completa, Pint, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
 
 ## Despliegue (lo ejecuta `/release`)
