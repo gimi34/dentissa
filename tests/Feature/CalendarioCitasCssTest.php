@@ -40,6 +40,10 @@ class CalendarioCitasCssTest extends TestCase
         '.cal-lista-hora' => ['--p600', '--white', ['color: var(--p600)']],
         '.cal-cerrado span' => ['--text', '--white', ['color: var(--text)', 'background: var(--white)']],
         '.cal-hueco' => ['--p600', '--p100', ['color: var(--p600)']],
+        // Cifras del resumen, con su color de estado por clase en lugar de style="" (A7).
+        '.cal-cifra--agendada' => ['--p500', '--white', ['color: var(--p500)']],
+        '.cal-cifra--completada' => ['--green-texto', '--white', ['color: var(--green-texto)']],
+        '.cal-cifra--cancelada' => ['--red', '--white', ['color: var(--red)']],
     ];
 
     /** Bordes que distinguen algo: [borde, fondo, selector que lo declara]. */

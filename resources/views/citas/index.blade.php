@@ -121,7 +121,7 @@
 @endsection
 
 @push('styles')
-<link href="{{ asset('css/citas.css') }}?v={{ filemtime(public_path('css/citas.css')) }}" rel="stylesheet">
+{{-- Sin citas.css (DS5): «Citas» usa los campos de app.css, como el candidato c6 que se midió. --}}
 <link href="{{ asset('css/calendario.css') }}?v={{ is_file(public_path('css/calendario.css')) ? filemtime(public_path('css/calendario.css')) : 0 }}" rel="stylesheet">
 {{-- Sin defer: marca <html> con filtros-js antes de pintar, sin salto de maquetación (spec 034, D6). --}}
 <script src="{{ asset('js/filtros.js') }}?v={{ filemtime(public_path('js/filtros.js')) }}"></script>
