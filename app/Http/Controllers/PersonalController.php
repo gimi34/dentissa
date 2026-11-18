@@ -291,6 +291,10 @@ class PersonalController extends Controller
             'dentistas.*' => 'exists:personal,id',
         ]);
 
+        $this->impedirQuitarsePropioAcceso($miembro->usuario_id, [
+            'tipo' => $data['tipo'] !== 'administrador' ? self::NO_QUITARSE_ADMIN : null,
+        ]);
+
         $rol = match ($data['tipo']) {
             'dentista' => 'dentista',
             'asistente' => 'asistente',
@@ -337,6 +341,10 @@ class PersonalController extends Controller
         }
 
         $activo = DB::table('usuarios')->where('id', $miembro->usuario_id)->value('activo');
+        if ($activo && $this->esLaPropiaCuenta($miembro->usuario_id)) {
+            return back()->with('error', self::NO_DESACTIVARSE);
+        }
+
         DB::table('usuarios')->where('id', $miembro->usuario_id)->update([
             'activo' => $activo ? 0 : 1,
             'actualizado_en' => now(),

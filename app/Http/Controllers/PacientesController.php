@@ -323,6 +323,10 @@ class PacientesController extends Controller
         }
 
         $activo = DB::table('usuarios')->where('id', $paciente->usuario_id)->value('activo');
+        // Un admin con ficha de paciente tampoco puede desactivarse desde aquí (RS19.a).
+        if ($activo && $this->esLaPropiaCuenta($paciente->usuario_id)) {
+            return back()->with('error', self::NO_DESACTIVARSE);
+        }
 
         DB::table('usuarios')->where('id', $paciente->usuario_id)->update([
             'activo' => $activo ? 0 : 1,
