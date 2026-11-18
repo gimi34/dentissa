@@ -310,6 +310,51 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame(0, $this->celda($mes->celdasMes(), '2026-11-18')['total']);
     }
 
+    // ── T030 · Correcciones de /review r1 ─────────────────────────────
+
+    public function test_cinco_citas_a_la_vez_van_en_cinco_carriles(): void
+    {
+        // R1: las canceladas también ocupan carril; cinco a la vez se ven una junto a otra.
+        $citas = [
+            $this->cita('2026-11-18 10:00', 30, 'agendada', 'D1'), $this->cita('2026-11-18 10:00', 30, 'cancelada', 'D1'),
+            $this->cita('2026-11-18 10:00', 30, 'agendada', 'D2'), $this->cita('2026-11-18 10:00', 30, 'cancelada', 'D2'),
+            $this->cita('2026-11-18 10:00', 30, 'agendada', 'D3'),
+        ];
+        $miercoles = $this->dia($this->calendario(citas: $citas), '2026-11-18');
+
+        $this->assertSame(5, $miercoles['carriles']);
+        $carriles = array_column($miercoles['citas'], 'carril');
+        sort($carriles);
+        $this->assertSame([1, 2, 3, 4, 5], $carriles);
+    }
+
+    public function test_una_cita_oculta_antes_de_abrir_no_quita_el_hueco_de_las_9(): void
+    {
+        // R3: la cuadrícula empieza a las 9:00 (la lista no tiene citas antes), y una cita vigente de
+        // 8:00 a 8:30 que el buscador o el estado ocultan no debe ocupar el tramo de las 9:00.
+        $temprana = $this->cita('2026-11-18 08:00', 30, 'confirmada');
+        $huecos = $this->dia($this->calendario(citas: [], ocupacion: [$temprana]), '2026-11-18')['huecos'];
+
+        $this->assertSame('09:00', $huecos[0]['hora']);
+    }
+
+    public function test_semana_desde_un_mes_que_empieza_en_domingo_abre_la_primera_semana_del_mes(): void
+    {
+        // R4: el 1 de marzo de 2026 es domingo; «Semana» desde «Marzo de 2026» abre la del 2 al 7.
+        $calendario = $this->calendario('2026-03-10', vista: 'mes');
+
+        $this->assertSame('2026-03-02', $calendario->fechaOtraVista());
+    }
+
+    public function test_el_titulo_del_resumen_lleva_el_anio_cuando_la_semana_cruza_el_anio(): void
+    {
+        // R26: la semana del 28 de diciembre de 2026 al 2 de enero de 2027.
+        $calendario = $this->calendario('2026-12-30');
+
+        $this->assertSame('Resumen de la semana del 28 de diciembre de 2026 al 2 de enero de 2027', $calendario->tituloResumen());
+        $this->assertSame('28 de diciembre de 2026 – 2 de enero de 2027', $calendario->titulo());
+    }
+
     /** @return array<string, ?int> carril de cada cita del día, por id */
     private function carrilPorCita(array $dia): array
     {
