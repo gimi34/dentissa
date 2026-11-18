@@ -56,3 +56,5 @@ agendar citas con la duración correcta y distinguirlas visualmente.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: «Nuevo servicio» y «Editar servicio» tienen su propio título (ya no «Dashboard») y migas hasta «Servicios» | /release |
+| 2026-11-17 | Corregido por la ficha 2026-11-17-fix-detalles-servicios-usuarios en v0.20.1: el buscador filtra por nombre, descripción o categoría; `GET /admin/servicios/{id}` responde 404 (sin ruta `show`); alta, edición y borrado avisan | /release |

@@ -56,6 +56,7 @@ class UsuarioController extends Controller
         $totales = [
             'admin' => Usuario::where('rol', 'admin')->count(),
             'dentista' => Usuario::where('rol', 'dentista')->count(),
+            'asistente' => Usuario::where('rol', 'asistente')->count(),
             'cliente' => Usuario::where('rol', 'cliente')->count(),
         ];
 
@@ -108,7 +109,7 @@ class UsuarioController extends Controller
         ]);
 
         // 4. Lo regresamos al panel principal
-        return redirect()->route('admin.usuarios.index');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Usuario registrado correctamente.');
     }
 
     public function edit($id)
@@ -136,6 +137,11 @@ class UsuarioController extends Controller
             'rol' => 'required|in:cliente,asistente,dentista,admin',
         ], $this->mensajesValidacion());
 
+        $this->impedirQuitarsePropioAcceso($usuario->id, [
+            'rol' => $data['rol'] !== 'admin' ? self::NO_QUITARSE_ADMIN : null,
+            'activo' => $request->has('activo') ? null : self::NO_DESACTIVARSE,
+        ]);
+
         // Actualizamos los campos con lo que el administrador escribió en el formulario
         $usuario->fill([
             'nombre' => $data['nombre'],
@@ -152,7 +158,7 @@ class UsuarioController extends Controller
         $usuario->save();
 
         // Lo regresamos a la tabla principal
-        return redirect()->route('admin.usuarios.index');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Datos del usuario actualizados.');
     }
 
     /**
@@ -165,6 +171,10 @@ class UsuarioController extends Controller
         $usuario = DB::table('usuarios')->where('id', $id)->first();
         if (! $usuario) {
             abort(404);
+        }
+
+        if ($usuario->activo && $this->esLaPropiaCuenta($usuario->id)) {
+            return back()->with('error', self::NO_DESACTIVARSE);
         }
 
         DB::table('usuarios')->where('id', $id)->update([

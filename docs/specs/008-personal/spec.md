@@ -25,7 +25,7 @@ profesional, y decidir qué dentistas apoya cada asistente, porque de eso depend
 - [ ] CA3 · Dado un asistente dado de alta o editado con `dentistas[]`, cuando se guarda, entonces la tabla `asistente_dentista` queda sincronizada con esa lista.
 - [ ] CA4 · Dado un admin, cuando desactiva o reactiva personal, entonces cambia `usuarios.activo` sin borrar datos.
 - [ ] CA5 · Dado un asistente, cuando abre `/asistente/doctores`, entonces ve sus dentistas asignados con sus citas de hoy.
-- [ ] CA6 (abuso) · Como personal desactivado con sesión abierta, sigo navegando → se cierra la sesión. **HOY NO SE CUMPLE: la desactivación no invalida sesiones.**
+- [x] CA6 (abuso) · Como personal desactivado con sesión abierta, sigo navegando → se cierra la sesión. Resuelto por la ficha 2026-11-17-fix-sesion-cuenta-desactivada (v0.20.1).
 
 ## Fuera de alcance
 - Horarios (spec 005).
@@ -60,3 +60,6 @@ Hoy no se registran altas, cambios de rol ni desactivaciones. Eventos requeridos
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: la ficha, el alta y la edición del personal llevan las migas del parcial `partials/migas` (antes, hechas a mano) | /release |
+| 2026-11-17 | Corregido por la ficha 2026-11-17-fix-sesion-cuenta-desactivada en v0.20.1 (CA6): desactivar a un miembro del personal cierra su sesión abierta | /release |
+| 2026-11-17 | Corregido por la ficha 2026-11-17-fix-admin-no-se-desactiva en v0.20.1: un admin no puede desactivarse ni cambiarse el tipo a sí mismo desde Personal | /release |
