@@ -178,6 +178,21 @@ class CalendarioCitasCssTest extends TestCase
         }
     }
 
+    /**
+     * Verificación manual de T040: `.cal-dia-cab:hover` (fondo `--p50`) gana en especificidad a
+     * `.cal-dia-cab--elegido` (fondo `--p600`, texto blanco) y deja el texto blanco sobre casi blanco. El
+     * día elegido se oscurece al pasar el puntero, y su texto blanco sigue cumpliendo.
+     */
+    public function test_el_dia_elegido_conserva_el_contraste_al_pasar_el_puntero(): void
+    {
+        $this->assertFileExists(public_path(self::HOJA));
+        $tokens = $this->tokensDeColor();
+
+        $this->assertStringContainsString('background: var(--p800)', $this->declaraciones('.cal-dia-cab--elegido:hover', self::HOJA));
+        $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens['--white'], $tokens['--p800']), '--white sobre --p800 llega a 4,5:1.');
+        $this->assertLessThan(4.5, $this->contraste($tokens['--white'], $tokens['--p50']), 'Con el fondo del hover general no se leería.');
+    }
+
     /** R12 y R1: «hoy» en la tira con un borde más grueso (no solo color); carriles hasta 8. */
     public function test_hoy_en_la_tira_lleva_borde_grueso_y_hay_carriles_hasta_8(): void
     {

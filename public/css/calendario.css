@@ -77,6 +77,8 @@
 .cal-dia-total { font-size: var(--text-small); }
 .cal-dia-cab--hoy { background: var(--p50); box-shadow: inset 0 calc(-1 * var(--border-width-strong)) 0 var(--p400); }
 .cal-dia-cab--elegido { background: var(--p600); color: var(--white); }
+/* Al pasar el puntero, el día elegido se oscurece en lugar de aclararse: el texto blanco sigue leyéndose. */
+.cal-dia-cab--elegido:hover { background: var(--p800); }
 .cal-dia-cab--elegido .cal-hoy-marca { color: var(--white); }
 .cal-dia-cab .cal-hoy-marca { position: absolute; top: var(--space-3); right: var(--space-4); }
 .cal-hoy-marca { font-size: var(--text-small); font-weight: var(--weight-strong); color: var(--p600); }
