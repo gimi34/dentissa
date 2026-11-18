@@ -1,6 +1,7 @@
 ---
 lane: fix
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released                 # open → done → released · escalated (→ escalated_to)
+released: v0.20.1 (2026-11-17)
 base: c6359c2                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [008, 010]          # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # ninguna de las dos specs lo recoge como CA: lo define RS19.a de docs/security.md
@@ -102,6 +103,7 @@ código (el límite es 5). No hay que escalar. Toca permisos
     - El listado sigue ofreciendo «Desactivar» en la propia fila: aceptado, el servidor lo
       rechaza con el mensaje.
 - `python .ai/bin/aidd.py validate`: sin errores.
+- Liberada en v0.20.1: producción aprobada por el responsable (gimi34) el 2026-11-17 con «desplegar v0.20.1 a producción»; `desplegar.sh v0.20.1` en 138 s y `verificar.sh` interna y pública, todo OK.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |

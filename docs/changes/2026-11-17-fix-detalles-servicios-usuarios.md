@@ -1,6 +1,7 @@
 ---
 lane: fix
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released                 # open → done → released · escalated (→ escalated_to)
+released: v0.20.1 (2026-11-17)
 base: f801977                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [009, 010]          # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # son observaciones de las specs inferidas, no CA
@@ -124,6 +125,7 @@ la ruta `show` no rompe ningún contrato, porque respondía con un 500.
     - El 404 de la ficha de servicio depende de la ruta de reserva de la 044 (sin ella sería un
       405): anotado, el test lo vigila.
 - `python .ai/bin/aidd.py validate`: sin errores.
+- Liberada en v0.20.1: producción aprobada por el responsable (gimi34) el 2026-11-17 con «desplegar v0.20.1 a producción»; `desplegar.sh v0.20.1` en 138 s y `verificar.sh` interna y pública, todo OK.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |

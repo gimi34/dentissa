@@ -201,7 +201,7 @@ sesiones abiertas. Evidencia: `RoleMiddleware.php`, `UsuarioController::toggleAc
 `PersonalController::toggleActivo`, `PacientesController::toggleActivo`; specs 001, 006, 008, 010.
 
 Correcciones:
-- RS3.a Comprobar `activo` en cada petición autenticada (middleware) y cerrar la sesión si es falso — estado: en curso (`SesionVigente`, ficha `docs/changes/2026-11-17-fix-sesion-cuenta-desactivada.md`)
+- RS3.a Comprobar `activo` en cada petición autenticada (middleware) y cerrar la sesión si es falso — estado: mitigada (v0.20.1; `SesionVigente`, ficha `docs/changes/2026-11-17-fix-sesion-cuenta-desactivada.md`)
 - RS3.b Borrar las sesiones del usuario al desactivarlo — estado: pendiente (defensa en profundidad: con RS3.a la sesión de una cuenta inactiva ya se cierra en su siguiente petición; RS3.b solo borraría antes las filas de sesión)
 
 ### RS4 · Alta — Sin límite de intentos en login, registro y OAuth (A07 Authentication Failures)
@@ -386,7 +386,7 @@ el nuevo rol necesita. Evidencia: `app/Http/Controllers/UsuarioController.php` (
 `toggleActivo`); spec 010.
 
 Correcciones:
-- RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: en curso (usuarios, personal y pacientes, ficha `docs/changes/2026-11-17-fix-admin-no-se-desactiva.md`)
+- RS19.a Un admin no puede quitarse el rol ni desactivarse a sí mismo — estado: mitigada (v0.20.1; usuarios, personal y pacientes, ficha `docs/changes/2026-11-17-fix-admin-no-se-desactiva.md`)
 - RS19.b No se puede desactivar ni quitar el rol al último admin activo — estado: pendiente (→ objetivo 2). Con RS19.a ya no se llega a eso desde la aplicación: quien desactiva o degrada a otro admin es un admin activo que sigue siéndolo. Solo quedaría un cambio directo en la base
 - RS19.c Al cambiar el rol, crear o retirar la ficha de `personal` o `pacientes` que corresponde (o impedir el cambio si no se puede) — estado: pendiente (→ objetivo 2)
 

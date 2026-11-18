@@ -1,6 +1,7 @@
 ---
 lane: fix
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released                 # open → done → released · escalated (→ escalated_to)
+released: v0.20.1 (2026-11-17)
 base: c6359c2                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: [001, 006, 008, 010] # specs cuyo comportamiento toca ([] si ninguna)
 covers: [CA11, CA8, CA6]     # 001 CA11, 006 CA8, 008 CA6 y 010 CA8 (el validador no distingue la spec de cada CA)
@@ -83,6 +84,7 @@ escalar. El motivo 4 (seguridad: autenticación) lo aceptó el usuario de forma 
     4. Un admin puede desactivarse a sí mismo: es RS19.a, preexistente y fuera de alcance.
 - `lane-check` al cerrar sobre los archivos del fix: no hay que escalar (solo el motivo 4, aceptado).
 - `python .ai/bin/aidd.py validate`: sin errores.
+- Liberada en v0.20.1: producción aprobada por el responsable (gimi34) el 2026-11-17 con «desplegar v0.20.1 a producción»; `desplegar.sh v0.20.1` en 138 s y `verificar.sh` interna y pública, todo OK.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |

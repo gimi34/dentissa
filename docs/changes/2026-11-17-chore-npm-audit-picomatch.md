@@ -1,6 +1,7 @@
 ---
 lane: chore
-status: done                 # open → done → released · escalated (→ escalated_to)
+status: released                 # open → done → released · escalated (→ escalated_to)
+released: v0.20.1 (2026-11-17)
 base: f801977                # commit de partida; lo registra la skill al empezar (lo usa lane-check)
 relates: []                  # specs cuyo comportamiento toca ([] si ninguna)
 covers: []                   # fix: criterios de esas specs que el arreglo vuelve a cumplir
@@ -59,6 +60,7 @@ protegidas, `.github/workflows/ai-dd.yml`». El usuario aprobó de forma explíc
 - La CI de este PR **no** ejecuta el paso de dependencias, porque no cambia ningún lockfile. El script se probará en
   CI con el job `seguridad-completa` al fusionar en `main`, o en el primer PR que cambie un lockfile.
 - Sin review con subagente (carril chore).
+- Liberada en v0.20.1: producción aprobada por el responsable (gimi34) el 2026-11-17 con «desplegar v0.20.1 a producción»; `desplegar.sh v0.20.1` en 138 s y `verificar.sh` interna y pública, todo OK.
 
 ## Decisiones
 | Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
