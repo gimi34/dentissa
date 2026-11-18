@@ -5,6 +5,22 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-11-17
+
+### Fixed
+- Desactivar una cuenta (desde Usuarios, Personal o Pacientes, o desmarcando «Activo» al editar un usuario) cierra
+  también la sesión que esa persona tuviera abierta: en su siguiente paso vuelve a «Iniciar sesión»
+  (fix 2026-11-17-fix-sesion-cuenta-desactivada).
+- Un administrador ya no puede desactivar su propia cuenta ni quitarse el rol de administrador, ni desde Usuarios,
+  ni desde Personal, ni desde Pacientes: la aplicación lo explica y no lo aplica. Así no puede quedarse sin nadie que
+  la administre (fix 2026-11-17-fix-admin-no-se-desactiva).
+- El buscador de «Servicios» filtra por nombre, descripción o categoría, y lo dice cuando no encuentra nada; la
+  dirección de un servicio suelto responde «no encontrado» en lugar de un error (fix 2026-11-17-fix-detalles-servicios-usuarios).
+- Dar de alta, editar o eliminar un servicio, y crear o editar un usuario, muestra el aviso de que se guardó
+  (fix 2026-11-17-fix-detalles-servicios-usuarios).
+- «Usuarios» cuenta, filtra y agrupa también a los asistentes, y un filtro sin resultados ofrece ver todos en lugar
+  de decir que no hay usuarios (fix 2026-11-17-fix-detalles-servicios-usuarios).
+
 ## [0.20.0] - 2026-11-16
 
 ### Added
