@@ -91,7 +91,7 @@ class CalendarioCitasTest extends TestCase
         $filtros = ['buscar' => 'Pablo', 'dentista_id' => $this->d1, 'estado' => 'agendada'];
         $x = $this->pagina($this->admin, '/admin/citas?'.http_build_query($filtros));
 
-        foreach (['‹ Anterior' => '2026-11-09', 'Hoy' => '2026-11-16', 'Siguiente ›' => '2026-11-23'] as $texto => $fecha) {
+        foreach (['‹ Anterior semana' => '2026-11-09', 'Hoy' => '2026-11-16', 'Siguiente semana ›' => '2026-11-23'] as $texto => $fecha) {
             $enlace = $this->enlaceDeBarra($x, $texto);
             $this->assertSame(['vista' => 'semana', 'fecha' => $fecha] + $filtros, $this->parametros($enlace), $texto);
         }
@@ -103,7 +103,7 @@ class CalendarioCitasTest extends TestCase
         $this->assertSame(['vista' => 'mes', 'fecha' => '2026-11-01'] + $filtros, $this->parametros($mes));
 
         // La página que piden esos enlaces es la del periodo y la vista.
-        $siguiente = $this->pagina($this->admin, $this->enlaceDeBarra($x, 'Siguiente ›')->getAttribute('href'));
+        $siguiente = $this->pagina($this->admin, $this->enlaceDeBarra($x, 'Siguiente semana ›')->getAttribute('href'));
         $this->assertSame('23 – 28 de noviembre de 2026', $this->texto($this->uno($siguiente, "//*[@id='cal-titulo']")));
 
         $delMes = $this->pagina($this->admin, $mes->getAttribute('href'));
@@ -408,6 +408,82 @@ class CalendarioCitasTest extends TestCase
 
         $respuesta->assertRedirect(route('admin.citas', ['vista' => 'semana', 'fecha' => '2026-11-26', 'dia' => '2026-11-26']));
         $this->assertSame('Cita agendada correctamente.', session('success'));
+    }
+
+    // ── T031 · Correcciones de /review r1 ───────────────────────────────
+
+    public function test_cinco_citas_a_la_vez_se_ven_cada_una_en_su_carril(): void
+    {
+        // R1: las dos de las 12:00 del escenario más tres atenuadas: cinco a la vez; ninguna encima de otra.
+        foreach ([[$this->d1, $this->p1, 'cancelada'], [$this->d2, $this->p2, 'cancelada'], [$this->d1, $this->p1, 'no_asistio']] as [$d, $p, $estado]) {
+            $this->cita($d, $p, $estado, '2026-11-18 12:00');
+        }
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        $carriles = [];
+        foreach ($x->query("//*[{$this->clase('cal-dia')}][@data-dia='2026-11-18']//a[{$this->clase('cal-cita')}][contains(@aria-label, '12:00')]") as $cita) {
+            $carriles[] = implode(' ', array_filter($this->clases($cita), fn ($c) => str_starts_with($c, 'cal-carril-')));
+        }
+        sort($carriles);
+        $this->assertSame(['cal-carril-1', 'cal-carril-2', 'cal-carril-3', 'cal-carril-4', 'cal-carril-5'], $carriles);
+        $this->assertContains('cal-col--carriles-5', $this->clases($this->columna($x, '2026-11-18')));
+        $this->assertContains('cal-carriles-5', $this->clases($this->uno($x, "//*[{$this->clase('cal-dia')}][@data-dia='2026-11-18']")));
+    }
+
+    public function test_un_dia_elegido_sin_citas_lo_dice_y_ofrece_volver_al_periodo(): void
+    {
+        // R2: el sábado 21 no tiene citas, aunque la semana sí.
+        $x = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-21');
+        $lista = $this->uno($x, "//*[@id='lista']");
+
+        $this->assertStringContainsString('No hay citas el sábado 21 de noviembre', $this->texto($lista));
+        $this->assertStringNotContainsString('No hay citas en esta semana', $this->texto($lista));
+        $this->uno($x, "//*[@id='lista']//a[normalize-space(.)='Ver toda la semana']");
+    }
+
+    public function test_en_la_tira_el_dia_de_hoy_lo_dice_tambien_sin_color(): void
+    {
+        // R12: con otro día elegido, hoy no va relleno; su nombre dice «hoy».
+        $x = $this->pagina($this->admin, '/admin/citas?vista=semana&fecha=2026-11-16&dia=2026-11-18');
+        $hoy = $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-17']");
+
+        $this->assertSame(1, $x->query(".//*[{$this->clase('cal-oculto')}][normalize-space(.)=', hoy']", $hoy)->length, 'Hoy dice «, hoy» en su nombre');
+        $this->assertSame(0, $x->query(".//*[{$this->clase('cal-oculto')}][contains(., 'hoy')]", $this->uno($x, "//ol[{$this->clase('cal-tira')}]//a[@data-dia='2026-11-18']"))->length);
+    }
+
+    public function test_anterior_y_siguiente_dicen_que_recorren_y_sus_flechas_no_se_leen(): void
+    {
+        // R14: «‹» y «›» en aria-hidden; el nombre dice «semana» o «mes».
+        foreach (['/admin/citas' => 'semana', '/admin/citas?vista=mes' => 'mes'] as $url => $periodo) {
+            $x = $this->pagina($this->admin, $url);
+            foreach (["‹ Anterior {$periodo}", "Siguiente {$periodo} ›"] as $texto) {
+                $enlace = $this->enlaceDeBarra($x, $texto);
+                $flecha = $this->uno($x, ".//*[@aria-hidden='true']", $enlace);
+                $this->assertContains(trim($flecha->textContent), ['‹', '›'], "{$url}: {$texto}");
+                $this->assertSame(" {$periodo}", $this->uno($x, ".//*[{$this->clase('cal-oculto')}]", $enlace)->textContent, "{$url}: {$texto}");
+            }
+        }
+    }
+
+    public function test_el_destino_de_saltar_a_la_lista_recibe_el_foco(): void
+    {
+        // R21: el título de la lista admite el foco del enlace «Saltar a la lista de citas».
+        $x = $this->pagina($this->admin, '/admin/citas');
+
+        $this->assertSame('#lista-titulo', $this->uno($x, "//a[{$this->clase('cal-saltar')}]")->getAttribute('href'));
+        $this->assertSame('-1', $this->uno($x, "//*[@id='lista-titulo']")->getAttribute('tabindex'));
+    }
+
+    public function test_el_alta_deja_los_valores_por_defecto_ante_parametros_manipulados(): void
+    {
+        // R5 (CA10, TM3): los valores mal formados o no escalares no se proponen.
+        foreach (['fecha=ayer&hora=25:99&dentista=nadie&paciente_id=nadie', 'fecha[]=x&hora[]=x&dentista[]=x&paciente_id[]=x', 'hora=9:00&dentista='.$this->d1.'x'] as $consulta) {
+            $x = $this->pagina($this->admin, "/admin/citas/crear?{$consulta}");
+            $this->assertSame('2026-11-18', $this->uno($x, "//input[@name='fecha']")->getAttribute('value'), "{$consulta}: fecha por defecto (mañana)");
+            $this->assertSame('09:00', $this->uno($x, "//input[@name='hora']")->getAttribute('value'), "{$consulta}: hora por defecto");
+            $this->assertSame(0, $x->query("//select[@name='dentista_id']/option[@selected]")->length, "{$consulta}: ningún dentista elegido");
+            $this->assertSame(0, $x->query("//select[@name='paciente_id']/option[@selected]")->length, "{$consulta}: ningún paciente elegido");
+        }
     }
 
     // ── Utilidades ───────────────────────────────────────────────────────

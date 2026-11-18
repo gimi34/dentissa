@@ -49,10 +49,23 @@ class CalendarioCitasParametrosTest extends TestCase
 
     public function test_un_dia_fuera_del_periodo_o_mal_escrito_no_se_elige(): void
     {
-        foreach (['dia=2026-12-25', 'dia=mañana', 'vista=mes&fecha=2026-11-01&dia=2026-10-30'] as $consulta) {
+        // R6: el título exacto y sin «Ver toda…»: un día elegido cambiaría los dos.
+        $casos = ['dia=2026-12-25' => 'Citas de la semana', 'dia=mañana' => 'Citas de la semana', 'vista=mes&fecha=2026-11-01&dia=2026-10-30' => 'Citas del mes', 'vista=mes&fecha=2026-11-01&dia=2026-12-01' => 'Citas del mes'];
+        foreach ($casos as $consulta => $titulo) {
             $x = $this->pagina("/admin/citas?{$consulta}");
-            $this->assertStringStartsWith('Citas de', $this->texto($x, "//*[@id='lista-titulo']"), $consulta);
-            $this->assertSame(0, $x->query("//*[{$this->clase('cal-dia-cab--elegido')}]")->length, $consulta);
+            $this->assertSame($titulo, $this->texto($x, "//*[@id='lista-titulo']"), $consulta);
+            $this->assertSame(0, $x->query("//*[@id='lista']//a[starts-with(normalize-space(.), 'Ver tod')]")->length, $consulta);
+            $this->assertSame(0, $x->query("//a[{$this->clase('cal-dia-cab')} or {$this->clase('mes-dia')}][@aria-current='date']")->length, $consulta);
+            $this->assertSame(0, $x->query("//*[@id='lista'][{$this->clase('cal-lista--dia')}]")->length, $consulta);
+        }
+    }
+
+    public function test_un_anio_fuera_de_rango_muestra_la_semana_actual(): void
+    {
+        // R27: el año de `fecha`, `fecha_desde` y `dia` va de 2000 a 2100.
+        foreach (['fecha=9999-12-31', 'fecha=0001-01-01', 'fecha=1999-12-31', 'fecha_desde=2101-01-03', 'vista=mes&fecha=9999-12-01'] as $consulta) {
+            $titulo = str_starts_with($consulta, 'vista=mes') ? 'Noviembre de 2026' : self::SEMANA_ACTUAL;
+            $this->assertSame($titulo, $this->texto($this->pagina("/admin/citas?{$consulta}"), "//*[@id='cal-titulo']"), $consulta);
         }
     }
 
