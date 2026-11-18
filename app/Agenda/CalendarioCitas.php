@@ -149,9 +149,10 @@ final class CalendarioCitas
     /** `fecha` de la semana (o el mes) del otro modo de vista, para el interruptor «Semana · Mes». */
     public function fechaOtraVista(): string
     {
-        // Si el mes empieza en domingo, su primera semana es la del lunes 2 (/review R4).
+        // Si se parte del día 1 del mes y es domingo, su primera semana es la del lunes 2 (/review R4); un
+        // domingo elegido u hoy en domingo siguen en su semana, la que termina el sábado anterior (R38).
         $base = $this->dia ?? ($this->contieneHoy() ? $this->ahora->startOfDay() : $this->inicio);
-        if ($base->dayOfWeekIso === 7 && $this->vista === 'mes') {
+        if ($this->vista === 'mes' && $base->equalTo($this->inicio) && $base->dayOfWeekIso === 7) {
             $base = $base->addDay();
         }
 
