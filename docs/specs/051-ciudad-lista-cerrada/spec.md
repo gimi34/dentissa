@@ -112,7 +112,7 @@ ciudad antigua fuera de la lista y su aviso (CA10) y el error de CA5, con los co
 aviso que ya existen. Sin recursos de marca nuevos.
 
 Sin ciclo de candidatos de `/design-spec`: `/plan` usa los componentes del sistema y el usuario lo
-valida en pantalla durante `/implement`.
+valida en pantalla durante `/implement`. Acta: [design.md](design.md).
 
 ## Criterios de diseño
 Modo: operar · sin ciclo de candidatos · la verificación es la del usuario en pantalla y los tests de `/implement`.
@@ -155,6 +155,7 @@ toque ≥ 44 px en el móvil, sin desbordes a 320 px).
 | 2026-11-18 | supuesto | Al editar un paciente con ciudad fuera de la lista, ¿guardar sin tocarla la borra? | No: se conserva tal cual hasta que alguien elija otra opción (CA10), para no perder el dato al cambiar otro campo | agente |
 | 2026-11-18 | supuesto | ¿«Otro lugar» cuenta como ciudad en «Ciudades distintas»? | No; sí aparece en el filtro si algún paciente la tiene | agente |
 | 2026-11-18 | brecha | La spec tiene 12 criterios (más de ~10): ¿dividirla? | Se mantiene junta: es una sola capacidad y la corrección de datos no tiene sentido sin la lista | usuario |
+| 2026-11-18 | diseño | ¿Cómo se diseña el campo? | Sin ciclo de candidatos: desplegable igual al de «Género» en cada formulario y aviso de CA10 con el texto de ayuda en `--text` ([design.md](design.md)) | /design-spec 051 |
 
 ## Notas para /plan
 - Formularios y controladores que mencionó el usuario: `auth/register.blade.php` y
