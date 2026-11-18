@@ -1,7 +1,7 @@
 ---
 id: 050
 slug: hora-clinica
-status: approved
+status: draft
 created: 2026-11-17
 extends: [002, 003, 004, 006, 007, 008, 011, 012, 026]
 ---
@@ -37,7 +37,7 @@ las 03:50 del 18.
 - [ ] CA7 · Dada una cita agendada a las 21:50 del 17 en la clínica y cambiada de estado a las 22:10, cuando el personal abre su detalle y el paciente abre el suyo, entonces «Agendada el» dice 17/11/2026 21:50 y el historial muestra el cambio a las 22:10 del 17; del mismo modo, la fecha de alta de un expediente, de un paciente y de un usuario se muestra en el día y la hora de la clínica, también para lo registrado antes de esta spec.
 - [ ] CA8 · Dado que en la clínica son las 17:59, las 18:00 y las 23:59 del 17, cuando se repite cualquiera de los casos anteriores, entonces «hoy» es el 17 en los tres momentos; y a las 00:00 del 18 en la clínica, «hoy» pasa a ser el 18.
 - [ ] CA9 · Dado que esta spec se libera, cuando se comprueba lo que ya usaba la hora de la clínica (si una cita ya empezó, el plazo de 24 horas del paciente, la reprogramación, los horarios de las dentistas, los reportes, el registro de auditoría y la hora de los correos), entonces todo eso se comporta igual que antes.
-- [ ] CA10 (abuso) · Dado que en la clínica son las 21:50 del 17, cuando un paciente envía a mano una petición para agendar una cita el 16, o el personal registra a mano una próxima visita para el 17, entonces el servidor la rechaza con el mensaje de fecha no válida de siempre, aunque el calendario del formulario no se haya usado.
+- [ ] CA10 (abuso) · Dado que en la clínica son las 21:50 del 17, cuando un paciente envía a mano una petición para agendar una cita el 16, o el personal registra a mano una próxima visita para el 17, entonces el servidor la rechaza con un mensaje en español que dice que la fecha no puede ser anterior a hoy (o, en la próxima visita, que debe ser posterior a hoy), aunque el calendario del formulario no se haya usado; la fecha de nacimiento del alta de paciente se rechaza igual con «La fecha de nacimiento debe ser anterior a hoy.».
 
 ## Fuera de alcance
 - Cambiar la hora con la que trabaja el sistema por dentro: sigue en hora universal (ver «Decisiones»).
@@ -90,6 +90,7 @@ Ninguna.
 | 2026-11-17 | supuesto | ¿Se indica la zona junto a la hora? | No; todas las horas del panel son de la clínica | — |
 | 2026-11-17 | supuesto | ¿Entran la fecha de nacimiento y el año del pie, con un efecto mínimo? | Sí: misma regla en todo el panel (CA5) | — |
 | 2026-11-17 | supuesto | Calendario de la 049, aún sin fusionar | Sigue esta regla; la rama que se fusione segunda se adapta | — |
+| 2026-11-17 | contradicción | Tres reglas de fecha (cita del paciente, próxima visita, nacimiento en el alta de paciente) muestran hoy el mensaje de Laravel en inglés con «today»; con el día de la clínica mostrarían la fecha (CA10 pedía «el mensaje de siempre») | Mensajes en español sin la fecha, como los del perfil y el registro (CA10) | usuario (en /plan 050) |
 
 ## Notas para /plan
 - Mantener `app.timezone` en UTC. Patrón de referencia: `HorarioDentista.php:66` (`Carbon::now(config('clinica.zona_horaria'))`).
@@ -103,3 +104,4 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-11-17 | CA10: mensaje en español en lugar de «el mensaje de siempre» | Decisión del usuario en /plan 050: el mensaje de hoy está en inglés y cambiaría de todos modos |
