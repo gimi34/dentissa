@@ -37,7 +37,7 @@ final class CalendarioCitas
     /** @var list<object> citas del periodo, en orden de hora */
     private array $citas;
 
-    /** @var array<string, array<int, true>> tramos ocupados por día ('Y-m-d' => [fila => true]) */
+    /** @var array<string, list<array{0: int, 1: int}>> citas vigentes por día, en minutos [inicio, fin) */
     private array $ocupados = [];
 
     private CarbonImmutable $inicio;
@@ -84,11 +84,11 @@ final class CalendarioCitas
             if ($dentista !== null && ($cita->dentista_id ?? null) !== $dentista) {
                 continue;
             }
-            [$fila, $tramos] = $this->posicion($cita);
-            $iso = $this->momento($cita)->toDateString();
-            for ($f = $fila; $f < $fila + $tramos; $f++) {
-                $this->ocupados[$iso][$f] = true;
-            }
+            // Por minuto de reloj, no por fila: una cita fuera de la cuadrícula visible (que el
+            // buscador o el estado ocultan) no se recorta sobre la primera fila (/review R3).
+            $momento = $this->momento($cita);
+            $empieza = $momento->hour * 60 + $momento->minute;
+            $this->ocupados[$momento->toDateString()][] = [$empieza, $empieza + max(1, (int) $cita->duracion_min)];
         }
     }
 
@@ -149,7 +149,11 @@ final class CalendarioCitas
     /** `fecha` de la semana (o el mes) del otro modo de vista, para el interruptor «Semana · Mes». */
     public function fechaOtraVista(): string
     {
+        // Si el mes empieza en domingo, su primera semana es la del lunes 2 (/review R4).
         $base = $this->dia ?? ($this->contieneHoy() ? $this->ahora->startOfDay() : $this->inicio);
+        if ($base->dayOfWeekIso === 7 && $this->vista === 'mes') {
+            $base = $base->addDay();
+        }
 
         return ($this->vista === 'mes' ? $base->startOfWeek(CarbonInterface::MONDAY) : $base->startOfMonth())->toDateString();
     }
@@ -305,6 +309,10 @@ final class CalendarioCitas
         }
 
         $sabado = $this->inicio->addDays(5);
+        if ($this->inicio->year !== $sabado->year) {
+            // La semana cruza el año: los dos extremos con su año (/review R26).
+            return 'Resumen de la semana del '.$this->fechaLarga($this->inicio, true).' al '.$this->fechaLarga($sabado, true);
+        }
         $desde = $this->inicio->month === $sabado->month ? (string) $this->inicio->day : $this->fechaLarga($this->inicio);
 
         return 'Resumen de la semana del '.$desde.' al '.$this->fechaLarga($sabado);
@@ -404,11 +412,13 @@ final class CalendarioCitas
             if ($inicio->lessThanOrEqualTo($this->ahora)) {
                 continue;
             }
-            $fila = $this->filaDe($minuto);
-            if (isset($this->ocupados[$iso][$fila])) {
-                continue;
+            // Ocupado si alguna cita vigente se solapa con el tramo (10:15 de 45 min ocupa 10:00 y 10:30).
+            foreach ($this->ocupados[$iso] ?? [] as [$desde, $hasta]) {
+                if ($desde < $minuto + self::TRAMO_MIN && $hasta > $minuto) {
+                    continue 2;
+                }
             }
-            $huecos[] = ['fila' => $fila, 'hora' => $this->hora($minuto), 'fecha' => $iso, 'carril' => null];
+            $huecos[] = ['fila' => $this->filaDe($minuto), 'hora' => $this->hora($minuto), 'fecha' => $iso, 'carril' => null];
         }
 
         return $huecos;
