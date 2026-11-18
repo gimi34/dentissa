@@ -73,6 +73,26 @@ class CalendarioCitasAlcanceTest extends TestCase
         }
     }
 
+    /**
+     * R7 (TM1): con el buscador o con una dentista fuera de su alcance, la ocupación de los huecos sale
+     * de su propia consulta, que también lleva el alcance: la cita de D2 a las 14:00 no le quita a la
+     * asistente (que solo lleva a D1) ese hueco.
+     */
+    public function test_la_ocupacion_de_los_huecos_respeta_el_alcance_con_buscador_o_dentista_ajena(): void
+    {
+        foreach (['?buscar=Nadie', "?dentista_id={$this->d2}", '?buscar=Pablo'] as $consulta) {
+            $x = $this->xpath($this->actingAs($this->asistente)->get("/asistente/citas{$consulta}")->assertOk()->getContent());
+            $horas = array_map(function (DOMElement $a) {
+                parse_str((string) parse_url($a->getAttribute('href'), PHP_URL_QUERY), $parametros);
+
+                return $parametros['hora'] ?? '';
+            }, iterator_to_array($x->query("//*[{$this->clase('cal-dia')}][@data-dia='2026-11-18']//a[{$this->clase('cal-hueco')}]")));
+
+            $this->assertContains('14:00', $horas, "{$consulta}: la cita de D2 no ocupa el tramo de la asistente");
+            $this->assertNotContains('10:00', $horas, "{$consulta}: su propia cita sí lo ocupa");
+        }
+    }
+
     public function test_la_administracion_ve_todas_las_citas(): void
     {
         $respuesta = $this->actingAs($this->admin)->get('/admin/citas')->assertOk();
