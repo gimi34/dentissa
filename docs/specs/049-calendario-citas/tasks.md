@@ -73,7 +73,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: `docs/architecture.md` (párrafo de `app/Agenda/`, diagrama y filas «Agenda (personal)» y «Agenda (calendario)») y el mapa de `AGENTS.md` (filas `app/Agenda/` y `public/css/`), con aprobación del usuario del 2026-11-17.
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
   - nota: sin cambios en ninguno de los dos: la 049 no añade variables, entornos, pasos de despliegue, migraciones, logs, eventos de auditoría ni métricas (plan, Observabilidad y Rollout); `calendario.css` se sirve como las demás hojas de `public/css/`.
-- [ ] T092 Marcar spec como `implemented`: suite completa, Pint, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
+- [x] T092 Marcar spec como `implemented`: suite completa, Pint, gitleaks sobre el diff de la spec, criterios `[x]` y `docs/specs/README.md`
+  - nota: suite completa 1303 en verde (línea base 1257 + 46 de la 049; 1069 s); Pint limpio en los 13 PHP de la spec; gitleaks y semgrep limpios sobre el diff de la spec (código, vistas, CSS, tests, `capturar.mjs`, `system.*`, documentos de la 049 y `architecture.md`); CA1–CA10 marcados; `docs/specs/README.md` en `implemented`.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (semana, mes, día elegido, un hueco que abre «Nueva cita», en escritorio y móvil)
