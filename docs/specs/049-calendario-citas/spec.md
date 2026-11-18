@@ -1,7 +1,7 @@
 ---
 id: 049
 slug: calendario-citas
-status: approved
+status: implemented
 created: 2026-11-15
 extends: [034]
 ---
@@ -133,3 +133,4 @@ Ninguna.
 | 2026-11-17 | Spec, acta, plan y tareas aprobados de nuevo tras `/analyze` r3 pass | usuario |
 | 2026-11-17 | Implementada: CA1–CA10 con sus tests en verde (suite 1303); `implemented` | /implement 049 (T092) |
 | 2026-11-17 | `/review` r1 `changes_requested` (R1–R12 y cuatro menores se corrigen con T030–T037); vuelve a `approved` | /review 049 |
+| 2026-11-17 | Correcciones de /review r1 (T030–T037); suite 1318; `implemented` | /implement 049 |
