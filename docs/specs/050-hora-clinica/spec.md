@@ -1,7 +1,7 @@
 ---
 id: 050
 slug: hora-clinica
-status: approved
+status: implemented
 created: 2026-11-17
 extends: [002, 003, 004, 006, 007, 008, 010, 011, 012, 026, 038, 039, 049]
 ---
