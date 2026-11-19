@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\EstadosCita;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -12,7 +12,7 @@ class DashboardController extends Controller
     // ── ADMIN ──────────────────────────────────────────────────────────────
     public function admin()
     {
-        $hoy = Carbon::today();
+        $hoy = RelojClinica::fechaHoy();
 
         // Estadísticas principales
         $citasHoy = DB::table('citas')
@@ -56,7 +56,7 @@ class DashboardController extends Controller
     public function dentista()
     {
         $user = auth()->user();
-        $hoy = Carbon::today();
+        $hoy = RelojClinica::hoy();
 
         // Obtener el registro de personal del dentista autenticado
         $personal = DB::table('personal')
@@ -118,7 +118,7 @@ class DashboardController extends Controller
     public function asistente()
     {
         $user = auth()->user();
-        $hoy = Carbon::today();
+        $hoy = RelojClinica::fechaHoy();
 
         $personal = DB::table('personal')
             ->where('usuario_id', $user->id)
@@ -195,7 +195,7 @@ class DashboardController extends Controller
                 ->join('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
                 ->leftJoin('servicios', 'citas.servicio_id', '=', 'servicios.id')
                 ->where('citas.paciente_id', $paciente->id)
-                ->where('citas.fecha_hora', '>=', now())
+                ->where('citas.fecha_hora', '>=', RelojClinica::momentoLocal())
                 ->whereNotIn('citas.estado', ['cancelada', 'no_asistio'])
                 ->select(
                     'citas.id',
@@ -225,7 +225,7 @@ class DashboardController extends Controller
                 ->join('usuarios as ud', 'personal.usuario_id', '=', 'ud.id')
                 ->leftJoin('servicios', 'citas.servicio_id', '=', 'servicios.id')
                 ->where('citas.paciente_id', $paciente->id)
-                ->where('citas.fecha_hora', '<', now())
+                ->where('citas.fecha_hora', '<', RelojClinica::momentoLocal())
                 ->select(
                     'citas.id',
                     'citas.fecha_hora',
