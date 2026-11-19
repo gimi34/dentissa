@@ -53,7 +53,7 @@
             </div>
             @if($paciente->fecha_nacimiento)
                 <div style="font-size:13px;color:var(--text-muted);margin-top:4px">
-                    {{ (int) \App\Agenda\RelojClinica::deCita($paciente->fecha_nacimiento)->diffInYears(\App\Agenda\RelojClinica::hoy()) }} años ·
+                    {{ \App\Agenda\RelojClinica::edad($paciente->fecha_nacimiento) }} años ·
                     {{ \Carbon\Carbon::parse($paciente->fecha_nacimiento)->locale('es')->isoFormat('D MMM YYYY') }}
                 </div>
             @endif

@@ -91,7 +91,7 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
 - [x] T043 Ampliar los tests: `RelojClinica::edad('1950-02-12')` el 2026-02-12 da 76 y la víspera 75; `fechaDe("2026-11-18\n")` da `null`; y la ficha del paciente muestra 26 años a las 00:00 del 18 en la clínica — `tests/Unit/RelojClinicaTest.php`, `tests/Feature/HoraClinicaPanelesTest.php` — hecho cuando: los casos de `edad` y de `fechaDe` fallan con el código actual; el de los 26 años pasa y se comprueba calculando la edad un momento con la víspera (falla); restaurado — cubre: CA3, CA8
   - nota: edad y fechaDe en rojo antes de corregir; comprobado rompiendo: calculando la edad con la víspera falla el caso de los 26 años; restaurado.
   - nota: añadida por /review: R3, R4, R5
-- [ ] T044 Implementar `RelojClinica::edad()` con fechas puras, usarla en la ficha del paciente y cerrar el patrón de `fechaDe` con el modificador `D` — `app/Agenda/RelojClinica.php`, `resources/views/pacientes/show.blade.php` — hecho cuando: T043 pasa — cubre: CA3, CA8 — depende: T043
+- [x] T044 Implementar `RelojClinica::edad()` con fechas puras, usarla en la ficha del paciente y cerrar el patrón de `fechaDe` con el modificador `D` — `app/Agenda/RelojClinica.php`, `resources/views/pacientes/show.blade.php` — hecho cuando: T043 pasa — cubre: CA3, CA8 — depende: T043
   - nota: añadida por /review: R3, R5
 - [ ] T045 Fijar `clinica.zona_horaria` en `HistorialCitaTest` — `tests/Feature/HistorialCitaTest.php` — hecho cuando: el test pasa con `CLINICA_ZONA_HORARIA=UTC` en el entorno — cubre: CA7
   - nota: añadida por /review: R7

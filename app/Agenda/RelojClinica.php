@@ -63,10 +63,17 @@ final class RelojClinica
         return $fecha->setTimezone(self::zona());
     }
 
+    /** Años cumplidos hoy en la clínica. Cuenta con fechas puras: una medianoche que no existió en la zona no resta un año. */
+    public static function edad(string $nacimiento): int
+    {
+        return (int) CarbonImmutable::parse(substr($nacimiento, 0, 10), 'UTC')
+            ->diffInYears(CarbonImmutable::parse(self::fechaHoy(), 'UTC'));
+    }
+
     /** Fecha `AAAA-MM-DD` válida, entre 2000 y 2100, en la zona de la clínica; cualquier otro valor da null. */
     public static function fechaDe(mixed $valor): ?CarbonImmutable
     {
-        if (! is_string($valor) || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $m)
+        if (! is_string($valor) || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $valor, $m)
             || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1])
             || (int) $m[1] < self::ANIOS[0] || (int) $m[1] > self::ANIOS[1]) {
             return null;
