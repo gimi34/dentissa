@@ -135,10 +135,18 @@
                     </div>
                     <div class="field-group">
                         <label class="field-label" for="campo-ciudad">Ciudad</label>
-                        <input type="text" name="ciudad" id="campo-ciudad" @error('ciudad') aria-invalid="true" aria-describedby="error-ciudad" @enderror class="field {{ $errors->has('ciudad') ? 'field-error' : '' }}"
-                            value="{{ old('ciudad', $paciente->ciudad ?? '') }}"
-                            placeholder="Ciudad de México">
+                        @php
+                            $ciudadGuardada = $paciente->ciudad ?? null;
+                            $ciudadAntigua = \App\Pacientes\Ciudades::antigua($ciudadGuardada);
+                            $ayudasCiudad = array_filter([$errors->has('ciudad') ? 'error-ciudad' : null, $ciudadAntigua !== null ? 'aviso-ciudad' : null]);
+                        @endphp
+                        <select name="ciudad" id="campo-ciudad" @error('ciudad') aria-invalid="true" @enderror @if($ayudasCiudad) aria-describedby="{{ implode(' ', $ayudasCiudad) }}" @endif class="field {{ $errors->has('ciudad') ? 'field-error' : '' }}">
+                            @include('partials.opciones-ciudad', ['guardada' => $ciudadGuardada])
+                        </select>
                         @error('ciudad')<div class="error-msg" id="error-ciudad">{{ $message }}</div>@enderror
+                        @if($ciudadAntigua !== null)
+                            <div class="field-hint field-hint-aviso" id="aviso-ciudad">La ciudad guardada «{{ $ciudadAntigua }}» no está en la lista: elige una o deja «Sin indicar»</div>
+                        @endif
                     </div>
                 </div>
                 <div class="grid-2">
