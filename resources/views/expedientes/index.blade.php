@@ -36,7 +36,7 @@
                     @foreach($expedientes as $exp)
                     <tr>
                         <td class="celda-cab" data-label="Fecha" style="white-space:nowrap;color:var(--text-muted);font-size:13px">
-                            {{ \Carbon\Carbon::parse($exp->creado_en)->format('d/m/Y') }}
+                            {{ \App\Agenda\RelojClinica::delSistema($exp->creado_en)?->format('d/m/Y') }}
                         </td>
                         <td data-label="Paciente" style="font-weight:500">{{ $exp->paciente }}</td>
                         <td data-label="Diagnóstico" style="font-size:13px;color:var(--text-muted);max-width:360px">

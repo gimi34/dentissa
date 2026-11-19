@@ -66,7 +66,7 @@ class HoraClinicaFechasSistemaTest extends TestCase
         $this->assertStringContainsString('17/11/2026 21:50', $ficha, 'Ficha del expediente: fecha de alta.');
 
         // Lista de expedientes, lista y ficha de pacientes, ficha del usuario.
-        $this->assertFilaConFecha($this->actingAs($this->admin)->get('/admin/expedientes')->assertOk()->getContent(), 'Diagnóstico de prueba', '17/11/2026', 'Lista de expedientes');
+        $this->assertFilaConFecha($this->actingAs($this->dentista1)->get('/dentista/expedientes')->assertOk()->getContent(), 'Diagnóstico de prueba', '17/11/2026', 'Lista de expedientes');
         $this->assertFilaConFecha($this->actingAs($this->admin)->get('/admin/pacientes?buscar=Pablo')->assertOk()->getContent(), 'Pablo Paciente', '17/11/2026', 'Lista de pacientes');
         $this->assertMatchesRegularExpression('/17 nov\.? 2026/u', $this->actingAs($this->admin)->get("/admin/pacientes/{$this->p1}")->assertOk()->getContent(), 'Ficha del paciente: alta del expediente.');
         $usuario = $this->actingAs($this->admin)->get("/admin/usuarios/{$this->paciente1->id}")->assertOk()->getContent();

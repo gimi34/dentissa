@@ -53,7 +53,7 @@
             </div>
             @if($paciente->fecha_nacimiento)
                 <div style="font-size:13px;color:var(--text-muted);margin-top:4px">
-                    {{ \Carbon\Carbon::parse($paciente->fecha_nacimiento)->age }} años ·
+                    {{ (int) \App\Agenda\RelojClinica::deCita($paciente->fecha_nacimiento)->diffInYears(\App\Agenda\RelojClinica::hoy()) }} años ·
                     {{ \Carbon\Carbon::parse($paciente->fecha_nacimiento)->locale('es')->isoFormat('D MMM YYYY') }}
                 </div>
             @endif
@@ -219,7 +219,7 @@
                             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
                                 <div class="texto-partible">
                                     <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light)">
-                                        {{ \Carbon\Carbon::parse($exp->creado_en)->locale('es')->isoFormat('D MMM YYYY') }}
+                                        {{ \App\Agenda\RelojClinica::delSistema($exp->creado_en)?->locale('es')->isoFormat('D MMM YYYY') }}
                                         @if($exp->servicio) · {{ $exp->servicio }} @endif
                                     </div>
                                     <div style="font-size:14px;font-weight:500;color:var(--text);margin-top:3px">
