@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
+use Tests\Feature\Concerns\EventosDelTest;
 use Tests\TestCase;
 
 /**
@@ -24,6 +25,7 @@ use Tests\TestCase;
 class DenegacionesAuditadasTest extends TestCase
 {
     use DatabaseTransactions, EscenarioEstadosCita;
+    use EventosDelTest;
 
     protected function setUp(): void
     {
@@ -48,7 +50,7 @@ class DenegacionesAuditadasTest extends TestCase
 
     private function denegaciones(): Collection
     {
-        return DB::table('auditoria')->where('accion', 'acceso_denegado')->orderBy('id')->get();
+        return $this->auditoriaDelTest()->where('accion', 'acceso_denegado')->orderBy('id')->get();
     }
 
     /** Una cita de P2 (de D2), en el futuro, para pedirla como otro paciente o como D1. */
@@ -267,7 +269,7 @@ class DenegacionesAuditadasTest extends TestCase
         $this->get('/_pruebas/020/publica/abc')->assertForbidden();
         $this->get('/cliente/citas/'.$this->citaDeOtro())->assertRedirect('/login');
 
-        $this->assertCount(0, DB::table('auditoria')->get());
+        $this->assertCount(0, $this->auditoriaDelTest()->get());
     }
 
     /** La cita sigue en su estado y con su fecha: ninguna ruta del paciente la tocó. */

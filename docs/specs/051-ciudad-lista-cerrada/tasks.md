@@ -79,6 +79,11 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - [x] T028 Crear `App\Pacientes\CorreccionCiudades::ejecutar()` (recorrido por id con `chunkById`, comparación en PHP, `update` por id, todo en `DB::transaction` con el evento crítico `pacientes_ciudades_corregidas` al final) — app/Pacientes/CorreccionCiudades.php — hecho cuando: `CorreccionCiudadesTest` pasa — cubre: CA8, CA9, CA12 — depende: T016, T020
 - [x] T029 Crear la migración de datos que llama al servicio, con `down()` vacío y el comentario de por qué no se deshace y de que usa la lista vigente — database/migrations/2026_11_18_000000_corregir_ciudades_de_pacientes.php — hecho cuando: `migrate --force` sobre `dentissa_test` la ejecuta y deja su evento; `migrate:rollback --step=1` y otro `migrate` no corrigen nada (`corregidos` 0); la suite completa pasa — cubre: CA8, CA12 — depende: T028
   - nota: comprobado en una base de datos ficticia y en una copia local: 7 corregidas y 7 fuera de la lista; tras `migrate:rollback` y otro `migrate`, 0 corregidas. Controles de TM1–TM6 comprobados rompiéndolos uno por uno.
+- [x] T030 Hacer que `RegistroAuditoriaTest` e `IdentificadorPeticionTest` miren solo los eventos escritos durante cada test, con el trait nuevo `EventosDelTest` — tests/Feature/Concerns/EventosDelTest.php, tests/Feature/Auditoria/RegistroAuditoriaTest.php, tests/Feature/Auditoria/IdentificadorPeticionTest.php — hecho cuando: los dos pasan con el evento de la migración ya en la base de tests y las comprobaciones no cambian — cubre: CA12 — depende: T029
+  - nota: añadida durante /implement: la migración deja su evento antes de la suite (la CI migra antes de los tests) y la auditoría no admite borrados; 19 tests de la 020 suponían la tabla vacía (decisión del usuario, 2026-11-18).
+- [x] T031 Hacer lo mismo en `ConsultaAuditoriaTest` y `DenegacionesAuditadasTest` — tests/Feature/Auditoria/ConsultaAuditoriaTest.php, tests/Feature/Auditoria/DenegacionesAuditadasTest.php — hecho cuando: `tests/Feature/Auditoria` pasa completo con el evento de la migración en la base de tests — cubre: CA12 — depende: T030
+  - nota: `tests/Feature/Auditoria` pasa completo (111 tests) con el evento de la migración en la base de tests.
+  - nota: añadida durante /implement: mismo motivo que T030.
 
 ## Integración y documentación
 - [ ] T090 Actualizar `docs/architecture.md` si cambió la estructura: módulo `app/Pacientes/` (`Ciudades`, `CorreccionCiudades`), la regla `CiudadDeLaLista` y la migración de datos; y en `AGENTS.md` → «Mapa del repositorio», la fila de `app/Pacientes/` y la regla en `app/Rules/`
@@ -105,7 +110,7 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | CA9 | T016 | T028 |
 | CA10 | T010, T013 | T021, T022, T024, T025 |
 | CA11 | T014 | T026 |
-| CA12 | T016 | T028, T029 |
+| CA12 | T016 | T028, T029, T030, T031 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -134,6 +139,7 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | public/css/auth.css | T022 |
 | docs/design/system.md, docs/design/system.html | T001 |
 | tests/Feature/MovilPacientesExpedientesTest.php | T027 |
+| tests/Feature/Concerns/EventosDelTest.php, tests/Feature/Auditoria/ (añadido durante /implement) | T030, T031 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|

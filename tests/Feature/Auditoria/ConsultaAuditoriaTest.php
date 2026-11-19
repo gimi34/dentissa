@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Tests\Feature\Concerns\EventosDelTest;
 use Tests\TestCase;
 
 /**
@@ -29,6 +30,7 @@ use Tests\TestCase;
 class ConsultaAuditoriaTest extends TestCase
 {
     use DatabaseTransactions;
+    use EventosDelTest;
 
     private const URL = '/admin/auditoria';
 
@@ -81,7 +83,7 @@ class ConsultaAuditoriaTest extends TestCase
 
     private function consultadas(): Collection
     {
-        return DB::table('auditoria')->where('accion', 'auditoria_consultada')->get();
+        return $this->auditoriaDelTest()->where('accion', 'auditoria_consultada')->get();
     }
 
     private function xpath(string $html): DOMXPath
@@ -177,7 +179,7 @@ class ConsultaAuditoriaTest extends TestCase
         $this->from(self::URL)->consultar(['recurso_id' => 'Juan Pérez', 'actor' => 'Juan Pérez'])
             ->assertRedirect(self::URL)->assertSessionHasErrors(['recurso_id', 'actor']);
 
-        $this->assertFalse(DB::table('auditoria')->get()->contains(fn ($evento) => str_contains(json_encode($evento, JSON_UNESCAPED_UNICODE), 'Juan')));
+        $this->assertFalse($this->auditoriaDelTest()->get()->contains(fn ($evento) => str_contains(json_encode($evento, JSON_UNESCAPED_UNICODE), 'Juan')));
         $this->assertCount(0, $this->consultadas());
     }
 
@@ -291,7 +293,7 @@ class ConsultaAuditoriaTest extends TestCase
 
             $this->actingAs($usuario)->get(self::URL)->assertForbidden();
 
-            $evento = DB::table('auditoria')->where('accion', 'acceso_denegado')->where('actor_id', $usuario->id)->sole();
+            $evento = $this->auditoriaDelTest()->where('accion', 'acceso_denegado')->where('actor_id', $usuario->id)->sole();
             $this->assertSame('denegado', $evento->resultado);
             $this->assertSame(['accion_solicitada' => 'admin.auditoria.index'], json_decode($evento->detalle, true));
             $this->assertSame('auditoria', $evento->recurso_tipo);
@@ -367,7 +369,7 @@ class ConsultaAuditoriaTest extends TestCase
     {
         $this->get(self::URL)->assertRedirect('/login');
 
-        $this->assertCount(0, DB::table('auditoria')->get());
+        $this->assertCount(0, $this->auditoriaDelTest()->get());
     }
 
     /**
