@@ -78,13 +78,28 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
   - nota: HoraClinicaFechasSistemaTest: la lista de expedientes se pide como dentista, porque la administración no la tiene.
 - [x] T032 [P] Fechas de alta del usuario y del consentimiento de la galería con `delSistema` — `resources/views/usuarios/show.blade.php`, `resources/views/galeria/index.blade.php` — hecho cuando: `test_las_fechas_de_alta_se_muestran_en_hora_de_la_clinica` pasa entero — cubre: CA7 — depende: T014, T020
 
+## Correcciones de /review
+- [ ] T040 Ampliar `HoraClinicaFormulariosTest`: una próxima visita de hoy con hora (`2026-11-17 10:00` y `2026-11-17T23:59:59`) se rechaza por el alta (`POST`) y por la ficha (`PUT`), con «La próxima visita debe tener el formato AAAA-MM-DD.»; un nacimiento `2026-11-17T00:00:00+14:00` y `2026-11-20 -10 days` se rechaza en el alta y la edición de paciente, el perfil y los dos registros, con «La fecha de nacimiento debe tener el formato AAAA-MM-DD.»; y el caso de D10 cambia también el diagnóstico y comprueba que se guardó — `tests/Feature/HoraClinicaFormulariosTest.php` — hecho cuando: los casos nuevos de rechazo fallan con el código actual — cubre: CA5, CA10
+  - nota: añadida por /review: R1, R2, R6
+- [ ] T041 Exigir el formato `AAAA-MM-DD` en `proxima_visita` del alta y de la ficha (también cuando la fecha llega sin cambios), con «La próxima visita debe tener el formato AAAA-MM-DD.» — `app/Http/Controllers/ExpedientesController.php` — hecho cuando: los casos de la próxima visita de T040 pasan y `MovilPacientesExpedientesTest` sigue en verde — cubre: CA10 — depende: T040
+  - nota: añadida por /review: R1
+- [ ] T042 Exigir el formato `AAAA-MM-DD` en `fecha_nacimiento` del alta y la edición de paciente, el perfil y los dos registros, con «La fecha de nacimiento debe tener el formato AAAA-MM-DD.» — `app/Http/Controllers/PacientesController.php`, `app/Http/Controllers/PerfilController.php`, `app/Http/Controllers/RegisterController.php` — hecho cuando: los casos de nacimiento de T040 pasan — cubre: CA5, CA10 — depende: T040
+  - nota: añadida por /review: R2
+- [ ] T043 Ampliar los tests: `RelojClinica::edad('1950-02-12')` el 2026-02-12 da 76 y la víspera 75; `fechaDe("2026-11-18\n")` da `null`; y la ficha del paciente muestra 26 años a las 00:00 del 18 en la clínica — `tests/Unit/RelojClinicaTest.php`, `tests/Feature/HoraClinicaPanelesTest.php` — hecho cuando: los casos de `edad` y de `fechaDe` fallan con el código actual; el de los 26 años pasa y se comprueba calculando la edad un momento con la víspera (falla); restaurado — cubre: CA3, CA8
+  - nota: añadida por /review: R3, R4, R5
+- [ ] T044 Implementar `RelojClinica::edad()` con fechas puras, usarla en la ficha del paciente y cerrar el patrón de `fechaDe` con el modificador `D` — `app/Agenda/RelojClinica.php`, `resources/views/pacientes/show.blade.php` — hecho cuando: T043 pasa — cubre: CA3, CA8 — depende: T043
+  - nota: añadida por /review: R3, R5
+- [ ] T045 Fijar `clinica.zona_horaria` en `HistorialCitaTest` — `tests/Feature/HistorialCitaTest.php` — hecho cuando: el test pasa con `CLINICA_ZONA_HORARIA=UTC` en el entorno — cubre: CA7
+  - nota: añadida por /review: R7
+- [ ] T046 Sacar el mes y el año de «citas este mes» de un solo instante — `app/Http/Controllers/PersonalController.php` — hecho cuando: `test_las_cuentas_del_mes_usan_el_mes_de_la_clinica` sigue en verde — cubre: CA6
+  - nota: añadida por /review: R8
+
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` (convención de fechas: el sistema guarda en UTC, las citas en hora local, y toda referencia a hoy o ahora y toda fecha mostrada pasa por `RelojClinica`), el comentario de `zona_horaria` en `config/clinica.php` (A20) y el mapa de `AGENTS.md`, fila `app/Agenda/` (ruta protegida: con aprobación del usuario)
   - nota: AGENTS.md (ruta protegida) con aprobación del usuario el 2026-11-18.
 - [x] T091 Actualizar `docs/deployment.md` (la fila de `CLINICA_ZONA_HORARIA` describe que decide toda referencia a hoy, ahora y las fechas mostradas; A20) y `docs/observability.md` si cambiaron logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
   - nota: deployment.md actualizado; observability.md sin cambios: la 050 no añade logs, eventos de auditoría ni métricas (plan).
-- [x] T092 Marcar spec como `implemented`: suite completa (con las de regresión de CA9 sin tocar, las de T016), Pint, gitleaks y semgrep sobre lo tocado, `composer audit` y `npm audit --audit-level=high` (A15); el grep del plan (fila RNF «una sola zona») en `app/Http` y `resources/views` sin resultados fuera de sus excepciones (A14, A25); criterios `[x]` y `docs/specs/README.md`
-  - nota: suite completa 1368 en verde (18797 aserciones); CA9: las mismas 400 pruebas de T016 en verde, sin más cambio que un comentario en EstadosCitaVistasTest (T015); Pint, semgrep y gitleaks limpios sobre lo tocado; composer audit sin altas; npm audit sin altas; el grep del plan solo da sus excepciones.
+- [ ] T092 Marcar spec como `implemented`: suite completa (con las de regresión de CA9 sin tocar, las de T016), Pint, gitleaks y semgrep sobre lo tocado, `composer audit` y `npm audit --audit-level=high` (A15); el grep del plan (fila RNF «una sola zona») en `app/Http` y `resources/views` sin resultados fuera de sus excepciones (A14, A25); criterios `[x]` y `docs/specs/README.md`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
@@ -97,18 +112,18 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
 |---|---|---|
 | CA1 | T011 | T021, T022, T026 |
 | CA2 | T011 | T021, T023 |
-| CA3 | T011 | T024, T031 |
+| CA3 | T011, T043 | T024, T031, T044 |
 | CA4 | T012 (caracterización) | — (la agenda de la 049 ya usa la hora de la clínica; el test la fija; A6) |
-| CA5 | T013 | T023, T024, T025, T027, T028, T029 |
-| CA6 | T011 | T021, T026 |
-| CA7 | T014, T015 | T027, T030, T031, T032 |
-| CA8 | T010, T011 | T020, T021, T022 |
+| CA5 | T013, T040 | T023, T024, T025, T027, T028, T029, T042 |
+| CA6 | T011 | T021, T026, T046 |
+| CA7 | T014, T015, T045 | T027, T030, T031, T032 |
+| CA8 | T010, T011, T043 | T020, T021, T022, T044 |
 | CA9 | T016 (línea base), T092 (las mismas suites al cerrar) | — (D4: no se toca lo que ya usa la hora de la clínica) |
-| CA10 | T013 | T023, T024, T027, T028 |
+| CA10 | T013, T040 | T023, T024, T027, T028, T041, T042 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
-| TM1 | T023, T024, T027, T028 | T013 |
+| TM1 | T023, T024, T027, T028, T041, T042 | T013, T040 |
 | TM2 | T023 | T013 |
 
 | Cambio del plan (módulo) | Tarea(s) |
