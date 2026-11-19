@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
+use Tests\Feature\Concerns\EventosDelTest;
 use Tests\Support\AlmacenAuditoriaQueFalla;
 use Tests\TestCase;
 
@@ -19,6 +20,7 @@ class CorreccionCiudadesTest extends TestCase
 {
     use DatabaseTransactions;
     use EscenarioEstadosCita;
+    use EventosDelTest;
 
     private const ACCION = 'pacientes_ciudades_corregidas';
 
@@ -95,9 +97,9 @@ class CorreccionCiudadesTest extends TestCase
     {
         $totales = app(CorreccionCiudades::class)->ejecutar();
 
-        $evento = DB::table('auditoria')->where('accion', self::ACCION)->orderByDesc('id')->first();
+        // Solo el de este test: la migración deja el suyo antes de la suite (/review R7).
+        $evento = $this->auditoriaDelTest()->where('accion', self::ACCION)->sole();
 
-        $this->assertNotNull($evento, 'Queda un evento de la corrección.');
         $this->assertSame('exito', $evento->resultado);
         $this->assertSame('pacientes', $evento->recurso_tipo);
         $this->assertNull($evento->recurso_id);
@@ -130,6 +132,17 @@ class CorreccionCiudadesTest extends TestCase
         foreach ($this->pacientes as $paciente => $ciudad) {
             $this->assertSame($ciudad, $this->ciudadDe($paciente), "«{$ciudad}» sigue como estaba.");
         }
+    }
+
+    /** /review R5: la migración llama a la corrección y deja su evento. */
+    public function test_la_migracion_ejecuta_la_correccion(): void
+    {
+        $migracion = require database_path('migrations/2026_11_18_000000_corregir_ciudades_de_pacientes.php');
+
+        $migracion->up();
+
+        $this->assertSame('Lázaro Cárdenas', $this->ciudadDe($this->idDe('lazaro cardenas')));
+        $this->assertSame(1, $this->auditoriaDelTest()->where('accion', self::ACCION)->count());
     }
 
     private function ciudadDe(string $paciente): ?string

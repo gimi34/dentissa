@@ -309,13 +309,7 @@ class CiudadListaCerradaTest extends TestCase
         $this->assertSame(['error-ciudad', 'aviso-ciudad'], explode(' ', $campo->getAttribute('aria-describedby')));
     }
 
-    /** @return array<string, array{string}> */
-    public static function formulariosSinEsaCiudad(): array
-    {
-        return self::formularios();
-    }
-
-    #[DataProvider('formulariosSinEsaCiudad')]
+    #[DataProvider('formularios')]
     public function test_la_ciudad_antigua_de_otro_paciente_se_rechaza(string $formulario): void
     {
         $this->guardarCiudad('LC');
