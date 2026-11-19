@@ -1,7 +1,7 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.19.0
+version: 1.20.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
@@ -337,6 +337,14 @@ Recortes reales de las capturas en `capturas/componentes/` (vista en `system.htm
 - Error: borde `--red` y texto de ayuda en `--red` junto al campo.
 - `.field-hint` y `.field-hint-error` (spec 027) están en `app.css`, con `aria-describedby` y
   `aria-invalid` solo en el horario.
+- **Aviso de campo** (`.field-hint-aviso`, spec 051, 1.20.0): variante de `.field-hint` para avisos
+  que no son errores y no impiden guardar. Texto en `--text` (21:1 sobre `--white`; `--text-light`
+  no llega a 4.5:1), nunca en rojo, y enlazado al campo con `aria-describedby`.
+- **Desplegable de ciudad** (`.campo-ciudad`, spec 051, 1.20.0): en el registro y el perfil, donde el
+  foco de `.field` no llega a 3:1 (DS2), lleva borde `--border-control` (3.93:1 sobre `--white`, 3.67:1
+  sobre `--p50`), también con foco, y en `:focus-visible` el anillo `--focus-ring` de
+  `--focus-ring-width` con `--focus-ring-offset`. `auth.css` declara `--border-control` con el valor de
+  `app.css`.
 - Acceso: campos de 14px, de 40–42px de alto y radio 10px, con icono a la izquierda, foco en
   `--p300` y error en `--red`.
 
@@ -1222,3 +1230,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-14 | diseño | ¿Qué incorpora el sistema para abrir las citas del panel de inicio (spec 048)? | Versión 1.17.0, sin tokens nuevos: el componente «Cita que abre su detalle» (`.fila-cita` y `.cita-enlace`) en «Lista, tabla y tarjeta»: un solo enlace por cita en su dato principal con un `::after` que la cubre, reposo igual que hoy, fondo `--p50` al pasar el puntero solo en el escritorio (A57 de la 034), un solo anillo de foco por dentro y nombre accesible que empieza por el texto visible. Diseño: [048](../specs/048-citas-panel-detalle/design.md), sin exploración | `/design-spec 048` y `/analyze` 048 (A1, A4, A14), aprobado por el usuario |
 | 2026-11-14 | diseño | ¿Qué incorpora el sistema para la navegación interna (spec 046)? | Versión 1.18.0 (era 1.17.0; se renumeró al fusionar la v0.19.0, que liberó la 1.17.0 con la spec 048; decisión del usuario, 2026-11-15), sin tokens nuevos: las migas de pan pasan a ser una navegación con nombre y lista ordenada, con la página actual marcada y los separadores ocultos a los lectores de pantalla; el enlace va en `--p600` subrayado (`--p800` al pasar el puntero) y el elemento actual en `--text` sin subrayar; el camino puede pasar de línea a todos los anchos; regla de dónde se usan las migas y regla del título de pantalla. Cierra 033/R6 | usuario (spec 046, design.md sin candidatos) |
 | 2026-11-17 | diseño | ¿Qué incorpora el sistema para el calendario de citas (spec 049)? | Versión 1.19.0, sin tokens nuevos: componente «Calendario de citas» (resumen del periodo, barra del periodo, semana por horas con carriles, huecos y fuera de horario, tira de seis días, mes y lista del periodo con clases `.cal-lista-*`), con los cinco refinados del acta; las citas son una variante de «Cita que abre su detalle» (048); el filtro plegable de «Citas» pierde las fechas y los atajos. Diseño: [049](../specs/049-calendario-citas/design.md), candidato `c6` | `/design-spec 049`, aprobado por el usuario |
+| 2026-11-18 | diseño | ¿Qué incorpora el sistema para la ciudad de una lista cerrada (spec 051)? | Versión 1.20.0, sin colores nuevos: variante «Aviso de campo» (`.field-hint-aviso`) y «Desplegable de ciudad» (`.campo-ciudad`), que corrige el foco y el borde solo en ese campo; el token `--border-control` se declara también en `auth.css`, con el mismo valor. El resto de los `.field` sigue como deuda DS2 | usuario (spec 051, design.md y plan) |

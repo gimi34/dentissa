@@ -1,6 +1,7 @@
 ---
 spec: 051-ciudad-lista-cerrada
 plan: plan.md
+impl_base: 0667c58
 status: approved
 ---
 
@@ -44,8 +45,9 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   de T092.
 
 ## Preparación
-- [ ] T001 Añadir al sistema de diseño la variante «Aviso de campo» de `.field-hint` (texto en `--text`, enlazado con `aria-describedby`, para avisos que no son errores) en «Campo de formulario», subir la versión a 1.20.0 (o la siguiente libre) y añadir la fila de «Decisiones» — docs/design/system.md, docs/design/system.html — hecho cuando: la variante aparece en los dos documentos con su contraste (21:1 sobre `--white`) y `python .ai/bin/aidd.py validate` no da errores
-- [ ] T002 Poner la rama al día con `main` cuando la 050 esté fusionada (D8), resolver los choques y fijar la línea base de la suite — rama `feature/051-ciudad-lista-cerrada` — hecho cuando: la rama contiene la 050, no quedan conflictos y `php artisan test` pasa completo (resultado anotado en la nota de la tarea)
+- [x] T001 Añadir al sistema de diseño la variante «Aviso de campo» de `.field-hint` (texto en `--text`, enlazado con `aria-describedby`, para avisos que no son errores) en «Campo de formulario», subir la versión a 1.20.0 (o la siguiente libre) y añadir la fila de «Decisiones» — docs/design/system.md, docs/design/system.html — hecho cuando: la variante aparece en los dos documentos con su contraste (21:1 sobre `--white`) y `python .ai/bin/aidd.py validate` no da errores
+- [x] T002 Poner la rama al día con `main` cuando la 050 esté fusionada (D8), resolver los choques y fijar la línea base de la suite — rama `feature/051-ciudad-lista-cerrada` — hecho cuando: la rama contiene la 050, no quedan conflictos y `php artisan test` pasa completo (resultado anotado en la nota de la tarea)
+  - nota: rebase sobre `main` (02f4c3b, con la 050 liberada en v0.22.0); único choque, la fila de la 050 en `docs/specs/README.md`. Línea base: 1370 tests, 0 fallos (534 s), en un contenedor propio con el código del worktree.
 
 ## Tests (antes de implementar)
 - [ ] T010 [P] Escribir los tests unitarios de la lista y de la regla. `CiudadesTest`: 113 de Michoacán y 4 de Guerrero, sin repetidos; orden alfabético por clave sin tildes en cada grupo; «Otro lugar» al final de `nombres()`; `normalizar()` con mayúsculas, tildes, espacios dobles y finales, cada alias de D5, `null` para «LC», «zihuayork» y «colima», y estable al aplicarlo dos veces. `CiudadDeLaListaTest`: acepta un nombre de la lista; rechaza «Ciudad de México», 101 caracteres y `<b>x</b>` con «Elige una ciudad de la lista»; rechaza un array con el mismo mensaje; acepta la guardada fuera de la lista idéntica, también si tenía espacios sobrantes, y rechaza otra ciudad fuera de la lista distinta de la guardada — tests/Unit/CiudadesTest.php, tests/Unit/CiudadDeLaListaTest.php — hecho cuando: fallan porque las clases no existen (anotado) — cubre: CA1, CA5, CA6, CA8, CA10
