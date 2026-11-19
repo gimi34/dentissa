@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -88,7 +89,7 @@ class PacientesController extends Controller
             'telefono' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6',
 
-            'fecha_nacimiento' => 'nullable|date|before:today',
+            'fecha_nacimiento' => 'nullable|date|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
             'ciudad' => 'nullable|string|max:100',
@@ -102,6 +103,7 @@ class PacientesController extends Controller
             'dentista_id' => 'nullable|exists:personal,id',
         ], [
             'email.unique' => 'Este correo ya está registrado en el sistema.',
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
         // Genera o usa la contraseña ingresada
@@ -215,7 +217,7 @@ class PacientesController extends Controller
         $proximaCita = DB::table('citas')
             ->leftJoin('servicios', 'citas.servicio_id', '=', 'servicios.id')
             ->where('citas.paciente_id', $id)
-            ->where('citas.fecha_hora', '>=', now())
+            ->where('citas.fecha_hora', '>=', RelojClinica::momentoLocal())
             ->whereNotIn('citas.estado', ['cancelada', 'no_asistio'])
             ->select('citas.fecha_hora', 'servicios.nombre AS servicio')
             ->orderBy('citas.fecha_hora')
@@ -269,7 +271,7 @@ class PacientesController extends Controller
             'email' => "required|email|unique:usuarios,email,{$paciente->usuario_id},id",
             'telefono' => 'nullable|string|max:20',
 
-            'fecha_nacimiento' => 'nullable|date|before:today',
+            'fecha_nacimiento' => 'nullable|date|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
             'ciudad' => 'nullable|string|max:100',
@@ -281,6 +283,8 @@ class PacientesController extends Controller
             'contacto_emergencia' => 'nullable|string|max:200',
             'telefono_emergencia' => 'nullable|string|max:20',
             'dentista_id' => 'nullable|exists:personal,id',
+        ], [
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
         DB::transaction(function () use ($data, $paciente) {
