@@ -1,63 +1,69 @@
 ---
 result: fail
-round: 1
-mode: full
+round: 2
+mode: delta
 constitution_version: 1.3.0
 date: 2026-11-18
-spec_sha: e92f5b7bf3c7
-plan_sha: d3f9beab25d1
-tasks_sha: 7d9078d45ee8
+spec_sha: 221ae7cec958
+plan_sha: ef0f0dafc0e7
+tasks_sha: 1e5b46837215
 ---
 
 # Análisis · 050 La hora de la clínica en todo el panel
 
 ## Resumen
-`fail`: dos críticos de la constitución. La 050 modifica endpoints que no cumplen P3 (Gate por recurso, deuda
-RS1) ni P7 (auditoría de la ficha y de los cambios de pacientes y expedientes, OB1.d/e), y el plan los da por
-«➖» sin excepción, cuando la constitución exige ambos a todo endpoint modificado (precedente: plan de la 026).
-Además: la próxima visita del expediente se guarda también por `update`, sin regla (A4); TM1 no prueba las
-reglas de nacimiento del perfil, la edición y el registro (A5); `fecha` de «Agendar cita» del paciente llega sin
-validar (A3); CA4 describe la agenda anterior a la 049 (A6); y el `max` de nacimiento cambiaba sin pedirlo (A7).
-Análisis completo con un subagente independiente; cada hallazgo se verificó abriendo el archivo citado.
-Conteo: CRÍTICA 2 · ALTA 5 · MEDIA 8 · BAJA 5
+`fail` por decisión del usuario: los 20 hallazgos de la ronda 1 están resueltos (A1, A2, A4 y A14 con efecto
+nuevo), sin críticos ni altos. Quedan dos medios que el usuario decide corregir antes de aprobar: la próxima
+visita ya guardada que no se toca (A21) y la excepción de P3 y P7, que nombraba solo una parte de los endpoints
+(A22); y cinco bajos que se corrigen en la misma pasada. Delta con un subagente independiente (perfil `standard`;
+134 líneas cambiadas, 56 KB, sin cambio estructural).
+Conteo: CRÍTICA 0 · ALTA 0 · MEDIA 2 · BAJA 5
 
 ## Cobertura
 | Métrica | Valor |
 |---|---|
-| Criterios con tarea de test e implementación | 10 / 10 (CA4 de caracterización y CA9 de regresión; CA10 parcial: A4, A5) |
-| Amenazas con control y test | 1 / 1 (TM1 parcial: A4, A5; falta la de A3) |
-| Principios de la constitución evaluados | 10 / 10 |
+| Criterios con tarea de test e implementación | 10 / 10 (CA4 de caracterización, CA9 de regresión) |
+| Amenazas con control y test | 2 / 2 |
+| Principios de la constitución evaluados | 10 / 10 (delta: P2, P3, P6, P7) |
 
 ## Seguimiento de rondas anteriores
-Primera ronda.
+| ID | Severidad | Estado | Evidencia |
+|---|---|---|---|
+| A1 | CRÍTICA | resuelto con efecto nuevo (→ A22, A26) | Plan P3 con endpoints, RS1.a–e → 014, RS2.a y aprobación del 2026-11-18 |
+| A2 | CRÍTICA | resuelto con efecto nuevo (→ A22) | Plan P7 con OB1.d/e → 022 y aprobación |
+| A3 | ALTA | resuelto | Plan TM2; T023; `test_agendar_ignora_una_fecha_manipulada` en T013 |
+| A4 | ALTA | resuelto con efecto nuevo (→ A21) | Plan y T027 con `update`; T013 con POST y PUT |
+| A5 | ALTA | resuelto | T013: nacimiento 16/17 en la edición, el perfil y los dos registros |
+| A6 | ALTA | resuelto | Spec CA4, Decisiones y Fuera de alcance; plan; T012 (clases reales de la 049) |
+| A7 | ALTA | resuelto | Spec CA5; plan; T013 (`max` 2025-11-17), T024, T028, T029 |
+| A8 | MEDIA | resuelto | `extends` con 010, 038, 039 y 049 |
+| A9 | MEDIA | resuelto | Spec CA7, Diseño y Decisiones |
+| A10 | MEDIA | resuelto | Spec CA3; plan; T011 y T031 |
+| A11 | MEDIA | resuelto | T013 con el reloj también a las 10:00 de la clínica |
+| A12 | MEDIA | resuelto | T011, T013 y T025 |
+| A13 | MEDIA | resuelto | T013 (24 cercana, 25 no) y T027 |
+| A14 | MEDIA | resuelto con efecto nuevo (→ A25) | Plan RNF y T092 con patrón ampliado |
+| A15 | MEDIA | resuelto | Plan P6 con EX5; Rollout; T092 con los audits |
+| A16 | BAJA | resuelto (resto en el plan → A24) | Spec CA1 y T011 |
+| A17 | BAJA | resuelto | T014 y T027 |
+| A18 | BAJA | resuelto | T028 con los tests reales |
+| A19 | BAJA | resuelto | Plan y T016 con `AvisoProduccionTest` y `ContrasenaDistintaTest` |
+| A20 | BAJA | resuelto | Referencias corregidas; T090, T091 y T012 |
 
 ## Hallazgos nuevos
 | ID | Categoría | Severidad | Ubicación | Hallazgo | Corrección |
 |---|---|---|---|---|---|
-| A1 | Constitución (P3) | CRÍTICA | plan P3 (➖); tasks Constitution Check | Endpoints modificados sin Gate de recurso (`PacientesController::show/store/update`, `ExpedientesController::store/update`, `CitasController::create`, `PersonalController::show`, `ClienteCitasController::index/agendarForm/agendarStore`); RS1.a–d en curso → 014; el plan dice «no cambia quién ve qué» sin excepción | Decisión del usuario (2026-11-18): «❌ aceptado» con la lista de endpoints, RS1 → 014 (y RS2.a del grupo cliente) y la aprobación con fecha → `/plan --fix` |
-| A2 | Constitución (P7) | CRÍTICA | plan P7 (➖) | Lectura de la ficha y cambios de pacientes y expedientes sin auditoría (OB1.d, OB1.e pendientes) en endpoints que la 050 modifica | Decisión del usuario (2026-11-18): «❌ aceptado» con OB1.d/e → su spec y la aprobación con fecha → `/plan --fix` |
-| A3 | Seguridad (P4) | ALTA | `ClienteCitasController.php:298`; T023; modelo de amenazas | `fecha` de `GET /cliente/agendar` llega sin validar a `old('fecha', $fechaSugerida)`: con `?fecha[]=x`, 500 | Nueva amenaza: una `fecha` sugerida manipulada o no escalar se ignora y la página responde 200 (test en T013) → `/plan --fix`, `/tasks --fix` |
-| A4 | Cobertura (CA10/TM1) | ALTA | `ExpedientesController.php:201` (`update`: `nullable|date`); plan; T027; T013 | La ficha guarda la próxima visita por `PUT update`, sin `after`: tras la 050 seguiría aceptando fechas pasadas | El servidor rechaza una próxima visita del 17 por el alta y por la ficha (test: POST y PUT en T013) → `/plan --fix`, `/tasks --fix` |
-| A5 | Cobertura (TM1/P2) | ALTA | T013; T028; plan TM1 | Las reglas de nacimiento de la edición de paciente, el perfil y los dos registros cambian sin test que falle antes | T013 acepta el 16 y rechaza el 17, enviados a mano, en la edición de paciente, el perfil y los dos registros → `/tasks --fix` |
-| A6 | Inconsistencia (CA4/049) | ALTA | spec CA4, «Fuera de alcance», Decisión de la 049, Notas; plan Estrategia y Trazabilidad; T012; Cobertura | CA4 pide el filtro con fecha, «Hoy», «Esta semana» y la vista de próximos días, que la 049 retiró | Decisión del usuario (2026-11-18): CA4 reescrito sobre el calendario de la 049 → `/specify --edit`, `/plan --fix`, `/tasks --fix` (CA4 = caracterización) |
-| A7 | Inconsistencia | ALTA | `register.blade.php:241`, `registro-contacto.blade.php:86`, `cliente/perfil.blade.php:61`, `pacientes/create.blade.php:80`; plan; T013, T024, T028, T029 | El `max` de nacimiento («hace un año») pasaba a «ayer» sin pedirlo | Decisión del usuario (2026-11-18): se mantiene «hace un año», contado desde el día de la clínica (test: `max` 2025-11-17) → `/plan --fix`, `/tasks --fix` |
-| A8 | Inconsistencia (extends) | MEDIA | spec `extends` | Faltan 010 (alta del usuario), 038 (año del pie), 039 (consentimiento) y 049 (agenda y «Nueva cita») | → `/specify --edit` |
-| A9 | Inconsistencia (plan > spec) | MEDIA | plan D6; T014, T032; spec CA7 y Diseño | La galería entra por el plan sin estar en la spec | CA7 y Diseño con el consentimiento de la galería; fila en Decisiones → `/specify --edit` |
-| A10 | Cobertura | MEDIA | `pacientes/show.blade.php:56` (`->age`) | La edad se calcula con `now()` UTC | Decisión del usuario (2026-11-18): entra; la edad se calcula con el día de la clínica (test en T011) → `/plan --fix`, `/tasks --fix` |
-| A11 | Constitución (P2) | MEDIA | T013; `expedientes/show.blade.php:152` | El `min` de la ficha del expediente a las 21:50 ya es el 18 con el código actual: no falla antes | Comprobarlo también a una hora diurna de la clínica (10:00) → `/tasks --fix` |
-| A12 | Constitución (P2) | MEDIA | T022, T023, T025 | Consejo del día, fecha sugerida desde la próxima visita y fecha de la tarjeta de agenda de la dentista cambian sin test | Un caso de test para cada uno; T025 compara la próxima visita con «posterior a hoy» → `/tasks --fix` |
-| A13 | Cobertura (CA5) | MEDIA | `expedientes/show.blade.php:168` (`diffInDays` con signo, Carbon 3); T013, T027 | Hoy toda próxima visita futura sale «Próxima semana»; el test solo prueba una cercana | Una del 25 (8 días) no sale cercana (test en T013) → `/tasks --fix` |
-| A14 | Cobertura (RNF) | MEDIA | plan RNF; T092 | El grep no ve `date(`, `isPast/isFuture/isToday`, `->age` ni `parse($x->creado_en)`; excepciones incompletas | Patrón ampliado y excepciones enumeradas (escrituras de `creado_en`/`actualizado_en`, vencimiento del enlace de recuperación) → `/plan --fix`, `/tasks --fix` |
-| A15 | Inconsistencia (P6/Rollout) | MEDIA | plan P6 y Rollout; tasks Constitution Check, T092 | Las 6 altas de `picomatch` quedaron como EX5 (vence 2026-12-31) y la 049 ya está en v0.21.0; T092 no lista los audits | P6 con EX5; Rollout actualizado; `composer audit` y `npm audit` en T092 → `/plan --fix`, `/tasks --fix` |
-| A16 | Ambigüedad | BAJA | spec CA1; `dashboard/admin.blade.php:26` | El panel de la administración muestra «17 Nov», no «martes 17 de noviembre» | CA1: la fecha del encabezado en el formato de cada panel → `/specify --edit` |
-| A17 | Ambigüedad | BAJA | T027; `expedientes/show.blade.php:25, 186` | Dos fechas de alta en la ficha del expediente | Nombrar las dos → `/tasks --fix` |
-| A18 | Inconsistencia | BAJA | T028 (`Registro*Test`) | El registro se prueba en `LimiteIntentosTest`, `TerminosPrivacidadTest` y `ContrasenaDistintaTest` | Nombrar los tests reales → `/tasks --fix` |
-| A19 | Cobertura (CA9) | BAJA | T016, T092; plan Estrategia | Faltan `AvisoProduccionTest` y `ContrasenaDistintaTest` (correos) en la línea base | Añadirlos → `/plan --fix`, `/tasks --fix` |
-| A20 | Redacción | BAJA | spec Notas (`HistorialCitaTest.php:88`), plan (`EstadosCitaVistasTest.php:119`); `config/clinica.php`; `docs/deployment.md:226`; T012 | Referencias de línea desfasadas; el comentario de la configuración y deployment.md describen la zona solo para la 026; T012 no dice qué aserciones distinguen la zona | Referencias corregidas; T090/T091 incluyen el comentario y la fila; T012 nombra las aserciones que fallan con UTC → `/plan --fix`, `/tasks --fix` |
+| A21 | Cobertura / ambigüedad | MEDIA | plan (`ExpedientesController`); T027; T013; `expedientes/show.blade.php:150-168` | Con `after:hoy` en `update`, guardar la ficha sin tocar una próxima visita ya vencida se rechazaría | Decisión del usuario (2026-11-18): solo se exige «posterior a hoy» si la fecha cambia; una fecha guardada sin cambios se acepta (test en T013: PUT con la fecha anterior sin cambiar, aceptado; cambiada a una pasada, rechazado) → `/plan --fix`, `/tasks --fix` |
+| A22 | Constitución (P3/P7) | MEDIA | plan P3 y P7; tasks Constitution Check | La excepción nombra solo parte de los endpoints que la 050 modifica (perfil del paciente en `/cliente`, listas y fichas, detalle de la cita, usuario, galería, paneles; lectura del expediente en P7) | Decisión del usuario (2026-11-18): excepción ampliada a todos los endpoints cuya vista o regla de fecha cambia la 050, con la lista completa → `/plan --fix`; la spec nombra también la 015 (RS2.a) |
+| A23 | Inconsistencia | BAJA | spec Decisiones y Notas; plan Enfoque, P1, Riesgos y `CitasController` | Texto de cuando la 049 no estaba fusionada; el plan omite el `isFuture` de `CitasController:277` | Textos marcados como superados; `:277` en la fila → `/specify --edit`, `/plan --fix` |
+| A24 | Inconsistencia | BAJA | plan Estrategia (CA1) | El plan espera «martes, 17 de noviembre» en los tres paneles | El test de CA1 comprueba el formato de cada panel → `/plan --fix` |
+| A25 | Cobertura (RNF) | BAJA | plan RNF; T092 | El patrón `date(` y `today` da falsos positivos y las llamadas con zona no son excepción | Patrón sin ambigüedad (`\bdate\(`, reglas `before:`/`after:` con `fechaHoy()`) y las llamadas con la zona de la clínica como excepción → `/plan --fix`, `/tasks --fix` |
+| A26 | Constitución | BAJA | plan Decisiones; T098 | Las excepciones P3 y P7 no están como decisiones ni como deuda en el roadmap | Decisión en el plan y T098 anota la deuda → `/plan --fix`, `/tasks --fix` |
+| A27 | Duplicación | BAJA | T023; `CitasController.php:194` | T023 duplicaría la validación `AAAA-MM-DD` de `CitasController::fechaDe` | T023 reutiliza esa validación (sigue probada por T013) → `/tasks --fix` |
 
 ## Decisiones pendientes del usuario
-Resueltas el 2026-11-18: A1 y A2 (excepciones aceptadas, como en la 026), A7 (se mantiene «hace un año»), A10 (la
-edad entra) y A6, A8, A9 (se corrige la spec).
+Resueltas el 2026-11-18: A21 (se acepta la próxima visita guardada sin cambios) y A22 (excepción ampliada, con
+la lista completa, como decisión y como deuda en el roadmap).
 
 ## Aceptados
-Ninguno: todos se corrigen con `/specify --edit`, `/plan --fix` y `/tasks --fix` antes de la ronda 2.
+Ninguno: se corrigen todos antes de la ronda 3.
