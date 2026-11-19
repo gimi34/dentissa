@@ -238,7 +238,7 @@
                             <input type="date" id="fecha_nacimiento" name="fecha_nacimiento"
                                 class="field {{ $errors->has('fecha_nacimiento') ? 'field-error' : '' }}"
                                 value="{{ old('fecha_nacimiento') }}"
-                                max="{{ now()->subYears(1)->format('Y-m-d') }}">
+                                max="{{ \App\Agenda\RelojClinica::hoy()->subYear()->format('Y-m-d') }}">
                         </div>
                         @error('fecha_nacimiento')<div class="error-msg">{{ $message }}</div>@enderror
                     </div>

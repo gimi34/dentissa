@@ -163,7 +163,7 @@
                             @endif
                         </td>
                         <td class="solo-escritorio" data-label="Registrado" style="color:var(--text-muted);font-size:12.5px;white-space:nowrap">
-                            {{ \Carbon\Carbon::parse($p->creado_en)->format('d/m/Y') }}
+                            {{ \App\Agenda\RelojClinica::delSistema($p->creado_en)?->format('d/m/Y') }}
                         </td>
                         <td class="celda-acciones" data-label="Acciones">
                             <div style="display:flex;gap:4px;justify-content:flex-end">

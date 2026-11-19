@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -117,9 +118,11 @@ class ExpedientesController extends Controller
             'tratamiento' => 'nullable|string|max:2000',
             'receta' => 'nullable|string|max:2000',
             'observaciones' => 'nullable|string|max:2000',
-            'proxima_visita' => 'nullable|date|after:today',
+            'proxima_visita' => 'nullable|date_format:Y-m-d|after:'.RelojClinica::fechaHoy(),
         ], [
             'diagnostico.required' => 'El diagnóstico es obligatorio.',
+            'proxima_visita.date_format' => 'La próxima visita debe tener el formato AAAA-MM-DD.',
+            'proxima_visita.after' => 'La próxima visita debe ser posterior a hoy.',
         ]);
 
         $id = (string) Str::uuid();
@@ -193,12 +196,19 @@ class ExpedientesController extends Controller
             abort(403);
         }
 
+        // Una próxima visita ya guardada que llega sin cambios se acepta aunque haya vencido (spec 050, D10).
+        $guardada = DB::table('expedientes')->where('id', $id)->value('proxima_visita');
+        $sinCambios = $guardada !== null && $request->input('proxima_visita') === substr((string) $guardada, 0, 10);
+
         $data = $request->validate([
             'diagnostico' => 'required|string|max:2000',
             'tratamiento' => 'nullable|string|max:2000',
             'receta' => 'nullable|string|max:2000',
             'observaciones' => 'nullable|string|max:2000',
-            'proxima_visita' => 'nullable|date',
+            'proxima_visita' => $sinCambios ? 'nullable|date_format:Y-m-d' : 'nullable|date_format:Y-m-d|after:'.RelojClinica::fechaHoy(),
+        ], [
+            'proxima_visita.date_format' => 'La próxima visita debe tener el formato AAAA-MM-DD.',
+            'proxima_visita.after' => 'La próxima visita debe ser posterior a hoy.',
         ]);
 
         DB::table('expedientes')->where('id', $id)->update($data);

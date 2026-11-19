@@ -20,9 +20,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | Las citas guardan su fecha y hora en la hora local de la clínica, mientras
-    | que la aplicación trabaja en UTC (config/app.php). Esta zona se usa para
-    | decidir si una cita ya empezó (spec 026). Debe ser un identificador válido
-    | de zona horaria de PHP.
+    | que la aplicación trabaja en UTC (config/app.php). Esta zona decide si una
+    | cita ya empezó (spec 026) y toda referencia a «hoy» o «ahora» y toda fecha
+    | mostrada, a través de App\Agenda\RelojClinica (spec 050). Debe ser un
+    | identificador válido de zona horaria de PHP.
     |
     */
 

@@ -17,7 +17,7 @@
 <div class="welcome-banner" style="margin-bottom:22px">
     <div style="z-index:1">
         <div class="welcome-title">Buen día, Dr. {{ auth()->user()->nombre }}</div>
-        <div class="welcome-sub">{{ now()->locale('es')->isoFormat('dddd, D [de] MMMM') }} · {{ $citasHoy ?? 0 }} {{ ($citasHoy ?? 0) == 1 ? 'cita programada' : 'citas programadas' }} hoy</div>
+        <div class="welcome-sub">{{ \App\Agenda\RelojClinica::ahora()->locale('es')->isoFormat('dddd, D [de] MMMM') }} · {{ $citasHoy ?? 0 }} {{ ($citasHoy ?? 0) == 1 ? 'cita programada' : 'citas programadas' }} hoy</div>
     </div>
     <div class="welcome-actions">
         <a href="/dentista/citas" class="btn btn-white btn-sm">Ver agenda</a>
@@ -66,7 +66,7 @@
     <div>
         <div class="section-head">
             <span class="section-title">Agenda de hoy</span>
-            <span style="font-size:12px;color:var(--text-muted)">{{ now()->format('d/m/Y') }}</span>
+            <span style="font-size:12px;color:var(--text-muted)">{{ \App\Agenda\RelojClinica::ahora()->format('d/m/Y') }}</span>
         </div>
         <div class="card card-0">
             @if(isset($citasHoyLista) && $citasHoyLista->count() > 0)

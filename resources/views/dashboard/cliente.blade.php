@@ -181,7 +181,7 @@
                     'Reducir el consumo de azúcar protege tus dientes del deterioro.',
                     'Las revisiones cada 6 meses ayudan a detectar problemas a tiempo.',
                 ];
-                $tip = $tips[date('N') % count($tips)];
+                $tip = $tips[\App\Agenda\RelojClinica::ahora()->dayOfWeekIso % count($tips)];
             @endphp
             <p style="font-size:13px;color:var(--p800);line-height:1.6">{{ $tip }}</p>
         </div>

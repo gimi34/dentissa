@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class RegisterController extends Controller
 
             // Paso 2 — Contacto
             'telefono' => ['nullable', 'string', 'max:20'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
@@ -49,6 +50,7 @@ class RegisterController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'terminos.accepted' => 'Debes aceptar los términos de uso y el aviso de privacidad.',
         ]);
@@ -123,12 +125,13 @@ class RegisterController extends Controller
 
         $data = $request->validate([
             'telefono' => ['nullable', 'string', 'max:20'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
             'terminos' => ['accepted'],
         ], [
+            'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'terminos.accepted' => 'Debes aceptar los términos de uso y el aviso de privacidad.',
         ]);

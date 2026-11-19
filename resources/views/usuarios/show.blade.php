@@ -88,7 +88,7 @@
                     
                     <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
                         <span style="font-weight:500;color:var(--text)">Registrado el:</span>
-                        <span style="color:var(--text-muted)">{{ $usuario->creado_en ? \Carbon\Carbon::parse($usuario->creado_en)->format('d/m/Y') : 'N/A' }}</span>
+                        <span style="color:var(--text-muted)">{{ $usuario->creado_en ? \App\Agenda\RelojClinica::delSistema($usuario->creado_en)->format('d/m/Y') : 'N/A' }}</span>
                     </div>
 
                 </div>

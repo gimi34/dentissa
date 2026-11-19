@@ -6,6 +6,7 @@ use App\Agenda\CalendarioCitas;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
+use App\Agenda\RelojClinica;
 use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
 use App\Autorizacion\AlcanceClinico;
@@ -100,9 +101,9 @@ class CitasController extends Controller
 
         // Parámetros (contrato del plan 049): lo que no es escalar o no tiene su formato se ignora.
         $vista = in_array($this->textoDe($request, 'vista'), ['semana', 'mes'], true) ? $this->textoDe($request, 'vista') : 'semana';
-        $fecha = $this->fechaDe($request, 'fecha', $ahora) ?? $this->fechaDe($request, 'fecha_desde', $ahora) ?? $ahora->startOfDay();
+        $fecha = $this->fechaDe($request, 'fecha') ?? $this->fechaDe($request, 'fecha_desde') ?? $ahora->startOfDay();
         [$inicio, $fin] = CalendarioCitas::periodo($vista, $fecha);
-        $dia = $this->fechaDe($request, 'dia', $ahora);
+        $dia = $this->fechaDe($request, 'dia');
         if ($dia !== null && ($dia->lessThan($inicio) || $dia->greaterThan($fin))) {
             $dia = null;
         }
@@ -184,21 +185,10 @@ class CitasController extends Controller
         return is_string($valor) ? $valor : null;
     }
 
-    /** Primer y último año que admite un parámetro de fecha (/review R27): fuera, no es válido. */
-    private const ANIOS = [2000, 2100];
-
-    /** Fecha `AAAA-MM-DD` válida de un parámetro, entre 2000 y 2100, en la zona de la clínica, o null. */
-    private function fechaDe(Request $request, string $clave, CarbonImmutable $ahora): ?CarbonImmutable
+    /** Fecha `AAAA-MM-DD` válida de un parámetro de la dirección, en la zona de la clínica, o null. */
+    private function fechaDe(Request $request, string $clave): ?CarbonImmutable
     {
-        $valor = $this->textoDe($request, $clave);
-        if ($valor === null || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $m) || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
-            return null;
-        }
-        if ((int) $m[1] < self::ANIOS[0] || (int) $m[1] > self::ANIOS[1]) {
-            return null;
-        }
-
-        return CarbonImmutable::createFromFormat('!Y-m-d', $valor, $ahora->getTimezone());
+        return RelojClinica::fechaDe($request->query($clave));
     }
 
     /** Dentistas del desplegable del filtro, respetando el alcance del rol (como hoy). */
@@ -251,12 +241,11 @@ class CitasController extends Controller
 
         // Preselección al venir desde el perfil de un paciente o desde un hueco del calendario
         // (spec 049): solo se proponen valores de texto con su formato; lo demás se ignora (A13, A29).
-        $ahora = CarbonImmutable::now(config('clinica.zona_horaria'));
         $uuid = fn (string $clave) => Str::isUuid((string) $this->textoDe($request, $clave)) ? $this->textoDe($request, $clave) : null;
         $pacienteSeleccionado = $uuid('paciente_id');
         $dentistaSeleccionado = $uuid('dentista');
 
-        $fechaSugerida = $this->fechaDe($request, 'fecha', $ahora)?->toDateString();
+        $fechaSugerida = $this->fechaDe($request, 'fecha')?->toDateString();
 
         if ($pacienteSeleccionado) {
             // Si el paciente tiene doctor asignado, preseleccionarlo
@@ -274,13 +263,13 @@ class CitasController extends Controller
                     ->orderByDesc('creado_en')
                     ->value('proxima_visita');
 
-                if ($proximaVisita && Carbon::parse($proximaVisita)->isFuture()) {
+                if ($proximaVisita && Carbon::parse($proximaVisita)->toDateString() > RelojClinica::fechaHoy()) {
                     $fechaSugerida = Carbon::parse($proximaVisita)->format('Y-m-d');
                 }
             }
         }
 
-        $fechaSugerida = $fechaSugerida ?: now()->addDay()->format('Y-m-d');
+        $fechaSugerida = $fechaSugerida ?: RelojClinica::hoy()->addDay()->toDateString();
         $hora = (string) $this->textoDe($request, 'hora');
         $horaSugerida = preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora) ? $hora : '09:00';
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,13 +36,14 @@ class PerfilController extends Controller
             'apellido' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', "unique:usuarios,email,{$user->id},id"],
             'telefono' => ['nullable', 'string', 'max:20'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
             'contrasena_correo' => ['nullable', 'string', 'max:255'],
         ], [
             'email.unique' => 'Este correo ya está en uso por otra cuenta.',
+            'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 

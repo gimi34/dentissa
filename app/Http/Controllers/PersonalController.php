@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Agenda\HorarioDentista;
 use App\Agenda\HorarioNoGuardado;
+use App\Agenda\RelojClinica;
 use App\Rules\HoraFinPosterior;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -206,10 +206,11 @@ class PersonalController extends Controller
                 ->get();
 
             $totalCitas = DB::table('citas')->where('dentista_id', $id)->count();
+            $ahora = RelojClinica::ahora();
             $citasEsteMes = DB::table('citas')
                 ->where('dentista_id', $id)
-                ->whereMonth('fecha_hora', now()->month)
-                ->whereYear('fecha_hora', now()->year)
+                ->whereMonth('fecha_hora', $ahora->month)
+                ->whereYear('fecha_hora', $ahora->year)
                 ->count();
 
             $asistentesAsignados = DB::table('asistente_dentista')
@@ -453,7 +454,7 @@ class PersonalController extends Controller
                 ->orderBy('usuarios.nombre')
                 ->get();
 
-            $hoy = Carbon::today();
+            $hoy = RelojClinica::fechaHoy();
             foreach ($doctores as $doc) {
                 $doc->citas_hoy = DB::table('citas')
                     ->where('dentista_id', $doc->id)

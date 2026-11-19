@@ -94,7 +94,7 @@
         </div>
         <div class="pub-foot__small">
             <span>Melissa López N. · Odontología integral</span>
-            <span>© {{ now()->year }} Dentissa</span>
+            <span>© {{ \App\Agenda\RelojClinica::ahora()->year }} Dentissa</span>
         </div>
     </div>
 </footer>

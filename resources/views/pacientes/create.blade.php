@@ -77,7 +77,7 @@
                         <label class="field-label" for="campo-fecha_nacimiento">Fecha de nacimiento</label>
                         <input type="date" name="fecha_nacimiento" id="campo-fecha_nacimiento" @error('fecha_nacimiento') aria-invalid="true" aria-describedby="error-fecha_nacimiento" @enderror class="field {{ $errors->has('fecha_nacimiento') ? 'field-error' : '' }}"
                             value="{{ old('fecha_nacimiento', isset($paciente->fecha_nacimiento) ? \Carbon\Carbon::parse($paciente->fecha_nacimiento)->format('Y-m-d') : '') }}"
-                            max="{{ now()->subYear()->format('Y-m-d') }}">
+                            max="{{ \App\Agenda\RelojClinica::hoy()->subYear()->format('Y-m-d') }}">
                         @error('fecha_nacimiento')<div class="error-msg" id="error-fecha_nacimiento">{{ $message }}</div>@enderror
                     </div>
                     <div class="field-group">

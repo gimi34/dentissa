@@ -143,7 +143,7 @@
                 <div style="display:flex;flex-direction:column;gap:10px">
                     <div style="display:flex;justify-content:space-between">
                         <span style="color:var(--text-muted)">Creada</span>
-                        <span>{{ \Carbon\Carbon::parse($cita->creado_en)->format('d/m/Y H:i') }}</span>
+                        <span>{{ \App\Agenda\RelojClinica::delSistema($cita->creado_en)?->format('d/m/Y H:i') }}</span>
                     </div>
                     @if($cita->recordatorio_enviado)
                         <div style="display:flex;justify-content:space-between">
@@ -215,7 +215,7 @@
                             @foreach($historial as $h)
                                 <div class="timeline-item">
                                     <div class="timeline-time">
-                                        {{ \Carbon\Carbon::parse($h->fecha)->format('d/m H:i') }}
+                                        {{ \App\Agenda\RelojClinica::delSistema($h->fecha)?->format('d/m H:i') }}
                                     </div>
                                     <div class="timeline-dot"></div>
                                     <div class="timeline-content">
