@@ -96,7 +96,7 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
 - [x] T045 Fijar `clinica.zona_horaria` en `HistorialCitaTest` — `tests/Feature/HistorialCitaTest.php` — hecho cuando: el test pasa con `CLINICA_ZONA_HORARIA=UTC` en el entorno — cubre: CA7
   - nota: pasa con CLINICA_ZONA_HORARIA=UTC en el entorno (6 tests).
   - nota: añadida por /review: R7
-- [ ] T046 Sacar el mes y el año de «citas este mes» de un solo instante — `app/Http/Controllers/PersonalController.php` — hecho cuando: `test_las_cuentas_del_mes_usan_el_mes_de_la_clinica` sigue en verde — cubre: CA6
+- [x] T046 Sacar el mes y el año de «citas este mes» de un solo instante — `app/Http/Controllers/PersonalController.php` — hecho cuando: `test_las_cuentas_del_mes_usan_el_mes_de_la_clinica` sigue en verde — cubre: CA6
   - nota: añadida por /review: R8
 
 ## Integración y documentación

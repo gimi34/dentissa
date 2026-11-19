@@ -206,10 +206,11 @@ class PersonalController extends Controller
                 ->get();
 
             $totalCitas = DB::table('citas')->where('dentista_id', $id)->count();
+            $ahora = RelojClinica::ahora();
             $citasEsteMes = DB::table('citas')
                 ->where('dentista_id', $id)
-                ->whereMonth('fecha_hora', RelojClinica::ahora()->month)
-                ->whereYear('fecha_hora', RelojClinica::ahora()->year)
+                ->whereMonth('fecha_hora', $ahora->month)
+                ->whereYear('fecha_hora', $ahora->year)
                 ->count();
 
             $asistentesAsignados = DB::table('asistente_dentista')
