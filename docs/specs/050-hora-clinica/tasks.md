@@ -93,7 +93,8 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
   - nota: añadida por /review: R3, R4, R5
 - [x] T044 Implementar `RelojClinica::edad()` con fechas puras, usarla en la ficha del paciente y cerrar el patrón de `fechaDe` con el modificador `D` — `app/Agenda/RelojClinica.php`, `resources/views/pacientes/show.blade.php` — hecho cuando: T043 pasa — cubre: CA3, CA8 — depende: T043
   - nota: añadida por /review: R3, R5
-- [ ] T045 Fijar `clinica.zona_horaria` en `HistorialCitaTest` — `tests/Feature/HistorialCitaTest.php` — hecho cuando: el test pasa con `CLINICA_ZONA_HORARIA=UTC` en el entorno — cubre: CA7
+- [x] T045 Fijar `clinica.zona_horaria` en `HistorialCitaTest` — `tests/Feature/HistorialCitaTest.php` — hecho cuando: el test pasa con `CLINICA_ZONA_HORARIA=UTC` en el entorno — cubre: CA7
+  - nota: pasa con CLINICA_ZONA_HORARIA=UTC en el entorno (6 tests).
   - nota: añadida por /review: R7
 - [ ] T046 Sacar el mes y el año de «citas este mes» de un solo instante — `app/Http/Controllers/PersonalController.php` — hecho cuando: `test_las_cuentas_del_mes_usan_el_mes_de_la_clinica` sigue en verde — cubre: CA6
   - nota: añadida por /review: R8

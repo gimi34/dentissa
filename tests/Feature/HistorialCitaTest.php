@@ -31,6 +31,7 @@ class HistorialCitaTest extends TestCase
     {
         parent::setUp();
         $this->crearEscenario();
+        config(['clinica.zona_horaria' => 'America/Mexico_City']);
         Carbon::setTestNow(Carbon::parse('2026-10-05 17:00:00', 'UTC'));
     }
 
