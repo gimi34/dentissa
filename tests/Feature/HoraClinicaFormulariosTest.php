@@ -29,6 +29,10 @@ class HoraClinicaFormulariosTest extends TestCase
 
     private const NACIMIENTO_ANTERIOR = 'La fecha de nacimiento debe ser anterior a hoy.';
 
+    private const VISITA_FORMATO = 'La próxima visita debe tener el formato AAAA-MM-DD.';
+
+    private const NACIMIENTO_FORMATO = 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.';
+
     private const GOOGLE = ['google_id' => 'google-050', 'nombre' => 'Persona', 'apellido' => 'De Pruebas', 'email' => 'google-050@example.test', 'foto_url' => null];
 
     protected function setUp(): void
@@ -77,10 +81,10 @@ class HoraClinicaFormulariosTest extends TestCase
         return $id;
     }
 
-    private function paraLaFicha(string $expediente, ?string $proximaVisita): TestResponse
+    private function paraLaFicha(string $expediente, ?string $proximaVisita, string $diagnostico = 'Diagnóstico de prueba'): TestResponse
     {
         return $this->actingAs($this->dentista1)->from("/dentista/expedientes/{$expediente}")
-            ->put("/dentista/expedientes/{$expediente}", ['diagnostico' => 'Diagnóstico de prueba', 'proxima_visita' => $proximaVisita]);
+            ->put("/dentista/expedientes/{$expediente}", ['diagnostico' => $diagnostico, 'proxima_visita' => $proximaVisita]);
     }
 
     private function pacienteNuevo(string $nacimiento): array
@@ -172,14 +176,17 @@ class HoraClinicaFormulariosTest extends TestCase
 
         // Próxima visita el 18, por el alta y por la ficha.
         $this->actingAs($this->dentista1)->post('/dentista/expedientes', [
-            'paciente_id' => $this->p1, 'dentista_id' => $this->d1, 'diagnostico' => 'Diagnóstico', 'proxima_visita' => '2026-11-18',
-        ])->assertSessionDoesntHaveErrors('proxima_visita');
+            'paciente_id' => $this->p1, 'dentista_id' => $this->d1, 'cita_id' => '', 'diagnostico' => 'Diagnóstico aceptado', 'proxima_visita' => '2026-11-18',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertDatabaseHas('expedientes', ['paciente_id' => $this->p1, 'diagnostico' => 'Diagnóstico aceptado', 'proxima_visita' => '2026-11-18']);
         $this->paraLaFicha($this->expediente(null), '2026-11-18')->assertSessionDoesntHaveErrors('proxima_visita');
 
         // Una próxima visita ya guardada y vencida que llega sin cambios (/analyze A21).
         $vencida = $this->expediente('2026-11-10');
-        $this->paraLaFicha($vencida, '2026-11-10')->assertSessionDoesntHaveErrors('proxima_visita');
-        $this->assertSame('2026-11-10', substr((string) DB::table('expedientes')->where('id', $vencida)->value('proxima_visita'), 0, 10));
+        $this->paraLaFicha($vencida, '2026-11-10', 'Diagnóstico corregido')->assertSessionDoesntHaveErrors('proxima_visita');
+        $guardado = DB::table('expedientes')->where('id', $vencida)->first();
+        $this->assertSame('Diagnóstico corregido', $guardado->diagnostico, 'La ficha se guarda con la fecha vencida sin cambios.');
+        $this->assertSame('2026-11-10', substr((string) $guardado->proxima_visita, 0, 10));
 
         // Nacimiento el 16, en el alta y la edición de paciente, el perfil y los dos registros.
         $this->actingAs($this->admin)->post('/admin/pacientes', $this->pacienteNuevo('2026-11-16'))->assertSessionDoesntHaveErrors('fecha_nacimiento');
@@ -216,6 +223,29 @@ class HoraClinicaFormulariosTest extends TestCase
         $this->post('/registro', $this->registro('2026-11-17'))->assertSessionHasErrors('fecha_nacimiento');
         $this->withSession(['google_registro' => self::GOOGLE])->post('/registro/contacto', ['fecha_nacimiento' => '2026-11-17'])
             ->assertSessionHasErrors('fecha_nacimiento');
+    }
+
+    public function test_el_servidor_rechaza_fechas_con_hora_o_zona(): void
+    {
+        // Una próxima visita de hoy con hora no entra por el alta ni por la ficha (/review R1).
+        foreach (['2026-11-17 10:00', '2026-11-17T23:59:59'] as $valor) {
+            $this->actingAs($this->dentista1)->post('/dentista/expedientes', [
+                'paciente_id' => $this->p1, 'dentista_id' => $this->d1, 'cita_id' => '', 'diagnostico' => 'Diagnóstico', 'proxima_visita' => $valor,
+            ])->assertSessionHasErrors(['proxima_visita' => self::VISITA_FORMATO]);
+            $this->paraLaFicha($this->expediente(null), $valor)->assertSessionHasErrors(['proxima_visita' => self::VISITA_FORMATO]);
+        }
+
+        // El nacimiento tampoco admite zona ni expresiones relativas (/review R2).
+        foreach (['2026-11-17T00:00:00+14:00', '2026-11-20 -10 days'] as $valor) {
+            $error = ['fecha_nacimiento' => self::NACIMIENTO_FORMATO];
+            $this->actingAs($this->admin)->post('/admin/pacientes', $this->pacienteNuevo($valor))->assertSessionHasErrors($error);
+            $this->actingAs($this->admin)->put("/admin/pacientes/{$this->p1}", $this->perfil($valor))->assertSessionHasErrors($error);
+            $this->actingAs($this->paciente1)->put('/cliente/perfil', $this->perfil($valor))->assertSessionHasErrors($error);
+            auth()->logout();
+            $this->post('/registro', $this->registro($valor))->assertSessionHasErrors($error);
+            $this->withSession(['google_registro' => self::GOOGLE])->post('/registro/contacto', ['fecha_nacimiento' => $valor])
+                ->assertSessionHasErrors($error);
+        }
     }
 
     // ── TM2: la fecha sugerida de «Agendar cita» ──────────────────────────
