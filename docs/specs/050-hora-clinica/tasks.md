@@ -79,7 +79,8 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
 
 ## Integración y documentación
 - [ ] T090 Actualizar `docs/architecture.md` (convención de fechas: el sistema guarda en UTC, las citas en hora local, y toda referencia a hoy o ahora y toda fecha mostrada pasa por `RelojClinica`), el comentario de `zona_horaria` en `config/clinica.php` (A20) y el mapa de `AGENTS.md`, fila `app/Agenda/` (ruta protegida: con aprobación del usuario)
-- [ ] T091 Actualizar `docs/deployment.md` (la fila de `CLINICA_ZONA_HORARIA` describe que decide toda referencia a hoy, ahora y las fechas mostradas; A20) y `docs/observability.md` si cambiaron logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
+- [x] T091 Actualizar `docs/deployment.md` (la fila de `CLINICA_ZONA_HORARIA` describe que decide toda referencia a hoy, ahora y las fechas mostradas; A20) y `docs/observability.md` si cambiaron logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
+  - nota: deployment.md actualizado; observability.md sin cambios: la 050 no añade logs, eventos de auditoría ni métricas (plan).
 - [ ] T092 Marcar spec como `implemented`: suite completa (con las de regresión de CA9 sin tocar, las de T016), Pint, gitleaks y semgrep sobre lo tocado, `composer audit` y `npm audit --audit-level=high` (A15); el grep del plan (fila RNF «una sola zona») en `app/Http` y `resources/views` sin resultados fuera de sus excepciones (A14, A25); criterios `[x]` y `docs/specs/README.md`
 
 ## Despliegue (lo ejecuta `/release`)

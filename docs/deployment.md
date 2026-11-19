@@ -223,7 +223,7 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
 |---|---|---|---|---|
 | APP_NAME, APP_ENV, APP_KEY, APP_DEBUG, APP_URL | ✓ | — | ✓ | `.env` local · `app.env` en el servidor |
 | APP_LOCALE, APP_FALLBACK_LOCALE, APP_FAKER_LOCALE, BCRYPT_ROUNDS | ✓ | — | ✓ (valores por defecto) | `.env` · `app.env` |
-| CLINICA_ZONA_HORARIA (zona de la hora de las citas; por defecto America/Mexico_City; spec 026) | ✓ | — | ✓ (valor por defecto) | `.env` · `app.env` |
+| CLINICA_ZONA_HORARIA (zona de la clínica: la hora de las citas, toda referencia a «hoy» o «ahora» y las fechas mostradas; por defecto America/Mexico_City; specs 026 y 050) | ✓ | — | ✓ (valor por defecto) | `.env` · `app.env` |
 | LOG_CHANNEL, LOG_STACK, LOG_DEPRECATIONS_CHANNEL, LOG_LEVEL | ✓ | — | ✓ (`LOG_LEVEL=info`) | `.env` · `app.env` |
 | DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD | ✓ | — | ✓ (`DB_USERNAME=dentissa_app`) | `.env` · `app.env` |
 | SESSION_DRIVER, SESSION_LIFETIME, SESSION_ENCRYPT, SESSION_PATH, SESSION_DOMAIN, SESSION_SECURE_COOKIE | ✓ | — | ✓ (`file`, `SESSION_SECURE_COOKIE=true`) | `.env` · `app.env` |
