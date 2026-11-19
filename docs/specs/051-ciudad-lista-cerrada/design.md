@@ -73,9 +73,10 @@ Ninguno.
 - Con teclado: Tab llega al campo, las flechas recorren las opciones y teclear las primeras letras
   salta al municipio (K4); es el comportamiento del desplegable nativo, sin JavaScript.
 - El error y el aviso son texto, no solo color, y el lector de pantalla los lee al llegar al campo.
-- Foco visible: en el alta y la edición, el del sistema (`.form-paciente`); en el registro y el
-  perfil, el de su formulario. Si `/plan` comprueba que el de esos dos no llega a 3:1, el campo de
-  ciudad lo corrige al tocarlo (constitución P9, «Código previo»).
+- Foco visible: en el alta y la edición, el del sistema (`.form-paciente`). En el registro y el
+  perfil, el de `.field` no llega a 3:1 (DS2), así que el desplegable de ciudad lleva borde
+  `--border-control` (3.93:1 sobre `--white`, 3.67:1 sobre `--p50`) y anillo `--focus-ring` (7.00:1
+  sobre `--white`) con `.campo-ciudad` (constitución P9, «Código previo»).
 - Objetivo de toque ≥ 44 px a 320 y 390 px: el del desplegable vecino (`movil.css` ya lo fija para
   `.field` y `select`).
 
@@ -83,4 +84,5 @@ Ninguno.
 | Fecha | Tipo | Pregunta | Decisión | Fuente |
 |---|---|---|---|---|
 | 2026-11-18 | diseño | Ciclo de candidatos | Sin exploración (`exploration: none`): el desplegable vecino de cada formulario y validación en pantalla del usuario | usuario (aprobó la spec 051 con esa propuesta, 2026-11-18) |
+| 2026-11-18 | refinado | El foco del desplegable en el registro y el perfil no llega a 3:1 (/analyze A3) | Borde `--border-control` y anillo `--focus-ring` solo en este campo; su borde se ve algo más oscuro que el de «Género» | /analyze A3 |
 | 2026-11-18 | diseño | ¿Cómo se ve el aviso de la ciudad antigua (CA10)? | Texto de ayuda en `--text` debajo del campo, no en rojo, y la ciudad antigua como primera opción marcada «(no está en la lista)» | usuario (aprobó el acta, 2026-11-18) |
