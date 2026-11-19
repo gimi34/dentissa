@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Agenda\RelojClinica;
 use App\Agenda\HorarioDentista;
 use App\Agenda\HorarioNoGuardado;
+use App\Agenda\RelojClinica;
 use App\Rules\HoraFinPosterior;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Agenda\RelojClinica;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\EstadosCita;
+use App\Agenda\RelojClinica;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller

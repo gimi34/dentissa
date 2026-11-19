@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Agenda\RelojClinica;
 use App\Agenda\CalendarioCitas;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
+use App\Agenda\RelojClinica;
 use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
 use App\Autorizacion\AlcanceClinico;
