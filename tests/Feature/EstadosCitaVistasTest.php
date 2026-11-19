@@ -117,7 +117,7 @@ class EstadosCitaVistasTest extends TestCase
         $this->assertSame(0, $this->formulariosHacia($detalle($empezada), "/cliente/citas/{$empezada}/cancelar", 'PATCH'));
         $this->assertSame(1, $this->formulariosHacia($detalle($pendiente), "/cliente/citas/{$pendiente}/cancelar", 'PATCH'));
 
-        // El listado compara en UTC (deuda D4): la empezada sale en «pasadas» (A8) y la pendiente, en las próximas.
+        // El listado compara con la hora de la clínica (spec 050): la empezada sale en «pasadas» (A8) y la pendiente, en las próximas.
         $pasadas = $this->actingAs($this->paciente1)->get('/cliente/citas?filtro=pasadas')->assertOk()->getContent();
         $this->assertSame(0, $this->formulariosHacia($pasadas, "/cliente/citas/{$empezada}/cancelar", 'PATCH'));
         $proximas = $this->actingAs($this->paciente1)->get('/cliente/citas')->assertOk()->getContent();

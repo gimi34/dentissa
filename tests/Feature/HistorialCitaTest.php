@@ -109,8 +109,8 @@ class HistorialCitaTest extends TestCase
         $this->assertStringContainsString('Agendada', $historial);
         $this->assertStringContainsString('Confirmada', $historial);
         $this->assertStringContainsString('Confirmó por teléfono', $historial);
-        // La fecha se muestra como hoy, en UTC y sin convertir (deuda D4).
-        $this->assertStringContainsString('05/10 17:00', $historial);
+        // La fecha del historial (17:00 UTC) se muestra en la hora de la clínica (spec 050, CA7; deuda D4 de la 026).
+        $this->assertStringContainsString('05/10 11:00', $historial);
         $this->assertSame(1, substr_count($historial, 'Confirmó por teléfono'));
     }
 
