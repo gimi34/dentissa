@@ -73,7 +73,7 @@
                         <label class="field-label">Fecha <span style="color:var(--p500)">*</span></label>
                         <input type="date" name="fecha" value="{{ old('fecha', $fechaSugerida) }}"
                                class="field {{ $errors->has('fecha') ? 'field-error' : '' }}"
-                               min="{{ now()->format('Y-m-d') }}" required>
+                               min="{{ \App\Agenda\RelojClinica::fechaHoy() }}" required>
                         @error('fecha')
                             <div class="field-hint field-hint-error">{{ $message }}</div>
                         @enderror
