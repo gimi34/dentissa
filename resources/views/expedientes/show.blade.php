@@ -22,7 +22,7 @@
             <div class="expediente-cabecera">
                 <div class="texto-partible">
                     <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">
-                        {{ \Carbon\Carbon::parse($expediente->creado_en)->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}
+                        {{ \App\Agenda\RelojClinica::delSistema($expediente->creado_en)?->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}
                         @if($expediente->servicio) · {{ $expediente->servicio }} @endif
                     </div>
                     <div style="font-family:'Roboto',sans-serif;font-size:20px;font-weight:500;color:var(--text)">
@@ -149,7 +149,7 @@
                     <label class="field-label" for="campo-proxima_visita">Fecha sugerida</label>
                     <input type="date" name="proxima_visita" id="campo-proxima_visita" @error('proxima_visita') aria-invalid="true" aria-describedby="error-proxima_visita" @enderror class="field {{ $errors->has('proxima_visita') ? 'field-error' : '' }}" style="margin-bottom:10px"
                         value="{{ old('proxima_visita', $expediente->proxima_visita ? \Carbon\Carbon::parse($expediente->proxima_visita)->format('Y-m-d') : '') }}"
-                        min="{{ now()->format('Y-m-d') }}">
+                        min="{{ \App\Agenda\RelojClinica::hoy()->addDay()->toDateString() }}">
                     @error('proxima_visita')<div class="error-msg" id="error-proxima_visita">{{ $message }}</div>@enderror
                     <button type="submit" class="btn btn-outline btn-sm" style="width:100%;justify-content:center">
                         Guardar fecha
@@ -161,11 +161,13 @@
                     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;text-align:center;color:var(--p600);font-weight:500">
                         📅 {{ \Carbon\Carbon::parse($expediente->proxima_visita)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
                     </div>
-                    @if(\Carbon\Carbon::parse($expediente->proxima_visita)->isPast())
+                    {{-- Días de hoy a la visita, en días de la clínica: negativos si ya pasó (spec 050). --}}
+                    @php $diasParaLaVisita = (int) round(\App\Agenda\RelojClinica::hoy()->diffInDays(\App\Agenda\RelojClinica::deCita(substr((string) $expediente->proxima_visita, 0, 10)))); @endphp
+                    @if($diasParaLaVisita < 0)
                         <div style="text-align:center;margin-top:6px">
                             <span class="badge badge-red">Fecha vencida</span>
                         </div>
-                    @elseif(\Carbon\Carbon::parse($expediente->proxima_visita)->diffInDays(now()) <= 7)
+                    @elseif($diasParaLaVisita <= 7)
                         <div style="text-align:center;margin-top:6px">
                             <span class="badge badge-amber">Próxima semana</span>
                         </div>
@@ -183,7 +185,7 @@
                 <div style="display:flex;flex-direction:column;gap:10px">
                     <div style="display:flex;justify-content:space-between">
                         <span style="color:var(--text-muted)">Creado</span>
-                        <span>{{ \Carbon\Carbon::parse($expediente->creado_en)->format('d/m/Y H:i') }}</span>
+                        <span>{{ \App\Agenda\RelojClinica::delSistema($expediente->creado_en)?->format('d/m/Y H:i') }}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between">
                         <span style="color:var(--text-muted)">Dentista</span>

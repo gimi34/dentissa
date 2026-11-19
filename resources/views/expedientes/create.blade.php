@@ -117,7 +117,7 @@
                     <label class="field-label" for="campo-proxima_visita">Fecha de próxima visita</label>
                     <input type="date" name="proxima_visita" id="campo-proxima_visita" @error('proxima_visita') aria-invalid="true" aria-describedby="error-proxima_visita" @enderror class="field campo-fecha {{ $errors->has('proxima_visita') ? 'field-error' : '' }}"
                         value="{{ old('proxima_visita') }}"
-                        min="{{ now()->addDay()->format('Y-m-d') }}">
+                        min="{{ \App\Agenda\RelojClinica::hoy()->addDay()->toDateString() }}">
                     @error('proxima_visita')<div class="error-msg" id="error-proxima_visita">{{ $message }}</div>@enderror
                 </div>
             </div>
