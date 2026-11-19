@@ -465,7 +465,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     pestañas), en lugar del mensaje genérico de transición.
   - 026/R3: tests del paciente en el borde exacto de la hora de inicio y con una cita agendada ya
     empezada.
-  - 026/R6: dos aserciones fijan las fechas en UTC (deuda D4); actualizarlas con la spec que corrija D4.
+  - 026/R6: dos aserciones fijaban las fechas en UTC (deuda D4): resuelto en la v0.22.0 (spec 050).
   - 026/R7: documentar en `CambioEstadoConcurrenteTest` que el bloqueo real llega como
     `DeadlockException` (transacción anidada) y el 1205 de producción solo lo cubre el test simulado.
   - 026/R8: limpieza robusta en `CambioEstadoConcurrenteTest` si `dentissa_test` conserva el trigger.
@@ -530,11 +530,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   `ReprogramacionCitas` fallan con una `QueryException` distinta de 1205/1213, el reporte por defecto
   registra el SQL con sus valores, motivo incluido → spec 023 (OB4.a). Excepción P8 de la spec 028
   (decisión del usuario, 2026-10-07).
-- Comparaciones de fecha que siguen en UTC aunque las citas guardan la hora local de la clínica:
-  paneles, próximas y pasadas del paciente, `after_or_equal:today` del alta y fechas del historial
-  de la cita, mostradas sin convertir. La spec 026 solo usa `config('clinica.zona_horaria')` para
-  decidir si una cita ya empezó (spec 026, D4; decisión del usuario, 2026-10-02). → spec
-  [050](specs/050-hora-clinica/spec.md), con 026/R6 (visto en producción el 2026-11-17).
+- Comparaciones de fecha en UTC aunque las citas guardan la hora local de la clínica (spec 026, D4): resuelto en la
+  v0.22.0 por la spec [050](specs/050-hora-clinica/spec.md), con 026/R6.
 - Al retomar la 014: debe incorporar con `/specify --edit 014` el Gate del detalle de cita del
   personal (`GET /{rol}/citas/{id}`), y en `/plan 014 --fix` partir de `App\Autorizacion\AlcanceClinico`
   ya creado (con `personalId` y `dentistasDelAlcance`), de los Gates `gestionar-cita` y
@@ -600,6 +597,17 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 046/R7: `range()` frágil con caminos de un solo elemento en el test de accesibilidad de las migas;
   - 046/R8: duplicación en las vistas de citas y pacientes y en el parcial de migas (texto por rol, prefijo, separador, nombre compuesto) y un bucle de un solo elemento en `MovilPacienteTest`;
   - 046/R9: `trustHosts` sin activar (anterior a la 046), para una spec o ficha de seguridad.
+- Spec 050, excepciones P3 y P7 (aprobadas por el usuario el 2026-11-18; plan D9, liberada en v0.22.0): los endpoints cuya
+  vista o regla de fecha cambió conservan su autorización y su falta de auditoría (lista en el plan de la 050). Gates por
+  recurso → spec 014 (RS1.a–e); `role:cliente` en el grupo `/cliente` → spec 015 (RS2); auditoría de lecturas y cambios de
+  pacientes y expedientes → spec 022 (OB1.d, OB1.e).
+- Spec 050, aceptados sin tarea de `/review` (2026-11-18; deuda menor, liberada en v0.22.0):
+  - 050/R9: un campo enviado como arreglo vuelve a `old()` y da 500 una vez en los formularios (preexistente);
+  - 050/R10: la decisión D10 solo aplica en el servidor: el `min` del navegador impide reenviar una fecha vencida;
+  - 050/R11: unificar en `RelojClinica` la zona que aún se resuelve a mano en otros servicios (`/refactor`);
+  - 050/R12: método propio para fechas de calendario y sacar de la vista la cuenta de días de la próxima visita;
+  - 050/R13: el caso de la próxima visita del 18 coincide con el valor por defecto;
+  - 050/R14: un alta de expediente enviada a mano sin `cita_id` da un 500 (preexistente; `/fix` aparte).
 - Spec 049, aceptados sin tarea de `/review` (2026-11-17; deuda menor, liberada en v0.21.0):
   - 049/R13: `npm audit` con 6 altas de `picomatch` vía `vite`: resuelto en la v0.20.1 (chore de npm, EX5);
   - 049/R15: muchas paradas de tabulador en los huecos; «Saltar a la lista» las evita;

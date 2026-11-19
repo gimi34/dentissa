@@ -64,3 +64,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | 2026-10-04 | Comportamiento modificado por 030 en v0.5.0 | /release |
 | 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: «Volver al inicio» y logo-enlace en el registro; con sesión, el registro lleva al panel del rol | /release |
 | 2026-11-13 | Comportamiento modificado por 045 en v0.18.0: la casilla dice «aviso de privacidad», sus enlaces abren los textos en una ventana y `POST /registro` valida `terminos` en el servidor | /release |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

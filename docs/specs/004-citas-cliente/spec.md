@@ -66,3 +66,4 @@ desde 028 también la reprogramación. Ver `docs/observability.md`.
 | 2026-10-02 | Comportamiento modificado por 026 en v0.3.0 | /release |
 | 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 | /release |
 | 2026-10-18 | Criterios con test marcados; alcance, Auditoría y Notas al día con 025, 026 y 028 | /init (re-sincronizar) |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

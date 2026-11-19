@@ -108,10 +108,14 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
   - nota: suite completa 1370 en verde (18833 aserciones), con las suites de CA9 de T016; Pint, semgrep y gitleaks limpios sobre lo tocado; composer audit y npm audit sin altas; el grep del plan solo da sus excepciones.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones) y `verificar.sh`; comprobar solo leyendo que la base de producción está en UTC (`SELECT @@system_time_zone, NOW(), UTC_TIMESTAMP()` con el usuario de la aplicación; si no, se para y se revisa D3); después de las 18:00 de la clínica, el usuario abre el panel y comprueba que la fecha y las citas de hoy son las del día; vigilar los 5xx. Rollback: `bash deploy/volver.sh <tag anterior>`, sin la copia
-- [ ] T098 Marcar spec como `released`; en `docs/roadmap.md`, cerrar la deuda D4 de la 026 y 026/R6 y anotar como deuda las excepciones P3 y P7 de la 050 (endpoints del plan → specs 014, 015 y 022; A26); en las specs de `extends`, una línea en su Historial
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
+  - nota: sin staging; comprobado en producción por el usuario el 2026-11-18 tras desplegar (T097): a las 20:50 de la clínica, ya día 19 en UTC, el panel muestra el 18 y las citas de hoy.
+- [x] T096 Aprobación humana para producción
+  - nota: aprobado por gimi34 el 2026-11-18 para v0.22.0 («desplegar v0.22.0 a producción»).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones) y `verificar.sh`; comprobar solo leyendo que la base de producción está en UTC (`SELECT @@system_time_zone, NOW(), UTC_TIMESTAMP()` con el usuario de la aplicación; si no, se para y se revisa D3); después de las 18:00 de la clínica, el usuario abre el panel y comprueba que la fecha y las citas de hoy son las del día; vigilar los 5xx. Rollback: `bash deploy/volver.sh <tag anterior>`, sin la copia
+  - nota: v0.22.0 desplegada el 2026-11-18 en 139 s (anterior: v0.21.0), `verificar.sh` todo OK. Base de producción en UTC antes de desplegar (`@@system_time_zone` UTC; `NOW()` = `UTC_TIMESTAMP()`). Los 5xx quedan a cargo del aviso automático `dentissa-vigilar` (activo); no se revisaron a mano.
+- [x] T098 Marcar spec como `released`; en `docs/roadmap.md`, cerrar la deuda D4 de la 026 y 026/R6 y anotar como deuda las excepciones P3 y P7 de la 050 (endpoints del plan → specs 014, 015 y 022; A26); en las specs de `extends`, una línea en su Historial
+  - nota: deuda D4 de la 026 y 026/R6 cerradas; excepciones P3 y P7 y 050/R9–R14 anotadas en el roadmap; una línea en el Historial de las 13 specs de `extends`.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

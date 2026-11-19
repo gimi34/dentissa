@@ -59,3 +59,4 @@ Cada rol necesita, al entrar, un resumen de lo más urgente de su día.
 | 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: «Ver sitio web» al final de la barra lateral de los cuatro roles | /release |
 | 2026-11-12 | El placeholder de «Reportes» ya no existe: `/admin/reportes` muestra los reportes de la administración (spec 047, v0.17.0) | /release |
 | 2026-11-15 | Comportamiento modificado por 048 en v0.19.0: las citas de hoy de los paneles de administración, asistente y dentista y las del historial del paciente abren su detalle al pulsarlas en cualquier parte | /release |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

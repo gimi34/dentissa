@@ -171,3 +171,4 @@ resto de las pantallas del paciente y la ficha creada desde el perfil quedan par
 | 2026-10-02 | Implementada de nuevo (T016–T018, T028, T029 de /review) | /implement |
 | 2026-10-02 | Liberada en v0.3.0, sin despliegue (no hay entornos) | /release |
 | 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 | /release |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
