@@ -887,7 +887,7 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
 /* Fin spec 048 */
 
 /* Spec 051 */
-.field-hint-aviso { color: var(--text); }
+.field-hint.field-hint-aviso { color: var(--text); }
 select.campo-ciudad,
 select.campo-ciudad:focus { border-color: var(--border-control); }
 select.campo-ciudad:focus-visible {

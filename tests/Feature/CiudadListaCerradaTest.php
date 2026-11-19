@@ -455,7 +455,8 @@ class CiudadListaCerradaTest extends TestCase
             $this->assertSame([], $this->literales($cuerpos), "{$hoja}: el bloque 051 solo usa tokens.");
         }
 
-        $this->assertStringContainsString('color: var(--text)', $this->declaraciones('.field-hint-aviso'));
+        // Con las dos clases: `pacientes/create` redefine `.field-hint` en su propio <style>, después de app.css.
+        $this->assertStringContainsString('color: var(--text)', $this->declaraciones('.field-hint.field-hint-aviso'));
     }
 
     public function test_el_foco_y_el_borde_de_la_ciudad_llegan_a_3_1(): void
@@ -469,6 +470,13 @@ class CiudadListaCerradaTest extends TestCase
             $this->assertStringContainsString('outline: var(--focus-ring-width) solid var(--focus-ring)', $foco, "{$hoja}: anillo de foco.");
             $this->assertStringContainsString('outline-offset: var(--focus-ring-offset)', $foco, "{$hoja}: separación del anillo.");
         }
+
+        $toque = array_filter(
+            $this->analizarCss($this->bloque051('css/auth.css')),
+            fn (array $regla) => $regla[0] === '.page-register select.campo-ciudad' && in_array('@media (max-width: 899px)', $regla[2], true),
+        );
+        $this->assertCount(1, $toque, 'El registro no carga movil.css: el toque de 44 px va en su bloque.');
+        $this->assertStringContainsString('min-height: var(--touch-min)', array_values($toque)[0][1]);
 
         $this->assertSame($this->tokenDeLaHoja('css/app.css', '--border-control'), $this->tokenDeLaHoja('css/auth.css', '--border-control'));
         $this->assertSame($this->tokenDeLaHoja('css/app.css', '--p400'), $this->tokenDeLaHoja('css/auth.css', '--p400'));

@@ -430,4 +430,7 @@ body {
     outline: var(--focus-ring-width) solid var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
 }
+@media (max-width: 899px) {
+    .page-register select.campo-ciudad { min-height: var(--touch-min); }
+}
 /* Fin spec 051 */
