@@ -1,7 +1,8 @@
 ---
 id: 050
 slug: hora-clinica
-status: implemented
+status: released
+released: v0.22.0 (2026-11-18)
 created: 2026-11-17
 extends: [002, 003, 004, 006, 007, 008, 010, 011, 012, 026, 038, 039, 049]
 ---
@@ -112,3 +113,4 @@ Ninguna.
 | 2026-11-17 | CA10: mensaje en español en lugar de «el mensaje de siempre» | Decisión del usuario en /plan 050: el mensaje de hoy está en inglés y cambiaría de todos modos |
 | 2026-11-18 | CA1 (formato de cada panel), CA3 (edad), CA4 (calendario de la 049), CA5 (calendario de nacimiento), CA7 (galería); `extends` con 010, 038, 039 y 049; Diseño, Fuera de alcance y Decisiones; vuelve a `draft` | `/analyze` r1: A6, A7, A8, A9, A10, A16, A20 |
 | 2026-11-18 | Decisiones y Notas al día con la 049 liberada; la 015 en «Fuera de alcance» | `/analyze` r2: A22, A23 |
+| 2026-11-18 | Liberada en v0.22.0 | /release |

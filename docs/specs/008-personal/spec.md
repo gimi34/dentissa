@@ -63,3 +63,4 @@ Hoy no se registran altas, cambios de rol ni desactivaciones. Eventos requeridos
 | 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: la ficha, el alta y la edición del personal llevan las migas del parcial `partials/migas` (antes, hechas a mano) | /release |
 | 2026-11-17 | Corregido por la ficha 2026-11-17-fix-sesion-cuenta-desactivada en v0.20.1 (CA6): desactivar a un miembro del personal cierra su sesión abierta | /release |
 | 2026-11-17 | Corregido por la ficha 2026-11-17-fix-admin-no-se-desactiva en v0.20.1: un admin no puede desactivarse ni cambiarse el tipo a sí mismo desde Personal | /release |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

@@ -5,6 +5,25 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-18
+
+### Fixed
+- A partir de las 18:00 el panel ya no salta al día siguiente: la fecha, las citas de hoy y sus cuentas son las del día
+  de la clínica en los paneles del personal y en «Mis doctores» (spec 050).
+- El paciente ve como próxima su cita de esta noche, en su panel y en «Mis citas», y la ficha del paciente también;
+  la edad cambia el día del cumpleaños en la clínica (spec 050).
+- Las cuentas del mes usan el mes de la clínica (spec 050).
+- Los formularios proponen y aceptan las fechas según el día de la clínica: citas, próxima visita y fecha de nacimiento
+  (spec 050).
+- «Agendada el», el historial de la cita, las fechas de alta y el consentimiento de la galería se muestran en la hora de
+  la clínica (spec 050).
+- El aviso de próxima visita ya no marca como vencida la de hoy ni como cercana cualquier fecha futura (spec 050).
+- El año del pie de las páginas públicas es el de la clínica (spec 050).
+
+### Security
+- La ficha del expediente valida también la próxima visita; las fechas de próxima visita y de nacimiento solo se aceptan
+  con el formato `AAAA-MM-DD`, y una fecha manipulada en la dirección de «Agendar cita» ya no rompe la página (spec 050).
+
 ## [0.21.0] - 2026-11-18
 
 ### Added

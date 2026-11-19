@@ -68,3 +68,4 @@ Hoy no se registran altas, cambios de rol ni desactivaciones. Eventos requeridos
 | 2026-11-17 | Corregido por la ficha 2026-11-17-fix-sesion-cuenta-desactivada en v0.20.1 (CA8): desactivar un usuario cierra su sesión abierta | /release |
 | 2026-11-17 | Corregido por la ficha 2026-11-17-fix-admin-no-se-desactiva en v0.20.1: un admin no puede desactivarse ni quitarse el rol a sí mismo | /release |
 | 2026-11-17 | Corregido por la ficha 2026-11-17-fix-detalles-servicios-usuarios en v0.20.1: tarjeta, filtro y grupo de asistentes; alta y edición avisan; un filtro sin resultados ofrece ver todos | /release |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

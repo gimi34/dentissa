@@ -64,3 +64,4 @@ Hoy `update` sobrescribe el expediente sin guardar quién ni cuándo (la tabla s
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

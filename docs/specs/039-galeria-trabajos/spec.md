@@ -216,3 +216,4 @@ Ninguna.
 | 2026-11-09 | Decisiones: PNG hasta 4000 píxeles por lado, también en la ayuda del campo de la foto | Decisión del usuario en `/review 039` (R1, R37) |
 | 2026-11-10 | Liberada en v0.16.0 (producción el 2026-11-10, aprobada por el responsable) | /release |
 | 2026-10-20 | Spec creada en `draft`, separada de la 038 | División decidida por el usuario al añadir promociones |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

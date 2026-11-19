@@ -76,3 +76,4 @@ cambios de notas internas no dejan rastro con actor. Ver brechas en `docs/observ
 | 2026-10-02 | Comportamiento modificado por 026 en v0.3.0 | /release |
 | 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 | /release |
 | 2026-10-18 | Criterios con test marcados, Auditoría, Seguridad y Observaciones al día con 025, 026 y 028 | /init (re-sincronizar) |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |

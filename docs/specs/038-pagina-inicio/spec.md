@@ -242,3 +242,4 @@ Ninguna.
 | 2026-11-10 | Comportamiento modificado por 044 en v0.15.0: con sesión, `/` muestra la página con «Ir a mi panel» (CA2 → reemplazado por 044 CA5) y el aviso «Has cerrado sesión»; `publico.js` retira el aviso | /release |
 | 2026-11-10 | Comportamiento modificado por 039 en v0.16.0: con fotos en la galería, `/` muestra el carrusel «Nuestros trabajos» después de los servicios; con la galería vacía, la página no cambia (039 CA1, CA3) | /release |
 | 2026-11-13 | Comportamiento modificado por 045 en v0.18.0: el pie público enlaza «Términos de uso» y «Aviso de privacidad»; `--font-display` con respaldos de Newsreader | /release |
+| 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
