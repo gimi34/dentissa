@@ -146,6 +146,11 @@ class HoraClinicaPanelesTest extends TestCase
         $this->assertMatchesRegularExpression('/·\s*23:00/u', $html, 'La próxima es la de las 23:00 del 17.');
         $this->assertMatchesRegularExpression('/\b25 años/u', $html, 'La edad cambia el día del cumpleaños en la clínica.');
         $this->assertDoesNotMatchRegularExpression('/\b26 años/u', $html);
+
+        // A las 00:00 del 18 en la clínica ya los cumplió (/review R4).
+        $this->relojEnLaClinica('2026-11-18 00:00:00');
+        $cumpleanos = $this->actingAs($this->admin)->get("/admin/pacientes/{$this->p1}")->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/\b26 años/u', $cumpleanos, 'El día del cumpleaños la edad sube.');
     }
 
     // ── CA6: cuentas del mes ──────────────────────────────────────────────

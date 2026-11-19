@@ -87,9 +87,19 @@ class RelojClinicaTest extends TestCase
         $this->assertSame('2026-11-18 00:00:00', $fecha->format('Y-m-d H:i:s'));
         $this->assertSame(self::ZONA, $fecha->getTimezone()->getName());
 
-        foreach ([null, ['x'], 'ayer', '2026-02-30', '9999-12-31', '1999-12-31', '2026-11-18 10:00', 20261118] as $valor) {
+        foreach ([null, ['x'], 'ayer', '2026-02-30', '9999-12-31', '1999-12-31', '2026-11-18 10:00', 20261118, "2026-11-18\n"] as $valor) {
             $this->assertNull(RelojClinica::fechaDe($valor), var_export($valor, true));
         }
+    }
+
+    public function test_la_edad_cambia_el_dia_del_cumpleanos_en_la_clinica(): void
+    {
+        // La medianoche del 12/02/1950 no existió en esta zona (cambio de horario): /review R3.
+        $this->relojEnLaClinica('2026-02-11 23:59:00');
+        $this->assertSame(75, RelojClinica::edad('1950-02-12'));
+
+        $this->relojEnLaClinica('2026-02-12 00:00:00');
+        $this->assertSame(76, RelojClinica::edad('1950-02-12'));
     }
 
     public function test_la_zona_sale_de_la_configuracion(): void
