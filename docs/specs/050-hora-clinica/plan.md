@@ -19,20 +19,20 @@ la hora de la clínica (estados, reprogramación, horarios, reportes, auditoría
 
 **Orden con la 049 (decisión del usuario, 2026-11-17):** la 049 se fusiona antes. Las tareas de la 050 se escriben
 y se implementan sobre `main` con la 049 ya fusionada. La 049 rehace la agenda y su `CitasController::index` ya
-calcula con la hora de la clínica (`CitasController.php:99` y `:254` en la rama de la 049). Por eso, en la agenda la
+calcula con la hora de la clínica (`CitasController.php:99` y `:254`, ya en `main` con la v0.21.0). Por eso, en la agenda la
 050 añade el test de CA4 sobre la agenda de la 049 y corrige solo lo que siga en UTC, como la fecha sugerida de
 `create` (`:283` en la 049).
 
 ## Constitution Check
 | Principio | Resultado | Justificación / ajuste | Cómo se verifica |
 |---|---|---|---|
-| P1 Spec aprobada antes de código | ✅ | Spec 050 aprobada el 2026-11-17 (`8495fb6`); nada de código hasta aprobar plan y tareas | manual: estado de spec, plan y tareas antes de `/implement` |
+| P1 Spec aprobada antes de código | ✅ | Spec 050 aprobada por el usuario (vuelve a aprobarse tras `/analyze`; la fecha se anota entonces); nada de código hasta aprobar plan y tareas | manual: estado de spec, plan y tareas antes de `/implement` |
 | P2 Test que falla antes y pasa después | ✅ | Cada CA tiene un test con el reloj fijado a las 21:50 de la clínica (03:50 UTC del día siguiente), donde hoy falla; los de R6 se actualizan para que esperen lo correcto | test: `RelojClinicaTest`, `HoraClinicaPanelesTest`, `HoraClinicaFormulariosTest`, `HoraClinicaFechasSistemaTest` (rojos antes del cambio) |
-| P3 Autorización en el servidor | ❌ aceptado: la 050 modifica endpoints sin Gate por recurso solo para cambiar la fecha de referencia o la regla de fecha, y conservan su autorización actual: `PacientesController::show/store/update`, `ExpedientesController::store/update`, `CitasController::create`, `PersonalController::show` y `misDoctores` (rol con middleware, alcance con los filtros de hoy) y `ClienteCitasController::index/agendarForm/agendarStore` (grupo `/cliente` sin `role:` en el grupo). Deuda RS1.a–e → spec 014 y RS2.a → su spec (`docs/security.md`) — aprobado por el usuario el 2026-11-18 (/analyze A1) | No cambia quién ve qué; las consultas conservan su filtro de alcance | test: los tests de alcance existentes de esas pantallas siguen en verde (T092) |
+| P3 Autorización en el servidor | ❌ aceptado: la 050 modifica, solo para cambiar la fecha de referencia, la regla de fecha o cómo se muestra una fecha, endpoints sin Gate por recurso, que conservan su autorización actual (rol con middleware y alcance con los filtros de hoy): paneles `GET /{admin,dentista,asistente,cliente}`; pacientes `index`, `create`, `store`, `show`, `edit`, `update`; expedientes `index`, `create`, `store`, `show`, `update`; citas del personal `create` y `show`; personal `show` y «Mis doctores»; usuarios `show`; galería `index`; y en `/cliente` (sin `role:` en el grupo): `citas`, `citas/{id}`, `agendar` (GET y POST) y `perfil` (GET y PUT). Deuda RS1.a–e → spec 014 y RS2 → spec 015 (`docs/security.md`) — aprobado por el usuario el 2026-11-18 (/analyze A1, ampliado en A22; D9) | No cambia quién ve qué; las consultas conservan su filtro de alcance | test: los tests de alcance existentes de esas pantallas siguen en verde (T092) |
 | P4 Entrada validada y SQL con bindings | ✅ | Las reglas de fecha se siguen validando en el servidor, ahora con el día de la clínica; las comparaciones pasan texto por bindings (`where`/`whereDate`), sin SQL crudo nuevo | test: `test_el_servidor_rechaza_fechas_pasadas_segun_el_dia_de_la_clinica` (CA10) · lint: Pint |
 | P5 Nada sensible en el repositorio | ➖ | Sin secretos ni datos nuevos | — |
 | P6 Sin vulnerabilidades críticas o altas | ✅ | La 050 no añade dependencias. Las 6 altas previas de `npm audit` (`picomatch` y sus dependientes) las cubre la excepción EX5 (`docs/security.md`, vence el 2026-12-31; el `/chore` de npm de la v0.20.1 la registró). `composer audit`: solo 1 baja | lint: `composer audit` y `npm audit --audit-level=high` en la CI y en T092 |
-| P7 Auditoría de accesos y cambios | ❌ aceptado: endpoints que la 050 modifica no registran la lectura de la ficha del paciente (`PacientesController::show`) ni los cambios de pacientes y expedientes (`PacientesController::store/update`, `ExpedientesController::store/update`): OB1.d y OB1.e → spec 022 (`docs/observability.md`). La 050 no añade acciones; el registro de auditoría ya usa la hora de la clínica (spec 020) y no se toca — aprobado por el usuario el 2026-11-18 (/analyze A2) | — | test: suite `tests/Feature/Auditoria/` en verde (CA9) |
+| P7 Auditoría de accesos y cambios | ❌ aceptado: endpoints que la 050 modifica no registran las lecturas de la ficha del paciente y del expediente (`PacientesController::show`, `ExpedientesController::show`) ni los cambios de pacientes y expedientes (`PacientesController::store/update`, `ExpedientesController::store/update`): OB1.d y OB1.e → spec 022 (`docs/observability.md`). La 050 no añade acciones; el registro de auditoría ya usa la hora de la clínica (spec 020) y no se toca — aprobado por el usuario el 2026-11-18 (/analyze A2, ampliado en A22; D9) | — | test: suite `tests/Feature/Auditoria/` en verde (CA9) |
 | P8 Correlación y logs limpios | ➖ | No se añaden logs | — |
 | P9 Solo el sistema de diseño | ✅ | Ningún cambio de marcado, clase ni estilo: solo cambia el valor de fechas y horas | test: los tests de vistas existentes siguen en verde · manual: las pantallas afectadas se ven igual que antes |
 | P10 Rutas indexables descubribles | ➖ | Las rutas indexables (`/`, `/servicios`, `/registro`) solo cambian el año del pie y la fecha máxima de nacimiento del registro; no cambian títulos, descripciones, canónica ni sitemap | test: `PaginasPublicasTest` y `PaginaInicioTest` en verde |
@@ -40,13 +40,13 @@ calcula con la hora de la clínica (`CitasController.php:99` y `:254` en la rama
 ## Cambios por módulo
 | Módulo | Cambio | Riesgo |
 |---|---|---|
-| `app/Agenda/RelojClinica.php` (nuevo) | `zona()`, `ahora()`, `hoy()` (inicio del día), `fechaHoy()` (`Y-m-d`), `momentoLocal()` (`Y-m-d H:i:s`), `deCita(string)` (interpreta `fecha_hora` en la zona de la clínica) y `delSistema($valor)` (interpreta un valor UTC, string o Carbon, y lo pasa a la zona de la clínica; `null` → `null`) | bajo |
+| `app/Agenda/RelojClinica.php` (nuevo) | `zona()`, `ahora()`, `hoy()` (inicio del día), `fechaHoy()` (`Y-m-d`), `momentoLocal()` (`Y-m-d H:i:s`), `deCita(string)` (interpreta `fecha_hora` en la zona de la clínica), `delSistema($valor)` (interpreta un valor UTC, string o Carbon, y lo pasa a la zona de la clínica; `null` → `null`) y `fechaDe($valor)` (texto `AAAA-MM-DD` válido entre 2000 y 2100 en la zona de la clínica, o `null`; la validación que hoy es privada de `CitasController`, /analyze A27) | bajo |
 | `app/Http/Controllers/DashboardController.php` | `whereDate(..., fechaHoy())` en los paneles de administración, dentista y asistente (15, 59, 121 y sus usos); mes de la clínica en los pacientes atendidos del mes (80-81); próxima y pasadas del paciente con `momentoLocal()` (198, 228) | medio: cuatro paneles |
 | `app/Http/Controllers/ClienteCitasController.php` | Próximas y pasadas con `momentoLocal()` (50, 52); fecha sugerida `hoy()->addDay()`, y la `fecha` de la dirección solo se propone si es texto `AAAA-MM-DD` válido (si no, se ignora; /analyze A3, TM2) (298); `after_or_equal:`.`fechaHoy()` con mensaje «La fecha de la cita no puede ser anterior a hoy.» (310) | medio |
 | `app/Http/Controllers/PacientesController.php` | Próxima cita de la ficha con `momentoLocal()` (218); `before:`.`fechaHoy()` en el alta y la edición (91, 272) con «La fecha de nacimiento debe ser anterior a hoy.»; la edad de la ficha (`pacientes/show`, `->age`) con el día de la clínica (/analyze A10) | bajo |
-| `app/Http/Controllers/CitasController.php` | Sobre la versión de la 049: fecha sugerida de `create` con `hoy()->addDay()`; si queda algún `Carbon::today()` o `now()` de la agenda, `RelojClinica` | bajo |
+| `app/Http/Controllers/CitasController.php` | Sobre la versión de la 049: fecha sugerida de `create` con `hoy()->addDay()`; la próxima visita sugerida solo si es posterior a hoy de la clínica (en lugar de `isFuture()`, `:277`); `fechaDe` delega en `RelojClinica::fechaDe` (A27) | bajo |
 | `app/Http/Controllers/PersonalController.php` | «Citas este mes» con el mes de la clínica (211-212); «Mis doctores», citas de hoy con `fechaHoy()` (456) | bajo |
-| `app/Http/Controllers/ExpedientesController.php` | `after:`.`fechaHoy()` en `proxima_visita` del alta (`store`, 120) y de la ficha (`update`, 201, que hoy no la valida; /analyze A4) con «La próxima visita debe ser posterior a hoy.» | bajo |
+| `app/Http/Controllers/ExpedientesController.php` | `after:`.`fechaHoy()` en `proxima_visita` del alta (`store`, 120) y de la ficha (`update`, 201, que hoy no la valida; /analyze A4) con «La próxima visita debe ser posterior a hoy.». En la ficha solo se exige si la fecha cambia: una próxima visita ya guardada que llega sin cambios se acepta aunque haya vencido (decisión del usuario, /analyze A21) | bajo |
 | `app/Http/Controllers/PerfilController.php`, `RegisterController.php` | `before:`.`fechaHoy()` en `fecha_nacimiento` (38; 36 y 126); sus mensajes en español no cambian | bajo |
 | Vistas con «hoy» y «ahora» | `now()`, `date()` e `isToday`/`isFuture` → `RelojClinica`: `dashboard/{admin,dentista,asistente,cliente}` (fecha del encabezado, consejo del día), `citas/index` (lo que quede tras la 049), `citas/create`, `citas/cliente-agendar`, `expedientes/{create,show}` (`min`; vencida o cercana comparando fechas con `hoy()`, con la distancia en días sin signo: hoy `diffInDays` de Carbon 3 da negativo y toda futura sale «cercana», /analyze A13), `cliente/perfil`, `auth/{register,registro-contacto}` y `pacientes/create` (`max` de nacimiento: sigue siendo hace un año, `hoy()->subYear()`, decisión del usuario /analyze A7), `layouts/publico` (año) | medio: muchas vistas, cambio mecánico |
 | Vistas con fechas del sistema | `Carbon::parse($x->creado_en)`, `$h->fecha` y `consentimiento_en` → `RelojClinica::delSistema(...)`: `citas/show` (146, 218), `citas/cliente-show` (74), `expedientes/{index,show}`, `pacientes/{index,show}`, `usuarios/show`, `galeria/index`. **No** se convierten `fecha_hora_anterior`, `fecha_hora_nueva` ni `fecha_cita`, que ya están en hora local | medio: convertir de más adelantaría 6 h lo que hoy está bien |
@@ -78,7 +78,7 @@ del 17 en la clínica, salvo donde se indique. Cada test se escribe primero y fa
   `delSistema('2026-11-18 03:50:00')` da las 21:50 del 17 y `delSistema(null)` da `null`; `deCita('2026-11-17 23:00:00')`
   es posterior a `ahora()`. No necesita base de datos.
 - **Feature**, `tests/Feature/HoraClinicaPanelesTest.php`, con citas el 17 a las 21:00 y a las 23:00 y el 18 a las 10:00:
-  - `test_los_paneles_del_personal_muestran_el_dia_de_la_clinica` (CA1): encabezado «martes, 17 de noviembre» y la lista de
+  - `test_los_paneles_del_personal_muestran_el_dia_de_la_clinica` (CA1): el encabezado con el 17 en el formato de cada panel (A24) y la lista de
     hoy con las citas del 17 y sin la del 18, en los paneles de administración, dentista y asistente.
   - `test_el_paciente_ve_como_proxima_su_cita_de_esta_noche` (CA2): la de las 23:00 aparece en «Tu próxima cita» y en
     las próximas de «Mis citas»; la de las 21:00, en las pasadas y en el historial del panel.
@@ -149,7 +149,7 @@ Se cambian reglas que validan entradas externas (fechas de formularios); no hay 
 | TM1 | Igual que CA10 | Igual que CA10 |
 | TM2 | `ClienteCitasController::agendarForm` | Feature: `test_agendar_ignora_una_fecha_manipulada` |
 | RNF: comprobado en la franja de 18:00 a 23:59 y en los bordes | Reloj fijado en todos los tests nuevos | Todos los tests nuevos (21:50 del 17) y `test_los_bordes_del_dia_de_la_clinica` |
-| RNF: una sola zona configurada | `RelojClinica::zona()` lee `clinica.zona_horaria`; ningún «hoy», «ahora» ni fecha mostrada sin zona en los archivos tocados | Unit: `test_la_zona_sale_de_la_configuracion` (cambia `clinica.zona_horaria` a `America/Bogota` y `fechaHoy()` la sigue) · T092 y `/review`: grep de `now()`, `Carbon::today()`, `today`, `date(`, `isPast`, `isFuture`, `isToday`, `->age` y `parse($x->creado_en)`/`parse($h->fecha)` sin `delSistema` en `app/Http` y `resources/views`; excepciones: las escrituras de `creado_en`/`actualizado_en` y el vencimiento del enlace de recuperación (`RecuperarContrasenaController`), que siguen en UTC (/analyze A14) |
+| RNF: una sola zona configurada | `RelojClinica::zona()` lee `clinica.zona_horaria`; ningún «hoy», «ahora» ni fecha mostrada sin zona en los archivos tocados | Unit: `test_la_zona_sale_de_la_configuracion` (cambia `clinica.zona_horaria` a `America/Bogota` y `fechaHoy()` la sigue) · T092 y `/review`: `grep -nE "now\(\)|Carbon::today|['|:]today\b|\bdate\(|isPast|isFuture|isToday|->age\b|parse\(\$[a-z]+->(creado_en|fecha|consentimiento_en)\)"` en `app/Http` y `resources/views`, sin resultados salvo las excepciones: escrituras de `creado_en`/`actualizado_en`, el vencimiento del enlace de recuperación (`RecuperarContrasenaController`), las llamadas que ya pasan la zona de la clínica (`now(config('clinica.zona_horaria'))`, `CarbonImmutable::now(...)` de `CitasController` y `ReportesController`) y los correos (`resources/views/correos/`) (/analyze A14, A25) |
 
 ## Observabilidad
 No aplica: la spec no toca datos sensibles, autenticación ni permisos, y no añade logs, eventos ni métricas.
@@ -193,6 +193,10 @@ No aplica: no se crean ni cambian rutas indexables; en `/` y `/servicios` solo c
   del plan).
 - **D7 · Orden con la 049** (decisión del usuario, 2026-11-17): la 049 se fusiona antes; las tareas de la 050 se
   escriben después de esa fusión.
+- **D9 · Excepciones P3 y P7** (decisión del usuario, 2026-11-18; /analyze A1, A2, A22, A26): los endpoints cuya vista o
+  regla de fecha cambia la 050 conservan su autorización y su auditoría actuales; la deuda queda en el roadmap (T098).
+- **D10 · Próxima visita sin cambios** (decisión del usuario, 2026-11-18; /analyze A21): en la ficha del expediente,
+  «posterior a hoy» solo se exige si la fecha cambia.
 - **D8 · `npm audit`** (decisión del usuario, 2026-11-17): las 6 altas previas de `picomatch` van en un `/chore` aparte
   en `main`, fuera de esta spec y antes del próximo `/release`.
 
@@ -209,7 +213,7 @@ No aplica: no se crean ni cambian rutas indexables; en `/` y `/servicios` solo c
 - **Convertir de más.** Pasar por `delSistema` una fecha que ya está en hora local (`fecha_hora`, `fecha_hora_anterior`,
   `fecha_hora_nueva`, `fecha_cita`, `proxima_visita`) la adelantaría o atrasaría 6 h. Mitigación: la tabla de
   «Cambios por módulo» separa las dos familias, y `test_las_fechas_de_reprogramacion_no_se_convierten` lo fija.
-- **Conflicto con la 049** en `citas/index` y `CitasController`. Mitigación: D7, tareas escritas después de fusionarla.
+- **Conflicto con la 049** en `citas/index` y `CitasController` (superado: la 049 está en `main` desde la v0.21.0 y las tareas se escribieron sobre ella, D7).
 - **Un `now()` olvidado.** Mitigación: el grep de la fila RNF en `/review`, y los tests de CA1 a CA7 en la franja
   donde falla.
 - **La base de producción en otra zona.** Mitigación: comprobación de solo lectura en el Rollout antes de dar la

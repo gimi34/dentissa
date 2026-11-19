@@ -47,7 +47,7 @@ las 03:50 del 18.
 - El reloj del servidor y su sincronización, que son cosa del despliegue.
 - Cambiar el calendario de citas de la spec 049 (liberada en v0.21.0): ya calcula con la hora de la clínica; la 050 solo lo fija con un test (CA4).
 - Recordatorios de cita y el enlace a WhatsApp de la página de inicio, que tendrán sus propias specs.
-- La autorización por recurso (Gates) y la auditoría de lecturas y cambios de los endpoints que la 050 toca: conservan las de hoy (excepciones P3 y P7 del plan, aprobadas por el usuario el 2026-11-18); son deuda de las specs 014 y 022 (`docs/security.md`, `docs/observability.md`).
+- La autorización por recurso (Gates) y la auditoría de lecturas y cambios de los endpoints que la 050 toca: conservan las de hoy (excepciones P3 y P7 del plan, aprobadas por el usuario el 2026-11-18); son deuda de las specs 014, 015 (el grupo `/cliente`) y 022 (`docs/security.md`, `docs/observability.md`).
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: ninguno nuevo. Las pantallas muestran los mismos datos de citas, pacientes y expedientes que ya enseñan; solo cambia qué día o qué hora se toma como referencia.
@@ -86,11 +86,11 @@ Ninguna.
 | 2026-11-17 | implícita | ¿Qué hora es la de referencia? | La zona configurada de la clínica, la misma que ya decide si una cita empezó | `docs/roadmap.md` (deuda D4 de la 026); `config/clinica.php` |
 | 2026-11-17 | implícita | Las aserciones de la 026 que dan por buena la hora universal (026/R6) | Se corrigen en esta spec | `docs/roadmap.md` (026/R6) |
 | 2026-11-17 | implícita | Correos, auditoría, reportes, «ya empezó», plazo del paciente y reprogramación | Ya usan la hora de la clínica; no cambian (CA9) | `app/Agenda/EstadosCita.php`, `app/Auditoria/AlmacenAuditoriaBaseDatos.php`, `app/Reportes/ReporteCitas.php`, `app/Mail/` |
-| 2026-11-17 | brecha | La spec cambia nueve specs (más de cuatro): ¿una o dos? | Una sola spec: una sola regla con una sola causa | usuario |
+| 2026-11-17 | brecha | La spec cambia nueve specs (más de cuatro; trece desde /analyze A8): ¿una o dos? | Una sola spec: una sola regla con una sola causa | usuario |
 | 2026-11-17 | supuesto | ¿En qué hora están las fechas que registra el sistema? | En hora universal; se muestran convertidas, también las anteriores a esta spec, sin migrar datos. `/plan` comprueba las que pone la propia base por defecto | — |
 | 2026-11-17 | supuesto | ¿Se indica la zona junto a la hora? | No; todas las horas del panel son de la clínica | — |
 | 2026-11-17 | supuesto | ¿Entran la fecha de nacimiento y el año del pie, con un efecto mínimo? | Sí: misma regla en todo el panel (CA5) | — |
-| 2026-11-17 | supuesto | Calendario de la 049, aún sin fusionar | Sigue esta regla; la rama que se fusione segunda se adapta | — |
+| 2026-11-17 | supuesto | Calendario de la 049, aún sin fusionar (superado: la 049 se liberó en v0.21.0, ver la fila del 2026-11-18) | Sigue esta regla; la rama que se fusione segunda se adapta | — |
 | 2026-11-18 | brecha | La 049 se liberó (v0.21.0) sin filtro de fechas ni atajos, que CA4 nombraba (/analyze A6) | CA4 se comprueba sobre el calendario de la 049: semana, hoy en la cabecera, la tira y la lista, y «Hoy» | usuario (2026-11-18) |
 | 2026-11-18 | brecha | ¿Entra el consentimiento de la galería en CA7? (/analyze A9) | Sí: es una fecha que guarda el sistema en UTC | usuario (2026-11-18) |
 | 2026-11-18 | brecha | El calendario de nacimiento propone hoy como mucho «hace un año» (/analyze A7) | Se mantiene, contado desde el día de la clínica | usuario (2026-11-18) |
@@ -100,14 +100,15 @@ Ninguna.
 ## Notas para /plan
 - Mantener `app.timezone` en UTC. Patrón de referencia: `HorarioDentista.php:66` (`Carbon::now(config('clinica.zona_horaria'))`).
 - Puntos conocidos (2026-11-17, sobre `f801977`): `DashboardController.php:15,59,121,198,228`; `ClienteCitasController.php:50,52,298,310`; `PacientesController.php:91,218,272`; `CitasController.php:120-121,217`; `PersonalController.php:211-212,456`; `ExpedientesController.php:120`; `PerfilController.php:38`; `RegisterController.php:36,126`.
-- Vistas con `now()` o comparaciones: `dashboard/dentista`, `admin`, `asistente`, `citas/index` (incl. `isToday`/`isFuture` en 138-139 y atajos en 68-79), `citas/create`, `citas/cliente-agendar`, `expedientes/show` (152, 164-168) y `create` (120), `cliente/perfil`, `auth/register`, `auth/registro-contacto`, `pacientes/create`, `layouts/publico` (año), `dashboard/cliente` (`date('N')` del consejo del día).
+- Vistas con `now()` o comparaciones: `dashboard/dentista`, `admin`, `asistente`, `citas/index` (antes de la 049; tras ella, el calendario ya usa la hora de la clínica), `citas/create`, `citas/cliente-agendar`, `expedientes/show` (152, 164-168) y `create` (120), `cliente/perfil`, `auth/register`, `auth/registro-contacto`, `pacientes/create`, `layouts/publico` (año), `dashboard/cliente` (`date('N')` del consejo del día).
 - Fechas del sistema mostradas sin convertir: `citas/show.blade.php:146,218`, `citas/cliente-show.blade.php:74`, `expedientes/index` y `show`, `pacientes/index` y `show`, `usuarios/show`.
 - `historial_citas.fecha` y varios `creado_en` tienen `DEFAULT current_timestamp()` en el volcado: comprobar en qué zona corre la base en local y en producción.
 - Tests que fijan hoy la hora UTC (026/R6): `HistorialCitaTest.php:113` y `EstadosCitaVistasTest.php:120`.
-- La 049 (`feature/049-calendario-citas`, worktree `dentissa-041`) puede tener su propio «hoy»: revisarlo al fusionar.
+- La 049 (v0.21.0) ya calcula con la hora de la clínica; la 050 se escribe sobre ella (superado lo de revisarla al fusionar).
 
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-11-17 | CA10: mensaje en español en lugar de «el mensaje de siempre» | Decisión del usuario en /plan 050: el mensaje de hoy está en inglés y cambiaría de todos modos |
 | 2026-11-18 | CA1 (formato de cada panel), CA3 (edad), CA4 (calendario de la 049), CA5 (calendario de nacimiento), CA7 (galería); `extends` con 010, 038, 039 y 049; Diseño, Fuera de alcance y Decisiones; vuelve a `draft` | `/analyze` r1: A6, A7, A8, A9, A10, A16, A20 |
+| 2026-11-18 | Decisiones y Notas al día con la 049 liberada; la 015 en «Fuera de alcance» | `/analyze` r2: A22, A23 |
