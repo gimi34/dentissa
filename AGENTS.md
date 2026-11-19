@@ -84,7 +84,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | Ruta | Contenido |
 |---|---|
 | `app/Http/Controllers/` | 19 controladores (más el `Controller` base; `PaginasPublicasController`, spec 038; `FotosGaleriaController`, spec 039; `ReportesController`, spec 047) con casi toda la lógica (ver docs/architecture.md) |
-| `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación, horario (specs 025–028) y calendario de «Citas» (`CalendarioCitas`, spec 049) |
+| `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación, horario (specs 025–028), calendario de «Citas» (`CalendarioCitas`, spec 049) y hora de la clínica (`RelojClinica`, spec 050) |
 | `app/Autorizacion/` | alcance del personal y Gates de citas y de personal (ADR 0003) |
 | `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
 | `app/Galeria/` | galería de trabajos: `ProcesadorFoto` (dos WebP sin datos de la cámara) y `Galeria` (publicar, mover y quitar con auditoría), con el disco `galeria` en `storage/app/galeria` (spec 039, ADR 0009) |
