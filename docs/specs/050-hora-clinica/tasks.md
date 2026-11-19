@@ -83,7 +83,8 @@ Ninguna: sin dependencias, configuración, flags ni migraciones (plan, «Contrat
   - nota: AGENTS.md (ruta protegida) con aprobación del usuario el 2026-11-18.
 - [x] T091 Actualizar `docs/deployment.md` (la fila de `CLINICA_ZONA_HORARIA` describe que decide toda referencia a hoy, ahora y las fechas mostradas; A20) y `docs/observability.md` si cambiaron logs, eventos de auditoría o métricas (el plan dice que no: dejar nota)
   - nota: deployment.md actualizado; observability.md sin cambios: la 050 no añade logs, eventos de auditoría ni métricas (plan).
-- [ ] T092 Marcar spec como `implemented`: suite completa (con las de regresión de CA9 sin tocar, las de T016), Pint, gitleaks y semgrep sobre lo tocado, `composer audit` y `npm audit --audit-level=high` (A15); el grep del plan (fila RNF «una sola zona») en `app/Http` y `resources/views` sin resultados fuera de sus excepciones (A14, A25); criterios `[x]` y `docs/specs/README.md`
+- [x] T092 Marcar spec como `implemented`: suite completa (con las de regresión de CA9 sin tocar, las de T016), Pint, gitleaks y semgrep sobre lo tocado, `composer audit` y `npm audit --audit-level=high` (A15); el grep del plan (fila RNF «una sola zona») en `app/Http` y `resources/views` sin resultados fuera de sus excepciones (A14, A25); criterios `[x]` y `docs/specs/README.md`
+  - nota: suite completa 1368 en verde (18797 aserciones); CA9: las mismas 400 pruebas de T016 en verde, sin más cambio que un comentario en EstadosCitaVistasTest (T015); Pint, semgrep y gitleaks limpios sobre lo tocado; composer audit sin altas; npm audit sin altas; el grep del plan solo da sus excepciones.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
