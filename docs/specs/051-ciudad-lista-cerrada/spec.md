@@ -1,7 +1,7 @@
 ---
 id: 051
 slug: ciudad-lista-cerrada
-status: approved
+status: implemented
 created: 2026-11-18
 extends: [002, 006, 011]
 ---
@@ -25,47 +25,47 @@ no se corrige, cada alta nueva ensucia más el dato y el filtro deja de servir.
   avise de las que no, para limpiar el dato sin perder lo que ya había.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un visitante en cualquiera de los dos formularios de registro (con correo y
+- [x] CA1 · Dado un visitante en cualquiera de los dos formularios de registro (con correo y
   contraseña, y el de datos de contacto tras entrar con Google), cuando llega al campo «Ciudad»,
   entonces solo puede elegir de una lista: «Sin indicar» (por defecto), los 113 municipios de
   Michoacán, los municipios de Guerrero La Unión de Isidoro Montes de Oca, Zihuatanejo de Azueta,
   Petatlán y Coahuayutla de José María Izazaga, y «Otro lugar» al final; los municipios van
   agrupados por estado y en orden alfabético dentro de cada grupo, y no se puede escribir texto
   libre.
-- [ ] CA2 · Dado un paciente en su perfil, cuando abre el formulario, entonces el campo «Ciudad» es
+- [x] CA2 · Dado un paciente en su perfil, cuando abre el formulario, entonces el campo «Ciudad» es
   la misma lista de CA1 y aparece elegida la ciudad que tiene guardada (o «Sin indicar» si no tiene).
-- [ ] CA3 · Dado personal que puede dar de alta o editar pacientes, cuando abre el alta o la edición
+- [x] CA3 · Dado personal que puede dar de alta o editar pacientes, cuando abre el alta o la edición
   de un paciente, entonces el campo «Ciudad» es la misma lista de CA1 y, en la edición, aparece
   elegida la ciudad guardada.
-- [ ] CA4 · Dado cualquiera de esos formularios, cuando se guarda con un valor de la lista,
+- [x] CA4 · Dado cualquiera de esos formularios, cuando se guarda con un valor de la lista,
   entonces se guarda exactamente ese nombre (p. ej. «Lázaro Cárdenas»); con «Sin indicar», el
   paciente queda sin ciudad; la ciudad sigue siendo opcional.
-- [ ] CA5 · (abuso) Dado cualquiera de esos formularios, cuando alguien envía una ciudad que no está
+- [x] CA5 · (abuso) Dado cualquiera de esos formularios, cuando alguien envía una ciudad que no está
   en la lista (alterando el formulario o enviando la petición a mano), entonces se rechaza con el
   mensaje «Elige una ciudad de la lista» junto al campo, no se guarda nada de ese envío y el
   formulario conserva los demás datos escritos.
-- [ ] CA6 · (abuso) Dado un paciente con una ciudad antigua fuera de la lista, cuando alguien envía
+- [x] CA6 · (abuso) Dado un paciente con una ciudad antigua fuera de la lista, cuando alguien envía
   en otro formulario (otro paciente o un alta nueva) esa misma ciudad antigua, entonces se rechaza
   como en CA5: una ciudad fuera de la lista solo se acepta para conservar la que ya tenía ese mismo
   paciente (CA10).
-- [ ] CA7 · Dado el directorio de pacientes, cuando el personal abre el filtro por ciudad,
+- [x] CA7 · Dado el directorio de pacientes, cuando el personal abre el filtro por ciudad,
   entonces solo ofrece ciudades de la lista que tiene al menos un paciente que esa persona puede
   ver, más «Otro lugar» si hay alguno; nunca ofrece valores fuera de la lista. La cifra «Ciudades
   distintas» cuenta esas mismas ciudades sin contar «Otro lugar».
-- [ ] CA8 · Dada una ciudad ya guardada que coincide con un nombre de la lista sin importar
+- [x] CA8 · Dada una ciudad ya guardada que coincide con un nombre de la lista sin importar
   mayúsculas, acentos ni espacios sobrantes (p. ej. «lazaro cardenas», «MORELIA », «Zihuatanejo»
   para Zihuatanejo de Azueta, «La Unión» para La Unión de Isidoro Montes de Oca), cuando se libera
   esta spec, entonces esa ciudad queda guardada con el nombre de la lista; aplicar la corrección dos
   veces deja el mismo resultado.
-- [ ] CA9 · Dada una ciudad ya guardada que no coincide con ninguna de la lista (p. ej. «LC»),
+- [x] CA9 · Dada una ciudad ya guardada que no coincide con ninguna de la lista (p. ej. «LC»),
   cuando se libera esta spec, entonces se conserva sin cambios y la ficha del paciente la sigue
   mostrando como hoy.
-- [ ] CA10 · Dado un paciente con una ciudad fuera de la lista (CA9), cuando él abre su perfil o el
+- [x] CA10 · Dado un paciente con una ciudad fuera de la lista (CA9), cuando él abre su perfil o el
   personal abre su edición, entonces el formulario muestra el aviso «La ciudad guardada «<valor>» no
   está en la lista: elige una o deja «Sin indicar»» junto al campo, con esa ciudad elegida como
   opción marcada «no está en la lista»; si se guarda sin cambiarla, se conserva tal cual, y si se
   elige otra opción, la sustituye y la antigua deja de ofrecerse.
-- [ ] CA11 · Dado un paciente con «Otro lugar» o con una ciudad de la lista, cuando el personal abre
+- [x] CA11 · Dado un paciente con «Otro lugar» o con una ciudad de la lista, cuando el personal abre
   su ficha o el directorio, entonces la ciudad se muestra como hoy, con el nombre tal como está
   guardado.
 
@@ -95,7 +95,7 @@ no se corrige, cada alta nueva ensucia más el dato y el filtro deja de servir.
     fuera de la lista → se rechaza (CA6).
 
 ## Auditoría
-- [ ] CA12 · Dada la corrección de las ciudades guardadas (CA8 y CA9), cuando termina, entonces
+- [x] CA12 · Dada la corrección de las ciudades guardadas (CA8 y CA9), cuando termina, entonces
   queda registrado un evento con actor «sistema», la acción, el recurso «pacientes», el resultado y
   cuántos pacientes se corrigieron y cuántos quedaron fuera de la lista, sin nombres de pacientes ni
   valores de ciudad (ver `docs/observability.md`).
@@ -173,3 +173,4 @@ toque ≥ 44 px en el móvil, sin desbordes a 320 px).
 |---|---|---|
 | 2026-11-18 | Creación | Petición del usuario: restringir la ciudad, que hoy acepta cualquier texto |
 | 2026-11-18 | Aprobada | Decisión del usuario, con los supuestos revisados |
+| 2026-11-18 | Implementada | Tareas T001–T031 y T090–T092 cerradas; suite completa en verde (1497 tests) |
