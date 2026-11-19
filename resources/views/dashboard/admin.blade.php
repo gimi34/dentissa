@@ -23,7 +23,7 @@
         <div class="stat-value">{{ $citasHoy ?? 0 }}</div>
         <div class="stat-label">Citas hoy</div>
         <span class="stat-badge badge-pink">
-            {{ now()->format('d M') }}
+            {{ \App\Agenda\RelojClinica::ahora()->format('d M') }}
         </span>
     </div>
 

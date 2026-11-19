@@ -17,7 +17,7 @@
 <div class="welcome-banner" style="margin-bottom:22px">
     <div style="z-index:1">
         <div class="welcome-title">Hola, {{ auth()->user()->nombre }} </div>
-        <div class="welcome-sub">{{ now()->locale('es')->isoFormat('dddd, D [de] MMMM') }} · {{ $citasHoy }} {{ $citasHoy == 1 ? 'cita programada' : 'citas programadas' }} hoy con tus doctores</div>
+        <div class="welcome-sub">{{ \App\Agenda\RelojClinica::ahora()->locale('es')->isoFormat('dddd, D [de] MMMM') }} · {{ $citasHoy }} {{ $citasHoy == 1 ? 'cita programada' : 'citas programadas' }} hoy con tus doctores</div>
     </div>
 </div>
 
