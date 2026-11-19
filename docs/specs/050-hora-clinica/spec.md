@@ -1,9 +1,9 @@
 ---
 id: 050
 slug: hora-clinica
-status: approved
+status: draft
 created: 2026-11-17
-extends: [002, 003, 004, 006, 007, 008, 011, 012, 026]
+extends: [002, 003, 004, 006, 007, 008, 010, 011, 012, 026, 038, 039, 049]
 ---
 
 # 050 · La hora de la clínica en todo el panel
@@ -28,13 +28,13 @@ En todos los ejemplos la clínica está en Ciudad de México (seis horas por det
 y «21:50 del 17» son las 21:50 del 17 de noviembre de 2026 en la clínica, que en hora universal ya son
 las 03:50 del 18.
 
-- [ ] CA1 · Dado que en la clínica son las 21:50 del 17 y hay citas el 17 y el 18, cuando la administración, una dentista o una asistente abre su panel de inicio, entonces la fecha del encabezado es el martes 17 de noviembre y la lista y las cuentas «de hoy» (citas programadas, agenda de hoy, próximo paciente) son las del 17; ninguna cita del 18 aparece como de hoy.
+- [ ] CA1 · Dado que en la clínica son las 21:50 del 17 y hay citas el 17 y el 18, cuando la administración, una dentista o una asistente abre su panel de inicio, entonces la fecha del encabezado es el martes 17 de noviembre (en el formato de cada panel) y la lista y las cuentas «de hoy» (citas programadas, agenda de hoy, próximo paciente) son las del 17; ninguna cita del 18 aparece como de hoy.
 - [ ] CA2 · Dado un paciente con una cita a las 23:00 del 17 y otra a las 21:00 del 17, y que en la clínica son las 21:50 del 17, cuando abre su panel y «Mis citas», entonces la de las 23:00 aparece como su próxima cita y en las próximas, y la de las 21:00 aparece entre las pasadas y en el historial.
-- [ ] CA3 · Dado un paciente con una cita a las 23:00 del 17 y que en la clínica son las 21:50 del 17, cuando el personal abre la ficha de ese paciente, entonces esa cita aparece como su próxima cita.
-- [ ] CA4 · Dado que en la clínica son las 21:50 del 17, cuando el personal abre la agenda de citas, entonces el filtro propone el 17 como fecha, el atajo «Hoy» muestra las citas del 17, «Esta semana» la semana que contiene el 17, la vista de los próximos días empieza el 17 y la marca de cita de hoy o futura de cada fila corresponde al día y la hora de la clínica.
-- [ ] CA5 · Dado que en la clínica son las 21:50 del 17, cuando alguien abre un formulario con fechas, entonces el calendario no deja elegir días anteriores al 17 para una cita ni anteriores al 18 para una próxima visita, la fecha sugerida para agendar es el 18, y el servidor acepta una cita del paciente para el 17 y una próxima visita para el 18; la fecha de nacimiento acepta el 16 y rechaza el 17; el aviso de próxima visita vencida o cercana del expediente cuenta los días desde el 17; y el año del pie de las páginas públicas es el de la clínica.
+- [ ] CA3 · Dado un paciente con una cita a las 23:00 del 17 y que en la clínica son las 21:50 del 17, cuando el personal abre la ficha de ese paciente, entonces esa cita aparece como su próxima cita; y la edad de la ficha cambia el día del cumpleaños en la clínica (la víspera, a las 21:50, aún muestra la edad anterior).
+- [ ] CA4 · Dado que en la clínica son las 21:50 del 17, cuando el personal abre «Citas» (el calendario de la spec 049), entonces ve la semana del 16 al 21, el 17 marcado como hoy en la cabecera de la semana, en la tira del móvil y en la lista, y «Hoy» lleva a esa semana.
+- [ ] CA5 · Dado que en la clínica son las 21:50 del 17, cuando alguien abre un formulario con fechas, entonces el calendario no deja elegir días anteriores al 17 para una cita ni anteriores al 18 para una próxima visita, la fecha sugerida para agendar es el 18, y el servidor acepta una cita del paciente para el 17 y una próxima visita para el 18; la fecha de nacimiento acepta el 16 y rechaza el 17, y su calendario sigue proponiendo como mucho la de hace un año, contada desde el día de la clínica; el aviso de próxima visita vencida o cercana del expediente cuenta los días desde el 17; y el año del pie de las páginas públicas es el de la clínica.
 - [ ] CA6 · Dado que en la clínica son las 20:00 del 30 de noviembre, cuando la administración abre la ficha de una dentista, entonces «citas este mes» cuenta las de noviembre; y dado el 31 de diciembre a las 20:00 en la clínica, el panel de la dentista cuenta los pacientes atendidos en diciembre.
-- [ ] CA7 · Dada una cita agendada a las 21:50 del 17 en la clínica y cambiada de estado a las 22:10, cuando el personal abre su detalle y el paciente abre el suyo, entonces «Agendada el» dice 17/11/2026 21:50 y el historial muestra el cambio a las 22:10 del 17; del mismo modo, la fecha de alta de un expediente, de un paciente y de un usuario se muestra en el día y la hora de la clínica, también para lo registrado antes de esta spec.
+- [ ] CA7 · Dada una cita agendada a las 21:50 del 17 en la clínica y cambiada de estado a las 22:10, cuando el personal abre su detalle y el paciente abre el suyo, entonces «Agendada el» dice 17/11/2026 21:50 y el historial muestra el cambio a las 22:10 del 17; del mismo modo, la fecha de alta de un expediente, de un paciente y de un usuario, y la del consentimiento de una foto de la galería, se muestran en el día y la hora de la clínica, también para lo registrado antes de esta spec.
 - [ ] CA8 · Dado que en la clínica son las 17:59, las 18:00 y las 23:59 del 17, cuando se repite cualquiera de los casos anteriores, entonces «hoy» es el 17 en los tres momentos; y a las 00:00 del 18 en la clínica, «hoy» pasa a ser el 18.
 - [ ] CA9 · Dado que esta spec se libera, cuando se comprueba lo que ya usaba la hora de la clínica (si una cita ya empezó, el plazo de 24 horas del paciente, la reprogramación, los horarios de las dentistas, los reportes, el registro de auditoría y la hora de los correos), entonces todo eso se comporta igual que antes.
 - [ ] CA10 (abuso) · Dado que en la clínica son las 21:50 del 17, cuando un paciente envía a mano una petición para agendar una cita el 16, o el personal registra a mano una próxima visita para el 17, entonces el servidor la rechaza con un mensaje en español que dice que la fecha no puede ser anterior a hoy (o, en la próxima visita, que debe ser posterior a hoy), aunque el calendario del formulario no se haya usado; la fecha de nacimiento del alta de paciente se rechaza igual con «La fecha de nacimiento debe ser anterior a hoy.».
@@ -45,8 +45,9 @@ las 03:50 del 18.
 - Indicar la zona horaria junto a las horas («hora de Ciudad de México»).
 - Reescribir las fechas ya guardadas: se muestran convertidas, sin tocar los datos.
 - El reloj del servidor y su sincronización, que son cosa del despliegue.
-- El calendario de citas de la spec 049, que va en su propia rama: debe seguir la misma regla (ver «Notas para /plan»).
+- Cambiar el calendario de citas de la spec 049 (liberada en v0.21.0): ya calcula con la hora de la clínica; la 050 solo lo fija con un test (CA4).
 - Recordatorios de cita y el enlace a WhatsApp de la página de inicio, que tendrán sus propias specs.
+- La autorización por recurso (Gates) y la auditoría de lecturas y cambios de los endpoints que la 050 toca: conservan las de hoy (excepciones P3 y P7 del plan, aprobadas por el usuario el 2026-11-18); son deuda de las specs 014 y 022 (`docs/security.md`, `docs/observability.md`).
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: ninguno nuevo. Las pantallas muestran los mismos datos de citas, pacientes y expedientes que ya enseñan; solo cambia qué día o qué hora se toma como referencia.
@@ -63,8 +64,8 @@ registro de auditoría ya guarda y filtra sus fechas con la hora de la clínica 
 Sin cambios visuales: las mismas pantallas, con los mismos componentes, enseñan el día y la hora de la
 clínica. Pantallas afectadas: los paneles de inicio de los cuatro roles, la agenda de citas, «Mis
 citas» y el detalle de la cita (personal y paciente), la ficha del paciente y de la dentista, los
-expedientes, los formularios de cita, de expediente, de registro y de perfil, y el pie de las páginas
-públicas. No necesita `/design-spec`: no hay nada que diseñar. Sistema:
+expedientes, la gestión de la galería, los formularios de cita, de expediente, de registro y de perfil, y el pie
+de las páginas públicas. No necesita `/design-spec`: no hay nada que diseñar. Sistema:
 [docs/design/system.md](../../design/system.md), sin cambios.
 
 ## Criterios de diseño
@@ -90,6 +91,10 @@ Ninguna.
 | 2026-11-17 | supuesto | ¿Se indica la zona junto a la hora? | No; todas las horas del panel son de la clínica | — |
 | 2026-11-17 | supuesto | ¿Entran la fecha de nacimiento y el año del pie, con un efecto mínimo? | Sí: misma regla en todo el panel (CA5) | — |
 | 2026-11-17 | supuesto | Calendario de la 049, aún sin fusionar | Sigue esta regla; la rama que se fusione segunda se adapta | — |
+| 2026-11-18 | brecha | La 049 se liberó (v0.21.0) sin filtro de fechas ni atajos, que CA4 nombraba (/analyze A6) | CA4 se comprueba sobre el calendario de la 049: semana, hoy en la cabecera, la tira y la lista, y «Hoy» | usuario (2026-11-18) |
+| 2026-11-18 | brecha | ¿Entra el consentimiento de la galería en CA7? (/analyze A9) | Sí: es una fecha que guarda el sistema en UTC | usuario (2026-11-18) |
+| 2026-11-18 | brecha | El calendario de nacimiento propone hoy como mucho «hace un año» (/analyze A7) | Se mantiene, contado desde el día de la clínica | usuario (2026-11-18) |
+| 2026-11-18 | brecha | La edad de la ficha se calcula con la hora universal (/analyze A10) | Entra: se calcula con el día de la clínica (CA3) | usuario (2026-11-18) |
 | 2026-11-17 | contradicción | Tres reglas de fecha (cita del paciente, próxima visita, nacimiento en el alta de paciente) muestran hoy el mensaje de Laravel en inglés con «today»; con el día de la clínica mostrarían la fecha (CA10 pedía «el mensaje de siempre») | Mensajes en español sin la fecha, como los del perfil y el registro (CA10) | usuario (en /plan 050) |
 
 ## Notas para /plan
@@ -98,10 +103,11 @@ Ninguna.
 - Vistas con `now()` o comparaciones: `dashboard/dentista`, `admin`, `asistente`, `citas/index` (incl. `isToday`/`isFuture` en 138-139 y atajos en 68-79), `citas/create`, `citas/cliente-agendar`, `expedientes/show` (152, 164-168) y `create` (120), `cliente/perfil`, `auth/register`, `auth/registro-contacto`, `pacientes/create`, `layouts/publico` (año), `dashboard/cliente` (`date('N')` del consejo del día).
 - Fechas del sistema mostradas sin convertir: `citas/show.blade.php:146,218`, `citas/cliente-show.blade.php:74`, `expedientes/index` y `show`, `pacientes/index` y `show`, `usuarios/show`.
 - `historial_citas.fecha` y varios `creado_en` tienen `DEFAULT current_timestamp()` en el volcado: comprobar en qué zona corre la base en local y en producción.
-- Tests que fijan hoy la hora UTC (026/R6): `HistorialCitaTest.php:88` y `EstadosCitaVistasTest.php:120`.
+- Tests que fijan hoy la hora UTC (026/R6): `HistorialCitaTest.php:113` y `EstadosCitaVistasTest.php:120`.
 - La 049 (`feature/049-calendario-citas`, worktree `dentissa-041`) puede tener su propio «hoy»: revisarlo al fusionar.
 
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-11-17 | CA10: mensaje en español en lugar de «el mensaje de siempre» | Decisión del usuario en /plan 050: el mensaje de hoy está en inglés y cambiaría de todos modos |
+| 2026-11-18 | CA1 (formato de cada panel), CA3 (edad), CA4 (calendario de la 049), CA5 (calendario de nacimiento), CA7 (galería); `extends` con 010, 038, 039 y 049; Diseño, Fuera de alcance y Decisiones; vuelve a `draft` | `/analyze` r1: A6, A7, A8, A9, A10, A16, A20 |
