@@ -192,6 +192,21 @@ class CiudadListaCerradaTest extends TestCase
         $this->assertStringNotContainsString('currentStep = 2', $html, 'El paso inicial siempre es el 1: si no, goTo(2) lo ocultaría.');
     }
 
+    /**
+     * /review R1: tras un error del servidor la contraseña vuelve vacía y su paso puede estar oculto; el
+     * navegador no marca un campo oculto y no enviaría nada. El botón vuelve antes al paso 1.
+     * La comprobación en el navegador va en la nota de T033.
+     */
+    public function test_crear_mi_cuenta_vuelve_al_paso_1_si_no_es_valido(): void
+    {
+        $script = $this->scriptDelRegistro($this->enviarSiguiendo('registro con correo', ['ciudad' => 'Ciudad de México']));
+
+        $this->assertMatchesRegularExpression(
+            "/querySelector\\('#register-form \\.btn-submit'\\)\\.addEventListener\\('click'.*?checkValidity\\(\\).*?preventDefault\\(\\);\\s*goTo\\(1\\);\\s*validateStep\\(1\\);/s",
+            $script,
+        );
+    }
+
     public function test_un_error_solo_de_los_terminos_abre_el_paso_2_del_registro(): void
     {
         $html = $this->enviarSiguiendo('registro con correo', ['terminos' => null]);

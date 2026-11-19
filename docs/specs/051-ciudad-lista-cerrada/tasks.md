@@ -88,7 +88,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: `tests/Feature/Auditoria` pasa completo (111 tests) con el evento de la migración en la base de tests.
   - nota: añadida durante /implement: mismo motivo que T030.
 
-- [ ] T032 Escribir el test de R1: el botón «Crear mi cuenta» del registro con correo, antes del envío nativo, comprueba el paso 1 y, si no es válido, vuelve a él (`validateStep(1)` y `goTo(1)` en el manejador del botón, como código del script y no en un comentario) — tests/Feature/CiudadListaCerradaTest.php — hecho cuando: falla hoy porque el botón no tiene ese manejador (anotado) — cubre: CA5 — depende: T031
+- [x] T032 Escribir el test de R1: el botón «Crear mi cuenta» del registro con correo, antes del envío nativo, comprueba el paso 1 y, si no es válido, vuelve a él (`validateStep(1)` y `goTo(1)` en el manejador del botón, como código del script y no en un comentario) — tests/Feature/CiudadListaCerradaTest.php — hecho cuando: falla hoy porque el botón no tiene ese manejador (anotado) — cubre: CA5 — depende: T031
+  - nota: falla antes del arreglo: el botón no tiene el manejador.
   - nota: añadida por /review: R1
 - [ ] T033 Hacer que «Crear mi cuenta» vuelva al paso 1 y marque el campo cuando el paso 1 no es válido (tras un error del servidor la contraseña vuelve vacía), y dejar una sola línea en blanco donde estaba el bloque de `currentStep` — resources/views/auth/register.blade.php — hecho cuando: T032 pasa · verificación manual: en el navegador, con un error de ciudad devuelto por el servidor, «Crear mi cuenta» abre el paso 1 con la contraseña marcada, y al escribirla y volver al paso 2 la cuenta se crea — cubre: CA5 — depende: T032
   - nota: añadida por /review: R1, R6
