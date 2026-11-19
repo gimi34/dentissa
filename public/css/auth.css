@@ -31,6 +31,7 @@
     --text-meta:          13px;
     --weight-strong:      500;
     --radius-sm:          8px;
+    --border-control:     var(--p400);
     --focus-ring:         var(--p600);
     --focus-ring-width:   2px;
     --focus-ring-offset:  2px;
@@ -421,3 +422,12 @@ body {
     .dialogo-legal__cabeza,
     .dialogo-legal__texto { padding-inline: var(--space-6); }
 }
+
+/* Spec 051 */
+.page-register select.campo-ciudad,
+.page-register select.campo-ciudad:focus { border-color: var(--border-control); }
+.page-register select.campo-ciudad:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+/* Fin spec 051 */

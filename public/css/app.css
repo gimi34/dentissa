@@ -885,3 +885,13 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
     .tabla-tarjetas .fila-cita .cita-enlace:focus-visible::after { border-radius: var(--radius); }
 }
 /* Fin spec 048 */
+
+/* Spec 051 */
+.field-hint-aviso { color: var(--text); }
+select.campo-ciudad,
+select.campo-ciudad:focus { border-color: var(--border-control); }
+select.campo-ciudad:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+}
+/* Fin spec 051 */
