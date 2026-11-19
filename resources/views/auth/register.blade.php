@@ -321,7 +321,6 @@ let currentStep = 1;
 const totalSteps = 2;
 const progress = [50, 100];
 
-
 // Valida los campos obligatorios del paso indicado antes de avanzar
 function validateStep(step) {
     const stepEl = document.getElementById('step-' + step);
@@ -406,6 +405,17 @@ document.addEventListener('DOMContentLoaded', () => {
     @if($errors->any() && ! $errors->hasAny(['nombre', 'apellido', 'email', 'password']))
         goTo(2);
     @endif
+
+    // Spec 051 (/review R1): tras un error del servidor la contraseña vuelve vacía y el paso 1 puede
+    // estar oculto; el navegador no marca un campo oculto y no enviaría nada. Se vuelve antes al paso 1.
+    document.querySelector('#register-form .btn-submit').addEventListener('click', (evento) => {
+        const paso1 = document.querySelectorAll('#step-1 input, #step-1 select, #step-1 textarea');
+        if (currentStep !== 1 && ![...paso1].every((campo) => campo.checkValidity())) {
+            evento.preventDefault();
+            goTo(1);
+            validateStep(1);
+        }
+    });
 });
 </script>
 {{-- Spec 045 (CA4): las ventanas de los términos y del aviso. --}}
