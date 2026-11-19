@@ -89,7 +89,7 @@ class PacientesController extends Controller
             'telefono' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6',
 
-            'fecha_nacimiento' => 'nullable|date|before:'.RelojClinica::fechaHoy(),
+            'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
             'ciudad' => 'nullable|string|max:100',
@@ -103,6 +103,7 @@ class PacientesController extends Controller
             'dentista_id' => 'nullable|exists:personal,id',
         ], [
             'email.unique' => 'Este correo ya está registrado en el sistema.',
+            'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
@@ -271,7 +272,7 @@ class PacientesController extends Controller
             'email' => "required|email|unique:usuarios,email,{$paciente->usuario_id},id",
             'telefono' => 'nullable|string|max:20',
 
-            'fecha_nacimiento' => 'nullable|date|before:'.RelojClinica::fechaHoy(),
+            'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
             'ciudad' => 'nullable|string|max:100',
@@ -284,6 +285,7 @@ class PacientesController extends Controller
             'telefono_emergencia' => 'nullable|string|max:20',
             'dentista_id' => 'nullable|exists:personal,id',
         ], [
+            'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
