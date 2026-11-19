@@ -121,8 +121,8 @@ class HoraClinicaPanelesTest extends TestCase
     {
         $panel = $this->actingAs($this->paciente1)->get('/cliente')->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/23:00\s+hrs/', $panel, '«Tu próxima cita» es la de las 23:00.');
-        $this->assertStringContainsString('href="'.route('cliente.citas.show', $this->cita21).'"', $panel, 'La de las 21:00 está en el historial.');
-        $this->assertStringNotContainsString('href="'.route('cliente.citas.show', $this->cita23).'"', $panel, 'La de las 23:00 no está en el historial.');
+        $this->assertStringContainsString('class="cita-enlace" href="'.route('cliente.citas.show', $this->cita21).'"', $panel, 'La de las 21:00 está en el historial.');
+        $this->assertStringNotContainsString('class="cita-enlace" href="'.route('cliente.citas.show', $this->cita23).'"', $panel, 'La de las 23:00 no está en el historial.');
 
         $proximas = $this->actingAs($this->paciente1)->get('/cliente/citas')->assertOk()->getContent();
         $this->assertStringContainsString('href="'.route('cliente.citas.show', $this->cita23).'"', $proximas, 'Próximas: la de las 23:00.');

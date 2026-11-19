@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use App\Agenda\CambioDeEstadoNoPermitido;
 use App\Agenda\CitaNoAgendable;
 use App\Agenda\EstadosCita;
@@ -47,9 +48,9 @@ class ClienteCitasController extends Controller
                 );
 
             if ($pasadas) {
-                $query->where('citas.fecha_hora', '<', now())->orderByDesc('citas.fecha_hora');
+                $query->where('citas.fecha_hora', '<', RelojClinica::momentoLocal())->orderByDesc('citas.fecha_hora');
             } else {
-                $query->where('citas.fecha_hora', '>=', now())
+                $query->where('citas.fecha_hora', '>=', RelojClinica::momentoLocal())
                     ->where('citas.estado', '!=', 'cancelada')
                     ->orderBy('citas.fecha_hora');
             }
@@ -295,7 +296,8 @@ class ClienteCitasController extends Controller
             ->orderBy('categoria')->orderBy('nombre')
             ->get();
 
-        $fechaSugerida = $request->get('fecha', now()->addDay()->format('Y-m-d'));
+        // Solo se propone una fecha válida de la dirección; lo demás se ignora (spec 050, TM2).
+        $fechaSugerida = (RelojClinica::fechaDe($request->query('fecha')) ?? RelojClinica::hoy()->addDay())->toDateString();
 
         return view('citas.cliente-agendar', compact('dentistas', 'servicios', 'fechaSugerida'));
     }
@@ -307,12 +309,13 @@ class ClienteCitasController extends Controller
         abort_unless($paciente, 404);
 
         $reglas = ReservaCitas::reglasDeEntrada();
-        $reglas['fecha'][] = 'after_or_equal:today';
+        $reglas['fecha'][] = 'after_or_equal:'.RelojClinica::fechaHoy();
 
         $data = $request->validate($reglas + [
             'servicio_id' => 'bail|required|string|exists:servicios,id',
             'notas_paciente' => 'nullable|string|max:1000',
         ], ReservaCitas::mensajesDeEntrada() + [
+            'fecha.after_or_equal' => 'La fecha de la cita no puede ser anterior a hoy.',
             'dentista_id.required' => 'Elige un dentista.',
             'servicio_id.required' => 'Elige un servicio.',
             'servicio_id.string' => 'Elige un servicio válido.',
