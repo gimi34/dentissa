@@ -37,7 +37,7 @@ class MovilPacientesExpedientesTest extends TestCase
 
         DB::table('usuarios')->where('id', $this->paciente1->id)->update(['telefono' => '5550102']);
         DB::table('pacientes')->where('id', $this->p1)->update([
-            'ciudad' => 'Ciudad de prueba', 'direccion' => 'Calle de prueba',
+            'ciudad' => 'Morelia', 'direccion' => 'Calle de prueba',
             'contacto_emergencia' => 'Contacto de prueba', 'telefono_emergencia' => '5550199',
             'tipo_sangre' => 'A+', 'alergias' => 'Alergia de prueba', 'fecha_nacimiento' => '2005-11-15',
         ]);
@@ -391,7 +391,7 @@ class MovilPacientesExpedientesTest extends TestCase
                 $this->assertContains('field-error', $this->clases($nodo), "{$caso}: «{$campo}» con .field-error.");
             }
             $conservado = match ($caso) {
-                'alta del paciente', 'edición del paciente' => ['ciudad', $datos['ciudad']],
+                'alta del paciente', 'edición del paciente' => ['contacto_emergencia', $datos['contacto_emergencia']],
                 // Tras un error del contenido, la fecha sugerida cae a su valor guardado (old('proxima_visita', …)).
                 'ficha del expediente: contenido' => ['proxima_visita', (string) DB::table('expedientes')->where('id', $this->expediente)->value('proxima_visita')],
                 default => ['proxima_visita', $datos['proxima_visita']],

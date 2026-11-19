@@ -9,12 +9,12 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Tests\Feature\Concerns\EventosDuranteLaPrueba;
 use Tests\Support\CapturaLogs;
 use Tests\TestCase;
 
@@ -28,6 +28,7 @@ use Tests\TestCase;
 class IdentificadorPeticionTest extends TestCase
 {
     use DatabaseTransactions;
+    use EventosDuranteLaPrueba;
 
     private const UUID = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/';
 
@@ -99,7 +100,7 @@ class IdentificadorPeticionTest extends TestCase
         $respuesta = $this->withHeader('X-Request-Id', self::VALIDO)->get('/_pruebas/020/log-y-evento');
 
         $respuesta->assertOk()->assertHeader('X-Request-Id', self::VALIDO);
-        $this->assertSame(self::VALIDO, DB::table('auditoria')->sole()->request_id);
+        $this->assertSame(self::VALIDO, $this->auditoriaDelTest()->sole()->request_id);
     }
 
     public function test_se_genera_uno_si_no_llega(): void
@@ -108,7 +109,7 @@ class IdentificadorPeticionTest extends TestCase
 
         $respuesta->assertOk();
         $this->assertMatchesRegularExpression(self::UUID, (string) $respuesta->headers->get('X-Request-Id'));
-        $this->assertSame($respuesta->headers->get('X-Request-Id'), DB::table('auditoria')->sole()->request_id);
+        $this->assertSame($respuesta->headers->get('X-Request-Id'), $this->auditoriaDelTest()->sole()->request_id);
     }
 
     public function test_las_respuestas_de_error_tambien_lo_llevan(): void
@@ -154,7 +155,7 @@ class IdentificadorPeticionTest extends TestCase
         $this->assertStringNotContainsString($malformado, $respuesta->getContent());
         $this->assertStringNotContainsString($malformado, (string) $respuesta->headers);
         $this->assertStringNotContainsString($malformado, $this->logs->comoTexto());
-        $this->assertFalse(DB::table('auditoria')->get()->contains(fn ($evento) => str_contains(json_encode($evento), $malformado)));
+        $this->assertFalse($this->auditoriaDelTest()->get()->contains(fn ($evento) => str_contains(json_encode($evento), $malformado)));
     }
 
     public function test_logs_y_eventos_comparten_request_id_y_actor(): void
@@ -163,7 +164,7 @@ class IdentificadorPeticionTest extends TestCase
 
         $respuesta = $this->actingAs($admin)->get('/_pruebas/020/log-y-evento');
 
-        $evento = DB::table('auditoria')->sole();
+        $evento = $this->auditoriaDelTest()->sole();
         $log = $this->logDe('prueba_correlacion');
         $this->assertSame($respuesta->headers->get('X-Request-Id'), $log['extra']['request_id'] ?? null);
         $this->assertSame($evento->request_id, $log['extra']['request_id'] ?? null);
@@ -176,12 +177,12 @@ class IdentificadorPeticionTest extends TestCase
         $dentista = $this->crearUsuario('dentista');
 
         $this->get('/_pruebas/020/entrar/'.$dentista->id)->assertOk();
-        $tras = DB::table('auditoria')->where('accion', 'prueba_tras_entrar')->sole();
+        $tras = $this->auditoriaDelTest()->where('accion', 'prueba_tras_entrar')->sole();
         $this->assertSame($dentista->id, $tras->actor_id);
         $this->assertSame($dentista->id, $this->logDe('prueba_tras_entrar')['extra']['actor_id'] ?? null);
 
         $this->get('/_pruebas/020/salir')->assertOk();
-        $salida = DB::table('auditoria')->where('accion', 'prueba_tras_salir')->sole();
+        $salida = $this->auditoriaDelTest()->where('accion', 'prueba_tras_salir')->sole();
         $this->assertNull($salida->actor_id);
         $this->assertArrayNotHasKey('actor_id', $this->logDe('prueba_tras_salir')['extra']);
     }
@@ -198,7 +199,7 @@ class IdentificadorPeticionTest extends TestCase
 
         $logs = collect($this->logs->registros())->where('mensaje', 'prueba.correlacion')->values();
         $this->assertArrayNotHasKey('actor_id', $logs->last()['extra'], 'La petición anónima no lleva actor_id.');
-        $this->assertNull(DB::table('auditoria')->orderByDesc('id')->first()->actor_id);
+        $this->assertNull($this->auditoriaDelTest()->orderByDesc('id')->first()->actor_id);
     }
 
     /** A62: con el descubrimiento automático, un solo listener por evento. */
@@ -230,7 +231,7 @@ class IdentificadorPeticionTest extends TestCase
         $this->sinSesion();
         $this->actingAs($asistente)->withHeader('X-Request-Id', self::VALIDO)->get('/_pruebas/020/log-y-evento')->assertOk();
 
-        $eventos = DB::table('auditoria')->where('request_id', self::VALIDO)->orderBy('id')->get();
+        $eventos = $this->auditoriaDelTest()->where('request_id', self::VALIDO)->orderBy('id')->get();
         $this->assertCount(2, $eventos, 'Un identificador válido repetido se acepta.');
         $this->assertSame([$admin->id, $asistente->id], $eventos->pluck('actor_id')->all());
         $this->assertNotSame($eventos[0]->id, $eventos[1]->id);
@@ -249,7 +250,7 @@ class IdentificadorPeticionTest extends TestCase
         $this->withHeader('X-Request-Id', self::VALIDO)->get('/admin')->assertRedirect('/login');
         $this->withHeader('X-Request-Id', self::VALIDO)->get('/_pruebas/020/log-y-evento')->assertOk();
 
-        $ultimo = DB::table('auditoria')->orderByDesc('id')->first();
+        $ultimo = $this->auditoriaDelTest()->orderByDesc('id')->first();
         $this->assertNull($ultimo->actor_id, 'Sin sesión no hay actor, aunque el identificador fuera de un admin.');
         $this->assertArrayNotHasKey('actor_id', collect($this->logs->registros())->where('mensaje', 'prueba.correlacion')->last()['extra']);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Agenda\RelojClinica;
 use App\Models\Usuario;
+use App\Rules\CiudadDeLaLista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ class RegisterController extends Controller
             'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
-            'ciudad' => ['nullable', 'string', 'max:100'],
+            'ciudad' => ['nullable', new CiudadDeLaLista],
 
             // Spec 045 (CA5, D5): la casilla de los términos y el aviso, también en el servidor.
             'terminos' => ['accepted'],
@@ -128,7 +129,7 @@ class RegisterController extends Controller
             'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
-            'ciudad' => ['nullable', 'string', 'max:100'],
+            'ciudad' => ['nullable', new CiudadDeLaLista],
             'terminos' => ['accepted'],
         ], [
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',

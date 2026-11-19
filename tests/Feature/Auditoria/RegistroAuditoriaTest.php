@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Tests\Feature\Concerns\EventosDuranteLaPrueba;
 use Tests\Support\AlmacenAuditoriaQueFalla;
 use Tests\Support\CapturaLogs;
 use Tests\TestCase;
@@ -31,6 +32,7 @@ use Tests\TestCase;
 class RegistroAuditoriaTest extends TestCase
 {
     use DatabaseTransactions;
+    use EventosDuranteLaPrueba;
 
     private const UUID = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/';
 
@@ -95,7 +97,7 @@ class RegistroAuditoriaTest extends TestCase
 
     private function eventos(): Collection
     {
-        return DB::table('auditoria')->orderBy('id')->get();
+        return $this->auditoriaDelTest()->orderBy('id')->get();
     }
 
     public function test_un_evento_guarda_todos_los_campos(): void

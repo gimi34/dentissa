@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Agenda\RelojClinica;
+use App\Pacientes\Ciudades;
+use App\Rules\CiudadDeLaLista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -44,7 +46,8 @@ class PacientesController extends Controller
             });
         }
 
-        if ($request->filled('ciudad')) {
+        // Spec 051 (D6): el filtro solo admite ciudades de la lista; las antiguas se encuentran con «Buscar».
+        if (is_string($request->ciudad) && Ciudades::contiene($request->ciudad)) {
             $query->where('pacientes.ciudad', $request->ciudad);
         }
 
@@ -59,16 +62,18 @@ class PacientesController extends Controller
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
             ->where('usuarios.activo', 1)->count();
 
-        $ciudades = DB::table('pacientes')
+        // Spec 051 (CA7): se compara en PHP porque la columna no distingue mayúsculas ni tildes.
+        $guardadas = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
             ->where('usuarios.activo', 1)
             ->whereNotNull('pacientes.ciudad')
-            ->where('pacientes.ciudad', '!=', '')
-            ->distinct()->pluck('pacientes.ciudad')->sort()->values();
+            ->pluck('pacientes.ciudad');
+        $ciudades = collect(Ciudades::nombres())->intersect($guardadas)->values();
+        $totalCiudades = $ciudades->reject(fn (string $ciudad) => $ciudad === Ciudades::OTRO_LUGAR)->count();
 
         $dentistas = $this->dentistasDisponibles();
 
-        return view('pacientes.index', compact('pacientes', 'totalPacientes', 'ciudades', 'dentistas'));
+        return view('pacientes.index', compact('pacientes', 'totalPacientes', 'ciudades', 'totalCiudades', 'dentistas'));
     }
 
     // ── CREATE ─────────────────────────────────────────────────────────
@@ -92,7 +97,7 @@ class PacientesController extends Controller
             'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
-            'ciudad' => 'nullable|string|max:100',
+            'ciudad' => ['nullable', new CiudadDeLaLista],
             'tipo_sangre' => 'nullable|string|max:5',
             'alergias' => 'nullable|string|max:1000',
             'enfermedades_cronicas' => 'nullable|string|max:1000',
@@ -275,7 +280,7 @@ class PacientesController extends Controller
             'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
-            'ciudad' => 'nullable|string|max:100',
+            'ciudad' => ['nullable', new CiudadDeLaLista($paciente->ciudad)],
             'tipo_sangre' => 'nullable|string|max:5',
             'alergias' => 'nullable|string|max:1000',
             'enfermedades_cronicas' => 'nullable|string|max:1000',

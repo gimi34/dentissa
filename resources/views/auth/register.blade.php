@@ -279,10 +279,12 @@
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                                 <polyline points="9 22 9 12 15 12 15 22"/>
                             </svg>
-                            <input type="text" id="ciudad" name="ciudad"
-                                class="field" value="{{ old('ciudad') }}"
-                                placeholder="Ciudad de México">
+                            <select id="ciudad" name="ciudad" class="field campo-ciudad"
+                                @error('ciudad') aria-invalid="true" aria-describedby="error-ciudad" @enderror>
+                                @include('partials.opciones-ciudad')
+                            </select>
                         </div>
+                        @error('ciudad')<div class="error-msg" id="error-ciudad">{{ $message }}</div>@enderror
                     </div>
 
                     <!-- Términos -->
@@ -318,15 +320,6 @@
 let currentStep = 1;
 const totalSteps = 2;
 const progress = [50, 100];
-
-// Si hay errores de servidor, ir al paso correcto
-@if($errors->has('nombre') || $errors->has('apellido') || $errors->has('email') || $errors->has('password'))
-    currentStep = 1;
-@elseif($errors->has('telefono') || $errors->has('fecha_nacimiento'))
-    currentStep = 2;
-@else
-    currentStep = 1;
-@endif
 
 // Valida los campos obligatorios del paso indicado antes de avanzar
 function validateStep(step) {
@@ -407,13 +400,22 @@ function togglePass(id) {
     input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-// Inicializar con el paso correcto si hay errores
+// Spec 051 (D13): con errores solo del paso 2, se abre ese paso para que se vean.
 document.addEventListener('DOMContentLoaded', () => {
-    @if($errors->any())
-        // Resetear y mostrar solo el paso 1 si hay errores
-        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-        document.getElementById('step-1').classList.add('active');
+    @if($errors->any() && ! $errors->hasAny(['nombre', 'apellido', 'email', 'password']))
+        goTo(2);
     @endif
+
+    // Spec 051 (/review R1): tras un error del servidor la contraseña vuelve vacía y el paso 1 puede
+    // estar oculto; el navegador no marca un campo oculto y no enviaría nada. Se vuelve antes al paso 1.
+    document.querySelector('#register-form .btn-submit').addEventListener('click', (evento) => {
+        const paso1 = document.querySelectorAll('#step-1 input, #step-1 select, #step-1 textarea');
+        if (currentStep !== 1 && ![...paso1].every((campo) => campo.checkValidity())) {
+            evento.preventDefault();
+            goTo(1);
+            validateStep(1);
+        }
+    });
 });
 </script>
 {{-- Spec 045 (CA4): las ventanas de los términos y del aviso. --}}

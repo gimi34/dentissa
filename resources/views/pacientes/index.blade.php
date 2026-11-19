@@ -54,7 +54,7 @@
                 <circle cx="12" cy="7" r="4"/>
             </svg>
         </div>
-        <div class="stat-value">{{ $ciudades->count() }}</div>
+        <div class="stat-value">{{ $totalCiudades }}</div>
         <div class="stat-label">Ciudades distintas</div>
     </div>
 </div>

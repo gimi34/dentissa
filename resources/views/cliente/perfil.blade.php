@@ -80,9 +80,21 @@
             </div>
 
             <div style="margin-bottom:20px">
-                <label class="field-label">Ciudad</label>
-                <input type="text" name="ciudad" value="{{ old('ciudad', optional($paciente)->ciudad) }}"
-                       class="field" placeholder="Ciudad de México">
+                @php
+                    $ciudadGuardada = optional($paciente)->ciudad;
+                    $ciudadAntigua = \App\Pacientes\Ciudades::antigua($ciudadGuardada);
+                    $ayudasCiudad = array_filter([$errors->has('ciudad') ? 'error-ciudad' : null, $ciudadAntigua !== null ? 'aviso-ciudad' : null]);
+                @endphp
+                <label class="field-label" for="campo-ciudad">Ciudad</label>
+                <select name="ciudad" id="campo-ciudad" class="field campo-ciudad"
+                    @error('ciudad') aria-invalid="true" @enderror
+                    @if($ayudasCiudad) aria-describedby="{{ implode(' ', $ayudasCiudad) }}" @endif>
+                    @include('partials.opciones-ciudad', ['guardada' => $ciudadGuardada])
+                </select>
+                @error('ciudad')<div class="field-hint field-hint-error" id="error-ciudad">{{ $message }}</div>@enderror
+                @if($ciudadAntigua !== null)
+                    <div class="field-hint field-hint-aviso" id="aviso-ciudad">La ciudad guardada «{{ $ciudadAntigua }}» no está en la lista: elige una o deja «Sin indicar»</div>
+                @endif
             </div>
 
             <div style="margin-bottom:20px">
