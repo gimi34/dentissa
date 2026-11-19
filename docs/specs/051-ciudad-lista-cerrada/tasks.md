@@ -88,10 +88,16 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: `tests/Feature/Auditoria` pasa completo (111 tests) con el evento de la migración en la base de tests.
   - nota: añadida durante /implement: mismo motivo que T030.
 
+- [ ] T032 Escribir el test de R1: el botón «Crear mi cuenta» del registro con correo, antes del envío nativo, comprueba el paso 1 y, si no es válido, vuelve a él (`validateStep(1)` y `goTo(1)` en el manejador del botón, como código del script y no en un comentario) — tests/Feature/CiudadListaCerradaTest.php — hecho cuando: falla hoy porque el botón no tiene ese manejador (anotado) — cubre: CA5 — depende: T031
+  - nota: añadida por /review: R1
+- [ ] T033 Hacer que «Crear mi cuenta» vuelva al paso 1 y marque el campo cuando el paso 1 no es válido (tras un error del servidor la contraseña vuelve vacía), y dejar una sola línea en blanco donde estaba el bloque de `currentStep` — resources/views/auth/register.blade.php — hecho cuando: T032 pasa · verificación manual: en el navegador, con un error de ciudad devuelto por el servidor, «Crear mi cuenta» abre el paso 1 con la contraseña marcada, y al escribirla y volver al paso 2 la cuenta se crea — cubre: CA5 — depende: T032
+  - nota: añadida por /review: R1, R6
+- [ ] T034 Ajustar los tests de la corrección y de los formularios: `CorreccionCiudadesTest` usa `EventosDelTest` y exige un único evento escrito durante el test (R7) y añade un test que ejecuta `up()` de la migración y comprueba su evento (R5); `CiudadListaCerradaTest` usa `formularios` en lugar de `formulariosSinEsaCiudad` (R4) — tests/Feature/CorreccionCiudadesTest.php, tests/Feature/CiudadListaCerradaTest.php — hecho cuando: los dos pasan; el test nuevo de la migración falla si `up()` no llama al servicio (comprobado rompiéndolo) — cubre: CA8, CA12 — depende: T033
+  - nota: añadida por /review: R4, R5, R7
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` si cambió la estructura: módulo `app/Pacientes/` (`Ciudades`, `CorreccionCiudades`), la regla `CiudadDeLaLista` y la migración de datos; y en `AGENTS.md` → «Mapa del repositorio», la fila de `app/Pacientes/` y la regla en `app/Rules/`
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: fila del evento `pacientes_ciudades_corregidas` en la tabla de eventos de `observability.md`; en `deployment.md`, que la migración de la 051 no se deshace con `volver.sh`, que el valor original está en la copia previa y que, si la verificación falla, se usa `volver.sh` aunque `desplegar.sh` sugiera `restaurar.sh` (la corrección es válida para la versión anterior y restaurar perdería lo guardado desde la copia)
-- [x] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` y `auditar-npm.mjs` sin altas ni críticas, criterios `[x]` y `docs/specs/README.md`
+- [ ] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` y `auditar-npm.mjs` sin altas ni críticas, criterios `[x]` y `docs/specs/README.md`
   - nota: suite completa 1497 tests en verde (con la migración aplicada, como en la CI); Pint sin cambios en los 17 PHP tocados; gitleaks y semgrep `p/php` sin hallazgos sobre los archivos del diff; `composer audit` y `auditar-npm.mjs` sin altas ni críticas.
 
 ## Despliegue (lo ejecuta `/release`)
@@ -107,14 +113,14 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | CA2 | T011 | T024 |
 | CA3 | T011 | T025 |
 | CA4 | T012 | T023, T024, T025 |
-| CA5 | T010, T012 | T021, T023, T024, T025, T027 |
+| CA5 | T010, T012, T032 | T021, T023, T024, T025, T027, T033 |
 | CA6 | T010, T013 | T021, T024, T025 |
 | CA7 | T014 | T026 |
-| CA8 | T010, T016 | T020, T028, T029 |
+| CA8 | T010, T016, T034 | T020, T028, T029 |
 | CA9 | T016 | T028 |
 | CA10 | T010, T013 | T021, T022, T024, T025 |
 | CA11 | T014 | T026 |
-| CA12 | T016 | T028, T029, T030, T031 |
+| CA12 | T016, T034 | T028, T029, T030, T031 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|

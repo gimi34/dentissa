@@ -1,7 +1,7 @@
 ---
 id: 051
 slug: ciudad-lista-cerrada
-status: implemented
+status: approved
 created: 2026-11-18
 extends: [002, 006, 011]
 ---
