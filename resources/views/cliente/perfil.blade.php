@@ -58,7 +58,7 @@
                     <input type="date" name="fecha_nacimiento"
                            value="{{ old('fecha_nacimiento', optional($paciente)->fecha_nacimiento) }}"
                            class="field {{ $errors->has('fecha_nacimiento') ? 'field-error' : '' }}"
-                           max="{{ now()->subYears(1)->format('Y-m-d') }}">
+                           max="{{ \App\Agenda\RelojClinica::hoy()->subYear()->format('Y-m-d') }}">
                     @error('fecha_nacimiento')<div class="field-hint field-hint-error">{{ $message }}</div>@enderror
                 </div>
                 <div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Agenda\RelojClinica;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class RegisterController extends Controller
 
             // Paso 2 — Contacto
             'telefono' => ['nullable', 'string', 'max:20'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'fecha_nacimiento' => ['nullable', 'date', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
@@ -123,7 +124,7 @@ class RegisterController extends Controller
 
         $data = $request->validate([
             'telefono' => ['nullable', 'string', 'max:20'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'fecha_nacimiento' => ['nullable', 'date', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
             'ciudad' => ['nullable', 'string', 'max:100'],
