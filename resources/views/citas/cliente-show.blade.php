@@ -71,7 +71,7 @@
         @endif
 
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted)">
-            Agendada el {{ \Carbon\Carbon::parse($cita->creado_en)->format('d/m/Y H:i') }}
+            Agendada el {{ \App\Agenda\RelojClinica::delSistema($cita->creado_en)?->format('d/m/Y H:i') }}
         </div>
     </div>
 </div>
