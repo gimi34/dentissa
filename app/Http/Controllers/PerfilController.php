@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Agenda\RelojClinica;
 use App\Models\Usuario;
+use App\Rules\CiudadDeLaLista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -30,6 +31,7 @@ class PerfilController extends Controller
     public function update(Request $request)
     {
         $user = auth()->user();
+        $paciente = DB::table('pacientes')->where('usuario_id', $user->id)->first();
 
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:100'],
@@ -39,7 +41,7 @@ class PerfilController extends Controller
             'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],
             'genero' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:500'],
-            'ciudad' => ['nullable', 'string', 'max:100'],
+            'ciudad' => ['nullable', new CiudadDeLaLista($paciente?->ciudad)],
             'contrasena_correo' => ['nullable', 'string', 'max:255'],
         ], [
             'email.unique' => 'Este correo ya está en uso por otra cuenta.',
@@ -75,7 +77,6 @@ class PerfilController extends Controller
             'actualizado_en' => now(),
         ]);
 
-        $paciente = DB::table('pacientes')->where('usuario_id', $user->id)->first();
         $datosPaciente = [
             'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
             'genero' => $data['genero'] ?? null,
