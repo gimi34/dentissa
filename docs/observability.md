@@ -64,6 +64,7 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
 | Alta, activación/desactivación de cuentas y cambio de contraseña | sí | actor, sujeto, acción, fecha. El restablecimiento ya se registra como `contrasena_restablecida`, en modo crítico (spec 041); el resto, en la 021 |
 | Lectura del propio registro de auditoría | sí | actor, filtro consultado, fecha |
 | Publicar, mover y quitar una foto de la galería (spec 039, CA16) | sí | `galeria_foto_publicada`, `galeria_foto_movida` y `galeria_foto_quitada`, en modo crítico: actor, recurso `galeria_foto` y su UUID, resultado, fecha y `detalle` con `con_paciente` y `posicion` (y `direccion` al mover); nunca la descripción ni la imagen. El 403 de otro rol, `acceso_denegado` del registro central |
+| Corrección de las ciudades guardadas (spec 051, CA12) | sí | `pacientes_ciudades_corregidas`, en modo crítico y dentro de la transacción de la migración: actor nulo (sistema), recurso `pacientes`, campo `ciudad` y `detalle` con `corregidos` y `fuera_de_lista`; nunca ciudades ni nombres |
 
 - Almacenamiento: tabla propia en MariaDB (propuesta `auditoria`), **solo anexado**: la
   aplicación solo inserta; nadie, tampoco un administrador, modifica ni borra entradas desde la

@@ -159,6 +159,7 @@ fuera del repositorio y del chat).
   `docker compose exec -e DB_DATABASE=dentissa_test app php artisan migrate --force`; si no,
   `HistorialCitaTest` encontrará dos filas por cambio. El CI ya ejecuta `migrate` tras cargar el
   volcado.
+- Spec 051: la migración `2026_11_18_000000_corregir_ciudades_de_pacientes` corrige datos y deja su evento de auditoría. `down()` no la deshace: solo reescribe la forma de ciudades que ya eran ese municipio y el texto original queda en la copia previa al despliegue. Si la verificación falla, se vuelve con `deploy/volver.sh <tag anterior>` aunque `desplegar.sh` sugiera `restaurar.sh`: los datos corregidos son válidos para la versión anterior y restaurar perdería lo guardado desde la copia.
 
 ## Copias de seguridad
 Cifradas desde la spec 032 ([ADR 0007](adr/0007-copias-cifradas-y-avisos.md)):
