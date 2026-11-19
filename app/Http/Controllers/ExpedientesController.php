@@ -118,9 +118,10 @@ class ExpedientesController extends Controller
             'tratamiento' => 'nullable|string|max:2000',
             'receta' => 'nullable|string|max:2000',
             'observaciones' => 'nullable|string|max:2000',
-            'proxima_visita' => 'nullable|date|after:'.RelojClinica::fechaHoy(),
+            'proxima_visita' => 'nullable|date_format:Y-m-d|after:'.RelojClinica::fechaHoy(),
         ], [
             'diagnostico.required' => 'El diagnóstico es obligatorio.',
+            'proxima_visita.date_format' => 'La próxima visita debe tener el formato AAAA-MM-DD.',
             'proxima_visita.after' => 'La próxima visita debe ser posterior a hoy.',
         ]);
 
@@ -204,8 +205,9 @@ class ExpedientesController extends Controller
             'tratamiento' => 'nullable|string|max:2000',
             'receta' => 'nullable|string|max:2000',
             'observaciones' => 'nullable|string|max:2000',
-            'proxima_visita' => $sinCambios ? 'nullable|date' : 'nullable|date|after:'.RelojClinica::fechaHoy(),
+            'proxima_visita' => $sinCambios ? 'nullable|date_format:Y-m-d' : 'nullable|date_format:Y-m-d|after:'.RelojClinica::fechaHoy(),
         ], [
+            'proxima_visita.date_format' => 'La próxima visita debe tener el formato AAAA-MM-DD.',
             'proxima_visita.after' => 'La próxima visita debe ser posterior a hoy.',
         ]);
 
