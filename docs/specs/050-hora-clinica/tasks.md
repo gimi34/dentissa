@@ -1,7 +1,7 @@
 ---
 spec: 050-hora-clinica
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 050 La hora de la clínica en todo el panel
