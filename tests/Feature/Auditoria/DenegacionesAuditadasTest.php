@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
-use Tests\Feature\Concerns\EventosDelTest;
+use Tests\Feature\Concerns\EventosDuranteLaPrueba;
 use Tests\TestCase;
 
 /**
@@ -25,7 +25,7 @@ use Tests\TestCase;
 class DenegacionesAuditadasTest extends TestCase
 {
     use DatabaseTransactions, EscenarioEstadosCita;
-    use EventosDelTest;
+    use EventosDuranteLaPrueba;
 
     protected function setUp(): void
     {

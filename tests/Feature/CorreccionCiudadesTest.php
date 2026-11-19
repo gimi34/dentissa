@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
-use Tests\Feature\Concerns\EventosDelTest;
+use Tests\Feature\Concerns\EventosDuranteLaPrueba;
 use Tests\Support\AlmacenAuditoriaQueFalla;
 use Tests\TestCase;
 
@@ -20,7 +20,7 @@ class CorreccionCiudadesTest extends TestCase
 {
     use DatabaseTransactions;
     use EscenarioEstadosCita;
-    use EventosDelTest;
+    use EventosDuranteLaPrueba;
 
     private const ACCION = 'pacientes_ciudades_corregidas';
 

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
-use Tests\Feature\Concerns\EventosDelTest;
+use Tests\Feature\Concerns\EventosDuranteLaPrueba;
 use Tests\TestCase;
 
 /**
@@ -30,7 +30,7 @@ use Tests\TestCase;
 class ConsultaAuditoriaTest extends TestCase
 {
     use DatabaseTransactions;
-    use EventosDelTest;
+    use EventosDuranteLaPrueba;
 
     private const URL = '/admin/auditoria';
 

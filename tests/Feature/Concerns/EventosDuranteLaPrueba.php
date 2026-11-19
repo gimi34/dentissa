@@ -10,12 +10,12 @@ use Illuminate\Support\Facades\DB;
  * evento antes de la suite (`pacientes_ciudades_corregidas`). Los tests que cuentan eventos miran solo
  * los que se escriben durante cada test.
  */
-trait EventosDelTest
+trait EventosDuranteLaPrueba
 {
     private int $ultimoEventoAnterior = 0;
 
     /** Laravel lo llama al preparar el test, con la transacción ya abierta. */
-    protected function setUpEventosDelTest(): void
+    protected function setUpEventosDuranteLaPrueba(): void
     {
         $this->ultimoEventoAnterior = (int) DB::table('auditoria')->max('id');
     }
