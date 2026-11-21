@@ -1,16 +1,22 @@
 ---
 spec: 053-whatsapp-inicio
 verdict: approved
-round: 1
+round: 2
 date: 2026-11-21
-base: d933175
-head: 48df521
+base: 70f5600
+head: 62d7120
 human_signoff: no requerido
 ---
 
 # Review · 053 Escríbenos por WhatsApp desde la página de inicio
 
 ## Resumen
+Ronda 2 (`--rerun`, delta, sin subagente): la rama se rebasó sobre `main` (7c00de5, con la v0.24.0 de la
+spec 011) para liberar. El diff de código de la 053 es idéntico al revisado en la ronda 1 (mismo SHA-1 de
+`git diff d933175 48df521` y `git diff 70f5600 62d7120`, 12 archivos) y la suite completa sigue en verde con el
+código de la 011 (1521 tests). Sin hallazgos nuevos; los aceptados de la ronda 1 se mantienen
+([history/review.r1.md](history/review.r1.md)).
+
 `approved`: los seis criterios se cumplen con tests que fallarían si se rompe lo que protegen, los cuatro
 controles del modelo de amenazas están en el código y la verificación automática está en verde. Solo hay
 hallazgos menores, aceptados al roadmap por el usuario (2026-11-21).
@@ -25,7 +31,7 @@ Conteo: bloqueante 0 · importante 0 · menor 7
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `vendor/bin/phpunit` (suite completa, `dentissa_test`, contenedor `dentissa-app` con el código del worktree) | ✅ 1510 tests, 19 743 aserciones, 0 fallos (línea base de `/implement`: 1502; 8 nuevos) |
+| `vendor/bin/phpunit` (suite completa, `dentissa_test`, contenedor `dentissa-app` con el código del worktree) | ✅ r2, tras el rebase: 1521 tests, 19 913 aserciones, 0 fallos (r1: 1510; +11 de la spec 011) |
 | `vendor/bin/pint --test` sobre los 6 PHP tocados | ✅ |
 | `python .ai/bin/aidd.py validate docs/specs/053-whatsapp-inicio` | ✅ 0 errores |
 | `evaluate.mjs` con `design/criterios.json` sobre `/` servida en local (T022) | ✅ 11/11 puertas; K1, K2, K4, K7, K8; K6 y K9 con el mapa en blanco, 7/7 (`.ai/inspect/053-build*`) |

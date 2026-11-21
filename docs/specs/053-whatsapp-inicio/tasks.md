@@ -1,7 +1,7 @@
 ---
 spec: 053-whatsapp-inicio
 plan: plan.md
-impl_base: d933175
+impl_base: 70f5600
 status: approved
 ---
 
@@ -43,6 +43,7 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 
 ## Preparación
 - [x] T001 Poner la rama al día con `origin/main` (16a110c: EX5 retirada, fix del expediente, specs 002/006/011), resolver los choques y fijar la línea base de la suite — rama `feature/053-whatsapp-inicio` — hecho cuando: la rama contiene `origin/main`, no quedan conflictos y `php artisan test` pasa completo (resultado anotado en la nota de la tarea)
+  - nota: 2026-11-21, para /release: rebase sobre `origin/main` 7c00de5 (v0.24.0, spec 011) sin choques; `impl_base` d933175 → 70f5600 (el mismo punto en el historial nuevo); suite 1521 en verde.
   - nota: rebase sobre `origin/main` (16a110c) sin choques. Línea base: 1502 tests, 0 fallos (5 min 50 s), con `vendor/bin/phpunit` en un contenedor `dentissa-app` propio con el código del worktree (`artisan test` sin `.env` avisa al leerlo; `phpunit` directo no).
 
 ## Tests (antes de implementar)
