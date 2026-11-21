@@ -5,7 +5,7 @@ exploration: loop        # loop: ciclo por criterios · none: sin diseño nuevo 
 threshold: 80            # puntuación mínima de la rúbrica (de .ai/project.yaml → design)
 floor: 3                 # nota mínima de cada punto de la rúbrica
 budget: 5                # candidatos como máximo
-accepted: c2             # candidato aceptado
+accepted: c3             # candidato aceptado
 score: 81                # puntuación del aceptado
 system_version: 1.20.0
 created: 2026-11-20
@@ -31,11 +31,12 @@ candidato a los cuatro anchos.
 | Candidato | Puertas | KPIs | Rúbrica | Resultado | Informe |
 |---|---|---|---|---|---|
 | `c1` | 11/11 | 7/7 (K6 y K9 sin el mapa) · K3 ✅ | 77 | descartado: bajo el umbral; WhatsApp suelto en su propia fila bajo el horario y el teléfono, cerca del pliegue; en contacto, WhatsApp y «Cómo llegar» se apilan con anchos distintos (borde dentado) a 320, 390 y 900 px | `.ai/inspect/053-c1/report.md` · `.ai/inspect/053-c1-sin-mapa/report.md` |
-| `c2` | 11/11 | 7/7 (K6 y K9 sin el mapa) · K3 ✅ | 81 | **aceptado** | `.ai/inspect/053-c2/report.md` · `.ai/inspect/053-c2-sin-mapa/report.md` |
+| `c2` | 11/11 | 7/7 (K6 y K9 sin el mapa) · K3 ✅ | 81 | aceptado por criterios; sustituido por c3 a petición del usuario (logotipo de WhatsApp en lugar de la burbuja) | `.ai/inspect/053-c2/report.md` · `.ai/inspect/053-c2-sin-mapa/report.md` |
+| `c3` | 11/11 | 7/7 (K6 y K9 sin el mapa) · K3 ✅ | 81 | **aceptado**: c2 con el logotipo de WhatsApp de una tinta (decisión del usuario) | `.ai/inspect/053-c3/report.md` · `.ai/inspect/053-c3-sin-mapa/report.md` |
 
 ## Resultado
 
-**c2**, aceptado con 81/100 (umbral 80, ningún punto bajo 3). Página: `design/candidatos/c2.html`.
+**c3**, aceptado con 81/100 (umbral 80, ningún punto bajo 3). Es c2 con el logotipo de WhatsApp en lugar de la burbuja (decisión del usuario, 2026-11-20); medidas y notas iguales a las de c2. Página: `design/candidatos/c3.html`.
 
 | Puerta o KPI | Objetivo | Medido | |
 |---|---|---|---|
@@ -58,7 +59,7 @@ candidato a los cuatro anchos.
 | Lectura y ritmo | 15 | 4 | `film-1440-09.png`: huecos de unos 250 px entre «Agenda sin llamar» y «Visítanos», la dirección en cuatro líneas y el horario repetido (todo de la 038) |
 | Diferencia frente a una plantilla | 15 | 3 | `1440-claro.png`: el arco y la semana son propios; titular, lista de servicios y bloque dirección + mapa son de plantilla (038). El botón no suma ni resta identidad |
 
-Frente a c1: mejor en jerarquía, primera pantalla y sistema; igual en lectura y plantilla.
+Evidencia de las capturas de c3 (`.ai/inspect/053-c3/`); las de c2 dan las mismas notas. c2 frente a c1: mejor en jerarquía, primera pantalla y sistema; igual en lectura y plantilla. c3 frente a c2: igual en los cinco puntos («el glifo de WhatsApp identifica el canal más rápido que el bocadillo genérico de c2, pero no cambia la nota»).
 
 ## Imágenes de muestra
 
@@ -68,8 +69,8 @@ Ninguna. La única imagen es la foto propia de la marca (`images/brand/access.we
 
 | Pantalla y estado | Ancho menor | Intermedio | Ancho mayor | Criterios |
 |---|---|---|---|---|
-| Inicio · primera pantalla, visitante | `candidatos/c2.html` a 320 y 390 | 900 | 1440 | CA1, CA3, CA4 |
-| Inicio · «Encuéntranos fácilmente» (contacto) | `candidatos/c2.html` a 320 y 390 | 900 | 1440 | CA2, CA3, CA4 |
+| Inicio · primera pantalla, visitante | `candidatos/c3.html` a 320 y 390 | 900 | 1440 | CA1, CA3, CA4 |
+| Inicio · «Encuéntranos fácilmente» (contacto) | `candidatos/c3.html` a 320 y 390 | 900 | 1440 | CA2, CA3, CA4 |
 
 Con sesión, la primera pantalla cambia solo «Agendar mi primera cita» por «Ir a mi panel» (044 CA5); el
 grupo de contacto y su botón son los mismos (CA1).
@@ -90,9 +91,11 @@ grupo de contacto y su botón son los mismos (CA1).
     «Cómo llegar».
   - Por debajo de 560 px, los dos botones van a todo el ancho con el relleno lateral `--space-6`, como las
     acciones del hero.
-  - **Icono:** burbuja de conversación dibujada con trazo de 2 (`currentColor`), como los demás iconos de
-    línea del sitio; no es el logotipo de WhatsApp, que no hace falta (el texto lo nombra) y evita las normas de
-    uso de esa marca.
+  - **Icono:** el logotipo de WhatsApp de una tinta (`fill="currentColor"`, el color del texto del botón), sin
+    alterar, a 24 px (`--icon-md`), en SVG en línea. Origen: Simple Icons 13.21.0 (`icons/whatsapp.svg`, licencia
+    CC0 de los datos; el símbolo es marca de WhatsApp/Meta). Las normas de la marca admiten el símbolo en un solo
+    color; el verde de la marca no se usa porque no es un token del sistema (`G-tokens`). Se sirve desde el propio
+    sitio: no se carga nada de WhatsApp ni de Meta (RNF de privacidad).
 - **Enlace:** `https://wa.me/527530000000?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20agendar%20una%20cita.`
   con `target="_blank"`, `rel="noopener noreferrer"` y `aria-label="Escríbenos por WhatsApp (se abre WhatsApp en
   una pestaña nueva)"`, que empieza por el texto visible (WCAG 2.5.3).
@@ -125,5 +128,6 @@ Ninguno nuevo. Los botones heredan la escala al pulsar y el desplazamiento del i
 |---|---|---|---|---|
 | 2026-11-20 | supuesto | K6 «sin aumento» y K9 con la página entera fallan por el mapa de Google (1,8 MB de JavaScript, ya en la página actual) | K6 ≤ 13 994 bytes y K9 ≤ 1 MB, medidos con el mapa en blanco, como el RNF de la 038 y la 045 | `docs/specs/038-pagina-inicio/spec.md` (RNF) · `docs/specs/045-terminos-privacidad/design/medir.mjs` |
 | 2026-11-20 | supuesto | K2 («más destacado que WhatsApp») y K3 («junto al teléfono en contacto») no tienen tipo en `evaluate.mjs` | K2: en la primera pantalla por KPI y su peso por el punto `jerarquia`; K3: comprobado en el DOM y con test en `/implement` | `design-spec/references/criterios.md` §3 |
-| 2026-11-20 | diseño | ¿Logotipo de WhatsApp o icono propio? | Burbuja de conversación de trazo del sistema; el texto nombra WhatsApp | /design-spec 053 |
+| 2026-11-20 | diseño | ¿Logotipo de WhatsApp o icono propio? | Burbuja de conversación de trazo del sistema (c2); la sustituye el logotipo por decisión del usuario (fila de abajo) | /design-spec 053 |
 | 2026-11-20 | diseño | Problemas de la rúbrica que son de la 038 (huecos entre secciones, dirección en cuatro líneas, horario repetido, peso del teléfono, titular) | Fuera de esta spec: la 053 no cambia el resto de la página de inicio (038 CA5) | /design-spec 053 · evaluador c1 y c2 |
+| 2026-11-20 | diseño | Burbuja de conversación (c2) o logotipo de WhatsApp | Logotipo de WhatsApp de una tinta en `currentColor` (c3); medido otra vez (11/11 puertas, 7/7 KPIs, rúbrica 81) | usuario |

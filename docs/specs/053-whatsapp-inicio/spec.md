@@ -71,7 +71,7 @@ directo: la aplicación no envía ni recibe mensajes de WhatsApp.
 ## Diseño
 El botón tiene que sentirse como una forma más, cercana, de hablar con la clínica, al lado del
 teléfono y sin competir con «Agendar mi primera cita», que sigue siendo la acción principal (038).
-Sistema: [docs/design/system.md](../../design/system.md). Acta: [design.md](design.md) (`c2`, 81/100).
+Sistema: [docs/design/system.md](../../design/system.md). Acta: [design.md](design.md) (`c3`, 81/100).
 
 - Qué debe lograr: en cinco segundos, quien llega entiende que puede escribir por WhatsApp sin
   registrarse.
@@ -119,7 +119,7 @@ Ninguna.
 | 2026-11-20 | supuesto | Mensaje ya escrito | «Hola, quiero información para agendar una cita.» (CA3) | /specify |
 | 2026-11-20 | supuesto | ¿El aviso de privacidad tiene que nombrar WhatsApp? | Sí, en el apartado de terceros, como ya nombra el mapa de Google (CA6) | /specify · `docs/specs/045-terminos-privacidad/spec.md` |
 | 2026-11-20 | supuesto | ¿Pestaña nueva en un ordenador? | Sí, para que la página de inicio siga abierta (CA3) | /specify |
-| 2026-11-20 | diseño | Diseño del botón en la primera pantalla y en contacto | `c2` aceptado con 81/100: teléfono y WhatsApp en un mismo grupo; en contacto, WhatsApp y «Cómo llegar» se reparten el ancho; sin cambios al sistema. K6 y K9 medidos sin el mapa; K2 y K3 ajustados en la tabla | [design.md](design.md) |
+| 2026-11-20 | diseño | Diseño del botón en la primera pantalla y en contacto | `c3` aceptado con 81/100 (c2 con el logotipo de WhatsApp de una tinta, decisión del usuario): teléfono y WhatsApp en un mismo grupo; en contacto, WhatsApp y «Cómo llegar» se reparten el ancho; sin cambios al sistema. K6 y K9 medidos sin el mapa; K2 y K3 ajustados en la tabla | [design.md](design.md) |
 
 ## Notas para /plan
 - El contacto sale de `$contacto` (`telefono`, `telefono_enlace`) en `resources/views/publico/inicio.blade.php:43`
