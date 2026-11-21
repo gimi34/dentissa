@@ -554,4 +554,98 @@ class PaginaInicioTest extends TestCase
             }
         }
     }
+
+    /** CA5 (abuso), TM2: el mismo enlace para todos, sin datos de la sesión ni de la visita. */
+    public function test_el_enlace_es_el_mismo_para_todos(): void
+    {
+        $visitas = ['visitante' => $this->get('/')->assertOk()->getContent()];
+        $datos = [];
+        foreach (['admin', 'dentista', 'asistente', 'cliente'] as $i => $rol) {
+            $usuario = Usuario::create([
+                'nombre' => "Nombre053{$rol}",
+                'apellido' => "Apellido053{$rol}",
+                'email' => "wa053.{$rol}.".Str::random(8).'@example.test',
+                'rol' => $rol,
+                'telefono' => "55512340{$i}",
+                'activo' => 1,
+                'password_hash' => Hash::make('secreto-de-pruebas'),
+            ]);
+            $datos[$rol] = [$usuario->nombre, $usuario->apellido, $usuario->email, $usuario->telefono];
+            $visitas[$rol] = $this->actingAs($usuario)->get('/')->assertOk()->getContent();
+        }
+        // /analyze A6: los datos de la visita tampoco entran en el enlace.
+        auth()->logout();
+        $visitas['visita con parámetros'] = $this->withHeader('Referer', 'https://otro.example.test/?nombre=Referido053')
+            ->get('/?utm_source=Campana053&nombre=Visita053')->assertOk()->getContent();
+        $datos['visita con parámetros'] = ['Campana053', 'Visita053', 'Referido053', 'otro.example.test'];
+
+        foreach ($visitas as $quien => $html) {
+            $hrefs = array_map(fn ($boton) => $boton->getAttribute('href'), $this->botonesWhatsapp($this->xpath($html)));
+            $this->assertSame([self::WHATSAPP, self::WHATSAPP], $hrefs, "{$quien}: el mismo enlace en los dos botones.");
+            foreach ($datos[$quien] ?? [] as $dato) {
+                foreach ($hrefs as $href) {
+                    $this->assertStringNotContainsStringIgnoringCase($dato, rawurldecode($href), "{$quien}: el enlace no lleva «{$dato}».");
+                    $this->assertStringNotContainsStringIgnoringCase(rawurlencode($dato), $href, "{$quien}: el enlace no lleva «{$dato}» codificado.");
+                }
+            }
+        }
+    }
+
+    /** TM3 y RNF de privacidad: nada de WhatsApp ni de Meta se carga al abrir la página (por host, A5). */
+    public function test_no_carga_nada_de_whatsapp_ni_de_meta(): void
+    {
+        $xpath = $this->xpath($this->inicioComo(null));
+        $terceros = ['wa.me', 'whatsapp.com', 'whatsapp.net', 'facebook.com', 'fbcdn.net', 'meta.com'];
+        $deTerceros = function (string $url) use ($terceros): bool {
+            $host = strtolower((string) parse_url(trim($url), PHP_URL_HOST));
+            foreach ($terceros as $dominio) {
+                if ($host === $dominio || str_ends_with($host, '.'.$dominio)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $recursos = [];
+        foreach ($xpath->query('//*[@src]/@src | //link[@href]/@href | //*[local-name()="image" or local-name()="use"]/@href | //object[@data]/@data | //*[@poster]/@poster') as $atributo) {
+            $recursos[] = $atributo->value;
+        }
+        foreach ($xpath->query('//*[@srcset]/@srcset') as $atributo) {
+            foreach (explode(',', $atributo->value) as $candidato) {
+                $recursos[] = strtok(trim($candidato), ' ');
+            }
+        }
+        $this->assertNotEmpty($recursos, 'La página carga sus propios recursos.');
+        foreach ($recursos as $url) {
+            $this->assertFalse($deTerceros($url), "No se carga «{$url}» de WhatsApp ni de Meta.");
+        }
+
+        // Solo los botones apuntan a WhatsApp: se contacta con WhatsApp al pulsarlos, no antes.
+        foreach ($xpath->query('//a[@href]') as $enlace) {
+            if ($deTerceros($enlace->getAttribute('href'))) {
+                $this->assertTrue($this->tieneClase($enlace, 'pub-wa'), 'Solo «Escríbenos por WhatsApp» enlaza con WhatsApp: '.$enlace->getAttribute('href'));
+                $this->assertSame('wa.me', parse_url($enlace->getAttribute('href'), PHP_URL_HOST));
+            }
+        }
+    }
+
+    /** RNF de accesibilidad: el nombre empieza por el texto visible y avisa de que abre WhatsApp (A9). */
+    public function test_el_boton_avisa_de_que_abre_whatsapp(): void
+    {
+        $xpath = $this->xpath($this->inicioComo(null));
+        $botones = $this->botonesWhatsapp($xpath);
+        $this->assertCount(2, $botones);
+
+        foreach ($botones as $i => $boton) {
+            $nombre = $boton->getAttribute('aria-label');
+            $this->assertSame('Escríbenos por WhatsApp (se abre WhatsApp)', $nombre, "Botón {$i}: el nombre accesible.");
+            $this->assertStringStartsWith($this->textoDe($boton), $nombre, "Botón {$i}: empieza por el texto visible (WCAG 2.5.3).");
+
+            $iconos = $xpath->query('.//svg', $boton);
+            $this->assertSame(1, $iconos->length, "Botón {$i}: con el logotipo.");
+            $this->assertSame('true', $iconos->item(0)->getAttribute('aria-hidden'), "Botón {$i}: el logotipo no se anuncia.");
+            $this->assertSame('false', $iconos->item(0)->getAttribute('focusable'), "Botón {$i}: ni recibe el foco.");
+        }
+    }
 }
