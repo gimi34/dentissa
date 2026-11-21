@@ -20,6 +20,8 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Spec 045: los términos de uso y el aviso de privacidad, texto fijo con los datos de la clínica de
  * `config('clinica.contacto')` (D4).
+ *
+ * Spec 053: el enlace de «Escríbenos por WhatsApp» de la portada (`whatsappEnlace()`).
  */
 class PaginasPublicasController extends Controller
 {
@@ -33,6 +35,7 @@ class PaginasPublicasController extends Controller
             'contacto' => config('clinica.contacto'),
             'fotos' => GaleriaFoto::ordenadas()->get(),
             'panel' => auth()->check() ? self::panelDelRol(auth()->user()) : null,
+            'whatsapp' => self::whatsappEnlace(),
         ]);
     }
 
@@ -72,6 +75,20 @@ class PaginasPublicasController extends Controller
         return count($tramos) > 1
             ? implode(', ', array_slice($tramos, 0, -1)).' y '.end($tramos)
             : ($tramos[0] ?? '');
+    }
+
+    /**
+     * Spec 053 (CA3, CA5; D1, D2; TM2, TM4): el chat de WhatsApp con la clínica, con el mensaje ya escrito.
+     * El número son los dígitos del teléfono de la página (`tel:+527530000000` → `527530000000`) y el
+     * mensaje sale de la configuración, codificado para la URL. No usa nada de la petición ni de la sesión:
+     * el enlace es el mismo para todos los visitantes.
+     */
+    public static function whatsappEnlace(): string
+    {
+        $contacto = config('clinica.contacto');
+
+        return 'https://wa.me/'.preg_replace('/\D/', '', $contacto['telefono_enlace'])
+            .'?text='.rawurlencode($contacto['whatsapp_mensaje']);
     }
 
     // ── Galería (spec 039) ───────────────────────────────────────────────────
