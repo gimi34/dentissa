@@ -1,6 +1,7 @@
 ---
 spec: 052-recordatorio-correo
 plan: plan.md
+impl_base: 4427723
 status: approved
 ---
 
@@ -36,8 +37,9 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - ➖ P10: sin rutas públicas.
 
 ## Preparación
-- [ ] T001 Poner la rama al día con `origin/main` cuando la spec 054 esté fusionada (D9), resolver los choques, aplicar sus migraciones en `dentissa_test` y fijar la línea base de la suite — rama `feature/052-recordatorio-correo` — hecho cuando: la rama contiene la 054 (`usuarios.email` admite nulo en `dentissa_test`), no quedan conflictos y la suite completa pasa (resultado anotado)
+- [x] T001 Poner la rama al día con `origin/main` cuando la spec 054 esté fusionada (D9), resolver los choques, aplicar sus migraciones en `dentissa_test` y fijar la línea base de la suite — rama `feature/052-recordatorio-correo` — hecho cuando: la rama contiene la 054 (`usuarios.email` admite nulo en `dentissa_test`), no quedan conflictos y la suite completa pasa (resultado anotado)
   - nota: desbloqueada 2026-11-21 — la 054 está en `main` (origin/main bce170b, PR #106, v0.26.0)
+  - nota: rebase sobre `origin/main` bce170b sin choques; en `dentissa_test` se aplicaron las migraciones pendientes `2026_11_18_000000_corregir_ciudades_de_pacientes` (051) y `2026_11_20_000000_correo_opcional_en_usuarios` (054: `usuarios.email` admite nulo). Línea base: 1591 tests, 0 fallos (7 min 22 s), con `vendor/bin/phpunit` en un contenedor `dentissa-app` con el código del worktree.
 
 ## Tests (antes de implementar)
 - [ ] T010 Escribir en `RecordatorioCitaTest` (con `Mail::fake()`, el tiempo fijado con `travelTo` en la hora de la clínica, las citas de `EscenarioEstadosCita` y `Artisan::call('dentissa:recordatorios')`) los casos de selección: `test_sale_cuando_faltan_24_horas` (a 24 h 1 min no sale; a 23 h 59 min sale un único `RecordatorioCita`), `test_llega_al_correo_de_la_cuenta_del_paciente_con_sus_datos` (destinatario el correo de la cuenta del paciente de la cita y no el de otro paciente con cita a otra hora; TM1), `test_una_cita_a_menos_de_24_horas_sale_en_la_siguiente_revision` (creada a 3 h), `test_una_cita_que_ya_empezo_no_recibe_recordatorio`, `test_solo_agendadas_y_confirmadas_reciben_recordatorio` (en curso, completada, cancelada y no asistió no), `test_una_cuenta_desactivada_no_recibe_recordatorio`, `test_una_cuenta_sin_correo_se_salta_sin_registro` (`usuarios.email` nulo: sin correo y sin ningún log, con `CapturaLogs`), `test_apagado_no_envia_nada` (`recordatorios.activo` a false) y `test_apagado_por_defecto` (sin la variable, `config('recordatorios.activo')` es `false`) — tests/Feature/RecordatorioCitaTest.php — hecho cuando: fallan porque el comando y la configuración no existen (anotado) — cubre: CA1, CA2, CA5, CA6 — depende: T001
