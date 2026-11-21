@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PacientesController extends Controller
 {
@@ -22,6 +23,9 @@ class PacientesController extends Controller
 
     /** Spec 054 (CA5): a quien ya tiene correo no se le puede quitar, porque es su acceso. */
     public const CORREO_OBLIGATORIO = 'El correo es obligatorio: es el acceso del paciente a la aplicación.';
+
+    /** Spec 054 (/review R4): con ese correo, la recuperación de la 041 daría la cuenta del personal. */
+    public const CORREO_DEL_PERSONAL = 'El correo de una cuenta del personal no se cambia desde Pacientes.';
 
     public function index(Request $request)
     {
@@ -337,7 +341,8 @@ class PacientesController extends Controller
         }
 
         // Spec 054 (CA5, CA6): el correo se puede añadir a quien no lo tiene, nunca quitar a quien lo tiene.
-        $correoActual = DB::table('usuarios')->where('id', $paciente->usuario_id)->value('email');
+        $cuenta = DB::table('usuarios')->where('id', $paciente->usuario_id)->first(['email', 'rol']);
+        $correoActual = $cuenta->email;
 
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
@@ -364,6 +369,12 @@ class PacientesController extends Controller
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
+
+        // Spec 054 (/review R4): el correo de una cuenta del personal con ficha de paciente solo se cambia
+        // desde «Usuarios»; desde aquí, se rechaza antes de guardar nada.
+        if ($cuenta->rol !== 'cliente' && Str::lower((string) ($data['email'] ?? '')) !== Str::lower((string) $correoActual)) {
+            throw ValidationException::withMessages(['email' => self::CORREO_DEL_PERSONAL]);
+        }
 
         $correoAnadido = $correoActual === null && ! empty($data['email']);
 
