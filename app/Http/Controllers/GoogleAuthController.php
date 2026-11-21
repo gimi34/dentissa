@@ -39,6 +39,13 @@ class GoogleAuthController extends Controller
             return $this->volverAlLoginPorFallo();
         }
 
+        // Spec 054 (A1, D14, TM1): sin correo, `where('email', null)` buscaría `email IS NULL` y daría con
+        // una cuenta de paciente sin correo. Un inicio sin correo (nulo, vacío o solo espacios) nunca
+        // llega a ninguna búsqueda ni al registro (/analyze A21).
+        if (blank(trim((string) $googleUser->getEmail()))) {
+            return $this->volverAlLoginPorFallo();
+        }
+
         $usuario = Usuario::where('google_id', $googleUser->getId())->first();
 
         if (! $usuario) {

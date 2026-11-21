@@ -368,10 +368,15 @@ class MovilPacientesExpedientesTest extends TestCase
         $validos = ['paciente_id', 'diagnostico', 'tratamiento', 'receta', 'observaciones'];
         foreach ($casos as $caso => [$desde, $metodo, $destino, $datos]) {
             $fecha = $caso === 'ficha del expediente: fecha sugerida';
-            // Sin errores: ni mensaje ni aria-describedby.
+            // Sin errores: ni mensaje ni aria-describedby a un error; solo ayudas y avisos del campo (spec 054, /analyze A3).
             $xpath = $this->xpath($this->actingAs($this->admin)->get($desde)->assertOk()->getContent());
             $this->assertSame(0, $xpath->query("//main//*[contains(concat(' ', normalize-space(@class), ' '), ' error-msg ')]")->length, "{$caso}: sin errores, sin mensajes.");
-            $this->assertSame(0, $xpath->query('//main//form//*[@aria-describedby]')->length, "{$caso}: sin errores, sin aria-describedby.");
+            foreach ($xpath->query('//main//form//*[@aria-describedby]') as $descrito) {
+                foreach (preg_split('/\s+/', trim($descrito->getAttribute('aria-describedby'))) as $id) {
+                    $this->assertMatchesRegularExpression('/^(ayuda|aviso)-/', $id, "{$caso}: sin errores, aria-describedby solo a ayudas o avisos.");
+                    $this->assertDescritoPorExiste($xpath, $id, $caso);
+                }
+            }
 
             $html = $this->actingAs($this->admin)->followingRedirects()->from($desde)->{$metodo}($destino, $datos)->assertOk()->getContent();
             $xpath = $this->xpath($html);
@@ -382,8 +387,14 @@ class MovilPacientesExpedientesTest extends TestCase
                 $nodo = $xpath->query("//main//form//*[@name='{$campo}'][not(@type='hidden')]")->item(0);
                 $this->assertInstanceOf(DOMElement::class, $nodo, "{$caso}: existe «{$campo}».");
                 $this->assertSame('true', $nodo->getAttribute('aria-invalid'), "{$caso}: «{$campo}» con aria-invalid.");
-                $mensaje = $nodo->getAttribute('aria-describedby');
-                $this->assertSame("error-{$campo}", $mensaje, "{$caso}: «{$campo}» enlazado a su mensaje.");
+                // El error va primero; detrás, si las hay, su ayuda o su aviso (spec 054, /analyze A3).
+                $descritoPor = preg_split('/\s+/', trim($nodo->getAttribute('aria-describedby')));
+                $mensaje = $descritoPor[0];
+                $this->assertSame("error-{$campo}", $mensaje, "{$caso}: «{$campo}» enlazado a su mensaje, en primer lugar.");
+                foreach (array_slice($descritoPor, 1) as $id) {
+                    $this->assertMatchesRegularExpression('/^(ayuda|aviso)-/', $id, "{$caso}: «{$campo}» solo añade ayudas o avisos tras su error.");
+                    $this->assertDescritoPorExiste($xpath, $id, $caso);
+                }
                 $error = $xpath->query("//*[@id='{$mensaje}'][contains(concat(' ', normalize-space(@class), ' '), ' error-msg ')]");
                 $this->assertSame(1, $error->length, "{$caso}: el mensaje de «{$campo}» existe.");
                 $this->assertNotSame('', trim($error->item(0)->textContent), "{$caso}: el mensaje de «{$campo}» tiene texto.");
@@ -625,5 +636,13 @@ class MovilPacientesExpedientesTest extends TestCase
         libxml_clear_errors();
 
         return new DOMXPath($dom);
+    }
+
+    /** Spec 054 (/review R7): cada id de aria-describedby apunta a un elemento con texto. */
+    private function assertDescritoPorExiste(DOMXPath $xpath, string $id, string $caso): void
+    {
+        $destino = $xpath->query("//*[@id='{$id}']");
+        $this->assertSame(1, $destino->length, "{$caso}: aria-describedby apunta a «{$id}», que existe.");
+        $this->assertNotSame('', trim($destino->item(0)->textContent), "{$caso}: «{$id}» tiene texto.");
     }
 }

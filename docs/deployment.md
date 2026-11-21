@@ -160,6 +160,10 @@ fuera del repositorio y del chat).
   `HistorialCitaTest` encontrará dos filas por cambio. El CI ya ejecuta `migrate` tras cargar el
   volcado.
 - Spec 051: la migración `2026_11_18_000000_corregir_ciudades_de_pacientes` corrige datos y deja su evento de auditoría. `down()` no la deshace: solo reescribe la forma de ciudades que ya eran ese municipio y el texto original queda en la copia previa al despliegue. Si la verificación falla, se vuelve con `deploy/volver.sh <tag anterior>` aunque `desplegar.sh` sugiera `restaurar.sh`: los datos corregidos son válidos para la versión anterior y restaurar perdería lo guardado desde la copia.
+- Spec 054: la migración `2026_11_20_000000_correo_opcional_en_usuarios` hace nulable `usuarios.email` (solo expand); la versión anterior convive con ella, así que se vuelve con `deploy/volver.sh <tag anterior>` **sin deshacer la migración**. Su `down()` se niega a ejecutarse si ya hay cuentas sin correo. La versión anterior no tiene la guarda de Google sin correo (spec 054, /analyze A1): si ya hay cuentas sin correo, **antes** de `volver.sh`:
+  1. Anotar los ids de las cuentas sin correo **activas**: `SELECT id FROM usuarios WHERE email IS NULL AND activo = 1` (solo esas, para no reactivar después las que ya estaban desactivadas a propósito; /analyze A20).
+  2. Desactivarlas por id (`UPDATE usuarios SET activo = 0 WHERE id IN (…)`): el retorno de Google rechaza una cuenta desactivada.
+  3. Al volver a desplegar la 054, reactivarlas por id y quitar a esas mismas cuentas cualquier vínculo con Google creado mientras tanto (`UPDATE usuarios SET activo = 1, google_id = NULL WHERE id IN (…) AND email IS NULL`; /analyze A19). Comprobación: `SELECT COUNT(*) FROM usuarios WHERE email IS NULL AND google_id IS NOT NULL` devuelve 0.
 
 ## Copias de seguridad
 Cifradas desde la spec 032 ([ADR 0007](adr/0007-copias-cifradas-y-avisos.md)):

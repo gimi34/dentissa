@@ -90,7 +90,7 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | `app/Galeria/` | galería de trabajos: `ProcesadorFoto` (dos WebP sin datos de la cámara) y `Galeria` (publicar, mover y quitar con auditoría), con el disco `galeria` en `storage/app/galeria` (spec 039, ADR 0009) |
 | `app/Reportes/` | reportes de la administración: `ReporteCitas` valida el periodo y saca las cifras de citas por estado, por dentista y por servicio, solo totales (spec 047) |
 | `app/Listeners/` | fallos de acceso al canal `seguridad` (spec 032) y actor del `Context` de los logs (spec 020) |
-| `app/Pacientes/` | ciudad del paciente: la lista cerrada (`Ciudades`) y la corrección de las ya guardadas (`CorreccionCiudades`) (spec 051) |
+| `app/Pacientes/` | ciudad del paciente: la lista cerrada (`Ciudades`) y la corrección de las ya guardadas (`CorreccionCiudades`) (spec 051); posibles duplicados de un alta (`PosiblesDuplicados`, spec 054) |
 | `app/Rules/`, `app/Console/Commands/` | reglas `HoraFinPosterior` y `CiudadDeLaLista` (spec 051); comando `dentissa:rotar-credenciales` |
 | `app/Http/Middleware/` | `RoleMiddleware` (rol), `PreventBackHistory` (no-cache), `SesionVigente` (cierra las sesiones de una cuenta que restableció su contraseña; spec 041) |
 | `app/Mail/` | `AvisoProduccion` (spec 032), `EnlaceRestablecimiento` y `ContrasenaCambiada` (spec 041), con sus plantillas en `resources/views/correos/` |
