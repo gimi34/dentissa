@@ -5,15 +5,16 @@
     $contacto = config('clinica.contacto');
     $horario = \App\Http\Controllers\PaginasPublicasController::horarioEnTexto();
 @endphp
+{{-- Spec 053 (D6; /analyze A1): cada ventana lleva la fecha de su página. --}}
 @foreach ([
-    ['id' => 'dialogo-terminos', 'titulo' => 'Términos de uso', 'parcial' => 'publico.legal.terminos-texto', 'prefijo' => 'terminos-'],
-    ['id' => 'dialogo-privacidad', 'titulo' => 'Aviso de privacidad', 'parcial' => 'publico.legal.privacidad-texto', 'prefijo' => 'privacidad-'],
+    ['id' => 'dialogo-terminos', 'titulo' => 'Términos de uso', 'parcial' => 'publico.legal.terminos-texto', 'prefijo' => 'terminos-', 'fecha' => '12 de noviembre de 2026'],
+    ['id' => 'dialogo-privacidad', 'titulo' => 'Aviso de privacidad', 'parcial' => 'publico.legal.privacidad-texto', 'prefijo' => 'privacidad-', 'fecha' => '20 de noviembre de 2026'],
 ] as $ventana)
 <dialog class="dialogo-legal" id="{{ $ventana['id'] }}" aria-labelledby="{{ $ventana['id'] }}-titulo">
     <div class="dialogo-legal__cabeza">
         <div>
             <h2 id="{{ $ventana['id'] }}-titulo">{{ $ventana['titulo'] }}</h2>
-            <p class="dialogo-legal__fecha">Última actualización: 12 de noviembre de 2026</p>
+            <p class="dialogo-legal__fecha">Última actualización: {{ $ventana['fecha'] }}</p>
         </div>
         <button type="button" class="btn-back dialogo-legal__cerrar" data-cerrar>Cerrar</button>
     </div>
