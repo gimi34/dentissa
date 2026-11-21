@@ -39,7 +39,9 @@ class RecordatorioCita extends Mailable
     {
         $datos = $this->datos();
         $html = view('correos.recordatorio-cita', $datos)->render();
-        $hoja = file_get_contents(resource_path('views/correos/acceso.css'));
+        // T022: la hoja del recordatorio se suma a la de los correos del acceso.
+        $hoja = file_get_contents(resource_path('views/correos/acceso.css'))
+            .PHP_EOL.file_get_contents(resource_path('views/correos/recordatorio.css'));
 
         return new Content(
             text: 'correos.recordatorio-cita-texto',

@@ -1,0 +1,24 @@
+/* Spec 052 (design.md `c2`): hoja del recordatorio de cita, que se suma a correos/acceso.css antes de pasarla a
+   estilos en línea (CssToInlineStyles). Como acceso.css, copia los valores de los tokens de system.md porque los
+   clientes de correo no entienden var(); un test exige que cada uno sea el de un token. Valores: --p100, --p200,
+   --p600, --white, --text, --text-acceso-titulo, --text-acceso-lema, --text-acceso-destacado, --text-acceso-small,
+   --text-meta, --weight-strong, --weight-bold, --leading-titulo, --leading-publico, --radius-acceso y --space-*. */
+.saludo { margin: 0 0 4px; font-size: 16.8px; font-weight: 500; }
+/* La tarjeta de la cita: la fecha (el h1) y la hora en grande, y la semana de la consulta con el día marcado. */
+.cita { width: 100%; margin: 0 0 20px; background-color: #FBEAF0; border-radius: 10px; }
+.cita-celda { padding: 20px; }
+.etiqueta, .datos dt, .talon dt { margin: 0 0 4px; color: #993556; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.cita-dia { margin: 0 0 4px; font-size: 28px; font-weight: 600; line-height: 1.15; }
+.cita-dia .semana-dia { display: block; }
+.nw { white-space: nowrap; }
+.cita-hora { margin: 0 0 16px; color: #993556; font-size: 30px; font-weight: 600; line-height: 1.15; }
+/* La semana de la agenda de la página de inicio (038): el día de la cita relleno; el cerrado, con borde discontinuo. */
+.semana { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 4px 0; }
+.semana td { padding: 6px 0; border: 1px solid #F4C0D1; border-radius: 10px; color: #000000; font-size: 13px; font-weight: 500; text-align: center; }
+.semana td.hoy { background-color: #993556; border-color: #993556; color: #FFFFFF; }
+.semana td.cerrado { border-style: dashed; }
+/* Con quién, qué y dónde, antes de «Ver mis citas»; el aviso y el talón, en letra pequeña. */
+.datos { margin: 0 0 20px; }
+.datos dd { margin: 0 0 14px; font-size: 16.8px; line-height: 1.5; }
+.nota { font-size: 13px; }
+.talon dd { margin: 0 0 14px; font-size: 13px; }
