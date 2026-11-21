@@ -76,6 +76,14 @@ Rollout).
   - nota: comprobado rompiendo cada control, con su test en rojo y en verde al restaurar: subir la versión al principio, antes de las comprobaciones (T016 y los demás de CA6 en rojo, TM4); sin `regenerate()` (T015, TM3); sin el `put` de la versión (T015: la sesión actual se cierra al releer la cuenta); sin la subida, con `update` (T014 ×2 y T015, TM2). `PerfilCambioCorreoTest`, `ContrasenaDistintaTest` y `SesionVigenteTest` siguen en verde (45 tests con `PerfilClienteTest`).
   - nota: el commit 6eeb2ec salió sin marcar T014–T016 y T021 en este archivo (fallo del script al anotar); se marcan en el commit siguiente.
 
+- [ ] T023 Escribir `test_un_cambio_simultaneo_cierra_tambien_la_sesion_actual`: el paciente cambia su contraseña mientras otro cambio de la misma cuenta sube la versión justo después de la escritura de este (simulado con un `DB::listen` que, una sola vez, tras el `update` de `usuarios` con `password_hash`, sube `version_sesion` en 1). La sesión actual guarda en `version_sesion` la versión que escribió su propio cambio (1) y, al leer de nuevo la cuenta (versión 2), su siguiente petición va a `/login` — tests/Feature/PerfilClienteTest.php — hecho cuando: falla por la razón esperada (hoy la sesión guarda 2 y sigue dentro) — cubre: CA6 — depende: T021
+  - nota: añadida por /review: R1
+- [ ] T024 En `updatePassword`, calcular la versión nueva dentro de una transacción, leyendo la de la cuenta con bloqueo (`lockForUpdate()`) y escribiendo esa versión + 1 junto con `password_hash` en un solo `update`, y guardar en la sesión ese mismo valor, sin volver a leerlo; sin `DB::raw` — app/Http/Controllers/PerfilController.php — hecho cuando: pasan T023 y los demás de `PerfilClienteTest`, `ContrasenaDistintaTest` y `SesionVigenteTest`, y volver a leer la versión después de escribir hace fallar T023 — cubre: CA6 — depende: T023
+  - nota: añadida por /review: R1
+- [ ] T025 Escribir `test_la_sesion_antigua_desaparece_del_almacen`: el paciente entra y hace una petición con la cookie de un identificador conocido, para que el almacén de sesiones guarde esa sesión; después cambia su contraseña con la misma cookie. El almacén ya no tiene nada para el identificador conocido (`read()` del manejador de sesiones vacío) y la sesión nueva sigue dentro — tests/Feature/PerfilClienteTest.php — hecho cuando: falla por la razón esperada (hoy la sesión antigua sigue en el almacén) — cubre: CA6 — depende: T024
+  - nota: añadida por /review: R2
+- [ ] T026 Borrar la sesión antigua al renovar el identificador en `updatePassword` (`regenerate(true)`) — app/Http/Controllers/PerfilController.php — hecho cuando: pasan T025 y el resto de `PerfilClienteTest`, quitar el `true` hace fallar T025, y la suite completa y Pint sobre los PHP tocados siguen en verde — cubre: CA6 — depende: T025
+  - nota: añadida por /review: R2
 ## Integración y documentación
 - [x] T022 Pasar la verificación final: suite completa, Pint sobre los 3 PHP tocados (`routes/web.php`, `PerfilController.php` y `PerfilClienteTest.php`), gitleaks sobre el diff, semgrep `p/php` sobre los archivos tocados, `composer audit --locked`, `node .github/scripts/auditar-npm.mjs` y revisión de que el diff no tiene `Log::` nuevos — sin archivos — hecho cuando: todo en verde, con `ContrasenaDistintaTest` y `PerfilCambioCorreoTest` (los tests existentes de CA3, CA4 y CA5) en verde, y `composer audit` sin altas ni críticas nuevas respecto a la línea base del plan — cubre: CA3, CA4, CA5 — depende: T020, T021
   - nota: 2026-11-20 — suite completa 1511 en verde (19 605 aserciones; 1502 de la línea base y 9 nuevos), con `ContrasenaDistintaTest` y `PerfilCambioCorreoTest` (CA3, CA4, CA5) en verde; Pint limpio en los 3 PHP; gitleaks (`dir`) sin fugas en los 3 archivos y en `docs/specs/011-perfil-cliente`; semgrep `p/php` 0 hallazgos (con `--no-git-ignore`, porque el worktree no tiene `.git` propio dentro del contenedor); `composer audit --locked` sin altas ni críticas (solo la baja de `laravel/framework` de la línea base); `auditar-npm.mjs` sin avisos.
@@ -83,9 +91,9 @@ Rollout).
 - [x] T090 Actualizar `docs/architecture.md`: el cambio de contraseña desde el perfil también sube `version_sesion` (como el restablecimiento de la 041) y `role:cliente` va también en `PUT /cliente/perfil` (plan, Impacto en arquitectura) — docs/architecture.md — hecho cuando: las dos frases están en su sección y `aidd.py validate` sigue sin errores
   - nota: fila «Perfil» de la tabla de módulos (la versión sube en la misma escritura, `SesionVigente` cierra las otras sesiones y la actual se regenera) y párrafo del grupo `/cliente` (`role:cliente` también al guardar el perfil, spec 011).
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas — sin cambios (plan, Observabilidad y Rollout); `docs/security.md` y `docs/roadmap.md` se actualizan en `/release` (plan, Impacto en arquitectura); se anota en la tarea
-  - nota: `docs/deployment.md` y `docs/observability.md` sin cambios: sin variables, pasos de deploy, logs, eventos ni métricas nuevos (la excepción P7 ya consta en `docs/observability.md`, OB1.b, OB1.e y OB1.f pendientes).
+  - nota: `docs/deployment.md` y `docs/observability.md` sin cambios: sin variables, pasos de deploy, logs, eventos ni métricas nuevos (la excepción P7 ya consta como pendiente en `docs/observability.md`: entradas y salidas, cambios de pacientes y cambios de contraseña).
   - nota: A7 — documentos que cambian de destino y que `/release` debe conciliar para no dejar ninguna referencia a la 016 ni a la 015 en lo que resuelve la 011: `docs/security.md` (RS2.a, RS2.b, RS9.a y RS9.b, según el plan, Impacto); `docs/roadmap.md` objetivo 2 (añadir la 011: RS2.a en parte, RS2.b y RS9.a) y la excepción de la 051 en Pendientes («`role:cliente` en `PUT /cliente/perfil` → spec 015», ya hecho por la 011); `docs/specs/README.md` objetivo 2 (016 sesiones-seguras deja de incluir el cierre de sesiones al cambiar la contraseña desde el perfil); `docs/specs/014-autorizacion-alcance-clinico/spec.md` Fuera de alcance («Cierre de sesiones al … cambiar credenciales (spec 016)»: el cambio desde el perfil ya lo hace la 011), con una fila de Historial.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con una cuenta de paciente de prueba y sin escribir ninguna contraseña en ningún documento:
@@ -103,14 +111,14 @@ Rollout).
 | CA3 | `ContrasenaDistintaTest` (existente), en verde en T021 y T022 | ninguna: ya se cumple (043); T022 confirma que sigue en verde |
 | CA4 | `ContrasenaDistintaTest` (existente), en verde en T021 y T022 | ninguna: ya se cumple (043); T022 confirma que sigue en verde |
 | CA5 | `PerfilCambioCorreoTest` (existente), en verde en T021 y T022 | ninguna: ya se cumple (041); T022 confirma que sigue en verde |
-| CA6 | T012, T014, T015, T016 | T021 |
+| CA6 | T012, T014, T015, T016, T023, T025 | T021, T024, T026 |
 | CA7 | T013 | T020 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
 | TM1 | T020 | T013 |
-| TM2 | T021 | T014 |
-| TM3 | T021 | T015 |
+| TM2 | T021, T024 | T014, T023 |
+| TM3 | T021, T026 | T015, T025 |
 | TM4 | T021 | T016 |
 | TM6 | ninguna: fuera de esta spec → spec 018 (plan, Modelo de amenazas; decisión del usuario, 2026-11-20, `/analyze` A4) | ninguna (fuera) |
 | TM5 | ninguna: ya se cumple (`Auth::attempt` sin `remember`, plan D5); la rotura de T012 lo prueba | T012 |
@@ -118,8 +126,8 @@ Rollout).
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
 | routes/web.php | T020 |
-| app/Http/Controllers/PerfilController.php | T021 |
-| tests/Feature/PerfilClienteTest.php | T010, T011, T012, T013, T014, T015, T016 |
+| app/Http/Controllers/PerfilController.php | T021, T024, T026 |
+| tests/Feature/PerfilClienteTest.php | T010, T011, T012, T013, T014, T015, T016, T023, T025 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
