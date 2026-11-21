@@ -782,7 +782,12 @@ class PacienteSinCorreoTest extends TestCase
     {
         $errores = session('errors');
 
-        return $errores instanceof ViewErrorBag ? ($errores->first('email') ?: null) : null;
+        if ($errores instanceof ViewErrorBag) {
+            return $errores->first('email') ?: null;
+        }
+
+        // Como en GoogleVueltaFallidaTest: tras la redirección los errores pueden quedar serializados.
+        return $errores['default']['messages']['email'][0] ?? null;
     }
 
     private function almacenQueFalla(): void
