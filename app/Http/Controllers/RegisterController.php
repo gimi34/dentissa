@@ -14,6 +14,12 @@ use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
+    /**
+     * Spec 002 (CA8, TM1, D1): el rechazo de un correo ya registrado no dice que tenga cuenta. La vista lo reconoce
+     * para añadir los enlaces de iniciar sesión y recuperar la contraseña.
+     */
+    public const CORREO_NO_DISPONIBLE = 'No pudimos crear la cuenta con estos datos. Si ya tienes una, inicia sesión o recupera tu contraseña.';
+
     public function showForm()
     {
         // Con sesión, al panel de su rol (spec 044, D7: `/` ya no redirige con sesión; destino fijo, TM1).
@@ -46,7 +52,7 @@ class RegisterController extends Controller
             'nombre.required' => 'El nombre es obligatorio.',
             'apellido.required' => 'El apellido es obligatorio.',
             'email.required' => 'El correo es obligatorio.',
-            'email.unique' => 'Este correo ya está registrado. ¿Quieres iniciar sesión?',
+            'email.unique' => self::CORREO_NO_DISPONIBLE,
             'email.email' => 'Ingresa un correo válido.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.confirmed' => 'Las contraseñas no coinciden.',

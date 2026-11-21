@@ -97,10 +97,10 @@ trait ReglasCss
         return $hallados;
     }
 
-    /** Tokens de color de `:root` (hex), resolviendo `var()`. */
-    private function tokensDeColor(): array
+    /** Tokens de color de `:root` (hex) de una hoja de `public/`, resolviendo `var()` (spec 002, /analyze N1). */
+    private function tokensDeColor(string $archivo = 'css/app.css'): array
     {
-        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path('css/app.css')), $root);
+        preg_match('/:root\s*\{([^}]*)\}/', file_get_contents(public_path($archivo)), $root);
         preg_match_all('/(--[\w-]+)\s*:\s*([^;]+);/', $root[1] ?? '', $pares, PREG_SET_ORDER);
         $crudos = [];
         foreach ($pares as [, $nombre, $valor]) {

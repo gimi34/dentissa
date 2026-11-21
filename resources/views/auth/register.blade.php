@@ -142,9 +142,21 @@
                             <input type="email" id="email" name="email"
                                 class="field {{ $errors->has('email') ? 'field-error' : '' }}"
                                 value="{{ old('email') }}"
+                                @error('email') aria-invalid="true" aria-describedby="email-error" @enderror
                                 placeholder="maria@correo.com" required>
                         </div>
-                        @error('email')<div class="error-msg">{{ $message }}</div>@enderror
+                        @error('email')
+                            <div class="error-msg" id="email-error">
+                                {{ $message }}
+                                {{-- Spec 002 (CA8, D2): solo con el correo ya registrado, que el mensaje no nombra. --}}
+                                @if($message === \App\Http\Controllers\RegisterController::CORREO_NO_DISPONIBLE)
+                                    <a href="{{ route('login') }}">Iniciar sesión</a>
+                                    @if(config('acceso.recuperar_contrasena'))
+                                        · <a href="{{ route('contrasena.solicitud') }}">Recuperar tu contraseña</a>
+                                    @endif
+                                @endif
+                            </div>
+                        @enderror
                     </div>
 
                     <div class="grid-2">

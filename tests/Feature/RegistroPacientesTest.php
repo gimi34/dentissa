@@ -2,12 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\RegisterController;
 use App\Models\Usuario;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Tests\Feature\Concerns\ReglasCss;
 use Tests\TestCase;
 
 /**
@@ -19,6 +24,7 @@ use Tests\TestCase;
 class RegistroPacientesTest extends TestCase
 {
     use DatabaseTransactions;
+    use ReglasCss;
 
     private const CONTRASENA = 'registro-de-pruebas';
 
@@ -136,7 +142,156 @@ class RegistroPacientesTest extends TestCase
         $this->assertDatabaseHas('usuarios', ['email' => $justa['email']]);
     }
 
+    // ── CA3 y CA8 · el correo ya registrado ───────────────────────────────────────────
+
+    /** CA3, CA8, TM1, TM4: el rechazo no dice que el correo tenga cuenta y ofrece entrar o recuperar la contraseña. */
+    public function test_un_correo_registrado_se_rechaza_sin_decir_que_existe(): void
+    {
+        $existente = $this->crearCuentaExistente();
+
+        // También con otras mayúsculas: la comparación del correo no distingue mayúsculas.
+        $mayusculas = $this->datosDelAlta(['email' => Str::upper($existente)]);
+        $this->from('/registro')->post('/registro', $mayusculas)->assertRedirect('/registro')
+            ->assertSessionHasErrors(['email' => RegisterController::CORREO_NO_DISPONIBLE]);
+
+        $datos = $this->datosDelAlta(['email' => $existente]);
+        $pagina = $this->from('/registro')->followingRedirects()->post('/registro', $datos)->assertOk()->getContent();
+        $this->assertSame(1, Usuario::where('email', $existente)->count(), 'No se crea ninguna cuenta.');
+
+        $this->assertStringNotContainsString('ya está registrado', $pagina);
+        $this->assertStringNotContainsString('ya existe', $pagina);
+        $xpath = $this->xpath($pagina);
+        $grupo = $this->grupoDelCorreo($xpath);
+        $this->assertStringContainsString(RegisterController::CORREO_NO_DISPONIBLE, $grupo->textContent);
+        // A10: los enlaces, dentro del grupo del campo y no en el aviso general; TM4: direcciones fijas.
+        $this->assertSame([route('login'), route('contrasena.solicitud')], $this->enlaces($xpath, $grupo));
+
+        // A5: vuelven los datos escritos salvo la contraseña; la casilla de términos, sin marcar.
+        foreach (['nombre' => 'Rita', 'apellido' => 'Registro', 'telefono' => '443-555-0303', 'fecha_nacimiento' => '1992-03-14'] as $campo => $valor) {
+            $this->assertSame($valor, $xpath->query("//input[@name='{$campo}']")->item(0)?->getAttribute('value'), "Vuelve {$campo}.");
+        }
+        $this->assertSame('', (string) $xpath->query("//input[@name='password']")->item(0)?->getAttribute('value'), 'La contraseña no vuelve.');
+        $this->assertSame(1, $xpath->query("//select[@name='genero']/option[@value='femenino'][@selected]")->length, 'Vuelve el género.');
+        $this->assertSame(1, $xpath->query("//select[@name='ciudad']//option[@value='Ario'][@selected]")->length, 'Vuelve la ciudad.');
+        $this->assertSame('Calle del Registro 7', trim($xpath->query("//textarea[@name='direccion']")->item(0)?->textContent ?? ''), 'Vuelve la dirección.');
+        $this->assertFalse($xpath->query("//input[@name='terminos']")->item(0)->hasAttribute('checked'), 'La casilla vuelve sin marcar.');
+    }
+
+    /** A13: el correo que vuelve al campo va escapado. */
+    public function test_el_correo_que_vuelve_va_escapado(): void
+    {
+        $pagina = $this->from('/registro')->followingRedirects()
+            ->post('/registro', $this->datosDelAlta(['email' => 'a<b>@example.test']))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('a<b>@example.test', $pagina);
+        $this->assertSame('a<b>@example.test', $this->xpath($pagina)->query("//input[@id='email']")->item(0)?->getAttribute('value'));
+    }
+
+    // ── CA8 · accesibilidad, otros errores y estilos ──────────────────────────────────
+
+    public function test_el_error_del_correo_queda_asociado_al_campo(): void
+    {
+        $xpath = $this->xpath($this->rechazoDe($this->crearCuentaExistente()));
+        $campo = $xpath->query("//input[@id='email']")->item(0);
+
+        $this->assertSame('true', $campo?->getAttribute('aria-invalid'), 'El campo dice que tiene un error.');
+        $descrito = $campo?->getAttribute('aria-describedby');
+        $this->assertNotEmpty($descrito, 'El campo apunta a su mensaje.');
+        $mensaje = $xpath->query("//*[@id='{$descrito}']")->item(0);
+        $this->assertNotNull($mensaje, 'El mensaje existe con ese id.');
+        $this->assertStringContainsString(RegisterController::CORREO_NO_DISPONIBLE, $mensaje->textContent);
+    }
+
+    public function test_otros_errores_del_correo_no_llevan_los_enlaces(): void
+    {
+        $xpath = $this->xpath($this->rechazoDe('no-es-un-correo'));
+        $grupo = $this->grupoDelCorreo($xpath);
+
+        $this->assertStringContainsString('Ingresa un correo válido.', $grupo->textContent);
+        $this->assertSame([], $this->enlaces($xpath, $grupo), 'Sin los enlaces del correo ya registrado.');
+    }
+
+    /** A11: con el límite de la 030 agotado, el error del correo es el del límite, sin los enlaces, y vuelven los datos. */
+    public function test_con_el_limite_agotado_no_salen_los_enlaces(): void
+    {
+        $existente = $this->crearCuentaExistente();
+        for ($i = 0; $i < 5; $i++) {
+            $this->from('/registro')->post('/registro', $this->datosDelAlta(['email' => $existente]));
+        }
+
+        $xpath = $this->xpath($this->rechazoDe($existente));
+        $grupo = $this->grupoDelCorreo($xpath);
+
+        $this->assertStringContainsString('Demasiados intentos', $grupo->textContent);
+        $this->assertSame([], $this->enlaces($xpath, $grupo), 'El límite no lleva los enlaces.');
+        $this->assertSame('Rita', $xpath->query("//input[@name='nombre']")->item(0)?->getAttribute('value'), 'Vuelven los datos.');
+    }
+
+    /** P9: el mensaje y sus enlaces solo usan clases y reglas sin valores literales. */
+    public function test_los_enlaces_del_rechazo_solo_usan_tokens(): void
+    {
+        $xpath = $this->xpath($this->rechazoDe($this->crearCuentaExistente()));
+        $grupo = $this->grupoDelCorreo($xpath);
+        $this->assertSame(0, $xpath->query(".//*[contains(@class, 'error-msg')]/descendant-or-self::*[@style]", $grupo)->length, 'Sin style="".');
+
+        $regla = $this->declaraciones('.page-register .error-msg a', 'css/auth.css');
+        $this->assertNotSame('', $regla, 'auth.css tiene la regla de los enlaces del mensaje.');
+        $this->assertSame([], $this->literales($regla), 'La regla no tiene valores literales.');
+    }
+
+    /** P9, WCAG 2.4.7 y 1.4.3 (/analyze A2): foco visible con los tokens y contraste ≥ 4,5:1 del texto del mensaje. */
+    public function test_los_enlaces_del_rechazo_tienen_foco_y_contraste(): void
+    {
+        $foco = $this->declaraciones('.page-register .error-msg a:focus-visible', 'css/auth.css');
+        foreach (['var(--focus-ring-width)', 'var(--focus-ring)', 'var(--focus-ring-offset)'] as $token) {
+            $this->assertStringContainsString($token, $foco, "El foco usa {$token}.");
+        }
+        $this->assertSame([], $this->literales($foco), 'El foco no tiene valores literales.');
+
+        $tokens = $this->tokensDeColor('css/auth.css');
+        $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens['--red'], $tokens['--white']), '--red sobre --white.');
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
+
+    private function crearCuentaExistente(): string
+    {
+        $correo = 'existente.'.Str::lower(Str::random(10)).'@example.test';
+        Usuario::create(['nombre' => 'Eva', 'apellido' => 'Existente', 'email' => $correo, 'rol' => 'cliente',
+            'activo' => 1, 'password_hash' => Hash::make('otra-contrasena-de-pruebas')]);
+
+        return $correo;
+    }
+
+    /** Envía un alta con ese correo desde el formulario y devuelve la página del rechazo. */
+    private function rechazoDe(string $correo): string
+    {
+        return $this->from('/registro')->followingRedirects()
+            ->post('/registro', $this->datosDelAlta(['email' => $correo]))->assertOk()->getContent();
+    }
+
+    private function xpath(string $html): DOMXPath
+    {
+        $documento = new DOMDocument;
+        @$documento->loadHTML('<?xml encoding="utf-8"?>'.$html);
+
+        return new DOMXPath($documento);
+    }
+
+    /** El grupo del campo del correo (etiqueta, campo y mensaje), sin el aviso general de errores. */
+    private function grupoDelCorreo(DOMXPath $xpath): DOMElement
+    {
+        $grupo = $xpath->query("//input[@id='email']/ancestor::div[contains(@class, 'field-group')][1]")->item(0);
+        $this->assertInstanceOf(DOMElement::class, $grupo, 'El campo del correo tiene su grupo.');
+
+        return $grupo;
+    }
+
+    /** @return list<string> */
+    private function enlaces(DOMXPath $xpath, DOMElement $grupo): array
+    {
+        return array_map(fn (DOMElement $a) => $a->getAttribute('href'), iterator_to_array($xpath->query('.//a[@href]', $grupo)));
+    }
 
     /** Da de alta a alguien nuevo y devuelve el dentista de su ficha. */
     private function dentistaAsignado(): ?string
