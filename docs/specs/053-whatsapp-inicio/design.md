@@ -1,6 +1,6 @@
 ---
 spec: 053-whatsapp-inicio
-status: draft            # draft | approved (solo el usuario aprueba)
+status: approved           # draft | approved (solo el usuario aprueba)
 exploration: loop        # loop: ciclo por criterios · none: sin diseño nuevo (motivo en "Resultado")
 threshold: 80            # puntuación mínima de la rúbrica (de .ai/project.yaml → design)
 floor: 3                 # nota mínima de cada punto de la rúbrica

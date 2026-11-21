@@ -132,3 +132,4 @@ Ninguna.
 | Fecha | Cambio | Motivo |
 |---|---|---|
 | 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
+| 2026-11-20 | Diseño aprobado ([design.md](design.md), `c3`) | aprobado por el usuario |
