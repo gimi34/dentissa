@@ -258,6 +258,34 @@ class PerfilClienteTest extends TestCase
         $this->assertSesionSigue($otra);
     }
 
+    /**
+     * CA6, TM2 (/review R1): si otro cambio de la misma cuenta sube la versión justo después de este, la sesión
+     * actual guarda la versión que escribió su propio cambio, no la del otro, y el otro cambio también la cierra.
+     */
+    public function test_un_cambio_simultaneo_cierra_tambien_la_sesion_actual(): void
+    {
+        $this->entrarConContrasena($this->paciente1);
+
+        $hecho = false;
+        DB::listen(function ($consulta) use (&$hecho) {
+            if (! $hecho && str_starts_with($consulta->sql, 'update `usuarios`') && str_contains($consulta->sql, '`password_hash`')) {
+                $hecho = true;
+                DB::table('usuarios')->where('id', $this->paciente1->id)->increment('version_sesion');
+            }
+        });
+
+        $this->cambiarContrasena(['password_actual' => self::ACTUAL, 'password' => self::NUEVA, 'password_confirmation' => self::NUEVA])
+            ->assertRedirect(self::PERFIL);
+        $this->assertTrue($hecho, 'El otro cambio se simuló.');
+        $this->assertSame(2, (int) $this->paciente1->fresh()->version_sesion, 'Los dos cambios subieron la versión.');
+        $this->assertSame(1, session('version_sesion'), 'La sesión guarda la versión de su propio cambio.');
+
+        $actual = session()->all();
+        $this->app['auth']->forgetGuards();
+        $this->withSession($actual)->get(self::PERFIL)->assertRedirect(url('/login'));
+        $this->assertGuest();
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
 
     private const ACTUAL = 'secreto-de-pruebas';
