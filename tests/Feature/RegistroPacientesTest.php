@@ -152,6 +152,9 @@ class RegistroPacientesTest extends TestCase
         $this->assertSame([$google['google_id'], 'cliente', null], [$cuenta->google_id, $cuenta->rol, $cuenta->password_hash]);
         $this->assertSame(1, DB::table('pacientes')->where('usuario_id', $cuenta->id)->count(), 'Tiene su ficha de paciente.');
         $this->assertAuthenticatedAs($cuenta);
+        // /review R8: los datos de contacto enviados quedan guardados.
+        $this->assertSame('443-555-0404', $cuenta->telefono);
+        $this->assertSame('Ario', DB::table('pacientes')->where('usuario_id', $cuenta->id)->value('ciudad'));
     }
 
     // ── CA5 · el rol · CA6 · la contraseña ────────────────────────────────────────────
@@ -237,6 +240,30 @@ class RegistroPacientesTest extends TestCase
         }
         $this->assertSame(1, Usuario::where('email', $existente)->count());
         $this->assertDatabaseMissing('usuarios', ['email' => $nuevo]);
+    }
+
+    /** CA8 (/review R6): con la recuperación desactivada, el rechazo solo ofrece iniciar sesión. */
+    public function test_sin_recuperacion_solo_se_ofrece_iniciar_sesion(): void
+    {
+        config(['acceso.recuperar_contrasena' => false]);
+        $xpath = $this->xpath($this->rechazoDe($this->crearCuentaExistente()));
+
+        $this->assertSame([route('login')], $this->enlaces($xpath, $this->grupoDelCorreo($xpath)));
+    }
+
+    /** CA8 (/review R7): el rechazo conserva el correo escrito y nunca la contraseña ni su confirmación. */
+    public function test_el_rechazo_conserva_el_correo_y_no_la_contrasena(): void
+    {
+        $existente = $this->crearCuentaExistente();
+
+        $this->from('/registro')->post('/registro', $this->datosDelAlta(['email' => $existente]))->assertRedirect('/registro');
+        $anteriores = session()->getOldInput();
+        $this->assertSame($existente, $anteriores['email'] ?? null, 'El correo vuelve.');
+        $this->assertArrayNotHasKey('password', $anteriores, 'La contraseña no vuelve.');
+        $this->assertArrayNotHasKey('password_confirmation', $anteriores, 'Su confirmación tampoco.');
+
+        $campo = $this->xpath($this->get('/registro')->getContent())->query("//input[@id='email']")->item(0);
+        $this->assertSame($existente, $campo?->getAttribute('value'), 'El campo del correo muestra lo escrito.');
     }
 
     /** A13: el correo que vuelve al campo va escapado. */

@@ -46,7 +46,7 @@ trait ReglasCss
         return $reglas;
     }
 
-    /** Declaraciones de un selector exacto (dentro de una lista de selectores) en `app.css`. */
+    /** Declaraciones de un selector exacto (dentro de una lista de selectores) en una hoja de `public/` (`app.css` por defecto). */
     private function declaraciones(string $selector, string $archivo = 'css/app.css'): string
     {
         $cuerpos = [];
