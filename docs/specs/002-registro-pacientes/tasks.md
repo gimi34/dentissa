@@ -102,7 +102,8 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
   - nota: no cambia la estructura; la fila «Registro» de la tabla de módulos describe ahora el rechazo neutro del correo ya registrado (`CORREO_NO_DISPONIBLE`, spec 002) y sus enlaces.
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas — sin cambios (plan, Observabilidad y Rollout); `docs/security.md` (RS13.b en parte) y `docs/roadmap.md` (excepción P7 y confirmación del correo) se actualizan en `/release`; se anota en la tarea
   - nota: `docs/deployment.md` y `docs/observability.md` sin cambios: sin variables, pasos de deploy, logs, eventos ni métricas nuevos. RS13.c ya está en `docs/security.md` y en el objetivo 2 del roadmap (`/analyze` A3); en `/release`, RS13.b pasa a mitigada y el roadmap recoge la excepción P7 (→ 021) y RS13.c como pendiente.
-- [ ] T092 Marcar spec como `implemented`
+- [x] T092 Marcar spec como `implemented`
+  - nota: 2026-11-21 — de nuevo tras las tareas de `/review` r1 (T023–T028): suite completa 1542 en verde (20 061 aserciones), Pint limpio, gitleaks y semgrep sin hallazgos en los archivos tocados.
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, sin escribir ningún correo real en ningún documento:

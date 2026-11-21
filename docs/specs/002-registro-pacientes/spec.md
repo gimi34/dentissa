@@ -1,7 +1,7 @@
 ---
 id: 002
 slug: registro-pacientes
-status: approved
+status: implemented
 created: 2026-09-28
 extends: []
 ---
@@ -98,3 +98,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | 2026-11-21 | CA2 (inactivos y sin dentistas), CA8 (casilla), RS13 partido en RS13.b y RS13.c, excepción P7 en Decisiones | `/analyze` A3, A4, A5, A7 |
 | 2026-11-21 | Implementada: CA8 (mensaje neutro con enlaces); CA1–CA6 con tests de caracterización | /implement |
 | 2026-11-21 | Vuelve a `approved`: `/review` r1 pide corregir R1–R9 (T023–T028) | /review |
+| 2026-11-21 | Implementada de nuevo con las correcciones de `/review` r1 (T023–T028) | /implement |
