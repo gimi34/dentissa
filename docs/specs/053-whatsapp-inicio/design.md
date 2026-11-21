@@ -97,8 +97,9 @@ grupo de contacto y su botón son los mismos (CA1).
     color; el verde de la marca no se usa porque no es un token del sistema (`G-tokens`). Se sirve desde el propio
     sitio: no se carga nada de WhatsApp ni de Meta (RNF de privacidad).
 - **Enlace:** `https://wa.me/527530000000?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20agendar%20una%20cita.`
-  con `target="_blank"`, `rel="noopener noreferrer"` y `aria-label="Escríbenos por WhatsApp (se abre WhatsApp en
-  una pestaña nueva)"`, que empieza por el texto visible (WCAG 2.5.3).
+  con `target="_blank"`, `rel="noopener noreferrer"` y `aria-label="Escríbenos por WhatsApp (se abre WhatsApp)"`,
+  que empieza por el texto visible (WCAG 2.5.3) y vale para el móvil (abre la aplicación) y el ordenador
+  (WhatsApp Web en otra pestaña) (refinado, /analyze 053 A9).
 
 ## Cambios a incorporar al sistema
 
@@ -115,7 +116,7 @@ Ninguno nuevo. Los botones heredan la escala al pulsar y el desplazamiento del i
 - **Contraste, toque y foco:** medidos por `evaluate.mjs` (puertas `G-contraste`, `G-toque`, `G-foco`) sin
   fallos; los dos botones miden 44 px de alto.
 - **Encabezados y estructura:** sin cambios; un solo `h1`. Los botones son enlaces con nombre accesible que
-  avisa de que abren WhatsApp en una pestaña nueva.
+  avisa de que abren WhatsApp.
 - **Teclado:** en la primera pantalla, el orden es teléfono → WhatsApp; en contacto, teléfono → WhatsApp →
   «Cómo llegar».
 - **Decorativos ocultos:** el icono lleva `aria-hidden="true"` y `focusable="false"`.
@@ -131,3 +132,4 @@ Ninguno nuevo. Los botones heredan la escala al pulsar y el desplazamiento del i
 | 2026-11-20 | diseño | ¿Logotipo de WhatsApp o icono propio? | Burbuja de conversación de trazo del sistema (c2); la sustituye el logotipo por decisión del usuario (fila de abajo) | /design-spec 053 |
 | 2026-11-20 | diseño | Problemas de la rúbrica que son de la 038 (huecos entre secciones, dirección en cuatro líneas, horario repetido, peso del teléfono, titular) | Fuera de esta spec: la 053 no cambia el resto de la página de inicio (038 CA5) | /design-spec 053 · evaluador c1 y c2 |
 | 2026-11-20 | diseño | Burbuja de conversación (c2) o logotipo de WhatsApp | Logotipo de WhatsApp de una tinta en `currentColor` (c3); medido otra vez (11/11 puertas, 7/7 KPIs, rúbrica 81) | usuario |
+| 2026-11-20 | refinado | El nombre accesible decía «se abre WhatsApp en una pestaña nueva», pero en el móvil se abre la aplicación | `aria-label` «Escríbenos por WhatsApp (se abre WhatsApp)» en `c3`; solo cambia el nombre accesible (ni el aspecto ni el tamaño), medido otra vez con `evaluate.mjs` | usuario (/analyze 053, A9) |

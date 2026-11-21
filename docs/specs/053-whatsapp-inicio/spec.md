@@ -119,6 +119,7 @@ Ninguna.
 | 2026-11-20 | supuesto | Mensaje ya escrito | «Hola, quiero información para agendar una cita.» (CA3) | /specify |
 | 2026-11-20 | supuesto | ¿El aviso de privacidad tiene que nombrar WhatsApp? | Sí (CA6) | /specify · `docs/specs/045-terminos-privacidad/spec.md` |
 | 2026-11-20 | brecha | El aviso no tiene un apartado «de terceros» (el mapa de Google se nombra en «07 Cookies»): ¿dónde va la frase de CA6? | En «02 Qué datos recabamos», como un punto más de la lista | usuario (/plan 053) |
+| 2026-11-20 | contradicción | 045 CA3 pide que el aviso no mencione datos que el sitio no pide; el número y el mensaje de WhatsApp no los pide el sitio (CA6) | Excepción a 045 CA3 solo para el punto de WhatsApp en «02 Qué datos recabamos»; «03 Para qué los usamos» y «05 Cuánto los conservamos» no cambian | usuario (/analyze 053, A3) |
 | 2026-11-20 | supuesto | ¿Pestaña nueva en un ordenador? | Sí, para que la página de inicio siga abierta (CA3) | /specify |
 | 2026-11-20 | diseño | Diseño del botón en la primera pantalla y en contacto | `c3` aceptado con 81/100 (c2 con el logotipo de WhatsApp de una tinta, decisión del usuario): teléfono y WhatsApp en un mismo grupo; en contacto, WhatsApp y «Cómo llegar» se reparten el ancho; sin cambios al sistema. K6 y K9 medidos sin el mapa; K2 y K3 ajustados en la tabla | [design.md](design.md) |
 
@@ -135,3 +136,4 @@ Ninguna.
 | 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
 | 2026-11-20 | Diseño aprobado ([design.md](design.md), `c3`) | aprobado por el usuario |
 | 2026-11-20 | CA6: «apartado de servicios de terceros» → «apartado «Qué datos recabamos»» | decisión del usuario en /plan 053 (el aviso no tiene apartado de terceros) |
+| 2026-11-20 | Decisiones: excepción a 045 CA3 para el punto de WhatsApp | decisión del usuario en /analyze 053 (A3); sin cambio de criterios |
