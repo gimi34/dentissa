@@ -31,7 +31,7 @@ No hay migraciones, dependencias, rutas nuevas ni cambios de pantalla: `version_
 | P4 Entrada validada y SQL con bindings | ✅ | Ninguna entrada nueva. La versión nueva se calcula en el servidor con la columna (`version_sesion + 1`) en el mismo `update` con bindings, sin `DB::raw` con entrada del usuario (D2). | lint: semgrep `p/php` sobre los archivos tocados |
 | P5 Nada sensible en el repo | ✅ | Los tests usan contraseñas de ejemplo ficticias, como los de la 041 y la 043. | lint: gitleaks sobre el diff |
 | P6 Sin vulnerabilidades críticas/altas | ✅ | Sin cambios en `composer.json`, `composer.lock` ni los archivos de npm. Línea base del 2026-11-20: `composer audit --locked`, 0 altas o críticas (1 baja de `laravel/framework`, ignorada por gravedad); `npm audit`, 0 vulnerabilidades (ficha `2026-11-20-chore-retirar-ex5`). | lint: `composer audit --locked` y `auditar-npm.mjs` en CI y `/release` |
-| P7 Auditoría de datos sensibles | ❌ aceptado: el cambio de contraseña desde el perfil y el guardado del perfil siguen sin evento de auditoría. La spec no tiene criterios de «Auditoría» y añadirlos queda para la 021 (cambios de contraseña) y la 022 (cambios de pacientes), según `docs/observability.md` — aprobado por el usuario el 2026-11-20 | Lo que sí queda auditado: el 403 del personal en `PUT /cliente/perfil` lo registra el registro central de denegaciones de la 020 como `acceso_denegado`, sin código nuevo. | test: `PerfilClienteTest::test_el_personal_no_puede_guardar_el_perfil_de_paciente` comprueba el evento `acceso_denegado` |
+| P7 Auditoría de datos sensibles | ❌ aceptado: el cambio de contraseña desde el perfil, el guardado del perfil y los cierres de sesión forzados por CA6 siguen sin evento de auditoría. La spec no tiene criterios de «Auditoría» y añadirlos queda para la 021 (cambios de contraseña), la 022 (cambios de pacientes) y el registro de entradas y salidas, según `docs/observability.md`; los cierres forzados de la recuperación (041) tampoco dejan evento — aprobado por el usuario el 2026-11-20 (cierres forzados: `/analyze` A5) | Lo que sí queda auditado: el 403 del personal en `PUT /cliente/perfil` lo registra el registro central de denegaciones de la 020 como `acceso_denegado`, sin código nuevo. | test: `PerfilClienteTest::test_el_personal_no_puede_guardar_el_perfil_de_paciente` comprueba el evento `acceso_denegado` |
 | P8 Correlación y logs limpios | ✅ | No añade ningún `Log::`. La sesión renovada conserva el `request_id` de la petición (middleware de la 020). | manual: diff sin `Log::` |
 | P9 La interfaz usa solo el sistema de diseño | ➖ | Ningún cambio de marcado, clase ni estilo: el mensaje de éxito y el formulario siguen igual (D4). | — |
 | P10 Rutas indexables descubribles | ➖ | No crea ni cambia rutas indexables: el perfil exige sesión. | — |
@@ -65,10 +65,22 @@ No hay migraciones, dependencias, rutas nuevas ni cambios de pantalla: `version_
 PHPUnit Feature con `DatabaseTransactions` contra la base de tests, en `tests/Feature/PerfilClienteTest.php`, con el
 escenario de `EscenarioEstadosCita` (admin, dentistas, asistente y pacientes).
 
-- **Otras sesiones (CA6):** se entra como el paciente, se guarda en la sesión la versión de la cuenta, se cambia la
-  contraseña y se simula una segunda sesión con la versión anterior (`withSession(['version_sesion' => <anterior>])`):
-  su siguiente petición redirige a `/login` y queda sin autenticar. La sesión desde la que se cambió sigue entrando a
-  `/cliente/perfil` (200) y su identificador cambió. Falla hoy porque la versión no sube.
+- **Dos sesiones reales (CA6, `/analyze` A1):** en los tests el guard y el almacén de sesión son compartidos, y el
+  guard conserva en memoria la cuenta con la versión antigua; poner solo la versión en la sesión no simula otra
+  sesión. Se sigue el patrón de `SesionVigenteTest` (041): la «otra» sesión entra de verdad (`POST /login`, o el
+  retorno de Google con Socialite simulado para la cuenta sin contraseña) y se guardan sus datos (`session()->all()`);
+  se cambia a otro equipo (`flushSession()` y `forgetGuards()`), la sesión «actual» entra y cambia la contraseña; al
+  volver a la otra (`forgetGuards()` y `withSession(<sus datos>)`), su siguiente petición redirige a `/login` y queda
+  sin autenticar. Falla hoy porque la versión no sube, y falla al quitar la subida.
+- **La sesión actual (CA6, TM3, `/analyze` A1 y A2):** sin la cookie de sesión, el arnés asigna un identificador nuevo
+  en cada petición, así que comparar identificadores entre peticiones no distingue nada. El cambio de contraseña se
+  envía con la cookie de sesión de un identificador conocido y válido (40 caracteres alfanuméricos) y se comprueba
+  que la cookie de la respuesta trae otro: en rojo sin `regenerate()`. Después, con `forgetGuards()` (la cuenta se
+  lee de nuevo, como en un servidor real) y los datos de esa sesión, `/cliente/perfil` responde 200: en rojo si la
+  sesión no guarda la versión nueva. Si el arnés no permite fijar el identificador así, `/implement` lo anota y
+  busca la comprobación equivalente más cercana antes de seguir.
+- **Rechazos (TM4):** los cuatro rechazos con la otra sesión real abierta: tras cada uno, `version_sesion` no cambia y
+  la otra sesión sigue entrando.
 - **Personal (CA7):** `PUT /cliente/perfil` como admin, dentista y asistente → 403, sin fila nueva en `pacientes` ni
   cambios en `usuarios`, y un `acceso_denegado` en la auditoría. Falla hoy (302 y ficha creada).
 - **Caracterización (P2):** CA1 (la página muestra los datos y el dentista asignado) y CA2 (guardar actualiza
@@ -86,6 +98,7 @@ escenario de `EscenarioEstadosCita` (admin, dentistas, asistente y pacientes).
 | TM2 | Spoofing: quien tiene una sesión robada sigue dentro después de que el paciente cambia su contraseña | A07:2025 Fallos de autenticación | `PUT /cliente/perfil/password`, `SesionVigente` | El cambio sube `version_sesion`; `SesionVigente` cierra las sesiones con una versión menor (D1) | `test_cambiar_la_contrasena_cierra_las_otras_sesiones` |
 | TM3 | Spoofing (fijación de sesión): el identificador de la sesión actual, si alguien lo conocía, sigue valiendo tras el cambio | A07:2025 Fallos de autenticación | `PerfilController::updatePassword` | `session()->regenerate()` tras guardar (D2) | `test_la_sesion_actual_sigue_abierta_con_otro_identificador` |
 | TM4 | Denial of service: un cambio rechazado cierra igualmente las sesiones de la cuenta | A07:2025 Fallos de autenticación | `PerfilController::updatePassword` | La versión sube solo en la misma escritura que guarda la contraseña nueva, después de todas las comprobaciones (D1) | `test_un_cambio_rechazado_no_cierra_ninguna_sesion` |
+| TM6 | Spoofing / denegación de servicio: quien tiene una sesión robada de una cuenta que entra solo con Google crea una contraseña sin dar la actual (CA4) y, por D6, cierra las sesiones del dueño | A07:2025 Fallos de autenticación | `PUT /cliente/perfil/password` sin contraseña previa | **Fuera de esta spec** → spec 018 (vinculación segura de las cuentas de Google), decisión del usuario del 2026-11-20 (`/analyze` A4). El dueño recupera la cuenta con el restablecimiento por correo (041), que cierra también la sesión del intruso | — (fuera) |
 | TM5 | Spoofing: una cookie de «Recordarme» vuelve a abrir una sesión cerrada, ya con la versión nueva | A07:2025 Fallos de autenticación | inicio de sesión | El inicio de sesión no emite cookie de recuerdo: `Auth::attempt` se llama sin `remember`, aunque la casilla exista (D5) | `test_recordarme_no_crea_una_cookie_de_recuerdo` (caracterización) |
 
 ## Trazabilidad
@@ -102,13 +115,15 @@ escenario de `EscenarioEstadosCita` (admin, dentistas, asistente y pacientes).
 | TM2 | `PerfilController::updatePassword` | `test_cambiar_la_contrasena_cierra_las_otras_sesiones` |
 | TM3 | `PerfilController::updatePassword` | `test_la_sesion_actual_sigue_abierta_con_otro_identificador` |
 | TM4 | `PerfilController::updatePassword` | `test_un_cambio_rechazado_no_cierra_ninguna_sesion` |
+| TM6 | fuera → spec 018 | — |
 | TM5 | ninguno (ya se cumple) | `test_recordarme_no_crea_una_cookie_de_recuerdo` (caracterización) |
 
 ## Observabilidad
 - Logs nuevos: ninguno.
 - Eventos de auditoría: ninguno nuevo (excepción P7, decisión del usuario del 2026-11-20). El 403 del personal en
   `PUT /cliente/perfil` queda como `acceso_denegado` por el registro central de denegaciones de la 020 (test de CA7).
-  Una sesión cerrada por `SesionVigente` no deja evento, igual que tras un restablecimiento.
+  Una sesión cerrada por `SesionVigente` no deja evento, igual que tras un restablecimiento: entra en la excepción P7
+  (`/analyze` A5).
 - Métricas y alertas: sin cambios. Los 403 nuevos no cuentan como fallos de acceso del canal `seguridad`.
 - Cómo se verifica tras el deploy: con dos navegadores abiertos con la misma cuenta de paciente de prueba, cambiar la
   contraseña en uno y comprobar que el otro vuelve al inicio de sesión en su siguiente clic, y que el primero sigue
@@ -137,8 +152,8 @@ No aplica: la spec no crea ni cambia rutas públicas; el perfil exige sesión y 
 | D3 | ¿Qué rutas del perfil exigen `role:cliente`? | solo `PUT /cliente/perfil` · también `GET /cliente/perfil` | **Solo `PUT /cliente/perfil`**, que es lo que pide CA7; `GET` queda para la spec 015 (decisión del usuario, 2026-11-20). La de la contraseña ya lo exige (043) |
 | D4 | ¿Se avisa al paciente de que se cerraron sus otras sesiones? | mensaje nuevo · mensaje de siempre | **Mensaje de siempre**: la spec no lo pide y un texto nuevo es un cambio de contrato visible; queda como mejora posible (supuesto) |
 | D5 | ¿Hay que invalidar cookies de «Recordarme»? | sí · no hace falta | **No hace falta**: el inicio de sesión nunca emite esa cookie (`Auth::attempt` sin `remember`); un test de caracterización lo fija (TM5) |
-| D6 | ¿Crear la primera contraseña de una cuenta de Google también cierra las otras sesiones? | sí · solo al cambiar una existente | **Sí**: es la misma acción («cambio mi contraseña», CA6) y el mismo código; deja fuera a quien entró con la cuenta de Google en otro sitio (supuesto) |
-| D7 | Auditoría del cambio de contraseña y del guardado del perfil | registrar el evento en esta spec · excepción P7 | **Excepción P7** → 021 (cambios de contraseña) y 022 (cambios de pacientes) (decisión del usuario, 2026-11-20) |
+| D6 | ¿Crear la primera contraseña de una cuenta de Google también cierra las otras sesiones? | sí · solo al cambiar una existente | **Sí**: es la misma acción («cambio mi contraseña», CA6) y el mismo código; deja fuera a quien entró con la cuenta de Google en otro sitio. El caso de una sesión robada queda fuera (TM6 → 018) (decisión del usuario, 2026-11-20, `/analyze` A4) |
+| D7 | Auditoría del cambio de contraseña, del guardado del perfil y de los cierres de sesión forzados | registrar el evento en esta spec · excepción P7 | **Excepción P7** → 021 (cambios de contraseña), 022 (cambios de pacientes) y el registro de entradas y salidas (cierres forzados) (decisión del usuario, 2026-11-20; cierres forzados: `/analyze` A5) |
 
 Ninguna decisión es arquitectónica: sin ADR.
 
@@ -152,8 +167,14 @@ Ninguna decisión es arquitectónica: sin ADR.
 ## Impacto en arquitectura
 - `docs/architecture.md`: en la sección del perfil o de sesiones, que el cambio de contraseña desde el perfil también
   sube `version_sesion` (como el restablecimiento) y que `PUT /cliente/perfil` exige `role:cliente`. Lo hace T090.
-- `docs/security.md` (en `/release`): el riesgo de sesión no protegida al cambiar credenciales queda corregido en el
-  cambio de contraseña desde el perfil; el del grupo `/cliente` sin `role:cliente`, solo en parte: `PUT /cliente/perfil`
-  ya exige el rol, y `GET /cliente/perfil` y el resto del grupo siguen → spec 015.
+- `docs/security.md` (en `/release`), corrección por corrección según la «Cobertura de riesgos» de la spec
+  (`/analyze` A3):
+  - RS2.a sigue `pendiente`, atendida en parte: anota `PUT /cliente/perfil` con `role:cliente` (spec 011, CA7, T020);
+    `GET /cliente/perfil` y el resto del grupo → spec 015.
+  - RS2.b pasa a `mitigada` (CA7: T020, T013).
+  - RS9.a pasa a `mitigada` (CA6: T021, T014–T016).
+  - RS9.b sigue `mitigada` (041); su residuo de las cuentas de Google gana el cierre de las sesiones del dueño (TM6)
+    → spec 018.
+  - RS2 queda atendido parcialmente (RS2.a pendiente); RS9, con sus dos correcciones dentro, salvo el residuo.
 - `docs/roadmap.md` (en `/release`): la excepción P7 de la 011 como deuda (→ 021 y 022), y los destinos de esas dos
   correcciones, que ya no son la 016 ni la 015.
