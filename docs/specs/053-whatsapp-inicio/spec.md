@@ -38,8 +38,8 @@ directo: la aplicación no envía ni recibe mensajes de WhatsApp.
 - [ ] CA5 · (abuso) Como alguien que inspecciona el enlace con una sesión abierta, busco datos de la
   cuenta o de la página → el mensaje y el enlace son los mismos para todos los visitantes y no
   llevan nombre, correo, teléfono ni ningún otro dato de la sesión o de la visita.
-- [ ] CA6 · Dado un visitante que lee el aviso de privacidad, cuando llega al apartado de servicios
-  de terceros, entonces lee que, si escribe por WhatsApp, la clínica recibe su número y lo que
+- [ ] CA6 · Dado un visitante que lee el aviso de privacidad, cuando llega al apartado «Qué datos
+  recabamos», entonces lee que, si escribe por WhatsApp, la clínica recibe su número y lo que
   escriba solo para responderle, y que WhatsApp es un servicio de un tercero con su propio aviso de
   privacidad (amplía 045).
 
@@ -117,7 +117,8 @@ Ninguna.
 | 2026-11-20 | brecha | ¿Dónde aparece? | En la primera pantalla y en la sección de contacto, junto al teléfono (CA1, CA2) | usuario |
 | 2026-11-20 | implícita | Que funcione sin JavaScript | Sí (CA4): la página de inicio está completa sin él | `docs/specs/038-pagina-inicio/spec.md` · `AGENTS.md` (layout público) |
 | 2026-11-20 | supuesto | Mensaje ya escrito | «Hola, quiero información para agendar una cita.» (CA3) | /specify |
-| 2026-11-20 | supuesto | ¿El aviso de privacidad tiene que nombrar WhatsApp? | Sí, en el apartado de terceros, como ya nombra el mapa de Google (CA6) | /specify · `docs/specs/045-terminos-privacidad/spec.md` |
+| 2026-11-20 | supuesto | ¿El aviso de privacidad tiene que nombrar WhatsApp? | Sí (CA6) | /specify · `docs/specs/045-terminos-privacidad/spec.md` |
+| 2026-11-20 | brecha | El aviso no tiene un apartado «de terceros» (el mapa de Google se nombra en «07 Cookies»): ¿dónde va la frase de CA6? | En «02 Qué datos recabamos», como un punto más de la lista | usuario (/plan 053) |
 | 2026-11-20 | supuesto | ¿Pestaña nueva en un ordenador? | Sí, para que la página de inicio siga abierta (CA3) | /specify |
 | 2026-11-20 | diseño | Diseño del botón en la primera pantalla y en contacto | `c3` aceptado con 81/100 (c2 con el logotipo de WhatsApp de una tinta, decisión del usuario): teléfono y WhatsApp en un mismo grupo; en contacto, WhatsApp y «Cómo llegar» se reparten el ancho; sin cambios al sistema. K6 y K9 medidos sin el mapa; K2 y K3 ajustados en la tabla | [design.md](design.md) |
 
@@ -133,3 +134,4 @@ Ninguna.
 |---|---|---|
 | 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
 | 2026-11-20 | Diseño aprobado ([design.md](design.md), `c3`) | aprobado por el usuario |
+| 2026-11-20 | CA6: «apartado de servicios de terceros» → «apartado «Qué datos recabamos»» | decisión del usuario en /plan 053 (el aviso no tiene apartado de terceros) |
