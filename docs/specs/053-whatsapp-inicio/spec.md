@@ -71,7 +71,7 @@ directo: la aplicación no envía ni recibe mensajes de WhatsApp.
 ## Diseño
 El botón tiene que sentirse como una forma más, cercana, de hablar con la clínica, al lado del
 teléfono y sin competir con «Agendar mi primera cita», que sigue siendo la acción principal (038).
-Sistema: [docs/design/system.md](../../design/system.md).
+Sistema: [docs/design/system.md](../../design/system.md). Acta: [design.md](design.md) (`c2`, 81/100).
 
 - Qué debe lograr: en cinco segundos, quien llega entiende que puede escribir por WhatsApp sin
   registrarse.
@@ -86,14 +86,17 @@ Modo: persuadir · umbral 80 · mínimo por punto 3 · presupuesto 5 candidatos.
 | ID | Qué se mide | Objetivo | Sale de |
 |---|---|---|---|
 | K1 | «Escríbenos por WhatsApp» en la primera pantalla | visible entero a 320, 390, 900 y 1440 px | CA1 |
-| K2 | «Agendar mi primera cita» sigue siendo la acción principal | más destacado que el botón de WhatsApp en la primera pantalla | 038 CA1 |
-| K3 | «Escríbenos por WhatsApp» en la sección de contacto | junto al teléfono, a 320, 390, 900 y 1440 px | CA2 |
+| K2 | «Agendar mi primera cita» sigue siendo la acción principal | entero en la primera pantalla a los cuatro anchos; que destaque más que el botón de WhatsApp lo juzga el punto `jerarquia` de la rúbrica | 038 CA1 |
+| K3 | «Escríbenos por WhatsApp» en la sección de contacto | junto al teléfono, a 320, 390, 900 y 1440 px (sin tipo en `evaluate.mjs`: se comprueba en el DOM del candidato y con test en `/implement`) | CA2 |
 | K4 | Contacto de la 038 | los textos de 038 K5 siguen presentes | CA2 |
-| K5 | Tamaño de toque de los dos botones | ≥ 44 × 44 px | P9 (DS6) |
-| K6 | JavaScript de la ruta | sin aumento respecto de la 038 | CA4, P10 |
+| K5 | Tamaño de toque de los dos botones | ≥ 44 × 44 px (puerta `G-toque`) | P9 (DS6) |
+| K6 | JavaScript de la ruta | sin aumento: ≤ 13 994 bytes, lo que pesa hoy `publico.js`, medido con el mapa en blanco | CA4, P10 |
+| K7 | Titular y teléfono en la primera pantalla | los dos visibles a 900 y 1440 px (038 K2) | 038 CA1 |
+| K8 | Estabilidad visual (CLS) | ≤ 0.1 | modo persuadir |
+| K9 | Peso de la primera visita | ≤ 1 MB con el mapa en blanco (RNF de la 038) | P10 |
 
 Puertas: las de `design-spec/references/criterios.md` §2; `G-red` sigue admitiendo solo
-`www.google.com` (el mapa de la 038). Rúbrica: pesos por defecto.
+`www.google.com` (el mapa de la 038); `G-sin-js` cubre CA4. Rúbrica: pesos por defecto.
 
 ## Requisitos no funcionales
 - Accesibilidad (P9, WCAG 2.1 AA): los dos botones se anuncian como «Escríbenos por WhatsApp» y
@@ -116,6 +119,7 @@ Ninguna.
 | 2026-11-20 | supuesto | Mensaje ya escrito | «Hola, quiero información para agendar una cita.» (CA3) | /specify |
 | 2026-11-20 | supuesto | ¿El aviso de privacidad tiene que nombrar WhatsApp? | Sí, en el apartado de terceros, como ya nombra el mapa de Google (CA6) | /specify · `docs/specs/045-terminos-privacidad/spec.md` |
 | 2026-11-20 | supuesto | ¿Pestaña nueva en un ordenador? | Sí, para que la página de inicio siga abierta (CA3) | /specify |
+| 2026-11-20 | diseño | Diseño del botón en la primera pantalla y en contacto | `c2` aceptado con 81/100: teléfono y WhatsApp en un mismo grupo; en contacto, WhatsApp y «Cómo llegar» se reparten el ancho; sin cambios al sistema. K6 y K9 medidos sin el mapa; K2 y K3 ajustados en la tabla | [design.md](design.md) |
 
 ## Notas para /plan
 - El contacto sale de `$contacto` (`telefono`, `telefono_enlace`) en `resources/views/publico/inicio.blade.php:43`
