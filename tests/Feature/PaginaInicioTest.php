@@ -438,4 +438,72 @@ class PaginaInicioTest extends TestCase
         $this->assertSame('Mapa de Google con la ubicación de la consulta', $mapa->getAttribute('title'));
         $this->assertStringContainsString('El mapa lo sirve Google.', $this->texto($respuesta->getContent()));
     }
+
+    // ── Spec 053: «Escríbenos por WhatsApp» en la primera pantalla y en contacto ──────────────────
+
+    /** Los elementos hijos de un nodo, sin textos ni comentarios. */
+    private function hijos(DOMNode $nodo): array
+    {
+        return array_values(array_filter(iterator_to_array($nodo->childNodes), fn ($hijo) => $hijo instanceof DOMElement));
+    }
+
+    private function tieneClase(DOMElement $elemento, string $clase): bool
+    {
+        return in_array($clase, preg_split('/\s+/', trim($elemento->getAttribute('class'))), true);
+    }
+
+    /** `/` como visitante (null) o con la sesión de un rol. */
+    private function inicioComo(?string $rol): string
+    {
+        $peticion = $rol === null ? $this : $this->actingAs($this->crearUsuario($rol));
+
+        return $peticion->get('/')->assertOk()->getContent();
+    }
+
+    /** CA1 (amplía 038 CA1): junto al horario y el teléfono, con y sin sesión. */
+    public function test_whatsapp_en_la_primera_pantalla_junto_al_telefono(): void
+    {
+        foreach ([null, 'admin', 'dentista', 'asistente', 'cliente'] as $rol) {
+            $quien = $rol ?? 'visitante';
+            $xpath = $this->xpath($this->inicioComo($rol));
+            $presentacion = $this->porClase($xpath, 'pub-hero');
+            $datos = $this->porClase($xpath, 'pub-hero__facts', $presentacion);
+            $this->assertNotNull($datos, "{$quien}: la lista del horario y el teléfono.");
+
+            // El horario sigue en su propio elemento de la lista; el teléfono y WhatsApp forman un grupo.
+            $this->assertSame(1, $xpath->query('./li[normalize-space()="Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00"]', $datos)->length, "{$quien}: el horario en la misma lista.");
+            $grupo = $xpath->query('./li[contains(concat(" ", normalize-space(@class), " "), " pub-hero__contacto ")]', $datos);
+            $this->assertSame(1, $grupo->length, "{$quien}: un grupo de contacto en la lista.");
+
+            $hijos = $this->hijos($grupo->item(0));
+            $this->assertCount(2, $hijos, "{$quien}: el teléfono y WhatsApp, nada más.");
+            $this->assertSame('tel:+527530000000', $hijos[0]->getAttribute('href'), "{$quien}: primero el teléfono.");
+            $this->assertSame('753 000 0000', $this->textoDe($hijos[0]));
+            $this->assertTrue($this->tieneClase($hijos[1], 'pub-wa'), "{$quien}: después, el botón de WhatsApp.");
+            $this->assertSame('Escríbenos por WhatsApp', $this->textoDe($hijos[1]));
+
+            $this->assertSame(1, $xpath->query('.//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]', $presentacion)->length, "{$quien}: un solo WhatsApp en la presentación.");
+        }
+    }
+
+    /** CA2 (amplía 038 CA5): en contacto, después del teléfono y antes de «Cómo llegar». */
+    public function test_whatsapp_en_contacto_junto_al_telefono(): void
+    {
+        $xpath = $this->xpath($this->inicioComo(null));
+        $ubicacion = $xpath->query('//*[@id="ubicacion"]')->item(0);
+        $telefono = $this->porClase($xpath, 'pub-visit__tel', $ubicacion);
+        $this->assertNotNull($telefono, 'El teléfono de contacto.');
+
+        $acciones = $telefono->nextElementSibling;
+        $this->assertNotNull($acciones, 'Algo sigue al teléfono.');
+        $this->assertTrue($this->tieneClase($acciones, 'pub-visit__acciones'), 'Justo después del teléfono, el grupo de acciones.');
+
+        $hijos = $this->hijos($acciones);
+        $this->assertCount(2, $hijos, 'WhatsApp y «Cómo llegar», nada más.');
+        $this->assertTrue($this->tieneClase($hijos[0], 'pub-wa'), 'Primero WhatsApp.');
+        $this->assertSame('Escríbenos por WhatsApp', $this->textoDe($hijos[0]));
+        $this->assertSame('Cómo llegar', $this->textoDe($hijos[1]), 'Después, «Cómo llegar».');
+
+        $this->assertSame(2, $xpath->query('//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]')->length, 'Dos botones en la página: la presentación y el contacto.');
+    }
 }
