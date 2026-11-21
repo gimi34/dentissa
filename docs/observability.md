@@ -65,6 +65,8 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
 | Lectura del propio registro de auditoría | sí | actor, filtro consultado, fecha |
 | Publicar, mover y quitar una foto de la galería (spec 039, CA16) | sí | `galeria_foto_publicada`, `galeria_foto_movida` y `galeria_foto_quitada`, en modo crítico: actor, recurso `galeria_foto` y su UUID, resultado, fecha y `detalle` con `con_paciente` y `posicion` (y `direccion` al mover); nunca la descripción ni la imagen. El 403 de otro rol, `acceso_denegado` del registro central |
 | Corrección de las ciudades guardadas (spec 051, CA12) | sí | `pacientes_ciudades_corregidas`, en modo crítico y dentro de la transacción de la migración: actor nulo (sistema), recurso `pacientes`, campo `ciudad` y `detalle` con `corregidos` y `fuera_de_lista`; nunca ciudades ni nombres |
+| Alta de un paciente por el personal (spec 054, CA10) | sí | `paciente_alta` (alta de cuenta de paciente), en modo crítico y dentro de la transacción del alta: actor, recurso `pacientes` con el id de la ficha nueva, resultado y `detalle` con `con_acceso` (si se dio de alta con correo) y `posible_duplicado` (si se confirmó pese al aviso; lo calcula el servidor); nunca nombre, teléfono ni correo. El alta denegada por rol, `acceso_denegado` del registro central |
+| Correo añadido a un paciente sin correo (spec 054, CA11) | sí | `paciente_correo_anadido` (cambio de cuenta: el paciente pasa a poder tener acceso), en modo crítico y dentro de la transacción de la edición: actor, recurso `pacientes`, `campos: ['email']` y `detalle` con `acceso_posible`; nunca el correo. Cambiar un correo que ya existía no lo registra (sigue OB1.e) |
 
 - Almacenamiento: tabla propia en MariaDB (propuesta `auditoria`), **solo anexado**: la
   aplicación solo inserta; nadie, tampoco un administrador, modifica ni borra entradas desde la
@@ -113,7 +115,7 @@ Correcciones:
 - OB1.c Registrar los accesos denegados (403) de middleware, controladores y Policies — estado: mitigada (v0.12.0)
 - OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente
 - OB1.e Registrar cambios de pacientes, expedientes, notas y estado de citas (campos, sin valores) — estado: pendiente
-- OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente (→ 021). La spec 041 cubre solo el restablecimiento (`contrasena_restablecida`)
+- OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente (→ 021). La spec 041 cubre solo el restablecimiento (`contrasena_restablecida`); la 054, solo el alta de pacientes por el personal (`paciente_alta`) y el correo añadido a un paciente sin correo (`paciente_correo_anadido`). Siguen pendientes el registro público, el alta de usuarios de la administración, los cambios de rol y la activación/desactivación
 - OB1.g Retención de 5 años con purga programada (`routes/console.php`) — estado: mitigada (v0.12.0)
 - OB1.h Pantalla de consulta solo para admin que audita su propia lectura — estado: mitigada (v0.12.0)
 
