@@ -20,6 +20,9 @@ class PacientesController extends Controller
     /** Spec 054 (CA2, CA5): sin correo, el teléfono es el único contacto. */
     public const TELEFONO_OBLIGATORIO = 'Sin correo, el teléfono es obligatorio para poder contactarle.';
 
+    /** Spec 054 (CA5): a quien ya tiene correo no se le puede quitar, porque es su acceso. */
+    public const CORREO_OBLIGATORIO = 'El correo es obligatorio: es el acceso del paciente a la aplicación.';
+
     public function index(Request $request)
     {
         $query = DB::table('pacientes')
@@ -333,11 +336,14 @@ class PacientesController extends Controller
             abort(404);
         }
 
+        // Spec 054 (CA5, CA6): el correo se puede añadir a quien no lo tiene, nunca quitar a quien lo tiene.
+        $correoActual = DB::table('usuarios')->where('id', $paciente->usuario_id)->value('email');
+
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
-            'email' => "required|email|unique:usuarios,email,{$paciente->usuario_id},id",
-            'telefono' => 'nullable|string|max:20',
+            'email' => [$correoActual ? 'required' : 'nullable', 'email', 'max:255', "unique:usuarios,email,{$paciente->usuario_id},id"],
+            'telefono' => ['required_without:email', 'nullable', 'string', 'max:20'],
 
             'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
@@ -352,15 +358,20 @@ class PacientesController extends Controller
             'telefono_emergencia' => 'nullable|string|max:20',
             'dentista_id' => 'nullable|exists:personal,id',
         ], [
+            'email.required' => self::CORREO_OBLIGATORIO,
+            'email.unique' => 'Este correo ya está registrado en el sistema.',
+            'telefono.required_without' => self::TELEFONO_OBLIGATORIO,
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
-        DB::transaction(function () use ($data, $paciente) {
+        $correoAnadido = $correoActual === null && ! empty($data['email']);
+
+        DB::transaction(function () use ($data, $paciente, $correoAnadido) {
             DB::table('usuarios')->where('id', $paciente->usuario_id)->update([
                 'nombre' => $data['nombre'],
                 'apellido' => $data['apellido'],
-                'email' => $data['email'],
+                'email' => $data['email'] ?? null,
                 'telefono' => $data['telefono'] ?? null,
                 'actualizado_en' => now(),
             ]);
@@ -379,6 +390,12 @@ class PacientesController extends Controller
                 'contacto_emergencia' => $data['contacto_emergencia'] ?? null,
                 'telefono_emergencia' => $data['telefono_emergencia'] ?? null,
             ]);
+
+            // Spec 054 (CA11, TM6, TM7): el paciente pasa a poder tener acceso; sin el correo en el evento.
+            if ($correoAnadido) {
+                app(Auditoria::class)->registrar('paciente_correo_anadido', 'exito', 'pacientes', $paciente->id,
+                    campos: ['email'], detalle: ['acceso_posible' => true], critico: true);
+            }
         });
 
         $base = auth()->user()->rol === 'admin' ? 'admin' : 'dentista';
