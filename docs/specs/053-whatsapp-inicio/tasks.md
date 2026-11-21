@@ -1,6 +1,7 @@
 ---
 spec: 053-whatsapp-inicio
 plan: plan.md
+impl_base: d933175
 status: approved
 ---
 
@@ -41,7 +42,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   y Lighthouse SEO ≥ 90 de las dos en T092 (A2).
 
 ## Preparación
-- [ ] T001 Poner la rama al día con `origin/main` (16a110c: EX5 retirada, fix del expediente, specs 002/006/011), resolver los choques y fijar la línea base de la suite — rama `feature/053-whatsapp-inicio` — hecho cuando: la rama contiene `origin/main`, no quedan conflictos y `php artisan test` pasa completo (resultado anotado en la nota de la tarea)
+- [x] T001 Poner la rama al día con `origin/main` (16a110c: EX5 retirada, fix del expediente, specs 002/006/011), resolver los choques y fijar la línea base de la suite — rama `feature/053-whatsapp-inicio` — hecho cuando: la rama contiene `origin/main`, no quedan conflictos y `php artisan test` pasa completo (resultado anotado en la nota de la tarea)
+  - nota: rebase sobre `origin/main` (16a110c) sin choques. Línea base: 1502 tests, 0 fallos (5 min 50 s), con `vendor/bin/phpunit` en un contenedor `dentissa-app` propio con el código del worktree (`artisan test` sin `.env` avisa al leerlo; `phpunit` directo no).
 
 ## Tests (antes de implementar)
 - [ ] T010 Escribir los tests de los dos sitios del botón: `test_whatsapp_en_la_primera_pantalla_junto_al_telefono` (en la lista de datos de la primera pantalla, un `li.pub-hero__contacto` con el enlace `tel:` del teléfono y, después, `a.pub-wa` con el texto «Escríbenos por WhatsApp»; como visitante y con sesión de los cuatro roles) y `test_whatsapp_en_contacto_junto_al_telefono` (en la sección de contacto, `.pub-visit__acciones` justo después de `a.pub-visit__tel`, con `a.pub-wa` antes de «Cómo llegar») — tests/Feature/PaginaInicioTest.php — hecho cuando: fallan porque el botón no existe (anotado) — cubre: CA1, CA2
