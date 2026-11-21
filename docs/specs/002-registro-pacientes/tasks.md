@@ -1,7 +1,7 @@
 ---
 spec: 002-registro-pacientes
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 002 Autorregistro de pacientes

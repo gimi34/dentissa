@@ -1,7 +1,7 @@
 ---
 id: 002
 slug: registro-pacientes
-status: draft
+status: approved
 created: 2026-09-28
 extends: []
 ---
