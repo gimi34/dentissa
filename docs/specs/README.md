@@ -53,7 +53,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 049 | [calendario-citas](049-calendario-citas/spec.md) | Agenda | released (v0.21.0) | — | — (2026-11-15) |
 | 050 | [hora-clinica](050-hora-clinica/spec.md) | Transversal | released (v0.22.0) | — | — (2026-11-17; re-aprobada el 2026-11-18 tras /analyze r3) |
 | 051 | [ciudad-lista-cerrada](051-ciudad-lista-cerrada/spec.md) | Pacientes | released (v0.23.0) | — | — (2026-11-18) |
-| 053 | [whatsapp-inicio](053-whatsapp-inicio/spec.md) | Transversal | draft | — | — (2026-11-20) |
+| 053 | [whatsapp-inicio](053-whatsapp-inicio/spec.md) | Transversal | approved | — | — (2026-11-20) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado (guardar el perfil ya exige el rol: 011) · 016 sesiones-seguras (el cierre de sesiones al cambiar la contraseña desde el perfil ya lo hace la 011) · 017 limite-intentos-acceso ·

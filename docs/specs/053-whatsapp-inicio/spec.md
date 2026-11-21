@@ -1,7 +1,7 @@
 ---
 id: 053
 slug: whatsapp-inicio
-status: draft
+status: approved
 created: 2026-11-20
 extends: [038, 045]
 ---
@@ -127,3 +127,4 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
