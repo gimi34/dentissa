@@ -540,6 +540,25 @@ class PacienteSinCorreoTest extends TestCase
         $this->assertSame($antes, DB::table('usuarios')->count(), 'No se crea ninguna cuenta.');
     }
 
+    /** /review R15: una sesión de registro con Google sin correo (p. ej. de la versión anterior) no crea cuentas. */
+    #[DataProvider('correosDeGoogleVacios')]
+    public function test_el_registro_tras_google_sin_correo_no_crea_cuenta(?string $correo): void
+    {
+        $antes = DB::table('usuarios')->count();
+
+        $respuesta = $this->withSession(['google_registro' => [
+            'google_id' => 'google-054-sesion-antigua', 'nombre' => 'Sesion', 'apellido' => 'Antigua',
+            'email' => $correo, 'foto_url' => null,
+        ]])->post('/registro/contacto', ['telefono' => '5550005050', 'terminos' => '1']);
+
+        $respuesta->assertRedirect(route('login'));
+        $this->assertSame(GoogleAuthController::MENSAJE_FALLO_GOOGLE, $this->errorEmail());
+        $this->assertGuest();
+        $this->assertNull(session('google_registro'), 'La sesión de registro se olvida.');
+        $this->assertSame($antes, DB::table('usuarios')->count(), 'No se crea ninguna cuenta.');
+        $this->assertNull(DB::table('usuarios')->where('google_id', 'google-054-sesion-antigua')->value('id'));
+    }
+
     public function test_el_dentista_el_paciente_y_el_visitante_no_dan_de_alta(): void
     {
         $antes = $this->cuentasDePrueba();
