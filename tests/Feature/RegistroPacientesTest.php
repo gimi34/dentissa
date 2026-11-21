@@ -8,6 +8,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -87,6 +88,43 @@ class RegistroPacientesTest extends TestCase
         $antiguo = $this->crearDentista('f0000000-0000-4000-8000-00000000000f', '2021-01-01 09:00:00');
 
         $this->assertSame($antiguo, $this->dentistaAsignado(), 'A igualdad de pacientes, el más antiguo.');
+    }
+
+    /**
+     * CA2 (/review R2): seis empatados y seis altas seguidas. Cada alta va al más antiguo de los que aún no tienen
+     * paciente, así que la secuencia completa sigue el orden de antigüedad. Sin ese orden, acertarla por azar es
+     * 1 entre 720.
+     */
+    public function test_los_empates_se_resuelven_por_antiguedad_en_orden(): void
+    {
+        $this->desactivarDentistasDelVolcado();
+        $porAntiguedad = [];
+        // Se insertan en un orden distinto al de antigüedad y con UUID que tampoco lo siguen.
+        foreach ([['c', '2021-05-01'], ['3', '2021-01-01'], ['9', '2021-04-01'], ['0', '2021-06-01'], ['f', '2021-02-01'], ['6', '2021-03-01']] as $i => [$prefijo, $fecha]) {
+            $porAntiguedad[$fecha] = $this->crearDentista($prefijo.'1000000-0000-4000-8000-00000000000'.$i, $fecha.' 09:00:00');
+        }
+        ksort($porAntiguedad);
+
+        $asignados = [];
+        foreach ($porAntiguedad as $ignorada) {
+            Cache::flush(); // el límite de la 030 admite 5 altas por minuto y dirección
+            $asignados[] = $this->dentistaAsignado();
+        }
+
+        $this->assertSame(array_values($porAntiguedad), $asignados, 'Los empates se resuelven por antigüedad, en orden.');
+    }
+
+    /** P10 (/review R4): el `GET /registro` sigue indexable y con su título. */
+    public function test_el_registro_sigue_indexable_con_su_titulo(): void
+    {
+        $respuesta = $this->get('/registro')->assertOk();
+
+        $this->assertStringNotContainsStringIgnoringCase('noindex', (string) $respuesta->headers->get('X-Robots-Tag'));
+        $xpath = $this->xpath($respuesta->getContent());
+        $this->assertSame('Dentissa · Crear cuenta', trim($xpath->query('//title')->item(0)?->textContent ?? ''));
+        foreach ($xpath->query("//meta[@name='robots']") as $meta) {
+            $this->assertStringNotContainsStringIgnoringCase('noindex', $meta->getAttribute('content'));
+        }
     }
 
     /** CA2 (/analyze A7): sin ningún dentista activo, el alta se completa y la ficha queda sin dentista. */
@@ -261,6 +299,12 @@ class RegistroPacientesTest extends TestCase
         $regla = $this->declaraciones('.page-register .error-msg a', 'css/auth.css');
         $this->assertNotSame('', $regla, 'auth.css tiene la regla de los enlaces del mensaje.');
         $this->assertSame([], $this->literales($regla), 'La regla no tiene valores literales.');
+
+        // /review R3: el color que se ve es el de --red (con el que se mide el contraste) y el enlace se distingue
+        // por el subrayado, no solo por el color.
+        $this->assertMatchesRegularExpression('/color\s*:\s*var\(--red\)/', $this->declaraciones('.page-register .error-msg', 'css/auth.css'));
+        $this->assertMatchesRegularExpression('/color\s*:\s*inherit/', $regla);
+        $this->assertMatchesRegularExpression('/text-decoration\s*:\s*underline/', $regla);
     }
 
     /** P9, WCAG 2.4.7 y 1.4.3 (/analyze A2): foco visible con los tokens y contraste ≥ 4,5:1 del texto del mensaje. */
