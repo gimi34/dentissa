@@ -138,3 +138,4 @@ Puertas: las de `design-spec/references/criterios.md` §2 (CA7 y CA8 los cubren 
 | 2026-11-13 | /review r1 `changes_requested` (0 bloqueantes, 2 importantes): vuelve a `approved` con las tareas T034–T041 | /review 045 |
 | 2026-11-13 | Correcciones de /review r1 (T034–T041: R1, R2, R3, R5, R8, R13, R14); suite 931 en verde; vuelve a `implemented` | /implement 045 |
 | 2026-11-13 | Liberada en v0.18.0 (PR #80, tag sobre `f11a7cf`); comprobada en producción | /release 045 |
+| 2026-11-21 | Comportamiento modificado por 053 en v0.25.0: el aviso explica WhatsApp en «Qué datos recabamos» y su fecha pasa al 20 de noviembre de 2026; cada ventana del registro lleva la fecha de su página. Excepción a CA3 (el aviso nombra un dato que el sitio no pide), decisión del usuario en /analyze 053 (A3) | /release |
