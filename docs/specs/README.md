@@ -22,7 +22,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 008 | [personal](008-personal/spec.md) | Identidad | inferred | alta | sin tests |
 | 009 | [servicios](009-servicios/spec.md) | Agenda | inferred | alta | 5 de 7 criterios |
 | 010 | [usuarios-admin](010-usuarios-admin/spec.md) | Identidad | inferred | alta | 7 de 9 criterios |
-| 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | implemented | — | 7 de 7 criterios (implementada el 2026-11-20; correcciones de /review r1 el 2026-11-21) |
+| 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | released (v0.24.0) | — | 7 de 7 criterios (liberada el 2026-11-21) |
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
@@ -55,7 +55,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 051 | [ciudad-lista-cerrada](051-ciudad-lista-cerrada/spec.md) | Pacientes | released (v0.23.0) | — | — (2026-11-18) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
-- Objetivo 2: 015 portal-paciente-aislado · 016 sesiones-seguras · 017 limite-intentos-acceso ·
+- Objetivo 2: 015 portal-paciente-aislado (guardar el perfil ya exige el rol: 011) · 016 sesiones-seguras (el cierre de sesiones al cambiar la contraseña desde el perfil ya lo hace la 011) · 017 limite-intentos-acceso ·
   018 vinculacion-google-segura · 019 credenciales-generadas.
 - Objetivo 3: 021 auditoria-accesos-cuentas · 022 auditoria-datos-clinicos · 023 logs-y-errores.
 - Objetivo 4 (agenda): la 027 reservada como horarios-reprogramar se dividió en 027
