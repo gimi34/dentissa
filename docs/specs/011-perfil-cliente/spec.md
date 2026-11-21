@@ -1,7 +1,8 @@
 ---
 id: 011
 slug: perfil-cliente
-status: implemented
+status: released
+released: v0.24.0 (2026-11-21)
 created: 2026-09-28
 extends: []
 ---
@@ -92,3 +93,4 @@ que sí queda registrado es el rechazo de CA7, como acceso denegado.
 | 2026-11-20 | Implementada: CA6 (el cambio de contraseña cierra las otras sesiones) y CA7 (`role:cliente` al guardar el perfil); CA1 y CA2 con tests de caracterización | /implement |
 | 2026-11-21 | Vuelve a `approved`: `/review` r1 pide corregir R1 y R2 (T023–T026) | /review |
 | 2026-11-21 | Implementada de nuevo con las correcciones de `/review` R1 y R2 (T023–T026) | /implement |
+| 2026-11-21 | Liberada en v0.24.0 | /release |

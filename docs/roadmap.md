@@ -12,7 +12,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | # | Objetivo | Criterio de éxito | Spec | Estado |
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
-| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); fichas 2026-11-17-fix-sesion-cuenta-desactivada (RS3.a) y 2026-11-17-fix-admin-no-se-desactiva (RS19.a), liberadas en v0.20.1; 015–019 previstas | pendiente |
+| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [011](specs/011-perfil-cliente/spec.md) (RS2.a en parte: guardar el perfil; RS2.b y RS9.a, liberada en v0.24.0); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); fichas 2026-11-17-fix-sesion-cuenta-desactivada (RS3.a) y 2026-11-17-fix-admin-no-se-desactiva (RS19.a), liberadas en v0.20.1; 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b y OB6.c → objetivo 5 | [020](specs/020-auditoria-base/spec.md) (OB1.a, OB1.c, OB1.g, OB1.h, OB2; released v0.12.0); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b, RS15.c y RS15.d → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS8.c, RS15.b, RS15.c, RS15.d, OB4.b, OB4.c, OB6.b, OB6.c, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS8.d → Pendientes y deuda (CSP estricta, por pantallas), RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); [031](specs/031-endurecer-produccion/spec.md) (cabeceras, conexión segura obligatoria, incidencias de la 030 y administración desde fuera); [032](specs/032-alertas-cifrado-copias/spec.md) (alertas y copias cifradas, en curso: OB6.b y RS15.b; RS15.c como excepción EX3 hasta el primer dato real; OB6.c y RS15.d, staging, pendientes) | pendiente |
@@ -607,16 +607,35 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 050/R11: unificar en `RelojClinica` la zona que aún se resuelve a mano en otros servicios (`/refactor`);
   - 050/R12: método propio para fechas de calendario y sacar de la vista la cuenta de días de la próxima visita;
   - 050/R13: el caso de la próxima visita del 18 coincide con el valor por defecto;
-  - 050/R14: un alta de expediente enviada a mano sin `cita_id` da un 500 (preexistente; `/fix` aparte).
+  - ~~050/R14: un alta de expediente enviada a mano sin `cita_id` da un 500 (preexistente; `/fix` aparte).~~ Resuelto en
+    la v0.24.0 (ficha 2026-11-20-fix-expediente-sin-cita, que corrige también las notas internas de la cita).
 - Spec 051, excepciones P3 y P7 (aprobadas por el usuario el 2026-11-18; /analyze A1 y A2, liberada en v0.23.0): los
   cinco formularios cuya ciudad cambió conservan su autorización y su falta de auditoría. Gates por recurso en
-  `POST`/`PUT` de pacientes → spec 014 (RS1.a); `role:cliente` en `PUT /cliente/perfil` → spec 015 (RS2.a); eventos de
+  `POST`/`PUT` de pacientes → spec 014 (RS1.a); `role:cliente` en `PUT /cliente/perfil` → hecho por la spec 011 en la v0.24.0 (RS2.a en parte); eventos de
   los cambios de pacientes → spec 022 (OB1.e) y de las altas por registro → spec 021 (OB1.f).
 - Spec 051, aceptados sin tarea de `/review` (2026-11-18; deuda menor, liberada en v0.23.0):
   - 051/R2: asociar las etiquetas de los filtros del directorio de pacientes (Buscar, Ciudad, Doctor) con sus campos
     (preexistente);
   - 051/R3: extraer a un parcial el aviso y el `aria-describedby` del campo «Ciudad», hoy copiados en el perfil y en el
     alta o la edición de pacientes.
+- Spec 011, excepción P7 (aprobada por el usuario el 2026-11-20; plan D7, /analyze A5, liberada en v0.24.0): el cambio
+  de contraseña desde el perfil, el guardado del perfil y los cierres de sesión forzados por el cambio no dejan evento de
+  auditoría → spec 021 (cambios de contraseña), spec 022 (cambios de pacientes) y el registro de entradas y salidas
+  (`docs/observability.md`). Abrir el perfil (`GET /cliente/perfil`) sigue sin `role:cliente` → spec 015 (RS2.a). Una
+  sesión robada de una cuenta que entra solo con Google puede crear la contraseña y cerrar las sesiones del dueño
+  (TM6) → spec 018.
+- Spec 011, dato descubierto en `/implement` (T012): `usuarios` no tiene columna `remember_token`; la casilla
+  «Recordarme» del inicio de sesión no hace nada, y si algún camino pidiera el recuerdo daría un 500. Quitar la casilla
+  o implementarlo es de otra spec.
+- Spec 011, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.24.0):
+  - 011/R3: el test de TM3 no comprueba directamente que el identificador antiguo deje de valer (lo cubren el de las
+    otras sesiones y el del almacén);
+  - 011/R4: un doble envío del cambio de contraseña puede dejar fuera al propio paciente (desactivar el botón al enviar);
+  - 011/R5: el cambio de contraseña desde el perfil no avisa por correo ni deja evento (excepción P7 → 016, 018 o 021);
+  - 011/R6: `assertForbidden()` sin el rol en el mensaje en el test de CA7;
+  - 011/R7: separar los tres caminos del test de «Recordarme»;
+  - 011/R8: el límite de 5 intentos escrito a mano en el test de rechazos;
+  - 011/R9: constantes del test en mitad de la clase.
 - Spec 049, aceptados sin tarea de `/review` (2026-11-17; deuda menor, liberada en v0.21.0):
   - 049/R13: `npm audit` con 6 altas de `picomatch` vía `vite`: resuelto en la v0.20.1 (chore de npm, EX5);
   - 049/R15: muchas paradas de tabulador en los huecos; «Saltar a la lista» las evita;

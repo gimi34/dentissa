@@ -100,12 +100,15 @@ Rollout).
 - [x] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con una cuenta de paciente de prueba y sin escribir ninguna contraseña en ningún documento:
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, con una cuenta de paciente de prueba y sin escribir ninguna contraseña en ningún documento:
   - CA6: con dos navegadores abiertos con la misma cuenta de paciente, cambiar la contraseña en uno → el otro vuelve al inicio de sesión en su siguiente clic y el primero sigue dentro
   - CA7: el 403 del personal en `PUT /cliente/perfil` lo prueba T013; si se intenta en producción, aparece en `/admin/auditoria` como `acceso_denegado`
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar 5xx en `/cliente/perfil` y `/cliente/perfil/password` (aviso `dentissa-vigilar`). Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia
-- [ ] T098 Marcar spec como `released`
+  - nota: CA6 — resultado: el usuario confirma el 2026-11-21 en producción que, al cambiar la contraseña, la otra sesión se cerró (sin ninguna contraseña en los documentos). CA7 queda probado por T013; no se intentó en producción.
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-21 00:43 para v0.24.0
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar 5xx en `/cliente/perfil` y `/cliente/perfil/password` (aviso `dentissa-vigilar`). Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia
+  - nota: 2026-11-21 — `deploy/desplegar.sh v0.24.0` en 139 s (sin la verificación), anterior v0.23.0, copia `dentissa-20261121-064552.sql.gz.gpg`; `verificar.sh` interna y por la dirección pública: todo OK. Tag `v0.24.0` sobre `7c00de5` (PR #102). Rollback, si hiciera falta: `bash deploy/volver.sh v0.23.0`, sin la copia.
+- [x] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

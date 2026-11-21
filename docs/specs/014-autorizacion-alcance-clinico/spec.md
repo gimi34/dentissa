@@ -37,7 +37,7 @@ autor edita un expediente). Esta spec atiende RS1 por completo.
 
 ## Fuera de alcance
 - Restringir el portal de pacientes a su rol (spec 015).
-- Cierre de sesiones al desactivar cuentas o cambiar credenciales (spec 016).
+- Cierre de sesiones al desactivar cuentas o cambiar credenciales (spec 016; el cambio de contraseña desde el perfil ya cierra las otras sesiones desde la spec 011, v0.24.0).
 - Notas internas y cancelación de citas por el admin (el admin conserva acceso total).
 - Construir el registro de auditoría (objetivo 3 del roadmap): esta spec solo declara qué debe registrarse.
 - Cifrado de datos clínicos en reposo (spec 013).
@@ -93,3 +93,4 @@ Eventos que deben quedar registrados según `docs/observability.md`:
 |---|---|---|
 | 2026-09-28 | Creación | /specify, objetivo 2 del roadmap (RS1) |
 | 2026-09-28 | Aprobada por el usuario | /specify |
+| 2026-11-21 | «Fuera de alcance»: el cierre de sesiones al cambiar la contraseña desde el perfil lo hace ya la 011 (v0.24.0); sin cambios de criterios | /release 011 |

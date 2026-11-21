@@ -193,8 +193,8 @@ El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usar
 Evidencia: `routes/web.php:147`, `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; reprogramar del paciente, `GET` y `PATCH /cliente/citas/{id}/reprogramar`, con `role:cliente`: spec 028; cambio de contraseña del perfil, `PUT /cliente/perfil/password`, con `role:cliente`: spec 043; resto del grupo → spec 015)
-- RS2.b `PerfilController::update` no crea ficha de paciente para usuarios que no son cliente — estado: pendiente
+- RS2.a Añadir `role:cliente` al grupo `/cliente` — estado: pendiente (cancelación del paciente con `role:cliente`: spec 026; reprogramar del paciente, `GET` y `PATCH /cliente/citas/{id}/reprogramar`, con `role:cliente`: spec 028; cambio de contraseña del perfil, `PUT /cliente/perfil/password`, con `role:cliente`: spec 043; guardar el perfil, `PUT /cliente/perfil`, con `role:cliente`: spec 011, v0.24.0; resto del grupo, incluido abrir el perfil, → spec 015)
+- RS2.b `PerfilController::update` no crea ficha de paciente para usuarios que no son cliente — estado: mitigada (v0.24.0, spec 011 CA7): `PUT /cliente/perfil` exige `role:cliente`; el personal recibe 403, auditado como `acceso_denegado`
 
 ### RS3 · Alta — Usuarios desactivados conservan su sesión (A07 Authentication Failures)
 `activo` solo se comprueba al hacer login; desactivar un usuario o personal no invalida sus
@@ -268,8 +268,8 @@ Cambiar la contraseña no invalida otras sesiones ni regenera la actual; cambiar
 perfil no pide reautenticación ni verificación. Evidencia: `PerfilController.php`; spec 011.
 
 Correcciones:
-- RS9.a `Auth::logoutOtherDevices()` (o borrado de sesiones) y regeneración de sesión al cambiar la contraseña — estado: pendiente (→ objetivo 2). El restablecimiento ya cierra las sesiones con `usuarios.version_sesion` y `SesionVigente` (spec 041): esa pieza sirve para el cambio desde el perfil, subiendo la versión
-- RS9.b Pedir la contraseña actual para cambiar el email — estado: mitigada (v0.14.0, spec 041 CA13): con 5 fallos por minuto; queda la contraseña creada en el perfil de una cuenta de Google con una sesión ajena (041/R32, RS5.c)
+- RS9.a `Auth::logoutOtherDevices()` (o borrado de sesiones) y regeneración de sesión al cambiar la contraseña — estado: mitigada (v0.24.0, spec 011 CA6): el cambio desde el perfil sube `usuarios.version_sesion` en la misma escritura que la contraseña, con bloqueo, y `SesionVigente` cierra las otras sesiones en su siguiente petición; la actual se regenera y la antigua se borra del almacén. El restablecimiento ya lo hacía (spec 041). Sin evento de auditoría ni aviso por correo del cambio desde el perfil (excepción P7 de la 011 → specs 021 y 016/018; 011/R5)
+- RS9.b Pedir la contraseña actual para cambiar el email — estado: mitigada (v0.14.0, spec 041 CA13): con 5 fallos por minuto; queda la contraseña creada en el perfil de una cuenta de Google con una sesión ajena (041/R32, RS5.c), que desde la v0.24.0 además cierra las sesiones del dueño (spec 011 TM6 → spec 018)
 
 ### RS10 · Media — Contraseña generada viaja en claro en la sesión (A04 Cryptographic Failures)
 Al dar de alta pacientes o personal sin contraseña, la generada se guarda en el flash de sesión
