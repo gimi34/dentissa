@@ -1,7 +1,7 @@
 ---
 id: 053
 slug: whatsapp-inicio
-status: approved
+status: implemented
 created: 2026-11-20
 extends: [038, 045]
 ---
@@ -23,22 +23,22 @@ directo: la aplicación no envía ni recibe mensajes de WhatsApp.
   mensaje, para decidir si escribo.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un visitante, con o sin sesión, en la página de inicio, cuando mira la primera
+- [x] CA1 · Dado un visitante, con o sin sesión, en la página de inicio, cuando mira la primera
   pantalla, entonces ve «Escríbenos por WhatsApp» junto al horario y el teléfono (amplía 038 CA1).
-- [ ] CA2 · Dado un visitante en la sección de contacto de la página de inicio, cuando la mira,
+- [x] CA2 · Dado un visitante en la sección de contacto de la página de inicio, cuando la mira,
   entonces ve «Escríbenos por WhatsApp» junto al teléfono; el resto del contacto de 038 CA5 no
   cambia (amplía 038 CA5).
-- [ ] CA3 · Dado un visitante que pulsa cualquiera de los dos botones, cuando se abre el enlace,
+- [x] CA3 · Dado un visitante que pulsa cualquiera de los dos botones, cuando se abre el enlace,
   entonces se abre WhatsApp (la aplicación en el móvil o WhatsApp Web en un ordenador) con un chat al
   mismo número que el teléfono de la página, 753 000 0000 con la clave de México, y el mensaje ya
   escrito «Hola, quiero información para agendar una cita.», que el visitante puede cambiar antes de
   enviarlo; en un ordenador, la página de inicio sigue abierta en su pestaña.
-- [ ] CA4 · Dado un navegador sin JavaScript, cuando el visitante pulsa cualquiera de los dos
+- [x] CA4 · Dado un navegador sin JavaScript, cuando el visitante pulsa cualquiera de los dos
   botones, entonces funciona igual que en CA3.
-- [ ] CA5 · (abuso) Como alguien que inspecciona el enlace con una sesión abierta, busco datos de la
+- [x] CA5 · (abuso) Como alguien que inspecciona el enlace con una sesión abierta, busco datos de la
   cuenta o de la página → el mensaje y el enlace son los mismos para todos los visitantes y no
   llevan nombre, correo, teléfono ni ningún otro dato de la sesión o de la visita.
-- [ ] CA6 · Dado un visitante que lee el aviso de privacidad, cuando llega al apartado «Qué datos
+- [x] CA6 · Dado un visitante que lee el aviso de privacidad, cuando llega al apartado «Qué datos
   recabamos», entonces lee que, si escribe por WhatsApp, la clínica recibe su número y lo que
   escriba solo para responderle, y que WhatsApp es un servicio de un tercero con su propio aviso de
   privacidad (amplía 045).
@@ -137,3 +137,4 @@ Ninguna.
 | 2026-11-20 | Diseño aprobado ([design.md](design.md), `c3`) | aprobado por el usuario |
 | 2026-11-20 | CA6: «apartado de servicios de terceros» → «apartado «Qué datos recabamos»» | decisión del usuario en /plan 053 (el aviso no tiene apartado de terceros) |
 | 2026-11-20 | Decisiones: excepción a 045 CA3 para el punto de WhatsApp | decisión del usuario en /analyze 053 (A3); sin cambio de criterios |
+| 2026-11-20 | `approved` → `implemented` | /implement 053: 13 tareas hechas, suite 1510 en verde |
