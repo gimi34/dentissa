@@ -242,6 +242,18 @@ class RegistroPacientesTest extends TestCase
         $this->assertDatabaseMissing('usuarios', ['email' => $nuevo]);
     }
 
+    /** CA8, WCAG 4.1.3 (/review R5): el aviso general de errores se anuncia y su icono no se lee. */
+    public function test_el_aviso_general_se_anuncia(): void
+    {
+        $xpath = $this->xpath($this->rechazoDe($this->crearCuentaExistente()));
+        $aviso = $xpath->query("//div[contains(concat(' ', normalize-space(@class), ' '), ' alert-error ')]")->item(0);
+
+        $this->assertInstanceOf(DOMElement::class, $aviso, 'Hay aviso general de errores.');
+        $this->assertSame('alert', $aviso->getAttribute('role'), 'El aviso se anuncia al cargar.');
+        $icono = $xpath->query('.//svg', $aviso)->item(0);
+        $this->assertSame('true', $icono?->getAttribute('aria-hidden'), 'El icono del aviso no se lee.');
+    }
+
     /** CA8 (/review R6): con la recuperación desactivada, el rechazo solo ofrece iniciar sesión. */
     public function test_sin_recuperacion_solo_se_ofrece_iniciar_sesion(): void
     {
