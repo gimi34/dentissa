@@ -1,7 +1,7 @@
 ---
 id: 052
 slug: recordatorio-correo
-status: draft
+status: approved
 created: 2026-11-20
 extends: [003, 004, 028]
 ---
@@ -170,3 +170,4 @@ Ninguna.
 ## Historial
 | Fecha | Cambio | Motivo |
 |---|---|---|
+| 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
