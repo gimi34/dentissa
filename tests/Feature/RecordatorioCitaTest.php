@@ -267,6 +267,9 @@ class RecordatorioCitaTest extends TestCase
         $this->assertSame('error', $fallos[0]['nivel']);
         $this->assertSame(['error' => 'TransportException'], $fallos[0]['contexto']);
 
+        // El mock de Mail sustituyó al gestor de correo: se olvida antes de volver a la falsificación.
+        app()->forgetInstance('mail.manager');
+        Mail::clearResolvedInstance('mail.manager');
         Mail::fake();
         $this->travel(1)->minutes();
         $this->revisar();
@@ -336,7 +339,8 @@ class RecordatorioCitaTest extends TestCase
     {
         config(['recordatorios.tope_diario' => 1]);
         $enviada = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
-        $aplazada = $this->cita($this->d2, $this->p2, 'agendada', $this->dentroDe('+3 hours'));
+        // A 20 h: al día siguiente (00:05) sigue sin empezar y su envío falla.
+        $aplazada = $this->cita($this->d2, $this->p2, 'agendada', $this->dentroDe('+20 hours'));
         $servicio = DB::table('servicios')->first();
         DB::table('citas')->whereIn('id', [$enviada, $aplazada])->update(['servicio_id' => $servicio->id]);
         $logs = CapturaLogs::instalar();
