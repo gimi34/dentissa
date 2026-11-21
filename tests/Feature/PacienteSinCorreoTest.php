@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -133,6 +134,29 @@ class PacienteSinCorreoTest extends TestCase
         $this->assertSame($correo, $cuenta->email);
         $this->assertNotNull($cuenta->password_hash);
         $this->assertNull($cuenta->telefono, 'Con correo, el teléfono sigue siendo opcional.');
+    }
+
+    /** /review R2: con correo y contraseña escrita, se guarda esa contraseña y no se genera otra. */
+    public function test_el_alta_con_correo_y_contrasena_usa_la_escrita(): void
+    {
+        $correo = 'escrita.'.Str::lower(Str::random(6)).'@example.test';
+
+        $this->alta('admin', $this->datos(['email' => $correo, 'password' => 'contrasena-escrita-segura']))
+            ->assertSessionHasNoErrors()->assertSessionMissing('password_generada')
+            ->assertSessionHas('success', 'Paciente registrado correctamente.');
+
+        $this->assertTrue(Hash::check('contrasena-escrita-segura', (string) $this->cuenta()->password_hash), 'Se guarda la contraseña escrita.');
+    }
+
+    /** /review R2: el correo sigue siendo único en el alta, con su mensaje. */
+    public function test_el_alta_con_un_correo_ya_registrado_se_rechaza(): void
+    {
+        $antes = $this->cuentasDePrueba();
+
+        $this->alta('admin', $this->datos(['email' => $this->paciente1->email]))
+            ->assertSessionHasErrors(['email' => self::CORREO_REPETIDO]);
+
+        $this->assertSame($antes, $this->cuentasDePrueba(), 'No se crea nada.');
     }
 
     public function test_sin_correo_ni_telefono_se_rechaza_y_conserva_lo_escrito(): void

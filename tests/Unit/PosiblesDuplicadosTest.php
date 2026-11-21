@@ -62,6 +62,14 @@ class PosiblesDuplicadosTest extends TestCase
         $this->assertSame(['ids' => [], 'total' => 0], PosiblesDuplicados::buscar('Rosa', self::APELLIDO, ' - ', null));
     }
 
+    /** /review R1: sin teléfono en la entrada, un homónimo sin teléfono no coincide si la fecha es otra. */
+    public function test_sin_telefono_y_con_otra_fecha_no_coincide_con_un_homonimo_sin_telefono(): void
+    {
+        $this->paciente('Rosa', self::APELLIDO, fecha: '1970-07-07');
+
+        $this->assertSame(['ids' => [], 'total' => 0], PosiblesDuplicados::buscar('Rosa', self::APELLIDO, null, '1990-01-01'));
+    }
+
     public function test_incluye_pacientes_desactivados_y_fichas_de_cuentas_del_personal(): void
     {
         $desactivado = $this->paciente('Elena', self::APELLIDO, telefono: '5533334444', activo: 0);
