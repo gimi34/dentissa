@@ -1,7 +1,7 @@
 ---
 id: 011
 slug: perfil-cliente
-status: approved
+status: implemented
 created: 2026-09-28
 extends: []
 ---
@@ -91,3 +91,4 @@ que sí queda registrado es el rechazo de CA7, como acceso denegado.
 | 2026-11-20 | «Cobertura de riesgos» (RS2.a en parte, RS2.b, RS9.a, RS9.b), CA3 y CA4 marcados como cubiertos, evidencia al día, decisiones de D6 y de la excepción P7 | `/analyze` A3, A4, A5, A10 |
 | 2026-11-20 | Implementada: CA6 (el cambio de contraseña cierra las otras sesiones) y CA7 (`role:cliente` al guardar el perfil); CA1 y CA2 con tests de caracterización | /implement |
 | 2026-11-21 | Vuelve a `approved`: `/review` r1 pide corregir R1 y R2 (T023–T026) | /review |
+| 2026-11-21 | Implementada de nuevo con las correcciones de `/review` R1 y R2 (T023–T026) | /implement |

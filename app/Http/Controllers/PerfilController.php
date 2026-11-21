@@ -139,8 +139,9 @@ class PerfilController extends Controller
             return $nueva;
         });
 
-        // D2, TM3: esta sesión sigue abierta, con otro identificador y la versión nueva.
-        $request->session()->regenerate();
+        // D2, TM3: esta sesión sigue abierta, con otro identificador y la versión nueva; la antigua se borra del
+        // almacén (/review R2).
+        $request->session()->regenerate(true);
         $request->session()->put('version_sesion', $version);
 
         return back()->with('success', 'Tu contraseña fue actualizada.');

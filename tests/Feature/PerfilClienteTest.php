@@ -258,6 +258,26 @@ class PerfilClienteTest extends TestCase
         $this->assertSesionSigue($otra);
     }
 
+    /** CA6, TM3 (/review R2): al renovar el identificador, la sesión antigua se borra del almacén. */
+    public function test_la_sesion_antigua_desaparece_del_almacen(): void
+    {
+        $this->entrarConContrasena($this->paciente1);
+        $conocido = Str::random(40);
+        $almacen = $this->app['session']->driver()->getHandler();
+
+        $this->withCookie(config('session.cookie'), $conocido)->get(self::PERFIL)->assertOk();
+        $this->assertNotSame('', $almacen->read($conocido), 'El almacén guarda la sesión del identificador conocido.');
+
+        $respuesta = $this->withCookie(config('session.cookie'), $conocido)
+            ->cambiarContrasena(['password_actual' => self::ACTUAL, 'password' => self::NUEVA, 'password_confirmation' => self::NUEVA])
+            ->assertRedirect(self::PERFIL)
+            ->assertSessionHas('success');
+
+        $this->assertSame('', $almacen->read($conocido), 'La sesión antigua ya no está en el almacén.');
+        $this->assertNotSame($conocido, $respuesta->getCookie(config('session.cookie'))?->getValue());
+        $this->assertAuthenticatedAs($this->paciente1);
+    }
+
     /**
      * CA6, TM2 (/review R1): si otro cambio de la misma cuenta sube la versión justo después de este, la sesión
      * actual guarda la versión que escribió su propio cambio, no la del otro, y el otro cambio también la cierra.
