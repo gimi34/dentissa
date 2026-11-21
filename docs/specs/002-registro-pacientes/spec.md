@@ -1,7 +1,7 @@
 ---
 id: 002
 slug: registro-pacientes
-status: approved
+status: implemented
 created: 2026-09-28
 extends: []
 ---
@@ -20,14 +20,14 @@ Esta spec atiende parcialmente el riesgo de enumeración de cuentas en el regist
 
 ## Criterios de aceptación
 <!-- Spec inferida: [x] = cubierto por un test existente; [ ] = comportamiento observado en el código, sin test. -->
-- [ ] CA1 · Dado un visitante, cuando completa `POST /registro` con datos válidos, entonces se crean en una transacción un `usuarios` con rol `cliente` y su fila en `pacientes`, y se inicia sesión.
-- [ ] CA2 · Dado el alta, cuando se crea el paciente, entonces se le asigna el dentista activo con menos pacientes (a igualdad, el que lleva más tiempo en el personal de la clínica); un dentista inactivo nunca se asigna, y si no hay ninguno activo el alta se completa y el paciente queda sin dentista asignado.
-- [ ] CA3 · Dado un email ya registrado, cuando se envía el registro, entonces se rechaza con un error de validación.
-- [ ] CA4 · Dado un visitante que viene del callback de Google sin cuenta, cuando completa `POST /registro/contacto` (teléfono, datos demográficos y términos), entonces se crea el usuario sin contraseña y su paciente.
-- [ ] CA5 · Dado el alta, cuando se crea la cuenta, entonces el rol es siempre `cliente` (fijado en el servidor, no viene del formulario).
-- [ ] CA6 · Dada una contraseña de menos de 8 caracteres, cuando se envía el registro, entonces se rechaza.
+- [x] CA1 · Dado un visitante, cuando completa `POST /registro` con datos válidos, entonces se crean en una transacción un `usuarios` con rol `cliente` y su fila en `pacientes`, y se inicia sesión. (`RegistroPacientesTest`)
+- [x] CA2 · Dado el alta, cuando se crea el paciente, entonces se le asigna el dentista activo con menos pacientes (a igualdad, el que lleva más tiempo en el personal de la clínica); un dentista inactivo nunca se asigna, y si no hay ninguno activo el alta se completa y el paciente queda sin dentista asignado. (`RegistroPacientesTest`)
+- [x] CA3 · Dado un email ya registrado, cuando se envía el registro, entonces se rechaza con un error de validación. (`RegistroPacientesTest`)
+- [x] CA4 · Dado un visitante que viene del callback de Google sin cuenta, cuando completa `POST /registro/contacto` (teléfono, datos demográficos y términos), entonces se crea el usuario sin contraseña y su paciente. (`RegistroPacientesTest`)
+- [x] CA5 · Dado el alta, cuando se crea la cuenta, entonces el rol es siempre `cliente` (fijado en el servidor, no viene del formulario). (`RegistroPacientesTest`)
+- [x] CA6 · Dada una contraseña de menos de 8 caracteres, cuando se envía el registro, entonces se rechaza. (`RegistroPacientesTest`)
 - [x] CA7 (abuso) · Como bot, envío cientos de registros → se limitan por IP. resuelto por 030 (v0.5.0)
-- [ ] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → el rechazo de un correo ya registrado no dice que ese correo tenga cuenta: muestra un mensaje que no afirma nada («No pudimos crear la cuenta con estos datos. Si ya tienes una, inicia sesión o recupera tu contraseña.»), con enlaces a iniciar sesión y a recuperar la contraseña, y conserva los demás datos escritos salvo la contraseña (la casilla de términos y aviso de privacidad vuelve sin marcar, porque el consentimiento se da en cada envío); el volumen de intentos sigue limitado (CA7). **HOY NO SE CUMPLE: mensaje explícito «Este correo ya está registrado»** (se corrige en esta spec, decisión del usuario del 2026-11-20 y del 2026-11-21).
+- [x] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → el rechazo de un correo ya registrado no dice que ese correo tenga cuenta: muestra un mensaje que no afirma nada («No pudimos crear la cuenta con estos datos. Si ya tienes una, inicia sesión o recupera tu contraseña.»), con enlaces a iniciar sesión y a recuperar la contraseña, y conserva los demás datos escritos salvo la contraseña (la casilla de términos y aviso de privacidad vuelve sin marcar, porque el consentimiento se da en cada envío); el volumen de intentos sigue limitado (CA7). Corregido en esta spec (decisión del usuario del 2026-11-20 y del 2026-11-21; `RegistroPacientesTest`).
 
 ## Fuera de alcance
 - Verificación del correo electrónico.
@@ -77,7 +77,7 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 
 ## Evidencia (solo si status=inferred)
 - Archivos: `routes/web.php:20-24`, `app/Http/Controllers/RegisterController.php` (incluye `asignarDentistaAutomatico`), `resources/views/auth/register.blade.php`, `resources/views/auth/registro-contacto.blade.php`
-- Tests (parciales; ningún criterio queda cubierto entero): `CiudadListaCerradaTest` (los dos registros crean el usuario y su ficha de paciente con la ciudad elegida), `LimiteIntentosTest` (límite de altas, CA7), `TerminosPrivacidadTest` (sin la casilla no se crea la cuenta, en los dos registros), `HoraClinicaFormulariosTest` (fecha de nacimiento) y `NavegacionSalidasTest` (salir del registro con Google no crea cuenta)
+- Tests: `RegistroPacientesTest` (CA1–CA6, CA8), `CiudadListaCerradaTest` (los dos registros crean el usuario y su ficha de paciente con la ciudad elegida), `LimiteIntentosTest` (límite de altas, CA7), `TerminosPrivacidadTest` (sin la casilla no se crea la cuenta, en los dos registros), `HoraClinicaFormulariosTest` (fecha de nacimiento) y `NavegacionSalidasTest` (salir del registro con Google no crea cuenta)
 
 ## Observaciones (solo si status=inferred)
 - ~~`register.blade.php` marca `terminos` como `required` en HTML, pero `register` no lo valida en el servidor~~: resuelto por 045 (v0.18.0), que lo valida en los dos registros.
@@ -96,3 +96,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | 2026-11-20 | Aprobada; los criterios que hoy no se cumplen se corrigen en esta spec | Decisión del usuario |
 | 2026-11-21 | CA8 reescrito (mensaje neutro, sin ocultar del todo), «Cobertura de riesgos» (RS13) y dos exclusiones en «Fuera de alcance» | Decisión del usuario en `/plan` |
 | 2026-11-21 | CA2 (inactivos y sin dentistas), CA8 (casilla), RS13 partido en RS13.b y RS13.c, excepción P7 en Decisiones | `/analyze` A3, A4, A5, A7 |
+| 2026-11-21 | Implementada: CA8 (mensaje neutro con enlaces); CA1–CA6 con tests de caracterización | /implement |

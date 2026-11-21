@@ -13,7 +13,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | # | Spec | Dominio | Estado | Confianza | Tests |
 |---|---|---|---|---|---|
 | 001 | [autenticacion](001-autenticacion/spec.md) | Identidad | inferred | alta | 2 de 11 criterios |
-| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | approved | — | 1 de 8 criterios (validada el 2026-11-20) |
+| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | implemented | — | 8 de 8 criterios (implementada el 2026-11-21) |
 | 003 | [agenda-citas-personal](003-agenda-citas-personal/spec.md) | Agenda | inferred | alta | 4 de 11 criterios |
 | 004 | [citas-cliente](004-citas-cliente/spec.md) | Agenda | inferred | alta | 2 de 7 criterios |
 | 005 | [horarios-dentista](005-horarios-dentista/spec.md) | Agenda | inferred | alta | 1 de 4 criterios |
