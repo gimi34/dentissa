@@ -100,6 +100,8 @@ class PaginasPublicasTest extends TestCase
         'resources/views/publico/legal/terminos-texto.blade.php',
         'resources/views/publico/legal/privacidad-texto.blade.php',
         'resources/views/auth/_dialogos-legales.blade.php',
+        // Spec 053 (T014, TM4, P9): el botón «Escríbenos por WhatsApp».
+        'resources/views/publico/_boton-whatsapp.blade.php',
     ];
 
     /** Host de las peticiones del test (el de `APP_URL` de `phpunit.xml`): también es propio. */

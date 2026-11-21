@@ -186,6 +186,8 @@ class PaginasPublicasCssTest extends TestCase
         'resources/views/auth/_dialogos-legales.blade.php',
         'resources/views/publico/_trabajo.blade.php',
         'resources/views/galeria/index.blade.php',
+        // Spec 053 (T014, TM4, P9): el botón «Escríbenos por WhatsApp».
+        'resources/views/publico/_boton-whatsapp.blade.php',
     ];
 
     /** El bloque `:root` de `app.css`. */
