@@ -11,6 +11,8 @@ extends: []
 ## Problema
 Los pacientes nuevos necesitan crear su cuenta sin depender del personal de la clínica y quedar
 asignados a un dentista para poder agendar.
+Esta spec atiende parcialmente el riesgo de enumeración de cuentas en el registro (`docs/security.md`, RS13; ver
+«Cobertura de riesgos»).
 
 ## Historias de usuario
 - Como paciente nuevo, quiero registrarme con mis datos para agendar citas en línea.
@@ -25,16 +27,27 @@ asignados a un dentista para poder agendar.
 - [ ] CA5 · Dado el alta, cuando se crea la cuenta, entonces el rol es siempre `cliente` (fijado en el servidor, no viene del formulario).
 - [ ] CA6 · Dada una contraseña de menos de 8 caracteres, cuando se envía el registro, entonces se rechaza.
 - [x] CA7 (abuso) · Como bot, envío cientos de registros → se limitan por IP. resuelto por 030 (v0.5.0)
-- [ ] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → la respuesta no lo revela. **HOY NO SE CUMPLE: mensaje explícito de correo ya registrado** (se corrige en esta spec, decisión del usuario del 2026-11-20; `docs/security.md`, enumeración de cuentas en el registro).
+- [ ] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → el rechazo de un correo ya registrado no dice que ese correo tenga cuenta: muestra un mensaje que no afirma nada («No pudimos crear la cuenta con estos datos. Si ya tienes una, inicia sesión o recupera tu contraseña.»), con enlaces a iniciar sesión y a recuperar la contraseña, y conserva los demás datos escritos salvo la contraseña; el volumen de intentos sigue limitado (CA7). **HOY NO SE CUMPLE: mensaje explícito «Este correo ya está registrado»** (se corrige en esta spec, decisión del usuario del 2026-11-20 y del 2026-11-21).
 
 ## Fuera de alcance
 - Verificación del correo electrónico.
+- Ocultar del todo si un correo tiene cuenta: con un correo nuevo el alta entra al panel y con uno registrado no, así
+  que la diferencia sigue siendo visible; ocultarla exige confirmar el correo antes de crear la cuenta (spec futura,
+  decisión del usuario del 2026-11-21).
+- Avisar por correo al dueño de una cuenta cuando alguien intenta registrarse con su dirección (decisión del usuario
+  del 2026-11-21).
 - Alta de pacientes hecha por el personal (spec 006).
 
 ## Seguridad y privacidad
 - Datos sensibles involucrados: datos personales (nombre, email, teléfono, fecha de nacimiento, dirección).
 - Quién puede hacer qué: cualquier visitante puede registrarse solo como cliente.
 - Casos de abuso: CA7, CA8.
+
+## Cobertura de riesgos
+| Corrección | Alcance | Criterios / motivo y destino |
+|---|---|---|
+| RS13.a — limitar las altas por dirección | fuera | ya mitigada por la 030 (v0.5.0); CA7 la documenta |
+| RS13.b — mensaje genérico en el alta, que no revele si el correo ya tiene cuenta | dentro | CA8: el mensaje deja de decirlo; lo que el alta sigue dejando ver (entrar o no al panel) → spec futura de confirmación del correo |
 
 ## Auditoría
 Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability.md`.
@@ -52,6 +65,8 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 |---|---|---|---|---|
 | 2026-11-20 | cierre | ¿Esta spec documenta bien el sistema actual? | Validada y aprobada | usuario |
 | 2026-11-20 | brecha | ¿Los criterios que hoy no se cumplen se corrigen en esta spec o en una aparte? | En esta spec: quedan `[ ]` y pasan por `/plan` | usuario |
+| 2026-11-21 | contradicción | CA8 pedía que la respuesta no revelara si el correo tiene cuenta, pero el alta entra al panel al instante y la confirmación del correo está fuera de alcance: la diferencia sigue siendo visible | Mensaje neutro en el rechazo, con el límite de la 030; ocultarlo del todo → spec futura de confirmación del correo | usuario (`/plan`) |
+| 2026-11-21 | brecha | ¿Se avisa por correo al dueño cuando alguien intenta registrarse con su dirección? | No | usuario (`/plan`) |
 
 ## Notas para /plan
 
@@ -74,3 +89,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | 2026-11-19 | Comportamiento modificado por 051 en v0.23.0: la ciudad se elige de una lista cerrada | /release |
 | 2026-11-20 | Validada con el sistema actual: evidencia y tests al día, observaciones revisadas y destino de cada «HOY NO SE CUMPLE» | /specify --edit |
 | 2026-11-20 | Aprobada; los criterios que hoy no se cumplen se corrigen en esta spec | Decisión del usuario |
+| 2026-11-21 | CA8 reescrito (mensaje neutro, sin ocultar del todo), «Cobertura de riesgos» (RS13) y dos exclusiones en «Fuera de alcance» | Decisión del usuario en `/plan` |
