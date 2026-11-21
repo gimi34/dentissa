@@ -9,10 +9,9 @@
 
 import { execSync } from 'node:child_process';
 
-// Aviso (GHSA) → excepción de docs/security.md y su vencimiento (AAAA-MM-DD, incluido).
-const EXCEPCIONES = {
-    'GHSA-fc5q-39xc-vjpf': { id: 'EX5', vence: '2026-12-31' }, // picomatch ≤ 4.0.7, ReDoS; sin versión corregida
-};
+// Aviso (GHSA) → excepción de docs/security.md y su vencimiento (AAAA-MM-DD, incluido), con la forma
+// 'GHSA-xxxx-xxxx-xxxx': { id: 'EXn', vence: 'AAAA-MM-DD' }. Hoy ninguna (EX5 se retiró el 2026-11-20).
+const EXCEPCIONES = {};
 
 const NIVELES = new Set(['high', 'critical']);
 
