@@ -165,6 +165,9 @@ Ninguna.
   referencia de plantilla y de versión de solo texto. Hora: `App\Agenda\RelojClinica` (spec 050).
 - La revisión periódica: hoy hay un temporizador de systemd cada minuto (`dentissa-vigilar`, spec 032)
   y no hay colas (`docs/security.md`); valorar el planificador de Laravel o un temporizador nuevo.
+- Spec 054 (alta de pacientes sin correo, en `feature/054-paciente-sin-correo`): habrá cuentas de
+  paciente con `usuarios.email` nulo. El recordatorio debe saltárselas sin intentarlo ni contarlo
+  como fallo (CA8), y sin dejar nada en el registro técnico (decisión del usuario, 2026-11-21).
 - Interruptor de entorno como `RECUPERAR_CONTRASENA` de la 041, para liberar apagado.
 
 ## Historial
