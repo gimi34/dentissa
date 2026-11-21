@@ -67,6 +67,7 @@ y no existe phpMyAdmin; ver [Despliegue](#despliegue).
 | Pacientes | `app/Http/Controllers/PacientesController.php` | CRUD de pacientes y alta de su usuario | `usuarios`, `pacientes`, `expedientes`, `citas` |
 | Expedientes | `app/Http/Controllers/ExpedientesController.php` | Expediente clínico ligado a una cita | `expedientes`, `citas` |
 | Pacientes (ciudad) | `app/Pacientes/Ciudades.php`, `app/Pacientes/CorreccionCiudades.php`, `app/Rules/CiudadDeLaLista.php`, `resources/views/partials/opciones-ciudad.blade.php` | Spec 051: la ciudad del paciente sale de una lista cerrada (municipios de Michoacán y cuatro de Guerrero, del catálogo de INEGI, más «Otro lugar»), la misma en los formularios, la validación y el filtro del directorio. La regla solo admite fuera de la lista la ciudad antigua de ese mismo paciente. La migración `2026_11_18_000000_corregir_ciudades_de_pacientes` lleva a la lista las ciudades guardadas que coinciden y deja el evento `pacientes_ciudades_corregidas` |
+| Pacientes (posibles duplicados) | `app/Pacientes/PosiblesDuplicados.php` | Spec 054: antes de un alta, busca pacientes con el mismo nombre y apellido (sin mayúsculas, tildes ni espacios sobrantes) y el mismo teléfono (solo dígitos) o fecha de nacimiento. Una consulta con binding por la primera palabra del apellido y comparación en PHP; devuelve hasta 3 ids y el total. `PacientesController::store` vuelve al formulario con el aviso si no se confirma |
 | Personal | `app/Http/Controllers/PersonalController.php` | CRUD de personal, asignación asistente↔dentista y horarios: valida el horario y lo guarda con `app/Agenda/HorarioDentista.php`, que también da la lista de citas fuera del horario de la ficha (spec 027) | `personal`, `usuarios`, `horarios_dentista`, `asistente_dentista` |
 | Servicios | `app/Http/Controllers/ServiciosController.php` | Catálogo (Eloquent + `Route::resource`) | `servicios` |
 | Páginas públicas | `app/Http/Controllers/PaginasPublicasController.php` | `/` (página de inicio; desde la spec 044 también con sesión, con «Ir a mi panel» hacia `panelDelRol()` en lugar de los enlaces de cuenta) y `/servicios`, sin parámetros, con `Servicio::porCategoria()`; desde la spec 045, `/terminos` y `/aviso-de-privacidad`, texto fijo con el contacto de la configuración y el horario en una frase (`horarioEnTexto()`), cuyas secciones viven en `publico/legal/` y las comparten las ventanas del registro (solo activos: nombre, descripción y categoría, en una consulta) y el contacto de `config/clinica.php` (spec 038); desde la spec 053, el botón «Escríbenos por WhatsApp» de `/` (primera pantalla y contacto, parcial `publico/_boton-whatsapp.blade.php`): un enlace a `wa.me` que arma `whatsappEnlace()` con los dígitos de `contacto.telefono_enlace` y `contacto.whatsapp_mensaje`, igual para todos y sin JavaScript; la aplicación no envía ni recibe mensajes de WhatsApp | `servicios` |
@@ -111,7 +112,9 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
 - Acceso: PDO con Query Builder (148 usos de `DB::` en controladores y 4 más en `app/Autorizacion`
   y el comando; `app/Agenda` recibe la conexión inyectada) y Eloquent solo para
   `Usuario` (modelo de autenticación, tabla `usuarios`), `Servicio` y `GaleriaFoto` (spec 039).
-- Entidades: `usuarios` (rol enum cliente/asistente/dentista/admin), `pacientes`, `personal`
+- Entidades: `usuarios` (rol enum cliente/asistente/dentista/admin; desde la spec 054 `email` admite
+  nulos: una cuenta de paciente sin correo, con `password_hash` también nulo, no tiene acceso a la
+  aplicación hasta que el personal le añade un correo), `pacientes`, `personal`
   (tipo dentista/asistente/administrador), `asistente_dentista`, `horarios_dentista`, `servicios`,
   `citas` (estado enum de 6 valores), `historial_citas` (`cambiado_por`, `estado_anterior`,
   `estado_nuevo`, `motivo`, `fecha_hora_anterior`, `fecha_hora_nueva`), `expedientes` y, desde la
@@ -126,7 +129,8 @@ nueva en `fecha_hora_anterior` y `fecha_hora_nueva` (spec 028).
   `database/dentissa.sql`. Las migraciones crean tablas de infraestructura (`users`, `sessions`,
   `cache`, `jobs`…) y `asistente_dentista`, alteran `usuarios` y `pacientes`, que ninguna migración
   crea, retiran el trigger (spec 026) y añaden a `historial_citas` `fecha_hora_anterior` y
-  `fecha_hora_nueva` (`DATETIME NULL`, spec 028). La tabla `auditoria` sí nace de una migración
+  `fecha_hora_nueva` (`DATETIME NULL`, spec 028); la spec 054 hace nulable `usuarios.email`
+  (`2026_11_20_000000_correo_opcional_en_usuarios`, solo expand). La tabla `auditoria` sí nace de una migración
   (spec 020), con sus triggers `auditoria_sin_update` (rechaza todo `UPDATE`) y
   `auditoria_sin_delete` (solo deja borrar con el indicador `@auditoria_purga` y eventos de más de
   5 años medidos con `UTC_TIMESTAMP()`). `galeria_fotos` también nace de una migración (spec 039). El
