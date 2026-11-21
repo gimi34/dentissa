@@ -5,6 +5,11 @@ namespace Tests\Feature;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as UsuarioGoogle;
+use Mockery;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\TestCase;
 
@@ -91,5 +96,62 @@ class PerfilClienteTest extends TestCase
 
         $ficha = DB::table('pacientes')->where('usuario_id', $sinFicha->id)->sole();
         $this->assertSame(['Avenida Guardada 45', 'Ario'], [$ficha->direccion, $ficha->ciudad]);
+    }
+
+    // ── TM5 · sin cookie de «Recordarme» ──────────────────────────────────────────────
+
+    /**
+     * Caracterización (TM5, plan D5, /analyze A8): ningún camino de entrada emite la cookie de recuerdo,
+     * así que una sesión cerrada por CA6 no se puede reabrir con ella. `usuarios` no tiene columna
+     * `remember_token`: pedir el recuerdo en cualquiera de los tres caminos daría un 500, y el test falla en
+     * su redirección.
+     */
+    public function test_recordarme_no_crea_una_cookie_de_recuerdo(): void
+    {
+        $recuerdo = $this->app['auth']->guard()->getRecallerName();
+
+        // Inicio de sesión con la casilla «Recordarme» marcada.
+        $this->post('/login', ['email' => $this->paciente1->email, 'password' => 'secreto-de-pruebas', 'remember' => 'on'])
+            ->assertRedirect('/cliente')
+            ->assertCookieMissing($recuerdo);
+        $this->assertAuthenticatedAs($this->paciente1);
+        $this->otroEquipo();
+
+        // Registro, que también deja la sesión abierta.
+        $correo = 'registro.'.Str::lower(Str::random(10)).'@example.test';
+        $this->post('/registro', [
+            'nombre' => 'Rita', 'apellido' => 'Registro', 'email' => $correo,
+            'password' => 'registro-de-pruebas', 'password_confirmation' => 'registro-de-pruebas',
+            'terminos' => '1', 'remember' => 'on',
+        ])->assertRedirect(route('cliente.dashboard'))->assertCookieMissing($recuerdo);
+        $registrada = Usuario::where('email', $correo)->sole();
+        $this->assertAuthenticatedAs($registrada);
+        $this->otroEquipo();
+
+        // Retorno de Google de una cuenta ya vinculada.
+        $conGoogle = $this->crearUsuarioDePrueba('cliente', 'Gala', 'Google');
+        $conGoogle->forceFill(['google_id' => 'google-'.Str::random(12), 'password_hash' => null])->save();
+        $this->simularGoogle($conGoogle);
+        $this->get('/auth/google/callback')->assertRedirect(route('cliente.dashboard'))->assertCookieMissing($recuerdo);
+        $this->assertAuthenticatedAs($conGoogle);
+    }
+
+    // ── Ayudas ────────────────────────────────────────────────────────────────────────
+
+    /** Deja el navegador de la prueba sin sesión ni usuario, como otro equipo (patrón de SesionVigenteTest). */
+    private function otroEquipo(): void
+    {
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+    }
+
+    /** El retorno de Google devuelve esta cuenta (patrón de SesionVigenteTest). */
+    private function simularGoogle(Usuario $usuario): void
+    {
+        $proveedor = Mockery::mock(Provider::class);
+        $proveedor->shouldReceive('user')->andReturn((new UsuarioGoogle)->setRaw([])->map([
+            'id' => $usuario->google_id, 'name' => $usuario->nombre.' '.$usuario->apellido, 'email' => $usuario->email, 'avatar' => null,
+        ]));
+        Socialite::shouldReceive('driver')->with('google')->andReturn($proveedor);
     }
 }
