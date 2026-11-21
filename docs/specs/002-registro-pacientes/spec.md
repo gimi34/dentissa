@@ -1,8 +1,7 @@
 ---
 id: 002
 slug: registro-pacientes
-status: inferred
-confidence: alta
+status: approved
 created: 2026-09-28
 extends: []
 ---
@@ -26,7 +25,7 @@ asignados a un dentista para poder agendar.
 - [ ] CA5 · Dado el alta, cuando se crea la cuenta, entonces el rol es siempre `cliente` (fijado en el servidor, no viene del formulario).
 - [ ] CA6 · Dada una contraseña de menos de 8 caracteres, cuando se envía el registro, entonces se rechaza.
 - [x] CA7 (abuso) · Como bot, envío cientos de registros → se limitan por IP. resuelto por 030 (v0.5.0)
-- [ ] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → la respuesta no lo revela. **HOY NO SE CUMPLE: mensaje explícito de correo ya registrado.**
+- [ ] CA8 (abuso) · Como atacante, uso el registro para averiguar qué emails tienen cuenta → la respuesta no lo revela. **HOY NO SE CUMPLE: mensaje explícito de correo ya registrado** (se corrige en esta spec, decisión del usuario del 2026-11-20; `docs/security.md`, enumeración de cuentas en el registro).
 
 ## Fuera de alcance
 - Verificación del correo electrónico.
@@ -48,14 +47,21 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 ## Supuestos
 - La asignación automática ignora dentistas inactivos.
 
+## Decisiones
+| Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
+|---|---|---|---|---|
+| 2026-11-20 | cierre | ¿Esta spec documenta bien el sistema actual? | Validada y aprobada | usuario |
+| 2026-11-20 | brecha | ¿Los criterios que hoy no se cumplen se corrigen en esta spec o en una aparte? | En esta spec: quedan `[ ]` y pasan por `/plan` | usuario |
+
 ## Notas para /plan
 
 ## Evidencia (solo si status=inferred)
 - Archivos: `routes/web.php:20-24`, `app/Http/Controllers/RegisterController.php` (incluye `asignarDentistaAutomatico`), `resources/views/auth/register.blade.php`, `resources/views/auth/registro-contacto.blade.php`
-- Tests: sin tests
+- Tests (parciales; ningún criterio queda cubierto entero): `CiudadListaCerradaTest` (los dos registros crean el usuario y su ficha de paciente con la ciudad elegida), `LimiteIntentosTest` (límite de altas, CA7), `TerminosPrivacidadTest` (sin la casilla no se crea la cuenta, en los dos registros), `HoraClinicaFormulariosTest` (fecha de nacimiento) y `NavegacionSalidasTest` (salir del registro con Google no crea cuenta)
 
 ## Observaciones (solo si status=inferred)
-- `register.blade.php` marca `terminos` como `required` en HTML, pero `register` no lo valida en el servidor; `contactoStore` sí.
+- ~~`register.blade.php` marca `terminos` como `required` en HTML, pero `register` no lo valida en el servidor~~: resuelto por 045 (v0.18.0), que lo valida en los dos registros.
+- Comportamiento definido después por otras specs, que manda sobre esta: límite de altas por dirección (030), salidas del registro (044), casilla de términos y aviso de privacidad (045), fecha de nacimiento anterior al día de la clínica (050) y ciudad elegida de una lista cerrada (051).
 
 ## Historial
 | Fecha | Cambio | Motivo |
@@ -66,3 +72,5 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | 2026-11-13 | Comportamiento modificado por 045 en v0.18.0: la casilla dice «aviso de privacidad», sus enlaces abren los textos en una ventana y `POST /registro` valida `terminos` en el servidor | /release |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
 | 2026-11-19 | Comportamiento modificado por 051 en v0.23.0: la ciudad se elige de una lista cerrada | /release |
+| 2026-11-20 | Validada con el sistema actual: evidencia y tests al día, observaciones revisadas y destino de cada «HOY NO SE CUMPLE» | /specify --edit |
+| 2026-11-20 | Aprobada; los criterios que hoy no se cumplen se corrigen en esta spec | Decisión del usuario |
