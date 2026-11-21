@@ -608,6 +608,15 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 050/R12: método propio para fechas de calendario y sacar de la vista la cuenta de días de la próxima visita;
   - 050/R13: el caso de la próxima visita del 18 coincide con el valor por defecto;
   - 050/R14: un alta de expediente enviada a mano sin `cita_id` da un 500 (preexistente; `/fix` aparte).
+- Spec 051, excepciones P3 y P7 (aprobadas por el usuario el 2026-11-18; /analyze A1 y A2, liberada en v0.23.0): los
+  cinco formularios cuya ciudad cambió conservan su autorización y su falta de auditoría. Gates por recurso en
+  `POST`/`PUT` de pacientes → spec 014 (RS1.a); `role:cliente` en `PUT /cliente/perfil` → spec 015 (RS2.a); eventos de
+  los cambios de pacientes → spec 022 (OB1.e) y de las altas por registro → spec 021 (OB1.f).
+- Spec 051, aceptados sin tarea de `/review` (2026-11-18; deuda menor, liberada en v0.23.0):
+  - 051/R2: asociar las etiquetas de los filtros del directorio de pacientes (Buscar, Ciudad, Doctor) con sus campos
+    (preexistente);
+  - 051/R3: extraer a un parcial el aviso y el `aria-describedby` del campo «Ciudad», hoy copiados en el perfil y en el
+    alta o la edición de pacientes.
 - Spec 049, aceptados sin tarea de `/review` (2026-11-17; deuda menor, liberada en v0.21.0):
   - 049/R13: `npm audit` con 6 altas de `picomatch` vía `vite`: resuelto en la v0.20.1 (chore de npm, EX5);
   - 049/R15: muchas paradas de tabulador en los huecos; «Saltar a la lista» las evita;

@@ -5,6 +5,19 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-19
+
+### Changed
+- La ciudad del paciente se elige de una lista en el registro, el registro con Google, el perfil y el alta o la edición
+  de pacientes: los municipios de Michoacán y los vecinos de Guerrero más cercanos, y «Otro lugar» para quien vive fuera
+  (spec 051).
+- Las ciudades ya guardadas que corresponden a un municipio de la lista quedan escritas igual; a quien tiene otra se le
+  pide elegirla la próxima vez que edite sus datos (spec 051).
+- El filtro por ciudad del directorio de pacientes ofrece solo las ciudades de la lista (spec 051).
+
+### Security
+- La ciudad solo se acepta si es de la lista también cuando se envía sin el formulario (spec 051).
+
 ## [0.22.0] - 2026-11-18
 
 ### Fixed

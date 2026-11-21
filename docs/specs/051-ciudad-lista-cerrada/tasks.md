@@ -105,10 +105,15 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: suite completa 1497 tests en verde (con la migración aplicada, como en la CI); Pint sin cambios en los 17 PHP tocados; gitleaks y semgrep `p/php` sin hallazgos sobre los archivos del diff; `composer audit` y `auditar-npm.mjs` sin altas ni críticas.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (registro, perfil, alta y edición con el desplegable; filtro del directorio limpio)
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): copia de la base, `deploy/desplegar.sh vX.Y.Z` (incluye la migración de datos), `verificar.sh`, el evento `pacientes_ciudades_corregidas` en la pantalla de auditoría con sus totales y la comprobación de T095; `5xx` de registro, perfil y pacientes la primera hora. Rollback: `bash deploy/volver.sh <tag anterior>`, no `restaurar.sh` (la corrección se queda; el original, en la copia)
-- [ ] T098 Marcar spec como `released`; en las specs 002, 006 y 011 anotar en su Historial que la ciudad se elige de una lista cerrada (051), recordando que son `inferred`
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (registro, perfil, alta y edición con el desplegable; filtro del directorio limpio)
+  - nota: sin staging; en producción el 2026-11-20, `/registro` responde 200 con el desplegable de ciudad («Zihuatanejo de Azueta» y «Otro lugar»), comprobado desde fuera. El perfil, el alta y edición y el filtro del directorio no se revisaron a mano en producción (los cubre la suite: 1499 tests en verde).
+- [x] T096 Aprobación humana para producción
+  - nota: aprobado por gimi34 el 2026-11-19 12:52 para v0.23.0 («desplegar v0.23.0 a producción»).
+  - nota: cambio posterior al /review r2 aceptado sin otra review por el usuario el 2026-11-19: solo el renombrado del trait de tests `EventosDelTest` → `EventosDuranteLaPrueba` (a99deca), por la CI.
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): copia de la base, `deploy/desplegar.sh vX.Y.Z` (incluye la migración de datos), `verificar.sh`, el evento `pacientes_ciudades_corregidas` en la pantalla de auditoría con sus totales y la comprobación de T095; `5xx` de registro, perfil y pacientes la primera hora. Rollback: `bash deploy/volver.sh <tag anterior>`, no `restaurar.sh` (la corrección se queda; el original, en la copia)
+  - nota: v0.23.0 desplegada el 2026-11-20 en 139 s (anterior: v0.22.0), con la migración de datos; copia previa `dentissa-20261120-232610.sql.gz.gpg`. `verificar.sh --interna` y `verificar.sh` (dirección pública incluida) todo OK. Los totales del evento `pacientes_ciudades_corregidas` no se anotaron; los 5xx quedan a cargo del aviso automático `dentissa-vigilar` (activo).
+- [x] T098 Marcar spec como `released`; en las specs 002, 006 y 011 anotar en su Historial que la ciudad se elige de una lista cerrada (051), recordando que son `inferred`
+  - nota: spec `released` (v0.23.0); una línea en el Historial de 002, 006 y 011 (las tres siguen `inferred`); excepciones P3 y P7 y 051/R2–R3 anotadas en el roadmap.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
