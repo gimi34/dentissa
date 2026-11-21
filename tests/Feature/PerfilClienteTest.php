@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
@@ -42,5 +43,53 @@ class PerfilClienteTest extends TestCase
             ->assertSee('value="443-555-0101"', false)
             ->assertSee('Calle Pruebas 123')
             ->assertSee('Dr. Diego Primero');
+    }
+
+    // ── CA2 · guardar el perfil ───────────────────────────────────────────────────────
+
+    /** Datos de un perfil completo y válido. */
+    private function datosDelPerfil(Usuario $usuario, array $cambios = []): array
+    {
+        return array_merge([
+            'nombre' => 'Pablo Nuevo',
+            'apellido' => 'Paciente Nuevo',
+            'email' => $usuario->email,
+            'telefono' => '443-555-0202',
+            'fecha_nacimiento' => '1990-05-10',
+            'genero' => 'masculino',
+            'direccion' => 'Avenida Guardada 45',
+            'ciudad' => 'Ario',
+        ], $cambios);
+    }
+
+    public function test_el_paciente_guarda_su_perfil(): void
+    {
+        $this->actingAs($this->paciente1)->from(self::PERFIL)
+            ->put(self::PERFIL, $this->datosDelPerfil($this->paciente1))
+            ->assertRedirect(self::PERFIL)
+            ->assertSessionHas('success', 'Tu perfil fue actualizado correctamente.');
+
+        $usuario = DB::table('usuarios')->where('id', $this->paciente1->id)->first();
+        $this->assertSame(['Pablo Nuevo', 'Paciente Nuevo', '443-555-0202'], [$usuario->nombre, $usuario->apellido, $usuario->telefono]);
+
+        $ficha = DB::table('pacientes')->where('id', $this->p1)->first();
+        $this->assertSame(['1990-05-10', 'masculino', 'Avenida Guardada 45', 'Ario'], [
+            (string) $ficha->fecha_nacimiento, $ficha->genero, $ficha->direccion, $ficha->ciudad,
+        ]);
+        $this->assertSame($this->d1, $ficha->dentista_id, 'El dentista asignado no cambia.');
+    }
+
+    public function test_guardar_crea_la_ficha_si_no_existia(): void
+    {
+        $sinFicha = $this->crearUsuarioDePrueba('cliente', 'Sonia', 'Sinficha');
+        $this->assertSame(0, DB::table('pacientes')->where('usuario_id', $sinFicha->id)->count());
+
+        $this->actingAs($sinFicha)->from(self::PERFIL)
+            ->put(self::PERFIL, $this->datosDelPerfil($sinFicha, ['nombre' => 'Sonia', 'apellido' => 'Sinficha']))
+            ->assertRedirect(self::PERFIL)
+            ->assertSessionHas('success');
+
+        $ficha = DB::table('pacientes')->where('usuario_id', $sinFicha->id)->sole();
+        $this->assertSame(['Avenida Guardada 45', 'Ario'], [$ficha->direccion, $ficha->ciudad]);
     }
 }
