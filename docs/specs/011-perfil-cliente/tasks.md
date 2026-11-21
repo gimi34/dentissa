@@ -1,6 +1,7 @@
 ---
 spec: 011-perfil-cliente
 plan: plan.md
+impl_base: ba00cb7
 status: approved
 ---
 
@@ -23,6 +24,7 @@ Formato:
   (`session()->all()`) y se cambia de equipo con `flushSession()` y `forgetGuards()`; al volver a ella,
   `forgetGuards()` y `withSession(<sus datos>)`. Sin esto el guard conserva la cuenta en memoria y ningún test de CA6
   distingue nada (plan, Estrategia de pruebas).
+- **Línea base (2026-11-20, `impl_base` ba00cb7):** suite completa 1502 en verde (19 463 aserciones), sin fallos previos.
 - **Datos de prueba:** contraseñas de ejemplo ficticias y sin espacios al principio ni al final (`TrimStrings`
   recorta `password_actual`, 043/A8).
 
@@ -47,7 +49,8 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (`ver
 Rollout).
 
 ## Tests (antes de implementar)
-- [ ] T010 Crear `PerfilClienteTest` con el escenario y escribir `test_el_paciente_ve_sus_datos_y_su_dentista` (el paciente abre `/cliente/perfil` y ve su nombre, su correo, sus datos de la ficha y el nombre de su dentista asignado) — tests/Feature/PerfilClienteTest.php — hecho cuando: pasa (caracterización) y quitar un momento el nombre del dentista de `resources/views/cliente/perfil.blade.php` lo hace fallar; se anota la rotura — cubre: CA1
+- [x] T010 Crear `PerfilClienteTest` con el escenario y escribir `test_el_paciente_ve_sus_datos_y_su_dentista` (el paciente abre `/cliente/perfil` y ve su nombre, su correo, sus datos de la ficha y el nombre de su dentista asignado) — tests/Feature/PerfilClienteTest.php — hecho cuando: pasa (caracterización) y quitar un momento el nombre del dentista de `resources/views/cliente/perfil.blade.php` lo hace fallar; se anota la rotura — cubre: CA1
+  - nota: comprobado rompiendo: sin el nombre del dentista en `cliente/perfil.blade.php` el test falla («Dr. Diego Primero»); al restaurar, pasa.
 - [ ] T011 Escribir `test_el_paciente_guarda_su_perfil` (`PUT /cliente/perfil` como paciente actualiza sus datos en `usuarios` y en `pacientes` y redirige con el mensaje de éxito) y `test_guardar_crea_la_ficha_si_no_existia` (un paciente sin fila en `pacientes` guarda y se le crea, enlazada a su cuenta) — tests/Feature/PerfilClienteTest.php — hecho cuando: los dos pasan (caracterización) y quitar un momento el `insert` de la ficha en `PerfilController::update` hace fallar el segundo; se anota la rotura — cubre: CA2 — depende: T010
 - [ ] T012 Escribir `test_recordarme_no_crea_una_cookie_de_recuerdo` (iniciar sesión con la casilla «Recordarme» marcada no deja ninguna cookie `remember_web_*` en la respuesta y `remember_token` sigue vacío) — tests/Feature/PerfilClienteTest.php — hecho cuando: pasa (caracterización) y pasar un momento `true` como `remember` a `Auth::attempt` en `AuthController` lo hace fallar; se anota la rotura — cubre: CA6 — depende: T011
 - [ ] T013 Escribir `test_el_personal_no_puede_guardar_el_perfil_de_paciente`: `PUT /cliente/perfil` como admin, dentista y asistente → 403, sin fila nueva en `pacientes`, sin cambios en su fila de `usuarios` y con un evento `acceso_denegado` en la auditoría por cada uno — tests/Feature/PerfilClienteTest.php — hecho cuando: falla por la razón esperada (hoy 302 y se crea la ficha) — cubre: CA7 — depende: T012
