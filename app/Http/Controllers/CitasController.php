@@ -496,7 +496,7 @@ class CitasController extends Controller
         ]);
 
         DB::table('citas')->where('id', $id)->update([
-            'notas_internas' => $data['notas_internas'],
+            'notas_internas' => $data['notas_internas'] ?? null,
             'actualizado_en' => now(),
         ]);
 
