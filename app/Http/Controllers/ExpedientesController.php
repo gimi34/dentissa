@@ -131,7 +131,7 @@ class ExpedientesController extends Controller
             'id' => $id,
             'paciente_id' => $data['paciente_id'],
             'dentista_id' => $data['dentista_id'],
-            'cita_id' => $data['cita_id'] ?: null,
+            'cita_id' => $data['cita_id'] ?? null,
             'diagnostico' => $data['diagnostico'],
             'tratamiento' => $data['tratamiento'] ?? null,
             'receta' => $data['receta'] ?? null,
