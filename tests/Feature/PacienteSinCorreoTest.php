@@ -54,6 +54,8 @@ class PacienteSinCorreoTest extends TestCase
 
     private const CORREO_REPETIDO = 'Este correo ya está registrado en el sistema.';
 
+    private const CORREO_DEL_PERSONAL = 'El correo de una cuenta del personal no se cambia desde Pacientes.';
+
     private const MARCA = 'Sin correo · sin acceso a la aplicación';
 
     private const AVISO = 'Ya existe un paciente con estos datos';
@@ -453,6 +455,32 @@ class PacienteSinCorreoTest extends TestCase
         $this->assertNull($this->cuentaDelPaciente($paciente)->email);
     }
 
+    /** /review R4: con el correo de una cuenta del personal, la recuperación de la 041 daría esa cuenta. */
+    #[DataProvider('quienesEditan')]
+    public function test_desde_pacientes_no_se_cambia_el_correo_de_una_cuenta_del_personal(string $rol): void
+    {
+        $ficha = $this->fichaDelPersonal('personal.ficha.054@example.test');
+        $usuario = $rol === 'admin' ? $this->admin : $this->dentista1;
+        $datos = ['nombre' => 'Personal', 'apellido' => self::APELLIDO, 'telefono' => '5550004040'];
+
+        $this->actingAs($usuario)->put("/{$rol}/pacientes/{$ficha}", $datos + ['email' => 'otro.dueno.054@example.test'])
+            ->assertSessionHasErrors(['email' => self::CORREO_DEL_PERSONAL]);
+        $this->assertSame('personal.ficha.054@example.test', $this->cuentaDelPaciente($ficha)->email, 'Conserva su correo.');
+
+        $this->actingAs($usuario)->put("/{$rol}/pacientes/{$ficha}", $datos + ['email' => 'PERSONAL.ficha.054@example.test', 'alergias' => 'Ninguna 054'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Ninguna 054', DB::table('pacientes')->where('id', $ficha)->value('alergias'), 'Con el mismo correo, la ficha se guarda.');
+    }
+
+    public function test_desde_pacientes_el_correo_de_un_paciente_se_sigue_cambiando(): void
+    {
+        $this->actingAs($this->dentista1)->put("/dentista/pacientes/{$this->p1}", [
+            'nombre' => $this->paciente1->nombre, 'apellido' => $this->paciente1->apellido, 'email' => 'p1.dentista.054@example.test',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('p1.dentista.054@example.test', $this->paciente1->fresh()->email);
+    }
+
     public function test_el_asistente_sigue_sin_poder_editar_un_paciente(): void
     {
         $paciente = $this->existente('Editable', '5550001111');
@@ -818,6 +846,20 @@ class PacienteSinCorreoTest extends TestCase
         DB::table('pacientes')->insert(array_merge(['id' => $paciente, 'usuario_id' => $usuario], $ficha));
 
         return $paciente;
+    }
+
+    /** Ficha de paciente de una cuenta del personal (existen: RS19.a). Devuelve el id de la ficha. */
+    private function fichaDelPersonal(string $correo): string
+    {
+        $usuario = (string) Str::uuid();
+        DB::table('usuarios')->insert([
+            'id' => $usuario, 'nombre' => 'Personal', 'apellido' => self::APELLIDO, 'email' => $correo,
+            'password_hash' => null, 'rol' => 'dentista', 'telefono' => '5550004040', 'activo' => 1,
+        ]);
+        $ficha = (string) Str::uuid();
+        DB::table('pacientes')->insert(['id' => $ficha, 'usuario_id' => $usuario]);
+
+        return $ficha;
     }
 
     private function cuenta(): object
