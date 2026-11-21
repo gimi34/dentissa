@@ -1,6 +1,7 @@
 ---
 spec: 054-paciente-sin-correo
 plan: plan.md
+impl_base: c97daaf
 status: approved
 ---
 
@@ -46,7 +47,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - ➖ P10: sin rutas públicas; `PaginasPublicasTest` en la suite de T092.
 
 ## Preparación
-- [ ] T001 [P] Añadir al sistema de diseño el componente «Aviso de posible duplicado» (`.aviso-duplicado`: caja `--amber-bg` con borde `--amber`, título y texto en `--text`, acciones en `.acciones-formulario` con el botón principal sobre `--p500`, en columna por debajo de 900 px, `role="alert"`) en «Aviso, diálogo y mensajes», con sus contrastes (18.31:1, 6.73:1 y 5.42:1), subir la versión a 1.21.0 (o la siguiente libre) y añadir la fila de «Decisiones» — docs/design/system.md, docs/design/system.html — hecho cuando: el componente aparece en los dos documentos con los valores de `design.md` y la versión nueva — cubre: CA3
+- [x] T001 [P] Añadir al sistema de diseño el componente «Aviso de posible duplicado» (`.aviso-duplicado`: caja `--amber-bg` con borde `--amber`, título y texto en `--text`, acciones en `.acciones-formulario` con el botón principal sobre `--p500`, en columna por debajo de 900 px, `role="alert"`) en «Aviso, diálogo y mensajes», con sus contrastes (18.31:1, 6.73:1 y 5.42:1), subir la versión a 1.21.0 (o la siguiente libre) y añadir la fila de «Decisiones» — docs/design/system.md, docs/design/system.html — hecho cuando: el componente aparece en los dos documentos con los valores de `design.md` y la versión nueva — cubre: CA3
+  - nota: componente en «Aviso, diálogo y mensajes» de `system.md` y en `system.html` (sección `aviso-054`), con sus contrastes y la regla del botón de envío por defecto (A10); versión 1.21.0 y fila en «Decisiones».
 - [ ] T002 [P] Crear la migración que hace nulable `usuarios.email` con `DB::statement('ALTER TABLE usuarios MODIFY email VARCHAR(255) NULL')` y un `down()` que vuelve a `NOT NULL` solo si no hay correos nulos y, si los hay, lanza una excepción con el motivo (Rollout del plan) — database/migrations/2026_11_20_000000_correo_opcional_en_usuarios.php — hecho cuando: `migrate --force` sobre `dentissa_test` la aplica, la columna admite nulos y conserva `uq_usuarios_email` y la intercalación; `migrate:rollback --step=1` sin nulos la revierte y con un nulo falla con el mensaje; otro `migrate` la deja aplicada (anotado en la nota) — cubre: CA1
 - [ ] T003 Fijar la línea base de la suite en la rama con la migración aplicada, comprobar que sigue al día con `main` (D11) y si la 052 ya está en `main`; si lo está, añadir una tarea que haga que su recordatorio se salte las cuentas sin correo sin contarlo como fallo (/analyze A8) — rama `feature/054-paciente-sin-correo` — hecho cuando: `php artisan test` pasa completo y el número de tests, el commit de `main` y el estado de la 052 quedan en la nota — depende: T002
 
