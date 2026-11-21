@@ -616,6 +616,50 @@ class PacienteSinCorreoTest extends TestCase
         $this->assertSame(0, $this->auditoriaDelTest()->where('accion', 'paciente_correo_anadido')->count());
     }
 
+    /** /review R3: añadir el correo desde «Usuarios» deja el mismo evento que desde «Pacientes». */
+    public function test_anadir_el_correo_desde_usuarios_registra_el_evento(): void
+    {
+        $paciente = $this->existente('Usuarios', '5550003030');
+        $cuenta = $this->cuentaDelPaciente($paciente);
+
+        $this->actingAs($this->admin)->put("/admin/usuarios/{$cuenta->id}", $this->edicionDeUsuario('desde.usuarios.054@example.test'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('desde.usuarios.054@example.test', $this->cuentaDelPaciente($paciente)->email);
+        $eventos = $this->auditoriaDelTest()->where('accion', 'paciente_correo_anadido')->get();
+        $this->assertCount(1, $eventos);
+        $evento = $eventos->first();
+        $this->assertSame($this->admin->id, $evento->actor_id);
+        $this->assertSame('exito', $evento->resultado);
+        $this->assertSame('pacientes', $evento->recurso_tipo);
+        $this->assertSame($paciente, $evento->recurso_id);
+        $this->assertSame(['email'], json_decode($evento->campos, true));
+        $this->assertSame(['acceso_posible' => true], json_decode($evento->detalle, true));
+        $this->assertSinDatosPersonales($evento, ['desde.usuarios.054@example.test', 'Usuarios']);
+    }
+
+    public function test_cambiar_un_correo_existente_desde_usuarios_no_lo_registra(): void
+    {
+        $this->actingAs($this->admin)->put("/admin/usuarios/{$this->paciente1->id}", array_merge(
+            $this->edicionDeUsuario('p1.usuarios.054@example.test'),
+            ['nombre' => $this->paciente1->nombre, 'apellido' => $this->paciente1->apellido],
+        ))->assertSessionHasNoErrors();
+
+        $this->assertSame(0, $this->auditoriaDelTest()->where('accion', 'paciente_correo_anadido')->count());
+    }
+
+    public function test_si_la_auditoria_falla_desde_usuarios_no_se_guarda_el_correo(): void
+    {
+        $paciente = $this->existente('Usuarios', '5550003030');
+        $cuenta = $this->cuentaDelPaciente($paciente);
+        $this->almacenQueFalla();
+
+        $this->actingAs($this->admin)->put("/admin/usuarios/{$cuenta->id}", $this->edicionDeUsuario('falla.usuarios.054@example.test'))
+            ->assertStatus(503);
+
+        $this->assertNull($this->cuentaDelPaciente($paciente)->email, 'Sin evento, sin correo.');
+    }
+
     public function test_si_la_auditoria_falla_no_se_da_el_alta(): void
     {
         $this->almacenQueFalla();
@@ -746,6 +790,13 @@ class PacienteSinCorreoTest extends TestCase
     private function edicion(array $cambios = []): array
     {
         return array_merge(['nombre' => 'Editable', 'apellido' => self::APELLIDO, 'email' => '', 'telefono' => '5550001111'], $cambios);
+    }
+
+    /** Datos del formulario de «Usuarios» (spec 010) para una cuenta de paciente activa. */
+    private function edicionDeUsuario(string $correo): array
+    {
+        return ['nombre' => 'Usuarios', 'apellido' => self::APELLIDO, 'email' => $correo, 'telefono' => '5550003030',
+            'rol' => 'cliente', 'activo' => '1'];
     }
 
     private function alta(string $rol, array $datos): TestResponse
