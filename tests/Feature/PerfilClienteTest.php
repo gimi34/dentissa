@@ -136,6 +136,27 @@ class PerfilClienteTest extends TestCase
         $this->assertAuthenticatedAs($conGoogle);
     }
 
+    // ── CA7 · el personal no guarda el perfil de paciente ─────────────────────────────
+
+    /** CA7, TM1, P3: admin, dentista y asistente reciben 403, sin ficha nueva ni cambios, y queda el acceso denegado (020). */
+    public function test_el_personal_no_puede_guardar_el_perfil_de_paciente(): void
+    {
+        foreach ([$this->admin, $this->dentista1, $this->asistente] as $personal) {
+            $antes = DB::table('usuarios')->where('id', $personal->id)->first();
+
+            $this->actingAs($personal)->from(self::PERFIL)
+                ->put(self::PERFIL, $this->datosDelPerfil($personal, ['nombre' => 'Cambiado', 'apellido' => 'Por El Perfil']))
+                ->assertForbidden();
+
+            $this->assertSame(0, DB::table('pacientes')->where('usuario_id', $personal->id)->count(), "{$personal->rol}: sin ficha de paciente.");
+            $this->assertEquals($antes, DB::table('usuarios')->where('id', $personal->id)->first(), "{$personal->rol}: su cuenta no cambia.");
+
+            $evento = DB::table('auditoria')->where('accion', 'acceso_denegado')->where('actor_id', $personal->id)->sole();
+            $this->assertSame('denegado', $evento->resultado);
+            $this->assertSame(['accion_solicitada' => 'cliente.perfil.update'], json_decode($evento->detalle, true));
+        }
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
 
     /** Deja el navegador de la prueba sin sesión ni usuario, como otro equipo (patrón de SesionVigenteTest). */

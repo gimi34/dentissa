@@ -210,7 +210,8 @@ Route::middleware('auth')->prefix('cliente')->name('cliente.')->group(function (
     Route::post('/agendar', [ClienteCitasController::class, 'agendarStore'])->name('agendar.store');
 
     Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil');
-    Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
+    // Spec 011 (D3, CA7): solo el paciente guarda el perfil, y nunca se crea una ficha a otra cuenta; abrirlo → spec 015.
+    Route::put('/perfil', [PerfilController::class, 'update'])->middleware('role:cliente')->name('perfil.update');
     // Spec 043 (D8, CA8): solo el paciente cambia su contraseña aquí; el resto del grupo → spec 015 (RS2.a).
     Route::put('/perfil/password', [PerfilController::class, 'updatePassword'])->middleware('role:cliente')->name('perfil.password');
 });
