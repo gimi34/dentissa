@@ -104,7 +104,7 @@ técnico, sin datos personales (CA8, CA11).
 Quien lo recibe tiene que ver de un vistazo, en el móvil, qué día y a qué hora es su cita y dónde,
 con un tono amable de recordatorio, como el recordatorio de WhatsApp y la tarjeta de cita que
 describe `docs/design/nicho.md` («día y hora en grande»). Sistema:
-[docs/design/system.md](../../design/system.md).
+[docs/design/system.md](../../design/system.md). Acta: [design.md](design.md) (`c2`, 82/100).
 
 - Qué debe lograr: en cinco segundos, quien abre el correo sabe qué día y a qué hora es su cita, con
   qué dentista y dónde; la única acción es «Ver mis citas».
@@ -155,6 +155,7 @@ Ninguna.
 | 2026-11-20 | supuesto | Tope diario | 250 recordatorios al día; el exceso sale al día siguiente si la cita no ha empezado (CA11) | /specify |
 | 2026-11-20 | supuesto | ¿Incluir el servicio aunque insinúe un tratamiento? | Sí, es el que eligió o le asignaron al paciente; nada del expediente ni notas (CA10) | /specify |
 | 2026-11-20 | supuesto | Citas que ya están a menos de 24 h el día que se libera esta spec | Reciben su recordatorio según CA2 si no han empezado | /specify |
+| 2026-11-21 | diseño | Diseño del correo de recordatorio | `c2` aceptado con 82/100: la fecha y la hora en una tarjeta con la semana de la consulta y el día marcado; «Con», «Servicio» y «Dónde» antes de «Ver mis citas»; teléfono y horario en el talón; sin cambios al sistema | [design.md](design.md) |
 
 ## Notas para /plan
 - `citas.recordatorio_enviado` (tinyint) ya existe y se lee en `CitasController.php:38` y

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!-- Candidato c1 (cita sin servicio) de /design-spec 052: el correo de recordatorio sobre el marco de los correos del acceso (spec 041,
+     resources/views/correos/marco-acceso.blade.php y acceso.css, copiada abajo tal cual). Lo nuevo va en
+     <style id="cambios-052">. Datos del volcado ficticio y de config/clinica.php. Se mide servido por HTTP con la
+     raíz en el repo (el logo se pide a /public/images/logo-main.png, en el correo real a APP_URL). -->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu cita es mañana, jueves 26 de noviembre, a las 10:30</title>
+<style id="acceso-041">
+body { margin: 0; padding: 0; background-color: #FDF5F8; color: #000000; font-family: Roboto, system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+.correo-exterior { padding: 16px; }
+.correo { max-width: 480px; background-color: #FFFFFF; border-radius: 10px; }
+.correo-cab { color: #FFFFFF; background-color: #72243E; background-image: linear-gradient(145deg, #993556 0%, #7A1F3A 60%, #4B1528 100%); padding: 28px 20px; border-radius: 10px 10px 0 0; text-align: center; }
+.correo-logo { display: block; width: 140px; height: auto; margin: 0 auto; }
+.correo-cuerpo { padding: 28px 20px 16px; }
+h1 { margin: 0 0 16px; color: #000000; font-size: 28px; font-weight: 600; line-height: 1.15; }
+p { margin: 0 0 16px; font-size: 14px; line-height: 1.5; }
+.correo-boton { margin: 0 0 16px; }
+.btn-primario { display: block; padding: 14px 20px; border-radius: 10px; background-color: #B83C65; color: #FFFFFF; font-size: 15px; font-weight: 500; text-align: center; text-decoration: none; }
+.url { color: #B83C65; font-size: 12px; overflow-wrap: anywhere; word-break: break-all; }
+.linea-celda { padding: 0 20px; }
+.linea { border-top: 1px solid #F0DCE4; }
+.talon-celda { padding: 16px 20px 20px; border-radius: 0 0 10px 10px; }
+.talon { margin: 0; font-size: 13px; line-height: 1.5; }
+dt { margin: 0; color: #000000; font-weight: 500; }
+dd { margin: 0 0 8px; }
+.tel { white-space: nowrap; }
+.rango { white-space: nowrap; }
+</style>
+<style id="cambios-052">
+/* 052 · c1: el día y la hora como tarjeta de cita (nicho.md: «día y hora en grande»), lo primero tras el saludo;
+   debajo, con quién y qué; el contacto de la clínica en el talón, como en los correos del acceso.
+   Valores copiados de tokens (--p100, --p600, --text-acceso-titulo, --text-acceso-lema, --text-acceso-destacado,
+   --text-acceso-small, --text-meta). */
+.saludo { margin: 0 0 4px; font-size: 16.8px; font-weight: 500; }
+.cita { width: 100%; margin: 0 0 20px; background-color: #FBEAF0; border-radius: 10px; }
+.cita-celda { padding: 20px; }
+.cita-etiqueta { margin: 0 0 4px; color: #993556; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.cita-dia { margin: 0 0 4px; font-size: 28px; font-weight: 600; line-height: 1.15; }
+.cita-hora { margin: 0; color: #993556; font-size: 30px; font-weight: 600; line-height: 1.15; }
+.datos { margin: 0 0 20px; font-size: 14px; }
+.datos dt { color: #000000; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.datos dd { margin: 0 0 12px; font-size: 16.8px; }
+.nota { font-size: 13px; }
+</style>
+</head>
+<body>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td class="correo-exterior" align="center">
+        <table role="presentation" class="correo" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td class="correo-cab"><img class="correo-logo" src="/public/images/logo-main.png" alt="Melissa López N. · Odontología integral" width="140" height="102" data-origen="propia"></td></tr>
+            <tr><td class="correo-cuerpo">
+                <p class="saludo">Hola, Fernanda:</p>
+                <p>Te recordamos tu cita de mañana en la consulta.</p>
+                <table role="presentation" class="cita" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td class="cita-celda">
+                        <p class="cita-etiqueta">Tu cita</p>
+                        <h1 class="cita-dia">Jueves 26 de noviembre de 2026</h1>
+                        <p class="cita-hora">10:30</p>
+                    </td></tr>
+                </table>
+                <dl class="datos">
+                    <dt>Con</dt><dd>Dra. Melissa López</dd>
+                </dl>
+                <p class="correo-boton"><a class="btn-primario" href="https://dentissa.app/cliente/citas">Ver mis citas</a></p>
+                <p class="nota">Si necesitas cambiarla o cancelarla, entra en «Mis citas» o llama a la consulta. Este correo es solo un recordatorio: no hace falta responderlo.</p>
+            </td></tr>
+            <tr><td class="linea-celda"><div class="linea" aria-hidden="true"></div></td></tr>
+            <tr><td class="talon-celda"><dl class="talon">
+                <dt>Dónde</dt><dd>Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950</dd>
+                <dt>Teléfono</dt><dd><span class="tel">753 000 0000</span></dd>
+            </dl></td></tr>
+        </table>
+    </td></tr>
+</table>
+</body>
+</html>
