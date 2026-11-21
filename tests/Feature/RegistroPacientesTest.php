@@ -177,6 +177,30 @@ class RegistroPacientesTest extends TestCase
         $this->assertFalse($xpath->query("//input[@name='terminos']")->item(0)->hasAttribute('checked'), 'La casilla vuelve sin marcar.');
     }
 
+    /**
+     * CA8, TM1 (/review R1): con otro campo inválido, la respuesta es la misma tenga o no cuenta el correo; el correo
+     * repetido solo se comprueba cuando el resto del formulario es válido.
+     */
+    public function test_otro_error_no_revela_si_el_correo_tiene_cuenta(): void
+    {
+        $existente = $this->crearCuentaExistente();
+        $nuevo = 'nuevo.'.Str::lower(Str::random(10)).'@example.test';
+
+        foreach (['sin los términos' => ['terminos' => null], 'con la confirmación distinta' => ['password_confirmation' => 'otra-confirmacion-9']] as $caso => $cambios) {
+            $errores = [];
+            foreach ([$existente, $nuevo] as $correo) {
+                $datos = array_filter($this->datosDelAlta(array_merge(['email' => $correo], $cambios)), fn ($valor) => $valor !== null);
+                $this->from('/registro')->post('/registro', $datos)->assertRedirect('/registro');
+                $errores[] = $this->erroresDeLaSesion();
+            }
+
+            $this->assertArrayNotHasKey('email', $errores[0], "{$caso}: el correo registrado no da error propio.");
+            $this->assertSame($errores[1], $errores[0], "{$caso}: la misma respuesta con un correo registrado o nuevo.");
+        }
+        $this->assertSame(1, Usuario::where('email', $existente)->count());
+        $this->assertDatabaseMissing('usuarios', ['email' => $nuevo]);
+    }
+
     /** A13: el correo que vuelve al campo va escapado. */
     public function test_el_correo_que_vuelve_va_escapado(): void
     {
@@ -253,6 +277,12 @@ class RegistroPacientesTest extends TestCase
     }
 
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
+
+    /** Los errores que dejó la última respuesta; al guardarse, la sesión los serializa como array. */
+    private function erroresDeLaSesion(): array
+    {
+        return session('errors')['default']['messages'] ?? [];
+    }
 
     private function crearCuentaExistente(): string
     {
