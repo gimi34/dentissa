@@ -1,7 +1,7 @@
 ---
 spec: 052-recordatorio-correo
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 052 Recordatorio de cita por correo
