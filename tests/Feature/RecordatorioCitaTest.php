@@ -4,10 +4,13 @@ namespace Tests\Feature;
 
 use App\Mail\RecordatorioCita;
 use Carbon\CarbonImmutable;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\Feature\Concerns\EscenarioEstadosCita;
 use Tests\Support\CapturaLogs;
 use Tests\TestCase;
@@ -181,5 +184,207 @@ class RecordatorioCitaTest extends TestCase
                 $_ENV['RECORDATORIOS_CORREO'] = $_SERVER['RECORDATORIOS_CORREO'] = $antes;
             }
         }
+    }
+
+    // ── Envío: sin duplicados, reprogramación, fallos, tope y registros (T011) ───────────────────
+
+    /** CA3: una segunda revisión no reenvía. */
+    public function test_una_segunda_revision_no_reenvia(): void
+    {
+        $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+
+        $this->revisar();
+        $this->travel(1)->minutes();
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 1);
+    }
+
+    /**
+     * CA3, TM6 (/analyze A3): si otra revisión reclama la cita entre la lectura y el reclamo, esta no
+     * envía nada. Se simula marcando la cita justo después de que la revisión lee las candidatas.
+     */
+    public function test_dos_revisiones_no_envian_dos_veces(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $hecho = false;
+        DB::listen(function (QueryExecuted $consulta) use ($cita, &$hecho) {
+            if (! $hecho && str_starts_with(ltrim(strtolower($consulta->sql)), 'select') && str_contains($consulta->sql, 'recordatorio_enviado')) {
+                $hecho = true;
+                DB::table('citas')->where('id', $cita)->update(['recordatorio_enviado' => 1]);
+            }
+        });
+
+        $this->revisar();
+
+        $this->assertTrue($hecho, 'Control: la revisión leyó las candidatas.');
+        Mail::assertNothingSent();
+    }
+
+    /** CA4: reprogramar reinicia la marca y sale el recordatorio de la fecha nueva. */
+    public function test_reprogramar_reinicia_el_recordatorio_y_sale_otro(): void
+    {
+        $this->conHorarios();
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $this->revisar();
+        $this->assertSame(1, $this->marcaDe($cita));
+
+        $this->reprogramar($this->admin, $cita, '2026-11-26', '11:00')->assertStatus(302)->assertSessionHasNoErrors();
+        $this->assertSame(0, $this->marcaDe($cita), 'La marca ya no vale para la fecha nueva.');
+
+        $this->travel(1)->hours();
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 2);
+        $this->assertSame(1, $this->marcaDe($cita));
+    }
+
+    /** CA5: cancelar después del recordatorio no genera ningún otro correo. */
+    public function test_cancelar_despues_del_recordatorio_no_envia_otro_correo(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $this->revisar();
+
+        $this->cambiar($this->admin, $cita, 'cancelada', 'El paciente avisó')->assertStatus(302);
+        $this->travel(1)->minutes();
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 1);
+    }
+
+    /** CA8, TM8: un fallo del correo no marca la cita y la revisión siguiente lo reintenta. */
+    public function test_un_fallo_del_correo_no_marca_la_cita_y_se_reintenta(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $logs = CapturaLogs::instalar();
+        Mail::shouldReceive('to')->andThrow(new TransportException('Fallo SMTP con '.$this->paciente1->email));
+
+        $this->revisar();
+
+        $this->assertSame(0, $this->marcaDe($cita), 'La cita no queda como avisada.');
+        $fallos = array_values(array_filter($logs->registros(), fn ($r) => $r['mensaje'] === 'recordatorio.correo_fallido'));
+        $this->assertCount(1, $fallos);
+        $this->assertSame('error', $fallos[0]['nivel']);
+        $this->assertSame(['error' => 'TransportException'], $fallos[0]['contexto']);
+
+        Mail::fake();
+        $this->travel(1)->minutes();
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 1);
+        $this->assertSame(1, $this->marcaDe($cita));
+    }
+
+    /**
+     * CA8, P8 (/analyze A2): un error al reclamar una cita (p. ej. de la base) se captura sin datos de la
+     * cita, la cita no queda avisada y la revisión sigue con las demás.
+     */
+    public function test_un_error_al_reclamar_no_deja_datos_en_el_registro(): void
+    {
+        $fallida = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $otra = $this->cita($this->d2, $this->p2, 'agendada', $this->dentroDe('+3 hours'));
+        $fecha = (string) DB::table('citas')->where('id', $fallida)->value('fecha_hora');
+        $logs = CapturaLogs::instalar();
+        $lanzado = false;
+        DB::listen(function (QueryExecuted $consulta) use ($fallida, $fecha, &$lanzado) {
+            if (! $lanzado && str_starts_with(ltrim(strtolower($consulta->sql)), 'update') && in_array($fallida, $consulta->bindings, true)) {
+                $lanzado = true;
+                throw new \RuntimeException("Deadlock al actualizar la cita {$fallida} del {$fecha}");
+            }
+        });
+
+        $this->revisar();
+
+        $this->assertTrue($lanzado, 'Control: el reclamo de la cita falló.');
+        Mail::assertSent(RecordatorioCita::class, 1);
+        Mail::assertSent(RecordatorioCita::class, fn ($correo) => $correo->hasTo($this->paciente2->email));
+        $this->assertSame(0, $this->marcaDe($fallida), 'La cita que falló no queda avisada.');
+        $this->assertSame(1, $this->marcaDe($otra));
+        $texto = $logs->comoTexto();
+        $this->assertStringContainsString('recordatorio.correo_fallido', $texto);
+        $this->assertStringNotContainsString($fallida, $texto);
+        $this->assertStringNotContainsString(substr($fecha, 0, 10), $texto);
+    }
+
+    /** CA11, TM4 (/analyze A4): el tope del día aplaza el exceso al día siguiente y avisa una sola vez. */
+    public function test_el_tope_diario_aplaza_el_exceso_al_dia_siguiente(): void
+    {
+        config(['recordatorios.tope_diario' => 2]);
+        $primera = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $segunda = $this->cita($this->d2, $this->p2, 'agendada', $this->dentroDe('+3 hours'));
+        $tercera = $this->cita($this->d1, $this->p1, 'confirmada', $this->dentroDe('+20 hours'));
+        $logs = CapturaLogs::instalar();
+
+        $this->revisar();
+        $this->travel(1)->minutes();
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 2);
+        $this->assertSame([1, 1, 0], [$this->marcaDe($primera), $this->marcaDe($segunda), $this->marcaDe($tercera)], 'Salen las dos más cercanas.');
+        $topes = array_filter($logs->registros(), fn ($r) => $r['mensaje'] === 'recordatorio.tope_diario');
+        $this->assertCount(1, $topes, 'Una sola línea al día aunque la revisión siga corriendo.');
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-26 00:05:00', config('clinica.zona_horaria')));
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 3);
+        $this->assertSame(1, $this->marcaDe($tercera), 'Al día siguiente sale la aplazada.');
+    }
+
+    /** P8, CA8, CA11, TM5: los tres eventos técnicos, solo con contadores o la clase del error. */
+    public function test_los_registros_no_llevan_datos_personales(): void
+    {
+        config(['recordatorios.tope_diario' => 1]);
+        $enviada = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $aplazada = $this->cita($this->d2, $this->p2, 'agendada', $this->dentroDe('+3 hours'));
+        $servicio = DB::table('servicios')->first();
+        DB::table('citas')->whereIn('id', [$enviada, $aplazada])->update(['servicio_id' => $servicio->id]);
+        $logs = CapturaLogs::instalar();
+
+        $this->revisar();
+        $this->travelTo(CarbonImmutable::parse('2026-11-26 00:05:00', config('clinica.zona_horaria')));
+        Mail::shouldReceive('to')->andThrow(new TransportException('Fallo SMTP con '.$this->paciente2->email));
+        $this->revisar();
+
+        $porMensaje = [];
+        foreach ($logs->registros() as $registro) {
+            $porMensaje[$registro['mensaje']][] = $registro['contexto'];
+        }
+        $this->assertSame(['tope' => 1], $porMensaje['recordatorio.tope_diario'][0] ?? null);
+        $this->assertSame(['error' => 'TransportException'], $porMensaje['recordatorio.correo_fallido'][0] ?? null);
+        $this->assertNotEmpty($porMensaje['recordatorio.revision'] ?? []);
+        foreach ($porMensaje['recordatorio.revision'] as $contexto) {
+            $this->assertSame(['enviados', 'fallidos', 'aplazados'], array_keys($contexto));
+        }
+
+        $texto = $logs->comoTexto();
+        foreach ([$this->paciente1->email, $this->paciente2->email, 'Pablo', 'Paula', 'Diego', 'Dora', $enviada, $aplazada, '2026-11-25', '12:30', $servicio->nombre] as $dato) {
+            $this->assertStringNotContainsString($dato, $texto, "El registro no lleva «{$dato}».");
+        }
+    }
+
+    /** D2: marcar la cita no cambia su fecha de modificación (la columna tiene ON UPDATE). */
+    public function test_la_marca_no_cambia_actualizado_en(): void
+    {
+        $cita = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        DB::table('citas')->where('id', $cita)->update(['actualizado_en' => '2026-11-20 08:00:00']);
+
+        $this->revisar();
+
+        $this->assertSame(1, $this->marcaDe($cita));
+        $this->assertSame('2026-11-20 08:00:00', (string) DB::table('citas')->where('id', $cita)->value('actualizado_en'));
+    }
+
+    /** CA1, CA2, RNF de entrega: la revisión está programada cada minuto y sin solaparse. */
+    public function test_la_revision_corre_cada_minuto(): void
+    {
+        $eventos = array_values(array_filter(
+            app(Schedule::class)->events(),
+            fn ($evento) => str_contains((string) $evento->command, 'dentissa:recordatorios'),
+        ));
+
+        $this->assertCount(1, $eventos);
+        $this->assertSame('* * * * *', $eventos[0]->expression);
+        $this->assertTrue($eventos[0]->withoutOverlapping);
     }
 }
