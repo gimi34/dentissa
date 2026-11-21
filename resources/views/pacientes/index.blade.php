@@ -129,7 +129,12 @@
                                 </div>
                                 <div class="texto-partible">
                                     <div style="font-weight:500">{{ $p->nombre_completo }}</div>
-                                    <div class="solo-escritorio" style="font-size:11.5px;color:var(--text-muted)">{{ $p->email }}</div>
+                                    @if($p->email)
+                                        <div class="solo-escritorio" style="font-size:11.5px;color:var(--text-muted)">{{ $p->email }}</div>
+                                    @else
+                                        {{-- Spec 054 (CA4): también en el móvil, donde el correo no se ve. --}}
+                                        <div class="marca-sin-correo">Sin correo · sin acceso a la aplicación</div>
+                                    @endif
                                 </div>
                             </div>
                         </td>

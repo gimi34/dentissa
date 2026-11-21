@@ -64,16 +64,15 @@
             </div>
 
             <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;text-align:left">
-                @if($paciente->email)
-                    <div class="perfil-dato texto-partible">
-                        <span class="solo-movil perfil-etiqueta">Correo</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2" aria-hidden="true">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                            <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                        <span class="dato-recortado texto-partible">{{ $paciente->email }}</span>
-                    </div>
-                @endif
+                {{-- Spec 054 (CA4): la fila «Correo» aparece siempre; sin correo, lo dice. --}}
+                <div class="perfil-dato texto-partible">
+                    <span class="solo-movil perfil-etiqueta">Correo</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p300)" stroke-width="2" aria-hidden="true">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <span class="dato-recortado texto-partible">{{ $paciente->email ?: 'Sin correo · sin acceso a la aplicación' }}</span>
+                </div>
                 @if($paciente->telefono)
                     <div class="perfil-dato texto-partible">
                         <span class="solo-movil perfil-etiqueta">Teléfono</span>
