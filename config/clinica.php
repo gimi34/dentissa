@@ -45,12 +45,18 @@ return [
     | pastilla «¿Abierto ahora?» de la portada (spec 038, D16); un test lo
     | mantiene igual que `horario`.
     |
+    | `whatsapp_mensaje` es el mensaje ya escrito del botón «Escríbenos por
+    | WhatsApp» de la portada (spec 053, CA3). El chat va al número de
+    | `telefono_enlace`, así que el teléfono de la página y el de WhatsApp no
+    | pueden separarse (D1).
+    |
     */
 
     'contacto' => [
         'direccion' => 'Av. Insurgentes 450, Col. Centro, Lázaro Cárdenas, Mich., C.P. 60950',
         'telefono' => '753 000 0000',
         'telefono_enlace' => 'tel:+527530000000',
+        'whatsapp_mensaje' => 'Hola, quiero información para agendar una cita.',
         'horario' => ['Lunes a viernes' => '9:00–20:00', 'Sábados' => '9:00–14:00'],
         'horario_semanal' => [
             1 => ['9:00', '20:00'],

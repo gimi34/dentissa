@@ -40,7 +40,8 @@
             <ul class="pub-hero__facts">
                 <li><span class="pub-status" data-live data-horario="{{ json_encode($contacto['horario_semanal']) }}" data-zona="{{ config('clinica.zona_horaria') }}"><span class="pub-status__dot" aria-hidden="true"></span><span class="pub-status__text" aria-live="polite"></span></span></li>
                 <li>{{ $horario }}</li>
-                <li><a href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a></li>
+                {{-- Spec 053 (CA1): el teléfono y «Escríbenos por WhatsApp», un mismo grupo de contacto. --}}
+                <li class="pub-hero__contacto"><a href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a>@include('publico._boton-whatsapp')</li>
             </ul>
             {{-- Spec 044 (CA5): con sesión, la cuenta se resume en «Ir a mi panel». --}}
             <p class="pub-acceso">@if ($panel)<a href="{{ $panel }}">Ir a mi panel</a>@else<a href="{{ route('login') }}">Iniciar sesión</a><a href="{{ route('register') }}">Crear cuenta</a>@endif</p>
@@ -192,7 +193,9 @@
                     </div>
                 </dl>
                 <a class="pub-visit__tel" href="{{ $contacto['telefono_enlace'] }}">{{ $contacto['telefono'] }}</a>
-                <div>
+                {{-- Spec 053 (CA2): WhatsApp junto al teléfono, antes de «Cómo llegar». --}}
+                <div class="pub-visit__acciones">
+                    @include('publico._boton-whatsapp')
                     {{-- TM5: el mapa aparte se abre en otra pestaña sin acceso a esta página. --}}
                     <a class="c-btn c-btn--ink" href="https://www.google.com/maps/dir/?api=1&destination={{ rawurlencode($contacto['direccion']) }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar (se abre en una pestaña nueva)">Cómo llegar <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
                 </div>

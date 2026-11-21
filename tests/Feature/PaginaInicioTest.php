@@ -438,4 +438,214 @@ class PaginaInicioTest extends TestCase
         $this->assertSame('Mapa de Google con la ubicación de la consulta', $mapa->getAttribute('title'));
         $this->assertStringContainsString('El mapa lo sirve Google.', $this->texto($respuesta->getContent()));
     }
+
+    // ── Spec 053: «Escríbenos por WhatsApp» en la primera pantalla y en contacto ──────────────────
+
+    /** Los elementos hijos de un nodo, sin textos ni comentarios. */
+    private function hijos(DOMNode $nodo): array
+    {
+        return array_values(array_filter(iterator_to_array($nodo->childNodes), fn ($hijo) => $hijo instanceof DOMElement));
+    }
+
+    private function tieneClase(DOMElement $elemento, string $clase): bool
+    {
+        return in_array($clase, preg_split('/\s+/', trim($elemento->getAttribute('class'))), true);
+    }
+
+    /** `/` como visitante (null) o con la sesión de un rol. */
+    private function inicioComo(?string $rol): string
+    {
+        $peticion = $rol === null ? $this : $this->actingAs($this->crearUsuario($rol));
+
+        return $peticion->get('/')->assertOk()->getContent();
+    }
+
+    /** CA1 (amplía 038 CA1): junto al horario y el teléfono, con y sin sesión. */
+    public function test_whatsapp_en_la_primera_pantalla_junto_al_telefono(): void
+    {
+        foreach ([null, 'admin', 'dentista', 'asistente', 'cliente'] as $rol) {
+            $quien = $rol ?? 'visitante';
+            $xpath = $this->xpath($this->inicioComo($rol));
+            $presentacion = $this->porClase($xpath, 'pub-hero');
+            $datos = $this->porClase($xpath, 'pub-hero__facts', $presentacion);
+            $this->assertNotNull($datos, "{$quien}: la lista del horario y el teléfono.");
+
+            // El horario sigue en su propio elemento de la lista; el teléfono y WhatsApp forman un grupo.
+            $this->assertSame(1, $xpath->query('./li[normalize-space()="Lunes a viernes 9:00–20:00 · Sábados 9:00–14:00"]', $datos)->length, "{$quien}: el horario en la misma lista.");
+            $grupo = $xpath->query('./li[contains(concat(" ", normalize-space(@class), " "), " pub-hero__contacto ")]', $datos);
+            $this->assertSame(1, $grupo->length, "{$quien}: un grupo de contacto en la lista.");
+
+            $hijos = $this->hijos($grupo->item(0));
+            $this->assertCount(2, $hijos, "{$quien}: el teléfono y WhatsApp, nada más.");
+            $this->assertSame('tel:+527530000000', $hijos[0]->getAttribute('href'), "{$quien}: primero el teléfono.");
+            $this->assertSame('753 000 0000', $this->textoDe($hijos[0]));
+            $this->assertTrue($this->tieneClase($hijos[1], 'pub-wa'), "{$quien}: después, el botón de WhatsApp.");
+            $this->assertSame('Escríbenos por WhatsApp', $this->textoDe($hijos[1]));
+
+            $this->assertSame(1, $xpath->query('.//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]', $presentacion)->length, "{$quien}: un solo WhatsApp en la presentación.");
+        }
+    }
+
+    /** CA2 (amplía 038 CA5): en contacto, después del teléfono y antes de «Cómo llegar». */
+    public function test_whatsapp_en_contacto_junto_al_telefono(): void
+    {
+        $xpath = $this->xpath($this->inicioComo(null));
+        $ubicacion = $xpath->query('//*[@id="ubicacion"]')->item(0);
+        $telefono = $this->porClase($xpath, 'pub-visit__tel', $ubicacion);
+        $this->assertNotNull($telefono, 'El teléfono de contacto.');
+
+        $acciones = $telefono->nextElementSibling;
+        $this->assertNotNull($acciones, 'Algo sigue al teléfono.');
+        $this->assertTrue($this->tieneClase($acciones, 'pub-visit__acciones'), 'Justo después del teléfono, el grupo de acciones.');
+
+        $hijos = $this->hijos($acciones);
+        $this->assertCount(2, $hijos, 'WhatsApp y «Cómo llegar», nada más.');
+        $this->assertTrue($this->tieneClase($hijos[0], 'pub-wa'), 'Primero WhatsApp.');
+        $this->assertSame('Escríbenos por WhatsApp', $this->textoDe($hijos[0]));
+        $this->assertSame('Cómo llegar', $this->textoDe($hijos[1]), 'Después, «Cómo llegar».');
+
+        $this->assertSame(2, $xpath->query('//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]')->length, 'Dos botones en la página: la presentación y el contacto.');
+    }
+
+    /** El enlace de los dos botones (plan «Contratos y datos»). */
+    private const WHATSAPP = 'https://wa.me/527530000000?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20agendar%20una%20cita.';
+
+    /** Los dos botones de WhatsApp de la página, en el orden del documento. */
+    private function botonesWhatsapp(DOMXPath $xpath): array
+    {
+        return iterator_to_array($xpath->query('//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]'));
+    }
+
+    /** CA3, TM1, TM4: el número del teléfono de la página, el mensaje escrito y la página sigue abierta. */
+    public function test_el_enlace_abre_whatsapp_con_el_numero_y_el_mensaje(): void
+    {
+        $botones = $this->botonesWhatsapp($this->xpath($this->inicioComo(null)));
+        $this->assertCount(2, $botones);
+
+        $digitos = preg_replace('/\D/', '', config('clinica.contacto.telefono_enlace'));
+        $this->assertSame('527530000000', $digitos, 'El teléfono de la página, con la clave de México.');
+
+        foreach ($botones as $i => $boton) {
+            $href = $boton->getAttribute('href');
+            $this->assertSame(self::WHATSAPP, $href, "Botón {$i}: el enlace exacto.");
+            $this->assertSame("https://wa.me/{$digitos}", strtok($href, '?'), "Botón {$i}: el mismo número que el teléfono de la página.");
+            parse_str((string) parse_url($href, PHP_URL_QUERY), $consulta);
+            $this->assertSame(['text' => 'Hola, quiero información para agendar una cita.'], $consulta, "Botón {$i}: solo el mensaje escrito.");
+
+            // En un ordenador, WhatsApp Web se abre en otra pestaña sin acceso a esta (TM1).
+            $this->assertSame('_blank', $boton->getAttribute('target'), "Botón {$i}: en otra pestaña.");
+            $rel = preg_split('/\s+/', trim($boton->getAttribute('rel')));
+            $this->assertContains('noopener', $rel, "Botón {$i}: noopener.");
+            $this->assertContains('noreferrer', $rel, "Botón {$i}: noreferrer.");
+        }
+    }
+
+    /** CA4: un enlace del HTML del servidor, sin nada que dependa de JavaScript. */
+    public function test_el_boton_no_depende_de_javascript(): void
+    {
+        $botones = $this->botonesWhatsapp($this->xpath($this->inicioComo(null)));
+        $this->assertCount(2, $botones, 'Los dos botones llegan en el HTML del servidor.');
+
+        foreach ($botones as $i => $boton) {
+            $this->assertSame('a', $boton->tagName, "Botón {$i}: un enlace.");
+            $this->assertStringStartsWith('https://wa.me/', $boton->getAttribute('href'), "Botón {$i}: con su destino en el HTML.");
+            foreach (iterator_to_array($boton->attributes) as $atributo) {
+                $this->assertDoesNotMatchRegularExpression('/^(on|data-)/i', $atributo->name, "Botón {$i}: sin manejadores ni datos para publico.js ({$atributo->name}).");
+            }
+        }
+    }
+
+    /** CA5 (abuso), TM2: el mismo enlace para todos, sin datos de la sesión ni de la visita. */
+    public function test_el_enlace_es_el_mismo_para_todos(): void
+    {
+        $visitas = ['visitante' => $this->get('/')->assertOk()->getContent()];
+        $datos = [];
+        foreach (['admin', 'dentista', 'asistente', 'cliente'] as $i => $rol) {
+            $usuario = Usuario::create([
+                'nombre' => "Nombre053{$rol}",
+                'apellido' => "Apellido053{$rol}",
+                'email' => "wa053.{$rol}.".Str::random(8).'@example.test',
+                'rol' => $rol,
+                'telefono' => "55512340{$i}",
+                'activo' => 1,
+                'password_hash' => Hash::make('secreto-de-pruebas'),
+            ]);
+            $datos[$rol] = [$usuario->nombre, $usuario->apellido, $usuario->email, $usuario->telefono];
+            $visitas[$rol] = $this->actingAs($usuario)->get('/')->assertOk()->getContent();
+        }
+        // /analyze A6: los datos de la visita tampoco entran en el enlace.
+        auth()->logout();
+        $visitas['visita con parámetros'] = $this->withHeader('Referer', 'https://otro.example.test/?nombre=Referido053')
+            ->get('/?utm_source=Campana053&nombre=Visita053')->assertOk()->getContent();
+        $datos['visita con parámetros'] = ['Campana053', 'Visita053', 'Referido053', 'otro.example.test'];
+
+        foreach ($visitas as $quien => $html) {
+            $hrefs = array_map(fn ($boton) => $boton->getAttribute('href'), $this->botonesWhatsapp($this->xpath($html)));
+            $this->assertSame([self::WHATSAPP, self::WHATSAPP], $hrefs, "{$quien}: el mismo enlace en los dos botones.");
+            foreach ($datos[$quien] ?? [] as $dato) {
+                foreach ($hrefs as $href) {
+                    $this->assertStringNotContainsStringIgnoringCase($dato, rawurldecode($href), "{$quien}: el enlace no lleva «{$dato}».");
+                    $this->assertStringNotContainsStringIgnoringCase(rawurlencode($dato), $href, "{$quien}: el enlace no lleva «{$dato}» codificado.");
+                }
+            }
+        }
+    }
+
+    /** TM3 y RNF de privacidad: nada de WhatsApp ni de Meta se carga al abrir la página (por host, A5). */
+    public function test_no_carga_nada_de_whatsapp_ni_de_meta(): void
+    {
+        $xpath = $this->xpath($this->inicioComo(null));
+        $terceros = ['wa.me', 'whatsapp.com', 'whatsapp.net', 'facebook.com', 'fbcdn.net', 'meta.com'];
+        $deTerceros = function (string $url) use ($terceros): bool {
+            $host = strtolower((string) parse_url(trim($url), PHP_URL_HOST));
+            foreach ($terceros as $dominio) {
+                if ($host === $dominio || str_ends_with($host, '.'.$dominio)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $recursos = [];
+        foreach ($xpath->query('//*[@src]/@src | //link[@href]/@href | //*[local-name()="image" or local-name()="use"]/@href | //object[@data]/@data | //*[@poster]/@poster') as $atributo) {
+            $recursos[] = $atributo->value;
+        }
+        foreach ($xpath->query('//*[@srcset]/@srcset') as $atributo) {
+            foreach (explode(',', $atributo->value) as $candidato) {
+                $recursos[] = strtok(trim($candidato), ' ');
+            }
+        }
+        $this->assertNotEmpty($recursos, 'La página carga sus propios recursos.');
+        foreach ($recursos as $url) {
+            $this->assertFalse($deTerceros($url), "No se carga «{$url}» de WhatsApp ni de Meta.");
+        }
+
+        // Solo los botones apuntan a WhatsApp: se contacta con WhatsApp al pulsarlos, no antes.
+        foreach ($xpath->query('//a[@href]') as $enlace) {
+            if ($deTerceros($enlace->getAttribute('href'))) {
+                $this->assertTrue($this->tieneClase($enlace, 'pub-wa'), 'Solo «Escríbenos por WhatsApp» enlaza con WhatsApp: '.$enlace->getAttribute('href'));
+                $this->assertSame('wa.me', parse_url($enlace->getAttribute('href'), PHP_URL_HOST));
+            }
+        }
+    }
+
+    /** RNF de accesibilidad: el nombre empieza por el texto visible y avisa de que abre WhatsApp (A9). */
+    public function test_el_boton_avisa_de_que_abre_whatsapp(): void
+    {
+        $xpath = $this->xpath($this->inicioComo(null));
+        $botones = $this->botonesWhatsapp($xpath);
+        $this->assertCount(2, $botones);
+
+        foreach ($botones as $i => $boton) {
+            $nombre = $boton->getAttribute('aria-label');
+            $this->assertSame('Escríbenos por WhatsApp (se abre WhatsApp)', $nombre, "Botón {$i}: el nombre accesible.");
+            $this->assertStringStartsWith($this->textoDe($boton), $nombre, "Botón {$i}: empieza por el texto visible (WCAG 2.5.3).");
+
+            $iconos = $xpath->query('.//svg', $boton);
+            $this->assertSame(1, $iconos->length, "Botón {$i}: con el logotipo.");
+            $this->assertSame('true', $iconos->item(0)->getAttribute('aria-hidden'), "Botón {$i}: el logotipo no se anuncia.");
+            $this->assertSame('false', $iconos->item(0)->getAttribute('focusable'), "Botón {$i}: ni recibe el foco.");
+        }
+    }
 }

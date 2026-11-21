@@ -10,6 +10,8 @@
     <ul>
         <li><strong>Al crear tu cuenta:</strong> nombre, apellidos, correo electrónico y contraseña (guardada de forma que nadie, ni la clínica, puede leerla), y, si quieres darlos, teléfono, fecha de nacimiento, género, dirección y ciudad.</li>
         <li><strong>Si te registras o entras con Google:</strong> tu nombre, tu correo, tu identificador de Google y la dirección de tu foto de perfil.</li>
+        {{-- Spec 053 (CA6; D8; excepción a 045 CA3, decisión del usuario): el botón de WhatsApp de la portada. --}}
+        <li><strong>Si nos escribes por WhatsApp:</strong> tu número y lo que escribas, solo para responderte. WhatsApp es un servicio de un tercero con su propio aviso de privacidad.</li>
         <li><strong>En tu ficha de paciente:</strong> el nombre y el teléfono de un contacto de emergencia, que anota el personal de la clínica.</li>
         <li><strong>Datos de salud</strong>, que son <strong>datos sensibles</strong>: alergias, tipo de sangre, enfermedades crónicas, medicamentos y notas médicas; el diagnóstico, el tratamiento, las recetas y las observaciones de tu expediente, y las notas de tus citas. Los anota el personal de la clínica durante tu atención.</li>
         <li><strong>Fotos de tratamientos:</strong> solo se publican en la galería con tu consentimiento y sin tu nombre.</li>

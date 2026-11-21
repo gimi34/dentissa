@@ -5,6 +5,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-21
+
+### Added
+- La página de inicio ofrece «Escríbenos por WhatsApp» junto al teléfono, en la primera pantalla y en la sección de
+  contacto: abre un chat con la clínica y el mensaje «Hola, quiero información para agendar una cita.» ya escrito,
+  también sin JavaScript; en un ordenador, WhatsApp Web se abre en otra pestaña (spec 053).
+
+### Changed
+- El aviso de privacidad explica, en «Qué datos recabamos», qué recibe la clínica si le escribes por WhatsApp; su
+  fecha de actualización pasa al 20 de noviembre de 2026 (spec 053).
+
 ## [0.24.0] - 2026-11-21
 
 ### Security

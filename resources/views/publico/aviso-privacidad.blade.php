@@ -13,7 +13,8 @@
                 <span class="pub-etiqueta">Información legal</span>
                 <h1>Aviso de privacidad</h1>
                 <p>Qué datos tuyos guarda la clínica, para qué y cómo puedes verlos, corregirlos o borrarlos.</p>
-                <p class="lb-fecha">Última actualización: 12 de noviembre de 2026</p>
+                {{-- Spec 053 (D6): el aviso cambió con el punto de WhatsApp. --}}
+                <p class="lb-fecha">Última actualización: 20 de noviembre de 2026</p>
             </div>
             <nav class="lb-indice lb-indice--legal" aria-labelledby="titulo-indice">
                 <p class="pub-etiqueta" id="titulo-indice">En esta página</p>

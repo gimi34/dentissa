@@ -360,6 +360,11 @@ body.publico button:focus-visible {
     text-decoration: none;
 }
 .pub-hero__facts a:hover { text-decoration: underline; text-decoration-color: var(--p400); }
+/* Spec 053 (CA1, design.md `c3`): el teléfono y «Escríbenos por WhatsApp» forman un grupo en su propia fila,
+   con el horario aparte; el botón, al tamaño del resto de la lista y sin el subrayado de los enlaces. */
+.pub-hero__facts > li.pub-hero__contacto { display: flex; flex-basis: 100%; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-6); }
+.pub-hero__facts a.pub-wa { font-size: var(--text-publico-small); }
+.pub-hero__facts a.pub-wa:hover { text-decoration: none; }
 /* En el móvil, «Iniciar sesión · Crear cuenta» a la vista sin abrir el menú. */
 .pub-acceso { display: none; flex-wrap: wrap; column-gap: var(--space-6); margin-top: var(--space-2); font-size: var(--text-publico-small); }
 .pub-acceso a { display: inline-flex; align-items: center; min-height: var(--touch-min); font-weight: var(--weight-bold); }
@@ -656,6 +661,9 @@ body.publico button:focus-visible {
 }
 .pub-visit__tel:hover { text-decoration: underline; text-decoration-color: var(--p400); }
 .pub-visit .c-btn { margin-top: var(--space-4); }
+/* Spec 053 (CA2, `c3`): WhatsApp y «Cómo llegar» forman un grupo que se reparte el ancho (iguales al apilarse). */
+.pub-visit__acciones { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); }
+.pub-visit__acciones .c-btn { flex: 1 1 auto; margin-top: 0; }
 .pub-map { display: grid; gap: var(--space-3); }
 .pub-map iframe {
     display: block;
@@ -844,6 +852,9 @@ body.publico button:focus-visible {
     .pub-bar__in { gap: var(--space-4); }
     .pub-hero__actions .c-btn,
     .pub-book__pie .c-btn { width: 100%; padding: 0 var(--space-6); font-size: var(--text-publico-small); }
+    /* Spec 053 (`c3`): los botones de WhatsApp y «Cómo llegar», también a todo el ancho. */
+    .pub-hero__contacto .pub-wa,
+    .pub-visit__acciones .c-btn { width: 100%; padding: 0 var(--space-6); }
     .pub-consulta__foto { height: 60svh; }
     .pub-consulta__foto img { object-fit: contain; }
     .pub-semana { grid-template-columns: 1fr; }

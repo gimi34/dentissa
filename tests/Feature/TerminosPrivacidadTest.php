@@ -32,7 +32,16 @@ class TerminosPrivacidadTest extends TestCase
 
     private const PRIVACIDAD = '/aviso-de-privacidad';
 
-    private const FECHA = 'Última actualización: 12 de noviembre de 2026';
+    /** Spec 053 (/analyze A1): cada texto lleva su fecha; los términos no cambian y el aviso cambió con la 053. */
+    private const FECHA_TERMINOS = 'Última actualización: 12 de noviembre de 2026';
+
+    private const FECHA_PRIVACIDAD = 'Última actualización: 20 de noviembre de 2026';
+
+    /** La fecha del aviso aprobada en la 045 (`candidatos/c4/privacidad.html`). */
+    private const FECHA_PRIVACIDAD_045 = 'Última actualización: 12 de noviembre de 2026';
+
+    /** Spec 053 (CA6): el punto de WhatsApp en «02 Qué datos recabamos», tras el de Google. */
+    private const WHATSAPP_AVISO = 'Si nos escribes por WhatsApp: tu número y lo que escribas, solo para responderte. WhatsApp es un servicio de un tercero con su propio aviso de privacidad.';
 
     private const CANDIDATO = 'docs/specs/045-terminos-privacidad/design/candidatos/c4/';
 
@@ -119,7 +128,7 @@ class TerminosPrivacidadTest extends TestCase
         $xpath = $this->pagina(self::TERMINOS);
 
         $this->assertSame('Términos de uso', $this->texto($xpath->query('//h1')->item(0)));
-        $this->assertStringContainsString(self::FECHA, $this->texto($xpath->query('//main')->item(0)), 'La fecha de la última actualización.');
+        $this->assertStringContainsString(self::FECHA_TERMINOS, $this->texto($xpath->query('//main')->item(0)), 'La fecha de la última actualización.');
         $this->assertSame(self::SECCIONES_TERMINOS, $this->secciones($xpath), 'Las secciones de CA1, en orden.');
         $urgencias = $this->texto($xpath->query('//section[@id="citas"]')->item(0));
         $this->assertStringContainsString('El sitio no sirve para urgencias.', $urgencias, 'CA1: el sitio no sirve para urgencias.');
@@ -131,7 +140,7 @@ class TerminosPrivacidadTest extends TestCase
         $xpath = $this->pagina(self::PRIVACIDAD);
 
         $this->assertSame('Aviso de privacidad', $this->texto($xpath->query('//h1')->item(0)));
-        $this->assertStringContainsString(self::FECHA, $this->texto($xpath->query('//main')->item(0)));
+        $this->assertStringContainsString(self::FECHA_PRIVACIDAD, $this->texto($xpath->query('//main')->item(0)), 'La fecha del cambio de la 053 (D6).');
         $this->assertSame(self::SECCIONES_PRIVACIDAD, $this->secciones($xpath), 'Las secciones de CA2, en orden.');
 
         $datos = $this->texto($xpath->query('//section[@id="datos"]')->item(0));
@@ -297,11 +306,48 @@ class TerminosPrivacidadTest extends TestCase
     {
         foreach ([self::TERMINOS => 'terminos.html', self::PRIVACIDAD => 'privacidad.html'] as $ruta => $archivo) {
             $aprobado = $this->xpath(file_get_contents(base_path(self::CANDIDATO.$archivo)));
+            $texto = $this->texto($this->pagina($ruta)->query('//main')->item(0));
+            if ($ruta === self::PRIVACIDAD) {
+                // Spec 053 (D5): sin los cambios de la 053, que comprueba test_el_aviso_explica_whatsapp, el texto es el de c4.
+                $texto = str_replace([' '.self::WHATSAPP_AVISO, self::FECHA_PRIVACIDAD], ['', self::FECHA_PRIVACIDAD_045], $texto);
+            }
             $this->assertSame(
                 $this->texto($aprobado->query('//main')->item(0)),
-                $this->texto($this->pagina($ruta)->query('//main')->item(0)),
+                $texto,
                 "{$ruta}: el texto de la página es el aprobado en candidatos/c4/{$archivo} (y llega en el HTML del servidor, CA8)."
             );
+        }
+    }
+
+    /** Spec 053 (CA6, D6, D8): el punto de WhatsApp en «Qué datos recabamos», en la página y en su ventana del registro. */
+    public function test_el_aviso_explica_whatsapp(): void
+    {
+        $sitios = ['página' => [$this->pagina(self::PRIVACIDAD), '']];
+        foreach ($this->registros() as $pantalla => $xpath) {
+            $sitios[$pantalla] = [$xpath, 'privacidad-'];
+        }
+
+        foreach ($sitios as $sitio => [$xpath, $prefijo]) {
+            $datos = $xpath->query('//section[@id="'.$prefijo.'datos"]')->item(0);
+            $this->assertInstanceOf(DOMElement::class, $datos, "{$sitio}: la sección «Qué datos recabamos».");
+            $puntos = array_map(fn ($li) => $this->texto($li), iterator_to_array($xpath->query('./ul/li', $datos)));
+            $posicion = array_search(self::WHATSAPP_AVISO, $puntos, true);
+            $this->assertNotFalse($posicion, "{$sitio}: el punto de WhatsApp, con su texto.");
+            $this->assertStringStartsWith('Si te registras o entras con Google:', $puntos[$posicion - 1] ?? '', "{$sitio}: justo después del de Google.");
+            $this->assertSame('Si nos escribes por WhatsApp:', $this->texto($xpath->query('./ul/li['.($posicion + 1).']/strong', $datos)->item(0)), "{$sitio}: con su entrada en negrita, como los demás.");
+
+            // Solo en «02» (decisión del usuario, /analyze A3): «03 Para qué los usamos» y «05» no cambian.
+            foreach ($xpath->query('//section[starts-with(@id, "'.$prefijo.'")][@aria-labelledby]') as $seccion) {
+                if ($seccion->getAttribute('id') !== $prefijo.'datos' && str_contains($seccion->getAttribute('aria-labelledby'), 'titulo-')) {
+                    $this->assertStringNotContainsString('WhatsApp', $this->texto($seccion), "{$sitio}: WhatsApp solo en «Qué datos recabamos» ({$seccion->getAttribute('id')}).");
+                }
+            }
+        }
+
+        // D6: el aviso cambió, con su fecha nueva en la página y en su ventana.
+        $this->assertStringContainsString(self::FECHA_PRIVACIDAD, $this->texto($sitios['página'][0]->query('//main')->item(0)));
+        foreach ($this->registros() as $pantalla => $xpath) {
+            $this->assertStringContainsString(self::FECHA_PRIVACIDAD, $this->texto($xpath->query('//dialog[@id="dialogo-privacidad"]')->item(0)), "{$pantalla}: la ventana del aviso con su fecha.");
         }
     }
 
@@ -365,7 +411,8 @@ class TerminosPrivacidadTest extends TestCase
                 $nombre = $this->texto($titulo);
                 $titulos[] = $nombre;
                 $this->assertArrayHasKey($nombre, $paginas, "{$pantalla}: la ventana se nombra con su título.");
-                $this->assertStringContainsString(self::FECHA, $this->texto($ventana), "{$pantalla}, {$nombre}: con la fecha.");
+                $fecha = $nombre === 'Términos de uso' ? self::FECHA_TERMINOS : self::FECHA_PRIVACIDAD;
+                $this->assertStringContainsString($fecha, $this->texto($ventana), "{$pantalla}, {$nombre}: con la fecha de su página (053, A1).");
                 $this->assertSame(1, $xpath->query('.//button[@type="button"][@data-cerrar][normalize-space()="Cerrar"]', $ventana)->length, "{$pantalla}, {$nombre}: botón «Cerrar».");
                 $pagina = $paginas[$nombre];
                 $this->assertSame(
