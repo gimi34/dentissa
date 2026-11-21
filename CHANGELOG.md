@@ -5,6 +5,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-21
+
+### Security
+- Al cambiar o crear la contraseña desde el perfil se cierran las demás sesiones abiertas de la cuenta; la sesión desde
+  la que se cambia sigue abierta, con un identificador nuevo (spec 011).
+- Solo el paciente puede guardar el perfil de paciente: el personal recibe «acceso denegado» y ya no se le crea una
+  ficha de paciente (spec 011).
+
+### Fixed
+- Dar de alta un expediente sin cita o guardar las notas internas de una cita vacías ya no da un error cuando el
+  formulario no envía ese campo (fix 2026-11-20-fix-expediente-sin-cita).
+
 ## [0.23.0] - 2026-11-19
 
 ### Changed
