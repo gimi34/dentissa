@@ -1,0 +1,96 @@
+---
+spec: 002-registro-pacientes
+plan: plan.md
+status: draft
+---
+
+# Tareas · 002 Autorregistro de pacientes
+
+Formato:
+`- [ ] T### [P] <verbo + qué> — <archivos> — hecho cuando: <criterio> — cubre: CA# — depende: T###`
+- T001–T089: trabajo. T090–T099: reservadas.
+- `[P]` = paralelizable con las demás `[P]` de su grupo una vez cumplidas sus dependencias (no
+  comparte archivos con otra tarea abierta).
+- `[-]` = obsoleta (`— obsoleta: <motivo> (AAAA-MM-DD)`): no cuenta como abierta ni como hecha.
+- Bajo una tarea: `  - nota: …`, `  - bloqueo: AAAA-MM-DD — <qué falta> — <skill a ejecutar>`.
+- **Alcance:** solo CA8 cambia comportamiento. CA1–CA6 reciben tests de caracterización; CA7 ya tiene test
+  (`LimiteIntentosTest`) y solo tiene que seguir en verde (plan, Estrategia de pruebas).
+- **Un solo archivo de tests nuevo**, `tests/Feature/RegistroPacientesTest.php`: las tareas de test lo comparten y van
+  en orden, sin `[P]`.
+- **Commits:** `AGENTS.md` no admite commits con tests en rojo, así que las tareas de test que fallan hoy (T014, T015)
+  van en el mismo commit que la implementación que las pone en verde.
+- **Datos de prueba:** correos `@example.test` y contraseñas ficticias, sin espacios al principio ni al final.
+
+## Constitution Check
+Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
+
+| Principio | Resultado | Justificación / ajuste | Cómo se verifica |
+|---|---|---|---|
+| P1 Spec aprobada antes de código | ✅ | Spec y plan aprobados (2026-11-21). Ninguna tarea de código empieza antes de que `tasks.md` esté `approved` y `/analyze` en `pass`. | manual: `aidd.py status` antes de `/implement` |
+| P2 Test que falla antes y pasa después | ✅ | T014 y T015, de test, van antes que T020 y T021, que dependen de ellas. Las de caracterización (T010–T013) pasan desde el principio y se comprueban rompiendo un momento el código que protegen, con su nota. | test: T010–T015 |
+| P3 Autorización en servidor | ✅ | T013 caracteriza que el rol se fija en el servidor (CA5, TM3). Ninguna tarea cambia autorizaciones. | test: T013 |
+| P4 Entrada validada y SQL con bindings | ✅ | T020 solo cambia el texto de un mensaje; ninguna tarea añade SQL. | lint: semgrep `p/php` en T022 |
+| P5 Nada sensible en el repo | ✅ | Datos y contraseñas ficticios en T010–T015. | lint: gitleaks en T022 |
+| P6 Sin vulnerabilidades críticas/altas | ✅ | Ninguna tarea toca dependencias. | lint: `composer audit --locked` y `node .github/scripts/auditar-npm.mjs` en T022 |
+| P7 Auditoría de datos sensibles | ❌ aceptado | Excepción aprobada por el usuario el 2026-11-21 (plan D6 → spec 021): ninguna tarea añade el evento de alta. | manual: diff sin eventos nuevos en T022 |
+| P8 Correlación y logs limpios | ✅ | Ninguna tarea añade `Log::`. | manual: diff sin `Log::` en T022 |
+| P9 La interfaz usa solo el sistema de diseño | ✅ | T021 usa `.error-msg` y una regla nueva de `auth.css` sin valores literales; T015 lo prueba. | test: T015 (`…_los_enlaces_del_rechazo_solo_usan_tokens`, `…_el_error_del_correo_queda_asociado_al_campo`) |
+| P10 Rutas indexables descubribles | ✅ | Ninguna tarea cambia el `GET /registro`. | test: `PaginasPublicasTest` en verde en T022 |
+
+## Preparación
+No hace falta: sin dependencias, configuración, interruptor ni migración (plan, Rollout).
+
+## Tests (antes de implementar)
+- [ ] T010 Crear `RegistroPacientesTest` y escribir `test_el_alta_crea_la_cuenta_y_la_ficha_y_entra` (un `POST /registro` válido crea un `usuarios` con rol `cliente`, `activo` 1 y la contraseña cifrada, y su fila en `pacientes`; queda con sesión y redirige al panel del paciente) y `test_si_falla_la_ficha_no_queda_la_cuenta` (con `DB::beforeExecuting` lanzando un error antes del `insert` en `pacientes`, el alta falla y no queda ninguna fila en `usuarios` con ese correo) — tests/Feature/RegistroPacientesTest.php — hecho cuando: los dos pasan (caracterización) y quitar un momento el `DB::transaction` de `RegisterController::register` hace fallar el segundo; se anota la rotura — cubre: CA1
+- [ ] T011 Escribir `test_se_asigna_el_dentista_activo_con_menos_pacientes` (con los dentistas del volcado desactivados dentro de la transacción: D1 con un paciente, D2 sin pacientes y D3 inactivo sin pacientes → se asigna D2) y `test_a_igualdad_el_dentista_mas_antiguo` (dos dentistas activos sin pacientes, con `personal.creado_en` distintos → el más antiguo) — tests/Feature/RegistroPacientesTest.php — hecho cuando: los dos pasan (caracterización) y quitar un momento el `orderBy('personal.creado_en')` hace fallar el segundo y quitar el `where('usuarios.activo', 1)` hace fallar el primero; se anota la rotura — cubre: CA2 — depende: T010
+- [ ] T012 Escribir `test_el_registro_con_google_crea_la_cuenta_sin_contrasena`: con `google_registro` en la sesión, `POST /registro/contacto` con los términos aceptados crea el usuario con su `google_id`, sin contraseña y con rol `cliente`, y su ficha; queda con sesión y redirige al panel — tests/Feature/RegistroPacientesTest.php — hecho cuando: pasa (caracterización) y guardar un momento una contraseña en `contactoStore` lo hace fallar; se anota la rotura — cubre: CA4 — depende: T011
+- [ ] T013 Escribir `test_el_rol_es_siempre_cliente` (un `POST /registro` válido con `rol=admin` y `activo=0` añadidos crea una cuenta `cliente` activa) y `test_una_contrasena_corta_se_rechaza` (7 caracteres → error en `password` y ninguna cuenta con ese correo) — tests/Feature/RegistroPacientesTest.php — hecho cuando: los dos pasan (caracterización) y tomar un momento el rol de `$request->input('rol', 'cliente')` hace fallar el primero y bajar el mínimo a 7 el segundo; se anota la rotura — cubre: CA5, CA6 — depende: T012
+- [ ] T014 Escribir `test_un_correo_registrado_se_rechaza_sin_decir_que_existe`: registro con el correo de una cuenta existente, también en mayúsculas. Error en `email` con el texto exacto de `RegisterController::CORREO_NO_DISPONIBLE`; la página del formulario no contiene «ya está registrado» ni «ya existe»; bajo el campo hay un enlace a `route('login')` y, con `acceso.recuperar_contrasena` activo, otro a `route('contrasena.solicitud')`, con esos `href` exactos; vuelven el nombre y el apellido y no la contraseña; no se crea ninguna cuenta — tests/Feature/RegistroPacientesTest.php — hecho cuando: falla por la razón esperada (hoy la constante no existe y el mensaje dice «Este correo ya está registrado») — cubre: CA3, CA8 — depende: T013
+- [ ] T015 Escribir `test_el_error_del_correo_queda_asociado_al_campo` (con error en el correo, `#email` lleva `aria-invalid="true"` y `aria-describedby` hacia el `id` del mensaje), `test_otros_errores_del_correo_no_llevan_los_enlaces` (con un correo mal escrito, el mensaje de formato sale sin los dos enlaces) y `test_los_enlaces_del_rechazo_solo_usan_tokens` (el mensaje y los enlaces no llevan `style=""`, y la regla `.page-register .error-msg a` de `auth.css` existe y no tiene colores ni medidas literales) — tests/Feature/RegistroPacientesTest.php — hecho cuando: el primero y el tercero fallan por la razón esperada (hoy el campo no tiene `aria-*` y la regla no existe) y el segundo pasa — cubre: CA8 — depende: T014
+
+## Implementación
+- [ ] T020 Añadir a `RegisterController` la constante pública `CORREO_NO_DISPONIBLE` con «No pudimos crear la cuenta con estos datos. Si ya tienes una, inicia sesión o recupera tu contraseña.» y usarla en `'email.unique'` (plan D1) — app/Http/Controllers/RegisterController.php — hecho cuando: la parte del mensaje de T014 pasa, siguen en verde T010–T013, `TerminosPrivacidadTest`, `CiudadListaCerradaTest` y `LimiteIntentosTest`, y volver un momento al texto anterior hace fallar T014 (CA8, TM1) — cubre: CA8 — depende: T014
+- [ ] T021 En `auth/register.blade.php`, bajo el campo `email` y solo si su error es `CORREO_NO_DISPONIBLE`, los enlaces «Iniciar sesión» (`route('login')`) y, con `config('acceso.recuperar_contrasena')`, «Recuperar tu contraseña» (`route('contrasena.solicitud')`); el mensaje con `id`, y el campo con `aria-invalid` y `aria-describedby` cuando tiene error. En `auth.css`, `.page-register .error-msg a { color: inherit; text-decoration: underline; }` (plan D2, D3, D4) — resources/views/auth/register.blade.php, public/css/auth.css — hecho cuando: pasan T014 y T015, siguen en verde `CiudadListaCerradaTest` (paso con error) y `NavegacionSalidasCssTest`, y quitar un momento la condición del mensaje hace fallar `…_otros_errores_del_correo_no_llevan_los_enlaces` · verificación manual: estado de error del paso 1 con un correo ya registrado a 390 y 1440 px, contra la pantalla actual del registro (mismo aspecto salvo el texto y los dos enlaces subrayados, legibles y pulsables) — cubre: CA8 — depende: T015, T020
+
+## Integración y documentación
+- [ ] T022 Pasar la verificación final: suite completa, Pint sobre los PHP tocados (`RegisterController.php` y `RegistroPacientesTest.php`), gitleaks sobre el diff, semgrep `p/php` sobre los archivos tocados, `composer audit --locked`, `node .github/scripts/auditar-npm.mjs` y revisión de que el diff no tiene `Log::` ni eventos de auditoría nuevos — sin archivos — hecho cuando: todo en verde, con `LimiteIntentosTest` (CA7) y `PaginasPublicasTest` (P10) en verde, y `composer audit` sin altas ni críticas nuevas respecto a la línea base del plan — cubre: CA7 — depende: T020, T021
+- [ ] T090 Actualizar `docs/architecture.md` si cambió la estructura — sin cambios previstos (plan, Impacto en arquitectura); se comprueba si nombra el mensaje del registro y se anota en la tarea
+- [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas — sin cambios (plan, Observabilidad y Rollout); `docs/security.md` (RS13.b en parte) y `docs/roadmap.md` (excepción P7 y confirmación del correo) se actualizan en `/release`; se anota en la tarea
+- [ ] T092 Marcar spec como `implemented`
+
+## Despliegue (lo ejecuta `/release`)
+- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, sin escribir ningún correo real en ningún documento:
+  - CA8: registrarse con el correo de una cuenta de prueba ya existente → el mensaje neutro con los dos enlaces y ninguna cuenta nueva
+- [ ] T096 Aprobación humana para producción
+- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar 5xx en `/registro` (aviso `dentissa-vigilar`). Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia
+- [ ] T098 Marcar spec como `released`
+
+## Cobertura
+| Criterio | Tarea(s) de test | Tarea(s) de implementación |
+|---|---|---|
+| CA1 | T010 | ninguna: ya se cumple (caracterización; la rotura de T010 lo prueba) |
+| CA2 | T011 | ninguna: ya se cumple (caracterización; las roturas de T011 lo prueban) |
+| CA3 | T014 | ninguna: ya se cumple (la parte del rechazo); T020 cambia solo su texto |
+| CA4 | T012 | ninguna: ya se cumple (caracterización; la rotura de T012 lo prueba) |
+| CA5 | T013 | ninguna: ya se cumple (caracterización; la rotura de T013 lo prueba) |
+| CA6 | T013 | ninguna: ya se cumple (caracterización; la rotura de T013 lo prueba) |
+| CA7 | `LimiteIntentosTest` (existente), en verde en T022 | ninguna: ya se cumple (030); T022 confirma que sigue en verde |
+| CA8 | T014, T015 | T020, T021 |
+
+| Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
+|---|---|---|
+| TM1 | T020 | T014 |
+| TM2 | ninguna: fuera de esta spec → spec futura de confirmación del correo (plan, Modelo de amenazas; decisión del usuario, 2026-11-21) | ninguna (fuera) |
+| TM3 | ninguna: ya se cumple (el rol se fija en el servidor); la rotura de T013 lo prueba | T013 |
+| TM4 | T021 | T014 |
+
+| Cambio del plan (módulo) | Tarea(s) |
+|---|---|
+| app/Http/Controllers/RegisterController.php | T020 |
+| resources/views/auth/register.blade.php | T021 |
+| public/css/auth.css | T021 |
+| tests/Feature/RegistroPacientesTest.php | T010, T011, T012, T013, T014, T015 |
+
+| Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
+|---|---|
+| Contraseña con `Password::min(8)` | T013 |
