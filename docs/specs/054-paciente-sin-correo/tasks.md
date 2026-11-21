@@ -1,7 +1,7 @@
 ---
 spec: 054-paciente-sin-correo
 plan: plan.md
-impl_base: c97daaf
+impl_base: 347b3f7
 status: approved
 ---
 
@@ -104,7 +104,10 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: filas de `paciente_alta` (alta de cuenta de paciente por el personal) y `paciente_correo_anadido` (cambio de cuenta: el paciente pasa a poder tener acceso), ambos con recurso `pacientes`, en la tabla de eventos de `observability.md`, y su correspondencia con OB1.f, que sigue pendiente para el resto de altas, roles y activaciones (→ 021) (/analyze A18); en `deployment.md`, que la migración de la 054 no se deshace con `volver.sh` y que su `down()` se niega si hay cuentas sin correo
   - nota: `observability.md`: filas de `paciente_alta` y `paciente_correo_anadido` (recurso `pacientes`) con su correspondencia con OB1.f, que sigue pendiente para el resto de altas, roles y activaciones (/analyze A18). `deployment.md`: la migración de la 054 no se deshace con `volver.sh` y su `down()` se niega con cuentas sin correo.
   - nota: A19 — en `deployment.md`, el paso del rollback: tras volver a la 054, las cuentas sin correo reactivadas pierden cualquier `google_id` creado mientras tanto, con la comprobación `SELECT COUNT(*) … WHERE email IS NULL AND google_id IS NOT NULL` = 0.
-- [ ] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` y `auditar-npm.mjs` sin altas ni críticas, criterios `[x]` y `docs/specs/README.md`
+- [x] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` y `auditar-npm.mjs` sin altas ni críticas, criterios `[x]` y `docs/specs/README.md`
+  - nota: 2026-11-21: suite completa 1579 en verde (T026; tras T090–T091, que solo tocan documentos, y el cambio de valores de prueba, `PacienteSinCorreoTest` y `PosiblesDuplicadosTest` siguen 58/58); Pint limpio en los 7 PHP tocados; semgrep `p/php` 1.99.0 sin hallazgos en los archivos del diff; `composer audit` (código 0) y `auditar-npm.mjs` sin altas ni críticas; CA1–CA11 `[x]` y README en `implemented`.
+  - nota: gitleaks v8.21.2 marcó 5 `generic-api-key` en contraseñas ficticias de `PacienteSinCorreoTest` (p. ej. `'secreto-temporal-054'`): falsos positivos. Se cambiaron por valores de baja entropía (`secreto-de-prueba`, `temporal-de-prueba`, `contrasena-nueva-segura`) también en los commits de la rama, sin subir, con `git filter-branch` (respaldo en la etiqueta local `respaldo-054-antes-filtro`), para que la CI, que escanea los commits del PR, no los vea. Después, gitleaks sobre el parche de todos los commits de la rama: sin hallazgos.
+  - nota: `impl_base` pasa de `c97daaf` a `347b3f7`: el commit de documentación cambió de hash al rebasar sobre `main` (`f317ac1`).
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097 (alta de un paciente de prueba sin correo, su «Sin correo» en el directorio y la ficha, su evento `paciente_alta` con `con_acceso: false` y el `request_id`; después se desactiva)

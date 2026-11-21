@@ -1,7 +1,7 @@
 ---
 id: 054
 slug: paciente-sin-correo
-status: approved
+status: implemented
 created: 2026-11-20
 extends: [006]
 ---
@@ -26,42 +26,42 @@ citas y expedientes sin ficha fiable.
   pueda entrar a la aplicación si un día lo desea.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un admin o asistente en el alta de paciente, cuando deja el correo vacío (o solo
+- [x] CA1 · Dado un admin o asistente en el alta de paciente, cuando deja el correo vacío (o solo
   con espacios) y llena nombre, apellido y teléfono, entonces el paciente queda registrado, aparece
   en el directorio y se le pueden agendar citas y crear expedientes como a cualquier otro; no se
   genera ni se muestra ninguna contraseña y la confirmación dice «Paciente registrado sin correo: no
   tiene acceso a la aplicación.». Con correo, el alta se comporta como hoy (correo único,
   contraseña indicada o generada y mostrada una sola vez, teléfono opcional).
-- [ ] CA2 · Dado un alta sin correo y sin teléfono, cuando se guarda, entonces se rechaza sin crear
+- [x] CA2 · Dado un alta sin correo y sin teléfono, cuando se guarda, entonces se rechaza sin crear
   nada, con el mensaje «Sin correo, el teléfono es obligatorio para poder contactarle.» junto al
   campo de teléfono, y el formulario conserva lo ya escrito.
-- [ ] CA3 · Dado un alta (con o sin correo) cuyo nombre y apellido coinciden con los de un paciente
+- [x] CA3 · Dado un alta (con o sin correo) cuyo nombre y apellido coinciden con los de un paciente
   existente, activo o desactivado (sin distinguir mayúsculas, acentos ni espacios sobrantes), y
   además coincide el teléfono o la fecha de nacimiento, cuando se guarda, entonces todavía no se crea
   nada: se muestra un aviso «Ya existe un paciente con estos datos» con el nombre del existente, un
   enlace a su ficha y la opción «Registrar de todos modos»; al confirmarla se crea el paciente nuevo
   con los datos escritos, sin volver a escribirlos (salvo la contraseña temporal, que no se conserva:
   ver Decisiones). Sin coincidencia, el alta no muestra aviso.
-- [ ] CA4 · Dado un paciente sin correo, cuando el personal lo ve en el directorio o abre su ficha,
+- [x] CA4 · Dado un paciente sin correo, cuando el personal lo ve en el directorio o abre su ficha,
   entonces donde iría el correo aparece «Sin correo · sin acceso a la aplicación», y la búsqueda del
   directorio por nombre o teléfono lo encuentra.
-- [ ] CA5 · Dado un admin o dentista que edita a un paciente sin correo, cuando guarda sin añadir
+- [x] CA5 · Dado un admin o dentista que edita a un paciente sin correo, cuando guarda sin añadir
   correo, entonces los cambios se guardan sin pedir correo; el teléfono sigue siendo obligatorio
   mientras no tenga correo (mismo mensaje que CA2). Dado un paciente con correo, al editarlo el
   correo sigue siendo obligatorio y dejarlo vacío se rechaza sin cambiar nada.
-- [ ] CA6 · Dado un admin o dentista que edita a un paciente sin correo, cuando añade un correo
+- [x] CA6 · Dado un admin o dentista que edita a un paciente sin correo, cuando añade un correo
   válido que no usa ninguna otra cuenta, entonces se guarda; desde ese momento el paciente puede
   crear su contraseña con «¿Olvidaste tu contraseña?» (spec 041) y entrar como cualquier paciente.
   No se le envía ningún correo automáticamente ni se muestra contraseña. Si el correo ya está
   registrado, se rechaza con «Este correo ya está registrado en el sistema.» sin cambiar nada.
-- [ ] CA7 (abuso) · Como alguien que conoce el nombre, el teléfono o la fecha de nacimiento de un
+- [x] CA7 (abuso) · Como alguien que conoce el nombre, el teléfono o la fecha de nacimiento de un
   paciente sin correo, intento entrar a su cuenta (con correo y contraseña, con Google o con la
   recuperación de contraseña) → no hay forma de acceder: el inicio de sesión responde como con
   cualquier credencial incorrecta y la recuperación responde como hoy sin enviar nada.
-- [ ] CA8 (abuso) · Como dentista, paciente o visitante sin sesión, envío directamente el alta de un
+- [x] CA8 (abuso) · Como dentista, paciente o visitante sin sesión, envío directamente el alta de un
   paciente sin correo → se deniega como cualquier alta no permitida (solo admin y asistente dan de
   alta) y no se crea nada.
-- [ ] CA9 (abuso) · Como personal que registra a alguien con el nombre de otro paciente para
+- [x] CA9 (abuso) · Como personal que registra a alguien con el nombre de otro paciente para
   averiguar sus datos, provoco el aviso de CA3 → el aviso muestra solo el nombre completo del
   existente y, si puedo ver su ficha, el enlace a ella; nunca su teléfono, su fecha de nacimiento,
   su correo ni datos clínicos.
@@ -96,11 +96,11 @@ citas y expedientes sin ficha fiable.
 ## Auditoría
 Eventos que deben quedar registrados (`docs/constitution.md` P7, `docs/observability.md`), sin
 nombre, teléfono ni correo en claro (spec 020 CA3):
-- [ ] CA10 · Dada un alta de paciente (con o sin correo), cuando se completa o se rechaza por
+- [x] CA10 · Dada un alta de paciente (con o sin correo), cuando se completa o se rechaza por
   permisos, entonces queda registrado quién, la acción «alta de paciente», el paciente creado, el
   resultado, si se registró con o sin acceso a la aplicación y si se confirmó pese al aviso de
   posible duplicado (CA3).
-- [ ] CA11 · Dado un admin o dentista que añade el correo a un paciente sin correo (CA6), cuando se
+- [x] CA11 · Dado un admin o dentista que añade el correo a un paciente sin correo (CA6), cuando se
   guarda, entonces queda registrado como cambio de cuenta: quién, sobre qué paciente, el resultado y
   que el paciente pasó a tener acceso posible, sin el correo.
 
@@ -183,3 +183,4 @@ toque ≥ 44 px en el móvil, sin desbordes a 320 px).
 | 2026-11-21 | Decisiones: supuestos A15 confirmados; aviso y alcance de la 014 (A4); contraseña al volver con el aviso (A2). Vuelve a draft hasta aprobarla de nuevo | /analyze A2, A4, A15 |
 | 2026-11-21 | CA3 aclara que la contraseña temporal no se conserva al volver con el aviso | /analyze A24 |
 | 2026-11-21 | Aprobada de nuevo | decisión del usuario |
+| 2026-11-21 | Implementada: CA1–CA11 con sus tests en verde (`PacienteSinCorreoTest`, `PosiblesDuplicadosTest`) | /implement |
