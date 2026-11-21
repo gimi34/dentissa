@@ -1,7 +1,7 @@
 ---
 spec: 011-perfil-cliente
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 011 Perfil y contraseña del paciente
