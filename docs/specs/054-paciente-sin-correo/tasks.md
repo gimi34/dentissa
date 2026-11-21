@@ -97,6 +97,24 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 
 - [x] T028 Añadir la guarda de Google sin correo: en el callback, si `$googleUser->getEmail()` es nulo o vacío, `volverAlLoginPorFallo()` antes de buscar por correo y antes de guardar `google_registro` (D14, TM1) — app/Http/Controllers/GoogleAuthController.php — hecho cuando: pasa `test_google_sin_correo_ni_vincula_ni_crea_cuenta` de T015 y los tests de Google existentes siguen en verde — cubre: CA7 — depende: T015
   - nota: A21 — la guarda va justo tras obtener el usuario de Google, antes de buscar por `google_id` y por correo, y rechaza correos nulos, vacíos o solo con espacios (`blank(trim(...))`); el test de T015 cubre los tres casos. Pasa `test_google_sin_correo_ni_vincula_ni_crea_cuenta` (3 casos) y siguen en verde los tests de Google, límite de intentos, salidas, perfil y sesión vigente (160). Comprobado rompiéndolo: sin la guarda, los 3 casos fallan. El helper `errorEmail()` del test se completó con la lectura de errores serializados, como en `GoogleVueltaFallidaTest`.
+- [ ] T030 Añadir los tests que faltan del alta: en `PosiblesDuplicadosTest`, una entrada sin teléfono y con una fecha distinta frente a un existente del mismo nombre con teléfono nulo no coincide (`total` 0); en `PacienteSinCorreoTest`, el alta con correo y contraseña escrita guarda esa contraseña (`Hash::check`) sin `password_generada`, y un correo ya registrado se rechaza con «Este correo ya está registrado en el sistema.» sin filas nuevas — tests/Unit/PosiblesDuplicadosTest.php, tests/Feature/PacienteSinCorreoTest.php — hecho cuando: los tres pasan y cada uno falla al romper lo que protege (la guarda `$digitos !== ''` de `PosiblesDuplicados`; la regla `exclude_without:email` puesta como `exclude`; el mensaje `email.unique` del alta), comprobado y anotado — cubre: CA1, CA3
+  - nota: añadida por /review: R1, R2
+- [ ] T031 Escribir el test de R3: un admin que añade el correo a una cuenta de paciente sin correo desde `PUT /admin/usuarios/{id}` deja un único `paciente_correo_anadido` (recurso `pacientes` con el id de su ficha, `campos: ['email']`, `detalle: {acceso_posible: true}`, sin el correo); cambiar un correo que ya existía desde «Usuarios» no lo deja; con un almacén de auditoría que falla, el correo no se guarda — tests/Feature/PacienteSinCorreoTest.php — hecho cuando: falla hoy porque «Usuarios» no registra nada (anotado) — cubre: CA11
+  - nota: añadida por /review: R3
+- [ ] T032 En `UsuarioController::update`, cuando la cuenta pasa de no tener correo a tenerlo y tiene ficha de paciente, registrar `paciente_correo_anadido` en modo crítico dentro de una transacción con el guardado (mismo evento que `PacientesController::update`) — app/Http/Controllers/UsuarioController.php — hecho cuando: T031 pasa y `AdminVistasSmokeTest`, `AdminNoSeDesactivaTest` y el resto de tests de usuarios siguen en verde — cubre: CA11 — depende: T031
+  - nota: añadida por /review: R3
+- [ ] T033 Escribir el test de R4: desde `PUT /{admin,dentista}/pacientes/{id}` no se puede cambiar el correo de una ficha cuya cuenta no es `cliente` (se rechaza con «El correo de una cuenta del personal no se cambia desde Pacientes.» y la cuenta conserva su correo); guardar esa ficha con el mismo correo sigue funcionando; en una cuenta `cliente`, el cambio de correo sigue como hoy — tests/Feature/PacienteSinCorreoTest.php — hecho cuando: el rechazo falla hoy porque el correo se cambia (anotado) — cubre: CA6
+  - nota: añadida por /review: R4
+- [ ] T034 En `PacientesController::update`, si la cuenta de la ficha no es `cliente` y el correo enviado es distinto del guardado (sin distinguir mayúsculas), rechazar la edición con ese mensaje en `email` antes de guardar nada — app/Http/Controllers/PacientesController.php — hecho cuando: T033 pasa y `PacienteSinCorreoTest`, `CiudadListaCerradaTest`, `MovilPacientesExpedientesTest` y `AdminNoSeDesactivaTest` siguen en verde — cubre: CA6 — depende: T033
+  - nota: añadida por /review: R4
+- [ ] T035 En `MovilPacientesExpedientesTest`, exigir que cada id de `aria-describedby` (ayudas, avisos y errores) apunte a un elemento que existe y tiene texto — tests/Feature/MovilPacientesExpedientesTest.php — hecho cuando: pasa con el marcado actual y falla con un `aria-describedby` que apunta a un id inexistente (comprobado y anotado) — cubre: CA1, CA5
+  - nota: añadida por /review: R7
+- [ ] T036 Escribir el test de R15: con una sesión `google_registro` cuyo correo es nulo o vacío, `POST /registro/contacto` no crea ninguna cuenta, olvida esa sesión y vuelve al inicio de sesión con el mensaje de fallo de Google — tests/Feature/PacienteSinCorreoTest.php — hecho cuando: falla hoy porque se crea una cuenta sin correo (anotado) — cubre: CA7
+  - nota: añadida por /review: R15
+- [ ] T037 En `RegisterController::contactoStore`, si el correo de `google_registro` está vacío, olvidar esa sesión y volver al inicio de sesión con `GoogleAuthController::MENSAJE_FALLO_GOOGLE` antes de validar o crear nada — app/Http/Controllers/RegisterController.php — hecho cuando: T036 pasa y los tests del registro con Google (`CiudadListaCerradaTest`, `HoraClinicaFormulariosTest`, `TerminosPrivacidadTest`) siguen en verde — cubre: CA7 — depende: T036
+  - nota: añadida por /review: R15
+- [ ] T038 Documentar las correcciones: en `docs/observability.md`, que `paciente_correo_anadido` también se registra desde «Usuarios»; en `docs/security.md` (cuentas sin correo), que el registro tras Google también rechaza una sesión sin correo y que desde «Pacientes» no se cambia el correo de una cuenta del personal — docs/observability.md, docs/security.md — hecho cuando: los dos documentos lo dicen y `aidd.py validate` no da errores — depende: T032, T034, T037
+  - nota: añadida por /review: R3, R4, R15
 
 ## Integración y documentación
 - [x] T090 Actualizar `docs/architecture.md` si cambió la estructura: `usuarios.email` nulable y qué significa (cuenta de paciente sin acceso), `PosiblesDuplicados` en `app/Pacientes/` y la migración en la lista; en `AGENTS.md` → «Mapa del repositorio», `PosiblesDuplicados` en la fila de `app/Pacientes/`; en `docs/security.md` → autenticación, que una cuenta sin correo no puede entrar hasta que el personal le añade uno y crea su contraseña con la 041
@@ -104,7 +122,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: filas de `paciente_alta` (alta de cuenta de paciente por el personal) y `paciente_correo_anadido` (cambio de cuenta: el paciente pasa a poder tener acceso), ambos con recurso `pacientes`, en la tabla de eventos de `observability.md`, y su correspondencia con OB1.f, que sigue pendiente para el resto de altas, roles y activaciones (→ 021) (/analyze A18); en `deployment.md`, que la migración de la 054 no se deshace con `volver.sh` y que su `down()` se niega si hay cuentas sin correo
   - nota: `observability.md`: filas de `paciente_alta` y `paciente_correo_anadido` (recurso `pacientes`) con su correspondencia con OB1.f, que sigue pendiente para el resto de altas, roles y activaciones (/analyze A18). `deployment.md`: la migración de la 054 no se deshace con `volver.sh` y su `down()` se niega con cuentas sin correo.
   - nota: A19 — en `deployment.md`, el paso del rollback: tras volver a la 054, las cuentas sin correo reactivadas pierden cualquier `google_id` creado mientras tanto, con la comprobación `SELECT COUNT(*) … WHERE email IS NULL AND google_id IS NOT NULL` = 0.
-- [x] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` y `auditar-npm.mjs` sin altas ni críticas, criterios `[x]` y `docs/specs/README.md`
+- [ ] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` y `auditar-npm.mjs` sin altas ni críticas, criterios `[x]` y `docs/specs/README.md`
+  - nota: desmarcada por /review r1 (changes_requested, 2026-11-21): se cierra tras T030–T038.
   - nota: 2026-11-21: suite completa 1579 en verde (T026; tras T090–T091, que solo tocan documentos, y el cambio de valores de prueba, `PacienteSinCorreoTest` y `PosiblesDuplicadosTest` siguen 58/58); Pint limpio en los 7 PHP tocados; semgrep `p/php` 1.99.0 sin hallazgos en los archivos del diff; `composer audit` (código 0) y `auditar-npm.mjs` sin altas ni críticas; CA1–CA11 `[x]` y README en `implemented`.
   - nota: gitleaks v8.21.2 marcó 5 `generic-api-key` en contraseñas ficticias de `PacienteSinCorreoTest` (p. ej. `'secreto-temporal-054'`): falsos positivos. Se cambiaron por valores de baja entropía (`secreto-de-prueba`, `temporal-de-prueba`, `contrasena-nueva-segura`) también en los commits de la rama, sin subir, con `git filter-branch` (respaldo en la etiqueta local `respaldo-054-antes-filtro`), para que la CI, que escanea los commits del PR, no los vea. Después, gitleaks sobre el parche de todos los commits de la rama: sin hallazgos.
   - nota: `impl_base` pasa de `c97daaf` a `347b3f7`: el commit de documentación cambió de hash al rebasar sobre `main` (`f317ac1`).
@@ -118,17 +137,17 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
-| CA1 | T011, T017 | T002, T021, T022, T027 |
+| CA1 | T011, T017, T030, T035 | T002, T021, T022, T027 |
 | CA2 | T011 | T021, T022 |
-| CA3 | T010, T012, T017 | T001, T020, T021, T022 |
+| CA3 | T010, T012, T017, T030 | T001, T020, T021, T022 |
 | CA4 | T013 | T023 |
-| CA5 | T014, T017 | T024, T027 |
-| CA6 | T014 | T024 |
-| CA7 | T015 | T021, T028, T029 |
+| CA5 | T014, T017, T035 | T024, T027 |
+| CA6 | T014, T033 | T024, T034 |
+| CA7 | T015, T036 | T021, T028, T029, T037 |
 | CA8 | T015 | T025 |
 | CA9 | T012 | T022 |
 | CA10 | T015, T016 | T021 |
-| CA11 | T016 | T024 |
+| CA11 | T016, T031 | T024, T032 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -149,6 +168,8 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | app/Pacientes/PosiblesDuplicados.php | T020 |
 | app/Http/Controllers/PacientesController.php | T021, T022, T024 |
 | app/Http/Controllers/GoogleAuthController.php | T028 |
+| app/Http/Controllers/UsuarioController.php (añadido por /review: R3) | T032 |
+| app/Http/Controllers/RegisterController.php (añadido por /review: R15) | T037 |
 | tests/Feature/MovilPacientesExpedientesTest.php | T027 |
 | resources/views/pacientes/create.blade.php | T022 |
 | resources/views/pacientes/index.blade.php | T023 |

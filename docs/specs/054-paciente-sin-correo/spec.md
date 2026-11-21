@@ -1,7 +1,7 @@
 ---
 id: 054
 slug: paciente-sin-correo
-status: implemented
+status: approved
 created: 2026-11-20
 extends: [006]
 ---
@@ -184,3 +184,4 @@ toque ≥ 44 px en el móvil, sin desbordes a 320 px).
 | 2026-11-21 | CA3 aclara que la contraseña temporal no se conserva al volver con el aviso | /analyze A24 |
 | 2026-11-21 | Aprobada de nuevo | decisión del usuario |
 | 2026-11-21 | Implementada: CA1–CA11 con sus tests en verde (`PacienteSinCorreoTest`, `PosiblesDuplicadosTest`) | /implement |
+| 2026-11-21 | Vuelve a approved: /review r1 changes_requested (R1–R4, R7, R15 → T030–T038) | /review |

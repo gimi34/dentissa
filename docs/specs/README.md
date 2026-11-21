@@ -54,7 +54,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 050 | [hora-clinica](050-hora-clinica/spec.md) | Transversal | released (v0.22.0) | — | — (2026-11-17; re-aprobada el 2026-11-18 tras /analyze r3) |
 | 051 | [ciudad-lista-cerrada](051-ciudad-lista-cerrada/spec.md) | Pacientes | released (v0.23.0) | — | — (2026-11-18) |
 | 053 | [whatsapp-inicio](053-whatsapp-inicio/spec.md) | Transversal | released (v0.25.0) | — | 6 de 6 criterios (liberada el 2026-11-21) |
-| 054 | [paciente-sin-correo](054-paciente-sin-correo/spec.md) | Pacientes | implemented | — | — (2026-11-20; implementada el 2026-11-21) |
+| 054 | [paciente-sin-correo](054-paciente-sin-correo/spec.md) | Pacientes | approved | — | — (2026-11-20; /review r1 changes_requested, 2026-11-21) |
 
 Specs previstas (números reservados; se crean con `/specify` una por una):
 - Objetivo 2: 015 portal-paciente-aislado (guardar el perfil ya exige el rol: 011) · 016 sesiones-seguras (el cierre de sesiones al cambiar la contraseña desde el perfil ya lo hace la 011) · 017 limite-intentos-acceso ·
