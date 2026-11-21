@@ -13,16 +13,16 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | # | Spec | Dominio | Estado | Confianza | Tests |
 |---|---|---|---|---|---|
 | 001 | [autenticacion](001-autenticacion/spec.md) | Identidad | inferred | alta | 2 de 11 criterios |
-| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | inferred | alta | 1 de 8 criterios |
+| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | approved | — | 1 de 8 criterios (validada el 2026-11-20) |
 | 003 | [agenda-citas-personal](003-agenda-citas-personal/spec.md) | Agenda | inferred | alta | 4 de 11 criterios |
 | 004 | [citas-cliente](004-citas-cliente/spec.md) | Agenda | inferred | alta | 2 de 7 criterios |
 | 005 | [horarios-dentista](005-horarios-dentista/spec.md) | Agenda | inferred | alta | 1 de 4 criterios |
-| 006 | [pacientes](006-pacientes/spec.md) | Pacientes | inferred | alta | sin tests |
+| 006 | [pacientes](006-pacientes/spec.md) | Pacientes | approved | — | parciales (validada el 2026-11-20) |
 | 007 | [expedientes-clinicos](007-expedientes-clinicos/spec.md) | Clínica | inferred | alta | sin tests |
 | 008 | [personal](008-personal/spec.md) | Identidad | inferred | alta | sin tests |
 | 009 | [servicios](009-servicios/spec.md) | Agenda | inferred | alta | 5 de 7 criterios |
 | 010 | [usuarios-admin](010-usuarios-admin/spec.md) | Identidad | inferred | alta | 7 de 9 criterios |
-| 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | inferred | alta | sin tests |
+| 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | approved | — | 1 de 7 criterios (validada el 2026-11-20) |
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |

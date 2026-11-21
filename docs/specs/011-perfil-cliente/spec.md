@@ -1,8 +1,7 @@
 ---
 id: 011
 slug: perfil-cliente
-status: inferred
-confidence: alta
+status: approved
 created: 2026-09-28
 extends: []
 ---
@@ -23,9 +22,9 @@ tienen asignado y gestionar su contraseña (también si entraron con Google).
 - [ ] CA2 · Dado un paciente, cuando actualiza su perfil, entonces se guardan los datos en `usuarios` y `pacientes`; si no existía su fila de paciente, se crea.
 - [ ] CA3 · Dado un paciente con contraseña, cuando la cambia, entonces debe indicar la actual; la nueva exige `Password::min(8)`.
 - [ ] CA4 · Dado un paciente sin contraseña (cuenta de Google), cuando establece una, entonces no se le pide la actual.
-- [ ] CA5 (abuso) · Como alguien con una sesión robada, cambio el email de la cuenta → se pide la contraseña actual. **HOY NO SE CUMPLE: el email se cambia sin reautenticación.**
-- [ ] CA6 (abuso) · Como paciente, cambio mi contraseña → el resto de sesiones abiertas se cierran. **HOY NO SE CUMPLE: no se invalidan otras sesiones ni se regenera la actual.**
-- [ ] CA7 (abuso) · Como admin o personal, guardo `/cliente/perfil` → se rechaza. **HOY NO SE CUMPLE: el grupo no exige `role:cliente` y se crea una ficha de paciente para ese usuario.**
+- [x] CA5 (abuso) · Como alguien con una sesión robada, cambio el email de la cuenta → se pide la contraseña actual. resuelto por 041 (v0.14.0), CA13 (`PerfilCambioCorreoTest`)
+- [ ] CA6 (abuso) · Como paciente, cambio mi contraseña → el resto de sesiones abiertas se cierran. **HOY NO SE CUMPLE: no se invalidan otras sesiones ni se regenera la actual** (se corrige en esta spec, decisión del usuario del 2026-11-20).
+- [ ] CA7 (abuso) · Como admin o personal, guardo `/cliente/perfil` → se rechaza. **HOY NO SE CUMPLE: el grupo no exige `role:cliente` y se crea una ficha de paciente para ese usuario** (se corrige en esta spec, decisión del usuario del 2026-11-20; el cambio de contraseña ya lo exige desde la 043).
 
 ## Fuera de alcance
 - Foto de perfil (`foto_url` existe sin uso).
@@ -45,13 +44,20 @@ Hoy no se registran cambios de perfil ni de contraseña. Eventos requeridos en `
 
 ## Supuestos
 
+## Decisiones
+| Fecha | Tipo | Pregunta / conflicto | Decisión | Fuente |
+|---|---|---|---|---|
+| 2026-11-20 | cierre | ¿Esta spec documenta bien el sistema actual? | Validada y aprobada | usuario |
+| 2026-11-20 | brecha | ¿Los criterios que hoy no se cumplen se corrigen en esta spec o en una aparte? | En esta spec: quedan `[ ]` y pasan por `/plan` | usuario |
+
 ## Notas para /plan
 
 ## Evidencia (solo si status=inferred)
 - Archivos: `routes/web.php:157-159`, `app/Http/Controllers/PerfilController.php`, `resources/views/cliente/perfil.blade.php`
-- Tests: sin tests
+- Tests (parciales): `PerfilCambioCorreoTest` (CA5), `ContrasenaDistintaTest` (cambio de contraseña desde el perfil, CA3), `CiudadListaCerradaTest` (ciudad del perfil) y `HoraClinicaFormulariosTest` (fecha de nacimiento)
 
 ## Observaciones (solo si status=inferred)
+- Comportamiento definido después por otras specs, que manda sobre esta: el correo solo cambia con la contraseña actual (041), la contraseña nueva distinta de la actual y `role:cliente` en el cambio de contraseña (043), fecha de nacimiento anterior al día de la clínica (050) y ciudad de una lista cerrada (051).
 
 ## Historial
 | Fecha | Cambio | Motivo |
@@ -60,3 +66,5 @@ Hoy no se registran cambios de perfil ni de contraseña. Eventos requeridos en `
 | 2026-11-07 | Comportamiento modificado por 043 en v0.14.1: la contraseña nueva del perfil tiene que ser distinta de la actual (amplía CA3), y CA8 de la 043 exige `role:cliente` solo en `PUT /cliente/perfil/password`; CA7 (`PUT /cliente/perfil`) sigue pendiente (→ spec 015) | /release |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
 | 2026-11-19 | Comportamiento modificado por 051 en v0.23.0: la ciudad se elige de una lista cerrada | /release |
+| 2026-11-20 | Validada con el sistema actual: evidencia y tests al día, observaciones revisadas y destino de cada «HOY NO SE CUMPLE» | /specify --edit |
+| 2026-11-20 | Aprobada; los criterios que hoy no se cumplen se corrigen en esta spec | Decisión del usuario |
