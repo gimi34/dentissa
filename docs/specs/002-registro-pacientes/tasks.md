@@ -75,6 +75,18 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
   - nota: comprobado rompiendo: con `@if(true)` en lugar de la condición del mensaje, fallan `…_otros_errores_del_correo_no_llevan_los_enlaces` y `…_con_el_limite_agotado_no_salen_los_enlaces`; sin la regla de foco, falla `…_tienen_foco_y_contraste`; al restaurar, pasan.
   - nota: verificación manual OK 2026-11-21 (usuario): app del worktree servida contra la base de tests y capturada con Playwright 1.63.0 a 390 y 1440 px; el mensaje neutro arriba y bajo el campo, con «Iniciar sesión · Recuperar tu contraseña» subrayados en el rojo del mensaje; vuelven los datos salvo la contraseña; con el teclado, el Tab desde el correo llega a «Iniciar sesión» con el anillo de foco (`solid 2px`). Los enlaces miden 71×14 px: dentro del texto no tienen tamaño mínimo exigido (WCAG 2.1 AA).
 
+- [ ] T023 Escribir `test_otro_error_no_revela_si_el_correo_tiene_cuenta`: con el correo de una cuenta existente y otro campo inválido (sin `terminos`; y en otro envío, con la confirmación distinta), la respuesta solo trae el error de ese campo, sin error en `email` ni `CORREO_NO_DISPONIBLE`, y es la misma que con un correo nuevo con el mismo error — tests/Feature/RegistroPacientesTest.php — hecho cuando: falla por la razón esperada (hoy sale también el mensaje neutro en `email`) — cubre: CA8 — depende: T021
+  - nota: añadida por /review: R1
+- [ ] T024 En `register`, comprobar que el correo no está registrado solo cuando el resto del formulario es válido: primero la validación sin `unique`; después, con todo válido, una segunda validación del correo con `unique:usuarios,email` y el mismo mensaje `CORREO_NO_DISPONIBLE`, que vuelve con los datos escritos salvo la contraseña — app/Http/Controllers/RegisterController.php — hecho cuando: pasan T023 y el resto de `RegistroPacientesTest`, siguen en verde `TerminosPrivacidadTest`, `CiudadListaCerradaTest`, `LimiteIntentosTest` y `HoraClinicaFormulariosTest`, y volver un momento a una sola validación hace fallar T023 — cubre: CA8 — depende: T023
+  - nota: añadida por /review: R1
+- [ ] T025 Endurecer tres tests: `test_los_empates_se_resuelven_por_antiguedad_en_orden` (seis dentistas activos empatados y seis altas seguidas: cada una se asigna al más antiguo de los que aún no tienen paciente, en el orden de `creado_en`); en `…_los_enlaces_del_rechazo_solo_usan_tokens`, que `.page-register .error-msg` declare `color: var(--red)` y que `.page-register .error-msg a` declare `color: inherit` y `text-decoration: underline`; y `test_el_registro_sigue_indexable_con_su_titulo` (`GET /registro`: 200, `<title>Dentissa · Crear cuenta</title>`, sin `noindex` en `meta robots` ni en `X-Robots-Tag`) — tests/Feature/RegistroPacientesTest.php — hecho cuando: pasan, y se comprueba rompiendo: sin el orden por antigüedad falla el de los empates (se anota en cuántas ejecuciones); sin el subrayado o con otro color en el mensaje falla el de tokens; con `noindex` en la vista falla el de indexación — cubre: CA2, CA8 — depende: T024
+  - nota: añadida por /review: R2, R3, R4
+- [ ] T026 Completar tests y un comentario: con `acceso.recuperar_contrasena` en `false`, el rechazo del correo registrado solo lleva el enlace a `route('login')`; en el rechazo, la sesión no guarda `password` ni `password_confirmation` en el `old input` y el campo del correo vuelve con su valor; el registro con Google guarda el teléfono en `usuarios` y la ciudad en `pacientes`; y el comentario de `declaraciones()` en `ReglasCss` deja de decir «en `app.css`» — tests/Feature/RegistroPacientesTest.php, tests/Feature/Concerns/ReglasCss.php — hecho cuando: pasan (caracterización) y quitar un momento la condición de `acceso.recuperar_contrasena` en la vista hace fallar el primero — cubre: CA4, CA8 — depende: T025
+  - nota: añadida por /review: R6, R7, R8, R9
+- [ ] T027 Escribir `test_el_aviso_general_se_anuncia`: con un error en el registro, el aviso general (`.alert-error`) lleva `role="alert"` y su icono `aria-hidden="true"` — tests/Feature/RegistroPacientesTest.php — hecho cuando: falla por la razón esperada (hoy el aviso no tiene `role`) — cubre: CA8 — depende: T026
+  - nota: añadida por /review: R5
+- [ ] T028 Añadir `role="alert"` al aviso general de errores del registro y `aria-hidden="true" focusable="false"` a su icono, sin estilos nuevos — resources/views/auth/register.blade.php — hecho cuando: pasa T027, siguen en verde `RegistroPacientesTest`, `CiudadListaCerradaTest` y `TerminosPrivacidadTest`, y quitar un momento el `role` hace fallar T027; revisión de accesibilidad: solo atributos — cubre: CA8 — depende: T027
+  - nota: añadida por /review: R5
 ## Integración y documentación
 - [x] T022 Pasar la verificación final: suite completa, Pint sobre los PHP tocados (`RegisterController.php` y `RegistroPacientesTest.php`), gitleaks sobre el diff, semgrep `p/php` sobre los archivos tocados, `composer audit --locked`, `node .github/scripts/auditar-npm.mjs` y revisión de que el diff no tiene `Log::` ni eventos de auditoría nuevos — sin archivos — hecho cuando: todo en verde, con `LimiteIntentosTest` (CA7) y `PaginasPublicasTest` (P10) en verde, y `composer audit` sin altas ni críticas nuevas respecto a la línea base del plan — cubre: CA7 — depende: T020, T021
   - nota: 2026-11-21 — suite completa 1536 en verde (20 007 aserciones; 1521 de la línea base y 15 nuevos), con `LimiteIntentosTest` (CA7) y `PaginasPublicasTest` (P10); Pint limpio en los 3 PHP; gitleaks (`dir`) sin fugas en los 5 archivos y en la carpeta de la spec; semgrep `p/php` 0 hallazgos (`--no-git-ignore`); `composer audit --locked` sin altas ni críticas; `auditar-npm.mjs` sin avisos; el diff no añade `Log::` ni eventos de auditoría.
@@ -82,7 +94,7 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
   - nota: no cambia la estructura; la fila «Registro» de la tabla de módulos describe ahora el rechazo neutro del correo ya registrado (`CORREO_NO_DISPONIBLE`, spec 002) y sus enlaces.
 - [x] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas — sin cambios (plan, Observabilidad y Rollout); `docs/security.md` (RS13.b en parte) y `docs/roadmap.md` (excepción P7 y confirmación del correo) se actualizan en `/release`; se anota en la tarea
   - nota: `docs/deployment.md` y `docs/observability.md` sin cambios: sin variables, pasos de deploy, logs, eventos ni métricas nuevos. RS13.c ya está en `docs/security.md` y en el objetivo 2 del roadmap (`/analyze` A3); en `/release`, RS13.b pasa a mitigada y el roadmap recoge la excepción P7 (→ 021) y RS13.c como pendiente.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, sin escribir ningún correo real en ningún documento:
@@ -95,28 +107,28 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
 |---|---|---|
 | CA1 | T010 | ninguna: ya se cumple (caracterización; la rotura de T010 lo prueba) |
-| CA2 | T011 | ninguna: ya se cumple (caracterización; las tres roturas de T011 lo prueban) |
+| CA2 | T011, T025 | ninguna: ya se cumple (caracterización; las roturas de T011 y T025 lo prueban) |
 | CA3 | T014 | ninguna: ya se cumple (la parte del rechazo); T020 cambia solo su texto |
-| CA4 | T012 | ninguna: ya se cumple (caracterización; la rotura de T012 lo prueba) |
+| CA4 | T012, T026 | ninguna: ya se cumple (caracterización; la rotura de T012 lo prueba) |
 | CA5 | T013 | ninguna: ya se cumple (caracterización; la rotura de T013 lo prueba) |
 | CA6 | T013 | ninguna: ya se cumple (caracterización; la rotura de T013 lo prueba) |
 | CA7 | `LimiteIntentosTest` (existente), en verde en T022 | ninguna: ya se cumple (030); T022 confirma que sigue en verde |
-| CA8 | T014, T015 | T020, T021 |
+| CA8 | T014, T015, T023, T025, T026, T027 | T020, T021, T024, T028 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
-| TM1 | T020 | T014 |
+| TM1 | T020, T024 | T014, T023 |
 | TM2 | ninguna: fuera de esta spec → spec futura de confirmación del correo (plan, Modelo de amenazas; decisión del usuario, 2026-11-21) | ninguna (fuera) |
 | TM3 | ninguna: ya se cumple (el rol se fija en el servidor); la rotura de T013 lo prueba | T013 |
 | TM4 | T021 | T014 |
 
 | Cambio del plan (módulo) | Tarea(s) |
 |---|---|
-| app/Http/Controllers/RegisterController.php | T020 |
-| resources/views/auth/register.blade.php | T021 |
+| app/Http/Controllers/RegisterController.php | T020, T024 |
+| resources/views/auth/register.blade.php | T021, T028 |
 | public/css/auth.css | T021 |
-| tests/Feature/RegistroPacientesTest.php | T010, T011, T012, T013, T014, T015 |
-| tests/Feature/Concerns/ReglasCss.php | T015 |
+| tests/Feature/RegistroPacientesTest.php | T010, T011, T012, T013, T014, T015, T023, T025, T026, T027 |
+| tests/Feature/Concerns/ReglasCss.php | T015, T026 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
