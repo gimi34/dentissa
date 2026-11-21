@@ -1,7 +1,7 @@
 ---
 id: 011
 slug: perfil-cliente
-status: approved
+status: implemented
 created: 2026-09-28
 extends: []
 ---
@@ -20,13 +20,13 @@ sesiones al cambiar la contraseña (`docs/security.md`, RS2 y RS9; ver «Cobertu
 
 ## Criterios de aceptación
 <!-- Spec inferida: [x] = cubierto por un test existente; [ ] = comportamiento observado en el código, sin test. -->
-- [ ] CA1 · Dado un paciente, cuando abre `/cliente/perfil`, entonces ve sus datos y su dentista asignado.
-- [ ] CA2 · Dado un paciente, cuando actualiza su perfil, entonces se guardan los datos en `usuarios` y `pacientes`; si no existía su fila de paciente, se crea.
+- [x] CA1 · Dado un paciente, cuando abre `/cliente/perfil`, entonces ve sus datos y su dentista asignado. (`PerfilClienteTest`)
+- [x] CA2 · Dado un paciente, cuando actualiza su perfil, entonces se guardan los datos en `usuarios` y `pacientes`; si no existía su fila de paciente, se crea. (`PerfilClienteTest`)
 - [x] CA3 · Dado un paciente con contraseña, cuando la cambia, entonces debe indicar la actual; la nueva exige `Password::min(8)`. (`ContrasenaDistintaTest`)
 - [x] CA4 · Dado un paciente sin contraseña (cuenta de Google), cuando establece una, entonces no se le pide la actual. (`ContrasenaDistintaTest::test_una_cuenta_sin_contrasena_crea_la_suya_en_el_perfil`)
 - [x] CA5 (abuso) · Como alguien con una sesión robada, cambio el email de la cuenta → se pide la contraseña actual. resuelto por 041 (v0.14.0), CA13 (`PerfilCambioCorreoTest`)
-- [ ] CA6 (abuso) · Como paciente, cambio mi contraseña → el resto de sesiones abiertas se cierran. **HOY NO SE CUMPLE: no se invalidan otras sesiones ni se regenera la actual** (se corrige en esta spec, decisión del usuario del 2026-11-20).
-- [ ] CA7 (abuso) · Como admin o personal, guardo `/cliente/perfil` → se rechaza. **HOY NO SE CUMPLE: el grupo no exige `role:cliente` y se crea una ficha de paciente para ese usuario** (se corrige en esta spec, decisión del usuario del 2026-11-20; el cambio de contraseña ya lo exige desde la 043).
+- [x] CA6 (abuso) · Como paciente, cambio mi contraseña → el resto de sesiones abiertas se cierran; la actual sigue abierta con otro identificador. Corregido en esta spec (decisión del usuario del 2026-11-20; `PerfilClienteTest`).
+- [x] CA7 (abuso) · Como admin o personal, guardo `/cliente/perfil` → se rechaza (403) y no se crea ninguna ficha de paciente. Corregido en esta spec (decisión del usuario del 2026-11-20; el cambio de contraseña ya lo exigía desde la 043; `PerfilClienteTest`).
 
 ## Fuera de alcance
 - Foto de perfil (`foto_url` existe sin uso).
@@ -74,7 +74,7 @@ que sí queda registrado es el rechazo de CA7, como acceso denegado.
 
 ## Evidencia (solo si status=inferred)
 - Archivos: `routes/web.php:212-215`, `app/Http/Controllers/PerfilController.php`, `resources/views/cliente/perfil.blade.php`
-- Tests (parciales): `PerfilCambioCorreoTest` (CA5), `ContrasenaDistintaTest` (cambio de contraseña desde el perfil, CA3 y CA4), `CiudadListaCerradaTest` (ciudad del perfil) y `HoraClinicaFormulariosTest` (fecha de nacimiento)
+- Tests: `PerfilClienteTest` (CA1, CA2, CA6, CA7), `PerfilCambioCorreoTest` (CA5), `ContrasenaDistintaTest` (cambio de contraseña desde el perfil, CA3 y CA4), `CiudadListaCerradaTest` (ciudad del perfil) y `HoraClinicaFormulariosTest` (fecha de nacimiento)
 
 ## Observaciones (solo si status=inferred)
 - Comportamiento definido después por otras specs, que manda sobre esta: el correo solo cambia con la contraseña actual (041), la contraseña nueva distinta de la actual y `role:cliente` en el cambio de contraseña (043), fecha de nacimiento anterior al día de la clínica (050) y ciudad de una lista cerrada (051).
@@ -89,3 +89,4 @@ que sí queda registrado es el rechazo de CA7, como acceso denegado.
 | 2026-11-20 | Validada con el sistema actual: evidencia y tests al día, observaciones revisadas y destino de cada «HOY NO SE CUMPLE» | /specify --edit |
 | 2026-11-20 | Aprobada; los criterios que hoy no se cumplen se corrigen en esta spec | Decisión del usuario |
 | 2026-11-20 | «Cobertura de riesgos» (RS2.a en parte, RS2.b, RS9.a, RS9.b), CA3 y CA4 marcados como cubiertos, evidencia al día, decisiones de D6 y de la excepción P7 | `/analyze` A3, A4, A5, A10 |
+| 2026-11-20 | Implementada: CA6 (el cambio de contraseña cierra las otras sesiones) y CA7 (`role:cliente` al guardar el perfil); CA1 y CA2 con tests de caracterización | /implement |

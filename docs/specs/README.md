@@ -22,7 +22,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 008 | [personal](008-personal/spec.md) | Identidad | inferred | alta | sin tests |
 | 009 | [servicios](009-servicios/spec.md) | Agenda | inferred | alta | 5 de 7 criterios |
 | 010 | [usuarios-admin](010-usuarios-admin/spec.md) | Identidad | inferred | alta | 7 de 9 criterios |
-| 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | approved | — | 3 de 7 criterios (validada el 2026-11-20; editada por /analyze r1) |
+| 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | implemented | — | 7 de 7 criterios (implementada el 2026-11-20) |
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
 | 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
