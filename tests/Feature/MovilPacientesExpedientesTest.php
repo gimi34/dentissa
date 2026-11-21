@@ -374,6 +374,7 @@ class MovilPacientesExpedientesTest extends TestCase
             foreach ($xpath->query('//main//form//*[@aria-describedby]') as $descrito) {
                 foreach (preg_split('/\s+/', trim($descrito->getAttribute('aria-describedby'))) as $id) {
                     $this->assertMatchesRegularExpression('/^(ayuda|aviso)-/', $id, "{$caso}: sin errores, aria-describedby solo a ayudas o avisos.");
+                    $this->assertDescritoPorExiste($xpath, $id, $caso);
                 }
             }
 
@@ -392,6 +393,7 @@ class MovilPacientesExpedientesTest extends TestCase
                 $this->assertSame("error-{$campo}", $mensaje, "{$caso}: «{$campo}» enlazado a su mensaje, en primer lugar.");
                 foreach (array_slice($descritoPor, 1) as $id) {
                     $this->assertMatchesRegularExpression('/^(ayuda|aviso)-/', $id, "{$caso}: «{$campo}» solo añade ayudas o avisos tras su error.");
+                    $this->assertDescritoPorExiste($xpath, $id, $caso);
                 }
                 $error = $xpath->query("//*[@id='{$mensaje}'][contains(concat(' ', normalize-space(@class), ' '), ' error-msg ')]");
                 $this->assertSame(1, $error->length, "{$caso}: el mensaje de «{$campo}» existe.");
@@ -634,5 +636,13 @@ class MovilPacientesExpedientesTest extends TestCase
         libxml_clear_errors();
 
         return new DOMXPath($dom);
+    }
+
+    /** Spec 054 (/review R7): cada id de aria-describedby apunta a un elemento con texto. */
+    private function assertDescritoPorExiste(DOMXPath $xpath, string $id, string $caso): void
+    {
+        $destino = $xpath->query("//*[@id='{$id}']");
+        $this->assertSame(1, $destino->length, "{$caso}: aria-describedby apunta a «{$id}», que existe.");
+        $this->assertNotSame('', trim($destino->item(0)->textContent), "{$caso}: «{$id}» tiene texto.");
     }
 }
