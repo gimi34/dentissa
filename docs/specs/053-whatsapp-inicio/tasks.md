@@ -1,7 +1,7 @@
 ---
 spec: 053-whatsapp-inicio
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 053 Escríbenos por WhatsApp desde la página de inicio
