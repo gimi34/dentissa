@@ -123,10 +123,18 @@ class PerfilController extends Controller
             return back()->withErrors(['password' => 'Elige una contraseña distinta de la actual']);
         }
 
-        DB::table('usuarios')->where('id', $user->id)->update([
+        // Spec 011 (CA6, D1, TM4): la versión sube en la misma escritura que la contraseña, y solo aquí, después
+        // de todas las comprobaciones. `SesionVigente` cierra en su siguiente petición las otras sesiones de la
+        // cuenta, como tras un restablecimiento (041).
+        DB::table('usuarios')->where('id', $user->id)->increment('version_sesion', 1, [
             'password_hash' => Hash::make($data['password']),
             'actualizado_en' => now(),
         ]);
+        $version = (int) DB::table('usuarios')->where('id', $user->id)->value('version_sesion');
+
+        // D2, TM3: esta sesión sigue abierta, con otro identificador y la versión nueva.
+        $request->session()->regenerate();
+        $request->session()->put('version_sesion', $version);
 
         return back()->with('success', 'Tu contraseña fue actualizada.');
     }
