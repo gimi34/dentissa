@@ -11,6 +11,14 @@
             'dentista' => 'dentista',
             default    => 'asistente',
         };
+        // Spec 054: el correo solo es obligatorio para quien ya lo tiene (CA5); sin él, el teléfono sí (CA2).
+        $correoObligatorio = isset($paciente) && filled($paciente->email);
+        $posiblesDuplicados = $posiblesDuplicados ?? [];
+        $masDuplicados = $masDuplicados ?? 0;
+        $describe = fn (string $campo, bool $conAyuda) => implode(' ', array_filter([
+            $errors->has($campo) ? "error-{$campo}" : null,
+            $conAyuda ? "ayuda-{$campo}" : null,
+        ]));
     @endphp
     @include('partials.migas', ['migas' => isset($paciente)
         ? [
@@ -27,8 +35,41 @@
           action="{{ isset($paciente) ? route("{$base}.pacientes.update", $paciente->id) : route("{$base}.pacientes.store") }}">
         @csrf
         @if(isset($paciente)) @method('PUT') @endif
+        @if($posiblesDuplicados)
+            {{-- Spec 054 (D13): primer envío del formulario, para que Enter en un campo no confirme el duplicado. --}}
+            <button type="submit" class="envio-por-defecto" tabindex="-1" aria-hidden="true">Registrar paciente</button>
+        @endif
 
         <div style="display:flex;flex-direction:column;gap:18px">
+
+            @if($posiblesDuplicados)
+                {{-- Spec 054 (CA3, CA9): solo nombres y la ficha del rol; nunca qué dato coincide ni otros datos. --}}
+                <div class="aviso-duplicado" role="alert">
+                    <div class="aviso-duplicado-cabecera">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <h2 tabindex="-1" autofocus>Ya existe un paciente con estos datos</h2>
+                    </div>
+                    <p>Coinciden el nombre y el teléfono o la fecha de nacimiento que escribiste.</p>
+                    <ul class="aviso-duplicado-lista">
+                        @foreach($posiblesDuplicados as $duplicado)
+                            <li class="texto-partible">{{ $duplicado['nombre'] }}</li>
+                        @endforeach
+                    </ul>
+                    @if($masDuplicados > 0)
+                        <p>y {{ $masDuplicados }} más</p>
+                    @endif
+                    <div class="acciones-formulario">
+                        @foreach($posiblesDuplicados as $duplicado)
+                            <a href="{{ $duplicado['url'] }}" class="btn btn-primary texto-partible">Ver ficha de {{ $duplicado['nombre'] }}</a>
+                        @endforeach
+                        <button type="submit" name="confirmar_duplicado" value="1" class="btn btn-outline">Registrar de todos modos</button>
+                    </div>
+                </div>
+            @endif
 
             {{-- Sección 1: Datos personales --}}
             <div class="card">
@@ -51,25 +92,37 @@
                 </div>
                 <div class="grid-2" style="margin-bottom:14px">
                     <div class="field-group">
-                        <label class="field-label" for="campo-email">Correo electrónico <span style="color:var(--p500)">*</span></label>
-                        <input type="email" name="email" id="campo-email" @error('email') aria-invalid="true" aria-describedby="error-email" @enderror class="field {{ $errors->has('email') ? 'field-error' : '' }}"
-                            value="{{ old('email', $paciente->email ?? '') }}" required placeholder="correo@ejemplo.com">
+                        @if($correoObligatorio)
+                            <label class="field-label" for="campo-email">Correo electrónico <span style="color:var(--p500)">*</span></label>
+                        @else
+                            <label class="field-label" for="campo-email">Correo electrónico (opcional)</label>
+                        @endif
+                        <input type="email" name="email" id="campo-email" @error('email') aria-invalid="true" @enderror @if($describe('email', ! $correoObligatorio)) aria-describedby="{{ $describe('email', ! $correoObligatorio) }}" @endif class="field {{ $errors->has('email') ? 'field-error' : '' }}"
+                            value="{{ old('email', $paciente->email ?? '') }}" @if($correoObligatorio) required @endif placeholder="correo@ejemplo.com">
                         @error('email')<div class="error-msg" id="error-email">{{ $message }}</div>@enderror
+                        @unless($correoObligatorio)
+                            <div class="field-hint field-hint-aviso" id="ayuda-email">{{ isset($paciente)
+                                ? 'Si añades un correo, el paciente podrá entrar creando su contraseña con «¿Olvidaste tu contraseña?».'
+                                : 'Sin correo, el paciente no tendrá acceso a la aplicación y el teléfono es obligatorio.' }}</div>
+                        @endunless
                     </div>
                     <div class="field-group">
                         <label class="field-label" for="campo-telefono">Teléfono</label>
-                        <input type="tel" name="telefono" id="campo-telefono" @error('telefono') aria-invalid="true" aria-describedby="error-telefono" @enderror class="field {{ $errors->has('telefono') ? 'field-error' : '' }}"
+                        <input type="tel" name="telefono" id="campo-telefono" @error('telefono') aria-invalid="true" @enderror @if($describe('telefono', ! $correoObligatorio)) aria-describedby="{{ $describe('telefono', ! $correoObligatorio) }}" @endif class="field {{ $errors->has('telefono') ? 'field-error' : '' }}"
                             value="{{ old('telefono', $paciente->telefono ?? '') }}" placeholder="55 1234 5678">
                         @error('telefono')<div class="error-msg" id="error-telefono">{{ $message }}</div>@enderror
+                        @unless($correoObligatorio)
+                            <div class="field-hint field-hint-aviso" id="ayuda-telefono">Obligatorio si el paciente no tiene correo.</div>
+                        @endunless
                     </div>
                 </div>
                 @if(!isset($paciente))
                     <div class="field-group">
                         <label class="field-label" for="campo-password">Contraseña temporal</label>
-                        <input type="text" name="password" id="campo-password" @error('password') aria-invalid="true" aria-describedby="error-password" @enderror class="field {{ $errors->has('password') ? 'field-error' : '' }}"
+                        <input type="text" name="password" id="campo-password" @error('password') aria-invalid="true" @enderror aria-describedby="{{ $describe('password', true) }}" class="field {{ $errors->has('password') ? 'field-error' : '' }}"
                             value="{{ old('password') }}" placeholder="Mín. 6 caracteres (dejar vacío para generar automáticamente)">
                         @error('password')<div class="error-msg" id="error-password">{{ $message }}</div>@enderror
-                        <div class="field-hint">Si se deja vacío se genera una contraseña aleatoria. El paciente deberá cambiarla.</div>
+                        <div class="field-hint field-hint-aviso" id="ayuda-password">Solo se usa si hay correo. Si se deja vacía, se genera una contraseña aleatoria.</div>
                     </div>
                 @endif
                 <div class="grid-3">

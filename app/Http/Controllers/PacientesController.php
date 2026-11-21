@@ -88,8 +88,42 @@ class PacientesController extends Controller
     public function create()
     {
         $dentistas = $this->dentistasDisponibles();
+        [$posiblesDuplicados, $masDuplicados] = $this->avisoDeDuplicados();
 
-        return view('pacientes.create', compact('dentistas'));
+        return view('pacientes.create', compact('dentistas', 'posiblesDuplicados', 'masDuplicados'));
+    }
+
+    /**
+     * Spec 054 (CA3, CA9, D7): nombres y ficha de los posibles duplicados que dejó `store`. Solo el
+     * nombre completo y la ruta de ficha del rol de quien registra; nunca otros datos del paciente.
+     *
+     * @return array{0: list<array{nombre: string, url: string}>, 1: int}
+     */
+    private function avisoDeDuplicados(): array
+    {
+        $aviso = session('posibles_duplicados');
+        if (! is_array($aviso) || empty($aviso['ids'])) {
+            return [[], 0];
+        }
+
+        $base = auth()->user()->rol === 'admin' ? 'admin' : 'asistente';
+        $filas = DB::table('pacientes')
+            ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
+            ->whereIn('pacientes.id', $aviso['ids'])
+            ->get(['pacientes.id', 'usuarios.nombre', 'usuarios.apellido'])
+            ->keyBy('id');
+
+        $duplicados = [];
+        foreach ($aviso['ids'] as $id) {
+            if ($fila = $filas->get($id)) {
+                $duplicados[] = [
+                    'nombre' => $fila->nombre.' '.$fila->apellido,
+                    'url' => route("{$base}.pacientes.show", $id),
+                ];
+            }
+        }
+
+        return [$duplicados, max(0, (int) $aviso['total'] - count($duplicados))];
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
