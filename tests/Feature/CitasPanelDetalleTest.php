@@ -360,7 +360,6 @@ class CitasPanelDetalleTest extends TestCase
         return array_values(array_filter(preg_split('/\s+/', trim($elemento->getAttribute('class')))));
     }
 
-
     // ── Spec 052 (CA7): la marca del recordatorio en el detalle del personal ────────────────
 
     /** Texto de la fila «Recordatorio» del detalle de la cita, o null si no está. */
