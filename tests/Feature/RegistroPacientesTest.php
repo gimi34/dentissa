@@ -92,6 +92,50 @@ class RegistroPacientesTest extends TestCase
         $this->assertNull($this->dentistaAsignado());
     }
 
+    // ── CA4 · registro con Google ─────────────────────────────────────────────────────
+
+    public function test_el_registro_con_google_crea_la_cuenta_sin_contrasena(): void
+    {
+        // A14: las claves que deja la vuelta de Google, como en CiudadListaCerradaTest.
+        $google = ['google_id' => 'google-002-'.Str::random(8), 'nombre' => 'Gala', 'apellido' => 'Google',
+            'email' => 'google.'.Str::lower(Str::random(10)).'@example.test', 'foto_url' => null];
+
+        $this->withSession(['google_registro' => $google])->post('/registro/contacto', [
+            'telefono' => '443-555-0404', 'ciudad' => 'Ario', 'terminos' => '1',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('cliente.dashboard'));
+
+        $cuenta = Usuario::where('email', $google['email'])->sole();
+        $this->assertSame([$google['google_id'], 'cliente', null], [$cuenta->google_id, $cuenta->rol, $cuenta->password_hash]);
+        $this->assertSame(1, DB::table('pacientes')->where('usuario_id', $cuenta->id)->count(), 'Tiene su ficha de paciente.');
+        $this->assertAuthenticatedAs($cuenta);
+    }
+
+    // ── CA5 · el rol · CA6 · la contraseña ────────────────────────────────────────────
+
+    /** CA5, TM3: el rol y `activo` los fija el servidor, aunque el formulario los envíe. */
+    public function test_el_rol_es_siempre_cliente(): void
+    {
+        $datos = $this->datosDelAlta(['rol' => 'admin', 'activo' => '0']);
+
+        $this->post('/registro', $datos)->assertSessionHasNoErrors()->assertRedirect(route('cliente.dashboard'));
+
+        $cuenta = Usuario::where('email', $datos['email'])->sole();
+        $this->assertSame(['cliente', 1], [$cuenta->rol, (int) $cuenta->activo]);
+    }
+
+    /** CA6 y el requisito no funcional (`Password::min(8)`); A12: 8 caracteres es el umbral exacto. */
+    public function test_una_contrasena_corta_se_rechaza(): void
+    {
+        $corta = $this->datosDelAlta(['password' => 'siete77', 'password_confirmation' => 'siete77']);
+        $this->from('/registro')->post('/registro', $corta)->assertRedirect('/registro')
+            ->assertSessionHasErrors(['password' => 'La contraseña debe tener al menos 8 caracteres.']);
+        $this->assertDatabaseMissing('usuarios', ['email' => $corta['email']]);
+
+        $justa = $this->datosDelAlta(['password' => 'ocho8888', 'password_confirmation' => 'ocho8888']);
+        $this->post('/registro', $justa)->assertSessionHasNoErrors()->assertRedirect(route('cliente.dashboard'));
+        $this->assertDatabaseHas('usuarios', ['email' => $justa['email']]);
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
 
     /** Da de alta a alguien nuevo y devuelve el dentista de su ficha. */
