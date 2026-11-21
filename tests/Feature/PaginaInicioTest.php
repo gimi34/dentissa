@@ -506,4 +506,52 @@ class PaginaInicioTest extends TestCase
 
         $this->assertSame(2, $xpath->query('//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]')->length, 'Dos botones en la página: la presentación y el contacto.');
     }
+
+    /** El enlace de los dos botones (plan «Contratos y datos»). */
+    private const WHATSAPP = 'https://wa.me/527530000000?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20agendar%20una%20cita.';
+
+    /** Los dos botones de WhatsApp de la página, en el orden del documento. */
+    private function botonesWhatsapp(DOMXPath $xpath): array
+    {
+        return iterator_to_array($xpath->query('//a[contains(concat(" ", normalize-space(@class), " "), " pub-wa ")]'));
+    }
+
+    /** CA3, TM1, TM4: el número del teléfono de la página, el mensaje escrito y la página sigue abierta. */
+    public function test_el_enlace_abre_whatsapp_con_el_numero_y_el_mensaje(): void
+    {
+        $botones = $this->botonesWhatsapp($this->xpath($this->inicioComo(null)));
+        $this->assertCount(2, $botones);
+
+        $digitos = preg_replace('/\D/', '', config('clinica.contacto.telefono_enlace'));
+        $this->assertSame('527530000000', $digitos, 'El teléfono de la página, con la clave de México.');
+
+        foreach ($botones as $i => $boton) {
+            $href = $boton->getAttribute('href');
+            $this->assertSame(self::WHATSAPP, $href, "Botón {$i}: el enlace exacto.");
+            $this->assertSame("https://wa.me/{$digitos}", strtok($href, '?'), "Botón {$i}: el mismo número que el teléfono de la página.");
+            parse_str((string) parse_url($href, PHP_URL_QUERY), $consulta);
+            $this->assertSame(['text' => 'Hola, quiero información para agendar una cita.'], $consulta, "Botón {$i}: solo el mensaje escrito.");
+
+            // En un ordenador, WhatsApp Web se abre en otra pestaña sin acceso a esta (TM1).
+            $this->assertSame('_blank', $boton->getAttribute('target'), "Botón {$i}: en otra pestaña.");
+            $rel = preg_split('/\s+/', trim($boton->getAttribute('rel')));
+            $this->assertContains('noopener', $rel, "Botón {$i}: noopener.");
+            $this->assertContains('noreferrer', $rel, "Botón {$i}: noreferrer.");
+        }
+    }
+
+    /** CA4: un enlace del HTML del servidor, sin nada que dependa de JavaScript. */
+    public function test_el_boton_no_depende_de_javascript(): void
+    {
+        $botones = $this->botonesWhatsapp($this->xpath($this->inicioComo(null)));
+        $this->assertCount(2, $botones, 'Los dos botones llegan en el HTML del servidor.');
+
+        foreach ($botones as $i => $boton) {
+            $this->assertSame('a', $boton->tagName, "Botón {$i}: un enlace.");
+            $this->assertStringStartsWith('https://wa.me/', $boton->getAttribute('href'), "Botón {$i}: con su destino en el HTML.");
+            foreach (iterator_to_array($boton->attributes) as $atributo) {
+                $this->assertDoesNotMatchRegularExpression('/^(on|data-)/i', $atributo->name, "Botón {$i}: sin manejadores ni datos para publico.js ({$atributo->name}).");
+            }
+        }
+    }
 }
