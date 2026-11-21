@@ -68,3 +68,4 @@ Hoy no se registran lecturas ni cambios de la ficha clínica. Eventos requeridos
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-11-17 | Corregido por la ficha 2026-11-17-fix-sesion-cuenta-desactivada en v0.20.1 (CA8): desactivar un paciente cierra su sesión abierta | /release |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
+| 2026-11-19 | Comportamiento modificado por 051 en v0.23.0: la ciudad se elige de una lista cerrada | /release |

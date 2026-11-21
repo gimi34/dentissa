@@ -59,3 +59,4 @@ Hoy no se registran cambios de perfil ni de contraseña. Eventos requeridos en `
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-11-07 | Comportamiento modificado por 043 en v0.14.1: la contraseña nueva del perfil tiene que ser distinta de la actual (amplía CA3), y CA8 de la 043 exige `role:cliente` solo en `PUT /cliente/perfil/password`; CA7 (`PUT /cliente/perfil`) sigue pendiente (→ spec 015) | /release |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
+| 2026-11-19 | Comportamiento modificado por 051 en v0.23.0: la ciudad se elige de una lista cerrada | /release |

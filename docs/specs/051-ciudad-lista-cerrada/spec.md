@@ -1,7 +1,8 @@
 ---
 id: 051
 slug: ciudad-lista-cerrada
-status: implemented
+status: released
+released: v0.23.0 (2026-11-19)
 created: 2026-11-18
 extends: [002, 006, 011]
 ---
@@ -175,3 +176,4 @@ toque ≥ 44 px en el móvil, sin desbordes a 320 px).
 | 2026-11-18 | Aprobada | Decisión del usuario, con los supuestos revisados |
 | 2026-11-18 | Implementada | Tareas T001–T031 y T090–T092 cerradas; suite completa en verde (1497 tests) |
 | 2026-11-18 | Implementada tras /review r1 | T032–T034 (R1 y menores); suite completa en verde (1499 tests) |
+| 2026-11-19 | Liberada en v0.23.0 | /release |
