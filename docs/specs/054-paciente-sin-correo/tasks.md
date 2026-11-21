@@ -1,7 +1,7 @@
 ---
 spec: 054-paciente-sin-correo
 plan: plan.md
-impl_base: 347b3f7
+impl_base: d5d5d70
 status: approved
 ---
 
