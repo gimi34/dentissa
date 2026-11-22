@@ -392,4 +392,44 @@ class RecordatorioCitaTest extends TestCase
         $this->assertSame('* * * * *', $eventos[0]->expression);
         $this->assertTrue($eventos[0]->withoutOverlapping);
     }
+
+    // ── Correcciones de /review r1 (T027) ─────────────────────────────────────────────────────────
+
+    /** R1: si el proceso muere a mitad de una revisión, el bloqueo no deja sin recordatorios todo un día. */
+    public function test_el_bloqueo_de_la_revision_caduca_pronto(): void
+    {
+        $evento = collect(app(Schedule::class)->events())
+            ->first(fn ($evento) => str_contains((string) $evento->command, 'dentissa:recordatorios'));
+
+        $this->assertNotNull($evento);
+        $this->assertSame(10, $evento->expiresAt, 'El bloqueo caduca a los 10 minutos.');
+    }
+
+    /** R2, CA8: con el correo caído, una revisión hace un solo intento y aplaza las demás citas. */
+    public function test_con_el_correo_caido_se_intenta_una_vez_por_revision(): void
+    {
+        $primera = $this->cita($this->d1, $this->p1, 'agendada', $this->dentroDe('+2 hours'));
+        $segunda = $this->cita($this->d2, $this->p2, 'agendada', $this->dentroDe('+3 hours'));
+        $logs = CapturaLogs::instalar();
+        Mail::shouldReceive('to')->once()->andThrow(new TransportException('Conexión rechazada'));
+
+        $this->revisar();
+
+        $this->assertSame([0, 0], [$this->marcaDe($primera), $this->marcaDe($segunda)], 'Ninguna queda avisada.');
+        $registros = $logs->registros();
+        $fallos = array_filter($registros, fn ($r) => $r['mensaje'] === 'recordatorio.correo_fallido');
+        $this->assertCount(1, $fallos, 'Un solo intento y un solo fallo por revisión.');
+        $revision = array_values(array_filter($registros, fn ($r) => $r['mensaje'] === 'recordatorio.revision'));
+        $this->assertSame([['enviados' => 0, 'fallidos' => 1, 'aplazados' => 1]], array_column($revision, 'contexto'));
+
+        // Con el correo de vuelta, la revisión siguiente envía las dos.
+        app()->forgetInstance('mail.manager');
+        Mail::clearResolvedInstance('mail.manager');
+        Mail::fake();
+        $this->travel(1)->minutes();
+        $this->revisar();
+
+        Mail::assertSent(RecordatorioCita::class, 2);
+        $this->assertSame([1, 1], [$this->marcaDe($primera), $this->marcaDe($segunda)]);
+    }
 }
