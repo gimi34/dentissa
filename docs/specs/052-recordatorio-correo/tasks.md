@@ -97,11 +97,17 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: tras /review r1 (T027, T028): suite completa 1624 tests en verde; Pint PASS en `RecordatoriosCitas.php` y `routes/console.php`; gitleaks y semgrep `p/php` sin hallazgos en lo tocado; `aidd.py validate` sin errores.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097, con el interruptor encendido después del despliegue
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097, con el interruptor encendido después del despliegue
   - verificación manual del RNF de entrega y de CA1 en producción: con `RECORDATORIOS_CORREO=true`, una cita de prueba de una cuenta de paciente de prueba (con un correo del usuario) a 24 h 2 min recibe el correo en los minutos siguientes con los datos de la cita; el detalle de esa cita en el panel del personal muestra «Recordatorio · Enviado»; el correo se lee bien en el móvil del usuario
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones) con `RECORDATORIOS_CORREO=false`, `verificar.sh` (con `dentissa:recordatorios` en «Tareas programadas»), encender el interruptor con `aplicar-entorno.sh app` para la comprobación de T095 y vigilar `recordatorio.correo_fallido` y `recordatorio.tope_diario`. Rollback: apagar el interruptor; si hace falta, `bash deploy/volver.sh <tag anterior>`, sin copia
-- [ ] T098 Marcar spec como `released`; en las specs 003, 004 y 028 anotar en su Historial que la 052 envía el recordatorio (y cierra 028/R11); en el roadmap, 028/R11 resuelto
+  - nota: A6 — cita de prueba de una cuenta de paciente de prueba con un correo del usuario; se le indicó cancelarla al terminar (cancelarla no envía otro correo, CA5).
+  - nota: resultado: el usuario confirma el 2026-11-22 en producción, con `RECORDATORIOS_CORREO=true`, que con una cita de prueba de una cuenta de paciente de prueba (correo del usuario, sin escribirlo en ningún documento) llegó el recordatorio con los datos de la cita, el detalle muestra «Recordatorio · Enviado» y el correo se lee bien en el móvil. La cita se puso el lunes a primera hora (el domingo la clínica cierra y «24 h 2 min» caía fuera del horario), así que el correo salió el domingo, 24 h antes.
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-21 21:40 para v0.28.0
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones) con `RECORDATORIOS_CORREO=false`, `verificar.sh` (con `dentissa:recordatorios` en «Tareas programadas»), encender el interruptor con `aplicar-entorno.sh app` para la comprobación de T095 y vigilar `recordatorio.correo_fallido` y `recordatorio.tope_diario`. Rollback: apagar el interruptor; si hace falta, `bash deploy/volver.sh <tag anterior>`, sin copia
+  - nota: A6 — estado final del interruptor: `RECORDATORIOS_CORREO=true`, como lo dejó el usuario tras la prueba de T095.
+  - nota: 2026-11-22 — `deploy/desplegar.sh v0.28.0` en 151 s (sin la verificación), anterior v0.27.0, copia `dentissa-20261122-060727.sql.gz.gpg`, con el interruptor apagado; `verificar.sh` interna y por la dirección pública: todo OK, con `dentissa:recordatorios` en «Tareas programadas». Después, `RECORDATORIOS_CORREO=true` en `app.env` y `aplicar-entorno.sh app` para T095. Tag `v0.28.0` sobre `790fd0bc` (PR #109). Rollback: apagar el interruptor; si hace falta, `bash deploy/volver.sh v0.27.0`, sin copia.
+- [x] T098 Marcar spec como `released`; en las specs 003, 004 y 028 anotar en su Historial que la 052 envía el recordatorio (y cierra 028/R11); en el roadmap, 028/R11 resuelto
+  - nota: spec `released`; Historial de las specs 003, 004 y 028 anotado; 028/R11 resuelto en el roadmap.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

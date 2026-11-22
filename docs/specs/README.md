@@ -53,7 +53,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 049 | [calendario-citas](049-calendario-citas/spec.md) | Agenda | released (v0.21.0) | — | — (2026-11-15) |
 | 050 | [hora-clinica](050-hora-clinica/spec.md) | Transversal | released (v0.22.0) | — | — (2026-11-17; re-aprobada el 2026-11-18 tras /analyze r3) |
 | 051 | [ciudad-lista-cerrada](051-ciudad-lista-cerrada/spec.md) | Pacientes | released (v0.23.0) | — | — (2026-11-18) |
-| 052 | [recordatorio-correo](052-recordatorio-correo/spec.md) | Agenda | implemented | — | — (2026-11-20) |
+| 052 | [recordatorio-correo](052-recordatorio-correo/spec.md) | Agenda | released (v0.28.0) | — | — (2026-11-20) |
 | 053 | [whatsapp-inicio](053-whatsapp-inicio/spec.md) | Transversal | released (v0.25.0) | — | 6 de 6 criterios (liberada el 2026-11-21) |
 | 054 | [paciente-sin-correo](054-paciente-sin-correo/spec.md) | Pacientes | implemented | — | — (2026-11-20; correcciones de /review r1, 2026-11-21) |
 
