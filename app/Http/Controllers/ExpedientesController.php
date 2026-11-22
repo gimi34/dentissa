@@ -3,12 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Agenda\RelojClinica;
+use App\Auditoria\Auditoria;
+use App\Autorizacion\AlcanceClinico;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ExpedientesController extends Controller
 {
+    /** Spec 014 (D5). */
+    public const AUTOR_NO_DENTISTA = 'El expediente lo firma un dentista.';
+
+    public const CITA_DE_OTRO_PACIENTE = 'La cita elegida no es de este paciente.';
+
     // ── INDEX ──────────────────────────────────────────────────────────
     public function index(Request $request)
     {
@@ -27,10 +36,11 @@ class ExpedientesController extends Controller
                 DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista")
             );
 
-        // El dentista solo ve los expedientes que él mismo registró
+        // El dentista ve los que él mismo registró, de pacientes de su alcance (spec 014, D7).
         if (auth()->user()->rol === 'dentista') {
-            $personal = DB::table('personal')->where('usuario_id', auth()->id())->first();
-            $query->where('expedientes.dentista_id', $personal->id ?? null);
+            $alcance = app(AlcanceClinico::class);
+            $query->where('expedientes.dentista_id', $alcance->personalId(auth()->user()));
+            $alcance->aplicarAPacientes($query, auth()->user());
         }
 
         if ($request->filled('buscar')) {
@@ -55,12 +65,14 @@ class ExpedientesController extends Controller
     // ── CREATE ─────────────────────────────────────────────────────────
     public function create(Request $request)
     {
-        // Solo el doctor (o el admin) puede registrar el diagnóstico clínico
-        if (auth()->user()->rol === 'asistente') {
-            abort(403);
+        // Spec 014 (D16, TM13): sin un UUID no hay paciente que buscar; 404 sin consultar, nunca un 500.
+        $pacienteId = $request->query('paciente_id');
+        if (! is_string($pacienteId) || ! Str::isUuid($pacienteId)) {
+            abort(404);
         }
 
-        $pacienteId = $request->get('paciente_id');
+        // Fuera del alcance, 404 auditado con el paciente; el asistente no registra expedientes (403).
+        $this->autorizarAlta($pacienteId);
 
         $paciente = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
@@ -106,14 +118,28 @@ class ExpedientesController extends Controller
     // ── STORE ──────────────────────────────────────────────────────────
     public function store(Request $request)
     {
-        if (auth()->user()->rol === 'asistente') {
-            abort(403);
+        $usuario = auth()->user();
+        $pacienteId = $request->input('paciente_id');
+
+        // Spec 014 (D16, D17): para el personal no admin, un UUID y el Gate sobre el paciente antes de validar, para
+        // que un paciente ajeno y uno inexistente respondan igual. El admin conserva la validación de siempre.
+        if ($usuario->rol !== 'admin') {
+            if (! is_string($pacienteId) || ! Str::isUuid($pacienteId)) {
+                abort(404);
+            }
+            $this->autorizarAlta($pacienteId);
+
+            // D5, D19: el dentista solo firma como él mismo; otro autor es un 403 auditado sobre el paciente.
+            if ($request->input('dentista_id') !== app(AlcanceClinico::class)->personalId($usuario)) {
+                app(Auditoria::class)->denegar($this->accionSolicitada(), 'pacientes', $pacienteId);
+            }
         }
 
         $data = $request->validate([
             'paciente_id' => 'required|exists:pacientes,id',
-            'dentista_id' => 'required|exists:personal,id',
-            'cita_id' => 'nullable|exists:citas,id',
+            // D5: el autor es un dentista y la cita, del mismo paciente.
+            'dentista_id' => ['required', Rule::exists('personal', 'id')->where('tipo', 'dentista')],
+            'cita_id' => ['nullable', Rule::exists('citas', 'id')->where('paciente_id', is_string($pacienteId) ? $pacienteId : '')],
             'diagnostico' => 'required|string|max:2000',
             'tratamiento' => 'nullable|string|max:2000',
             'receta' => 'nullable|string|max:2000',
@@ -121,6 +147,8 @@ class ExpedientesController extends Controller
             'proxima_visita' => 'nullable|date_format:Y-m-d|after:'.RelojClinica::fechaHoy(),
         ], [
             'diagnostico.required' => 'El diagnóstico es obligatorio.',
+            'dentista_id.exists' => self::AUTOR_NO_DENTISTA,
+            'cita_id.exists' => self::CITA_DE_OTRO_PACIENTE,
             'proxima_visita.date_format' => 'La próxima visita debe tener el formato AAAA-MM-DD.',
             'proxima_visita.after' => 'La próxima visita debe ser posterior a hoy.',
         ]);
@@ -155,6 +183,9 @@ class ExpedientesController extends Controller
     // ── SHOW ───────────────────────────────────────────────────────────
     public function show(string $id)
     {
+        // Spec 014 (CA4, CA5): fuera del alcance del paciente, 404 auditado; dentro, cualquier autor.
+        Gate::authorize('ver-expediente', $this->expedienteOFallar($id));
+
         $expediente = DB::table('expedientes')
             ->join('pacientes', 'expedientes.paciente_id', '=', 'pacientes.id')
             ->join('usuarios as up', 'pacientes.usuario_id', '=', 'up.id')
@@ -180,6 +211,9 @@ class ExpedientesController extends Controller
             abort(404);
         }
 
+        // Spec 014 (CA12, D3): lectura del expediente, en modo crítico (sin registro no se muestra).
+        app(Auditoria::class)->registrar('expediente_leido', 'exito', 'expedientes', $id, critico: true);
+
         $base = match (auth()->user()->rol) {
             'dentista' => 'dentista',
             'asistente' => 'asistente',
@@ -192,9 +226,8 @@ class ExpedientesController extends Controller
     // ── UPDATE ─────────────────────────────────────────────────────────
     public function update(Request $request, string $id)
     {
-        if (auth()->user()->rol === 'asistente') {
-            abort(403);
-        }
+        // Spec 014 (CA6, D17): solo su autor o el admin, y antes de validar; fuera del alcance, 404.
+        Gate::authorize('editar-expediente', $this->expedienteOFallar($id));
 
         // Una próxima visita ya guardada que llega sin cambios se acepta aunque haya vencido (spec 050, D10).
         $guardada = DB::table('expedientes')->where('id', $id)->value('proxima_visita');
@@ -214,5 +247,36 @@ class ExpedientesController extends Controller
         DB::table('expedientes')->where('id', $id)->update($data);
 
         return back()->with('success', 'Expediente actualizado.');
+    }
+
+    // ── HELPERS ────────────────────────────────────────────────────────
+
+    /** El expediente (paciente y autor) para su Gate, o 404 si no existe. */
+    private function expedienteOFallar(string $id): object
+    {
+        $expediente = DB::table('expedientes')->where('id', $id)->select('id', 'paciente_id', 'dentista_id')->first();
+        if (! $expediente) {
+            abort(404);
+        }
+
+        return $expediente;
+    }
+
+    /**
+     * Spec 014 (CA7, D4, D6): `crear-expediente` sobre el paciente. Estas rutas no llevan `{id}`, así que la denegación
+     * se audita aquí, con el paciente como recurso: 404 fuera del alcance, 403 dentro sin permiso.
+     */
+    private function autorizarAlta(string $pacienteId): void
+    {
+        $acceso = Gate::inspect('crear-expediente', [$pacienteId]);
+        if ($acceso->denied()) {
+            app(Auditoria::class)->denegar($this->accionSolicitada(), 'pacientes', $pacienteId,
+                $acceso->status() === 404 ? 'denegado_404' : 'denegado');
+        }
+    }
+
+    private function accionSolicitada(): string
+    {
+        return request()->route()?->getName() ?? 'ruta_sin_nombre';
     }
 }

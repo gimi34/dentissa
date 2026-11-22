@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Tests\Feature\Concerns\EscenarioAlcanceClinico;
 use Tests\TestCase;
 
 /**
- * Spec 014: lo que cada rol ve en las pantallas según su alcance (CA1–CA3): el filtro «Doctor», el directorio vacío
- * y el botón «Editar» de la ficha. Los elementos nuevos no llevan `style=""` (P9).
+ * Spec 014: lo que cada rol ve en las pantallas según su alcance: el filtro «Doctor», el directorio vacío y el botón
+ * «Editar» de la ficha (CA1–CA3); la edición del expediente solo para su autor y el autor fijo del dentista en el alta
+ * (CA4, CA6, CA7). Los elementos nuevos no llevan `style=""` (P9).
  */
 class AlcanceVistasTest extends TestCase
 {
@@ -71,7 +73,84 @@ class AlcanceVistasTest extends TestCase
         $this->assertSame(0, $x->query('.//*[@style]', $vacio)->length + ($vacio->hasAttribute('style') ? 1 : 0), 'El directorio vacío sin style="".');
     }
 
+    // ── T018 · expedientes ────────────────────────────────────────────────────────────
+
+    /** CA6: el formulario solo a su autor y al admin; el resto lo ve en solo lectura, con quién lo firmó. */
+    public function test_editar_el_expediente_solo_el_autor(): void
+    {
+        $casos = [
+            'autor (D1 en E1)' => [$this->dentista1, 'dentista', $this->e1, true],
+            'admin (E2)' => [$this->admin, 'admin', $this->e2, true],
+            'otro dentista (D1 en E2)' => [$this->dentista1, 'dentista', $this->e2, false],
+            'asistente (E1)' => [$this->asistente, 'asistente', $this->e1, false],
+        ];
+
+        foreach ($casos as $caso => [$usuario, $rol, $expediente, $edita]) {
+            $x = $this->xpath($this->actingAs($usuario)->get("/{$rol}/expedientes/{$expediente}")->assertOk()->getContent());
+            $formularios = $x->query('//form[contains(@action, "/expedientes/'.$expediente.'")]')->length;
+            $firma = $this->firma($x);
+
+            if ($edita) {
+                $this->assertSame(2, $formularios, "{$caso}: edición y próxima visita.");
+                $this->assertNull($firma, "{$caso}: sin «Firmado por».");
+            } else {
+                $this->assertSame(0, $formularios, "{$caso}: sin formularios.");
+                $this->assertNotNull($firma, "{$caso}: con «Firmado por».");
+                $this->assertSame('Firmado por '.$this->nombreDelDentista($expediente), trim(preg_replace('/\s+/', ' ', $firma->textContent)));
+            }
+        }
+    }
+
+    /** CA7: el dentista firma como él mismo (fijo); el admin elige el autor. */
+    public function test_el_autor_del_expediente_segun_el_rol(): void
+    {
+        $x = $this->xpath($this->actingAs($this->dentista1)->get("/dentista/expedientes/crear?paciente_id={$this->p1}")->assertOk()->getContent());
+        $this->assertSame(0, $x->query('//select[@name="dentista_id"]')->length, 'El dentista no elige autor.');
+        $oculto = $x->query('//input[@type="hidden"][@name="dentista_id"]')->item(0);
+        $this->assertNotNull($oculto);
+        $this->assertSame($this->d1, $oculto->getAttribute('value'));
+        $this->assertNotNull($this->autorFijo($x), 'Y ve su nombre como autor.');
+
+        $x = $this->xpath($this->actingAs($this->admin)->get("/admin/expedientes/crear?paciente_id={$this->p1}")->assertOk()->getContent());
+        $opciones = [];
+        foreach ($x->query('//select[@name="dentista_id"]/option[@value!=""]') as $opcion) {
+            $opciones[] = $opcion->getAttribute('value');
+        }
+        $this->assertContains($this->d1, $opciones);
+        $this->assertContains($this->d2, $opciones);
+    }
+
+    public function test_las_piezas_del_expediente_no_llevan_estilos_en_linea(): void
+    {
+        $firma = $this->firma($this->xpath($this->actingAs($this->dentista1)->get("/dentista/expedientes/{$this->e2}")->getContent()));
+        $this->assertNotNull($firma);
+        $this->assertFalse($firma->hasAttribute('style'), '«Firmado por» sin style="".');
+
+        $autor = $this->autorFijo($this->xpath($this->actingAs($this->dentista1)->get("/dentista/expedientes/crear?paciente_id={$this->p1}")->getContent()));
+        $this->assertNotNull($autor);
+        $this->assertFalse($autor->hasAttribute('style'), 'El autor fijo sin style="".');
+    }
+
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
+
+    private function firma(DOMXPath $x): ?\DOMElement
+    {
+        return $x->query('//*[contains(concat(" ", normalize-space(@class), " "), " firma-expediente ")]')->item(0);
+    }
+
+    private function autorFijo(DOMXPath $x): ?\DOMElement
+    {
+        return $x->query('//*[contains(concat(" ", normalize-space(@class), " "), " autor-expediente ")]')->item(0);
+    }
+
+    private function nombreDelDentista(string $expediente): string
+    {
+        $fila = DB::table('expedientes')->join('personal', 'personal.id', '=', 'expedientes.dentista_id')
+            ->join('usuarios', 'usuarios.id', '=', 'personal.usuario_id')
+            ->where('expedientes.id', $expediente)->first(['usuarios.nombre', 'usuarios.apellido']);
+
+        return $fila->nombre.' '.$fila->apellido;
+    }
 
     private function xpath(string $html): DOMXPath
     {

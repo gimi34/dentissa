@@ -57,8 +57,8 @@
             @endif
         </div>
 
-        {{-- Formulario de edición (solo doctor/admin; el asistente solo puede ver) --}}
-        @if($base !== 'asistente')
+        {{-- Formulario de edición: solo su autor o el admin (spec 014, CA6); el resto, solo lectura. --}}
+        @can('editar-expediente', $expediente)
         <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST" class="form-expediente">
             @csrf @method('PUT')
 
@@ -103,6 +103,7 @@
         </form>
         @else
             <div style="display:flex;flex-direction:column;gap:16px">
+                <p class="field-hint firma-expediente">Firmado por {{ $expediente->dentista }}</p>
                 <div class="card">
                     <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Diagnóstico</div>
                     <p style="font-size:13.5px;color:var(--text);line-height:1.6;white-space:pre-line">{{ $expediente->diagnostico }}</p>
@@ -126,7 +127,7 @@
                     </div>
                 @endif
             </div>
-        @endif
+        @endcan
 
     </div>
 
@@ -137,7 +138,7 @@
         <div>
             <div class="section-head"><span class="section-title">Próxima visita</span></div>
             <div class="card" style="padding:16px 18px">
-                @if($base !== 'asistente')
+                @can('editar-expediente', $expediente)
                 <form action="{{ route("{$base}.expedientes.update", $expediente->id) }}" method="POST" class="form-expediente">
                     @csrf @method('PUT')
                     {{-- Reenviar los campos existentes para no borrarlos --}}
@@ -155,7 +156,7 @@
                         Guardar fecha
                     </button>
                 </form>
-                @endif
+                @endcan
 
                 @if($expediente->proxima_visita)
                     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;text-align:center;color:var(--p600);font-weight:500">
@@ -172,7 +173,7 @@
                             <span class="badge badge-amber">Próxima semana</span>
                         </div>
                     @endif
-                @elseif($base === 'asistente')
+                @elseif(auth()->user()->cannot('editar-expediente', $expediente))
                     <p style="font-size:13px;color:var(--text-light);text-align:center">Sin fecha sugerida</p>
                 @endif
             </div>
