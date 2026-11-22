@@ -74,6 +74,15 @@ trait EscenarioAlcanceClinico
         return DB::table('auditoria')->where('accion', 'acceso_denegado')->orderByDesc('id')->first();
     }
 
+    /** Que la última denegación es la esperada: resultado, recurso, actor y ruta pedida. */
+    protected function assertDenegado(string $resultado, string $tipo, string $id, string $accion, string $actor): void
+    {
+        $evento = $this->ultimoDenegado();
+        $this->assertNotNull($evento, 'La denegación queda registrada.');
+        $this->assertSame([$resultado, $tipo, $id, $actor], [$evento->resultado, $evento->recurso_tipo, $evento->recurso_id, $evento->actor_id]);
+        $this->assertSame($accion, json_decode($evento->detalle, true)['accion_solicitada'] ?? null);
+    }
+
     /** El último evento con esa acción sobre ese recurso, o null. */
     protected function ultimoEvento(string $accion, string $recursoId): ?object
     {

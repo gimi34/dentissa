@@ -85,6 +85,8 @@
             </select>
         </div>
 
+        {{-- Spec 014: el dentista solo ve su alcance y no filtra por doctor; el asistente, por sus dentistas. --}}
+        @if(auth()->user()->rol !== 'dentista')
         <div style="min-width:180px">
             <label class="field-label">Doctor asignado</label>
             <select name="dentista_id" class="field">
@@ -96,6 +98,7 @@
                 @endforeach
             </select>
         </div>
+        @endif
 
         <button type="submit" class="btn btn-primary">Buscar</button>
         <a href="{{ request()->url() }}" class="btn btn-ghost">Limpiar</a>
@@ -227,7 +230,12 @@
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
             </svg>
-            <p>No se encontraron pacientes</p>
+            {{-- Spec 014: el dentista sin pacientes en su alcance; con filtros, el mensaje de siempre. --}}
+            @if(auth()->user()->rol === 'dentista' && ! request()->filled('buscar') && ! request()->filled('ciudad'))
+                <p>No tienes pacientes asignados</p>
+            @else
+                <p>No se encontraron pacientes</p>
+            @endif
             @if($rutaAlta)
             <a href="{{ $rutaAlta }}" class="btn btn-primary" style="margin-top:12px;display:inline-flex">
                 Registrar primer paciente

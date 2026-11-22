@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Agenda\RelojClinica;
 use App\Auditoria\Auditoria;
+use App\Autorizacion\AlcanceClinico;
 use App\Pacientes\Ciudades;
 use App\Pacientes\PosiblesDuplicados;
 use App\Rules\CiudadDeLaLista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PacientesController extends Controller
@@ -25,6 +28,12 @@ class PacientesController extends Controller
     public const CORREO_OBLIGATORIO = 'El correo es obligatorio: es el acceso del paciente a la aplicación.';
 
     /** Spec 054 (/review R4): con ese correo, la recuperación de la 041 daría la cuenta del personal. */
+    /** Spec 014 (CA8). */
+    public const DOCTOR_DEL_ASISTENTE = 'Asigna uno de tus dentistas.';
+
+    /** Spec 014 (CA10, D10). */
+    public const REASIGNADO_FUERA = 'El paciente quedó asignado a otro dentista.';
+
     public const CORREO_DEL_PERSONAL = 'El correo de una cuenta del personal no se cambia desde Pacientes.';
 
     public function index(Request $request)
@@ -51,6 +60,10 @@ class PacientesController extends Controller
                 DB::raw("CONCAT(ud.nombre, ' ', ud.apellido) AS dentista_nombre")
             );
 
+        // Spec 014 (CA1, CA2, TM12): el listado, el total y las ciudades, solo del alcance clínico.
+        $alcance = app(AlcanceClinico::class);
+        $alcance->aplicarAPacientes($query, auth()->user());
+
         if ($request->filled('buscar')) {
             $b = '%'.$request->buscar.'%';
             $query->where(function ($q) use ($b) {
@@ -73,20 +86,21 @@ class PacientesController extends Controller
         $pacientes = $query->orderBy('usuarios.nombre')->paginate(20)->withQueryString();
 
         // Total y ciudades para filtros
-        $totalPacientes = DB::table('pacientes')
+        $totalPacientes = $alcance->aplicarAPacientes(DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
-            ->where('usuarios.activo', 1)->count();
+            ->where('usuarios.activo', 1), auth()->user())->count();
 
         // Spec 051 (CA7): se compara en PHP porque la columna no distingue mayúsculas ni tildes.
-        $guardadas = DB::table('pacientes')
+        $guardadas = $alcance->aplicarAPacientes(DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
             ->where('usuarios.activo', 1)
-            ->whereNotNull('pacientes.ciudad')
+            ->whereNotNull('pacientes.ciudad'), auth()->user())
             ->pluck('pacientes.ciudad');
         $ciudades = collect(Ciudades::nombres())->intersect($guardadas)->values();
         $totalCiudades = $ciudades->reject(fn (string $ciudad) => $ciudad === Ciudades::OTRO_LUGAR)->count();
 
-        $dentistas = $this->dentistasDisponibles();
+        // Spec 014: el filtro «Doctor», con los dentistas del alcance (ninguno para el dentista, que solo se ve a sí mismo).
+        $dentistas = auth()->user()->rol === 'dentista' ? collect() : $this->dentistasDisponibles();
 
         return view('pacientes.index', compact('pacientes', 'totalPacientes', 'ciudades', 'totalCiudades', 'dentistas'));
     }
@@ -123,9 +137,10 @@ class PacientesController extends Controller
         $duplicados = [];
         foreach ($aviso['ids'] as $id) {
             if ($fila = $filas->get($id)) {
+                // Spec 014 (CA14, D20): el nombre siempre; el enlace a la ficha, solo si quien registra puede verla.
                 $duplicados[] = [
                     'nombre' => $fila->nombre.' '.$fila->apellido,
-                    'url' => route("{$base}.pacientes.show", $id),
+                    'url' => Gate::allows('ver-paciente', $id) ? route("{$base}.pacientes.show", $id) : null,
                 ];
             }
         }
@@ -156,12 +171,14 @@ class PacientesController extends Controller
             'notas_medicas' => 'nullable|string|max:2000',
             'contacto_emergencia' => 'nullable|string|max:200',
             'telefono_emergencia' => 'nullable|string|max:20',
-            'dentista_id' => 'nullable|exists:personal,id',
+            'dentista_id' => $this->reglasDelDoctor(alta: true),
         ], [
             'email.unique' => 'Este correo ya está registrado en el sistema.',
             'telefono.required_without' => self::TELEFONO_OBLIGATORIO,
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'dentista_id.required' => self::DOCTOR_DEL_ASISTENTE,
+            'dentista_id.in' => self::DOCTOR_DEL_ASISTENTE,
         ]);
 
         // Spec 054 (CA3, D6): con posibles duplicados y sin confirmar, vuelve al formulario con lo escrito
@@ -240,6 +257,9 @@ class PacientesController extends Controller
     // ── SHOW ───────────────────────────────────────────────────────────
     public function show(string $id)
     {
+        // Spec 014 (CA3): fuera del alcance, 404 auditado que no confirma que el paciente exista.
+        Gate::authorize('ver-paciente', $id);
+
         $paciente = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
             ->leftJoin('personal', 'pacientes.dentista_id', '=', 'personal.id')
@@ -254,6 +274,8 @@ class PacientesController extends Controller
         if (! $paciente) {
             abort(404);
         }
+
+        $this->registrarLectura($paciente->id);
 
         // Expedientes del paciente
         $expedientes = DB::table('expedientes')
@@ -307,10 +329,8 @@ class PacientesController extends Controller
     // ── EDIT ───────────────────────────────────────────────────────────
     public function edit(string $id)
     {
-        // El asistente no puede modificar la información del paciente
-        if (auth()->user()->rol === 'asistente') {
-            abort(403);
-        }
+        // Spec 014: fuera del alcance, 404; el asistente no modifica la ficha (403).
+        Gate::authorize('editar-paciente', $id);
 
         $paciente = DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
@@ -323,6 +343,9 @@ class PacientesController extends Controller
             abort(404);
         }
 
+        // Spec 014 (CA12): abrir la edición también muestra la ficha clínica.
+        $this->registrarLectura($paciente->id);
+
         $dentistas = $this->dentistasDisponibles();
 
         return view('pacientes.edit', compact('paciente', 'dentistas'));
@@ -331,9 +354,8 @@ class PacientesController extends Controller
     // ── UPDATE ─────────────────────────────────────────────────────────
     public function update(Request $request, string $id)
     {
-        if (auth()->user()->rol === 'asistente') {
-            abort(403);
-        }
+        // Spec 014 (D17): autorizar antes de validar, para que un paciente ajeno y uno inexistente respondan igual.
+        Gate::authorize('editar-paciente', $id);
 
         $paciente = DB::table('pacientes')->where('id', $id)->first();
         if (! $paciente) {
@@ -361,7 +383,7 @@ class PacientesController extends Controller
             'notas_medicas' => 'nullable|string|max:2000',
             'contacto_emergencia' => 'nullable|string|max:200',
             'telefono_emergencia' => 'nullable|string|max:20',
-            'dentista_id' => 'nullable|exists:personal,id',
+            'dentista_id' => $this->reglasDelDoctor(alta: false),
         ], [
             'email.required' => self::CORREO_OBLIGATORIO,
             'email.unique' => 'Este correo ya está registrado en el sistema.',
@@ -411,6 +433,11 @@ class PacientesController extends Controller
 
         $base = auth()->user()->rol === 'admin' ? 'admin' : 'dentista';
 
+        // Spec 014 (CA10, D10): si el dentista lo reasignó fuera de su alcance, ya no puede ver la ficha.
+        if (! Gate::allows('ver-paciente', $id)) {
+            return redirect()->route("{$base}.pacientes")->with('success', self::REASIGNADO_FUERA);
+        }
+
         return redirect()->route("{$base}.pacientes.show", $id)
             ->with('success', 'Datos del paciente actualizados.');
     }
@@ -440,12 +467,42 @@ class PacientesController extends Controller
     }
 
     // ── HELPERS ────────────────────────────────────────────────────────
+
+    /** Spec 014 (CA12, D3): lectura de la ficha, en modo crítico (sin registro no se muestra). */
+    private function registrarLectura(string $pacienteId): void
+    {
+        app(Auditoria::class)->registrar('paciente_leido', 'exito', 'pacientes', $pacienteId, critico: true);
+    }
+
+    /**
+     * Spec 014 (D15, CA8): el doctor asignado es un dentista activo. En el alta del asistente es obligatorio y uno de
+     * los suyos; para el resto, opcional.
+     */
+    private function reglasDelDoctor(bool $alta): array
+    {
+        $dentistaActivo = Rule::exists('personal', 'id')->where(fn ($consulta) => $consulta
+            ->where('tipo', 'dentista')
+            ->whereIn('usuario_id', DB::table('usuarios')->where('activo', 1)->select('id')));
+
+        if ($alta && auth()->user()->rol === 'asistente') {
+            return ['required', Rule::in(app(AlcanceClinico::class)->dentistasDelAlcance(auth()->user()) ?? []), $dentistaActivo];
+        }
+
+        return ['nullable', $dentistaActivo];
+    }
+
+    /** Dentistas activos; para el asistente, solo los suyos (spec 014, CA8). */
     private function dentistasDisponibles()
     {
+        $suyos = auth()->user()->rol === 'asistente'
+            ? (app(AlcanceClinico::class)->dentistasDelAlcance(auth()->user()) ?? [])
+            : null;
+
         return DB::table('personal')
             ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
             ->where('personal.tipo', 'dentista')
             ->where('usuarios.activo', 1)
+            ->when($suyos !== null, fn ($consulta) => $consulta->whereIn('personal.id', $suyos))
             ->select('personal.id', 'personal.especialidad',
                 DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre_completo"))
             ->orderBy('usuarios.nombre')

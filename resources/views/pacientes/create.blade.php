@@ -63,8 +63,11 @@
                         <p>y {{ $masDuplicados }} más</p>
                     @endif
                     <div class="acciones-formulario">
+                        {{-- Spec 014 (CA14): el enlace solo a quien puede ver la ficha; el nombre ya está en la lista. --}}
                         @foreach($posiblesDuplicados as $duplicado)
-                            <a href="{{ $duplicado['url'] }}" class="btn btn-primary texto-partible">Ver ficha de {{ $duplicado['nombre'] }}</a>
+                            @if($duplicado['url'])
+                                <a href="{{ $duplicado['url'] }}" class="btn btn-primary texto-partible">Ver ficha de {{ $duplicado['nombre'] }}</a>
+                            @endif
                         @endforeach
                         <button type="submit" name="confirmar_duplicado" value="1" class="btn btn-outline">Registrar de todos modos</button>
                     </div>
@@ -160,8 +163,10 @@
                 </div>
                 <div class="field-group" style="margin-top:14px">
                     <label class="field-label" for="campo-dentista_id">Doctor asignado</label>
-                    <select name="dentista_id" id="campo-dentista_id" @error('dentista_id') aria-invalid="true" aria-describedby="error-dentista_id" @enderror class="field {{ $errors->has('dentista_id') ? 'field-error' : '' }}">
-                        <option value="">Sin asignar</option>
+                    {{-- Spec 014 (CA8): en el alta del asistente, obligatorio y solo con sus dentistas. --}}
+                    @php $doctorObligatorio = ! isset($paciente) && auth()->user()->rol === 'asistente'; @endphp
+                    <select name="dentista_id" id="campo-dentista_id" @error('dentista_id') aria-invalid="true" aria-describedby="error-dentista_id" @enderror @if($doctorObligatorio) required @endif class="field {{ $errors->has('dentista_id') ? 'field-error' : '' }}">
+                        <option value="">{{ $doctorObligatorio ? 'Elige un dentista' : 'Sin asignar' }}</option>
                         @foreach($dentistas as $d)
                             <option value="{{ $d->id }}" {{ old('dentista_id', $paciente->dentista_id ?? '') == $d->id ? 'selected' : '' }}>
                                 {{ $d->nombre_completo }}{{ $d->especialidad ? ' · '.$d->especialidad : '' }}
@@ -169,7 +174,7 @@
                         @endforeach
                     </select>
                     @error('dentista_id')<div class="error-msg" id="error-dentista_id">{{ $message }}</div>@enderror
-                    <div class="field-hint">Dentista de cabecera del paciente.</div>
+                    <div class="field-hint">{{ $doctorObligatorio ? 'Asigna uno de tus dentistas.' : 'Dentista de cabecera del paciente.' }}</div>
                 </div>
             </div>
 
