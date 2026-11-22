@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Throwable;
 
 /**
@@ -22,7 +23,8 @@ use Throwable;
  *   fila, otra revisión ya la tomó o la cita cambió, y no se envía. Repite `actualizado_en` para que la
  *   marca no cambie la fecha de modificación de la cita (la columna tiene ON UPDATE).
  * - Fallos (CA8, TM8, /analyze A2): cualquier error al tratar una cita (reclamo, envío) libera el reclamo,
- *   deja `recordatorio.correo_fallido` con la clase del error y la revisión sigue con las demás.
+ *   deja `recordatorio.correo_fallido` con la clase del error y la revisión sigue con las demás; si el fallo
+ *   es del servicio de correo, la revisión se corta y las demás quedan aplazadas (/review R2).
  * - Tope (CA11, TM4, D5): como mucho `recordatorios.tope_diario` por día de la clínica, contados con el
  *   RateLimiter; el exceso espera al día siguiente y `recordatorio.tope_diario` se escribe una vez al día
  *   (/analyze A4).
@@ -73,6 +75,13 @@ final class RecordatoriosCitas
                 $this->liberar($cita);
                 $cuenta['fallidos']++;
                 Log::error('recordatorio.correo_fallido', ['error' => class_basename($e)]);
+
+                // /review R2: si falla el servicio de correo, no se insiste con las demás citas en esta
+                // revisión (un solo intento por minuto contra la cuenta de Gmail); quedan para la siguiente.
+                if ($e instanceof TransportExceptionInterface) {
+                    $cuenta['aplazados'] = $candidatas->count() - $posicion - 1;
+                    break;
+                }
             }
         }
 

@@ -47,5 +47,6 @@ Artisan::command('auditoria:purgar', function (AlmacenAuditoria $almacen, Audito
 // Tareas programadas del `scheduler`; dentissa:vigilar sigue en su temporizador de systemd hasta su spec propia.
 Schedule::command('auditoria:purgar')->monthlyOn(1, '03:00')->withoutOverlapping();
 
-// Spec 052 (D1): la revisión de los recordatorios de cita, cada minuto y sin solaparse (CA1, CA2, CA3).
-Schedule::command('dentissa:recordatorios')->everyMinute()->withoutOverlapping();
+// Spec 052 (D1): la revisión de los recordatorios de cita, cada minuto y sin solaparse (CA1, CA2, CA3). El
+// bloqueo caduca a los 10 minutos: si el proceso muere a mitad, no deja sin recordatorios el día (/review R1).
+Schedule::command('dentissa:recordatorios')->everyMinute()->withoutOverlapping(10);
