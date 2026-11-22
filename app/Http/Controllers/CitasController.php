@@ -9,6 +9,7 @@ use App\Agenda\EstadosCita;
 use App\Agenda\RelojClinica;
 use App\Agenda\ReprogramacionCitas;
 use App\Agenda\ReservaCitas;
+use App\Auditoria\Auditoria;
 use App\Autorizacion\AlcanceClinico;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -74,24 +75,6 @@ class CitasController extends Controller
         }
 
         return $query;
-    }
-
-    // ¿Puede el usuario autenticado ver/gestionar esta cita?
-    private function autorizadoParaCita(string $dentistaId): bool
-    {
-        $rol = auth()->user()->rol;
-
-        if ($rol === 'admin') {
-            return true;
-        }
-        if ($rol === 'dentista') {
-            return $dentistaId === $this->personalIdPropio();
-        }
-        if ($rol === 'asistente') {
-            return in_array($dentistaId, $this->dentistaIdsAsistente());
-        }
-
-        return false;
     }
 
     // ── INDEX: calendario de citas (spec 049) ──────────────────────────
@@ -211,9 +194,10 @@ class CitasController extends Controller
     // ── CREATE ─────────────────────────────────────────────────────────
     public function create(Request $request)
     {
-        $pacientes = DB::table('pacientes')
+        // Spec 014 (CA9): el personal solo agenda para pacientes de su alcance; el admin, para todos.
+        $pacientes = app(AlcanceClinico::class)->aplicarAPacientes(DB::table('pacientes')
             ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
-            ->where('usuarios.activo', 1)
+            ->where('usuarios.activo', 1), auth()->user())
             ->select('pacientes.id', DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido) AS nombre"), 'usuarios.telefono')
             ->orderBy('usuarios.nombre')
             ->get();
@@ -243,6 +227,10 @@ class CitasController extends Controller
         // (spec 049): solo se proponen valores de texto con su formato; lo demás se ignora (A13, A29).
         $uuid = fn (string $clave) => Str::isUuid((string) $this->textoDe($request, $clave)) ? $this->textoDe($request, $clave) : null;
         $pacienteSeleccionado = $uuid('paciente_id');
+        // Spec 014: un paciente fuera del alcance no se preselecciona (ni su doctor ni su próxima visita).
+        if ($pacienteSeleccionado && ! Gate::allows('agendar-para-paciente', $pacienteSeleccionado)) {
+            $pacienteSeleccionado = null;
+        }
         $dentistaSeleccionado = $uuid('dentista');
 
         $fechaSugerida = $this->fechaDe($request, 'fecha')?->toDateString();
@@ -282,6 +270,19 @@ class CitasController extends Controller
     // ── STORE ──────────────────────────────────────────────────────────
     public function store(Request $request, ReservaCitas $reservas)
     {
+        // Spec 014 (D16, D17, D6): para el dentista y el asistente, un UUID y el Gate sobre el paciente antes de
+        // validar, para que un paciente ajeno y uno inexistente respondan igual (404 auditado con el paciente).
+        // El admin conserva la validación de siempre.
+        if (auth()->user()->rol !== 'admin') {
+            $pacienteId = $request->input('paciente_id');
+            if (! is_string($pacienteId) || ! Str::isUuid($pacienteId)) {
+                abort(404);
+            }
+            if (Gate::denies('agendar-para-paciente', $pacienteId)) {
+                app(Auditoria::class)->denegar(request()->route()?->getName() ?? 'ruta_sin_nombre', 'pacientes', $pacienteId, 'denegado_404');
+            }
+        }
+
         $data = $request->validate(ReservaCitas::reglasDeEntrada() + [
             'paciente_id' => 'bail|required|string|exists:pacientes,id',
             'servicio_id' => 'bail|nullable|string|exists:servicios,id',
@@ -293,9 +294,8 @@ class CitasController extends Controller
             'servicio_id.string' => 'Elige un servicio válido.',
         ]);
 
-        if (! $this->autorizadoParaCita($data['dentista_id'])) {
-            abort(403);
-        }
+        // D18 (CA13): el dentista de la cita, del alcance del usuario (el mismo Gate que el detalle; 403 auditado).
+        Gate::authorize('gestionar-cita', (object) ['dentista_id' => $data['dentista_id'], 'paciente_id' => $data['paciente_id']]);
 
         // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
         try {
@@ -336,9 +336,8 @@ class CitasController extends Controller
         if (! $cita) {
             abort(404);
         }
-        if (! $this->autorizadoParaCita($cita->dentista_id)) {
-            abort(403);
-        }
+        // Spec 014 (CA13, D18): el alcance de la cita con su Gate (403 auditado por el registro central).
+        Gate::authorize('gestionar-cita', $cita);
 
         $historial = DB::table('historial_citas')
             ->leftJoin('usuarios', 'historial_citas.cambiado_por', '=', 'usuarios.id')

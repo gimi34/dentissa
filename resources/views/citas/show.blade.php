@@ -162,9 +162,12 @@
         {{-- Acciones rápidas --}}
         <div class="formulario-accesible">
             <div id="acciones" class="acciones-columna">
+                {{-- Spec 014 (D14): la cita puede ser del alcance aunque el paciente ya no lo sea. --}}
+                @can('ver-paciente', $cita->paciente_id)
                 <a href="{{ route("$rp.pacientes.show", $cita->paciente_id) }}" class="btn btn-outline">
                    Ver expediente del paciente
                 </a>
+                @endcan
                 @if($cita->puede_reprogramar)
                     <a href="{{ route("$rp.citas.reprogramar", $cita->id) }}" class="btn btn-outline">
                        Reprogramar
