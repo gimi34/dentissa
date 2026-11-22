@@ -1,7 +1,8 @@
 ---
 id: 052
 slug: recordatorio-correo
-status: implemented
+status: released
+released: v0.28.0 (2026-11-22)
 created: 2026-11-20
 extends: [003, 004, 028]
 ---
@@ -179,3 +180,4 @@ Ninguna.
 | 2026-11-21 | `approved` → `implemented` | /implement 052: 15 tareas (T026 añadida), suite 1622 en verde |
 | 2026-11-22 | `implemented` → `approved`: /review r1 `changes_requested` (R1, R2 → T027, T028) | /review 052 |
 | 2026-11-22 | `approved` → `implemented`: correcciones de /review r1 (T027, T028), suite 1624 en verde | /implement 052 |
+| 2026-11-22 | Liberada en v0.28.0; el recordatorio se encendió en producción tras la prueba de T095 | /release |

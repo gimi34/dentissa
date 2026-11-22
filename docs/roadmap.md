@@ -327,8 +327,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   required.» (Laravel sin traducción para esos campos). Corregirlo en la spec que toque esos
   formularios (detectado en la 033, T014; decisión del usuario, 2026-10-11).
 - Deuda de la spec 028 (liberada en v0.6.0; /review, aceptada sin tarea):
-  - 028/R11: al reprogramar no se reinicia `recordatorio_enviado`; reiniciarlo cuando existan los
-    recordatorios.
+  - ~~028/R11: al reprogramar no se reinicia `recordatorio_enviado`; reiniciarlo cuando existan los
+    recordatorios.~~ Resuelto en la v0.28.0 (spec 052).
   - 028/R13: los PATCH de reprogramar y cancelar no tienen límite de peticiones (viñeta del límite
     en las rutas de escritura).
   - 028/R14: en la pantalla de reprogramar, el error de `estado` marca el campo motivo y el foco no
@@ -635,6 +635,21 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 053/R5: el logotipo de WhatsApp va dos veces en `/` (`<symbol>` si algún día pesa);
   - 053/R6: mover `WHATSAPP` con las demás constantes de `PaginaInicioTest`;
   - 053/R7: la canónica se arma con `APP_URL` y `docs/seo.md` dice `seo.site_url`; en producción sale `https://dentissa.app/` (comprobado en v0.25.0): alinear el código o el documento.
+- Spec 052, interruptor `RECORDATORIOS_CORREO` (liberada en v0.28.0, encendido en producción el 2026-11-22 tras la
+  prueba de T095): retirar el interruptor y su comprobación en una versión posterior, cuando el recordatorio lleve
+  un tiempo funcionando sin incidencias.
+- Spec 052, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.28.0):
+  - 052/R3: contar el envío fuera del bloque que libera la cita (duplicado si falla la caché);
+  - 052/R4: el reclamo no pisa `actualizado_en` ni pasa por alto una cuenta desactivada en la ventana;
+  - 052/R5: test de TM1 con dos citas dentro de la ventana;
+  - 052/R6: el test de CA4 comprueba la fecha del segundo correo;
+  - 052/R7: docblock y nombre del test de la programación (020);
+  - 052/R8: `docker-compose.prod.yml` y `docs/security.md:94` con la tarea de recordatorios;
+  - 052/R9: alerta para `recordatorio.correo_fallido` (brecha de observabilidad);
+  - 052/R10: test del tope en el cambio de día UTC;
+  - 052/R11: `request_id` en los comandos programados;
+  - 052/R12: timeout corto del mailer SMTP;
+  - 052/R13: retoques del correo (`class` vacío, `.rango`, Outlook, versión de texto, nombres).
 - Spec 002, excepción P7 (aprobada por el usuario el 2026-11-21; plan D6, /analyze A4, liberada en v0.27.0): el alta
   de cuentas por el registro (formulario y Google) sigue sin evento de auditoría → spec 021.
 - Spec 002, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.27.0):
