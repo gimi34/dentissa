@@ -211,7 +211,8 @@ class RecordatorioCitaTest extends TestCase
         DB::listen(function (QueryExecuted $consulta) use ($cita, &$hecho) {
             if (! $hecho && str_starts_with(ltrim(strtolower($consulta->sql)), 'select') && str_contains($consulta->sql, 'recordatorio_enviado')) {
                 $hecho = true;
-                DB::table('citas')->where('id', $cita)->update(['recordatorio_enviado' => 1]);
+                // Otra revisión la reclama y, después, el personal edita sus notas internas (cambia `actualizado_en`).
+                DB::table('citas')->where('id', $cita)->update(['recordatorio_enviado' => 1, 'notas_internas' => 'Editada tras el reclamo', 'actualizado_en' => '2026-11-25 10:31:00']);
             }
         });
 
