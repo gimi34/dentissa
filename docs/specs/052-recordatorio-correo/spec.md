@@ -1,7 +1,7 @@
 ---
 id: 052
 slug: recordatorio-correo
-status: implemented
+status: approved
 created: 2026-11-20
 extends: [003, 004, 028]
 ---
@@ -177,3 +177,4 @@ Ninguna.
 | 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
 | 2026-11-21 | Diseño aprobado ([design.md](design.md), `c2`) | aprobado por el usuario |
 | 2026-11-21 | `approved` → `implemented` | /implement 052: 15 tareas (T026 añadida), suite 1622 en verde |
+| 2026-11-22 | `implemented` → `approved`: /review r1 `changes_requested` (R1, R2 → T027, T028) | /review 052 |
