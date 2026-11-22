@@ -78,9 +78,11 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 
 - [x] T026 Ajustar el test de la spec 020 que exige una sola tarea programada: exactamente dos, `auditoria:purgar` y `dentissa:recordatorios`, y sigue sin `dentissa:vigilar` — tests/Feature/Auditoria/InmutabilidadAuditoriaTest.php — hecho cuando: el test pasa con las dos tareas y falla si sobra o falta una — depende: T023
   - nota: añadida durante /implement (decisión del usuario, 2026-11-21): la suite completa daba un único fallo, `test_la_programacion_solo_tiene_la_purga`, porque la 052 añade la segunda tarea del plan (D1); el test pasa a exigir las dos tareas y conserva la comprobación de `dentissa:vigilar`.
+  - nota: comprobado comentando un momento la programación de `dentissa:recordatorios` en `routes/console.php`: el test falla («Dos tareas programadas…»); restaurado. Pint PASS.
 
 ## Integración y documentación
-- [ ] T090 Actualizar `docs/architecture.md` si cambió la estructura: `RecordatoriosCitas`, el comando y la tarea programada, y `RecordatorioCita` en «Correo»; y en `AGENTS.md` → «Mapa del repositorio», `app/Agenda/`, `app/Mail/` y `app/Console/Commands/`
+- [x] T090 Actualizar `docs/architecture.md` si cambió la estructura: `RecordatoriosCitas`, el comando y la tarea programada, y `RecordatorioCita` en «Correo»; y en `AGENTS.md` → «Mapa del repositorio», `app/Agenda/`, `app/Mail/` y `app/Console/Commands/`
+  - nota: `docs/architecture.md`: fila «Agenda (recordatorios)» tras la hora de la clínica. A7 — `AGENTS.md` (ruta protegida) solo en esta tarea y solo en el «Mapa del repositorio»: `app/Agenda/`, `app/Console/Commands/` y `app/Mail/`.
 - [ ] T091 Actualizar `docs/deployment.md` y `docs/observability.md` si cambiaron variables, entornos, pasos de deploy, logs, eventos de auditoría o métricas: en `deployment.md`, la variable `RECORDATORIOS_CORREO` (encender y apagar con `aplicar-entorno.sh app`) y `dentissa:recordatorios` en el `scheduler`; en `observability.md`, los eventos `recordatorio.revision`, `recordatorio.correo_fallido` y `recordatorio.tope_diario`; en `docs/security.md`, las tareas programadas (l. 88) y el uso de la cuenta de Gmail con los recordatorios
 - [ ] T092 Marcar spec como `implemented`: suite completa, Pint sobre lo tocado, gitleaks sobre el diff de la spec, semgrep `p/php` sobre los PHP tocados, `composer audit` (regla de la CI) y `auditar-npm.mjs` sin altas ni críticas, `python .ai/bin/aidd.py validate` sin errores, criterios `[x]` y `docs/specs/README.md`; resultados anotados en la tarea
 
