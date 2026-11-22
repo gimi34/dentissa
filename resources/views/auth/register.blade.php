@@ -61,8 +61,9 @@
             </div>
 
             @if($errors->any())
-                <div class="alert alert-error">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                {{-- Spec 002 (/review R5): el aviso se anuncia al cargar y su icono no se lee. --}}
+                <div class="alert alert-error" role="alert">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
                         <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
                     </svg>
                     <div>
@@ -142,9 +143,21 @@
                             <input type="email" id="email" name="email"
                                 class="field {{ $errors->has('email') ? 'field-error' : '' }}"
                                 value="{{ old('email') }}"
+                                @error('email') aria-invalid="true" aria-describedby="email-error" @enderror
                                 placeholder="maria@correo.com" required>
                         </div>
-                        @error('email')<div class="error-msg">{{ $message }}</div>@enderror
+                        @error('email')
+                            <div class="error-msg" id="email-error">
+                                {{ $message }}
+                                {{-- Spec 002 (CA8, D2): solo con el correo ya registrado, que el mensaje no nombra. --}}
+                                @if($message === \App\Http\Controllers\RegisterController::CORREO_NO_DISPONIBLE)
+                                    <a href="{{ route('login') }}">Iniciar sesión</a>
+                                    @if(config('acceso.recuperar_contrasena'))
+                                        · <a href="{{ route('contrasena.solicitud') }}">Recuperar tu contraseña</a>
+                                    @endif
+                                @endif
+                            </div>
+                        @enderror
                     </div>
 
                     <div class="grid-2">
