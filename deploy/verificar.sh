@@ -70,16 +70,18 @@ main() {
     done
 
     echo "== Tareas programadas (specs 020 y 052)"
-    # La purga mensual del registro de auditoría (spec 020, CA5) y la revisión de los recordatorios de
-    # cita cada minuto (spec 052, D1). La segunda está aunque RECORDATORIOS_CORREO esté apagado.
-    tareas="$("${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null)"
-    for tarea in auditoria:purgar dentissa:recordatorios; do
-        if grep -q "${tarea}" <<< "${tareas}"; then
-            ok "el scheduler programa ${tarea}"
-        else
-            fallo "el scheduler programa ${tarea} (docker compose -f docker-compose.prod.yml logs scheduler)"
-        fi
-    done
+    # La purga mensual del registro de auditoría (spec 020, CA5).
+    if "${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null | grep -q 'auditoria:purgar'; then
+        ok "el scheduler programa auditoria:purgar"
+    else
+        fallo "el scheduler programa auditoria:purgar (docker compose -f docker-compose.prod.yml logs scheduler)"
+    fi
+    # La revisión de los recordatorios de cita cada minuto (spec 052, D1); está aunque RECORDATORIOS_CORREO esté apagado.
+    if "${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null | grep -q 'dentissa:recordatorios'; then
+        ok "el scheduler programa dentissa:recordatorios"
+    else
+        fallo "el scheduler programa dentissa:recordatorios (docker compose -f docker-compose.prod.yml logs scheduler)"
+    fi
 
     echo "== Salud por la red interna"
     if "${compose[@]}" exec -T web wget -q -S -O /dev/null http://127.0.0.1/up 2>&1 | grep -q " 200 "; then

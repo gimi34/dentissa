@@ -74,7 +74,10 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 - [x] T024 Reiniciar la marca al reprogramar: `recordatorio_enviado => 0` en el `update` de la reprogramación (l. 122–126) — app/Agenda/ReprogramacionCitas.php — hecho cuando: `test_reprogramar_reinicia_el_recordatorio_y_sale_otro` y `test_el_detalle_no_muestra_el_recordatorio_tras_reprogramar` pasan y los tests de la 028 (`ReprogramarCita*`) siguen en verde — cubre: CA4, CA7 — depende: T013, T023
   - nota: los dos tests de reprogramar en verde; los de la 028 (`--filter Reprogramar`: 106 tests, incluidos los de esta spec) en verde; Pint PASS.
 - [x] T025 [P] Añadir a «Tareas programadas» de `verificar.sh` que `schedule:list` tenga `dentissa:recordatorios`, como `auditoria:purgar` — deploy/verificar.sh — hecho cuando: `bash -n deploy/verificar.sh` sin errores y la comprobación nueva junto a la de `auditoria:purgar` — depende: T023
-  - nota: `bash -n` sin errores; las dos tareas se comprueban sobre una sola salida de `schedule:list` (el script usa `set -uo pipefail`, sin `-e`: si falla la consulta, salen los dos FALLO y sigue). Se ejecutará en producción en T097.
+  - nota: `bash -n` sin errores. El bloque de `auditoria:purgar` se deja tal cual (lo fija `ConfiguracionProduccionTest::test_verificar_comprueba_el_scheduler`, spec 020) y se añade otro igual para `dentissa:recordatorios`; `ConfiguracionProduccionTest` en verde. Se ejecutará en producción en T097.
+
+- [x] T026 Ajustar el test de la spec 020 que exige una sola tarea programada: exactamente dos, `auditoria:purgar` y `dentissa:recordatorios`, y sigue sin `dentissa:vigilar` — tests/Feature/Auditoria/InmutabilidadAuditoriaTest.php — hecho cuando: el test pasa con las dos tareas y falla si sobra o falta una — depende: T023
+  - nota: añadida durante /implement (decisión del usuario, 2026-11-21): la suite completa daba un único fallo, `test_la_programacion_solo_tiene_la_purga`, porque la 052 añade la segunda tarea del plan (D1); el test pasa a exigir las dos tareas y conserva la comprobación de `dentissa:vigilar`.
 
 ## Integración y documentación
 - [ ] T090 Actualizar `docs/architecture.md` si cambió la estructura: `RecordatoriosCitas`, el comando y la tarea programada, y `RecordatorioCita` en «Correo»; y en `AGENTS.md` → «Mapa del repositorio», `app/Agenda/`, `app/Mail/` y `app/Console/Commands/`
@@ -126,6 +129,7 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
 | resources/views/correos/recordatorio.css | T022 |
 | app/Agenda/ReprogramacionCitas.php | T024 |
 | deploy/verificar.sh | T025 |
+| tests/Feature/Auditoria/InmutabilidadAuditoriaTest.php (añadida durante /implement) | T026 |
 | tests/Feature/RecordatorioCitaTest.php | T010, T011 |
 | tests/Feature/RecordatorioCitaCorreoTest.php | T012 |
 | tests/Feature/CitasPanelDetalleTest.php | T013 |
