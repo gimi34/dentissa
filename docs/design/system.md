@@ -1,13 +1,13 @@
 ---
 status: approved         # re-extraído el 2026-10-04 y aprobado por el usuario el 2026-10-04
 source: extracted        # documentado del código y de capturas de la app real
-version: 1.20.0
+version: 1.21.0
 extracted_with: 1.11.2   # re-extracción con /init --upgrade --redo-design (AI-DD 1.11.2)
 html: docs/design/system.html
 canvas: null
 widths: [320, 390, 1440]   # 320 por WCAG 1.4.10 (spec 033)
 created: 2026-10-02
-updated: 2026-11-17
+updated: 2026-11-21
 ---
 
 # Sistema de diseño de Dentissa
@@ -926,6 +926,20 @@ El estado se lee en el texto, no solo por el color.
   Escape (DS7).
 - **Confirmaciones:** `confirm()` nativo en 5 sitios (DS7).
 - **Avisos de formulario:** `.alert-error` en el acceso; `.alerta-errores` en servicios y usuarios.
+- **Aviso de posible duplicado** (`.aviso-duplicado`, spec 054, 1.21.0): el primer aviso ámbar de la
+  app, para avisar antes de crear algo que quizá ya existe sin impedir crearlo
+  ([diseño](../specs/054-paciente-sin-correo/design.md)).
+  - **Caja:** fondo `--amber-bg`, borde `var(--border-width)` `--amber` (6.73:1 sobre `--white`),
+    radio `--radius` y relleno `--space-5`, con `role="alert"`. Icono SVG de línea en `--amber`
+    (`stroke="currentColor"`, tamaño en los atributos del SVG, `aria-hidden`).
+  - **Texto:** título `h2` en `--text-body`, `--weight-strong`, y texto en `--text` (18.31:1 sobre
+    `--amber-bg`). El título lleva `tabindex="-1"` y `autofocus` para que el foco empiece en el aviso.
+  - **Acciones:** en `.acciones-formulario` dentro de la caja; la principal es `.btn-primary` sobre
+    `--p500` (blanco, 5.42:1; hover `--p600`) con el foco `--focus-ring`, y la secundaria
+    `.btn-outline`. Por debajo de 900 px, en columna, a ancho completo y de al menos `--touch-min`.
+  - Si una acción del aviso envía el formulario, no puede ser el primer botón de envío: Enter en un
+    campo debe hacer el envío normal (`.envio-por-defecto`, fuera de la vista y del orden de
+    tabulación).
 
 ### Estados de pantalla
 - **Vacío:** `.empty-state` (icono de 40px y texto) en 15 vistas.
@@ -1231,3 +1245,4 @@ AAAA-MM-DD: evidencia)`. Un ID nunca se reutiliza.
 | 2026-11-14 | diseño | ¿Qué incorpora el sistema para la navegación interna (spec 046)? | Versión 1.18.0 (era 1.17.0; se renumeró al fusionar la v0.19.0, que liberó la 1.17.0 con la spec 048; decisión del usuario, 2026-11-15), sin tokens nuevos: las migas de pan pasan a ser una navegación con nombre y lista ordenada, con la página actual marcada y los separadores ocultos a los lectores de pantalla; el enlace va en `--p600` subrayado (`--p800` al pasar el puntero) y el elemento actual en `--text` sin subrayar; el camino puede pasar de línea a todos los anchos; regla de dónde se usan las migas y regla del título de pantalla. Cierra 033/R6 | usuario (spec 046, design.md sin candidatos) |
 | 2026-11-17 | diseño | ¿Qué incorpora el sistema para el calendario de citas (spec 049)? | Versión 1.19.0, sin tokens nuevos: componente «Calendario de citas» (resumen del periodo, barra del periodo, semana por horas con carriles, huecos y fuera de horario, tira de seis días, mes y lista del periodo con clases `.cal-lista-*`), con los cinco refinados del acta; las citas son una variante de «Cita que abre su detalle» (048); el filtro plegable de «Citas» pierde las fechas y los atajos. Diseño: [049](../specs/049-calendario-citas/design.md), candidato `c6` | `/design-spec 049`, aprobado por el usuario |
 | 2026-11-18 | diseño | ¿Qué incorpora el sistema para la ciudad de una lista cerrada (spec 051)? | Versión 1.20.0, sin colores nuevos: variante «Aviso de campo» (`.field-hint-aviso`) y «Desplegable de ciudad» (`.campo-ciudad`), que corrige el foco y el borde solo en ese campo; el token `--border-control` se declara también en `auth.css`, con el mismo valor. El resto de los `.field` sigue como deuda DS2 | usuario (spec 051, design.md y plan) |
+| 2026-11-21 | diseño | ¿Qué incorpora el sistema para el alta de pacientes sin correo (spec 054)? | Versión 1.21.0, sin tokens nuevos: el componente «Aviso de posible duplicado» (`.aviso-duplicado`) en «Aviso, diálogo y mensajes», con su caja ámbar, título enfocable, acciones con el botón principal sobre `--p500` y la regla del botón de envío por defecto. Diseño: [054](../specs/054-paciente-sin-correo/design.md), sin exploración | usuario (spec 054, design.md y plan) |

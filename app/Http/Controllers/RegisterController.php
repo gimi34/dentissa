@@ -136,6 +136,14 @@ class RegisterController extends Controller
             return redirect()->route('register');
         }
 
+        // Spec 054 (/review R15): una sesión de registro sin correo (p. ej. creada antes de la guarda de
+        // GoogleAuthController) no crea una cuenta: sin correo no hay acceso a la aplicación.
+        if (blank($google['email'] ?? null)) {
+            $request->session()->forget('google_registro');
+
+            return redirect()->route('login')->withErrors(['email' => GoogleAuthController::MENSAJE_FALLO_GOOGLE]);
+        }
+
         $data = $request->validate([
             'telefono' => ['nullable', 'string', 'max:20'],
             'fecha_nacimiento' => ['nullable', 'date_format:Y-m-d', 'before:'.RelojClinica::fechaHoy()],

@@ -627,6 +627,14 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
 - Spec 011, dato descubierto en `/implement` (T012): `usuarios` no tiene columna `remember_token`; la casilla
   «Recordarme» del inicio de sesión no hace nada, y si algún camino pidiera el recuerdo daría un 500. Quitar la casilla
   o implementarlo es de otra spec.
+- Spec 053, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.25.0):
+  - 053/R1: contar las secciones revisadas en el bucle «solo en 02» de `test_el_aviso_explica_whatsapp`;
+  - 053/R2: que el descuento de `test_el_texto_es_el_aprobado` falle si falta lo que quita;
+  - 053/R3: una sola fuente para las fechas de los textos legales (página, ventana y test);
+  - 053/R4: validar o documentar el formato de `telefono_enlace` que usa `whatsappEnlace()`;
+  - 053/R5: el logotipo de WhatsApp va dos veces en `/` (`<symbol>` si algún día pesa);
+  - 053/R6: mover `WHATSAPP` con las demás constantes de `PaginaInicioTest`;
+  - 053/R7: la canónica se arma con `APP_URL` y `docs/seo.md` dice `seo.site_url`; en producción sale `https://dentissa.app/` (comprobado en v0.25.0): alinear el código o el documento.
 - Spec 011, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.24.0):
   - 011/R3: el test de TM3 no comprueba directamente que el identificador antiguo deje de valer (lo cubren el de las
     otras sesiones y el del almacén);

@@ -1,8 +1,9 @@
 ---
 id: 053
 slug: whatsapp-inicio
-status: implemented
+status: released
 created: 2026-11-20
+released: v0.25.0 (2026-11-21)
 extends: [038, 045]
 ---
 
@@ -138,3 +139,4 @@ Ninguna.
 | 2026-11-20 | CA6: «apartado de servicios de terceros» → «apartado «Qué datos recabamos»» | decisión del usuario en /plan 053 (el aviso no tiene apartado de terceros) |
 | 2026-11-20 | Decisiones: excepción a 045 CA3 para el punto de WhatsApp | decisión del usuario en /analyze 053 (A3); sin cambio de criterios |
 | 2026-11-20 | `approved` → `implemented` | /implement 053: 13 tareas hechas, suite 1510 en verde |
+| 2026-11-21 | `implemented` → `released`: v0.25.0 (PR #104, tag sobre `f317ac1`); comprobada en producción, también en un móvil | /release 053 |

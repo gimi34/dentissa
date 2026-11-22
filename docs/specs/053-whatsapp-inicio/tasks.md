@@ -78,11 +78,15 @@ Sobre el plan (constitución 1.3.0), lo que el desglose podría romper:
   - nota: A2, A11 — suite completa 1510 tests en verde (línea base 1502: 8 nuevos, ninguno roto; 6 min). Pint PASS en los 6 PHP tocados; gitleaks 8.21.2 sin fugas en los 15 archivos cambiados desde `impl_base` (modo archivos); semgrep `p/php` (1.99.0) sin hallazgos ni errores en los 6 PHP; `composer audit --locked` con la regla de la CI sin avisos (queda el leve de `laravel/framework` de la línea base del plan) y `auditar-npm.mjs` sin avisos. Lighthouse 13.5.0 SEO sobre la app del worktree en local: `/` 100/100 y `/aviso-de-privacidad` 100/100 (móvil/escritorio). `aidd.py validate` sin errores. CA1–CA6 `[x]`, spec `implemented` y su fila del README.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097
   - verificación manual de CA3 en un móvil real: en `https://dentissa.app/`, pulsar «Escríbenos por WhatsApp» en la primera pantalla y en contacto → se abre la aplicación de WhatsApp con un chat al +52 753 000 0000 y el mensaje «Hola, quiero información para agendar una cita.» ya escrito y editable (el número es ficticio: basta con que se abra así)
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z`, `verificar.sh`, `/` en `200` con el enlace de WhatsApp en su HTML y la comprobación de T095. Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia de la base (no hay cambios de datos)
-- [ ] T098 Marcar spec como `released`; en las specs 038 y 045 anotar en su Historial que la 053 amplía 038 CA1 y CA5 y el aviso de privacidad de la 045, con la excepción a 045 CA3 del punto de WhatsApp (A3)
+  - nota: verificación manual OK 2026-11-21 (usuario): en su móvil, los dos botones de `https://dentissa.app/` abren la app de WhatsApp con el chat al +52 753 000 0000 y el mensaje ya escrito.
+- [x] T096 Aprobación humana para producción
+  - nota: aprobado por gimi34 el 2026-11-21 12:49 para v0.25.0 («desplegar v0.25.0 a producción»).
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z`, `verificar.sh`, `/` en `200` con el enlace de WhatsApp en su HTML y la comprobación de T095. Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia de la base (no hay cambios de datos)
+  - nota: 2026-11-21 — PR #104 (merge `f317ac1`), tag anotado `v0.25.0` sobre `f317ac1`. `deploy/desplegar.sh v0.25.0` en 156 s (sin la verificación), anterior v0.24.0, copia `dentissa-20261121-185138.sql.gz.gpg`; `verificar.sh` interna y por la dirección pública: todo OK. Desde fuera: `/` 200 con los dos enlaces exactos a `wa.me` y su `aria-label`, sin recursos de WhatsApp ni Meta, canónica `https://dentissa.app/` (053/R7 comprobado); `/aviso-de-privacidad` 200 con el punto de WhatsApp y «20 de noviembre de 2026»; en `/registro`, la ventana de los términos con el 12 y la del aviso con el 20. Los 5xx quedan a cargo del aviso automático `dentissa-vigilar` (activo). Rollback, si hiciera falta: `bash deploy/volver.sh v0.24.0`, sin la copia.
+- [x] T098 Marcar spec como `released`; en las specs 038 y 045 anotar en su Historial que la 053 amplía 038 CA1 y CA5 y el aviso de privacidad de la 045, con la excepción a 045 CA3 del punto de WhatsApp (A3)
+  - nota: spec `released` (v0.25.0); Historial de 038 y 045 con la línea de la 053 (045 con la excepción a CA3); roadmap con 053/R1–R7; `aidd.py history --migrate --write`.
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |

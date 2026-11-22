@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Auditoria\Auditoria;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -155,7 +156,21 @@ class UsuarioController extends Controller
         // El modelo declara $timestamps = false y 'actualizado_en' no es asignable
         // en masa, así que la columna se escribe directamente sobre el atributo.
         $usuario->actualizado_en = now();
-        $usuario->save();
+
+        // Spec 054 (/review R3, CA11): un paciente sin correo que recibe uno pasa a poder tener acceso;
+        // queda el mismo evento que desde «Pacientes», crítico y en la misma transacción que el guardado.
+        $fichaSinCorreo = $usuario->getOriginal('email') === null
+            ? DB::table('pacientes')->where('usuario_id', $usuario->id)->value('id')
+            : null;
+
+        DB::transaction(function () use ($usuario, $fichaSinCorreo) {
+            $usuario->save();
+
+            if ($fichaSinCorreo !== null) {
+                app(Auditoria::class)->registrar('paciente_correo_anadido', 'exito', 'pacientes', $fichaSinCorreo,
+                    campos: ['email'], detalle: ['acceso_posible' => true], critico: true);
+            }
+        });
 
         // Lo regresamos a la tabla principal
         return redirect()->route('admin.usuarios.index')->with('success', 'Datos del usuario actualizados.');

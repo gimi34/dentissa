@@ -5,6 +5,25 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-21
+
+### Added
+- El personal (administración y asistentes) puede dar de alta pacientes sin correo, por ejemplo a quien llega en
+  persona para una sola consulta: basta el teléfono, no se crea contraseña y esos pacientes no tienen acceso a la
+  aplicación. En el directorio y en su ficha aparece «Sin correo · sin acceso a la aplicación» (spec 054).
+- Antes de un alta, si ya existe un paciente con el mismo nombre y el mismo teléfono o fecha de nacimiento, se
+  muestra un aviso con su nombre y su ficha, y se puede registrar de todos modos (spec 054).
+- La administración y los dentistas pueden añadir el correo más tarde a un paciente que no lo tenía; desde ese
+  momento el paciente puede crear su contraseña con «¿Olvidaste tu contraseña?» (spec 054).
+
+### Security
+- El acceso con Google sin correo, o una sesión de registro sin correo, se rechaza en lugar de vincular o crear
+  una cuenta (spec 054).
+- Desde «Pacientes» ya no se puede cambiar el correo de una ficha que pertenece a una cuenta del personal: ese
+  correo solo se cambia desde «Usuarios» (spec 054).
+- El alta de pacientes por el personal y el correo añadido a un paciente sin correo, también desde «Usuarios»,
+  quedan en el registro de auditoría (spec 054).
+
 ## [0.25.0] - 2026-11-21
 
 ### Added

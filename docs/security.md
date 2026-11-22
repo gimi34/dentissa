@@ -30,6 +30,15 @@ updated: 2026-10-18
   POST con invalidación. Google OAuth con Socialite (flujo con `state`). Registro público crea
   siempre rol `cliente`. Recuperación de contraseña por correo (spec 041): token de un solo uso con hash,
   60 minutos, solo cuentas activas y sesiones cerradas al restablecer. No hay verificación de correo.
+- Cuentas sin correo (spec 054): el personal puede dar de alta pacientes sin correo, con `email` y
+  `password_hash` nulos. No pueden entrar: el inicio de sesión exige un correo, la recuperación busca
+  por correo y el retorno de Google rechaza todo usuario sin correo antes de buscar o registrar
+  (`where('email', null)` daría con una de esas cuentas); el registro tras Google también rechaza una
+  sesión de registro sin correo, por si la creó una versión anterior (/review R15). Cuando el personal
+  (admin o dentista) les añade un correo, el paciente crea su contraseña con la recuperación de la 041.
+- Desde «Pacientes» no se cambia el correo de una ficha cuya cuenta es del personal (existen, RS19.a):
+  con ese correo, la recuperación de la 041 daría esa cuenta. Ese correo solo se cambia desde «Usuarios»
+  de la administración (spec 054, /review R4).
 - Modelo de autorización: rol único por usuario (`usuarios.rol`: cliente, asistente, dentista,
   admin). Regla de negocio deseada: dentista → sus pacientes asignados o con cita con él;
   asistente → los pacientes de sus dentistas asignados; solo el dentista autor (o admin) edita un

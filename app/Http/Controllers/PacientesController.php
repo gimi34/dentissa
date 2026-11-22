@@ -3,15 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Agenda\RelojClinica;
+use App\Auditoria\Auditoria;
 use App\Pacientes\Ciudades;
+use App\Pacientes\PosiblesDuplicados;
 use App\Rules\CiudadDeLaLista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PacientesController extends Controller
 {
+    /** Spec 054 (CA1): confirmación de un alta sin correo. */
+    public const ALTA_SIN_ACCESO = 'Paciente registrado sin correo: no tiene acceso a la aplicación.';
+
+    /** Spec 054 (CA2, CA5): sin correo, el teléfono es el único contacto. */
+    public const TELEFONO_OBLIGATORIO = 'Sin correo, el teléfono es obligatorio para poder contactarle.';
+
+    /** Spec 054 (CA5): a quien ya tiene correo no se le puede quitar, porque es su acceso. */
+    public const CORREO_OBLIGATORIO = 'El correo es obligatorio: es el acceso del paciente a la aplicación.';
+
+    /** Spec 054 (/review R4): con ese correo, la recuperación de la 041 daría la cuenta del personal. */
+    public const CORREO_DEL_PERSONAL = 'El correo de una cuenta del personal no se cambia desde Pacientes.';
+
     public function index(Request $request)
     {
         $query = DB::table('pacientes')
@@ -80,8 +95,42 @@ class PacientesController extends Controller
     public function create()
     {
         $dentistas = $this->dentistasDisponibles();
+        [$posiblesDuplicados, $masDuplicados] = $this->avisoDeDuplicados();
 
-        return view('pacientes.create', compact('dentistas'));
+        return view('pacientes.create', compact('dentistas', 'posiblesDuplicados', 'masDuplicados'));
+    }
+
+    /**
+     * Spec 054 (CA3, CA9, D7): nombres y ficha de los posibles duplicados que dejó `store`. Solo el
+     * nombre completo y la ruta de ficha del rol de quien registra; nunca otros datos del paciente.
+     *
+     * @return array{0: list<array{nombre: string, url: string}>, 1: int}
+     */
+    private function avisoDeDuplicados(): array
+    {
+        $aviso = session('posibles_duplicados');
+        if (! is_array($aviso) || empty($aviso['ids'])) {
+            return [[], 0];
+        }
+
+        $base = auth()->user()->rol === 'admin' ? 'admin' : 'asistente';
+        $filas = DB::table('pacientes')
+            ->join('usuarios', 'pacientes.usuario_id', '=', 'usuarios.id')
+            ->whereIn('pacientes.id', $aviso['ids'])
+            ->get(['pacientes.id', 'usuarios.nombre', 'usuarios.apellido'])
+            ->keyBy('id');
+
+        $duplicados = [];
+        foreach ($aviso['ids'] as $id) {
+            if ($fila = $filas->get($id)) {
+                $duplicados[] = [
+                    'nombre' => $fila->nombre.' '.$fila->apellido,
+                    'url' => route("{$base}.pacientes.show", $id),
+                ];
+            }
+        }
+
+        return [$duplicados, max(0, (int) $aviso['total'] - count($duplicados))];
     }
 
     // ── STORE ──────────────────────────────────────────────────────────
@@ -90,9 +139,11 @@ class PacientesController extends Controller
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
-            'email' => 'required|email|unique:usuarios,email',
-            'telefono' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:6',
+            // Spec 054: el correo es opcional; sin él no hay contraseña (D4, /analyze A6) y el teléfono es obligatorio (CA2).
+            'email' => ['nullable', 'email', 'max:255', 'unique:usuarios,email'],
+            'telefono' => ['required_without:email', 'nullable', 'string', 'max:20'],
+            'password' => ['exclude_without:email', 'nullable', 'string', 'min:6'],
+            'confirmar_duplicado' => ['nullable', 'boolean'],
 
             'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
@@ -108,15 +159,27 @@ class PacientesController extends Controller
             'dentista_id' => 'nullable|exists:personal,id',
         ], [
             'email.unique' => 'Este correo ya está registrado en el sistema.',
+            'telefono.required_without' => self::TELEFONO_OBLIGATORIO,
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
-        // Genera o usa la contraseña ingresada
-        $passwordPlain = ! empty($data['password']) ? $data['password'] : Str::random(10);
-        $passwordGenerada = empty($data['password']);
+        // Spec 054 (CA3, D6): con posibles duplicados y sin confirmar, vuelve al formulario con lo escrito
+        // salvo la contraseña, que nunca llega a la sesión (/analyze A2, TM10). Solo van ids en el aviso.
+        $duplicados = PosiblesDuplicados::buscar(
+            $data['nombre'], $data['apellido'], $data['telefono'] ?? null, $data['fecha_nacimiento'] ?? null,
+        );
+        if ($duplicados['total'] > 0 && empty($data['confirmar_duplicado'])) {
+            return back()->withInput($request->except('password'))->with('posibles_duplicados', $duplicados);
+        }
 
-        DB::transaction(function () use ($data, $passwordPlain) {
+        // Sin correo no hay acceso: ni correo ni contraseña (D1, D2). Con correo, como hoy.
+        $conAcceso = ! empty($data['email']);
+        $passwordPlain = $conAcceso ? (! empty($data['password']) ? $data['password'] : Str::random(10)) : null;
+        $passwordGenerada = $conAcceso && empty($data['password']);
+        $pacienteId = (string) Str::uuid();
+
+        DB::transaction(function () use ($data, $passwordPlain, $conAcceso, $pacienteId, $duplicados) {
             $usuarioId = (string) Str::uuid();
 
             // 1. Crear usuario
@@ -124,8 +187,8 @@ class PacientesController extends Controller
                 'id' => $usuarioId,
                 'nombre' => $data['nombre'],
                 'apellido' => $data['apellido'],
-                'email' => $data['email'],
-                'password_hash' => Hash::make($passwordPlain),
+                'email' => $conAcceso ? $data['email'] : null,
+                'password_hash' => $conAcceso ? Hash::make($passwordPlain) : null,
                 'rol' => 'cliente',
                 'telefono' => $data['telefono'] ?? null,
                 'activo' => 1,
@@ -135,7 +198,7 @@ class PacientesController extends Controller
 
             // 2. Crear perfil de paciente
             DB::table('pacientes')->insert([
-                'id' => (string) Str::uuid(),
+                'id' => $pacienteId,
                 'usuario_id' => $usuarioId,
                 'dentista_id' => $data['dentista_id'] ?? null,
                 'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
@@ -151,6 +214,12 @@ class PacientesController extends Controller
                 'telefono_emergencia' => $data['telefono_emergencia'] ?? null,
                 'creado_en' => now(),
             ]);
+
+            // Spec 054 (CA10, TM5–TM7): sin evento no hay alta. Solo booleanos calculados por el servidor.
+            app(Auditoria::class)->registrar('paciente_alta', 'exito', 'pacientes', $pacienteId, detalle: [
+                'con_acceso' => $conAcceso,
+                'posible_duplicado' => $duplicados['total'] > 0,
+            ], critico: true);
         });
 
         $rutaListado = auth()->user()->rol === 'admin' ? 'admin.pacientes' : 'asistente.pacientes';
@@ -165,7 +234,7 @@ class PacientesController extends Controller
         }
 
         return redirect()->route($rutaListado)
-            ->with('success', 'Paciente registrado correctamente.');
+            ->with('success', $conAcceso ? 'Paciente registrado correctamente.' : self::ALTA_SIN_ACCESO);
     }
 
     // ── SHOW ───────────────────────────────────────────────────────────
@@ -271,11 +340,15 @@ class PacientesController extends Controller
             abort(404);
         }
 
+        // Spec 054 (CA5, CA6): el correo se puede añadir a quien no lo tiene, nunca quitar a quien lo tiene.
+        $cuenta = DB::table('usuarios')->where('id', $paciente->usuario_id)->first(['email', 'rol']);
+        $correoActual = $cuenta->email;
+
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
-            'email' => "required|email|unique:usuarios,email,{$paciente->usuario_id},id",
-            'telefono' => 'nullable|string|max:20',
+            'email' => [$correoActual ? 'required' : 'nullable', 'email', 'max:255', "unique:usuarios,email,{$paciente->usuario_id},id"],
+            'telefono' => ['required_without:email', 'nullable', 'string', 'max:20'],
 
             'fecha_nacimiento' => 'nullable|date_format:Y-m-d|before:'.RelojClinica::fechaHoy(),
             'genero' => 'nullable|string|max:20',
@@ -290,15 +363,26 @@ class PacientesController extends Controller
             'telefono_emergencia' => 'nullable|string|max:20',
             'dentista_id' => 'nullable|exists:personal,id',
         ], [
+            'email.required' => self::CORREO_OBLIGATORIO,
+            'email.unique' => 'Este correo ya está registrado en el sistema.',
+            'telefono.required_without' => self::TELEFONO_OBLIGATORIO,
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
         ]);
 
-        DB::transaction(function () use ($data, $paciente) {
+        // Spec 054 (/review R4): el correo de una cuenta del personal con ficha de paciente solo se cambia
+        // desde «Usuarios»; desde aquí, se rechaza antes de guardar nada.
+        if ($cuenta->rol !== 'cliente' && Str::lower((string) ($data['email'] ?? '')) !== Str::lower((string) $correoActual)) {
+            throw ValidationException::withMessages(['email' => self::CORREO_DEL_PERSONAL]);
+        }
+
+        $correoAnadido = $correoActual === null && ! empty($data['email']);
+
+        DB::transaction(function () use ($data, $paciente, $correoAnadido) {
             DB::table('usuarios')->where('id', $paciente->usuario_id)->update([
                 'nombre' => $data['nombre'],
                 'apellido' => $data['apellido'],
-                'email' => $data['email'],
+                'email' => $data['email'] ?? null,
                 'telefono' => $data['telefono'] ?? null,
                 'actualizado_en' => now(),
             ]);
@@ -317,6 +401,12 @@ class PacientesController extends Controller
                 'contacto_emergencia' => $data['contacto_emergencia'] ?? null,
                 'telefono_emergencia' => $data['telefono_emergencia'] ?? null,
             ]);
+
+            // Spec 054 (CA11, TM6, TM7): el paciente pasa a poder tener acceso; sin el correo en el evento.
+            if ($correoAnadido) {
+                app(Auditoria::class)->registrar('paciente_correo_anadido', 'exito', 'pacientes', $paciente->id,
+                    campos: ['email'], detalle: ['acceso_posible' => true], critico: true);
+            }
         });
 
         $base = auth()->user()->rol === 'admin' ? 'admin' : 'dentista';

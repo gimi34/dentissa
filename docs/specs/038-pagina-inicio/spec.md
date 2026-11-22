@@ -243,3 +243,4 @@ Ninguna.
 | 2026-11-10 | Comportamiento modificado por 039 en v0.16.0: con fotos en la galería, `/` muestra el carrusel «Nuestros trabajos» después de los servicios; con la galería vacía, la página no cambia (039 CA1, CA3) | /release |
 | 2026-11-13 | Comportamiento modificado por 045 en v0.18.0: el pie público enlaza «Términos de uso» y «Aviso de privacidad»; `--font-display` con respaldos de Newsreader | /release |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
+| 2026-11-21 | Comportamiento modificado por 053 en v0.25.0: «Escríbenos por WhatsApp» junto al teléfono en la primera pantalla y en el contacto (amplía CA1 y CA5; el resto del contacto no cambia) | /release |
