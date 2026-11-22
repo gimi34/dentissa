@@ -106,11 +106,14 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
   - nota: 2026-11-21 — de nuevo tras las tareas de `/review` r1 (T023–T028): suite completa 1542 en verde (20 061 aserciones), Pint limpio, gitleaks y semgrep sin hallazgos en los archivos tocados.
 
 ## Despliegue (lo ejecuta `/release`)
-- [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, sin escribir ningún correo real en ningún documento:
+- [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, sin escribir ningún correo real en ningún documento:
   - CA8: registrarse con el correo de una cuenta de prueba ya existente → el mensaje neutro con los dos enlaces y ninguna cuenta nueva
-- [ ] T096 Aprobación humana para producción
-- [ ] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar 5xx en `/registro` (aviso `dentissa-vigilar`). Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia
-- [ ] T098 Marcar spec como `released`
+  - nota: resultado: el usuario confirma el 2026-11-21 en producción que, con el correo de una cuenta de prueba existente, sale el mensaje neutro con «Iniciar sesión · Recuperar tu contraseña», y que sin marcar los términos solo sale el error de los términos (R1); sin ningún correo en los documentos.
+- [x] T096 Aprobación humana para producción
+  - aprobado por gimi34 el 2026-11-21 18:45 para v0.27.0
+- [x] T097 Desplegar a producción y vigilar métricas del plan (Rollout): `deploy/desplegar.sh vX.Y.Z` (sin migraciones), `verificar.sh` y la comprobación de T095; vigilar 5xx en `/registro` (aviso `dentissa-vigilar`). Rollback: `bash deploy/volver.sh <tag anterior>`, sin copia
+  - nota: 2026-11-21 — `deploy/desplegar.sh v0.27.0` en 152 s (sin la verificación), anterior v0.26.0, copia `dentissa-20261122-004630.sql.gz.gpg`; `verificar.sh` interna y por la dirección pública: todo OK. Tag `v0.27.0` sobre `2b116e09` (PR #107). Rollback, si hiciera falta: `bash deploy/volver.sh v0.26.0`, sin la copia.
+- [x] T098 Marcar spec como `released`
 
 ## Cobertura
 | Criterio | Tarea(s) de test | Tarea(s) de implementación |
