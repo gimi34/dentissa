@@ -5,6 +5,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-21
+
+### Security
+- Al registrarse con un correo que ya tiene cuenta, el aviso ya no dice que el correo está registrado: ofrece iniciar
+  sesión o recuperar la contraseña, y solo aparece cuando el resto del formulario es válido (spec 002).
+
+### Fixed
+- El aviso de errores del registro se anuncia a los lectores de pantalla y el error del correo queda asociado a su
+  campo (spec 002).
+
 ## [0.26.0] - 2026-11-21
 
 ### Added

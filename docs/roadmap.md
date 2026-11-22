@@ -12,7 +12,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | # | Objetivo | Criterio de éxito | Spec | Estado |
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
-| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [011](specs/011-perfil-cliente/spec.md) (RS2.a en parte: guardar el perfil; RS2.b y RS9.a, liberada en v0.24.0); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); fichas 2026-11-17-fix-sesion-cuenta-desactivada (RS3.a) y 2026-11-17-fix-admin-no-se-desactiva (RS19.a), liberadas en v0.20.1; 015–019 previstas | pendiente |
+| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS13.c, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [011](specs/011-perfil-cliente/spec.md) (RS2.a en parte: guardar el perfil; RS2.b y RS9.a, liberada en v0.24.0); [002](specs/002-registro-pacientes/spec.md) (RS13.b, liberada en v0.27.0; RS13.c pendiente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); fichas 2026-11-17-fix-sesion-cuenta-desactivada (RS3.a) y 2026-11-17-fix-admin-no-se-desactiva (RS19.a), liberadas en v0.20.1; 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b y OB6.c → objetivo 5 | [020](specs/020-auditoria-base/spec.md) (OB1.a, OB1.c, OB1.g, OB1.h, OB2; released v0.12.0); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b, RS15.c y RS15.d → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS8.c, RS15.b, RS15.c, RS15.d, OB4.b, OB4.c, OB6.b, OB6.c, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS8.d → Pendientes y deuda (CSP estricta, por pantallas), RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); [031](specs/031-endurecer-produccion/spec.md) (cabeceras, conexión segura obligatoria, incidencias de la 030 y administración desde fuera); [032](specs/032-alertas-cifrado-copias/spec.md) (alertas y copias cifradas, en curso: OB6.b y RS15.b; RS15.c como excepción EX3 hasta el primer dato real; OB6.c y RS15.d, staging, pendientes) | pendiente |
@@ -635,6 +635,15 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 053/R5: el logotipo de WhatsApp va dos veces en `/` (`<symbol>` si algún día pesa);
   - 053/R6: mover `WHATSAPP` con las demás constantes de `PaginaInicioTest`;
   - 053/R7: la canónica se arma con `APP_URL` y `docs/seo.md` dice `seo.site_url`; en producción sale `https://dentissa.app/` (comprobado en v0.25.0): alinear el código o el documento.
+- Spec 002, excepción P7 (aprobada por el usuario el 2026-11-21; plan D6, /analyze A4, liberada en v0.27.0): el alta
+  de cuentas por el registro (formulario y Google) sigue sin evento de auditoría → spec 021.
+- Spec 002, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.27.0):
+  - 002/R10: el mensaje del correo de 12 px y sus enlaces de 71×14 px (cumplen WCAG 2.1 AA, pero son pequeños);
+  - 002/R11: el separador «·» entre los enlaces del rechazo se lee en voz alta;
+  - 002/R12: la vista del registro decide los enlaces comparando el texto del mensaje con la constante;
+  - 002/R13: el limitador `registro` no deja rastro de un sondeo (→ spec 021);
+  - 002/R14: diferencia de tiempos entre el alta nueva y el correo existente (dentro de RS13.c);
+  - 002/R15: con la recuperación desactivada, el mensaje ofrece recuperar la contraseña sin enlace.
 - Spec 011, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.24.0):
   - 011/R3: el test de TM3 no comprueba directamente que el identificador antiguo deje de valer (lo cubren el de las
     otras sesiones y el del almacén);
@@ -708,8 +717,10 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   (configuración de staging separada), OB4.c (checklist de staging) y OB7.b (logs de nginx en
   staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1);
   y RS8.c (conexión segura obligatoria en staging), creada al dividir RS8.b en la spec 031.
-- RS13.b (objetivo 2): mensaje genérico en el alta que no revele si el correo ya tiene cuenta; la
-  spec 030 solo añade el límite de intentos (RS13.a) (/analyze A34).
+- ~~RS13.b (objetivo 2): mensaje genérico en el alta que no revele si el correo ya tiene cuenta; la
+  spec 030 solo añade el límite de intentos (RS13.a) (/analyze A34).~~ Mitigada en la v0.27.0 (spec 002).
+- RS13.c (objetivo 2): no distinguir el alta de una cuenta nueva del rechazo de una existente (hoy una entra al
+  panel y la otra no); exige confirmar el correo antes de crear la cuenta → spec futura (/analyze 002 A3).
 - Entorno local: la base `dentissa` de un equipo creado antes de la spec 030 cargó el volcado a
   medias (la colación de la base cortaba la carga en `horarios_dentista`) y le faltan
   `fk_horario_personal`, `fk_pacientes_usuario` y `fk_personal_usuario`. Para repararla hay que

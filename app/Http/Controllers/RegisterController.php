@@ -14,6 +14,12 @@ use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
+    /**
+     * Spec 002 (CA8, TM1, D1): el rechazo de un correo ya registrado no dice que tenga cuenta. La vista lo reconoce
+     * para añadir los enlaces de iniciar sesión y recuperar la contraseña.
+     */
+    public const CORREO_NO_DISPONIBLE = 'No pudimos crear la cuenta con estos datos. Si ya tienes una, inicia sesión o recupera tu contraseña.';
+
     public function showForm()
     {
         // Con sesión, al panel de su rol (spec 044, D7: `/` ya no redirige con sesión; destino fijo, TM1).
@@ -30,7 +36,7 @@ class RegisterController extends Controller
             // Paso 1 — Cuenta
             'nombre' => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:255', 'unique:usuarios,email'],
+            'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Password::min(8)],
 
             // Paso 2 — Contacto
@@ -46,7 +52,6 @@ class RegisterController extends Controller
             'nombre.required' => 'El nombre es obligatorio.',
             'apellido.required' => 'El apellido es obligatorio.',
             'email.required' => 'El correo es obligatorio.',
-            'email.unique' => 'Este correo ya está registrado. ¿Quieres iniciar sesión?',
             'email.email' => 'Ingresa un correo válido.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
@@ -55,6 +60,13 @@ class RegisterController extends Controller
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'terminos.accepted' => 'Debes aceptar los términos de uso y el aviso de privacidad.',
         ]);
+
+        // Spec 002 (CA8, /review R1): el correo repetido solo se comprueba con el resto del formulario válido; si no,
+        // otro error enviado a propósito revelaría si el correo tiene cuenta sin crear ninguna.
+        $request->validate(
+            ['email' => ['unique:usuarios,email']],
+            ['email.unique' => self::CORREO_NO_DISPONIBLE],
+        );
 
         // Crear usuario y paciente en una sola transacción
         DB::transaction(function () use ($data) {

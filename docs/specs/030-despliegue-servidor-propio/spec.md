@@ -112,6 +112,7 @@ aplicación quedará abierta a todo internet.
 | OB7.b — lo mismo en staging (nueva al dividir OB7.a) | fuera | No hay staging → roadmap, objetivo 5 |
 | RS13.a — límite de intentos en el alta (corrección dividida, /analyze A34) | dentro | CA8 |
 | RS13.b — mensaje genérico en el alta, sin revelar si el correo ya está registrado (nueva al dividir RS13.a) | fuera | → roadmap, objetivo 2 |
+| RS13.c — no distinguir el alta de una cuenta nueva del rechazo de una existente (creada al dividir RS13.b, /analyze 002 A3) | fuera | → roadmap, objetivo 2: spec futura de confirmación del correo |
 
 ## Auditoría
 No aplica en esta spec, por una excepción a P7 aceptada por el usuario (2026-10-03, /analyze A4). El
@@ -186,3 +187,4 @@ inicio de sesión.
 | 2026-10-25 | Cobertura de riesgos: OB6.c, creada por la 032 al dividir OB6.b, declarada fuera (→ objetivo 5) | /implement 032 (T091) |
 | 2026-10-27 | Comportamiento modificado por 032 en v0.11.0: CA6 reemplazado por 032 CA9 y CA7 modificado por 032 CA9 (copias cifradas, restauración y vuelta con copia desde el PC); envío de correos desde producción atendido; destinos de RS15.b y OB6.b → 032 | /release |
 | 2026-10-31 | Comportamiento modificado por 020 en v0.12.0: el `scheduler` (purga de la auditoría) es un servicio más que `desplegar.sh` y `volver.sh` levantan y paran; la vuelta de la 020 es sin la copia | /release |
+| 2026-11-21 | «Cobertura de riesgos»: fila de RS13.c, creada por la spec 002 al dividir RS13.b; fuera, sin cambios de criterios | /release 002 |
