@@ -97,7 +97,8 @@ Eventos que deben quedar registrados según `docs/observability.md`:
 |---|---|---|---|---|
 | 2026-09-28 | brecha | ¿Qué es el alcance de un dentista? | Pacientes asignados a él o con al menos una cita con él | usuario |
 | 2026-11-21 | brecha | ¿Partir la spec (más de 10 criterios)? | No: una sola entrega | usuario (`/plan --redo`) |
-| 2026-11-22 | contradicción | La 006 CA6, la constitución P3 y RS1.e dicen «403»; esta spec pide no confirmar que el paciente existe | Fuera del alcance, 404 (como si no existiera) en ficha, edición y expediente; dentro del alcance sin permiso, 403. Reemplaza el 403 de 006 CA6 y 007 CA7 para estas rutas. Las citas conservan su 403 (spec 026) | usuario (`/plan`) |
+| 2026-11-22 | contradicción | La 006 CA6, la constitución P3 y RS1.e dicen «403»; esta spec pide no confirmar que el paciente existe | Fuera del alcance, 404 (como si no existiera) en ficha, edición y expediente; dentro del alcance sin permiso, 403. Reemplaza el 403 de 006 CA6 y 007 CA7 para estas rutas, y para ellas precisa el «denegado (403)» de la constitución P3 y el «permitido y 403» de RS1.e (el caso denegado fuera del alcance es un 404). Las citas conservan su 403 (spec 026) | usuario (`/plan`) |
+| 2026-11-22 | implícita | ¿Policies o Gates? | Gates sobre clases de `app/Autorizacion/`, la convención del proyecto desde ADR 0003 (no hay modelos de paciente ni de expediente) | `docs/adr/0003*`, `AGENTS.md` |
 | 2026-11-22 | brecha | ¿Qué lecturas audita esta spec? | Abrir la ficha, su edición y un expediente, en modo crítico; los listados → spec 022 | usuario (`/plan`, `/analyze` A1, A5) |
 | 2026-11-22 | brecha | El Gate del detalle de cita del personal, que la 026, la 028 y la 050 dejaron a la 014 | Dentro de esta spec (CA13) | usuario (`/analyze` A2) |
 | 2026-11-22 | brecha | ¿Quién agenda la primera cita de un paciente sin dentista o de otro dentista? | Solo el admin (o el propio paciente); antes era un supuesto de visibilidad | usuario (`/analyze` A15) |
@@ -105,7 +106,7 @@ Eventos que deben quedar registrados según `docs/observability.md`:
 
 ## Notas para /plan
 - Criterios de specs inferidas que esta spec reemplaza: 006 CA1, CA4, CA6, CA7 (directorio, edición y alcance); 007 CA3, CA4, CA6, CA7, CA8 (edición, lectura y alta de expedientes); 003 CA10 (pacientes en el alta de citas).
-- Código afectado según la exploración: `PacientesController` (index/show/edit/update/store), `ExpedientesController` (show/update/store), `CitasController::create/store`. El usuario aceptó Policies de Laravel como mecanismo (principio P3).
+- Código afectado según la exploración: `PacientesController` (index/show/edit/update/store), `ExpedientesController` (show/update/store), `CitasController::create/store`. Mecanismo: Gates sobre clases de `app/Autorizacion/` (ADR 0003), que sustituyen a las Policies que se aceptaron en 2026-09 (ver Decisiones).
 - Respuesta de denegación actual en el sistema: 403 (fuera del alcance pasa a 404, ver Decisiones).
 
 ## Historial
