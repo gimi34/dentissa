@@ -1,7 +1,7 @@
 ---
 id: 014
 slug: autorizacion-alcance-clinico
-status: approved
+status: implemented
 created: 2026-09-28
 extends: [003, 006, 007, 054]
 ---
@@ -25,18 +25,18 @@ lecturas de datos clínicos (OB1; ver «Cobertura de riesgos»).
 - Como admin, quiero seguir viendo y gestionando a todos los pacientes y expedientes.
 
 ## Criterios de aceptación
-- [ ] CA1 · Dado un dentista, cuando consulta el directorio de pacientes, entonces solo aparecen los pacientes de su alcance; si no tiene ninguno, ve la lista vacía.
-- [ ] CA2 · Dado un asistente, cuando consulta el directorio de pacientes, entonces solo aparecen los pacientes del alcance de sus dentistas asignados; un admin sigue viendo a todos.
-- [ ] CA3 (abuso) · Dado un dentista o asistente, cuando intenta abrir, editar o guardar la ficha de un paciente fuera de su alcance (p. ej. cambiando el identificador en la dirección), entonces se le deniega el acceso y la respuesta no revela ningún dato del paciente.
-- [ ] CA4 · Dado un dentista, cuando abre un expediente de un paciente de su alcance, entonces lo ve aunque lo haya firmado otro dentista; un asistente lo ve en solo lectura.
-- [ ] CA5 (abuso) · Dado un dentista o asistente, cuando intenta abrir un expediente de un paciente fuera de su alcance, entonces se le deniega el acceso sin revelar su contenido.
-- [ ] CA6 (abuso) · Dado un dentista, cuando intenta modificar un expediente que firmó otro dentista, entonces se rechaza y el expediente no cambia; un admin sí puede modificarlo.
-- [ ] CA7 (abuso) · Dado un dentista que registra un expediente, cuando indica a otro dentista como autor, una cita que no pertenece al paciente o un paciente fuera de su alcance, entonces se rechaza; si todo es válido, el expediente queda firmado por él.
-- [ ] CA8 · Dado un asistente que da de alta un paciente, cuando guarda el alta, entonces debe asignarlo a uno de sus dentistas; si no elige uno o elige un dentista que no tiene asignado, el alta se rechaza sin crear nada.
-- [ ] CA9 (abuso) · Dado un dentista o asistente que agenda una cita, cuando elige al paciente, entonces solo puede elegir pacientes de su alcance y solo ve la próxima visita sugerida de esos pacientes; si envía un paciente fuera de su alcance, la cita se rechaza. Un paciente sin dentista asignado y sin citas, o de otro dentista, solo lo agenda el admin (o el propio paciente desde su cuenta).
-- [ ] CA10 · Dado un paciente que cambia de dentista asignado, cuando el dentista anterior (sin citas con él) intenta abrir su ficha, entonces se le deniega; el nuevo dentista la ve de inmediato.
-- [ ] CA13 (abuso) · Dado un dentista o asistente, cuando abre el detalle de una cita de un dentista que no es el suyo ni uno de los que apoya, o intenta agendar una cita para uno de ellos, entonces se le deniega (como hoy en las citas, sin revelar el contenido de la cita); dentro de su alcance la ve y la agenda.
-- [ ] CA14 · Dado un aviso de posible paciente duplicado en el alta (spec 054), cuando el paciente coincidente está fuera del alcance de quien registra, entonces el aviso muestra su nombre pero no el enlace a su ficha; si está en su alcance (o es el admin), el aviso enlaza la ficha.
+- [x] CA1 · Dado un dentista, cuando consulta el directorio de pacientes, entonces solo aparecen los pacientes de su alcance; si no tiene ninguno, ve la lista vacía.
+- [x] CA2 · Dado un asistente, cuando consulta el directorio de pacientes, entonces solo aparecen los pacientes del alcance de sus dentistas asignados; un admin sigue viendo a todos.
+- [x] CA3 (abuso) · Dado un dentista o asistente, cuando intenta abrir, editar o guardar la ficha de un paciente fuera de su alcance (p. ej. cambiando el identificador en la dirección), entonces se le deniega el acceso y la respuesta no revela ningún dato del paciente.
+- [x] CA4 · Dado un dentista, cuando abre un expediente de un paciente de su alcance, entonces lo ve aunque lo haya firmado otro dentista; un asistente lo ve en solo lectura.
+- [x] CA5 (abuso) · Dado un dentista o asistente, cuando intenta abrir un expediente de un paciente fuera de su alcance, entonces se le deniega el acceso sin revelar su contenido.
+- [x] CA6 (abuso) · Dado un dentista, cuando intenta modificar un expediente que firmó otro dentista, entonces se rechaza y el expediente no cambia; un admin sí puede modificarlo.
+- [x] CA7 (abuso) · Dado un dentista que registra un expediente, cuando indica a otro dentista como autor, una cita que no pertenece al paciente o un paciente fuera de su alcance, entonces se rechaza; si todo es válido, el expediente queda firmado por él.
+- [x] CA8 · Dado un asistente que da de alta un paciente, cuando guarda el alta, entonces debe asignarlo a uno de sus dentistas; si no elige uno o elige un dentista que no tiene asignado, el alta se rechaza sin crear nada.
+- [x] CA9 (abuso) · Dado un dentista o asistente que agenda una cita, cuando elige al paciente, entonces solo puede elegir pacientes de su alcance y solo ve la próxima visita sugerida de esos pacientes; si envía un paciente fuera de su alcance, la cita se rechaza. Un paciente sin dentista asignado y sin citas, o de otro dentista, solo lo agenda el admin (o el propio paciente desde su cuenta).
+- [x] CA10 · Dado un paciente que cambia de dentista asignado, cuando el dentista anterior (sin citas con él) intenta abrir su ficha, entonces se le deniega; el nuevo dentista la ve de inmediato.
+- [x] CA13 (abuso) · Dado un dentista o asistente, cuando abre el detalle de una cita de un dentista que no es el suyo ni uno de los que apoya, o intenta agendar una cita para uno de ellos, entonces se le deniega (como hoy en las citas, sin revelar el contenido de la cita); dentro de su alcance la ve y la agenda.
+- [x] CA14 · Dado un aviso de posible paciente duplicado en el alta (spec 054), cuando el paciente coincidente está fuera del alcance de quien registra, entonces el aviso muestra su nombre pero no el enlace a su ficha; si está en su alcance (o es el admin), el aviso enlaza la ficha.
 
 ## Fuera de alcance
 - Restringir el portal de pacientes a su rol (spec 015).
@@ -77,8 +77,8 @@ lecturas de datos clínicos (OB1; ver «Cobertura de riesgos»).
 
 ## Auditoría
 Eventos que deben quedar registrados según `docs/observability.md`:
-- [ ] CA11 · Dado cualquier acceso denegado de esta spec (CA3, CA5, CA6, CA7, CA9, CA13), cuando ocurre, entonces queda registrado quién lo intentó, qué acción, sobre qué paciente o expediente, con resultado "denegado" y la fecha.
-- [ ] CA12 · Dada una lectura permitida de la ficha de un paciente (también al abrir su edición) o de un expediente, cuando ocurre, entonces queda registrado quién, qué recurso y la fecha; si no se puede registrar, la ficha o el expediente no se muestran.
+- [x] CA11 · Dado cualquier acceso denegado de esta spec (CA3, CA5, CA6, CA7, CA9, CA13), cuando ocurre, entonces queda registrado quién lo intentó, qué acción, sobre qué paciente o expediente, con resultado "denegado" y la fecha.
+- [x] CA12 · Dada una lectura permitida de la ficha de un paciente (también al abrir su edición) o de un expediente, cuando ocurre, entonces queda registrado quién, qué recurso y la fecha; si no se puede registrar, la ficha o el expediente no se muestran.
 
 ## Requisitos no funcionales
 - Cada criterio de acceso (CA1–CA10) se verifica para cada rol implicado, en el caso permitido y en el denegado (RS1.e, principio P3).
