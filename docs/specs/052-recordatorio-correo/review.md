@@ -1,28 +1,31 @@
 ---
 spec: 052-recordatorio-correo
-verdict: changes_requested
-round: 1
+verdict: approved
+round: 2
 date: 2026-11-22
 base: 4427723
-head: 38fa91f
+head: 6cf9ae8
 human_signoff: no requerido
 ---
 
 # Review · 052 Recordatorio de cita por correo
 
 ## Resumen
-`changes_requested`: sin bloqueantes, pero el usuario decide corregir antes de liberar los dos importantes
-(R1, el bloqueo de 24 h de `withoutOverlapping()`; R2, los fallos de envío sin freno), con las tareas T027 y
-T028. Los menores van al roadmap (decisión del usuario, 2026-11-22). Revisores con contexto limpio: spec (A) y
-seguridad (S) con perfil `critical` (opus); constitución y calidad (C+D) y accesibilidad con `standard`
-(sonnet). SEO no aplica (sin rutas públicas). Las skills `design:*` no están en `skills.enabled`: se aplicó
-la lista de la skill.
-Conteo: bloqueante 0 · importante 2 · menor 12
+Ronda 2 (`--rerun`, sin subagentes: diff pequeño desde `38fa91f`, 53 líneas en 3 archivos, releído desde cero).
+`approved`: R1 y R2 quedan corregidos con T027 y T028, la suite completa sigue en verde y no hay hallazgos
+nuevos. R1: `withoutOverlapping(10)` (`routes/console.php:52`), probado por
+`test_el_bloqueo_de_la_revision_caduca_pronto`. R2: al primer `TransportExceptionInterface` la revisión se corta
+y cuenta el resto como aplazadas (`RecordatoriosCitas.php:79-84`); lo prueba
+`test_con_el_correo_caido_se_intenta_una_vez_por_revision`, que falla al quitar el `break`. Si una revisión durara
+más de 10 min y se solapara con la siguiente, el reclamo atómico sigue evitando duplicados (TM6). Los menores de la
+ronda 1 siguen aceptados al roadmap ([history/review.r1.md](history/review.r1.md)).
+Conteo (abiertos): bloqueante 0 · importante 0 · menor 0 (12 menores aceptados en la ronda 1)
+
 
 ## Verificación automática
 | Comando | Resultado |
 |---|---|
-| `vendor/bin/phpunit` (suite completa, `dentissa_test`, contenedor `dentissa-app` con el código del worktree) | ✅ 1622 tests, 20 533 aserciones, 0 fallos (línea base de `/implement`: 1591) |
+| `vendor/bin/phpunit` (suite completa, `dentissa_test`, contenedor `dentissa-app` con el código del worktree) | ✅ r2: 1624 tests, 20 541 aserciones, 0 fallos (r1: 1622; +2 de T027) |
 | `vendor/bin/pint --test` sobre los 10 PHP tocados | ✅ |
 | `python .ai/bin/aidd.py validate docs/specs/052-recordatorio-correo` | ✅ 0 errores |
 | `evaluate.mjs` con `design/criterios.json` sobre el correo renderizado (T022) | ✅ 11/11 puertas y 2/2 KPIs con y sin servicio (`.ai/inspect/052-build/con`, `sin`) |
@@ -63,8 +66,8 @@ Conteo: bloqueante 0 · importante 2 · menor 12
 ## Seguridad
 | Herramienta | Resultado |
 |---|---|
-| gitleaks 8.21.2 (22 archivos desde `impl_base`, modo archivos) | ✅ 0 hallazgos |
-| semgrep `p/php` 1.99.0 (10 PHP) | ✅ 0 hallazgos (aviso de análisis parcial por las propiedades `readonly` promovidas de `RecordatorioCita`; revisado a mano por S) |
+| gitleaks 8.21.2 (22 archivos desde `impl_base`; r2: los 3 archivos tocados) | ✅ 0 hallazgos |
+| semgrep `p/php` 1.99.0 (10 PHP; r2: los 3 tocados, 0 errores) | ✅ 0 hallazgos (aviso de análisis parcial por las propiedades `readonly` promovidas de `RecordatorioCita`; revisado a mano por S) |
 | `composer audit --locked` (regla de la CI) + `auditar-npm.mjs` | ✅ crít: 0 · alta: 0 |
 | trivy 0.57.1 `fs` | ✅ 0 altas ni críticas en la ronda de la 053 con los mismos lockfiles; sin lockfiles cambiados (`deps.stat` vacío) |
 
@@ -72,10 +75,10 @@ Conteo: bloqueante 0 · importante 2 · menor 12
 |---|---|---|
 | A01:2025 Destinatario y datos (TM1, TM3) | ✅ | `up.email` de la cuenta del paciente de la cita; sin notas ni expediente |
 | A05:2025 Inyección (TM7) | ✅ | `{{ }}` en plantillas y asunto; asunto solo con fechas |
-| A06:2025 Volumen y concurrencia (TM4, TM6) | ❌ parcial | Tope diario y reclamo atómico en su sitio; sin freno para los fallos de envío (R2) |
+| A06:2025 Volumen y concurrencia (TM4, TM6) | ✅ | Tope diario, reclamo atómico y, desde la r2, un solo intento por revisión con el correo caído (R2) |
 | A07:2025 Enlace (TM2) | ✅ | Un solo enlace, sin token, a una ruta con `auth` |
 | A09:2025 Registros y alertas (TM5) | ✅ / ❌ alertas | Logs sin datos (test); `recordatorio.correo_fallido` no genera aviso (R9) |
-| A10:2025 Condiciones excepcionales (TM8) | ❌ parcial | `try/catch` por cita con liberación; bloqueo de 24 h si muere el proceso (R1) |
+| A10:2025 Condiciones excepcionales (TM8) | ✅ | `try/catch` por cita con liberación; bloqueo de 10 min desde la r2 (R1) |
 | Proceso | ✅ | Rutas protegidas solo en T090 (`AGENTS.md`, mapa); sin instrucciones a agentes |
 
 ## Observabilidad
@@ -111,8 +114,8 @@ Conteo: bloqueante 0 · importante 2 · menor 12
 - Cobertura de riesgos: la spec cierra 028/R11 (T024, con test); el estado del roadmap lo actualiza `/release`.
 
 ## Tareas añadidas
-- T027 ← R1, R2 (tests)
-- T028 ← R1, R2 (corrección)
+- T027 ← R1, R2 (tests), hecha
+- T028 ← R1, R2 (corrección), hecha
 
 ## Aceptados sin tarea
 Aceptados por el usuario el 2026-11-22:
