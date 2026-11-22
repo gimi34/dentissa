@@ -5,6 +5,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-21
+
+### Added
+- El paciente recibe un correo un día antes de su cita agendada o confirmada, con el día, la hora, el dentista, el
+  servicio, la dirección y el teléfono de la clínica y un enlace a «Mis citas»; si la cita se agenda o se cambia
+  con menos de un día de antelación, el correo sale en pocos minutos. Sale apagado y la clínica lo enciende cuando
+  quiera (spec 052).
+- En el detalle de la cita, el personal ve «Recordatorio · Enviado» cuando el recordatorio de la fecha actual ya
+  salió (spec 052).
+
+### Fixed
+- Al cambiar una cita de fecha, el recordatorio enviado para la fecha anterior deja de contar y se envía uno nuevo
+  para la fecha nueva (spec 052).
+
 ## [0.27.0] - 2026-11-21
 
 ### Security

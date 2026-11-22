@@ -53,5 +53,6 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="RECUPERAR_CONTRASENA" value="true"/>
+        <env name="RECORDATORIOS_CORREO" value="true"/>
     </php>
 </phpunit>

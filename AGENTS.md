@@ -84,16 +84,16 @@ Nunca escribas secretos en el código, los logs ni los docs.
 | Ruta | Contenido |
 |---|---|
 | `app/Http/Controllers/` | 19 controladores (más el `Controller` base; `PaginasPublicasController`, spec 038; `FotosGaleriaController`, spec 039; `ReportesController`, spec 047) con casi toda la lógica (ver docs/architecture.md) |
-| `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación, horario (specs 025–028), calendario de «Citas» (`CalendarioCitas`, spec 049) y hora de la clínica (`RelojClinica`, spec 050) |
+| `app/Agenda/` | servicios de la agenda: reserva, estados, reprogramación, horario (specs 025–028), calendario de «Citas» (`CalendarioCitas`, spec 049) y hora de la clínica (`RelojClinica`, spec 050) y recordatorios de cita por correo (`RecordatoriosCitas`, spec 052) |
 | `app/Autorizacion/` | alcance del personal y Gates de citas y de personal (ADR 0003) |
 | `app/Auditoria/` | registro de auditoría: `Auditoria::registrar()` y `denegar()`, almacén, registro central de denegaciones (spec 020, ADR 0004) |
 | `app/Galeria/` | galería de trabajos: `ProcesadorFoto` (dos WebP sin datos de la cámara) y `Galeria` (publicar, mover y quitar con auditoría), con el disco `galeria` en `storage/app/galeria` (spec 039, ADR 0009) |
 | `app/Reportes/` | reportes de la administración: `ReporteCitas` valida el periodo y saca las cifras de citas por estado, por dentista y por servicio, solo totales (spec 047) |
 | `app/Listeners/` | fallos de acceso al canal `seguridad` (spec 032) y actor del `Context` de los logs (spec 020) |
 | `app/Pacientes/` | ciudad del paciente: la lista cerrada (`Ciudades`) y la corrección de las ya guardadas (`CorreccionCiudades`) (spec 051); posibles duplicados de un alta (`PosiblesDuplicados`, spec 054) |
-| `app/Rules/`, `app/Console/Commands/` | reglas `HoraFinPosterior` y `CiudadDeLaLista` (spec 051); comando `dentissa:rotar-credenciales` |
+| `app/Rules/`, `app/Console/Commands/` | reglas `HoraFinPosterior` y `CiudadDeLaLista` (spec 051); comandos `dentissa:rotar-credenciales` y `dentissa:recordatorios` (spec 052, programado cada minuto en `routes/console.php`) |
 | `app/Http/Middleware/` | `RoleMiddleware` (rol), `PreventBackHistory` (no-cache), `SesionVigente` (cierra las sesiones de una cuenta que restableció su contraseña; spec 041) |
-| `app/Mail/` | `AvisoProduccion` (spec 032), `EnlaceRestablecimiento` y `ContrasenaCambiada` (spec 041), con sus plantillas en `resources/views/correos/` |
+| `app/Mail/` | `AvisoProduccion` (spec 032), `EnlaceRestablecimiento` y `ContrasenaCambiada` (spec 041), `RecordatorioCita` (spec 052), con sus plantillas en `resources/views/correos/` |
 | `app/Models/` | `Usuario` (auth), `Servicio`; `User` es un resto sin uso |
 | `routes/web.php` | todas las rutas |
 | `resources/views/` | vistas Blade por módulo |

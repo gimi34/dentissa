@@ -360,6 +360,40 @@ class CitasPanelDetalleTest extends TestCase
         return array_values(array_filter(preg_split('/\s+/', trim($elemento->getAttribute('class')))));
     }
 
+    // ── Spec 052 (CA7): la marca del recordatorio en el detalle del personal ────────────────
+
+    /** Texto de la fila «Recordatorio» del detalle de la cita, o null si no está. */
+    private function filaRecordatorio(Usuario $usuario, string $rol, string $cita): ?string
+    {
+        $xpath = $this->xpath($this->actingAs($usuario)->get(route("{$rol}.citas.show", $cita))->assertOk()->getContent());
+        $fila = $xpath->query('//div[span[normalize-space()="Recordatorio"]]')->item(0);
+
+        return $fila === null ? null : trim(preg_replace('/\s+/u', ' ', $fila->textContent));
+    }
+
+    /** CA7: con el recordatorio enviado, el personal lo ve; si no salió, no hay fila. */
+    public function test_el_detalle_muestra_el_recordatorio_enviado(): void
+    {
+        $this->assertNull($this->filaRecordatorio($this->admin, 'admin', $this->citaHoy), 'Sin recordatorio, no hay fila.');
+
+        DB::table('citas')->where('id', $this->citaHoy)->update(['recordatorio_enviado' => 1]);
+
+        foreach (['admin' => $this->admin, 'asistente' => $this->asistente, 'dentista' => $this->dentista1] as $rol => $usuario) {
+            $this->assertSame('Recordatorio Enviado', $this->filaRecordatorio($usuario, $rol, $this->citaHoy), "{$rol}: «Recordatorio · Enviado».");
+        }
+    }
+
+    /** CA7, CA4: tras reprogramar, la marca ya no vale para la fecha nueva y deja de verse. */
+    public function test_el_detalle_no_muestra_el_recordatorio_tras_reprogramar(): void
+    {
+        $this->conHorarios();
+        DB::table('citas')->where('id', $this->citaHoy)->update(['recordatorio_enviado' => 1]);
+
+        $this->reprogramar($this->admin, $this->citaHoy, '2026-10-15', '11:00')->assertStatus(302)->assertSessionHasNoErrors();
+
+        $this->assertNull($this->filaRecordatorio($this->admin, 'admin', $this->citaHoy), 'La cita reprogramada no muestra el recordatorio de la fecha anterior.');
+    }
+
     private function xpath(string $html): DOMXPath
     {
         $dom = new DOMDocument;

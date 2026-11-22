@@ -122,6 +122,8 @@ class ReprogramacionCitas
         $this->db->table('citas')->where('id', $cita->id)->update([
             'fecha_hora' => $inicio,
             'estado' => 'agendada',
+            // Spec 052 (CA4, 028/R11): el recordatorio enviado era de la fecha anterior; sale otro para la nueva.
+            'recordatorio_enviado' => 0,
             'actualizado_en' => $ahora,
         ]);
         $this->db->table('historial_citas')->insert([
