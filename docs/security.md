@@ -314,7 +314,7 @@ genérico queda pendiente (/analyze 030 A34: RS13.a se divide).
 
 Correcciones:
 - RS13.a Throttle en el alta (ver RS4.b) — estado: mitigada (v0.5.0)
-- RS13.b Mensaje genérico en el alta, que no diga si el correo ya tiene cuenta — estado: pendiente (→ spec 002, CA8)
+- RS13.b Mensaje genérico en el alta, que no diga si el correo ya tiene cuenta — estado: mitigada (v0.27.0, spec 002 CA8): mensaje neutro con enlaces para entrar o recuperar la contraseña, que solo sale cuando el resto del formulario es válido (/review 002 R1)
 - RS13.c No distinguir el alta de una cuenta nueva del rechazo de una existente (hoy una entra al panel y la otra no); exige confirmar el correo antes de crear la cuenta — estado: pendiente (→ objetivo 2, spec futura de confirmación del correo; /analyze 002 A3)
 
 ### RS14 · Baja — Campos privilegiados asignables en masa (A01 Broken Access Control)

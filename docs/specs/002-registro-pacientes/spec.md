@@ -1,7 +1,8 @@
 ---
 id: 002
 slug: registro-pacientes
-status: implemented
+status: released
+released: v0.27.0 (2026-11-21)
 created: 2026-09-28
 extends: []
 ---
@@ -99,3 +100,4 @@ Hoy no se registra el alta de cuentas. Eventos requeridos en `docs/observability
 | 2026-11-21 | Implementada: CA8 (mensaje neutro con enlaces); CA1–CA6 con tests de caracterización | /implement |
 | 2026-11-21 | Vuelve a `approved`: `/review` r1 pide corregir R1–R9 (T023–T028) | /review |
 | 2026-11-21 | Implementada de nuevo con las correcciones de `/review` r1 (T023–T028) | /implement |
+| 2026-11-21 | Liberada en v0.27.0 | /release |
