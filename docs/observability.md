@@ -57,8 +57,8 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
 |---|---|---|
 | Login exitoso y fallido (correo y Google) | sí | actor (o email intentado), método, IP, resultado, fecha, request_id |
 | Logout | sí | actor, fecha |
-| Acceso denegado (403) | sí | actor, acción, recurso, fecha |
-| Lectura de datos sensibles (ficha de paciente, expediente) | sí | actor, recurso, fecha |
+| Acceso denegado (403) | sí | actor, acción, recurso, fecha. Spec 014: fuera del alcance clínico también el 404 (`denegado_404`); en el alta de expediente y de cita, con el paciente como recurso |
+| Lectura de datos sensibles (ficha de paciente, expediente) | sí | actor, recurso, fecha. La ficha (también al abrir su edición) y el expediente ya se registran como `paciente_leido` y `expediente_leido` (spec 014, CA12), en modo crítico: sin registro no se muestran (503). Actor, recurso `pacientes` o `expedientes` con su id, resultado y fecha; nunca datos del paciente ni contenido clínico. Los listados, en la 022 (OB1.d) |
 | Cambio de datos sensibles (paciente, expediente, notas de cita, estado de cita) | sí | actor, recurso, campos cambiados (sin valores), fecha |
 | Cambio de permisos o roles | sí | actor, sujeto, antes → después, fecha |
 | Alta, activación/desactivación de cuentas y cambio de contraseña | sí | actor, sujeto, acción, fecha. El restablecimiento ya se registra como `contrasena_restablecida`, en modo crítico (spec 041); el resto, en la 021 |
