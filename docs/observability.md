@@ -101,6 +101,13 @@ La recuperación de contraseña escribe dos logs nuevos: `restablecimiento.corre
 datos), al superar los 200 enlaces del día; si aparece, revisar si hay abuso. `request_id` y `actor_id`
 llegan por el `Context`.
 
+El recordatorio de cita (spec 052, comando `dentissa:recordatorios` del `scheduler`, sin `request_id` porque no
+hay petición) escribe tres logs, solo con contadores o la clase del error, sin correo, nombre, dentista, fecha,
+servicio ni id de la cita (P8): `recordatorio.revision` (`info`, `{enviados, fallidos, aplazados}`, solo si la
+revisión hizo algo), `recordatorio.correo_fallido` (`error`, `{error}`: la cita queda sin avisar y se reintenta
+en la revisión siguiente) y `recordatorio.tope_diario` (`warning`, `{tope}`, una vez por día de la clínica al
+alcanzar los 250 recordatorios: el resto sale al día siguiente).
+
 ## Brechas
 <!-- Cada brecha con ID `OB<n>`, prioridad, correcciones `OB<n>.<letra>` y enlace al roadmap. -->
 

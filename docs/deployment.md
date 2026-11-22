@@ -100,8 +100,10 @@ Administrar desde fuera de casa: SSH con clave por la red privada de Tailscale, 
 `sudo bash deploy/preparar-acceso-remoto.sh` (spec 031, CA8; ADR 0006; guía §11, que también dice
 cómo retirar un dispositivo). Sin puertos abiertos en el router.
 
-**Servicio `scheduler` (spec 020):** ejecuta `php artisan schedule:work`, cuya única tarea es la
-purga mensual del registro de auditoría (`auditoria:purgar`, el día 1 a las 03:00 UTC). En local
+**Servicio `scheduler` (spec 020):** ejecuta `php artisan schedule:work` con dos tareas: la
+purga mensual del registro de auditoría (`auditoria:purgar`, el día 1 a las 03:00 UTC) y, desde la spec 052,
+la revisión de los recordatorios de cita (`dentissa:recordatorios`, cada minuto y sin solaparse; no envía nada
+mientras `RECORDATORIOS_CORREO` esté apagado). En local
 usa el mismo `build:` que `app`; en producción, la imagen que construye `app`
 (`dentissa-prod-app:produccion`, `pull_policy: never`), con `www-data`, solo `app.env`, el mismo
 `local.ini` y sin puertos. Se reinicia solo. `desplegar.sh` y `volver.sh` lo levantan con `app` y
@@ -238,6 +240,7 @@ Lo usa `/fix --hotfix` para un incidente en producción (decisión del usuario, 
 | MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS, MAIL_FROM_NAME (spec 032) | ✓ (`MAIL_MAILER=log`) | — | ✓ (`smtp`, `smtp.gmail.com`, `465`, cuenta de Gmail solo para enviar, contraseña de aplicación) | `.env` · `app.env` |
 | AVISOS_CORREO (destino de los avisos; spec 032) | vacío | — | ✓ | `.env` · `app.env` |
 | RECUPERAR_CONTRASENA (recuperar la contraseña por correo; por defecto `false`; spec 041) | opcional | `true` en `phpunit.xml` | `false` al desplegar; `true` tras la prueba de T095, con `aplicar-entorno.sh app` | `.env` · `app.env` |
+| RECORDATORIOS_CORREO (recordatorio de cita por correo 24 h antes; por defecto `false`; spec 052) | opcional | `true` en `phpunit.xml` | `false` al desplegar; `true` tras la cita de prueba de T095, con `aplicar-entorno.sh app` (recrea `app` y `scheduler`); se apaga igual, sin volver de versión | `.env` · `app.env` |
 | DENTISSA_CLAVE_PUBLICA (clave pública de las copias; por defecto `/opt/dentissa/entorno/copias.pub.asc`; spec 032) | — | — | opcional | entorno del shell que ejecuta `respaldar.sh`, `cifrar-copias-antiguas.sh`, `preparar-vigilancia.sh` y `verificar.sh` |
 | DENTISSA_APP (clon del servidor que usa `restaurar.sh` desde el PC; por defecto `/opt/dentissa/app`; spec 032) | — | — | opcional | Git Bash del PC del responsable |
 | MARIADB_PASSWORD, MARIADB_ROOT_PASSWORD | — | — | ✓ | `db.env` en el servidor (solo el servicio `db`) |
