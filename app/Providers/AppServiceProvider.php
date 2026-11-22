@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Auditoria\AlmacenAuditoria;
 use App\Auditoria\AlmacenAuditoriaBaseDatos;
 use App\Auditoria\Auditoria;
+use App\Autorizacion\AccesoClinico;
 use App\Autorizacion\CambiarEstadoCita;
 use App\Autorizacion\GestionGaleria;
 use App\Autorizacion\GestionPersonal;
@@ -54,6 +55,14 @@ class AppServiceProvider extends ServiceProvider
 
         // Reportes de la administración (spec 047, CA9): solo la administración los ve.
         Gate::define('ver-reportes', [VerReportes::class, 'autorizar']);
+
+        // Alcance clínico (spec 014): fuera del alcance, 404 que no confirma que el paciente exista; dentro, 403.
+        Gate::define('ver-paciente', [AccesoClinico::class, 'verPaciente']);
+        Gate::define('editar-paciente', [AccesoClinico::class, 'editarPaciente']);
+        Gate::define('ver-expediente', [AccesoClinico::class, 'verExpediente']);
+        Gate::define('editar-expediente', [AccesoClinico::class, 'editarExpediente']);
+        Gate::define('crear-expediente', [AccesoClinico::class, 'crearExpediente']);
+        Gate::define('agendar-para-paciente', [AccesoClinico::class, 'agendarParaPaciente']);
 
         // Límites de intentos (spec 030, CA8): 5 por minuto por IP (IPv6 por su /64), cuente o no
         // el resultado. El mensaje es el del login y no revela si la cuenta existe.

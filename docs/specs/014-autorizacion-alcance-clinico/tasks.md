@@ -1,6 +1,7 @@
 ---
 spec: 014-autorizacion-alcance-clinico
 plan: plan.md
+impl_base: 1a783965
 status: approved
 ---
 
@@ -31,6 +32,8 @@ Formato:
 - **Auditoría en los tests:** cada denegación comprueba un `acceso_denegado` con su `resultado` (`denegado_404` o
   `denegado`), `recurso_tipo` (`pacientes` o `expedientes`) y `recurso_id`; cada lectura, el evento de lectura.
 
+- **Línea base (2026-11-22, `impl_base` 1a783965):** suite completa 1645 en verde (20 689 aserciones).
+
 ## Constitution Check
 Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 
@@ -48,15 +51,20 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | P10 Rutas indexables descubribles | ➖ | Sin rutas indexables (plan). | — |
 
 ## Preparación
-- [ ] T001 Crear el escenario `EscenarioAlcanceClinico` sobre `EscenarioEstadosCita`, con P3, P4, P5, sus citas y los expedientes E1, E2 y E3 descritos en la cabecera, más ayudas para leer el último `acceso_denegado` y el último evento de lectura de un recurso — tests/Feature/Concerns/EscenarioAlcanceClinico.php — hecho cuando: crea los datos dentro de la transacción del test y T010 lo usa
+- [x] T001 Crear el escenario `EscenarioAlcanceClinico` sobre `EscenarioEstadosCita`, con P3, P4, P5, sus citas y los expedientes E1, E2 y E3 descritos en la cabecera, más ayudas para leer el último `acceso_denegado` y el último evento de lectura de un recurso — tests/Feature/Concerns/EscenarioAlcanceClinico.php — hecho cuando: crea los datos dentro de la transacción del test y T010 lo usa
+  - nota: trait sobre `EscenarioEstadosCita` con P3 («Tere Concita»), P4 («Cata Cancelada»), P5 («Sole Sindentista», sin dentista), sus citas con D1 (confirmada y cancelada) y E1–E3; ayudas `expediente()`, `ultimoDenegado()` y `ultimoEvento()`.
 
 ## Tests e implementación por área
 
 ### La regla y los Gates
-- [ ] T010 Escribir `AlcanceClinicoReglaTest`: P1 y P3 en el alcance de D1; P2, P4 y P5 fuera; A1 con el alcance de D1; el admin sin restricción; P5 solo para el admin; `aplicarAPacientes` devuelve exactamente esos pacientes por rol; y `test_reasignar_saca_del_alcance_en_el_acto` (P1 reasignado a D2 sale del alcance de D1 y entra en el de D2 en la siguiente consulta) — tests/Feature/AlcanceClinicoReglaTest.php — hecho cuando: falla por la razón esperada (los métodos aún no existen) — cubre: CA1, CA2, CA10 — depende: T001
-- [ ] T011 Añadir a `AlcanceClinicoReglaTest` los casos de los seis Gates por rol con `Gate::forUser(...)->inspect(...)`: dentro del alcance → permitido; fuera → denegado como 404 (`denyAsNotFound`); dentro sin permiso → 403 (asistente al editar ficha o expediente; dentista que no firmó al editar un expediente); admin → permitido en todo — tests/Feature/AlcanceClinicoReglaTest.php — hecho cuando: falla por la razón esperada (los Gates no existen) — cubre: CA3, CA5, CA6, CA7, CA9 — depende: T010
-- [ ] T020 Añadir a `AlcanceClinico` `aplicarAPacientes(Builder $consulta, Usuario $usuario): Builder` y `pacienteEnAlcance(Usuario $usuario, string $pacienteId): bool` con la regla del plan (asignado o con cita no cancelada; admin sin restricción), con Query Builder y sin caché (plan D11) — app/Autorizacion/AlcanceClinico.php — hecho cuando: pasan los casos de T010, siguen en verde los tests de la 026 que usan `dentistasDelAlcance`, y quitar un momento la condición de las citas o la exclusión de las canceladas hace fallar T010 — cubre: CA1, CA2, CA10 — depende: T010
-- [ ] T021 Crear `AccesoClinico` con `verPaciente`, `editarPaciente`, `verExpediente`, `editarExpediente`, `crearExpediente` y `agendarParaPaciente` (fuera del alcance `denyAsNotFound()`; dentro sin permiso `deny(<mensaje>)`, p. ej. «Solo quien firmó el expediente puede modificarlo.»; admin `allow()`) y registrar los seis Gates en `AppServiceProvider` (plan D1, D2) — app/Autorizacion/AccesoClinico.php, app/Providers/AppServiceProvider.php — hecho cuando: pasan los casos de T011 y cambiar un momento un `denyAsNotFound()` por `deny()` hace fallar su caso — cubre: CA3, CA5, CA6, CA7, CA9 — depende: T011, T020
+- [x] T010 Escribir `AlcanceClinicoReglaTest`: P1 y P3 en el alcance de D1; P2, P4 y P5 fuera; A1 con el alcance de D1; el admin sin restricción; P5 solo para el admin; `aplicarAPacientes` devuelve exactamente esos pacientes por rol; y `test_reasignar_saca_del_alcance_en_el_acto` (P1 reasignado a D2 sale del alcance de D1 y entra en el de D2 en la siguiente consulta) — tests/Feature/AlcanceClinicoReglaTest.php — hecho cuando: falla por la razón esperada (los métodos aún no existen) — cubre: CA1, CA2, CA10 — depende: T001
+  - nota: fallaba antes de T020 por la razón esperada («Call to undefined method AlcanceClinico::pacienteEnAlcance()» y `aplicarAPacientes()`). Va en el mismo commit que T020 y T021.
+- [x] T011 Añadir a `AlcanceClinicoReglaTest` los casos de los seis Gates por rol con `Gate::forUser(...)->inspect(...)`: dentro del alcance → permitido; fuera → denegado como 404 (`denyAsNotFound`); dentro sin permiso → 403 (asistente al editar ficha o expediente; dentista que no firmó al editar un expediente); admin → permitido en todo — tests/Feature/AlcanceClinicoReglaTest.php — hecho cuando: falla por la razón esperada (los Gates no existen) — cubre: CA3, CA5, CA6, CA7, CA9 — depende: T010
+  - nota: fallaba antes de T021 por la razón esperada (sin los Gates, `inspect` deniega todo y lo esperado «permitido» sale «403»). Los tres tests cubren los seis Gates con admin, dentista y asistente.
+- [x] T020 Añadir a `AlcanceClinico` `aplicarAPacientes(Builder $consulta, Usuario $usuario): Builder` y `pacienteEnAlcance(Usuario $usuario, string $pacienteId): bool` con la regla del plan (asignado o con cita no cancelada; admin sin restricción), con Query Builder y sin caché (plan D11) — app/Autorizacion/AlcanceClinico.php — hecho cuando: pasan los casos de T010, siguen en verde los tests de la 026 que usan `dentistasDelAlcance`, y quitar un momento la condición de las citas o la exclusión de las canceladas hace fallar T010 — cubre: CA1, CA2, CA10 — depende: T010
+  - nota: comprobado rompiendo: sin la condición de las citas fallan `test_el_alcance_de_cada_rol` y `…_aplicar_a_pacientes_…` (P3 sale del alcance de D1); contando las canceladas, fallan los mismos (P4 entra); al restaurar, pasan. `EstadosCitaRolesTest` y `ReprogramarCitaRolesTest` en verde.
+- [x] T021 Crear `AccesoClinico` con `verPaciente`, `editarPaciente`, `verExpediente`, `editarExpediente`, `crearExpediente` y `agendarParaPaciente` (fuera del alcance `denyAsNotFound()`; dentro sin permiso `deny(<mensaje>)`, p. ej. «Solo quien firmó el expediente puede modificarlo.»; admin `allow()`) y registrar los seis Gates en `AppServiceProvider` (plan D1, D2) — app/Autorizacion/AccesoClinico.php, app/Providers/AppServiceProvider.php — hecho cuando: pasan los casos de T011 y cambiar un momento un `denyAsNotFound()` por `deny()` hace fallar su caso — cubre: CA3, CA5, CA6, CA7, CA9 — depende: T011, T020
+  - nota: comprobado rompiendo: con `deny()` en lugar de `denyAsNotFound()` fuera del alcance, fallan los tres tests de Gates; al restaurar, pasan. 34 tests en verde con los de roles de la 026 y la 028.
 
 ### Pacientes
 - [ ] T012 Escribir en `AlcancePacientesTest` los tests del directorio: `test_el_directorio_del_dentista_es_su_alcance` (D1 ve P1 y P3, no P2, P4 ni P5; sin pacientes, la lista vacía), `test_el_directorio_del_asistente_es_el_de_sus_dentistas`, `test_el_admin_ve_a_todos` y `test_el_total_y_las_ciudades_son_del_alcance` (TM12) — tests/Feature/AlcancePacientesTest.php — hecho cuando: fallan por la razón esperada (hoy se ve a todos) salvo el del admin, que pasa (caracterización; rotura: aplicar el filtro también al admin) — cubre: CA1, CA2 — depende: T001
