@@ -108,6 +108,7 @@ No hace falta: sin dependencias, configuración, interruptor ni migración (plan
 ## Despliegue (lo ejecuta `/release`)
 - [x] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging (objetivo 5): la comprobación se hace en producción, dentro de T097, sin escribir ningún correo real en ningún documento:
   - CA8: registrarse con el correo de una cuenta de prueba ya existente → el mensaje neutro con los dos enlaces y ninguna cuenta nueva
+  - nota: A16 — se usó una cuenta de prueba ya existente, sin escribir su correo en ningún documento ni en el chat.
   - nota: resultado: el usuario confirma el 2026-11-21 en producción que, con el correo de una cuenta de prueba existente, sale el mensaje neutro con «Iniciar sesión · Recuperar tu contraseña», y que sin marcar los términos solo sale el error de los términos (R1); sin ningún correo en los documentos.
 - [x] T096 Aprobación humana para producción
   - aprobado por gimi34 el 2026-11-21 18:45 para v0.27.0
