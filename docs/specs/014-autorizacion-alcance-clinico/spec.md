@@ -37,6 +37,7 @@ lecturas de datos clínicos (OB1; ver «Cobertura de riesgos»).
 - [x] CA10 · Dado un paciente que cambia de dentista asignado, cuando el dentista anterior (sin citas con él) intenta abrir su ficha, entonces se le deniega; el nuevo dentista la ve de inmediato.
 - [ ] CA13 (abuso) · Dado un dentista o asistente, cuando abre el detalle de una cita de un dentista que no es el suyo ni uno de los que apoya, o intenta agendar una cita para uno de ellos, entonces se le deniega (como hoy en las citas, sin revelar el contenido de la cita); dentro de su alcance la ve y la agenda.
 - [x] CA14 · Dado un aviso de posible paciente duplicado en el alta (spec 054), cuando el paciente coincidente está fuera del alcance de quien registra, entonces el aviso muestra su nombre pero no el enlace a su ficha; si está en su alcance (o es el admin), el aviso enlaza la ficha.
+- [ ] CA15 (abuso) · Dado un dentista que tiene a un paciente en su alcance solo por una cita (no es su dentista asignado), cuando intenta cambiarle el dentista asignado, entonces se le deniega y se registra; puede seguir editando el resto de la ficha. El admin y el dentista asignado sí pueden cambiarlo.
 
 ## Fuera de alcance
 - Restringir el portal de pacientes a su rol (spec 015).
@@ -61,7 +62,7 @@ lecturas de datos clínicos (OB1; ver «Cobertura de riesgos»).
 ## Cobertura de riesgos
 | Corrección | Alcance | Criterios / motivo y destino |
 |---|---|---|
-| RS1.a — limitar directorio, ficha y edición de pacientes al alcance del rol | dentro | CA1, CA2, CA3, CA10 |
+| RS1.a — limitar directorio, ficha y edición de pacientes al alcance del rol | dentro | CA1, CA2, CA3, CA10, CA15 |
 | RS1.b — expedientes: lectura por alcance, edición solo del autor o admin | dentro | CA4, CA5, CA6 |
 | RS1.c — alta de expediente firmada por el propio dentista y coherente con la cita | dentro | CA7 |
 | RS1.d — alta de citas limitada a pacientes del alcance | dentro | CA9 |
@@ -77,7 +78,7 @@ lecturas de datos clínicos (OB1; ver «Cobertura de riesgos»).
 
 ## Auditoría
 Eventos que deben quedar registrados según `docs/observability.md`:
-- [ ] CA11 · Dado cualquier acceso denegado de esta spec (CA3, CA5, CA6, CA7, CA9, CA13), cuando ocurre, entonces queda registrado quién lo intentó, qué acción, sobre qué paciente o expediente, con resultado "denegado" y la fecha.
+- [ ] CA11 · Dado cualquier acceso denegado de esta spec (CA3, CA5, CA6, CA7, CA9, CA13, CA15), cuando ocurre, entonces queda registrado quién lo intentó, qué acción, sobre qué paciente o expediente, con resultado "denegado" y la fecha.
 - [x] CA12 · Dada una lectura permitida de la ficha de un paciente (también al abrir su edición) o de un expediente, cuando ocurre, entonces queda registrado quién, qué recurso y la fecha; si no se puede registrar, la ficha o el expediente no se muestran.
 
 ## Requisitos no funcionales
@@ -102,6 +103,7 @@ Eventos que deben quedar registrados según `docs/observability.md`:
 | 2026-11-22 | brecha | ¿Qué lecturas audita esta spec? | Abrir la ficha, su edición y un expediente, en modo crítico; los listados → spec 022 | usuario (`/plan`, `/analyze` A1, A5) |
 | 2026-11-22 | brecha | El Gate del detalle de cita del personal, que la 026, la 028 y la 050 dejaron a la 014 | Dentro de esta spec (CA13) | usuario (`/analyze` A2) |
 | 2026-11-22 | brecha | ¿Quién agenda la primera cita de un paciente sin dentista o de otro dentista? | Solo el admin (o el propio paciente); antes era un supuesto de visibilidad | usuario (`/analyze` A15) |
+| 2026-11-22 | brecha | ¿Quién cambia el dentista asignado de un paciente? Quien lo tiene en su alcance solo por una cita podía reasignárselo y dejar sin acceso al asignado | Solo el admin o el dentista asignado; el resto de la ficha la sigue editando quien la ve (CA15) | usuario (`/review` R5) |
 | 2026-11-21 | brecha | El aviso de duplicado de la 054 con un paciente fuera del alcance | El nombre se muestra siempre (excepción aceptada); el enlace a la ficha solo si se puede ver (CA14) | usuario (054 `/analyze` A4) |
 
 ## Notas para /plan
@@ -116,3 +118,4 @@ Eventos que deben quedar registrados según `docs/observability.md`:
 | 2026-09-28 | Aprobada por el usuario | /specify |
 | 2026-11-21 | «Fuera de alcance»: el cierre de sesiones al cambiar la contraseña desde el perfil lo hace ya la 011 (v0.24.0); sin cambios de criterios | /release 011 |
 | 2026-11-22 | `/analyze` r1: CA9 (quién agenda), CA12 (también la edición, modo crítico), CA13 (detalle de cita) y CA14 (aviso de duplicado) nuevos o precisados; «Decisiones»; OB1 en «Cobertura de riesgos»; `extends` 054; nota caducada de la base de tests quitada | `/analyze` A1–A5, A15, A20 |
+| 2026-11-22 | CA15 nuevo (quién cambia el dentista asignado) y CA11 lo incluye; aprobado por el usuario el 2026-11-22 | `/review` r1 R5 (decisión del usuario) |

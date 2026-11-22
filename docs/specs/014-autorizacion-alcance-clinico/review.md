@@ -151,7 +151,7 @@ la hora del día.
 - T042, T043 ← R7, R12
 - T044 ← R8, R17
 - T045 ← R9, R10, R11
-- R5: sus tareas se añaden tras `/specify --edit 014` (CA15) y `/plan 014 --fix`
+- T047, T048, T049 ← R5 (tras añadir CA15 a la spec y D21 y TM16 al plan, aprobados por el usuario el 2026-11-22)
 - T046 ← repetir la verificación final tras las correcciones
 
 ## Aceptados sin tarea

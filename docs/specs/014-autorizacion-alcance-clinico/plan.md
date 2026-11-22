@@ -150,6 +150,7 @@ PHPUnit Feature con `DatabaseTransactions` contra la base de tests, con el escen
 | TM13 | Denial of service / Information disclosure: un `paciente_id` mal formado, ausente o en array provoca un 500 en el alta de expediente o de cita | A05:2025 Inyección / validación | `expedientes.create`, `expedientes.store`, `citas.store` | formato de UUID comprobado antes del Gate y de `denegar()` → 404 (D16) | `test_el_alta_de_expediente_con_paciente_mal_formado_es_un_404`, su variante en `citas.store` |
 | TM14 | Information disclosure: el aviso de duplicado enlaza la ficha de un paciente fuera del alcance | A01:2025 | `pacientes.create` (aviso) | enlace solo con `ver-paciente` (CA14); el nombre, excepción aceptada | `test_el_aviso_de_duplicado_solo_enlaza_lo_que_se_puede_ver` |
 | TM15 | Information disclosure: el personal abre el detalle de una cita de un dentista que no apoya, con una comparación no estricta | A01:2025 | `citas.show`, `citas.store` | Gate `gestionar-cita` (026) con `in_array` estricto → 403 auditado (CA13) | `AlcanceCitasTest::test_el_detalle_de_una_cita_ajena_se_deniega_por_gate`, `…_agendar_con_un_dentista_ajeno_se_deniega` |
+| TM16 | Elevation of privilege: un dentista con el paciente en su alcance solo por una cita le cambia el dentista asignado (a sí mismo) y deja sin acceso al asignado | A01:2025 | `pacientes.update` | Gate `reasignar-paciente` → 403 auditado sobre el paciente si cambia `dentista_id` (CA15, D21) | `AlcancePacientesTest::test_quien_llega_por_una_cita_no_cambia_el_doctor` |
 
 ## Trazabilidad
 | Criterio de aceptación | Cambio(s) | Test(s) |
@@ -167,6 +168,7 @@ PHPUnit Feature con `DatabaseTransactions` contra la base de tests, con el escen
 | CA11: cada denegación (CA3, CA5, CA6, CA7, CA9, CA13) queda registrada con quién, acción, paciente o expediente, resultado y fecha | registro central (020); `Auditoria::denegar()` en `ExpedientesController::create/store` y `CitasController::store` | aserción del evento en cada test de denegación de CA3, CA5, CA6, CA7 y CA9 |
 | CA12: cada lectura permitida de ficha (también su edición) o expediente queda registrada; sin registro no se muestra | `PacientesController::show/edit`, `ExpedientesController::show` | `AlcancePacientesTest::test_leer_una_ficha_queda_registrado`, `…_abrir_la_edicion_de_la_ficha_queda_registrado`, `…_sin_auditoria_no_se_muestra_la_ficha`; `AlcanceExpedientesTest::test_leer_un_expediente_queda_registrado`, `…_sin_auditoria_no_se_muestra_el_expediente` |
 | CA13 (abuso): detalle y alta de cita de un dentista ajeno → denegado; dentro del alcance, permitido | `CitasController::show/store` (Gate `gestionar-cita`) | `AlcanceCitasTest::test_el_detalle_de_una_cita_ajena_se_deniega_por_gate` (dentista y asistente, auditado), `…_agendar_con_un_dentista_ajeno_se_deniega`, `…_el_detalle_de_una_cita_propia_se_ve` |
+| CA15 (abuso): solo el admin o el dentista asignado cambian el dentista asignado; quien llega por una cita edita el resto de la ficha | Gate `reasignar-paciente` (`AccesoClinico`), `PacientesController::update` (403 con `Auditoria::denegar` sobre el paciente si cambia `dentista_id` sin permiso), `pacientes/create.blade.php` (doctor como texto fijo y campo oculto) | `AlcancePacientesTest::test_quien_llega_por_una_cita_no_cambia_el_doctor`, `AlcanceVistasTest::test_el_doctor_es_fijo_para_quien_no_puede_reasignar` |
 | CA14: el aviso de duplicado enlaza la ficha solo si se puede ver | `PacientesController::avisoDeDuplicados` | `AlcancePacientesTest::test_el_aviso_de_duplicado_solo_enlaza_lo_que_se_puede_ver`; `PacienteSinCorreoTest::test_los_enlaces_del_aviso_usan_la_ruta_del_rol` (ajustado) |
 | RNF: cada criterio por rol, permitido y denegado | todos | los de CA1–CA10, con admin, dentista y asistente donde aplique |
 | RNF: denegar no expone datos ni confirma la existencia | `denyAsNotFound()`; Gate antes de validar (D17) | `test_un_paciente_ajeno_y_uno_inexistente_responden_igual` (ficha y `update`); `AlcanceExpedientesTest::test_un_expediente_ajeno_y_uno_inexistente_responden_igual`; la variante de `citas.store`; los 404 comprueban que no sale el nombre del paciente |
@@ -181,6 +183,7 @@ PHPUnit Feature con `DatabaseTransactions` contra la base de tests, con el escen
 | TM13 | `ExpedientesController::create/store`, `CitasController::store` | `test_el_alta_de_expediente_con_paciente_mal_formado_es_un_404` y su variante de cita |
 | TM14 | ver CA14 | ver CA14 |
 | TM15 | ver CA13 | ver CA13 |
+| TM16 | ver CA15 | ver CA15 |
 | P9: vistas sin estilos en línea nuevos | vistas tocadas | `AlcanceVistasTest::test_los_elementos_nuevos_no_llevan_estilos_en_linea` · verificación manual: directorio, ficha y expediente a 390 y 1440 px con un dentista y un asistente, contra la pantalla actual |
 
 ## Observabilidad
@@ -234,6 +237,7 @@ No aplica: la spec solo cambia rutas del panel con sesión, que no son indexable
 | D18 | Comprobación de alcance de citas en `show` y `store` | `autorizadoParaCita` · Gate `gestionar-cita` | **Gate `gestionar-cita`** de la 026, cuya comparación ya es estricta (`CambiarEstadoCita::alcance`); en el alta recibe un objeto sintético con el dentista elegido, porque aún no hay cita; desaparece `autorizadoParaCita` (026/R15; decisión del usuario, 2026-11-22, `/analyze` A2) |
 | D19 | Recurso del 403 por «otro autor» en el alta de expediente | ninguno · el paciente | **`pacientes` con el id del paciente**: el expediente aún no existe (`/analyze` A19) |
 | D20 | Aviso de duplicado con un paciente fuera del alcance | ocultarlo · nombre sin enlace | **Nombre sin enlace** (excepción decidida en la 054; CA14) |
+| D21 | Quién cambia el dentista asignado (CA15, `/review` R5) | cualquiera que edite la ficha · solo admin y asignado · nadie salvo admin | **Admin o dentista asignado**: Gate `reasignar-paciente` en `AccesoClinico` (admin, o `pacientes.dentista_id` igual a su `personalId()`); en `update`, si `dentista_id` cambia y el Gate lo niega, `Auditoria::denegar(<ruta>, 'pacientes', <id>)` (403) antes de validar; la vista muestra el doctor como texto fijo y un campo oculto con el actual. El resto de la ficha se guarda como hoy (decisión del usuario, 2026-11-22) |
 
 Ninguna decisión es arquitectónica: sin ADR (D1 y D18 siguen ADR 0003).
 
