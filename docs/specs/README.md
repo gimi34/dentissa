@@ -25,7 +25,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | released (v0.24.0) | — | 7 de 7 criterios (liberada el 2026-11-21) |
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
-| 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | implemented | — | — (2026-09-28; implementada el 2026-11-22) |
+| 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28; /review r1 changes_requested el 2026-11-22) |
 | 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | released (v0.12.0) | — | — (2026-09-28) |
 | 024 | [dependencias-seguras](024-dependencias-seguras/spec.md) | Transversal | released (v0.1.0) | — | — (2026-09-29) |
 | 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | released (v0.2.0) | — | — (2026-09-29) |
