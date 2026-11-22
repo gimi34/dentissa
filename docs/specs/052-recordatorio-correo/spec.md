@@ -1,7 +1,7 @@
 ---
 id: 052
 slug: recordatorio-correo
-status: approved
+status: implemented
 created: 2026-11-20
 extends: [003, 004, 028]
 ---
@@ -28,39 +28,39 @@ reprogramar, la marca de «enviado» seguía valiendo para la fecha nueva).
 Todas las horas son las de la clínica (spec 050). «Revisión» es la comprobación periódica que decide
 qué recordatorios tocan; no es algo que haga una persona.
 
-- [ ] CA1 · Dada una cita agendada o confirmada de un paciente con cuenta activa que se agendó con más
+- [x] CA1 · Dada una cita agendada o confirmada de un paciente con cuenta activa que se agendó con más
   de 24 h de antelación, cuando faltan 24 h para su hora, entonces llega al correo de la cuenta del
   paciente, entre 24 h y 23 h 50 min antes de la cita, un único correo en español de Dentissa con: el
   nombre del paciente, el día y la hora de la cita (p. ej. «jueves 26 de noviembre de 2026, 10:30»),
   el nombre del dentista, el servicio (si la cita tiene uno), la dirección y el teléfono de la clínica
   que muestra la página de inicio (038 CA5) y un enlace «Ver mis citas».
-- [ ] CA2 · Dada una cita agendada o confirmada que se crea o se reprograma cuando faltan menos de
+- [x] CA2 · Dada una cita agendada o confirmada que se crea o se reprograma cuando faltan menos de
   24 h para su hora, cuando se guarda, entonces el recordatorio de CA1 llega en menos de 10 minutos;
   si la cita empieza antes de que salga, no se envía.
-- [ ] CA3 · Dada una cita cuyo recordatorio ya salió, cuando la revisión vuelve a pasar o pasan dos
+- [x] CA3 · Dada una cita cuyo recordatorio ya salió, cuando la revisión vuelve a pasar o pasan dos
   revisiones a la vez, entonces no llega un segundo recordatorio para esa misma fecha y hora.
-- [ ] CA4 · Dada una cita con el recordatorio ya enviado, cuando el personal o el paciente la
+- [x] CA4 · Dada una cita con el recordatorio ya enviado, cuando el personal o el paciente la
   reprograman (spec 028), entonces deja de constar como enviado y llega un recordatorio nuevo para la
   fecha nueva según CA1 o CA2. Cierra 028/R11.
-- [ ] CA5 · Dada una cita cancelada, en curso, completada o marcada como «no asistió», o una que ya
+- [x] CA5 · Dada una cita cancelada, en curso, completada o marcada como «no asistió», o una que ya
   empezó, cuando llegaría el momento de su recordatorio, entonces no se envía; una cita cancelada
   después de recibir el recordatorio no genera ningún otro correo.
-- [ ] CA6 · Dado un paciente cuya cuenta está desactivada, cuando llega el momento del recordatorio de
+- [x] CA6 · Dado un paciente cuya cuenta está desactivada, cuando llega el momento del recordatorio de
   una de sus citas, entonces no se envía.
-- [ ] CA7 · Dado un miembro del personal que puede ver una cita, cuando abre su detalle, entonces ve
+- [x] CA7 · Dado un miembro del personal que puede ver una cita, cuando abre su detalle, entonces ve
   «Recordatorio · Enviado» si el recordatorio de la fecha actual de la cita ya salió, y no lo ve si
   aún no ha salido o si la cita se reprogramó después del envío.
-- [ ] CA8 · Dado un fallo del servicio de correo al enviar un recordatorio, cuando la revisión no
+- [x] CA8 · Dado un fallo del servicio de correo al enviar un recordatorio, cuando la revisión no
   logra enviarlo, entonces la cita no queda como enviada, se reintenta en la siguiente revisión
   mientras la cita no haya empezado y el fallo queda en el registro técnico sin el correo, el nombre
   ni los datos de la cita.
-- [ ] CA9 · (abuso) Como alguien que recibe un recordatorio reenviado o abre el buzón de otra
+- [x] CA9 · (abuso) Como alguien que recibe un recordatorio reenviado o abre el buzón de otra
   persona, uso el enlace «Ver mis citas» → sin sesión lleva al inicio de sesión; el correo no lleva
   ningún enlace que dé acceso a la cuenta ni que cambie, confirme o cancele la cita.
-- [ ] CA10 · (abuso) Como alguien que lee un recordatorio ajeno, busco datos de salud → el correo no
+- [x] CA10 · (abuso) Como alguien que lee un recordatorio ajeno, busco datos de salud → el correo no
   incluye las notas del paciente, las notas internas, el expediente ni ningún otro dato fuera de los
   de CA1.
-- [ ] CA11 · (abuso) Como alguien que crea o reprograma citas en masa para agotar el envío de correo
+- [x] CA11 · (abuso) Como alguien que crea o reprograma citas en masa para agotar el envío de correo
   de la clínica → como mucho 250 recordatorios al día en total, para que los correos de recuperación
   de contraseña (spec 041) y los avisos de producción (spec 032) sigan saliendo; los que excedan el
   tope no se envían ese día, salen en la siguiente revisión del día siguiente si la cita no ha
@@ -176,3 +176,4 @@ Ninguna.
 |---|---|---|
 | 2026-11-20 | `draft` → `approved` | aprobada por el usuario |
 | 2026-11-21 | Diseño aprobado ([design.md](design.md), `c2`) | aprobado por el usuario |
+| 2026-11-21 | `approved` → `implemented` | /implement 052: 15 tareas (T026 añadida), suite 1622 en verde |
