@@ -1,7 +1,7 @@
 ---
 spec: 014-autorizacion-alcance-clinico
 plan: plan.md
-status: draft
+status: approved
 ---
 
 # Tareas · 014 Autorización por alcance clínico

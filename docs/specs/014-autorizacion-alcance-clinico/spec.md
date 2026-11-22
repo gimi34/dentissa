@@ -1,7 +1,7 @@
 ---
 id: 014
 slug: autorizacion-alcance-clinico
-status: draft
+status: approved
 created: 2026-09-28
 extends: [003, 006, 007, 054]
 ---

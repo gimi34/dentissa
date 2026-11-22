@@ -1,6 +1,6 @@
 ---
 spec: 014-autorizacion-alcance-clinico
-status: draft
+status: approved
 constitution_version: 1.3.0
 created: 2026-11-22
 ---
