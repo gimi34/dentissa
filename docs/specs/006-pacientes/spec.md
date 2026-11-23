@@ -20,13 +20,13 @@ no se registraron solos.
 
 ## Criterios de aceptación
 <!-- Spec inferida: [x] = cubierto por un test existente; [ ] = comportamiento observado en el código, sin test. -->
-- [ ] CA1 · Dado personal (admin, dentista, asistente), cuando abre el directorio, entonces ve los pacientes activos con búsqueda y filtros por ciudad y dentista, 20 por página.
+- [ ] CA1 · Dado personal (admin, dentista, asistente), cuando abre el directorio, entonces ve los pacientes activos con búsqueda y filtros por ciudad y dentista, 20 por página. → reemplazado por 014 CA1, CA2 (cada rol, su alcance)
 - [ ] CA2 · Dado un admin o asistente, cuando da de alta un paciente, entonces se crean su `usuarios` (rol cliente) y su `pacientes` en una transacción; si no indica contraseña se genera una y se muestra una sola vez.
 - [ ] CA3 · Dada la ficha de un paciente, cuando se abre, entonces muestra sus datos, expedientes, últimas 10 citas, estadísticas y próxima cita.
-- [ ] CA4 · Dado un admin o dentista, cuando edita un paciente, entonces actualiza datos demográficos, clínicos y el dentista asignado; un asistente recibe 403.
+- [ ] CA4 · Dado un admin o dentista, cuando edita un paciente, entonces actualiza datos demográficos, clínicos y el dentista asignado; un asistente recibe 403. → reemplazado por 014 CA3 y CA15 (fuera del alcance, 404; el doctor, solo el admin o el asignado)
 - [ ] CA5 · Dado un admin, cuando desactiva o reactiva un paciente (`PATCH /admin/pacientes/{id}/toggle`), entonces cambia `usuarios.activo` sin borrar datos.
-- [ ] CA6 (abuso) · Como dentista, abro la ficha de un paciente que no es mío (ni asignado ni con cita conmigo) → 403. **HOY NO SE CUMPLE: index/show/edit/update no filtran por alcance** (se corrige en la spec 014, CA1–CA3; decisión del usuario del 2026-11-20).
-- [ ] CA7 (abuso) · Como asistente, listo pacientes → solo veo los de mis dentistas asignados. **HOY NO SE CUMPLE: ve a todos los pacientes activos** (se corrige en la spec 014, CA1–CA3; decisión del usuario del 2026-11-20).
+- [x] CA6 (abuso) · Como dentista, abro la ficha de un paciente que no es mío (ni asignado ni con cita conmigo) → 403. resuelto por 014 (v0.29.0) → reemplazado por 014 CA3 (responde 404, sin confirmar que existe)
+- [x] CA7 (abuso) · Como asistente, listo pacientes → solo veo los de mis dentistas asignados. resuelto por 014 (v0.29.0)
 - [x] CA8 (abuso) · Como paciente desactivado con sesión abierta, sigo navegando → se cierra la sesión. Resuelto por la ficha 2026-11-17-fix-sesion-cuenta-desactivada (v0.20.1).
 
 ## Fuera de alcance
@@ -77,3 +77,4 @@ Hoy no se registran lecturas ni cambios de la ficha clínica. Eventos requeridos
 | 2026-11-19 | Comportamiento modificado por 051 en v0.23.0: la ciudad se elige de una lista cerrada | /release |
 | 2026-11-20 | Validada con el sistema actual: evidencia y tests al día, observaciones revisadas y destino de cada «HOY NO SE CUMPLE» | /specify --edit |
 | 2026-11-20 | Aprobada; CA6 y CA7 se corrigen en la spec 014 | Decisión del usuario |
+| 2026-11-22 | Comportamiento modificado por 014 en v0.29.0: CA1 y CA4 reemplazados (014 CA1–CA3, CA15); CA6 y CA7 resueltos (CA6 responde 404) | /release |

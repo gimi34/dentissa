@@ -1,7 +1,8 @@
 ---
 id: 014
 slug: autorizacion-alcance-clinico
-status: implemented
+status: released
+released: v0.29.0 (2026-11-22)
 created: 2026-09-28
 extends: [003, 006, 007, 054]
 ---
@@ -119,3 +120,4 @@ Eventos que deben quedar registrados según `docs/observability.md`:
 | 2026-11-21 | «Fuera de alcance»: el cierre de sesiones al cambiar la contraseña desde el perfil lo hace ya la 011 (v0.24.0); sin cambios de criterios | /release 011 |
 | 2026-11-22 | `/analyze` r1: CA9 (quién agenda), CA12 (también la edición, modo crítico), CA13 (detalle de cita) y CA14 (aviso de duplicado) nuevos o precisados; «Decisiones»; OB1 en «Cobertura de riesgos»; `extends` 054; nota caducada de la base de tests quitada | `/analyze` A1–A5, A15, A20 |
 | 2026-11-22 | CA15 nuevo (quién cambia el dentista asignado) y CA11 lo incluye; aprobado por el usuario el 2026-11-22 | `/review` r1 R5 (decisión del usuario) |
+| 2026-11-22 | Liberada en v0.29.0 | /release |

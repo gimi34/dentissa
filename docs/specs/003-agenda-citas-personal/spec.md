@@ -29,7 +29,7 @@ dentista sin solaparlas y seguir el estado de cada cita hasta que se atiende o s
 - [ ] CA7 · Dado el detalle de una cita, cuando se cambia su estado (`PATCH …/estado`) a cualquiera de los 6 estados, entonces se guarda y el trigger añade una fila a `historial_citas`. → reemplazado por 026 CA1, CA2, CA3, CA4, CA5, CA6, CA9
 - [ ] CA8 · Dado un admin, cuando edita las notas internas (`PATCH /admin/citas/{id}/notas`), entonces se guardan; solo el admin las ve.
 - [ ] CA9 · Dado un admin, cuando "elimina" una cita (`DELETE /admin/citas/{id}`), entonces su estado pasa a `cancelada` sin borrarla. → reemplazado por 026 CA6
-- [ ] CA10 (abuso) · Como dentista o asistente, abro el formulario de alta → solo veo los pacientes de mi alcance. **HOY NO SE CUMPLE: se listan todos los pacientes activos con teléfono y se lee `proxima_visita` de cualquier paciente.**
+- [x] CA10 (abuso) · Como dentista o asistente, abro el formulario de alta → solo veo los pacientes de mi alcance. resuelto por 014 (v0.29.0; CA9)
 - [x] CA11 (abuso) · Como dos usuarios que agendan el mismo hueco a la vez → solo una cita se guarda. Resuelto por 025 (v0.2.0) → reemplazado por 025 CA8
 
 ## Fuera de alcance
@@ -78,3 +78,4 @@ cambios de notas internas no dejan rastro con actor. Ver brechas en `docs/observ
 | 2026-10-18 | Criterios con test marcados, Auditoría, Seguridad y Observaciones al día con 025, 026 y 028 | /init (re-sincronizar) |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
 | 2026-11-22 | Comportamiento modificado por 052 en v0.28.0: el paciente recibe un recordatorio por correo un día antes de la cita y el detalle muestra «Recordatorio · Enviado» | /release |
+| 2026-11-22 | Comportamiento modificado por 014 en v0.29.0: CA10 resuelto (014 CA9); el alta y el detalle de cita del personal, con los Gates `agendar-para-paciente` y `gestionar-cita` (014 CA13) | /release |

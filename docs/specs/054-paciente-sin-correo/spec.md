@@ -186,3 +186,4 @@ toque ≥ 44 px en el móvil, sin desbordes a 320 px).
 | 2026-11-21 | Implementada: CA1–CA11 con sus tests en verde (`PacienteSinCorreoTest`, `PosiblesDuplicadosTest`) | /implement |
 | 2026-11-21 | Vuelve a approved: /review r1 changes_requested (R1–R4, R7, R15 → T030–T038) | /review |
 | 2026-11-21 | Implementada de nuevo con T030–T038 | /implement |
+| 2026-11-22 | Comportamiento modificado por 014 en v0.29.0: el enlace del aviso de duplicado (CA3, CA9) solo aparece si quien registra puede ver la ficha (014 CA14); el asistente asigna uno de sus dentistas (014 CA8) | /release |

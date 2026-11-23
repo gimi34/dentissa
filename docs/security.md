@@ -190,12 +190,14 @@ expediente por su id. `ExpedientesController::store` acepta `dentista_id`, `paci
 `proxima_visita` de cualquier paciente. Contradice la regla de negocio confirmada. Evidencia:
 `PacientesController.php`, `ExpedientesController.php`, `CitasController.php`; specs 003, 006, 007.
 
+Estado: mitigado en v0.29.0 (spec 014): todas sus correcciones, RS1.a–RS1.e.
+
 Correcciones:
-- RS1.a Policy de paciente que limite `index/show/edit/update` al alcance del rol (dentista asignado o con cita; asistente → pacientes de sus dentistas) — estado: en curso (spec 014)
-- RS1.b Policy de expediente en `show/update`: lectura por alcance, edición solo del dentista autor o admin — estado: en curso (spec 014)
-- RS1.c `ExpedientesController::store` fuerza `dentista_id` propio para el rol dentista, valida que la cita pertenezca al paciente y que `dentista_id` sea de tipo dentista — estado: en curso (spec 014)
-- RS1.d `CitasController::create` limita pacientes y `proxima_visita` al alcance del rol — estado: en curso (spec 014)
-- RS1.e Tests Feature por rol (permitido y 403) para pacientes, expedientes y alta de citas — estado: en curso (spec 014)
+- RS1.a Gates de paciente (`AccesoClinico`) que limitan `index/show/edit/update` al alcance del rol (dentista asignado o con cita no cancelada; asistente → pacientes de sus dentistas); solo el admin o el dentista asignado cambian el doctor — estado: mitigada (v0.29.0, spec 014)
+- RS1.b Gates de expediente en `show/update`: lectura por alcance, edición solo del dentista autor o admin — estado: mitigada (v0.29.0, spec 014)
+- RS1.c `ExpedientesController::store` fuerza `dentista_id` propio para el rol dentista, valida que la cita pertenezca al paciente y que `dentista_id` sea de tipo dentista — estado: mitigada (v0.29.0, spec 014)
+- RS1.d `CitasController::create` limita pacientes y `proxima_visita` al alcance del rol — estado: mitigada (v0.29.0, spec 014)
+- RS1.e Tests Feature por rol (permitido y 403) para pacientes, expedientes y alta de citas — estado: mitigada (v0.29.0, spec 014)
 
 ### RS2 · Alta — Grupo `/cliente` sin control de rol (A01 Broken Access Control)
 El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usarlo, y
