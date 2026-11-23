@@ -164,6 +164,19 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 - [x] T046 Repetir la verificación final de T034 tras las correcciones: suite completa, Pint sobre los PHP tocados, gitleaks y semgrep `p/php` sobre el diff desde `impl_base`, `composer audit --locked`, `node .github/scripts/auditar-npm.mjs` y `aidd.py validate` sin ruta — sin archivos — hecho cuando: todo en verde y sin altas ni críticas nuevas — depende: T036, T037, T038, T039, T041, T043, T044, T045, T048, T049
   - nota: 2026-11-22 sobre `771ac30a`: suite completa 1711 en verde (20 865 aserciones; antes de las correcciones, 1705); Pint `--test` sobre los 19 PHP tocados desde `impl_base`, en verde; gitleaks sobre el diff, sin fugas; semgrep `p/php`, 0 hallazgos; 0 `Log::` y 0 `DB::raw` nuevos en `app/`, `resources/` y `routes/`; `node .github/scripts/auditar-npm.mjs`, sin altas ni críticas; `composer audit --locked`, el mismo aviso bajo de T034 (GHSA-63hm-g96r-2m2q, R25); `aidd.py validate` sin ruta, 0 errores. `docs/architecture.md` pasa a siete Gates con `reasignar-paciente` (CA15).
 
+### Correcciones de /review r2
+- [ ] T050 Añadir a `AlcancePacientesTest` `test_quien_llega_por_una_cita_guarda_la_ficha_con_el_doctor_desactivado` (P3 asignada a D2, D2 desactivado: D1 guarda la ficha de P3 con el mismo `dentista_id` → sin errores, el cambio guardado y P3 sigue con D2) — tests/Feature/AlcancePacientesTest.php — hecho cuando: falla por la razón esperada (hoy la regla de dentista activo rechaza el doctor actual) — cubre: CA15 — depende: T047
+  - nota: añadida por /review: R26
+- [ ] T051 En `PacientesController::update`, la regla de dentista activo de `dentista_id` solo cuando el doctor cambia: si llega igual al actual (con `''` como nulo), se acepta sin comprobarlo — app/Http/Controllers/PacientesController.php — hecho cuando: pasa T050, siguen en verde `test_un_dentista_desactivado_no_se_asigna_como_doctor` y `test_asignar_un_asistente_como_doctor_se_rechaza` (un cambio a un doctor no válido se sigue rechazando) y `PacienteSinCorreoTest`, y quitar un momento la excepción hace fallar T050 — cubre: CA15, CA8 — depende: T050, T048
+  - nota: añadida por /review: R26
+- [ ] T052 Regla `.autor-expediente` con tokens en `public/css/app.css` y su comprobación (regla propia y solo tokens) en `test_la_firma_del_expediente_cumple_el_contraste` — public/css/app.css, tests/Feature/AlcanceVistasTest.php — hecho cuando: el test incluye `.autor-expediente`, fallaba antes de la regla y pasa después — cubre: CA7 — depende: T043
+  - nota: añadida por /review: R27
+- [ ] T053 En `test_quien_llega_por_una_cita_no_cambia_el_doctor`, contar los `acceso_denegado` en cada vuelta (cada intento deja su registro); y nuevo `test_sin_doctor_solo_el_admin_lo_asigna` (un paciente sin doctor, del alcance de D1 por una cita: D1 guarda la ficha sin doctor; asignarse a sí mismo es 403 registrado; el admin sí lo asigna) — tests/Feature/AlcancePacientesTest.php — hecho cuando: pasan (caracterización) y quitar un momento la condición `$asignado !== null` de `reasignarPaciente` hace fallar el nuevo test — cubre: CA15, CA11 — depende: T047, T051
+  - nota: añadida por /review: R28, R29
+- [ ] T054 En `test_el_doctor_obligatorio_del_asistente_es_accesible`, con un error, el texto del mensaje es distinto del de la ayuda; y `DOCTOR_DEL_ASISTENTE` pasa a «Elige uno de tus dentistas: el doctor es obligatorio.» — tests/Feature/AlcanceVistasTest.php, app/Http/Controllers/PacientesController.php — hecho cuando: la nueva aserción fallaba con el mensaje antiguo y pasa con el nuevo, y `AlcancePacientesTest` sigue en verde — cubre: CA8 — depende: T041
+  - nota: añadida por /review: R30
+- [ ] T055 Repetir la verificación final de T046 tras las correcciones de la ronda 2 — sin archivos — hecho cuando: suite completa, Pint, gitleaks, semgrep, `composer audit`, `auditar-npm.mjs` y `aidd.py validate` en verde y sin altas ni críticas nuevas — depende: T051, T052, T053, T054
+
 ## Integración y documentación
 - [x] T034 Pasar la verificación final: suite completa, Pint sobre los PHP tocados, gitleaks sobre el diff, semgrep `p/php` sobre los archivos tocados, `composer audit --locked`, `node .github/scripts/auditar-npm.mjs`, `python .ai/bin/aidd.py validate` sin ruta y revisión de que el diff no tiene `Log::` nuevos — sin archivos — hecho cuando: todo en verde y sin altas ni críticas nuevas respecto a la línea base del plan — depende: T025, T028, T029, T030, T031, T032, T033
   - nota: 2026-11-22 sobre `1167d74e`: suite completa 1705 en verde (20 774 aserciones; línea base 1645); Pint `--test` sobre los 19 PHP tocados desde `impl_base`, en verde; gitleaks sobre el diff, sin fugas; semgrep `p/php` sobre esos 19 archivos, 0 hallazgos; `node .github/scripts/auditar-npm.mjs`, sin altas ni críticas; `aidd.py validate` sin ruta, 0 errores; 0 `Log::` nuevos. `composer audit --locked`: 1 aviso **bajo** nuevo desde la línea base, GHSA-63hm-g96r-2m2q (CVE-2026-128083, `laravel/framework` 12.69.2, «Task Output Injection - Concurrency Process», corregido en 12.71.0); la app no usa `Concurrency` (sin coincidencias en `app/`, `routes/` ni `config/`); no es alto ni crítico, así que no bloquea: va a un `/chore` de Laravel aparte. Verificación visual de T025 y T028 (2026-11-22, a petición del usuario): capturas de Playwright a 390 y 1440 px sobre una base desechable `dentissa_014_capturas` (volcado, migraciones y un escenario ficticio; borrada después) con un dentista y un asistente. Dentista: directorio con solo sus dos pacientes y sin filtro «Doctor»; ficha con «Editar»; expediente propio con los formularios; el de otro autor en solo lectura con «Firmado por Dora Segunda» y «Sin fecha sugerida»; alta de expediente con el autor fijo; paciente ajeno → página 404. Asistente: directorio con el filtro de sus dentistas, ficha sin «Editar» con los expedientes de los dos autores, expediente en solo lectura con «Firmado por …», alta de paciente con «Elige un dentista» y la ayuda. Ninguna pantalla con scroll horizontal.
@@ -171,7 +184,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
   - nota: `docs/architecture.md`: fila nueva «Acceso clínico» (`AccesoClinico` y `AlcanceClinico`, la regla del alcance sobre pacientes y los seis Gates, 404/403, quién los usa) y la sección Backend sin `autorizadoParaCita` y con los Gates de la 014. `aidd.py validate` sin errores.
 - [x] T091 Actualizar `docs/observability.md` con los eventos `paciente_leido` y `expediente_leido` (modo crítico, recurso e id, sin datos) en la tabla de eventos; `docs/deployment.md` sin cambios (sin variables ni pasos nuevos); se anota en la tarea — docs/observability.md — hecho cuando: los eventos constan y `aidd.py validate` sigue sin errores
   - nota: `docs/observability.md`: la fila «Lectura de datos sensibles» con `paciente_leido` (también al abrir la edición) y `expediente_leido`, modo crítico (503 sin registro), recurso e id, sin datos; la de «Acceso denegado» con el `denegado_404` y el paciente como recurso en las altas. `docs/deployment.md` sin cambios: no hay variables, migraciones ni pasos nuevos. `aidd.py validate` sin errores.
-- [x] T092 Marcar spec como `implemented`
+- [ ] T092 Marcar spec como `implemented`
 
 ## Despliegue (lo ejecuta `/release`)
 - [ ] T095 Desplegar a staging y verificar criterios de aceptación. No hay staging: la comprobación se hace en producción, dentro de T097, con cuentas de prueba y sin escribir datos reales en ningún documento:
@@ -190,15 +203,15 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | CA4 | T016, T018 | T026, T028 |
 | CA5 | T011, T016 | T021, T026 |
 | CA6 | T011, T016, T018, T042 | T021, T026, T028, T043 |
-| CA7 | T011, T017, T018, T038, T042 | T021, T027, T028, T043 |
-| CA8 | T014, T039, T040 | T024, T041 |
+| CA7 | T011, T017, T018, T038, T042, T052 | T021, T027, T028, T043, T052 |
+| CA8 | T014, T039, T040, T054 | T024, T041, T051, T054 |
 | CA9 | T011, T019, T037, T045 | T021, T029 |
 | CA10 | T010, T013, T045 | T020, T023 |
 | CA11 | T013, T016, T017, T019, T035, T047 | T023, T026, T027, T029, T036, T048 |
 | CA12 | T013, T016, T045 | T023, T026 |
 | CA13 | T019, T035 | T029, T036 |
 | CA14 | T014 | T024 |
-| CA15 | T047 | T048, T049 |
+| CA15 | T047, T050, T053 | T048, T049, T051 |
 
 | Amenaza (TM#) | Tarea(s) de control | Tarea(s) de test |
 |---|---|---|
@@ -224,7 +237,7 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | app/Autorizacion/AlcanceClinico.php | T020, T044 |
 | app/Autorizacion/AccesoClinico.php | T021, T048 |
 | app/Providers/AppServiceProvider.php | T021, T048 |
-| app/Http/Controllers/PacientesController.php | T022, T023, T024, T044, T048 |
+| app/Http/Controllers/PacientesController.php | T022, T023, T024, T044, T048, T051, T054 |
 | app/Http/Controllers/ExpedientesController.php | T026, T027 |
 | app/Http/Controllers/CitasController.php | T029, T036 |
 | resources/views/pacientes/index.blade.php | T025 |
@@ -235,12 +248,12 @@ Contra `plan.md` (constitución 1.3.0). Lo que el desglose podría romper:
 | resources/views/citas/show.blade.php | T029 |
 | tests/Feature/Concerns/EscenarioAlcanceClinico.php | T001 |
 | tests/Feature/AlcanceClinicoReglaTest.php | T010, T011 |
-| tests/Feature/AlcancePacientesTest.php | T012, T013, T014, T039, T045, T047 |
+| tests/Feature/AlcancePacientesTest.php | T012, T013, T014, T039, T045, T047, T050, T053 |
 | tests/Feature/AlcanceExpedientesTest.php | T016, T017, T038 |
 | tests/Feature/AlcanceCitasTest.php | T019, T035, T037, T045 |
-| tests/Feature/AlcanceVistasTest.php | T015, T018, T040, T042, T047 |
+| tests/Feature/AlcanceVistasTest.php | T015, T018, T040, T042, T047, T052, T054 |
 | Tests existentes (D13) | T030, T031, T032, T033 |
-| public/css/app.css (/review R7) | T043 |
+| public/css/app.css (/review R7) | T043, T052 |
 
 | Requisito no funcional | Tarea(s) de test o verificación manual (T095) |
 |---|---|
