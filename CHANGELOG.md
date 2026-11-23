@@ -5,6 +5,31 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-22
+
+### Security
+- Cada dentista solo ve y abre las fichas de sus pacientes: los que tiene asignados y los que tienen alguna cita
+  con él que no está cancelada. Cada asistente ve los de los dentistas a los que apoya. La administración sigue
+  viendo a todos. La ficha de un paciente ajeno responde como si no existiera, y el intento queda registrado
+  (spec 014).
+- Un dentista lee todos los expedientes de sus pacientes, pero solo modifica los que firmó; los demás los ve en
+  solo lectura, con «Firmado por …». Al registrar un expediente, lo firma él mismo. El asistente los lee sin
+  modificarlos (spec 014).
+- El personal solo agenda citas para pacientes de su alcance y con sus dentistas; un paciente sin dentista lo
+  agenda la administración (spec 014).
+- Cada vez que alguien abre una ficha, su edición o un expediente queda registrado quién y cuándo; si ese registro
+  no puede guardarse, la ficha no se muestra (spec 014).
+- Solo la administración o el dentista asignado cambian el doctor de un paciente; quien lo ve por una cita puede
+  editar el resto de la ficha (spec 014).
+
+### Changed
+- En el directorio de pacientes, el total, las ciudades y el filtro «Doctor» corresponden a los pacientes de cada
+  quien; el dentista sin pacientes ve «No tienes pacientes asignados» (spec 014).
+- Al dar de alta un paciente, el asistente le asigna uno de sus dentistas, y el aviso de posible duplicado solo
+  enlaza la ficha si quien registra puede verla (spec 014).
+- Si un dentista asigna el paciente a otro dentista, vuelve al directorio con el aviso «El paciente quedó asignado a
+  otro dentista.» (spec 014).
+
 ## [0.28.0] - 2026-11-21
 
 ### Added
