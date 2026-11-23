@@ -1,7 +1,7 @@
 ---
 id: 014
 slug: autorizacion-alcance-clinico
-status: approved
+status: implemented
 created: 2026-09-28
 extends: [003, 006, 007, 054]
 ---
@@ -37,7 +37,7 @@ lecturas de datos clínicos (OB1; ver «Cobertura de riesgos»).
 - [x] CA10 · Dado un paciente que cambia de dentista asignado, cuando el dentista anterior (sin citas con él) intenta abrir su ficha, entonces se le deniega; el nuevo dentista la ve de inmediato.
 - [x] CA13 (abuso) · Dado un dentista o asistente, cuando abre el detalle de una cita de un dentista que no es el suyo ni uno de los que apoya, o intenta agendar una cita para uno de ellos, entonces se le deniega (como hoy en las citas, sin revelar el contenido de la cita); dentro de su alcance la ve y la agenda.
 - [x] CA14 · Dado un aviso de posible paciente duplicado en el alta (spec 054), cuando el paciente coincidente está fuera del alcance de quien registra, entonces el aviso muestra su nombre pero no el enlace a su ficha; si está en su alcance (o es el admin), el aviso enlaza la ficha.
-- [ ] CA15 (abuso) · Dado un dentista que tiene a un paciente en su alcance solo por una cita (no es su dentista asignado), cuando intenta cambiarle el dentista asignado, entonces se le deniega y se registra; puede seguir editando el resto de la ficha. El admin y el dentista asignado sí pueden cambiarlo.
+- [x] CA15 (abuso) · Dado un dentista que tiene a un paciente en su alcance solo por una cita (no es su dentista asignado), cuando intenta cambiarle el dentista asignado, entonces se le deniega y se registra; puede seguir editando el resto de la ficha. El admin y el dentista asignado sí pueden cambiarlo.
 
 ## Fuera de alcance
 - Restringir el portal de pacientes a su rol (spec 015).

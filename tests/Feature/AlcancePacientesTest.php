@@ -195,9 +195,12 @@ class AlcancePacientesTest extends TestCase
 
         // D1 tiene a P3 (asignada a D2) solo por una cita: cambiarle el doctor es un 403 registrado sobre la paciente.
         foreach ([$this->d1, null] as $otro) {
+            $antes = DB::table('auditoria')->where('accion', 'acceso_denegado')->count();
             $this->actingAs($this->dentista1)
                 ->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => $otro, 'alergias' => 'No debe guardarse']))
                 ->assertForbidden();
+            // /review R28: cada intento deja su propio registro.
+            $this->assertSame($antes + 1, DB::table('auditoria')->where('accion', 'acceso_denegado')->count());
             $this->assertDenegado('denegado', 'pacientes', $this->p3, 'dentista.pacientes.update', $this->dentista1->id);
         }
         $this->assertSame($this->d2, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
@@ -213,6 +216,40 @@ class AlcancePacientesTest extends TestCase
         $this->assertSame($this->d1, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
         DB::table('pacientes')->where('id', $this->p3)->update(['dentista_id' => $this->d2]);
         $this->actingAs($this->dentista2)->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => $this->d1]))->assertSessionHasNoErrors();
+        $this->assertSame($this->d1, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
+    }
+
+    /** CA15 (/review R26): con el doctor asignado desactivado, quien llega por una cita guarda la ficha sin cambiarlo. */
+    public function test_quien_llega_por_una_cita_guarda_la_ficha_con_el_doctor_desactivado(): void
+    {
+        DB::table('usuarios')->where('id', $this->dentista2->id)->update(['activo' => 0]);
+
+        $this->actingAs($this->dentista1)->put("/dentista/pacientes/{$this->p3}", [
+            'nombre' => 'Tere', 'apellido' => 'Concita', 'email' => $this->paciente3->email, 'telefono' => '4435550003',
+            'dentista_id' => $this->d2, 'alergias' => 'Polen 014',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('Polen 014', DB::table('pacientes')->where('id', $this->p3)->value('alergias'));
+        $this->assertSame($this->d2, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
+    }
+
+    /** CA15 (/review R29): un paciente sin doctor, del alcance por una cita: se edita, pero solo el admin le asigna doctor. */
+    public function test_sin_doctor_solo_el_admin_lo_asigna(): void
+    {
+        DB::table('pacientes')->where('id', $this->p3)->update(['dentista_id' => null]);
+        $ficha = fn (array $cambios) => array_merge([
+            'nombre' => 'Tere', 'apellido' => 'Concita', 'email' => $this->paciente3->email, 'telefono' => '4435550003',
+        ], $cambios);
+
+        $this->actingAs($this->dentista1)->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => '', 'alergias' => 'Sin doctor 014']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Sin doctor 014', DB::table('pacientes')->where('id', $this->p3)->value('alergias'));
+
+        $this->actingAs($this->dentista1)->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => $this->d1]))->assertForbidden();
+        $this->assertDenegado('denegado', 'pacientes', $this->p3, 'dentista.pacientes.update', $this->dentista1->id);
+        $this->assertNull(DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
+
+        $this->actingAs($this->admin)->put("/admin/pacientes/{$this->p3}", $ficha(['dentista_id' => $this->d1]))->assertSessionHasNoErrors();
         $this->assertSame($this->d1, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
     }
 

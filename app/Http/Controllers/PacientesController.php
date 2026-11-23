@@ -28,7 +28,7 @@ class PacientesController extends Controller
     public const CORREO_OBLIGATORIO = 'El correo es obligatorio: es el acceso del paciente a la aplicación.';
 
     /** Spec 014 (CA8). */
-    public const DOCTOR_DEL_ASISTENTE = 'Asigna uno de tus dentistas.';
+    public const DOCTOR_DEL_ASISTENTE = 'Elige uno de tus dentistas: el doctor es obligatorio.';
 
     /** Spec 014 (CA10, D10). */
     public const REASIGNADO_FUERA = 'El paciente quedó asignado a otro dentista.';
@@ -398,7 +398,8 @@ class PacientesController extends Controller
             'notas_medicas' => 'nullable|string|max:2000',
             'contacto_emergencia' => 'nullable|string|max:200',
             'telefono_emergencia' => 'nullable|string|max:20',
-            'dentista_id' => $this->reglasDelDoctor(alta: false),
+            // /review R26: el doctor actual se acepta aunque esté desactivado; la regla de dentista activo, solo al cambiarlo.
+            'dentista_id' => $doctorPedido === $paciente->dentista_id ? ['nullable'] : $this->reglasDelDoctor(alta: false),
         ], [
             'email.required' => self::CORREO_OBLIGATORIO,
             'email.unique' => 'Este correo ya está registrado en el sistema.',

@@ -156,13 +156,17 @@ class AlcanceVistasTest extends TestCase
             ->post('/asistente/pacientes', ['nombre' => 'Sin', 'apellido' => 'Doctor', 'telefono' => '4435550123']);
         $x = $this->xpath($this->actingAs($this->asistente)->get('/asistente/pacientes/crear')->assertOk()->getContent());
         $this->assertSame(['error-dentista_id', 'ayuda-dentista_id'], $this->describe($x));
+        // /review R30: el mensaje de error no repite la ayuda (el lector de pantalla lee los dos).
+        $texto = fn (string $id) => trim($x->query("//*[@id=\"{$id}\"]")->item(0)?->textContent ?? '');
+        $this->assertNotSame('', $texto('error-dentista_id'));
+        $this->assertNotSame($texto('ayuda-dentista_id'), $texto('error-dentista_id'), 'El error dice algo distinto de la ayuda.');
     }
 
     /** CA6, CA7 (/review R7, R12): «Firmado por» y la ayuda del autor fijo, con regla propia y contraste AA. */
     public function test_la_firma_del_expediente_cumple_el_contraste(): void
     {
         $tokens = $this->tokensDeColor();
-        foreach (['.firma-expediente', '.autor-expediente-ayuda'] as $selector) {
+        foreach (['.firma-expediente', '.autor-expediente-ayuda', '.autor-expediente'] as $selector) {
             $cuerpo = $this->declaraciones($selector);
             $this->assertNotSame('', $cuerpo, "{$selector} tiene su regla en app.css.");
             $this->assertSame([], $this->literales($cuerpo), "{$selector}: solo tokens.");

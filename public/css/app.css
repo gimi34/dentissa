@@ -893,6 +893,8 @@ nav.paginacion a:focus-visible { outline: var(--focus-ring-width) solid var(--fo
 /* Spec 014 (/review R7): autoría del expediente y ayuda del autor fijo, con contraste AA (no --text-light, DS1). */
 .firma-expediente,
 .autor-expediente-ayuda { font-size: var(--text-small); color: var(--text-muted); }
+/* /review R27: el autor fijo del alta de expediente, como el valor de un campo. */
+.autor-expediente { margin: 0; font-size: var(--text-body); color: var(--text); }
 select.campo-ciudad,
 select.campo-ciudad:focus { border-color: var(--border-control); }
 select.campo-ciudad:focus-visible {
