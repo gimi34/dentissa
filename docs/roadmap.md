@@ -635,6 +635,27 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 053/R5: el logotipo de WhatsApp va dos veces en `/` (`<symbol>` si algún día pesa);
   - 053/R6: mover `WHATSAPP` con las demás constantes de `PaginaInicioTest`;
   - 053/R7: la canónica se arma con `APP_URL` y `docs/seo.md` dice `seo.site_url`; en producción sale `https://dentissa.app/` (comprobado en v0.25.0): alinear el código o el documento.
+- Spec 054, excepciones P3 y P7 (aprobadas por el usuario el 2026-11-20 y, P3 ampliada a `create`, el 2026-11-21;
+  liberada en v0.26.0): el alta y la edición de pacientes conservan su autorización sin alcance por recurso → spec 014
+  (RS1.a), que además debe aplicar su Gate `ver-paciente` al enlace del aviso de duplicado y mantener los nombres como
+  excepción (plan 054, D7 y D11; hecho en la v0.29.0, 014 CA14); el resto de ediciones de pacientes sigue sin evento → spec 022 (OB1.e). La 052 debe
+  saltarse a los pacientes sin correo (nota en su spec).
+- Spec 054, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.26.0):
+  - 054/R5: probar el aviso de duplicado con un lector de pantalla real (NVDA o VoiceOver); si se anuncia dos veces, quitar `role="alert"`;
+  - 054/R6: la parte de login y recuperación del test de CA7 es estructural; dejarlo dicho en el test o comparar la respuesta de la recuperación;
+  - 054/R8: el test del bloque CSS 054 con `literalesPublicos()` (también duraciones y `rem`);
+  - 054/R9: medir también `--amber` sobre `--amber-bg` (icono), el botón secundario y el foco sobre el ámbar;
+  - 054/R10: el aviso de duplicado vuelve con `back()`, que sin `Referer` va a `/` (redirigir a la ruta de alta del rol);
+  - 054/R11: `cuenta()` de `PacienteSinCorreoTest` por id, no por `creado_en`;
+  - 054/R12: `trim()` redundante en la guarda de Google sin correo;
+  - 054/R13: el test «estables» de `PosiblesDuplicadosTest` no afirma el orden declarado;
+  - 054/R14: el test de una sola consulta de `PosiblesDuplicados`, menos acoplado al SQL y con `finally`;
+  - 054/R16: tope de filas o segundo filtro (nombre) para las candidatas de `PosiblesDuplicados`;
+  - 054/R17: anotar en `docs/security.md`, junto a P3/014, que el aviso enseña nombres de desactivados y de fichas del personal;
+  - 054/R18: «y N más» del aviso, más explícito para lectores de pantalla;
+  - 054/R19: el placeholder de la contraseña del alta repite la ayuda;
+  - 054/R20: anunciar los errores del formulario de pacientes al cargar o llevar el foco al primer campo con error (preexistente, objetivo 6);
+  - 054/R21: en la edición de la ficha de una cuenta del personal, mostrar el correo de solo lectura con una ayuda que diga que se cambia desde «Usuarios».
 - Spec 052, interruptor `RECORDATORIOS_CORREO` (liberada en v0.28.0, encendido en producción el 2026-11-22 tras la
   prueba de T095): retirar el interruptor y su comprobación en una versión posterior, cuando el recordatorio lleve
   un tiempo funcionando sin incidencias.
