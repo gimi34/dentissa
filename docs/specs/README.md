@@ -13,7 +13,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | # | Spec | Dominio | Estado | Confianza | Tests |
 |---|---|---|---|---|---|
 | 001 | [autenticacion](001-autenticacion/spec.md) | Identidad | inferred | alta | 2 de 11 criterios |
-| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | approved | — | 1 de 8 criterios (validada el 2026-11-20) |
+| 002 | [registro-pacientes](002-registro-pacientes/spec.md) | Identidad | released (v0.27.0) | — | 8 de 8 criterios (liberada el 2026-11-21) |
 | 003 | [agenda-citas-personal](003-agenda-citas-personal/spec.md) | Agenda | inferred | alta | 4 de 11 criterios |
 | 004 | [citas-cliente](004-citas-cliente/spec.md) | Agenda | inferred | alta | 2 de 7 criterios |
 | 005 | [horarios-dentista](005-horarios-dentista/spec.md) | Agenda | inferred | alta | 1 de 4 criterios |
@@ -25,7 +25,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 011 | [perfil-cliente](011-perfil-cliente/spec.md) | Identidad | released (v0.24.0) | — | 7 de 7 criterios (liberada el 2026-11-21) |
 | 012 | [paneles-por-rol](012-paneles-por-rol/spec.md) | Transversal | inferred | alta | sin tests |
 | 013 | [monolito-modular](013-monolito-modular/spec.md) | Transversal | draft | — | — (migrada de AI-DLC) |
-| 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | approved | — | — (2026-09-28) |
+| 014 | [autorizacion-alcance-clinico](014-autorizacion-alcance-clinico/spec.md) | Pacientes / Clínica | released | v0.29.0 | — (2026-09-28; liberada el 2026-11-22) |
 | 020 | [auditoria-base](020-auditoria-base/spec.md) | Transversal | released (v0.12.0) | — | — (2026-09-28) |
 | 024 | [dependencias-seguras](024-dependencias-seguras/spec.md) | Transversal | released (v0.1.0) | — | — (2026-09-29) |
 | 025 | [agenda-unica](025-agenda-unica/spec.md) | Agenda | released (v0.2.0) | — | — (2026-09-29) |
@@ -53,6 +53,7 @@ y detalles técnicos. Pasan a `approved` solo con confirmación explícita del u
 | 049 | [calendario-citas](049-calendario-citas/spec.md) | Agenda | released (v0.21.0) | — | — (2026-11-15) |
 | 050 | [hora-clinica](050-hora-clinica/spec.md) | Transversal | released (v0.22.0) | — | — (2026-11-17; re-aprobada el 2026-11-18 tras /analyze r3) |
 | 051 | [ciudad-lista-cerrada](051-ciudad-lista-cerrada/spec.md) | Pacientes | released (v0.23.0) | — | — (2026-11-18) |
+| 052 | [recordatorio-correo](052-recordatorio-correo/spec.md) | Agenda | released (v0.28.0) | — | — (2026-11-20) |
 | 053 | [whatsapp-inicio](053-whatsapp-inicio/spec.md) | Transversal | released (v0.25.0) | — | 6 de 6 criterios (liberada el 2026-11-21) |
 | 054 | [paciente-sin-correo](054-paciente-sin-correo/spec.md) | Pacientes | released (v0.26.0) | — | 11 de 11 criterios (liberada el 2026-11-21) |
 
@@ -69,7 +70,8 @@ Specs previstas (números reservados; se crean con `/specify` una por una):
 ## Funcionalidades no documentadas como spec
 Existen como placeholder o no están implementadas; se especifican con `/specify` cuando se decida
 construirlas:
-- **Recordatorios de cita**: `citas.recordatorio_enviado` se lee pero nunca se escribe.
+- **Recordatorios de cita**: `citas.recordatorio_enviado` se lee pero nunca se escribe. Se
+  especifica en la [052](052-recordatorio-correo/spec.md) (solo por correo; decisión del usuario, 2026-11-20).
 - **Adjuntos del expediente**: `expedientes.archivos_url` siempre se guarda como `null`.
 - `welcome.blade.php`: código muerto del esqueleto de Laravel.
 

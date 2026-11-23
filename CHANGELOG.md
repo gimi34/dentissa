@@ -5,6 +5,55 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-22
+
+### Security
+- Cada dentista solo ve y abre las fichas de sus pacientes: los que tiene asignados y los que tienen alguna cita
+  con él que no está cancelada. Cada asistente ve los de los dentistas a los que apoya. La administración sigue
+  viendo a todos. La ficha de un paciente ajeno responde como si no existiera, y el intento queda registrado
+  (spec 014).
+- Un dentista lee todos los expedientes de sus pacientes, pero solo modifica los que firmó; los demás los ve en
+  solo lectura, con «Firmado por …». Al registrar un expediente, lo firma él mismo. El asistente los lee sin
+  modificarlos (spec 014).
+- El personal solo agenda citas para pacientes de su alcance y con sus dentistas; un paciente sin dentista lo
+  agenda la administración (spec 014).
+- Cada vez que alguien abre una ficha, su edición o un expediente queda registrado quién y cuándo; si ese registro
+  no puede guardarse, la ficha no se muestra (spec 014).
+- Solo la administración o el dentista asignado cambian el doctor de un paciente; quien lo ve por una cita puede
+  editar el resto de la ficha (spec 014).
+
+### Changed
+- En el directorio de pacientes, el total, las ciudades y el filtro «Doctor» corresponden a los pacientes de cada
+  quien; el dentista sin pacientes ve «No tienes pacientes asignados» (spec 014).
+- Al dar de alta un paciente, el asistente le asigna uno de sus dentistas, y el aviso de posible duplicado solo
+  enlaza la ficha si quien registra puede verla (spec 014).
+- Si un dentista asigna el paciente a otro dentista, vuelve al directorio con el aviso «El paciente quedó asignado a
+  otro dentista.» (spec 014).
+
+## [0.28.0] - 2026-11-21
+
+### Added
+- El paciente recibe un correo un día antes de su cita agendada o confirmada, con el día, la hora, el dentista, el
+  servicio, la dirección y el teléfono de la clínica y un enlace a «Mis citas»; si la cita se agenda o se cambia
+  con menos de un día de antelación, el correo sale en pocos minutos. Sale apagado y la clínica lo enciende cuando
+  quiera (spec 052).
+- En el detalle de la cita, el personal ve «Recordatorio · Enviado» cuando el recordatorio de la fecha actual ya
+  salió (spec 052).
+
+### Fixed
+- Al cambiar una cita de fecha, el recordatorio enviado para la fecha anterior deja de contar y se envía uno nuevo
+  para la fecha nueva (spec 052).
+
+## [0.27.0] - 2026-11-21
+
+### Security
+- Al registrarse con un correo que ya tiene cuenta, el aviso ya no dice que el correo está registrado: ofrece iniciar
+  sesión o recuperar la contraseña, y solo aparece cuando el resto del formulario es válido (spec 002).
+
+### Fixed
+- El aviso de errores del registro se anuncia a los lectores de pantalla y el error del correo queda asociado a su
+  campo (spec 002).
+
 ## [0.26.0] - 2026-11-21
 
 ### Added

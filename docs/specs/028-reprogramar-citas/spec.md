@@ -124,3 +124,4 @@ Ninguna.
 | 2026-10-08 | CA2: el plazo se cuenta sobre la hora actual de la cita y el hueco nuevo no exige 24 h; CA4: «ya pasada» en la hora de la clínica; CA5: reemplaza 026 CA1 solo al reprogramar, con el mensaje de volver a agendada según el rol. Vuelve a `draft` | `/analyze A3, A4, A18, A26` |
 | 2026-10-08 | Aprobada de nuevo | Aprobación del usuario |
 | 2026-11-16 | Comportamiento modificado por 046 en v0.20.0: «Reprogramar» lleva migas hasta el detalle de la cita, para el personal y para el paciente, se pueda reprogramar o no | /release |
+| 2026-11-22 | Comportamiento modificado por 052 en v0.28.0: al reprogramar, el recordatorio enviado deja de contar y se envía uno nuevo para la fecha nueva (cierra 028/R11) | /release |

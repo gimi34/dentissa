@@ -67,3 +67,4 @@ desde 028 también la reprogramación. Ver `docs/observability.md`.
 | 2026-10-11 | Comportamiento modificado por 028 en v0.6.0 | /release |
 | 2026-10-18 | Criterios con test marcados; alcance, Auditoría y Notas al día con 025, 026 y 028 | /init (re-sincronizar) |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
+| 2026-11-22 | Comportamiento modificado por 052 en v0.28.0: el paciente recibe un recordatorio por correo un día antes de su cita | /release |

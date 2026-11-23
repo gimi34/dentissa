@@ -277,7 +277,7 @@ class PacienteSinCorreoTest extends TestCase
     #[DataProvider('quienesDanDeAlta')]
     public function test_los_enlaces_del_aviso_usan_la_ruta_del_rol(string $rol): void
     {
-        $existente = $this->existente('Duplo', '5551112233');
+        $existente = $this->existente('Duplo', '5551112233', ['dentista_id' => $this->d1]); // Spec 014 (CA14): del alcance del asistente, para que el aviso lo enlace.
         $usuario = $rol === 'admin' ? $this->admin : $this->asistente;
 
         $this->actingAs($usuario)->from("/{$rol}/pacientes/crear")
@@ -384,11 +384,11 @@ class PacienteSinCorreoTest extends TestCase
     #[DataProvider('quienesEditan')]
     public function test_editar_sin_correo_no_lo_pide_y_exige_telefono(string $rol): void
     {
-        $paciente = $this->existente('Editable', '5550001111');
+        $paciente = $this->existente('Editable', '5550001111', ['dentista_id' => $this->d1]); // Spec 014: del alcance de D1.
         $usuario = $rol === 'admin' ? $this->admin : $this->dentista1;
 
-        $this->actingAs($usuario)->put("/{$rol}/pacientes/{$paciente}", $this->edicion(['telefono' => '5550002222', 'alergias' => 'Ninguna 054']))
-            ->assertSessionHasNoErrors();
+        $this->actingAs($usuario)->put("/{$rol}/pacientes/{$paciente}", $this->edicion(['telefono' => '5550002222', 'alergias' => 'Ninguna 054', 'dentista_id' => $this->d1]))
+            ->assertSessionHasNoErrors(); // Spec 014: el formulario envía el doctor; sin él, el paciente saldría del alcance de D1.
         $cuenta = $this->cuentaDelPaciente($paciente);
         $this->assertNull($cuenta->email);
         $this->assertSame('5550002222', $cuenta->telefono);
@@ -634,7 +634,7 @@ class PacienteSinCorreoTest extends TestCase
 
     public function test_anadir_el_correo_registra_un_cambio_de_cuenta(): void
     {
-        $paciente = $this->existente('Editable', '5550001111');
+        $paciente = $this->existente('Editable', '5550001111', ['dentista_id' => $this->d1]); // Spec 014: del alcance de D1.
 
         $this->actingAs($this->dentista1)->put("/dentista/pacientes/{$paciente}", $this->edicion(['email' => 'cambio.054@example.test']))
             ->assertSessionHasNoErrors();
@@ -876,7 +876,8 @@ class PacienteSinCorreoTest extends TestCase
             'password_hash' => null, 'rol' => 'dentista', 'telefono' => '5550004040', 'activo' => 1,
         ]);
         $ficha = (string) Str::uuid();
-        DB::table('pacientes')->insert(['id' => $ficha, 'usuario_id' => $usuario]);
+        // Spec 014: asignada a D1, para que el dentista pueda editarla.
+        DB::table('pacientes')->insert(['id' => $ficha, 'usuario_id' => $usuario, 'dentista_id' => $this->d1]);
 
         return $ficha;
     }

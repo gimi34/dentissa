@@ -20,14 +20,14 @@ próxima visita) ligado a la cita y al paciente, consultable por el equipo que l
 
 ## Criterios de aceptación
 <!-- Spec inferida: [x] = cubierto por un test existente; [ ] = comportamiento observado en el código, sin test. -->
-- [ ] CA1 · Dado un dentista, cuando abre `GET /dentista/expedientes`, entonces solo ve los expedientes que él firmó, con búsqueda por paciente o diagnóstico.
+- [ ] CA1 · Dado un dentista, cuando abre `GET /dentista/expedientes`, entonces solo ve los expedientes que él firmó, con búsqueda por paciente o diagnóstico. → reemplazado por 014 CA4 (los que firmó, de pacientes de su alcance; plan D7)
 - [ ] CA2 · Dada una cita `completada`, `en_curso` o `confirmada` sin expediente, cuando un admin o dentista crea el expediente, entonces se guarda con diagnóstico obligatorio; un asistente recibe 403.
-- [ ] CA3 · Dado un expediente, cuando un admin o dentista lo edita, entonces se actualizan diagnóstico, tratamiento, receta, observaciones y próxima visita.
-- [ ] CA4 · Dado un asistente, cuando abre un expediente, entonces lo ve en solo lectura.
+- [ ] CA3 · Dado un expediente, cuando un admin o dentista lo edita, entonces se actualizan diagnóstico, tratamiento, receta, observaciones y próxima visita. → reemplazado por 014 CA6 (solo su autor o el admin)
+- [ ] CA4 · Dado un asistente, cuando abre un expediente, entonces lo ve en solo lectura. → reemplazado por 014 CA4, CA5 (solo de pacientes de su alcance)
 - [ ] CA5 · Dado un expediente con `proxima_visita`, cuando se agenda la siguiente cita del paciente, entonces la fecha se precarga (spec 003).
-- [ ] CA6 (abuso) · Como dentista, edito el expediente de otro dentista cambiando el id → 403. **HOY NO SE CUMPLE: `update` no comprueba propiedad.**
-- [ ] CA7 (abuso) · Como dentista o asistente, abro un expediente de un paciente fuera de mi alcance → 403. **HOY NO SE CUMPLE: `show` no comprueba alcance.**
-- [ ] CA8 (abuso) · Como dentista, creo un expediente a nombre de otro dentista o para una cita de otro paciente → se rechaza. **HOY NO SE CUMPLE: `store` acepta `dentista_id`, `paciente_id` y `cita_id` arbitrarios.**
+- [x] CA6 (abuso) · Como dentista, edito el expediente de otro dentista cambiando el id → 403. resuelto por 014 (v0.29.0)
+- [x] CA7 (abuso) · Como dentista o asistente, abro un expediente de un paciente fuera de mi alcance → 403. resuelto por 014 (v0.29.0) → reemplazado por 014 CA5 (responde 404)
+- [x] CA8 (abuso) · Como dentista, creo un expediente a nombre de otro dentista o para una cita de otro paciente → se rechaza. resuelto por 014 (v0.29.0)
 
 ## Fuera de alcance
 - Archivos adjuntos (`archivos_url` siempre se guarda como `null`).
@@ -65,3 +65,4 @@ Hoy `update` sobrescribe el expediente sin guardar quién ni cuándo (la tabla s
 |---|---|---|
 | 2026-09-28 | Spec inferida del código | /init |
 | 2026-11-18 | Comportamiento modificado por 050 en v0.22.0 | /release |
+| 2026-11-22 | Comportamiento modificado por 014 en v0.29.0: CA1, CA3 y CA4 reemplazados (014 CA4–CA6); CA6, CA7 y CA8 resueltos (CA7 responde 404) | /release |

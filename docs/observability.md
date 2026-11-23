@@ -57,8 +57,8 @@ Eventos obligatorios (decisión del usuario, 2026-09-28):
 |---|---|---|
 | Login exitoso y fallido (correo y Google) | sí | actor (o email intentado), método, IP, resultado, fecha, request_id |
 | Logout | sí | actor, fecha |
-| Acceso denegado (403) | sí | actor, acción, recurso, fecha |
-| Lectura de datos sensibles (ficha de paciente, expediente) | sí | actor, recurso, fecha |
+| Acceso denegado (403) | sí | actor, acción, recurso, fecha. Spec 014: fuera del alcance clínico también el 404 (`denegado_404`); en el alta de expediente y de cita, con el paciente como recurso |
+| Lectura de datos sensibles (ficha de paciente, expediente) | sí | actor, recurso, fecha. La ficha (también al abrir su edición) y el expediente ya se registran como `paciente_leido` y `expediente_leido` (spec 014, CA12), en modo crítico: sin registro no se muestran (503). Actor, recurso `pacientes` o `expedientes` con su id, resultado y fecha; nunca datos del paciente ni contenido clínico. Los listados, en la 022 (OB1.d) |
 | Cambio de datos sensibles (paciente, expediente, notas de cita, estado de cita) | sí | actor, recurso, campos cambiados (sin valores), fecha |
 | Cambio de permisos o roles | sí | actor, sujeto, antes → después, fecha |
 | Alta, activación/desactivación de cuentas y cambio de contraseña | sí | actor, sujeto, acción, fecha. El restablecimiento ya se registra como `contrasena_restablecida`, en modo crítico (spec 041); el resto, en la 021 |
@@ -101,6 +101,13 @@ La recuperación de contraseña escribe dos logs nuevos: `restablecimiento.corre
 datos), al superar los 200 enlaces del día; si aparece, revisar si hay abuso. `request_id` y `actor_id`
 llegan por el `Context`.
 
+El recordatorio de cita (spec 052, comando `dentissa:recordatorios` del `scheduler`, sin `request_id` porque no
+hay petición) escribe tres logs, solo con contadores o la clase del error, sin correo, nombre, dentista, fecha,
+servicio ni id de la cita (P8): `recordatorio.revision` (`info`, `{enviados, fallidos, aplazados}`, solo si la
+revisión hizo algo), `recordatorio.correo_fallido` (`error`, `{error}`: la cita queda sin avisar y se reintenta
+en la revisión siguiente) y `recordatorio.tope_diario` (`warning`, `{tope}`, una vez por día de la clínica al
+alcanzar los 250 recordatorios: el resto sale al día siguiente).
+
 ## Brechas
 <!-- Cada brecha con ID `OB<n>`, prioridad, correcciones `OB<n>.<letra>` y enlace al roadmap. -->
 
@@ -113,7 +120,7 @@ Correcciones:
 - OB1.a Tabla de auditoría solo-anexado con actor, acción, recurso, resultado, fecha, IP y request_id — estado: mitigada (v0.12.0)
 - OB1.b Listeners de eventos de autenticación (Login, Failed, Logout) incluido el acceso con Google — estado: pendiente
 - OB1.c Registrar los accesos denegados (403) de middleware, controladores y Policies — estado: mitigada (v0.12.0)
-- OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente
+- OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente (→ 022). La spec 014 (v0.29.0) cubre abrir la ficha, su edición y un expediente (`paciente_leido`, `expediente_leido`, en modo crítico); quedan los listados (directorio de pacientes e índice de expedientes)
 - OB1.e Registrar cambios de pacientes, expedientes, notas y estado de citas (campos, sin valores) — estado: pendiente
 - OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente (→ 021). La spec 041 cubre solo el restablecimiento (`contrasena_restablecida`); la 054, solo el alta de pacientes por el personal (`paciente_alta`) y el correo añadido a un paciente sin correo (`paciente_correo_anadido`). Siguen pendientes el registro público, el alta de usuarios de la administración, los cambios de rol y la activación/desactivación
 - OB1.g Retención de 5 años con purga programada (`routes/console.php`) — estado: mitigada (v0.12.0)

@@ -106,7 +106,8 @@
                 </div>
             </div>
 
-            @if($base === 'admin' || $base === 'dentista')
+            {{-- Spec 014 (CA3): «Editar» solo a quien el Gate deja modificar la ficha. --}}
+            @can('editar-paciente', $paciente->id)
                 <div style="margin-top:16px;display:flex;gap:8px">
                     <a href="{{ route("{$base}.pacientes.edit", $paciente->id) }}"
                        class="btn btn-outline btn-sm" style="flex:1;justify-content:center">Editar</a>
@@ -119,7 +120,7 @@
                         </form>
                     @endif
                 </div>
-            @endif
+            @endcan
         </div>
 
         {{-- Info médica --}}

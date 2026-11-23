@@ -184,13 +184,15 @@ class InmutabilidadAuditoriaTest extends TestCase
     }
 
     /** TM14: el scheduler solo programa la purga; dentissa:vigilar sigue en su temporizador. */
+    /** Spec 020 (D13) y spec 052 (D1): la purga y la revisión de los recordatorios; `dentissa:vigilar` sigue en systemd. */
     public function test_la_programacion_solo_tiene_la_purga(): void
     {
-        $comandos = collect(app(Schedule::class)->events())->map(fn ($evento) => $evento->command ?? $evento->description);
+        $comandos = collect(app(Schedule::class)->events())->map(fn ($evento) => (string) ($evento->command ?? $evento->description));
 
-        $this->assertCount(1, $comandos, 'Una sola tarea programada.');
-        $this->assertStringContainsString('auditoria:purgar', $comandos->first());
-        $this->assertFalse($comandos->contains(fn ($comando) => str_contains((string) $comando, 'dentissa:vigilar')));
+        $this->assertCount(2, $comandos, 'Dos tareas programadas: la purga y los recordatorios (spec 052).');
+        $this->assertSame(1, $comandos->filter(fn ($comando) => str_contains($comando, 'auditoria:purgar'))->count(), 'La purga del registro de auditoría.');
+        $this->assertSame(1, $comandos->filter(fn ($comando) => str_contains($comando, 'dentissa:recordatorios'))->count(), 'La revisión de los recordatorios de cita.');
+        $this->assertFalse($comandos->contains(fn ($comando) => str_contains($comando, 'dentissa:vigilar')));
     }
 
     public function test_la_purga_queda_registrada(): void

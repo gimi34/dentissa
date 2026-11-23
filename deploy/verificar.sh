@@ -69,12 +69,18 @@ main() {
         if grep -qx "${servicio}" <<< "${enMarcha}"; then ok "${servicio} en marcha"; else fallo "${servicio} en marcha"; fi
     done
 
-    echo "== Tareas programadas (spec 020)"
-    # La purga mensual del registro de auditoría es la única tarea del scheduler (CA5).
+    echo "== Tareas programadas (specs 020 y 052)"
+    # La purga mensual del registro de auditoría (spec 020, CA5).
     if "${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null | grep -q 'auditoria:purgar'; then
         ok "el scheduler programa auditoria:purgar"
     else
         fallo "el scheduler programa auditoria:purgar (docker compose -f docker-compose.prod.yml logs scheduler)"
+    fi
+    # La revisión de los recordatorios de cita cada minuto (spec 052, D1); está aunque RECORDATORIOS_CORREO esté apagado.
+    if "${compose[@]}" exec -T -u www-data scheduler php artisan schedule:list 2> /dev/null | grep -q 'dentissa:recordatorios'; then
+        ok "el scheduler programa dentissa:recordatorios"
+    else
+        fallo "el scheduler programa dentissa:recordatorios (docker compose -f docker-compose.prod.yml logs scheduler)"
     fi
 
     echo "== Salud por la red interna"

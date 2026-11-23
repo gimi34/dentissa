@@ -38,6 +38,16 @@
                     Asignación
                 </div>
                 <div class="grid-2">
+                    {{-- Spec 014 (CA7): el dentista firma como él mismo; solo el admin elige el autor. --}}
+                    @if(auth()->user()->rol === 'dentista')
+                    <div class="field-group">
+                        <span class="field-label">Dentista responsable</span>
+                        <p class="autor-expediente">{{ $dentistas->firstWhere('id', $dentistaPreseleccionado)?->nombre }}</p>
+                        <input type="hidden" name="dentista_id" value="{{ $dentistaPreseleccionado }}">
+                        <div class="autor-expediente-ayuda">El expediente queda firmado a tu nombre.</div>
+                        @error('dentista_id')<div class="error-msg" id="error-dentista_id">{{ $message }}</div>@enderror
+                    </div>
+                    @else
                     <div class="field-group">
                         <label class="field-label" for="campo-dentista_id">Dentista responsable <span style="color:var(--p500)">*</span></label>
                         <select name="dentista_id" id="campo-dentista_id" @error('dentista_id') aria-invalid="true" aria-describedby="error-dentista_id" @enderror class="field {{ $errors->has('dentista_id') ? 'field-error' : '' }}" required>
@@ -51,6 +61,7 @@
                         </select>
                         @error('dentista_id')<div class="error-msg" id="error-dentista_id">{{ $message }}</div>@enderror
                     </div>
+                    @endif
 
                     <div class="field-group">
                         <label class="field-label" for="campo-cita_id">Cita relacionada <span style="font-weight:400;color:var(--text-light)">(opcional)</span></label>

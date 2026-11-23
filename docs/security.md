@@ -87,15 +87,16 @@ updated: 2026-10-18
 | Túnel de Cloudflare → nginx de producción | HTTPS público (borde de Cloudflare) | según ruta | única entrada a producción; sin puertos abiertos en el router ni publicados en el servidor; nginx toma la IP real de `CF-Connecting-IP` solo desde la red de Docker y redirige `http://` a `https://` (spec 030) |
 | SSH del servidor de producción | red local y red privada (Tailscale) | clave | desde la red local (`ufw`) y por la interfaz `tailscale0` solo el 22 (ACL del tailnet), sin contraseña ni root (specs 030 y 031, ADR 0006) |
 | Temporizador `dentissa-vigilar` (systemd, cada minuto) | tarea programada | cuenta de despliegue | `php artisan dentissa:vigilar` en `app` como `www-data`: lee el log de acceso de nginx (montado en solo lectura) y el canal `seguridad`, y envía avisos por correo; sin entrada externa propia (spec 032, ADR 0007) |
-| Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar. Los avisos no llevan datos personales ni secretos (spec 032, TM7, TM13). Desde la spec 041 (ADR 0008) también envía a las cuentas el enlace de restablecimiento, que equivale a una credencial mientras está vigente, y el aviso de contraseña cambiada |
+| Salida SMTP a Gmail (`smtp.gmail.com:465`) | saliente, TLS implícito | contraseña de aplicación | desde `app`, con una cuenta de Gmail solo para enviar. Los avisos no llevan datos personales ni secretos (spec 032, TM7, TM13). Desde la spec 041 (ADR 0008) también envía a las cuentas el enlace de restablecimiento, que equivale a una credencial mientras está vigente, y el aviso de contraseña cambiada. Desde la spec 052, el recordatorio de cita al correo de la cuenta del paciente (nombre, fecha y hora, dentista, servicio y el contacto de la clínica; sin notas ni expediente), como mucho 250 al día para no agotar la cuota de la cuenta (~500) |
 
 | `GET /admin/auditoria` | HTTP | sí, `role:admin` | consulta del registro de auditoría, solo lectura; filtros validados (identificadores, nombres y fechas `AAAA-MM-DD`); la propia consulta queda registrada (spec 020) |
 | `GET /_disenio/020/{pantalla}` | HTTP, solo `APP_ENV=local` | no | vista previa del diseño con datos inventados, sin sesión ni base; no existe en producción (spec 020, TM15; exención de P3 aceptada) |
 | Servicio `scheduler` (`schedule:work`) | tarea programada | — | misma imagen que `app`, `www-data`, solo `app.env`, sin puertos; su única tarea es la purga mensual del registro de auditoría (spec 020, TM14) |
 | Cabecera `X-Request-Id` | entrada en toda petición | — | se acepta solo si es un UUID de 36 caracteres; si no, se genera otro; solo correlaciona, nunca da actor ni acceso (spec 020, TM3, TM11) |
 
-No hay rutas API, webhooks ni colas. Las tareas programadas son el vigilante de avisos (spec 032) y
-la purga del registro de auditoría (spec 020).
+No hay rutas API, webhooks ni colas. Las tareas programadas son el vigilante de avisos (spec 032),
+la purga del registro de auditoría (spec 020) y la revisión de los recordatorios de cita (spec 052, cada minuto en
+el `scheduler`, con el interruptor `RECORDATORIOS_CORREO`).
 
 Amenazas del registro de auditoría (spec 020, modelo de amenazas del plan): eventos inmodificables
 salvo la purga de más de 5 años (triggers; vaciar la tabla o quitar los triggers con privilegios
@@ -189,12 +190,14 @@ expediente por su id. `ExpedientesController::store` acepta `dentista_id`, `paci
 `proxima_visita` de cualquier paciente. Contradice la regla de negocio confirmada. Evidencia:
 `PacientesController.php`, `ExpedientesController.php`, `CitasController.php`; specs 003, 006, 007.
 
+Estado: mitigado en v0.29.0 (spec 014): todas sus correcciones, RS1.a–RS1.e.
+
 Correcciones:
-- RS1.a Policy de paciente que limite `index/show/edit/update` al alcance del rol (dentista asignado o con cita; asistente → pacientes de sus dentistas) — estado: en curso (spec 014)
-- RS1.b Policy de expediente en `show/update`: lectura por alcance, edición solo del dentista autor o admin — estado: en curso (spec 014)
-- RS1.c `ExpedientesController::store` fuerza `dentista_id` propio para el rol dentista, valida que la cita pertenezca al paciente y que `dentista_id` sea de tipo dentista — estado: en curso (spec 014)
-- RS1.d `CitasController::create` limita pacientes y `proxima_visita` al alcance del rol — estado: en curso (spec 014)
-- RS1.e Tests Feature por rol (permitido y 403) para pacientes, expedientes y alta de citas — estado: en curso (spec 014)
+- RS1.a Gates de paciente (`AccesoClinico`) que limitan `index/show/edit/update` al alcance del rol (dentista asignado o con cita no cancelada; asistente → pacientes de sus dentistas); solo el admin o el dentista asignado cambian el doctor — estado: mitigada (v0.29.0, spec 014)
+- RS1.b Gates de expediente en `show/update`: lectura por alcance, edición solo del dentista autor o admin — estado: mitigada (v0.29.0, spec 014)
+- RS1.c `ExpedientesController::store` fuerza `dentista_id` propio para el rol dentista, valida que la cita pertenezca al paciente y que `dentista_id` sea de tipo dentista — estado: mitigada (v0.29.0, spec 014)
+- RS1.d `CitasController::create` limita pacientes y `proxima_visita` al alcance del rol — estado: mitigada (v0.29.0, spec 014)
+- RS1.e Tests Feature por rol (permitido y 403) para pacientes, expedientes y alta de citas — estado: mitigada (v0.29.0, spec 014)
 
 ### RS2 · Alta — Grupo `/cliente` sin control de rol (A01 Broken Access Control)
 El grupo `/cliente/*` solo exige `auth`; admin, dentista y asistente pueden usarlo, y
@@ -314,7 +317,8 @@ genérico queda pendiente (/analyze 030 A34: RS13.a se divide).
 
 Correcciones:
 - RS13.a Throttle en el alta (ver RS4.b) — estado: mitigada (v0.5.0)
-- RS13.b Mensaje genérico en el alta, que no revele si el correo ya tiene cuenta — estado: pendiente (→ objetivo 2)
+- RS13.b Mensaje genérico en el alta, que no diga si el correo ya tiene cuenta — estado: mitigada (v0.27.0, spec 002 CA8): mensaje neutro con enlaces para entrar o recuperar la contraseña, que solo sale cuando el resto del formulario es válido (/review 002 R1)
+- RS13.c No distinguir el alta de una cuenta nueva del rechazo de una existente (hoy una entra al panel y la otra no); exige confirmar el correo antes de crear la cuenta — estado: pendiente (→ objetivo 2, spec futura de confirmación del correo; /analyze 002 A3)
 
 ### RS14 · Baja — Campos privilegiados asignables en masa (A01 Broken Access Control)
 `Usuario::$fillable` incluye `rol`, `activo` y `password_hash`. Hoy siempre se usan arrays
