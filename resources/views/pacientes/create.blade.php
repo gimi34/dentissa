@@ -162,10 +162,17 @@
                     </div>
                 </div>
                 <div class="field-group" style="margin-top:14px">
-                    <label class="field-label" for="campo-dentista_id">Doctor asignado</label>
                     {{-- Spec 014 (CA8): en el alta del asistente, obligatorio y solo con sus dentistas. --}}
                     @php $doctorObligatorio = ! isset($paciente) && auth()->user()->rol === 'asistente'; @endphp
-                    <select name="dentista_id" id="campo-dentista_id" @error('dentista_id') aria-invalid="true" aria-describedby="error-dentista_id" @enderror @if($doctorObligatorio) required @endif class="field {{ $errors->has('dentista_id') ? 'field-error' : '' }}">
+                    {{-- Spec 014 (CA15): quien tiene al paciente solo por una cita no le cambia el doctor; lo ve fijo. --}}
+                    @if(isset($paciente) && ! ($puedeReasignar ?? true))
+                    <label class="field-label" for="campo-dentista_fijo">Doctor asignado</label>
+                    <input type="text" id="campo-dentista_fijo" class="field" value="{{ $doctorActual ?? 'Sin asignar' }}" readonly aria-describedby="ayuda-dentista_id">
+                    <input type="hidden" name="dentista_id" value="{{ $paciente->dentista_id }}">
+                    <div class="field-hint field-hint-aviso" id="ayuda-dentista_id">Solo el dentista asignado o la administración cambian el doctor.</div>
+                    @else
+                    <label class="field-label" for="campo-dentista_id">Doctor asignado @if($doctorObligatorio)<span class="marca-obligatorio">*</span>@endif</label>
+                    <select name="dentista_id" id="campo-dentista_id" @error('dentista_id') aria-invalid="true" @enderror aria-describedby="{{ $describe('dentista_id', true) }}" @if($doctorObligatorio) required @endif class="field {{ $errors->has('dentista_id') ? 'field-error' : '' }}">
                         <option value="">{{ $doctorObligatorio ? 'Elige un dentista' : 'Sin asignar' }}</option>
                         @foreach($dentistas as $d)
                             <option value="{{ $d->id }}" {{ old('dentista_id', $paciente->dentista_id ?? '') == $d->id ? 'selected' : '' }}>
@@ -174,7 +181,8 @@
                         @endforeach
                     </select>
                     @error('dentista_id')<div class="error-msg" id="error-dentista_id">{{ $message }}</div>@enderror
-                    <div class="field-hint">{{ $doctorObligatorio ? 'Asigna uno de tus dentistas.' : 'Dentista de cabecera del paciente.' }}</div>
+                    <div class="field-hint {{ $doctorObligatorio ? 'field-hint-aviso' : '' }}" id="ayuda-dentista_id">{{ $doctorObligatorio ? 'Asigna uno de tus dentistas.' : 'Dentista de cabecera del paciente.' }}</div>
+                    @endif
                 </div>
             </div>
 

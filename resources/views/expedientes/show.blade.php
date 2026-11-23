@@ -103,7 +103,7 @@
         </form>
         @else
             <div style="display:flex;flex-direction:column;gap:16px">
-                <p class="field-hint firma-expediente">Firmado por {{ $expediente->dentista }}</p>
+                <p class="firma-expediente">Firmado por {{ $expediente->dentista }}</p>
                 <div class="card">
                     <div style="font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px">Diagnóstico</div>
                     <p style="font-size:13.5px;color:var(--text);line-height:1.6;white-space:pre-line">{{ $expediente->diagnostico }}</p>

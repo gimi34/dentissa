@@ -44,7 +44,7 @@
                         <span class="field-label">Dentista responsable</span>
                         <p class="autor-expediente">{{ $dentistas->firstWhere('id', $dentistaPreseleccionado)?->nombre }}</p>
                         <input type="hidden" name="dentista_id" value="{{ $dentistaPreseleccionado }}">
-                        <div class="field-hint">El expediente queda firmado a tu nombre.</div>
+                        <div class="autor-expediente-ayuda">El expediente queda firmado a tu nombre.</div>
                         @error('dentista_id')<div class="error-msg" id="error-dentista_id">{{ $message }}</div>@enderror
                     </div>
                     @else

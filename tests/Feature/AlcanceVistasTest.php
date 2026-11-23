@@ -7,6 +7,7 @@ use DOMXPath;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Tests\Feature\Concerns\EscenarioAlcanceClinico;
+use Tests\Feature\Concerns\ReglasCss;
 use Tests\TestCase;
 
 /**
@@ -18,6 +19,7 @@ class AlcanceVistasTest extends TestCase
 {
     use DatabaseTransactions;
     use EscenarioAlcanceClinico;
+    use ReglasCss;
 
     protected function setUp(): void
     {
@@ -120,6 +122,65 @@ class AlcanceVistasTest extends TestCase
         $this->assertContains($this->d2, $opciones);
     }
 
+    /** CA15 (/review R5): quien no puede reasignar ve el doctor como texto fijo, con un campo oculto. */
+    public function test_el_doctor_es_fijo_para_quien_no_puede_reasignar(): void
+    {
+        $x = $this->xpath($this->actingAs($this->dentista1)->get("/dentista/pacientes/{$this->p3}/edit")->assertOk()->getContent());
+        $this->assertSame(0, $x->query('//select[@name="dentista_id"]')->length, 'D1 no elige doctor para P3.');
+        $oculto = $x->query('//input[@type="hidden"][@name="dentista_id"]')->item(0);
+        $this->assertNotNull($oculto);
+        $this->assertSame($this->d2, $oculto->getAttribute('value'));
+        $fijo = $x->query('//input[@id="campo-dentista_fijo"][@readonly]')->item(0);
+        $this->assertNotNull($fijo, 'El doctor, en un campo de solo lectura.');
+        $this->assertSame('Dora Segunda', $fijo->getAttribute('value'));
+        $this->assertSame(1, $x->query('//label[@for="campo-dentista_fijo"]')->length, 'Con su etiqueta.');
+
+        foreach ([[$this->dentista2, 'dentista'], [$this->admin, 'admin']] as [$usuario, $rol]) {
+            $x = $this->xpath($this->actingAs($usuario)->get("/{$rol}/pacientes/{$this->p3}/edit")->assertOk()->getContent());
+            $this->assertSame(1, $x->query('//select[@name="dentista_id"]')->length, "{$rol}: elige doctor.");
+        }
+    }
+
+    /** CA8 (/review R6): el doctor obligatorio del asistente se marca como obligatorio y su ayuda se anuncia. */
+    public function test_el_doctor_obligatorio_del_asistente_es_accesible(): void
+    {
+        $x = $this->xpath($this->actingAs($this->asistente)->get('/asistente/pacientes/crear')->assertOk()->getContent());
+        $marca = $x->query('//label[@for="campo-dentista_id"]//*[contains(concat(" ", normalize-space(@class), " "), " marca-obligatorio ")]')->item(0);
+        $this->assertNotNull($marca, 'La etiqueta lleva la marca de obligatorio.');
+        $this->assertFalse($marca->hasAttribute('style'), 'La marca, sin style="".');
+        $this->assertNotNull($x->query('//*[@id="ayuda-dentista_id"]')->item(0), 'La ayuda tiene id.');
+        $this->assertSame(['ayuda-dentista_id'], $this->describe($x), 'El select anuncia la ayuda.');
+
+        // Con un error, el select anuncia el error y la ayuda.
+        $this->actingAs($this->asistente)->from('/asistente/pacientes/crear')
+            ->post('/asistente/pacientes', ['nombre' => 'Sin', 'apellido' => 'Doctor', 'telefono' => '4435550123']);
+        $x = $this->xpath($this->actingAs($this->asistente)->get('/asistente/pacientes/crear')->assertOk()->getContent());
+        $this->assertSame(['error-dentista_id', 'ayuda-dentista_id'], $this->describe($x));
+    }
+
+    /** CA6, CA7 (/review R7, R12): «Firmado por» y la ayuda del autor fijo, con regla propia y contraste AA. */
+    public function test_la_firma_del_expediente_cumple_el_contraste(): void
+    {
+        $tokens = $this->tokensDeColor();
+        foreach (['.firma-expediente', '.autor-expediente-ayuda'] as $selector) {
+            $cuerpo = $this->declaraciones($selector);
+            $this->assertNotSame('', $cuerpo, "{$selector} tiene su regla en app.css.");
+            $this->assertSame([], $this->literales($cuerpo), "{$selector}: solo tokens.");
+            $this->assertSame(1, preg_match('/color:\s*var\((--[\w-]+)\)/', $cuerpo, $color), "{$selector}: color con un token.");
+            foreach (['--white', '--bg'] as $fondo) {
+                $this->assertGreaterThanOrEqual(4.5, $this->contraste($tokens[$color[1]], $tokens[$fondo]), "{$selector}: {$color[1]} sobre {$fondo}.");
+            }
+        }
+
+        $firma = $this->firma($this->xpath($this->actingAs($this->dentista1)->get("/dentista/expedientes/{$this->e2}")->getContent()));
+        $this->assertStringNotContainsString('field-hint', $firma->getAttribute('class'), '«Firmado por» no es una ayuda de campo.');
+
+        $x = $this->xpath($this->actingAs($this->dentista1)->get("/dentista/expedientes/crear?paciente_id={$this->p1}")->getContent());
+        $ayuda = $x->query('//*[contains(concat(" ", normalize-space(@class), " "), " autor-expediente-ayuda ")]')->item(0);
+        $this->assertNotNull($ayuda, 'La ayuda del autor fijo usa su clase.');
+        $this->assertStringNotContainsString('field-hint', $ayuda->getAttribute('class'));
+    }
+
     public function test_las_piezas_del_expediente_no_llevan_estilos_en_linea(): void
     {
         $firma = $this->firma($this->xpath($this->actingAs($this->dentista1)->get("/dentista/expedientes/{$this->e2}")->getContent()));
@@ -132,6 +193,15 @@ class AlcanceVistasTest extends TestCase
     }
 
     // ── Ayudas ────────────────────────────────────────────────────────────────────────
+
+    /** Los ids de `aria-describedby` del select del doctor. */
+    private function describe(DOMXPath $x): array
+    {
+        $select = $x->query('//select[@name="dentista_id"]')->item(0);
+        $this->assertNotNull($select);
+
+        return array_values(array_filter(explode(' ', $select->getAttribute('aria-describedby'))));
+    }
 
     private function firma(DOMXPath $x): ?\DOMElement
     {

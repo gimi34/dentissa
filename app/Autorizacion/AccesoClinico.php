@@ -4,11 +4,12 @@ namespace App\Autorizacion;
 
 use App\Models\Usuario;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Quién puede ver y modificar fichas y expedientes, crear expedientes y agendar para un paciente (spec 014, ADR 0003).
  *
- * Respalda seis Gates. Fuera del alcance clínico (`AlcanceClinico`) la respuesta es `denyAsNotFound()`: un 404 que no
+ * Respalda siete Gates. Fuera del alcance clínico (`AlcanceClinico`) la respuesta es `denyAsNotFound()`: un 404 que no
  * confirma que el paciente exista (D2). Dentro del alcance, lo que el rol no puede hacer es `deny()` (403). El admin
  * no tiene restricción. Quien no es personal de la clínica no pasa por aquí (sus rutas tienen otro rol).
  */
@@ -24,6 +25,24 @@ class AccesoClinico
     public function editarPaciente(Usuario $usuario, string $pacienteId): Response
     {
         return $this->conRol($usuario, $pacienteId, ['admin', 'dentista'], 'Como asistente no puedes modificar la ficha del paciente.');
+    }
+
+    /**
+     * Cambiar el dentista asignado (CA15, D21): el admin o el dentista asignado. Quien tiene al paciente en su alcance
+     * solo por una cita edita la ficha, pero no le cambia el doctor.
+     */
+    public function reasignarPaciente(Usuario $usuario, string $pacienteId): Response
+    {
+        $acceso = $this->conRol($usuario, $pacienteId, ['admin', 'dentista'], 'Como asistente no puedes modificar la ficha del paciente.');
+        if ($acceso->denied() || $usuario->rol === 'admin') {
+            return $acceso;
+        }
+
+        $asignado = DB::table('pacientes')->where('id', $pacienteId)->value('dentista_id');
+
+        return $asignado !== null && $asignado === $this->alcance->personalId($usuario)
+            ? Response::allow()
+            : Response::deny('Solo el dentista asignado o la administración cambian el doctor del paciente.');
     }
 
     public function verExpediente(Usuario $usuario, object $expediente): Response

@@ -59,7 +59,7 @@ class AlcanceClinico
 
         return $consulta->where(function (Builder $alcance) use ($dentistas) {
             $alcance->whereIn('pacientes.dentista_id', $dentistas)
-                ->orWhereExists(fn (Builder $citas) => $citas->select(DB::raw(1))
+                ->orWhereExists(fn (Builder $citas) => $citas->select('citas.id')
                     ->from('citas')
                     ->whereColumn('citas.paciente_id', 'pacientes.id')
                     ->whereIn('citas.dentista_id', $dentistas)

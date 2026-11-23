@@ -59,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         // Alcance clínico (spec 014): fuera del alcance, 404 que no confirma que el paciente exista; dentro, 403.
         Gate::define('ver-paciente', [AccesoClinico::class, 'verPaciente']);
         Gate::define('editar-paciente', [AccesoClinico::class, 'editarPaciente']);
+        Gate::define('reasignar-paciente', [AccesoClinico::class, 'reasignarPaciente']);
         Gate::define('ver-expediente', [AccesoClinico::class, 'verExpediente']);
         Gate::define('editar-expediente', [AccesoClinico::class, 'editarExpediente']);
         Gate::define('crear-expediente', [AccesoClinico::class, 'crearExpediente']);

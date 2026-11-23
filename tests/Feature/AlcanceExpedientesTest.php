@@ -158,6 +158,17 @@ class AlcanceExpedientesTest extends TestCase
         $this->assertDenegado('denegado', 'pacientes', $this->p1, 'dentista.expedientes.store', $this->dentista1->id);
     }
 
+    /** Caracterización (/review R3): la regla de la cita acepta una del propio paciente. */
+    public function test_el_alta_con_una_cita_del_propio_paciente_se_acepta(): void
+    {
+        $propia = $this->cita($this->d1, $this->p1, 'completada', '2026-11-02 10:00');
+
+        $this->actingAs($this->dentista1)->post('/dentista/expedientes', $this->alta($this->p1, $this->d1, ['cita_id' => $propia]))
+            ->assertSessionHasNoErrors()->assertRedirect(route('dentista.pacientes.show', $this->p1));
+
+        $this->assertSame($propia, DB::table('expedientes')->where('diagnostico', 'Alta 014')->value('cita_id'));
+    }
+
     public function test_el_alta_con_una_cita_de_otro_paciente_se_rechaza(): void
     {
         $deOtro = $this->cita($this->d1, $this->p3, 'completada', '2026-11-02 10:00');

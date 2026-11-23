@@ -136,6 +136,8 @@ class AlcancePacientesTest extends TestCase
         $this->app->extend(AlmacenAuditoria::class, fn (AlmacenAuditoria $real) => new AlmacenAuditoriaQueFalla($real));
 
         $this->actingAs($this->dentista1)->get("/dentista/pacientes/{$this->p1}")->assertStatus(503)->assertDontSee('Pablo');
+        // /review R11: abrir la edición también muestra la ficha clínica.
+        $this->actingAs($this->dentista1)->get("/dentista/pacientes/{$this->p1}/edit")->assertStatus(503)->assertDontSee('Pablo');
     }
 
     /** CA10, D10: si el dentista reasigna al paciente fuera de su alcance, vuelve al directorio con un aviso. */
@@ -148,6 +150,8 @@ class AlcancePacientesTest extends TestCase
 
         $this->assertSame($this->d2, DB::table('pacientes')->where('id', $this->p1)->value('dentista_id'));
         $this->actingAs($this->dentista1)->get("/dentista/pacientes/{$this->p1}")->assertNotFound();
+        // /review R9: el nuevo dentista la ve de inmediato (CA10).
+        $this->actingAs($this->dentista2)->get("/dentista/pacientes/{$this->p1}")->assertOk()->assertSee('Pablo');
     }
 
     /** D15: el doctor asignado es un dentista activo; con un asistente, el paciente quedaría fuera del alcance de todos. */
@@ -160,6 +164,56 @@ class AlcancePacientesTest extends TestCase
             ->assertSessionHasErrors('dentista_id');
 
         $this->assertSame($this->d1, DB::table('pacientes')->where('id', $this->p1)->value('dentista_id'));
+    }
+
+    /** D15 (/review R4): tampoco un dentista desactivado, ni en el alta del asistente ni en la edición del admin. */
+    public function test_un_dentista_desactivado_no_se_asigna_como_doctor(): void
+    {
+        DB::table('usuarios')->where('id', $this->dentista1->id)->update(['activo' => 0]);
+        DB::table('pacientes')->where('id', $this->p2)->update(['dentista_id' => $this->d2]);
+
+        $nombre = 'Alta'.Str::random(6);
+        $this->actingAs($this->asistente)->from('/asistente/pacientes/crear')
+            ->post('/asistente/pacientes', $this->datosDeAlta($nombre, $this->d1))
+            ->assertSessionHasErrors('dentista_id');
+        $this->assertSame(0, DB::table('usuarios')->where('nombre', $nombre)->count(), 'Alta: no se crea nada.');
+
+        $this->actingAs($this->admin)->from("/admin/pacientes/{$this->p2}/edit")
+            ->put("/admin/pacientes/{$this->p2}", array_merge($this->datosDeFicha(['dentista_id' => $this->d1]), [
+                'nombre' => 'Paula', 'apellido' => 'Otra', 'email' => $this->paciente2->email,
+            ]))
+            ->assertSessionHasErrors('dentista_id');
+        $this->assertSame($this->d2, DB::table('pacientes')->where('id', $this->p2)->value('dentista_id'), 'Edición: sin cambios.');
+    }
+
+    /** CA15 (/review R5): quien tiene al paciente solo por una cita edita la ficha, pero no le cambia el doctor. */
+    public function test_quien_llega_por_una_cita_no_cambia_el_doctor(): void
+    {
+        $ficha = fn (array $cambios) => array_merge([
+            'nombre' => 'Tere', 'apellido' => 'Concita', 'email' => $this->paciente3->email, 'telefono' => '4435550003',
+        ], $cambios);
+
+        // D1 tiene a P3 (asignada a D2) solo por una cita: cambiarle el doctor es un 403 registrado sobre la paciente.
+        foreach ([$this->d1, null] as $otro) {
+            $this->actingAs($this->dentista1)
+                ->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => $otro, 'alergias' => 'No debe guardarse']))
+                ->assertForbidden();
+            $this->assertDenegado('denegado', 'pacientes', $this->p3, 'dentista.pacientes.update', $this->dentista1->id);
+        }
+        $this->assertSame($this->d2, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
+        $this->assertNotSame('No debe guardarse', DB::table('pacientes')->where('id', $this->p3)->value('alergias'));
+
+        // Con el mismo doctor, el resto de la ficha se guarda.
+        $this->actingAs($this->dentista1)->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => $this->d2, 'alergias' => 'Látex 014']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Látex 014', DB::table('pacientes')->where('id', $this->p3)->value('alergias'));
+
+        // El admin y la dentista asignada sí lo cambian (caracterización).
+        $this->actingAs($this->admin)->put("/admin/pacientes/{$this->p3}", $ficha(['dentista_id' => $this->d1]))->assertSessionHasNoErrors();
+        $this->assertSame($this->d1, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
+        DB::table('pacientes')->where('id', $this->p3)->update(['dentista_id' => $this->d2]);
+        $this->actingAs($this->dentista2)->put("/dentista/pacientes/{$this->p3}", $ficha(['dentista_id' => $this->d1]))->assertSessionHasNoErrors();
+        $this->assertSame($this->d1, DB::table('pacientes')->where('id', $this->p3)->value('dentista_id'));
     }
 
     // ── T014 · el alta del asistente y el aviso de duplicado ──────────────────────────

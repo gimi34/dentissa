@@ -27,13 +27,13 @@ class PacientesController extends Controller
     /** Spec 054 (CA5): a quien ya tiene correo no se le puede quitar, porque es su acceso. */
     public const CORREO_OBLIGATORIO = 'El correo es obligatorio: es el acceso del paciente a la aplicación.';
 
-    /** Spec 054 (/review R4): con ese correo, la recuperación de la 041 daría la cuenta del personal. */
     /** Spec 014 (CA8). */
     public const DOCTOR_DEL_ASISTENTE = 'Asigna uno de tus dentistas.';
 
     /** Spec 014 (CA10, D10). */
     public const REASIGNADO_FUERA = 'El paciente quedó asignado a otro dentista.';
 
+    /** Spec 054 (/review R4): con ese correo, la recuperación de la 041 daría la cuenta del personal. */
     public const CORREO_DEL_PERSONAL = 'El correo de una cuenta del personal no se cambia desde Pacientes.';
 
     public function index(Request $request)
@@ -347,8 +347,15 @@ class PacientesController extends Controller
         $this->registrarLectura($paciente->id);
 
         $dentistas = $this->dentistasDisponibles();
+        // Spec 014 (CA15): quien no puede reasignar ve el doctor como texto fijo.
+        $puedeReasignar = Gate::allows('reasignar-paciente', $id);
+        $doctor = $paciente->dentista_id === null ? null : DB::table('personal')
+            ->join('usuarios', 'personal.usuario_id', '=', 'usuarios.id')
+            ->where('personal.id', $paciente->dentista_id)
+            ->first(['usuarios.nombre', 'usuarios.apellido']);
+        $doctorActual = $doctor ? $doctor->nombre.' '.$doctor->apellido : null;
 
-        return view('pacientes.edit', compact('paciente', 'dentistas'));
+        return view('pacientes.edit', compact('paciente', 'dentistas', 'puedeReasignar', 'doctorActual'));
     }
 
     // ── UPDATE ─────────────────────────────────────────────────────────
@@ -360,6 +367,14 @@ class PacientesController extends Controller
         $paciente = DB::table('pacientes')->where('id', $id)->first();
         if (! $paciente) {
             abort(404);
+        }
+
+        // Spec 014 (CA15, D21): cambiar el doctor, solo el admin o el dentista asignado; 403 registrado sobre el
+        // paciente, antes de validar. Un valor que no es texto también cuenta como cambio.
+        $doctorPedido = $request->input('dentista_id');
+        $doctorPedido = $doctorPedido === '' ? null : $doctorPedido;
+        if ($doctorPedido !== $paciente->dentista_id && Gate::denies('reasignar-paciente', $id)) {
+            app(Auditoria::class)->denegar($request->route()?->getName() ?? 'ruta_sin_nombre', 'pacientes', $id);
         }
 
         // Spec 054 (CA5, CA6): el correo se puede añadir a quien no lo tiene, nunca quitar a quien lo tiene.
