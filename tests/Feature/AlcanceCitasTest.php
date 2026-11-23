@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Agenda\RelojClinica;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -42,13 +43,16 @@ class AlcanceCitasTest extends TestCase
 
     public function test_la_preseleccion_ajena_se_ignora(): void
     {
-        DB::table('expedientes')->where('id', $this->e3)->update(['proxima_visita' => Carbon::now()->addMonth()->toDateString()]);
+        DB::table('expedientes')->where('id', $this->e3)->update(['proxima_visita' => RelojClinica::hoy()->addMonth()->toDateString()]);
 
-        $respuesta = $this->actingAs($this->dentista1)->get("/dentista/citas/crear?paciente_id={$this->p2}")->assertOk();
+        foreach ([[$this->dentista1, 'dentista'], [$this->asistente, 'asistente']] as [$usuario, $rol]) {
+            $respuesta = $this->actingAs($usuario)->get("/{$rol}/citas/crear?paciente_id={$this->p2}")->assertOk();
 
-        $this->assertNull($respuesta->viewData('pacienteSeleccionado'), 'Sin paciente preseleccionado.');
-        $this->assertNull($respuesta->viewData('dentistaSeleccionado'), 'Sin su doctor.');
-        $this->assertSame(Carbon::now()->addDay()->toDateString(), $respuesta->viewData('fechaSugerida'), 'Sin su próxima visita.');
+            $this->assertNull($respuesta->viewData('pacienteSeleccionado'), "{$rol}: sin paciente preseleccionado.");
+            $this->assertNull($respuesta->viewData('dentistaSeleccionado'), "{$rol}: sin su doctor.");
+            // /review R2: «mañana» en la zona de la clínica, como el controlador, no en UTC.
+            $this->assertSame(RelojClinica::hoy()->addDay()->toDateString(), $respuesta->viewData('fechaSugerida'), "{$rol}: sin su próxima visita.");
+        }
     }
 
     public function test_agendar_para_un_paciente_ajeno_es_un_404_auditado(): void
@@ -64,7 +68,9 @@ class AlcanceCitasTest extends TestCase
     /** CA9: un paciente sin dentista ni citas no es del alcance de nadie; solo el admin lo agenda. */
     public function test_un_paciente_sin_dentista_solo_lo_agenda_el_admin(): void
     {
-        $this->actingAs($this->dentista1)->post('/dentista/citas', $this->cita014($this->p5))->assertNotFound();
+        foreach ([[$this->dentista1, 'dentista'], [$this->asistente, 'asistente']] as [$usuario, $rol]) {
+            $this->actingAs($usuario)->post("/{$rol}/citas", $this->cita014($this->p5))->assertNotFound();
+        }
         $this->assertSame(0, $this->citasNuevas());
 
         $this->actingAs($this->admin)->post('/admin/citas', $this->cita014($this->p5))->assertRedirect()->assertSessionHasNoErrors();
@@ -112,10 +118,13 @@ class AlcanceCitasTest extends TestCase
         }
     }
 
-    /** Caracterización (CA13): un paciente del alcance, pero con un dentista que no es suyo. */
+    /** CA13 y CA11 (/review R1): un paciente del alcance con un dentista que no es suyo; 403 registrado sobre el paciente. */
     public function test_agendar_con_un_dentista_ajeno_se_deniega(): void
     {
-        $this->actingAs($this->dentista1)->post('/dentista/citas', $this->cita014($this->p3, $this->d2))->assertForbidden();
+        foreach ([[$this->dentista1, 'dentista'], [$this->asistente, 'asistente']] as [$usuario, $rol]) {
+            $this->actingAs($usuario)->post("/{$rol}/citas", $this->cita014($this->p3, $this->d2))->assertForbidden();
+            $this->assertDenegado('denegado', 'pacientes', $this->p3, "{$rol}.citas.store", $usuario->id);
+        }
 
         $this->assertSame(0, $this->citasNuevas());
     }

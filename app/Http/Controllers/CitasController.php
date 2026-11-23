@@ -294,8 +294,11 @@ class CitasController extends Controller
             'servicio_id.string' => 'Elige un servicio válido.',
         ]);
 
-        // D18 (CA13): el dentista de la cita, del alcance del usuario (el mismo Gate que el detalle; 403 auditado).
-        Gate::authorize('gestionar-cita', (object) ['dentista_id' => $data['dentista_id'], 'paciente_id' => $data['paciente_id']]);
+        // D18 (CA13): el dentista de la cita, del alcance del usuario (el mismo Gate que el detalle). La ruta no lleva
+        // {id}, así que el 403 se registra aquí con el paciente como recurso (CA11, /review R1).
+        if (Gate::denies('gestionar-cita', (object) ['dentista_id' => $data['dentista_id'], 'paciente_id' => $data['paciente_id']])) {
+            app(Auditoria::class)->denegar($request->route()?->getName() ?? 'ruta_sin_nombre', 'pacientes', $data['paciente_id']);
+        }
 
         // La regla de agenda (horario, franja, solape y doble reserva) vive en ReservaCitas.
         try {
