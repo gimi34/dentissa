@@ -12,7 +12,7 @@ Objetivos aceptados por el usuario en `/init` (decisión del usuario, 2026-09-28
 | # | Objetivo | Criterio de éxito | Spec | Estado |
 |---|---|---|---|---|
 | 1 | Esquema reproducible y repo sin datos sensibles | Un clon limpio levanta la base completa con `php artisan migrate --seed` sin el volcado, y los tests usan esa base. El historial de git ya no contiene el volcado con datos ni las contraseñas del README. Riesgos: RD2.a, RD2.b, RD2.c, RD2.d, RS6.a, RS6.b, RS6.d; fuera: RS6.c → objetivo 5 | 013 (parte 1) | pendiente |
-| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS13.c, RS14.a, RS19.a, RS19.b, RS19.c | 014 (RS1); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [011](specs/011-perfil-cliente/spec.md) (RS2.a en parte: guardar el perfil; RS2.b y RS9.a, liberada en v0.24.0); [002](specs/002-registro-pacientes/spec.md) (RS13.b, liberada en v0.27.0; RS13.c pendiente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); fichas 2026-11-17-fix-sesion-cuenta-desactivada (RS3.a) y 2026-11-17-fix-admin-no-se-desactiva (RS19.a), liberadas en v0.20.1; 015–019 previstas | pendiente |
+| 2 | Autorización por alcance y sesiones seguras | Cada acción sobre pacientes, expedientes y citas tiene test por rol (permitido y 403) según la regla confirmada; `/cliente` exige su rol; login y registro limitados. Riesgos: RS1.a, RS1.b, RS1.c, RS1.d, RS1.e, RS2.a, RS2.b, RS3.a, RS3.b, RS4.a, RS4.b, RS4.c, RS5.a, RS5.b, RS5.c, RS9.a, RS9.b, RS10.a, RS10.b, RS10.c, RS11.a, RS13.a, RS13.b, RS13.c, RS14.a, RS19.a, RS19.b, RS19.c | [014](specs/014-autorizacion-alcance-clinico/spec.md) (RS1.a–e, liberada en v0.29.0); [026](specs/026-estados-cita/spec.md) (RS2.a en parte: la cancelación del paciente); [011](specs/011-perfil-cliente/spec.md) (RS2.a en parte: guardar el perfil; RS2.b y RS9.a, liberada en v0.24.0); [002](specs/002-registro-pacientes/spec.md) (RS13.b, liberada en v0.27.0; RS13.c pendiente); [030](specs/030-despliegue-servidor-propio/spec.md) (RS4, liberada en v0.5.0); fichas 2026-11-17-fix-sesion-cuenta-desactivada (RS3.a) y 2026-11-17-fix-admin-no-se-desactiva (RS19.a), liberadas en v0.20.1; 015–019 previstas | pendiente |
 | 3 | Auditoría, correlación y logs limpios | Cada evento obligatorio de `docs/observability.md` tiene un test que comprueba su registro; toda respuesta lleva `X-Request-Id`; ningún log contiene datos sensibles. Riesgos: OB1.a, OB1.b, OB1.c, OB1.d, OB1.e, OB1.f, OB1.g, OB1.h, OB2.a, OB2.b, OB3.a, OB3.b, OB4.a, OB5.a, OB5.b, OB5.c, OB6.a, OB8.a, OB8.b; fuera: OB8.c → el responsable en el servidor, OB4.b y OB4.c → objetivo 5, OB6.b y OB6.c → objetivo 5 | [020](specs/020-auditoria-base/spec.md) (OB1.a, OB1.c, OB1.g, OB1.h, OB2; released v0.12.0); [026](specs/026-estados-cita/spec.md) (OB5.a); 021–023 previstas | pendiente |
 | 4 | Monolito modular con regla de agenda única | La regla de agenda vive en un solo sitio con pruebas propias, la doble reserva es imposible y una prueba de arquitectura vigila los módulos Agenda, Pacientes, Clínica e Identidad. Riesgos: RS12.a, RS12.b, RS12.c, RS15.a; fuera: RS15.b, RS15.c y RS15.d → objetivo 5 | [025](specs/025-agenda-unica/spec.md) (regla de agenda); [026](specs/026-estados-cita/spec.md) (estados); [027](specs/027-horarios-validos/spec.md) (horarios); [028](specs/028-reprogramar-citas/spec.md) (reprogramar, released v0.6.0); 013 (parte 3) | pendiente |
 | 5 | Staging y producción con rollback | Staging y prod desplegados en una plataforma gratuita (ADR), con backup previo, rollback ensayado en staging y checklist de configuración verificado. Riesgos: RD1.a, RD1.b, RD1.c, RD1.d, RD3.a, RD3.b, RD3.c, RD3.d, RD4.a, RD5.a, RD6.a, RD7.a, RD8.a, RD8.b, RD9.a, RS6.c, RS7.a, RS7.b, RS7.c, RS7.d, RS7.e, RS8.a, RS8.b, RS8.c, RS15.b, RS15.c, RS15.d, OB4.b, OB4.c, OB6.b, OB6.c, OB7.a, OB7.b, OB9.a, OB9.b; fuera: RS8.d → Pendientes y deuda (CSP estricta, por pantallas), RS6.a, RS6.b y RS6.d → objetivo 1, RS15.a → objetivo 4, OB4.a → objetivo 3, OB6.a → objetivo 3 | [030](specs/030-despliegue-servidor-propio/spec.md) (producción en un servidor propio con Cloudflare Tunnel, liberada en v0.5.0 el 2026-10-04: https://dentissa.app); [031](specs/031-endurecer-produccion/spec.md) (cabeceras, conexión segura obligatoria, incidencias de la 030 y administración desde fuera); [032](specs/032-alertas-cifrado-copias/spec.md) (alertas y copias cifradas, en curso: OB6.b y RS15.b; RS15.c como excepción EX3 hasta el primer dato real; OB6.c y RS15.d, staging, pendientes) | pendiente |
@@ -474,8 +474,8 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 026/R12: `conPuedeCancelar` y `aviso_cancelar` deben usar la regla del servicio.
   - 026/R13: una sola fuente para el texto de "aún no empieza" (`avisoDeEstado` y `antesDeTiempo`).
   - 026/R14: etiquetas de estado fuera de la clase de excepción `CambioDeEstadoNoPermitido`.
-  - 026/R15: `autorizadoParaCita` (show y store) al Gate `gestionar-cita`, con comparación estricta,
-    en la 014.
+  - ~~026/R15: `autorizadoParaCita` (show y store) al Gate `gestionar-cita`, con comparación estricta,
+    en la 014.~~ Resuelto en la v0.29.0 (spec 014, D18).
   - 026/R16: evitar consultas de alcance repetidas en `EstadosCita::disponibles()`.
   - 026/R17: `gestionar-cita` es redundante en `CitasController::destroy`.
   - 026/R18: excepción de dominio en lugar de `NotFoundHttpException` en `EstadosCita`.
@@ -499,14 +499,14 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   autenticado (OB1.c; pendiente de liberar).
 - Gate o Policy del alta de citas del paciente (`POST /cliente/agendar`) y rechazo por rol en
   `/cliente/*` → spec 015. Excepción P3 de la spec 025. El alta del personal recibe su Gate en la
-  014 (D9; decisión del usuario, 2026-09-30).
+  014 (D9; decisión del usuario, 2026-09-30): hecho en la v0.29.0 (`agendar-para-paciente` y `gestionar-cita`).
 - Residuo de SQL con bindings en el log: cualquier `QueryException` de `ReservaCitas` (bloqueo,
   lecturas o insert) distinta de 1205/1213 sigue el reporte por defecto y registra el SQL con sus
   valores, notas incluidas → spec 023 (OB4.a). Excepción P8 de la spec 025 (D9, A38; decisión del
   usuario, 2026-09-30).
-- Al retomar `/plan 014 --fix`: su plan añade el Gate `agendar-para-paciente` y el alcance del
+- ~~Al retomar `/plan 014 --fix`: su plan añade el Gate `agendar-para-paciente` y el alcance del
   paciente sobre el `CitasController@store` que deja la 025, que ya delega la regla en
-  `App\Agenda\ReservaCitas` (spec 025, D7; decisión del usuario, 2026-09-29).
+  `App\Agenda\ReservaCitas` (spec 025, D7; decisión del usuario, 2026-09-29).~~ Hecho en la v0.29.0.
 - Límite de peticiones en las rutas de escritura, empezando por el alta de citas (TM6 de la spec
   025: reservas del mismo dentista esperan en serie hasta 5 s y `/cliente/agendar` no tiene
   límite) → spec propia (spec 025, D13; decisión del usuario, 2026-09-30).
@@ -514,13 +514,13 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   fila de `personal` (tabla de Identidad) o migrar ese acceso a una interfaz de Identidad para
   bloquear a un dentista (spec 025, D11, A27).
 - Gate del detalle de la cita del personal (`GET /{rol}/citas/{id}`, que ahora también calcula
-  `puede_reprogramar`) → spec 014; `role:cliente` y Gate en "Mis citas" (`GET /cliente/citas`) y en
+  `puede_reprogramar`) → spec 014 (hecho en la v0.29.0: Gate `gestionar-cita` en `CitasController@show`); `role:cliente` y Gate en "Mis citas" (`GET /cliente/citas`) y en
   el detalle del paciente (`GET /cliente/citas/{id}`) → spec 015. Excepción P3 de la spec 028: esas
   rutas solo ganan los datos para mostrar u ocultar «Reprogramar» y el plazo; las rutas nuevas de
   reprogramar ya tienen rol y el Gate `reprogramar-cita` (decisión del usuario, 2026-10-07).
-- Al retomar `/plan 014 --fix`: partir del Gate `reprogramar-cita` registrado en
+- ~~Al retomar `/plan 014 --fix`: partir del Gate `reprogramar-cita` registrado en
   `AppServiceProvider` (`App\Autorizacion\ReprogramarCita`) y de `puede_reprogramar` en
-  `CitasController@show` (spec 028).
+  `CitasController@show` (spec 028).~~ Hecho en la v0.29.0.
 - Auditoría de la reprogramación y de la cancelación desde «No reagendar»: hoy solo quedan en el
   historial de la cita (autor, fechas y motivo), sin evento formal → spec 022; ~~los 403 del Gate
   `reprogramar-cita` no se registran → spec 020~~ (cerrado por la 020: los 403 y los 404 de ese Gate,
@@ -532,19 +532,19 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   (decisión del usuario, 2026-10-07).
 - Comparaciones de fecha en UTC aunque las citas guardan la hora local de la clínica (spec 026, D4): resuelto en la
   v0.22.0 por la spec [050](specs/050-hora-clinica/spec.md), con 026/R6.
-- Al retomar la 014: debe incorporar con `/specify --edit 014` el Gate del detalle de cita del
+- ~~Al retomar la 014: debe incorporar con `/specify --edit 014` el Gate del detalle de cita del
   personal (`GET /{rol}/citas/{id}`), y en `/plan 014 --fix` partir de `App\Autorizacion\AlcanceClinico`
   ya creado (con `personalId` y `dentistasDelAlcance`), de los Gates `gestionar-cita` y
   `cambiar-estado-cita` en `AppServiceProvider` y de que `CitasController` ya delega en él su
-  alcance (spec 026, D3, A11, A23).
-- Excepción P3 de la spec 026: el detalle de cita del personal recibe su Gate en la 014, y "Mis
+  alcance (spec 026, D3, A11, A23).~~ Hecho en la v0.29.0 (014 CA13).
+- Excepción P3 de la spec 026: el detalle de cita del personal recibe su Gate en la 014 (hecho en la v0.29.0), y "Mis
   citas" y el detalle del paciente, `role:cliente` en la 015 (spec 026, D11; decisión del
   usuario, 2026-10-02).
-- La 014 tras la 034 (plan de la 034, Rollout; A42, A63): su cambio del filtro y del estado vacío de
+- La 014 tras la 034 (plan de la 034, Rollout; A42, A63; aplicado en la v0.29.0): su cambio del filtro y del estado vacío de
   `pacientes/index` se aplica sobre el marcado de tarjetas de la 034. Toda columna o celda nueva
   lleva `data-label` igual al texto de su `<th>` y su clase de columna (`celda-cab`, `celda-acciones`,
   `solo-escritorio`…); `MovilPersonalTest` falla si no.
-- La 014 tras la 035 (plan de la 035, D11; /analyze A7): sus cambios de la ficha del expediente
+- La 014 tras la 035 (plan de la 035, D11; /analyze A7; aplicado en la v0.29.0): sus cambios de la ficha del expediente
   (formularios solo con `@can('editar-expediente')`), del alta del paciente (dentista obligatorio
   para la asistente) y del alta de expediente (autor fijo para la dentista) se aplican sobre el
   marcado de la 035 y conservan `.ficha-expediente`, `.expediente-cabecera`, `.acciones-formulario`,
@@ -599,7 +599,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 046/R9: `trustHosts` sin activar (anterior a la 046), para una spec o ficha de seguridad.
 - Spec 050, excepciones P3 y P7 (aprobadas por el usuario el 2026-11-18; plan D9, liberada en v0.22.0): los endpoints cuya
   vista o regla de fecha cambió conservan su autorización y su falta de auditoría (lista en el plan de la 050). Gates por
-  recurso → spec 014 (RS1.a–e); `role:cliente` en el grupo `/cliente` → spec 015 (RS2); auditoría de lecturas y cambios de
+  recurso → spec 014 (RS1.a–e; hecho en la v0.29.0); `role:cliente` en el grupo `/cliente` → spec 015 (RS2); auditoría de lecturas y cambios de
   pacientes y expedientes → spec 022 (OB1.d, OB1.e).
 - Spec 050, aceptados sin tarea de `/review` (2026-11-18; deuda menor, liberada en v0.22.0):
   - 050/R9: un campo enviado como arreglo vuelve a `old()` y da 500 una vez en los formularios (preexistente);
@@ -611,7 +611,7 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
     la v0.24.0 (ficha 2026-11-20-fix-expediente-sin-cita, que corrige también las notas internas de la cita).
 - Spec 051, excepciones P3 y P7 (aprobadas por el usuario el 2026-11-18; /analyze A1 y A2, liberada en v0.23.0): los
   cinco formularios cuya ciudad cambió conservan su autorización y su falta de auditoría. Gates por recurso en
-  `POST`/`PUT` de pacientes → spec 014 (RS1.a); `role:cliente` en `PUT /cliente/perfil` → hecho por la spec 011 en la v0.24.0 (RS2.a en parte); eventos de
+  `POST`/`PUT` de pacientes → hecho por la spec 014 en la v0.29.0 (RS1.a); `role:cliente` en `PUT /cliente/perfil` → hecho por la spec 011 en la v0.24.0 (RS2.a en parte); eventos de
   los cambios de pacientes → spec 022 (OB1.e) y de las altas por registro → spec 021 (OB1.f).
 - Spec 051, aceptados sin tarea de `/review` (2026-11-18; deuda menor, liberada en v0.23.0):
   - 051/R2: asociar las etiquetas de los filtros del directorio de pacientes (Buscar, Ciudad, Doctor) con sus campos
@@ -659,6 +659,19 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   - 002/R13: el limitador `registro` no deja rastro de un sondeo (→ spec 021);
   - 002/R14: diferencia de tiempos entre el alta nueva y el correo existente (dentro de RS13.c);
   - 002/R15: con la recuperación desactivada, el mensaje ofrece recuperar la contraseña sin enlace.
+- Spec 014, aceptados sin tarea de `/review` (2026-11-22; deuda menor, liberada en v0.29.0):
+  - 014/R13: el expediente ajeno y el inexistente dan cuerpos JSON distintos (`denyAsNotFound` frente a `abort(404)`); los tests solo comparan el estado;
+  - 014/R14: `paciente_id`/`dentista_id` en array dan 500 en las altas y ediciones del admin (falta `string`; preexistente);
+  - 014/R15: `buscar` en array da 500 en los directorios de pacientes y expedientes (preexistente);
+  - 014/R16: renombrar los tests del asistente que reciben el 403 del rol de la ruta, no del Gate;
+  - 014/R18: helper común para «Gate y `denegar()` con la ruta» en Citas, Expedientes y Pacientes;
+  - 014/R19: asignar el valor de `aplicarAPacientes` en vez de depender de la mutación del Builder;
+  - 014/R20: evaluar una sola vez `editar-expediente` y `ver-paciente` en las vistas;
+  - 014/R21: `$doctorObligatorio` desde el controlador, no con `isset($paciente)` en la vista;
+  - 014/R22: separar la aserción de estilos en línea del estado vacío;
+  - 014/R23: dividir `test_el_asistente_asigna_uno_de_sus_dentistas` en cuatro tests;
+  - 014/R24: asociar programáticamente el autor fijo del alta de expediente;
+  - 014/R25: explicar en el aviso de duplicado por qué no hay ficha que abrir; actualizar Laravel a ≥ 12.71.0 (GHSA-63hm-g96r-2m2q, bajo, `Concurrency` sin uso) con un `/chore`.
 - Spec 011, aceptados sin tarea de `/review` (2026-11-21; deuda menor, liberada en v0.24.0):
   - 011/R3: el test de TM3 no comprueba directamente que el identificador antiguo deje de valer (lo cubren el de las
     otras sesiones y el del almacén);
@@ -723,11 +736,11 @@ Para pasar de MVP a "entrega académica": objetivos 1, 2 y 3 cumplidos, staging 
   `docker-compose.prod.yml` y probar sus triggers con el usuario de base `dentissa_app`, sin root
   (spec 030, /analyze A26).~~ Hecho en la 020 (T043; los triggers con `dentissa_app`, en su ensayo
   local T047).
-- Tras fusionar la 020: `/plan 014 --fix` antes de `/tasks 014`, con el contrato final de la 020
+- ~~Tras fusionar la 020: `/plan 014 --fix` antes de `/tasks 014`, con el contrato final de la 020
   (`Auditoria::registrar` con `actor:`, `denegar()` y `denegado_404`; sin `Auditoria::denegacion`,
   `denegado_403`, `Gate::after` ni la marca en el `Context`) (plan 020, A58). Y `/plan 041 --fix`
   (T002 de la 041): `clinica.contacto`, los tokens con nombre de la 041 y la Roboto propia ya están
-  en `main` con la 020.
+  en `main` con la 020.~~ Hecho: el `/plan 014 --redo` partió del contrato final de la 020 (014 liberada en la v0.29.0) y la 041 se liberó en la v0.14.0.
 - Staging (objetivo 5): RD1.d (restauración probada en staging), RD3.d (TLS en staging), RS7.e
   (configuración de staging separada), OB4.c (checklist de staging) y OB7.b (logs de nginx en
   staging), creadas al dividir las correcciones que la spec 030 cumple en producción (/analyze A1);

@@ -120,7 +120,7 @@ Correcciones:
 - OB1.a Tabla de auditoría solo-anexado con actor, acción, recurso, resultado, fecha, IP y request_id — estado: mitigada (v0.12.0)
 - OB1.b Listeners de eventos de autenticación (Login, Failed, Logout) incluido el acceso con Google — estado: pendiente
 - OB1.c Registrar los accesos denegados (403) de middleware, controladores y Policies — estado: mitigada (v0.12.0)
-- OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente
+- OB1.d Registrar lecturas de ficha de paciente y de expedientes — estado: pendiente (→ 022). La spec 014 (v0.29.0) cubre abrir la ficha, su edición y un expediente (`paciente_leido`, `expediente_leido`, en modo crítico); quedan los listados (directorio de pacientes e índice de expedientes)
 - OB1.e Registrar cambios de pacientes, expedientes, notas y estado de citas (campos, sin valores) — estado: pendiente
 - OB1.f Registrar altas, cambios de rol, activación/desactivación y cambios de contraseña — estado: pendiente (→ 021). La spec 041 cubre solo el restablecimiento (`contrasena_restablecida`); la 054, solo el alta de pacientes por el personal (`paciente_alta`) y el correo añadido a un paciente sin correo (`paciente_correo_anadido`). Siguen pendientes el registro público, el alta de usuarios de la administración, los cambios de rol y la activación/desactivación
 - OB1.g Retención de 5 años con purga programada (`routes/console.php`) — estado: mitigada (v0.12.0)
